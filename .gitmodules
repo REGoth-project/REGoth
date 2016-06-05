@@ -1,0 +1,9 @@
+[submodule "lib/bgfx-cmake"]
+	path = lib/bgfx-cmake
+	url = git@github.com:degenerated1123/bgfx-cmake.git
+[submodule "lib/ZenLib"]
+	path = lib/ZenLib
+	url = git@github.com:degenerated1123/ZenLib.git
+[submodule "lib/glm"]
+	path = lib/glm
+	url = git@github.com:g-truc/glm.git
