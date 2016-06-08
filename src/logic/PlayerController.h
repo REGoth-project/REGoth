@@ -2,8 +2,11 @@
 
 #include <daedalus/DaedalusGameState.h>
 #include "Controller.h"
+#include "Inventory.h"
 namespace Logic
 {
+    class ModelVisual;
+
     class PlayerController : public Controller
     {
     public:
@@ -21,6 +24,8 @@ namespace Logic
          */
         void setDailyRoutine(const std::vector<size_t>& wps)
         { m_RoutineState.routineWaypoints = wps; }
+        void addRoutineWaypoint(size_t wp)
+        { m_RoutineState.routineWaypoints.push_back(wp); }
 
         /**
          * Called on game-tick
@@ -52,6 +57,26 @@ namespace Logic
          * @param Waypoint index to go to
          */
         void teleportToWaypoint(size_t wp);
+
+        /**
+         * @return The inventory of this player
+         */
+        Inventory& getInventory()
+        {
+            return m_Inventory;
+        }
+
+        /**
+         * Equips the item with the given handle
+         * Note: Be careful that this is actually inside the inventory of the player
+         */
+        void equipItem(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * @return The ModelVisual of the underlaying vob
+         */
+        ModelVisual* getModelVisual();
+
     protected:
 
         /**
@@ -110,5 +135,10 @@ namespace Logic
             // Handle to the npc data on script-side
             Daedalus::GameState::NpcHandle npcHandle;
         }m_ScriptState;
+
+        /**
+         * This players inventory
+         */
+        Inventory m_Inventory;
     };
 }

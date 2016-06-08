@@ -30,6 +30,7 @@
 
 #build dir
 build/
+winbuild/
 
 #dolphin
 .directory

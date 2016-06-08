@@ -8,14 +8,35 @@
 #include <engine/World.h>
 #include <debugdraw/debugdraw.h>
 #include <render/WorldRender.h>
+#include <components/Vob.h>
+#include <utils/logger.h>
+
+/**
+ * Standard node-names
+ */
+namespace BodyNodes
+{
+    const char* NPC_NODE_RIGHTHAND	= "ZS_RIGHTHAND";
+    const char* NPC_NODE_LEFTHAND	= "ZS_LEFTHAND";
+    const char* NPC_NODE_SWORD		= "ZS_SWORD";
+    const char* NPC_NODE_LONGSWORD	= "ZS_LONGSWORD";
+    const char* NPC_NODE_BOW		= "ZS_BOW";
+    const char* NPC_NODE_CROSSBOW	= "ZS_CROSSBOW";
+    const char* NPC_NODE_SHIELD		= "ZS_SHIELD";
+    const char* NPC_NODE_HELMET		= "ZS_HELMET";
+    const char* NPC_NODE_JAWS		= "ZS_JAWS";
+    const char* NPC_NODE_TORSO		= "ZS_TORSO";
+}
+
 
 Logic::PlayerController::PlayerController(World::WorldInstance& world,
                                           Handle::EntityHandle entity,
                                           Daedalus::GameState::NpcHandle scriptInstance)
-        : Controller(world, entity)
+        : Controller(world, entity),
+          m_Inventory(*world.getEngine(), world.getMyHandle(), scriptInstance)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
-    m_RoutineState.routineActive = false;
+    m_RoutineState.routineActive = true;
 
     m_AIState.closestWaypoint = 0;
     m_MoveState.currentPathPerc = 0;
@@ -120,4 +141,26 @@ void Logic::PlayerController::onDebugDraw()
     {
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
     }
+}
+
+void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
+{
+    // Get item
+    Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
+
+    if(!itemData.visual_change.empty())
+    {
+        Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
+
+        // TODO: Only replace the mesh loaded in the lib to keep attachments, etc?
+        Vob::setVisual(vob, itemData.visual_change);
+    }
+}
+
+Logic::ModelVisual* Logic::PlayerController::getModelVisual()
+{
+    Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
+
+    // TODO: Bring in some type-checking here
+    return reinterpret_cast<ModelVisual*>(vob.visual);
 }

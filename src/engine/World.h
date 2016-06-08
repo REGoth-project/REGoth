@@ -142,6 +142,10 @@ namespace World
 		{
 			m_MyHandle = handle;
 		}
+		Engine::BaseEngine* getEngine()
+		{
+			return m_pEngine;
+		}
     protected:
 
 		/**

@@ -3,6 +3,7 @@
 #include <daedalus/DaedalusGameState.h>
 #include <handle/HandleDef.h>
 #include <set>
+#include <daedalus/DaedalusVM.h>
 
 namespace Daedalus
 {
@@ -58,17 +59,39 @@ namespace Logic
          * @return value returned by the function
          */
         int32_t runFunction(const std::string& fname);
+        int32_t runFunction(size_t addr);
 
         /**
          * Returns the current script-gamestate
          */
         Daedalus::GameState::DaedalusGameState& getGameState();
+
+        /**
+         * Returns the underlaying VM for some internal work
+         */
+        Daedalus::DaedalusVM& getVM(){return *m_pVM; }
+
+        /**
+         * Returns the symbol-index of the given symbol-name
+         * @return Symbol-index, -1 of not found
+         */
+        size_t getSymbolIndexByName(const std::string& name);
     protected:
 
         /**
          * Called when an npc got inserted into the world
          */
         void onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint);
+
+        /**
+         * Called after the NPC got inserted into the world. At this point, it is fully initialized and can be used.
+         */
+        void onNPCInitialized(Daedalus::GameState::NpcHandle npc);
+
+        /**
+         * Called when an item got inserted into some NPCs inventory
+         */
+        void onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
 
         /**
          * Script-VM

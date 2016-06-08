@@ -16,6 +16,7 @@
 #include <render/WorldRender.h>
 #include "entry/input.h"
 #include <debugdraw/debugdraw.h>
+#include "config.h"
 
 struct PosColorVertex
 {
@@ -76,7 +77,7 @@ class ExampleCubes : public entry::AppI
 		m_width = 1280;
 		m_height = 720;
 		m_debug = BGFX_DEBUG_TEXT;
-		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_VSYNC;
+		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X8;
 
 		bgfx::init(args.m_type, args.m_pciId);
 		bgfx::reset(m_width, m_height, m_reset);
@@ -87,7 +88,7 @@ class ExampleCubes : public entry::AppI
 		// Set view 0 clear state.
 		bgfx::setViewClear(0
 			, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-			, 0x303030ff
+			, 0x7EC0EEff
 			, 1.0f
 			, 0
 			);
@@ -101,8 +102,8 @@ class ExampleCubes : public entry::AppI
 		Meshes::PositionColorVertex::init();
 		Meshes::PositionUVVertex::init();
 
-		m_Engine.initEngine();
-		m_Engine.addWorld("addonworld.zen");
+		m_Engine.initEngine(_argc, _argv);
+		m_Engine.addWorld(m_Engine.getEngineArgs().startupZEN);
 
 		m_timeOffset = bx::getHPCounter();
 
@@ -138,12 +139,12 @@ class ExampleCubes : public entry::AppI
 
 			// Use debug font to print information about this example.
 			bgfx::dbgTextClear();
-			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Project");
+			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_Engine.getEngineArgs().startupZEN.c_str());
 			bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
 
 
 			// This dummy draw call is here to make sure that view 0 is cleared
-			// if no other draw calls are submitted to view 0.
+			// if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
 			//bgfx::touch(0);
 
 			

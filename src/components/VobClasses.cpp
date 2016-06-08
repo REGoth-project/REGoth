@@ -14,9 +14,13 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     Daedalus::GEngineClasses::C_Npc& npc = world.getScriptEngine().getGameState().getNpc(scriptInstance);
 
-    // Link the script instance to our entity
+    //LogInfo() << "Instance: " << scriptInstance.index;
+    //LogInfo() << "Creating vob for: " << npc.name[0];
+
+              // Link the script instance to our entity
     ScriptInstanceUserData* userData = new ScriptInstanceUserData;
     userData->vobEntity = e;
+    userData->world = world.getMyHandle();
 
     world.getScriptEngine().getGameState().getNpc(scriptInstance).userPtr = userData;
 
@@ -44,6 +48,32 @@ void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle
     delete userdata;
 
     world.getScriptEngine().getGameState().getNpc(scriptInstance).userPtr = nullptr;
+}
+
+VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    NpcVobInformation npc;
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&npc, &v, sizeof(v));
+
+    // Enter new information
+    npc.playerController = reinterpret_cast<Logic::PlayerController*>(npc.logic);
+
+    return npc;
+}
+
+Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
+{
+    void* userptr = world.getScriptEngine().getGameState().getNpc(npc).userPtr;
+
+    if(!userptr)
+        return Handle::EntityHandle::makeInvalidHandle();
+
+    assert(world.getMyHandle() == reinterpret_cast<ScriptInstanceUserData*>(userptr)->world);
+
+    return reinterpret_cast<ScriptInstanceUserData*>(userptr)->vobEntity;
 }
 
 

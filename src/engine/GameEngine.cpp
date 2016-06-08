@@ -21,9 +21,9 @@ GameEngine::~GameEngine()
 
 }
 
-void GameEngine::initEngine()
+void GameEngine::initEngine(int argc, char** argv)
 {
-    BaseEngine::initEngine();
+    BaseEngine::initEngine(argc, argv);
 
     // Initialize main render system
     m_DefaultRenderSystem.init();
@@ -68,9 +68,6 @@ void GameEngine::drawFrame()
         // Set view 0 default viewport.
         bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
     }
-
-
-
 
 
     bgfx::touch(0);

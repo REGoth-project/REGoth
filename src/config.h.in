@@ -1,0 +1,6 @@
+/**
+ * Configuration-file filled by CMake. DO NOT EDIT MANUALLY!
+ */
+ 
+#define REGOTH_CONTENT_DIR "${GAME_CONTENT_DIR}"
+#define REGOTH_STARTUP_WORLD "${GAME_STARTUP_WORLD}"

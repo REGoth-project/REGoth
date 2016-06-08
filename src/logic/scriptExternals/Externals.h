@@ -1,5 +1,10 @@
 #pragma once
 
+namespace Engine
+{
+    class BaseEngine;
+}
+
 namespace Daedalus
 {
     class DaedalusVM;
@@ -17,6 +22,6 @@ namespace Logic
         /**
          * Registers our externals
          */
-        void registerEngineExternals(Daedalus::DaedalusVM& vm, bool verbose = false);
+        void registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose = false);
     }
 }

@@ -21,7 +21,25 @@ namespace Logic
          */
         virtual bool load(const std::string& visual);
 
+        /**
+         * Sets the headmesh for this model
+         * @param head File of the mesh to use as head
+         */
+        void setHeadMesh(const std::string& head);
     protected:
+        /**
+         * Rebuilds the main entity list from everything found inside the PartEntityLists
+         */
+        void rebuildMainEntityList();
 
+        /**
+         * Vectors of the entities created for the different parts of a model
+         */
+        struct
+        {
+            std::vector<Handle::EntityHandle> mainSkelMeshEntities;
+            std::vector<Handle::EntityHandle> headMeshEntities;
+            std::vector<Handle::EntityHandle> armorEntities;
+        }m_PartEntities;
     };
 }

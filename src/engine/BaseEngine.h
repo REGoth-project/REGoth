@@ -10,13 +10,20 @@ namespace Engine
 	class BaseEngine
 	{
 	public:
+
+        struct EngineArgs
+        {
+            std::string gameBaseDirectory;
+            std::string startupZEN;
+        };
+
 		BaseEngine();
 		virtual ~BaseEngine();
 
 		/**
 		 * @brief Initializes the Engine
 		 */
-		virtual void initEngine();
+		virtual void initEngine(int argc, char** argv);
 
 		/**
 		 * @brief Adds a world based of the given file
@@ -39,6 +46,19 @@ namespace Engine
 		 * @return Main VDF-Archive
 		 */
 		VDFS::FileIndex& getVDFSIndex() { return m_FileIndex;  }
+
+		/**
+		 * Returns the world-instance of the given handle.
+		 * Note: Do not save this pointer somewhere! It may change!
+		 * @param h Handle to look up
+		 * @return Data of the world-instance
+		 */
+		World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
+
+        /**
+         * @return Arguments passed to the engine
+         */
+        EngineArgs getEngineArgs();
 
 	protected:
 
@@ -72,5 +92,10 @@ namespace Engine
 		 * Registered worlds
 		 */
 		std::vector<Handle::WorldHandle> m_Worlds;
+
+        /**
+         * Arguments
+         */
+        EngineArgs m_Args;
 	};
 }

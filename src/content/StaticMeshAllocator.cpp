@@ -3,6 +3,7 @@
 #include <vdfs/fileIndex.h>
 #include <zenload/zCProgMeshProto.h>
 #include <zenload/zCModelMeshLib.h>
+#include <utils/logger.h>
 #include "VertexTypes.h"
 
 using namespace Meshes;
@@ -66,7 +67,7 @@ Handle::MeshHandle StaticMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx, 
 
         // Pack the mesh
         zmsh.packMesh(packed, 1.0f / 100.0f);
-    }else if(vname.find(".MDM") != std::string::npos)
+    }else if(vname.find(".MDM") != std::string::npos || vname.find(".MDL") != std::string::npos)
     {
         ZenLoad::zCModelMeshLib zlib(vname, *m_pVDFSIndex);
 
@@ -121,6 +122,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPacked(const ZenLoad::PackedMesh
         h.invalidate();
         mesh.m_SubmeshMaterials.push_back(h);
         mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
+
     }
 
     // Construct BGFX Vertex/Index-buffers

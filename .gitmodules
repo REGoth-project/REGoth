@@ -7,3 +7,6 @@
 [submodule "lib/glm"]
 	path = lib/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "lib/tinydir"]
+	path = lib/tinydir
+	url = git@github.com:cxong/tinydir.git

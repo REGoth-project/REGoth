@@ -14,7 +14,7 @@ namespace Engine
         /**
 		 * @brief Initializes the Engine
 		 */
-        virtual void initEngine() override;
+        virtual void initEngine(int argc, char** argv) override;
 
         /**
          * @brief Adds the main camera to the given world. If there already exists a main camera, it will be overwritten.

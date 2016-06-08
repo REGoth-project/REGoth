@@ -42,7 +42,6 @@ Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zen
         w.waypoints[e.first].edges.push_back(e.second);
         w.waypoints[e.second].edges.push_back(e.first);
 
-        LogInfo() << "Edge: " << e.first <<  " - " << e.second;
     }
 
     return w;

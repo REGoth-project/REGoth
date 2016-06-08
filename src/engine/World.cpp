@@ -166,8 +166,25 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
 void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName)
 {
-    m_ScriptEngine.loadDAT("vdf/GOTHIC.DAT");
+    // Default to the path G2 uses
+    std::string datFile = m_pEngine->getEngineArgs().gameBaseDirectory + "/_work/data/Scripts/_compiled/GOTHIC.DAT";
 
+    // Check G2 variant
+    if(Utils::fileExists(datFile))
+    {
+        m_ScriptEngine.loadDAT(datFile);
+    } else
+    {
+        // Check G1 variant
+        datFile = m_pEngine->getEngineArgs().gameBaseDirectory + "/_work/DATA/scripts/_compiled/GOTHIC.DAT";
+        if(Utils::fileExists(datFile))
+        {
+            m_ScriptEngine.loadDAT(datFile);
+        } else
+        {
+            LogError() << "Failed to find GOTHIC.DAT!";
+        }
+    }
     LogInfo() << "Initializing scripts for world: " << worldName;
     m_ScriptEngine.initForWorld(worldName);
 }

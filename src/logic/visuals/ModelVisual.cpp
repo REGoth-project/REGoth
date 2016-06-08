@@ -1,6 +1,7 @@
 #include "ModelVisual.h"
 #include <engine/World.h>
 #include <content/ContentLoad.h>
+#include <utils/logger.h>
 
 using namespace Logic;
 
@@ -17,9 +18,9 @@ ModelVisual::~ModelVisual()
 
 bool ModelVisual::load(const std::string& visual)
 {
-    assert(visual.find(".ASC") != std::string::npos);
+    assert(visual.find(".MDM") != std::string::npos || visual.find(".MDL") != std::string::npos);
 
-    /*Handle::MeshHandle msh = m_World.getStaticMeshAllocator().loadMeshVDF(visual);
+    Handle::MeshHandle msh = m_World.getStaticMeshAllocator().loadMeshVDF(visual);
 
     if(!msh.isValid())
         return false;
@@ -39,9 +40,23 @@ bool ModelVisual::load(const std::string& visual)
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
         pos.m_WorldMatrix = getEntityTransform();
     }
-**/
+
     Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
     m_World.getEntity<Components::BBoxComponent>(e).m_DebugColor = 0xFF00FFFF;
 
     return true;
+}
+
+void ModelVisual::setHeadMesh(const std::string& head)
+{
+
+}
+
+void ModelVisual::rebuildMainEntityList()
+{
+    m_VisualEntities.clear();
+
+    m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
+    m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.headMeshEntities.begin(), m_PartEntities.headMeshEntities.end());
+    m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.armorEntities.begin(), m_PartEntities.armorEntities.end());
 }
