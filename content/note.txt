@@ -1,0 +1,1 @@
+These are precompiled shaders for glsl, since it's hard to compile them yourself at the moment. These will later be removed and be part of the build process.
