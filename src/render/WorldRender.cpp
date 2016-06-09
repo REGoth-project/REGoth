@@ -22,26 +22,27 @@ namespace Render
 		size_t num = world.getComponentDataBundle().m_NumElements;
 
 		auto& meshes = world.getStaticMeshAllocator();
+		auto& skelmeshes = world.getSkeletalMeshAllocator();
 		Components::StaticMeshComponent* sms = std::get<Components::StaticMeshComponent*>(ctuple);
 		Components::PositionComponent* psc = std::get<Components::PositionComponent*>(ctuple);
 		Components::EntityComponent* ents = std::get<Components::EntityComponent*>(ctuple);
 		Components::BBoxComponent* bboxes = std::get<Components::BBoxComponent*>(ctuple);
 		Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
+		Components::AnimationComponent* animations = std::get<Components::AnimationComponent*>(ctuple);
 
 		size_t numIndices = 0;
 		for (size_t i = 0; i<num; i++)
 		{
 			
 			Components::ComponentMask mask = ents[i].m_ComponentMask;
-			auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
+
 			auto& pos = psc[i].m_WorldMatrix;
+
+
 
 			if ((mask & Components::StaticMeshComponent::MASK) != 0)
 			{
 				if (!sms[i].m_StaticMeshVisual.isValid())
-					continue;
-
-				if (mesh.m_Indices.empty())
 					continue;
 
 				if ((mask & Components::PositionComponent::MASK) != 0)
@@ -52,10 +53,7 @@ namespace Render
 
 				bgfx::setState(BGFX_STATE_DEFAULT);
 
-				bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
-				bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
-					sms[i].m_SubmeshInfo.m_StartIndex,
-					sms[i].m_SubmeshInfo.m_NumIndices);
+
 
 				numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
 
@@ -65,8 +63,53 @@ namespace Render
 					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle);
 				}
 
+				if((mask & Components::AnimationComponent::MASK) != 0)
+				{
+					Components::AnimHandler* animHandler = nullptr;
+					if(animations[i].m_ParentAnimHandler.isValid())
+					{
+						Components::AnimationComponent& pac = world.getEntity<Components::AnimationComponent>(animations[i].m_ParentAnimHandler);
+						animHandler = &pac.m_AnimHandler;
+					} else
+					{
+						animHandler = &animations[i].m_AnimHandler;
+					}
+
+					//animHandler->debugDrawSkeleton(pos);
+
+					// Copy everything to the temporary skeletal instance
+                    Math::Matrix nodeMat[ZenLoad::MAX_NUM_SKELETAL_NODES + 1];
+					animHandler->updateSkeletalMeshInfo(nodeMat + 1, ZenLoad::MAX_NUM_SKELETAL_NODES);
+                    nodeMat[0] = pos;
+
+					// They are vec4 inside the shader, thus numMatrices * 4
+                    //bgfx::setUniform(config.uniforms.nodeTransforms, tmpSkelInstance.nodeTransforms,
+					//				 4 * ZenLoad::MAX_NUM_SKELETAL_NODES);
+
+                    //float f[] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
+                    //bgfx::setUniform(config.uniforms.nodeTransforms, f, 2);
+                    bgfx::setTransform(nodeMat, static_cast<uint16_t>(animHandler->getNumNodes() + 1));
+
+					auto& mesh = skelmeshes.getMesh(sms[i].m_StaticMeshVisual);
+					bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
+					bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
+										 sms[i].m_SubmeshInfo.m_StartIndex,
+										 sms[i].m_SubmeshInfo.m_NumIndices);
+
+				} else
+				{
+					auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
+					bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
+					bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
+										 sms[i].m_SubmeshInfo.m_StartIndex,
+										 sms[i].m_SubmeshInfo.m_NumIndices);
+				}
+
 				// Submit primitive for rendering to view 0.
-				bgfx::submit(0, config.programs.mainWorldProgram);
+				if((mask & Components::AnimationComponent::MASK) != 0)
+					bgfx::submit(0, config.programs.mainSkinnedMeshProgram);
+				else
+					bgfx::submit(0, config.programs.mainWorldProgram);
 			}
 
 			if ((mask & Components::BBoxComponent::MASK) != 0)
@@ -93,6 +136,8 @@ namespace Render
 					logics[i].m_pLogicController->onDebugDraw();
 				}
 			}
+
+
 		}
 
 		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles: %d", numIndices/3);

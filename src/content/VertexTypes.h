@@ -2,30 +2,13 @@
 #include <inttypes.h>
 #include <bgfx/bgfx.h>
 #include <zenload/zTypes.h>
+#include <math/mathlib.h>
 
 namespace Meshes
 {
-    struct float3
-    {
-        union
-        {
-            struct{ float x,y,z; };
-            float v[3];
-        };
-    };
-    
-    struct float2
-    {
-        union
-        {
-            struct{ float x,y; };
-            float v[2];
-        };
-    };
-    
     struct PositionVertex
     {
-        float3 Position;
+        Math::float3 Position;
 
 		static void init()
 		{
@@ -40,7 +23,7 @@ namespace Meshes
 
 	struct PositionColorVertex
 	{
-		float3 Position;
+		Math::float3 Position;
 		uint32_t Color;
 
 		static void init()
@@ -57,8 +40,8 @@ namespace Meshes
     
     struct UVVertex
     {
-        float3 Position;
-        float2 TexCoord;
+		Math::float3 Position;
+		Math::float2 TexCoord;
 
 		static void init()
 		{
@@ -74,9 +57,9 @@ namespace Meshes
     
     struct UVNormVertex
     {
-        float3 Position;
-        float2 TexCoord;
-        float3 Normal;
+		Math::float3 Position;
+		Math::float2 TexCoord;
+		Math::float3 Normal;
 
 		static void init()
 		{
@@ -93,9 +76,9 @@ namespace Meshes
     
 	struct UVNormColorVertex
 	{
-		float3 Position;
-		float2 TexCoord;
-		float3 Normal;
+		Math::float3 Position;
+		Math::float2 TexCoord;
+		Math::float3 Normal;
 		uint32_t Color;
 
 		static void init()
@@ -114,8 +97,8 @@ namespace Meshes
 
 	struct PositionUVVertex
 	{
-		float3 Position;
-		float2 TexCoord;
+		Math::float3 Position;
+		Math::float2 TexCoord;
 
 		static void init()
 		{
@@ -129,6 +112,38 @@ namespace Meshes
 		static bgfx::VertexDecl ms_decl;
 	};
 
+#pragma pack(push, 1)
+	struct SkeletalVertex
+	{
+
+		Math::float3 Normal;
+		Math::float2 TexCoord;
+		uint32_t Color;
+		Math::float3 localPositions[4];
+		unsigned char boneIndices[4];
+		float weights[4];
+
+		static void init()
+		{
+			ms_decl
+					.begin()
+					.add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
+					.add(bgfx::Attrib::TexCoord1, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord2, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord3, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord4, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Uint8)
+					.add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
+					.end();
+		};
+
+		static bgfx::VertexDecl ms_decl;
+	};
+
+#pragma pack(pop)
+
 	template<typename V>
 	V vertexCast(const ZenLoad::WorldVertex& in)
 	{
@@ -138,58 +153,62 @@ namespace Meshes
 	template<>
 	inline PositionVertex vertexCast<PositionVertex>(const ZenLoad::WorldVertex& in)
 	{
-		return { in.Position.x, in.Position.y, in.Position.z };
+        PositionVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+
+		return v;
 	}
+
+    template<>
+    inline PositionUVVertex vertexCast<PositionUVVertex>(const ZenLoad::WorldVertex& in)
+    {
+        PositionUVVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+        v.TexCoord = Math::float2(in.TexCoord.x, in.TexCoord.y);
+
+        return v;
+    }
 
 	template<>
 	inline PositionColorVertex vertexCast<PositionColorVertex>(const ZenLoad::WorldVertex& in)
 	{
-		return { 
-			in.Position.x, in.Position.y, in.Position.z,
-			in.Color 
-		};
+        PositionColorVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+        v.Color = in.Color;
+
+		return v;
 	}
 
 	template<>
 	inline UVVertex vertexCast<UVVertex>(const ZenLoad::WorldVertex& in)
 	{
-		return { 
-			in.Position.x, in.Position.y, in.Position.z,
-			in.TexCoord.x, in.TexCoord.y 
-		};
+        UVVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+        v.TexCoord = Math::float2(in.TexCoord.x, in.TexCoord.y);
+
+		return v;
 	}
 
 	template<>
 	inline UVNormVertex vertexCast<UVNormVertex>(const ZenLoad::WorldVertex& in)
 	{
-		return { 
-			in.Position.x, in.Position.y, in.Position.z,
-			in.TexCoord.x, in.TexCoord.y,
-			in.Normal.x, in.Normal.y, in.Normal.z
-		};
+        UVNormVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+        v.TexCoord = Math::float2(in.TexCoord.x, in.TexCoord.y);
+        v.Normal = Math::float3(in.Normal.x, in.Normal.y, in.Normal.z );
+
+		return v;
 	}
 
 	template<>
 	inline UVNormColorVertex vertexCast<UVNormColorVertex>(const ZenLoad::WorldVertex& in)
 	{
-		return{
-			in.Position.x, in.Position.y, in.Position.z,
-			in.TexCoord.x, in.TexCoord.y,
-			in.Normal.x, in.Normal.y, in.Normal.z,
-			in.Color
-		};
+        UVNormColorVertex v;
+        v.Position = Math::float3(in.Position.x, in.Position.y, in.Position.z );
+        v.TexCoord = Math::float2(in.TexCoord.x, in.TexCoord.y);
+        v.Normal = Math::float3(in.Normal.x, in.Normal.y, in.Normal.z );
+        v.Color = in.Color;
+
+		return v;
 	}
-
-	template<>
-	inline PositionUVVertex vertexCast<PositionUVVertex>(const ZenLoad::WorldVertex& in)
-	{
-		return{
-			in.Position.x, in.Position.y, in.Position.z,
-			in.TexCoord.x, in.TexCoord.y,
-		};
-	}
-
-
-	
-	
 }

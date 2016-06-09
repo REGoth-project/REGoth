@@ -45,6 +45,13 @@ namespace VobTypes
     void unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);
 
     /**
+     * Sets the model heirachy from the given visual (MDS)
+     * @param vob npc to operate on
+     * @param visual heirachy to set
+     */
+    void NPC_SetModelVisual(NpcVobInformation& vob, const std::string& visual);
+
+    /**
      * @return The engine entity handle of the given script instance of an npc
      */
     Handle::EntityHandle getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);

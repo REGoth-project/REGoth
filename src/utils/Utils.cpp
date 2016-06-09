@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <tinydir.h>
 #include <utils/logger.h>
+#include <algorithm>
 
 void ::Utils::forEachFile(const std::string& directory, std::function<void(const std::string&,const std::string&,const std::string&)> fn, bool recursive )
 {
@@ -41,8 +42,12 @@ std::list<std::string> Utils::getFilesInDirectory(const std::string& directory, 
 {
     std::list<std::string> l;
 
+
     forEachFile(directory, [&](const std::string& path, const std::string& name, const std::string& fext){
-        if(ext == "*" || fext == ext)
+        std::string extlower = fext;
+        std::transform(extlower.begin(), extlower.end(), extlower.begin(), ::tolower);
+
+        if(ext == "*" || extlower == ext)
             l.push_back(path);
     });
 

@@ -8,4 +8,6 @@ namespace Meshes
 	bgfx::VertexDecl PositionVertex::ms_decl;
 	bgfx::VertexDecl PositionColorVertex::ms_decl;
 	bgfx::VertexDecl PositionUVVertex::ms_decl;
+	bgfx::VertexDecl SkeletalVertex::ms_decl;
+
 }

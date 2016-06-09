@@ -7,6 +7,8 @@
 #include <logic/PlayerController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
+#include "EntityActions.h"
+#include <engine/BaseEngine.h>
 
 Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -74,6 +76,23 @@ Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance&
     assert(world.getMyHandle() == reinterpret_cast<ScriptInstanceUserData*>(userptr)->world);
 
     return reinterpret_cast<ScriptInstanceUserData*>(userptr)->vobEntity;
+}
+
+void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std::string& visual)
+{
+    Handle::EntityHandle e = vob.entity;
+
+    // Initialize animations
+    Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(vob.world->getComponentAllocator(), e);
+
+    // Strip extension
+    std::string libName = visual.substr(0, visual.find_last_of('.'));
+
+    anim.m_AnimHandler.loadMeshLibFromVDF(libName + ".MDH", vob.world->getEngine()->getVDFSIndex());
+
+    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN", vob.world->getEngine()->getVDFSIndex());
+
+    anim.m_AnimHandler.playAnimation("S_RUNL");
 }
 
 

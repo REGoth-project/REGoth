@@ -9,11 +9,13 @@ namespace Render
         struct
         {
             bgfx::ProgramHandle mainWorldProgram;
+            bgfx::ProgramHandle mainSkinnedMeshProgram;
         }programs;
 
         struct
         {
             bgfx::UniformHandle diffuseTexture;
+            bgfx::UniformHandle nodeTransforms;
         }uniforms;
     };
 

@@ -2,6 +2,7 @@
 #include <engine/World.h>
 #include <content/ContentLoad.h>
 #include <utils/logger.h>
+#include <content/SkeletalMeshAllocator.h>
 
 using namespace Logic;
 
@@ -20,12 +21,12 @@ bool ModelVisual::load(const std::string& visual)
 {
     assert(visual.find(".MDM") != std::string::npos || visual.find(".MDL") != std::string::npos);
 
-    Handle::MeshHandle msh = m_World.getStaticMeshAllocator().loadMeshVDF(visual);
+    Handle::MeshHandle msh = m_World.getSkeletalMeshAllocator().loadMeshVDF(visual);
 
     if(!msh.isValid())
         return false;
 
-    Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(msh);
+    Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(msh);
 
     // TODO: Put these into a compound-component or something
     m_VisualEntities = Content::entitifyMesh(m_World, msh, mdata);
@@ -39,6 +40,13 @@ bool ModelVisual::load(const std::string& visual)
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
         pos.m_WorldMatrix = getEntityTransform();
+
+        // Init animation components
+        Components::addComponent<Components::AnimationComponent>(entity);
+        Components::AnimationComponent& anim = m_World.getEntity<Components::AnimationComponent>(e);
+
+        // Assign the main-vob as animation controller
+        anim.m_ParentAnimHandler = m_Entity;
     }
 
     Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);

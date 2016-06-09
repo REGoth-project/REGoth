@@ -71,6 +71,8 @@ class ExampleCubes : public entry::AppI
 {
 	void init(int _argc, char** _argv) BX_OVERRIDE
 	{
+        std::cout << "Running REGoth Engine" << std::endl;
+
 		Args args(_argc, _argv);
 
 		axis = 0;
@@ -101,6 +103,7 @@ class ExampleCubes : public entry::AppI
 		Meshes::PositionVertex::init();
 		Meshes::PositionColorVertex::init();
 		Meshes::PositionUVVertex::init();
+		Meshes::SkeletalVertex::init();
 
 		m_Engine.initEngine(_argc, _argv);
 		m_Engine.addWorld(m_Engine.getEngineArgs().startupZEN);

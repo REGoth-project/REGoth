@@ -8,11 +8,21 @@
 #include <memory/AllocatorBundle.h>
 #include <memory/Config.h>
 #include <engine/WorldTypes.h>
+#include "AnimHandler.h"
 
 /**
  * List of all available components
  */
-#define ALL_COMPONENTS EntityComponent, LogicComponent, PositionComponent, NBBoxComponent, BBoxComponent, StaticMeshComponent, CompoundComponent, ObjectComponent, VisualComponent
+#define ALL_COMPONENTS   EntityComponent,\
+                         LogicComponent,\
+                         PositionComponent,\
+                         NBBoxComponent,\
+                         BBoxComponent,\
+                         StaticMeshComponent,\
+                         CompoundComponent,\
+                         ObjectComponent,\
+                         VisualComponent,\
+                         AnimationComponent
 
 namespace Logic
 {
@@ -99,6 +109,11 @@ namespace Components
     {
         enum { MASK = 1 << 4 };
 
+        /**
+         * Handle to the mesh to render.
+         * Note: You must find the right allocator to this handle yourself!
+         * TODO: Maybe give an enum or something to help to find the allocator
+         */
         Handle::MeshHandle m_StaticMeshVisual;
 		Meshes::SubmeshVxInfo m_SubmeshInfo;
 		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
@@ -194,6 +209,30 @@ namespace Components
         static void init(ObjectComponent& c)
         {
             c.m_Type = Other;
+        }
+    };
+
+    /**
+	 * Handles current animations for the entity. Stores the results inside the instance-data-
+	 */
+    struct AnimationComponent : public Component
+    {
+        enum { MASK = 1 << 9 };
+
+        /**
+         * Storage for animations of this model
+         */
+        AnimHandler m_AnimHandler;
+
+        /**
+         * If this is set to something valid, the anim-handler of this will be ignored and the one of the
+         * set entity will be used
+         */
+        Handle::EntityHandle m_ParentAnimHandler;
+
+        static void init(AnimationComponent& c)
+        {
+
         }
     };
 

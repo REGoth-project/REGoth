@@ -10,6 +10,7 @@
 #include <content/StaticMeshAllocator.h>
 #include "Waynet.h"
 #include <logic/ScriptEngine.h>
+#include <content/SkeletalMeshAllocator.h>
 
 namespace ZenLoad
 {
@@ -39,6 +40,7 @@ namespace World
         Components::ComponentAllocator m_ComponentAllocator;
         Textures::TextureAllocator m_LevelTextureAllocator;
 		Meshes::StaticMeshAllocator m_LevelStaticMeshAllocator;
+		Meshes::SkeletalMeshAllocator m_LevelSkeletalMeshAllocator;
 
 		// TODO: Refractor this one into StaticMeshAllocator
 		WorldMeshAllocator m_WorldMeshAllocator;
@@ -121,6 +123,10 @@ namespace World
 		Meshes::StaticMeshAllocator& getStaticMeshAllocator()
 		{
 			return m_Allocators.m_LevelStaticMeshAllocator;
+		}
+		Meshes::SkeletalMeshAllocator& getSkeletalMeshAllocator()
+		{
+			return m_Allocators.m_LevelSkeletalMeshAllocator;
 		}
 		WorldAllocators::MaterialAllocator& getMaterialAllocator()
 		{

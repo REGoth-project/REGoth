@@ -18,6 +18,29 @@ void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool ver
 
 void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose)
 {
+    vm->registerExternalFunction("Mdl_SetVisual", [=](Daedalus::DaedalusVM& vm) {
+        std::string visual = vm.popString();
+
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+
+        // TODO: Need a better API for this
+        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+                (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
+
+        if(npcData.userPtr && vm.getDATFile().getSymbolByIndex(self).instanceDataHandle.isValid())
+        {
+            VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
+
+            LogInfo() << "Setting MDL visual to: " << visual;
+
+            World::WorldInstance& world = engine->getWorldInstance(userData->world);
+            VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+            VobTypes::NPC_SetModelVisual(vob, visual);
+        }
+    });
+
     vm->registerExternalFunction("Mdl_SetVisualBody", [=](Daedalus::DaedalusVM& vm){
 
         int32_t armorInstance = vm.popDataValue();

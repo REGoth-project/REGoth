@@ -8,6 +8,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(GAME_CONTENT_DIR ../content CACHE STRING "Content-folder, containing VDF-Archives and other files.")
 set(GAME_STARTUP_WORLD addonworld.zen CACHE STRING "[Testing] World to load at program start")
 
+# Setup BGFX
+add_definitions(-DBGFX_CONFIG_MAX_MATRIX_CACHE=131072) # Need to up this since everything got it's own matrix right now
+
 if(MINGW)
     SET(COMPILER_PREFIX "i686-mingw32")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")

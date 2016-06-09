@@ -29,6 +29,7 @@ void WorldInstance::init(Engine::BaseEngine& engine)
 {
 	m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
 }
@@ -246,6 +247,7 @@ void WorldInstance::onFrameUpdate(double deltaTime)
 
     Components::EntityComponent* ents = std::get<Components::EntityComponent*>(ctuple);
     Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
+    Components::AnimationComponent* anims = std::get<Components::AnimationComponent*>(ctuple);
     for (size_t i = 0; i<num; i++)
     {
         Components::ComponentMask mask = ents[i].m_ComponentMask;
@@ -255,6 +257,13 @@ void WorldInstance::onFrameUpdate(double deltaTime)
             {
                 logics[i].m_pLogicController->onUpdate(deltaTime);
             }
+        }
+
+        // Update animations, only if there isn't a valid parent registered
+        if((mask & Components::AnimationComponent::MASK) != 0
+           && !anims[i].m_ParentAnimHandler.isValid())
+        {
+            anims[i].m_AnimHandler.updateAnimations(deltaTime);
         }
     }
 
