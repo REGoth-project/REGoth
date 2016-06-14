@@ -25,7 +25,7 @@ namespace Math
         return glm::radians(deg);
     }
 
-    struct t_float2
+	struct alignas(16) t_float2
     {
         t_float2(){}
         t_float2(float x, float y)
@@ -60,7 +60,7 @@ namespace Math
 
     std::ostream& operator<< (std::ostream &out, t_float2 &v);
 
-    struct t_float3
+	struct alignas(16) t_float3
     {
         t_float3(){}
         t_float3(float x, float y, float z)
@@ -99,7 +99,7 @@ namespace Math
 
     std::ostream& operator<< (std::ostream &out, t_float3 &v);
 
-    struct t_float4
+	struct alignas(16) t_float4
     {
         t_float4(){}
 		t_float4(float x, float y, float z, float w)
@@ -274,7 +274,7 @@ namespace Math
 
     //------------------------------------------------------------------------------
     // 4x4 Matrix (assumes right-handed cooordinates)
-    struct Matrix
+	struct alignas(16) Matrix
     {
         Matrix(){}
 

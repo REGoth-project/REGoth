@@ -60,6 +60,9 @@ int32_t ScriptEngine::runFunction(const std::string& fname)
 
 int32_t ScriptEngine::runFunction(size_t addr)
 {
+	if(addr == 0)
+		return -1;
+
     // Place the call-operation
     m_pVM->doCallOperation(addr);
 
@@ -174,7 +177,12 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
     if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
     {
         //LogInfo() << "Equiping armor... " << itemData.visual_change;
-        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, VobTypes::getEntityFromScriptInstance(m_World, npc));
+		Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+
+		if(!e.isValid())
+			return; // FIXME: Happens on windows, wtf?
+
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
         std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
         Vob::setVisual(vob, visual);
@@ -190,12 +198,15 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
     //LogInfo() << "Self: " << getSymbolIndexByName("self");
 
 
-    prepareRunFunction();
+	if(npcData.daily_routine != 0)
+	{
+		prepareRunFunction();
 
-    m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
-    m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
+		m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
+		m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
 
-    runFunction(npcData.daily_routine);
+		runFunction(npcData.daily_routine);
+	}
 }
 
 

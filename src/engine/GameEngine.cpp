@@ -100,8 +100,9 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
     // Add player-camera
     m_MainCamera = winst.addEntity(Components::PositionComponent::MASK);
 
+	Math::Matrix lookAt = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0));
     getMainCamera<Components::PositionComponent>().m_WorldMatrix
-            = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0)).Invert();
+            = lookAt.Invert();
 
     Components::LogicComponent& logic = Components::Actions::initComponent<Components::LogicComponent>(
             winst.getComponentAllocator(),
@@ -113,6 +114,8 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
     cam->setCameraMode(Logic::CameraController::ECameraMode::Free);
     cam->getCameraSettings().freeCameraSettings.moveSpeed = 20.0f;
     cam->getCameraSettings().freeCameraSettings.turnSpeed = 5.0f;
+
+	return m_MainCamera;
 }
 
 

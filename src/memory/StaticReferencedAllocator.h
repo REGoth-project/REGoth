@@ -41,7 +41,7 @@ namespace Memory
 			return index != INVALID_HANDLE;
 		}
 
-		constexpr static GenericHandle<N1, N2, dif> makeInvalidHandle()
+		static GenericHandle<N1, N2, dif> makeInvalidHandle()
 		{
 			GenericHandle<N1, N2, dif> h;
 			h.invalidate();

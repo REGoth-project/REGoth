@@ -16,6 +16,12 @@ if(MINGW)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
 endif()
 
+if(MSVC)
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	add_definitions(-DNOMINMAX)
+	add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
+endif()
+
 # ------------------ Config-Header ------------------
 configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 include_directories(${PROJECT_BINARY_DIR}/src)

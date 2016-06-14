@@ -17,7 +17,11 @@ namespace Components
         inline T& initComponent(Components::ComponentAllocator& alloc,
                                 Handle::EntityHandle h)
         {
-            alloc.getElement<Components::EntityComponent>(h).m_ComponentMask |= T::MASK;
+			auto& c = alloc.getElement<Components::EntityComponent>(h);
+			if((c.m_ComponentMask & T::MASK) == 0)
+				T::init(alloc.getElement<T>(h));
+
+            c.m_ComponentMask |= T::MASK;
             return alloc.getElement<T>(h);
         }
 
@@ -136,8 +140,8 @@ namespace Components
                                      F f)
         {
             std::tuple<ALL_COMPONENTS> t;
-            Utils::for_each_in_tuple(t, [&](auto v){
-               f(alloc.getElement<decltype(v)>(e));
+            Utils::for_each_in_tuple(t, [&](auto& v){
+               f(alloc.getElement<std::remove_reference<decltype(v)>::type>(e));
             });
         }
     }

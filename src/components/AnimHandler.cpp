@@ -1,6 +1,7 @@
 #include <debugdraw/debugdraw.h>
 #include "AnimHandler.h"
 #include "utils/logger.h"
+#include <algorithm>
 
 using namespace Components;
 
@@ -218,8 +219,9 @@ bool AnimHandler::addAnimation(const std::string& file, VDFS::FileIndex& idx, fl
 {
 	ZenLoad::zCModelAni ani(file, idx, scale);
 
-	if(!ani.isValid())
-		return false;
+	// TODO: Insert this again after pushing changes of ZenLib
+	//if(!ani.isValid())
+	//	return false;
 
 	addAnimation(ani);
 	return true;
