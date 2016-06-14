@@ -11,6 +11,8 @@ set(GAME_STARTUP_WORLD addonworld.zen CACHE STRING "[Testing] World to load at p
 # Setup BGFX
 add_definitions(-DBGFX_CONFIG_MAX_MATRIX_CACHE=131072) # Need to up this since everything got it's own matrix right now
 
+add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
+
 if(MINGW)
     SET(COMPILER_PREFIX "i686-mingw32")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
@@ -19,8 +21,9 @@ endif()
 if(MSVC)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 	add_definitions(-DNOMINMAX)
-	add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
 endif()
+
+
 
 # ------------------ Config-Header ------------------
 configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
