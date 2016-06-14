@@ -41,6 +41,8 @@ make -j
 Open the generated `REGoth.sln` in VisualStudio and build as usual.
 
 # Running
+The compiled files are inside the `build/bin` directory.
+
 Make sure to copy the `content/shaders` folder to the working directory of the compiled `REGoth`-Executable.
 Then, run the program with the following flags:
 ```sh
