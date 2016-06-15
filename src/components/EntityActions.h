@@ -141,7 +141,7 @@ namespace Components
         {
             std::tuple<ALL_COMPONENTS> t;
             Utils::for_each_in_tuple(t, [&](auto& v){
-               f(alloc.getElement<std::remove_reference<decltype(v)>::type>(e));
+               f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
             });
         }
     }
