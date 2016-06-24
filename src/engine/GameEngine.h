@@ -56,12 +56,12 @@ namespace Engine
         /**
 		 * Update-method for subclasses
 		 */
-        void onFrameUpdate(double dt) override;
+        void onFrameUpdate(double dt, uint16_t width, uint16_t height) override;
 
         /**
          * Draws the worlds and presents the frame
          */
-        void drawFrame();
+        void drawFrame(uint16_t width, uint16_t height);
 
         /**
          * Players camera entity

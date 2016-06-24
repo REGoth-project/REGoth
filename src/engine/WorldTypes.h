@@ -3,6 +3,6 @@
 
 namespace World
 {
-	typedef Meshes::PositionUVVertex WorldMeshVertex;
+	typedef Meshes::UVNormColorVertex WorldMeshVertex;
 	typedef uint32_t WorldMeshIndex;
 }

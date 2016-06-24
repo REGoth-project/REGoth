@@ -106,14 +106,18 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& visual)
     *ppVisual = nullptr;
 
     // Check type of visual
-    if(visual.find(".3DS") != std::string::npos)
+    if(visual.find(".3DS") != std::string::npos
+       || visual.find(".MMB") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::StaticMeshVisual(*vob.world, vob.entity);
         if(ld->load(visual))
             (*ppVisual) = ld;
         else
             delete ld;
-    }else if(visual.find(".MDM") != std::string::npos || visual.find(".MDL") != std::string::npos)
+    }else if(visual.find(".MDM") != std::string::npos
+             || visual.find(".MDL") != std::string::npos
+             || visual.find(".MDS") != std::string::npos
+             || visual.find(".ASC") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::ModelVisual(*vob.world, vob.entity);
         if(ld->load(visual))

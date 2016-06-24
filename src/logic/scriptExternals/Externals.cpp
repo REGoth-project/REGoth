@@ -33,7 +33,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         {
             VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
 
-            LogInfo() << "Setting MDL visual to: " << visual;
+            //LogInfo() << "Setting MDL visual to: " << visual;
 
             World::WorldInstance& world = engine->getWorldInstance(userData->world);
             VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
@@ -44,8 +44,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
     vm->registerExternalFunction("Mdl_SetVisualBody", [=](Daedalus::DaedalusVM& vm){
 
         int32_t armorInstance = vm.popDataValue();
-        int32_t teethInstance = vm.popDataValue();
-        int32_t headTexNr = vm.popDataValue();
+        size_t teethTexNr = static_cast<size_t>(vm.popDataValue());
+        size_t headTexNr = static_cast<size_t>(vm.popDataValue());
         std::string head = vm.popString();
         int32_t bodyTexColor = vm.popDataValue();
         int32_t bodyTexNr = vm.popDataValue();
@@ -73,15 +73,20 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
             if(verbose) LogInfo() << "Setting visual to: " << body;
 
             World::WorldInstance& world = engine->getWorldInstance(userData->world);
-            Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
+            VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+
+            // Set main visual
             Vob::setVisual(vob, body + ".MDM");
+
+            // Set head-mesh
+            VobTypes::NPC_SetHeadMesh(vob, head, headTexNr, teethTexNr);
         }
 
         // TODO: Wrap this up
         // Set armor visual
         if(armorInstance != -1)
         {
-            // TODO: Right new, this equips the item automatically. When this is done properly, call the equip-method here
+            // TODO: Right now, this equips the item automatically. When this is done properly, call the equip-method here
             vm.getGameState().addInventoryItem(static_cast<size_t>(armorInstance), hnpc);
         }
     });
@@ -116,7 +121,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
 
             if(World::Waynet::waypointExists(world.getWaynet(), waypoint))
             {
-                vob.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
+                vob.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
                 vob.playerController->addRoutineWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
             }
         }

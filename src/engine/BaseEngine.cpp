@@ -8,6 +8,7 @@
 #include <render/WorldRender.h>
 #include <utils/logger.h>
 #include <bx/commandline.h>
+#include <zenload/zCModelPrototype.h>
 
 using namespace Engine;
 
@@ -97,9 +98,9 @@ Handle::WorldHandle  BaseEngine::addWorld()
 	return w;
 }
 
-void BaseEngine::frameUpdate(double dt)
+void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-	onFrameUpdate(dt);
+	onFrameUpdate(dt, width, height);
 
 }
 
@@ -134,6 +135,19 @@ void BaseEngine::loadArchives()
     {
         m_FileIndex.loadVDF(s);
     }
+
+    ZenLoad::zCModelPrototype p("HUMANS.MDS", m_FileIndex);
+
+    /*std::list<std::string> modArchives = Utils::getFilesInDirectory("vdf", "mod");
+
+    if(!modArchives.empty())
+    {
+        LogInfo() << "Loading MOD-Archives: " << modArchives;
+        for (std::string &s : modArchives)
+        {
+            m_FileIndex.loadVDF(s, 1);
+        }
+    }*/
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)

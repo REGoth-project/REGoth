@@ -36,7 +36,7 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     // FIXME: Debug, remove this
     Components::BBoxComponent& bbox = world.getEntity<Components::BBoxComponent>(e);
-    bbox.m_DebugColor = 0xFFFFFFFF;
+    bbox.m_DebugColor = 0;//0xFFFFFFFF;
     bbox.m_BBox3D.min = Math::float3(-1,-1,-1);
     bbox.m_BBox3D.max = Math::float3(1,1,1);
 
@@ -60,6 +60,7 @@ VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Hand
     // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
     memcpy(&npc, &v, sizeof(v));
 
+    // TODO: Add some typechecking
     // Enter new information
     npc.playerController = reinterpret_cast<Logic::PlayerController*>(npc.logic);
 
@@ -88,11 +89,55 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     // Strip extension
     std::string libName = visual.substr(0, visual.find_last_of('.'));
 
-    anim.m_AnimHandler.loadMeshLibFromVDF(libName + ".MDH", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
+    // TODO: Move to other place
     anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN", vob.world->getEngine()->getVDFSIndex());
+
+    anim.m_AnimHandler.addAnimation(libName + "-S_RUN.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_WALK.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN", vob.world->getEngine()->getVDFSIndex());
 
     anim.m_AnimHandler.playAnimation("S_RUNL");
+}
+
+void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, size_t headTextureIdx,
+                                 size_t teethTextureIdx)
+{
+    // TODO: Use head/teeth texture indices
+    reinterpret_cast<Logic::ModelVisual*>(vob.visual)->setHeadMesh(visual);
+}
+
+void ::VobTypes::NPC_ReplaceMainVisual(VobTypes::NpcVobInformation &vob, const std::string &visual)
+{
+    Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+    Logic::ModelVisual::BodyState oldState = model->getBodyState();
+
+    // Replace visual
+    Vob::setVisual(vob, visual);
+
+    // Pointer changed, re-get this
+    model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+
+    // Set the other stuff again
+    model->setHeadMesh(oldState.headVisual);
+}
+
+void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)
+{
+    Daedalus::GEngineClasses::C_Item& itemData = vob.world->getScriptEngine().getGameState().getItem(weapon);
+
+    // TODO: This is only doing visuals right now!
+    // Close-ranged (Swords, etc)
+    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
+    {
+        Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+        model->setNodeVisual(itemData.visual, Logic::EModelNode::Righthand);
+    }
 }
 
 

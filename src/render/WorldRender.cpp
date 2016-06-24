@@ -17,6 +17,10 @@ namespace Render
 	*/
 	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
 	{
+		// Extract camera position
+		const Math::float3 cameraPosition = config.state.cameraWorld.Translation();
+		const float drawDistance2 = config.state.drawDistanceSquared;
+
 		// Draw all components
 		const auto& ctuple = world.getComponentDataBundle().m_Data;
 		size_t num = world.getComponentDataBundle().m_NumElements;
@@ -38,7 +42,9 @@ namespace Render
 
 			auto& pos = psc[i].m_WorldMatrix;
 
-
+			// Simple distance-check // TODO: Frustum/Occlusion-Culling
+			if((pos.Translation() - cameraPosition).lengthSquared() * psc[i].m_DrawDistanceFactor > drawDistance2)
+				continue;
 
 			if ((mask & Components::StaticMeshComponent::MASK) != 0)
 			{
@@ -60,7 +66,7 @@ namespace Render
 				if(sms[i].m_Texture.isValid())
 				{
 					Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
-					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle);
+					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
 				}
 
 				if((mask & Components::AnimationComponent::MASK) != 0)

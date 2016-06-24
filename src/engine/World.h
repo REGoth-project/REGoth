@@ -32,7 +32,7 @@ namespace World
 			Config::MAX_NUM_LEVEL_MESHES
 		>;
 
-		typedef MeshAllocator<Meshes::PositionUVVertex, uint32_t> WorldMeshAllocator;
+		typedef MeshAllocator<Meshes::UVNormColorVertex, uint32_t> WorldMeshAllocator;
 		typedef Memory::StaticReferencedAllocator<
 				Materials::TexturedMaterial,
 				Config::MAX_NUM_LEVEL_MATERIALS> MaterialAllocator;
@@ -86,7 +86,7 @@ namespace World
         /**
          * Updates this world instances entities
          */
-        void onFrameUpdate(double deltaTime);
+        void onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld);
 
 		/**
 		 * @return The component associated with the given handle

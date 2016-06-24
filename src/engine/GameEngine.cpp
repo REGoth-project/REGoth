@@ -8,8 +8,11 @@
 #include <entry/input.h>
 #include <components/EntityActions.h>
 #include <logic/CameraController.h>
+#include <render/RenderSystem.h>
 
 using namespace Engine;
+
+const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine()
 {
@@ -29,21 +32,17 @@ void GameEngine::initEngine(int argc, char** argv)
     m_DefaultRenderSystem.init();
 }
 
-void GameEngine::onFrameUpdate(double dt)
+void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 {
     for(auto s : m_Worlds)
-        m_WorldInstances.getElement(s).onFrameUpdate(dt);
+        m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE, getMainCamera<Components::PositionComponent>().m_WorldMatrix);
 
-    drawFrame();
+    drawFrame(width, height);
 }
 
-void GameEngine::drawFrame()
+void GameEngine::drawFrame(uint16_t width, uint16_t height)
 {
     Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().getComponentAllocator(), m_MainCamera);
-
-    const int width = 1280;
-    const int height = 720;
-
 
     // Set view and projection matrix for view 0.
     const bgfx::HMD* hmd = bgfx::getHMD();
@@ -67,6 +66,10 @@ void GameEngine::drawFrame()
 
         // Set view 0 default viewport.
         bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
+
+        // Update the frame-config with the cameras world-matrix
+        m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainCamera<Components::PositionComponent>().m_WorldMatrix;
+        m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
     }
 
 

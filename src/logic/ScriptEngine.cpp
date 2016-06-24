@@ -185,7 +185,21 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
         std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
-        Vob::setVisual(vob, visual);
+
+        // Only switch the body-armor
+        VobTypes::NPC_ReplaceMainVisual(vob, visual);
+    }
+
+    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
+    {
+        Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+
+        if(!e.isValid())
+            return; // FIXME: Happens on windows, wtf?
+
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
+        VobTypes::NPC_EquipWeapon(vob, item);
+
     }
 }
 

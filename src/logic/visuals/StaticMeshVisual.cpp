@@ -17,7 +17,8 @@ StaticMeshVisual::~StaticMeshVisual()
 
 bool StaticMeshVisual::load(const std::string& visual)
 {
-    assert(visual.find(".3DS") != std::string::npos || visual.find(".MDM") != std::string::npos);
+    VisualController::load(visual);
+    assert(visual.find(".3DS") != std::string::npos || visual.find(".MMB") != std::string::npos);
 
     Handle::MeshHandle msh = m_World.getStaticMeshAllocator().loadMeshVDF(visual);
 

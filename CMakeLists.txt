@@ -10,8 +10,11 @@ set(GAME_STARTUP_WORLD addonworld.zen CACHE STRING "[Testing] World to load at p
 
 # Setup BGFX
 add_definitions(-DBGFX_CONFIG_MAX_MATRIX_CACHE=131072) # Need to up this since everything got it's own matrix right now
+add_definitions(-DBGFX_CONFIG_MAX_COMMAND_BUFFER_SIZE=131072) # FIXME: Flush some times at loading, so we don't exhaust the default setting of 64k
 
 add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 if(MINGW)
     SET(COMPILER_PREFIX "i686-mingw32")

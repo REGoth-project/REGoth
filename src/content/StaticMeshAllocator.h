@@ -15,7 +15,7 @@ namespace VDFS
 
 namespace Meshes
 {
-    typedef Meshes::PositionUVVertex WorldStaticMeshVertex;
+    typedef Meshes::UVNormColorVertex WorldStaticMeshVertex;
     typedef uint32_t WorldStaticMeshIndex;
     typedef LevelMesh::StaticLevelMesh<WorldStaticMeshVertex, WorldStaticMeshIndex> WorldStaticMesh;
 
