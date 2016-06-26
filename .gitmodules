@@ -1,12 +1,12 @@
 [submodule "lib/bgfx-cmake"]
 	path = lib/bgfx-cmake
-	url = git@github.com:degenerated1123/bgfx-cmake.git
+	url = https://github.com/degenerated1123/bgfx-cmake.git
 [submodule "lib/ZenLib"]
 	path = lib/ZenLib
-	url = git@github.com:degenerated1123/ZenLib.git
+	url = https://github.com/degenerated1123/ZenLib.git
 [submodule "lib/glm"]
 	path = lib/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "lib/tinydir"]
 	path = lib/tinydir
-	url = git@github.com:cxong/tinydir.git
+	url = https://github.com/cxong/tinydir.git
