@@ -2,6 +2,7 @@
 
 #include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
+#include <logic/visuals/ModelVisual.h>
 #include "Vob.h"
 
 namespace Logic
@@ -50,6 +51,29 @@ namespace VobTypes
      * @param visual heirachy to set
      */
     void NPC_SetModelVisual(NpcVobInformation& vob, const std::string& visual);
+
+    /**
+     * Sets the head of the given NPC
+     * @param vob NPC to operate on
+     * @param visual Visual to load and set
+     * @param headTextureIdx Index of the texture to use for the head
+     * @param teethTextureIdx Index of the texture to use for the teeth
+     */
+    void NPC_SetHeadMesh(NpcVobInformation& vob, const std::string& visual, size_t headTextureIdx=0, size_t teethTextureIdx=0);
+
+    /**
+     * Sets the visual on the given NPCs model, without changing the body-state, like the headmesh
+     * @param vob NPC to operate on
+     * @param visual Visual to load and set
+     */
+    void NPC_ReplaceMainVisual(NpcVobInformation& vob, const std::string& visual);
+
+    /**
+     * Equips the given weapon to the NPC
+     * @param vob NPC to operate on
+     * @param weapon Script-Handle to the weapon
+     */
+    void NPC_EquipWeapon(NpcVobInformation& vob, Daedalus::GameState::ItemHandle weapon);
 
     /**
      * @return The engine entity handle of the given script instance of an npc

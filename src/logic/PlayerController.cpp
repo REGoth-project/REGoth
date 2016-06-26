@@ -10,6 +10,7 @@
 #include <render/WorldRender.h>
 #include <components/Vob.h>
 #include <utils/logger.h>
+#include "visuals/ModelVisual.h"
 
 /**
  * Standard node-names
@@ -40,7 +41,7 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
 
     m_AIState.closestWaypoint = 0;
     m_MoveState.currentPathPerc = 0;
-    m_NPCProperties.moveSpeed = 10.0f;
+    m_NPCProperties.moveSpeed = 5.0f;
 
     m_ScriptState.npcHandle = scriptInstance;
 }
@@ -50,6 +51,10 @@ void Logic::PlayerController::onUpdate(float deltaTime)
     // Do waypoint-actions
     if (travelPath(deltaTime))
     {
+        // Path done, stop animation
+        if(getModelVisual())
+            getModelVisual()->setAnimation(ModelVisual::Idle);
+
         if (m_RoutineState.routineActive)
             continueRoutine();
     }
@@ -113,6 +118,7 @@ bool Logic::PlayerController::travelPath(float deltaTime)
                                                    * (m_NPCProperties.moveSpeed / m_MoveState.currentRouteLength));
 
     // Get new position
+    Math::float3 lastPosition = getEntityTransform().Translation();
     Math::float3 position = World::Waynet::interpolatePositionOnPath(m_World.getWaynet(),
                                                                      m_MoveState.currentPath,
                                                                      m_MoveState.currentPathPerc);
@@ -126,8 +132,11 @@ bool Logic::PlayerController::travelPath(float deltaTime)
         m_AIState.closestWaypoint = m_MoveState.currentPath[cwp];
 
     // FIXME: This should be taken care of by the physics engine
-    // FIXME: Direction is ignored
-    setEntityTransform(Math::Matrix::CreateTranslation(position));
+    Math::float3 direction = (position - lastPosition).normalize();
+    setEntityTransform(Math::Matrix::CreateLookAt(position, position + direction, Math::float3(0,1,0)).Invert());
+
+    // Set run animation
+    getModelVisual()->setAnimation(ModelVisual::Run);
 
     if (m_MoveState.currentPathPerc >= 1.0f) // == would be sufficient here, but why not?
         return true;
@@ -137,10 +146,10 @@ bool Logic::PlayerController::travelPath(float deltaTime)
 
 void Logic::PlayerController::onDebugDraw()
 {
-    if (!m_MoveState.currentPath.empty())
+    /*if (!m_MoveState.currentPath.empty())
     {
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
-    }
+    }*/
 }
 
 void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)

@@ -20,11 +20,14 @@ Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zen
         Waypoint wp;
         wp.name = zwp.wpName;
 
+        // FIXME: Only temporary, to make NPCs walk on the ground rather than IN the ground while there is no physics engine
+        const float heightOffset = 0.5f;
+
         // FIXME: They only seem right with the world in zyx-order. Find out why!
-		//wp.direction = Math::float3(zwp.direction.z, zwp.direction.y, zwp.direction.x);
-		//wp.position = Math::float3(zwp.position.z, zwp.position.y, zwp.position.x) * (1.0f / 100.0f);
-		wp.direction = Math::float3(zwp.direction.x, zwp.direction.y, zwp.direction.z);
-		wp.position = Math::float3(zwp.position.x, zwp.position.y, zwp.position.z) * (1.0f / 100.0f);
+        wp.direction = Math::float3(zwp.direction.x, zwp.direction.y, zwp.direction.z);
+        wp.position = Math::float3(zwp.position.x, zwp.position.y, zwp.position.z) * (1.0f / 100.0f);
+        wp.position.y += heightOffset;
+
         wp.waterDepth = static_cast<float>(zwp.waterDepth);
         wp.underWater = zwp.underWater;
 

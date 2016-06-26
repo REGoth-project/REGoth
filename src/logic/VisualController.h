@@ -19,7 +19,7 @@ namespace Logic
          * Note: The type must match this class
          * @param visual Filename of the visual. Uncompiled-version of the name!
          */
-        virtual bool load(const std::string& visual){return false;};
+        virtual bool load(const std::string& visual){ m_Name = visual; return false;};
 
         /**
          * @brief Called when something else modified the transform of the underlaying entity
@@ -31,5 +31,10 @@ namespace Logic
          * Entites of the visual registered here
          */
         std::vector<Handle::EntityHandle> m_VisualEntities;
+
+        /**
+         * Name of the loaded visual
+         */
+        std::string m_Name;
     };
 }

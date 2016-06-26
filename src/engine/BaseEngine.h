@@ -38,9 +38,9 @@ namespace Engine
 		Handle::WorldHandle addWorld();
 
 		/**
-		 * @brief Frame update
+		 * @brief Frame update // TODO: Remove width and height
 		 */
-		void frameUpdate(double dt);
+		void frameUpdate(double dt, uint16_t width, uint16_t m_height);
 
 		/**
 		 * @return Main VDF-Archive
@@ -70,7 +70,7 @@ namespace Engine
 		/**
 		 * Update-method for subclasses
 		 */
-		virtual void onFrameUpdate(double dt)=0;
+		virtual void onFrameUpdate(double dt, uint16_t width, uint16_t height)=0;
 
 		/**
 		 * @brief Called to load archives into the main VDFS-Index

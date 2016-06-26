@@ -30,14 +30,26 @@ namespace Components
 		bool addAnimation(const std::string& file, VDFS::FileIndex& idx, float scale = 1.0f / 100.0f);
 
 		/**
-		 * @brief Sets the currently playing animation
+		 * @brief Sets the currently playing animation. Restarts it, if this is currently running
 		 */
 		void playAnimation(const std::string& animName);
+
+		/**
+		 * @brief Sets the currently playing animation without restarting it, if it is currently running
+		 */
+		void setAnimation(const std::string& animName);
 
 		/**
 		 * @brief Updates the currently playing animations
 		 */
 		void updateAnimations(double deltaTime);
+
+		/**
+		 * @brief Stops the current animation and sets the bindpose
+		 * @param force If this is set to false, this method will do nothing of there isn't currently an animation running
+		 */
+		void setBindPose(bool force=false);
+		void stopAnimation(){setBindPose();}
 
 		/**
 		 * @brief Draws the skeleton of the animation
@@ -67,6 +79,32 @@ namespace Components
 		{
 			return m_MeshLib.getNodes().size();
 		}
+
+		/**
+		 * @return Last state of the finalized object space node-transforms
+		 */
+		const std::vector<Math::Matrix>& getObjectSpaceTransforms()
+		{
+			return m_ObjectSpaceNodeTransforms;
+		}
+
+		/**
+		 * @return The mesh lib containing the skeleton
+		 */
+		const ZenLoad::zCModelMeshLib& getMeshLib()
+		{
+			return m_MeshLib;
+		}
+
+		/**
+		 * Checks whether the given animation is available
+		 * @param name Animation to check
+		 * @return whether the given animation is available
+		 */
+		bool hasAnimation(const std::string& name)
+		{
+			return m_AnimationsByName.find(name) != m_AnimationsByName.end();
+		}
 	private:
 
 		/**
@@ -85,6 +123,7 @@ namespace Components
 		 */
 		size_t m_ActiveAnimation;
 		float m_AnimationFrame;
+		size_t m_LastProcessedFrame;
 
 		/** 
 		 * @brief Node transforms in local space

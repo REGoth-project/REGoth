@@ -63,9 +63,16 @@ namespace Components
         enum { MASK = 1 << 1 };
         Math::Matrix m_WorldMatrix;
 
+
+        /*+
+         * Factor to apply to global drawing distance before applying the check
+         */
+        float m_DrawDistanceFactor;
+
         static void init(PositionComponent& c)
         {
             c.m_WorldMatrix = Math::Matrix::CreateIdentity();
+            c.m_DrawDistanceFactor = 1.0f;
         }
     };
 

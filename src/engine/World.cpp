@@ -49,16 +49,16 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	ZenLoad::oCWorldData world = parser.readWorld();
 
 	ZenLoad::zCMesh* worldMesh = parser.getWorldMesh();
-	ZenLoad::PackedMesh packed;
-	worldMesh->packMesh(packed, 0.01f);
+	ZenLoad::PackedMesh packedWorldMesh;
+	worldMesh->packMesh(packedWorldMesh, 0.01f);
 
 	//m_WorldMesh.load(packed);
 
-    Handle::MeshHandle msh = getStaticMeshAllocator().loadFromPacked(packed);
-    Meshes::WorldStaticMesh& mdata = getStaticMeshAllocator().getMesh(msh);
+    Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh);
+    Meshes::WorldStaticMesh& worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
 
     // TODO: Put these into a compound-component or something
-    std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, msh, mdata);
+    std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData);
 
     for(Handle::EntityHandle e : ents)
     {
@@ -70,6 +70,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
         pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
         pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
+        pos.m_DrawDistanceFactor = 0.0f; // Always draw the worldmesh
     }
 
 
@@ -127,6 +128,10 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             m.Translation(m.Translation() * (1.0f / 100.0f));
             Vob::setTransform(vob, m);
             Vob::setVisual(vob, v.visual);
+
+            if(!vob.visual)
+                LogInfo() << "No visual for: " << v.visual;
+
             Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
                          Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
                          vob.visual ? 0 : 0xFF00AA00);
@@ -215,7 +220,7 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
     return h;
 }
 
-void WorldInstance::onFrameUpdate(double deltaTime)
+void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
     /*Components::LogicComponent& logic = m_Allocators.m_ComponentAllocator.getElement<Components::LogicComponent>(m_TestEntity);
     Logic::PlayerController* ai = reinterpret_cast<Logic::PlayerController*>(logic.m_pLogicController);
@@ -248,8 +253,17 @@ void WorldInstance::onFrameUpdate(double deltaTime)
     Components::EntityComponent* ents = std::get<Components::EntityComponent*>(ctuple);
     Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
     Components::AnimationComponent* anims = std::get<Components::AnimationComponent*>(ctuple);
+    Components::PositionComponent* positions = std::get<Components::PositionComponent*>(ctuple);
     for (size_t i = 0; i<num; i++)
     {
+        // Simple distance-check // TODO: Frustum/Occlusion-Culling
+        if(Components::hasComponent<Components::PositionComponent>(ents[i]))
+        {
+            if ((positions[i].m_WorldMatrix.Translation() - cameraWorld.Translation()).lengthSquared() *
+                positions[i].m_DrawDistanceFactor > updateRangeSquared)
+                continue;
+        }
+
         Components::ComponentMask mask = ents[i].m_ComponentMask;
         if((mask & Components::LogicComponent::MASK) != 0)
         {

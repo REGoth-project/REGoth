@@ -18,10 +18,10 @@ SkeletalMeshAllocator::~SkeletalMeshAllocator()
     // Delete all meshes
     for (size_t i = 0; i < m_Allocator.getNumObtainedElements(); i++)
     {
-        bgfx::VertexBufferHandle hv = m_Allocator.getElements()[i].m_VertexBufferHandle;
+        bgfx::VertexBufferHandle hv = m_Allocator.getElements()[i].mesh.m_VertexBufferHandle;
         bgfx::destroyVertexBuffer(hv);
 
-        bgfx::IndexBufferHandle hi = m_Allocator.getElements()[i].m_IndexBufferHandle;
+        bgfx::IndexBufferHandle hi = m_Allocator.getElements()[i].mesh.m_IndexBufferHandle;
         bgfx::destroyIndexBuffer(hi);
     }
 }
@@ -40,13 +40,20 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
     // Check if this isn't the compiled version
     if (vname.find("-C") == std::string::npos)
     {
-        if(vname.find("3DS") != std::string::npos)
+        if(vname.find("ASC") != std::string::npos)
         {
-            // Strip the ".3DS"
+            // Strip the ".ASC"
             vname = vname.substr(0, vname.size() - 4);
 
             // Add "compiled"-extension
-            vname += ".MRM";
+            vname += ".MDL";
+        } else if(vname.find("MDS") != std::string::npos)
+        {
+            // Strip the ".MDS"
+            vname = vname.substr(0, vname.size() - 4);
+
+            // Add "compiled"-extension
+            vname += ".MDL";
         } else if(vname.find(".MDM") != std::string::npos)
         {
 
@@ -56,12 +63,14 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
 
     ZenLoad::PackedSkeletalMesh packed;
 
-    if(vname.find(".MDM") != std::string::npos || vname.find(".MDL") != std::string::npos)
+    if(vname.find(".MDM") != std::string::npos
+       || vname.find(".MDL") != std::string::npos
+       || vname.find(".MDS") != std::string::npos)
     {
-        ZenLoad::zCModelMeshLib zlib(vname, *m_pVDFSIndex);
+        ZenLoad::zCModelMeshLib zlib(vname, *m_pVDFSIndex, 1.0f / 100.0f);
 
         // Failed?
-        if (zlib.getMeshes().size() == 0)
+        if (!zlib.isValid())
             return Handle::MeshHandle::makeInvalidHandle();
 
         ZenLoad::PackedSkeletalMesh sp;
@@ -71,9 +80,14 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
         {
             m.packMesh(packed, 1.0f / 100.0f);
         }
+
+        Handle::MeshHandle h = loadFromPacked(packed, name);
+        m_Allocator.getElement(h).lib = zlib;
+
+        return h;
     }
 
-    return loadFromPacked(packed, name);
+    return Handle::MeshHandle::makeInvalidHandle();
 }
 
 Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const std::string & name)
@@ -89,7 +103,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
 {
     // Create mesh instance
     Handle::MeshHandle h = m_Allocator.createObject();
-    WorldSkeletalMesh& mesh = m_Allocator.getElement(h);
+    WorldSkeletalMesh& mesh = m_Allocator.getElement(h).mesh;
 
     // Copy vertices
     mesh.m_Vertices.resize(packed.vertices.size());

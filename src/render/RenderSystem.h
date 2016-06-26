@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
+#include <math/mathlib.h>
 
 namespace Render
 {
@@ -17,6 +18,12 @@ namespace Render
             bgfx::UniformHandle diffuseTexture;
             bgfx::UniformHandle nodeTransforms;
         }uniforms;
+
+        struct
+        {
+            Math::Matrix cameraWorld;
+            float drawDistanceSquared;
+        }state;
     };
 
     class RenderSystem
@@ -34,7 +41,7 @@ namespace Render
         /**
          * @return The generated config of this system
          */
-        const RenderConfig& getConfig(){ return m_Config; }
+        RenderConfig& getConfig(){ return m_Config; }
     protected:
 
         /**

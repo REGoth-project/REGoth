@@ -1,6 +1,7 @@
 #pragma once
 #include <handle/Handle.h>
 #include <handle/HandleDef.h>
+#include <zenload/zCModelMeshLib.h>
 #include "memory/Config.h"
 #include "StaticLevelMesh.h"
 #include "GenericMeshAllocator.h"
@@ -33,13 +34,21 @@ namespace Meshes
         /**
          * @brief Returns the texture of the given handle
          */
-        WorldSkeletalMesh& getMesh(Handle::MeshHandle h) { return m_Allocator.getElement(h); }
+        WorldSkeletalMesh& getMesh(Handle::MeshHandle h) { return m_Allocator.getElement(h).mesh; }
+        const ZenLoad::zCModelMeshLib& getMeshLib(Handle::MeshHandle h){ return m_Allocator.getElement(h).lib; }
     protected:
 
         /**
          * Data allocator
          */
-        Memory::StaticReferencedAllocator<WorldSkeletalMesh, Config::MAX_NUM_LEVEL_MESHES> m_Allocator;
+
+        struct SkelMesh : public Handle::HandleTypeDescriptor<Handle::MeshHandle>
+        {
+            WorldSkeletalMesh mesh;
+            ZenLoad::zCModelMeshLib lib;
+        };
+
+        Memory::StaticReferencedAllocator<SkelMesh, Config::MAX_NUM_LEVEL_MESHES> m_Allocator;
 
         /**
          * @brief Textures by their set names. Note: If names are doubled, only the last loaded texture

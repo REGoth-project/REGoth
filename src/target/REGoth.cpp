@@ -79,7 +79,7 @@ class ExampleCubes : public entry::AppI
 		m_width = 1280;
 		m_height = 720;
 		m_debug = BGFX_DEBUG_TEXT;
-		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_VSYNC | BGFX_RESET_MSAA_X8;
+		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
 
 		bgfx::init(args.m_type, args.m_pciId);
 		bgfx::reset(m_width, m_height, m_reset);
@@ -158,7 +158,7 @@ class ExampleCubes : public entry::AppI
 
 			ddBegin(0);
 
-			m_Engine.frameUpdate(dt);
+			m_Engine.frameUpdate(dt, m_width, m_height);
 
 			ddSetTransform(nullptr);
 			ddDrawAxis(0.0f, 0.0f, 0.0f);
