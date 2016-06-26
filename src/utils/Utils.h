@@ -56,4 +56,14 @@ namespace Utils
      * @return True, if the given file can be opened
      */
     bool fileExists(const std::string& file);
+    
+    
+    /**
+     * Returns a string with case sensitive path based on case insensitive version
+     * @param string game root directory
+     * @param string file relative path
+     * @return str, full sensitive path 
+     */
+    std::string getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path);
+    
 }
