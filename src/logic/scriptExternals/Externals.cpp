@@ -30,10 +30,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
         VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
 
-        World::WorldInstance& world = engine->getWorldInstance(userData->world);
-        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+		
+		if(userData)
+		{
+			World::WorldInstance& world = engine->getWorldInstance(userData->world);
+			VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
 
-        return vob;
+			return vob;
+		}
+		else{
+			LogWarn() << "No userptr on npc: " << npcData.name[0];
+
+			VobTypes::NpcVobInformation vob;
+			vob.entity.invalidate();
+
+			return vob;
+		}
+
+        
     };
 
     auto getItemByInstance = [&](size_t instance)
@@ -45,10 +59,21 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         Daedalus::GEngineClasses::C_Item& itemData = vm->getGameState().getItem(hitem);
         VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
 
-        World::WorldInstance& world = engine->getWorldInstance(userData->world);
-        Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
+		if(userData)
+		{
+			World::WorldInstance& world = engine->getWorldInstance(userData->world);
+			Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
 
-        return vob;
+			return vob;
+		}
+		else{
+			LogWarn() << "No userptr on item: " << itemData.name;
+
+			Vob::VobInformation vob;
+			vob.entity.invalidate();
+
+			return vob;
+		}
     };
 
     /**
@@ -187,10 +212,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
         VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
 
-        World::WorldInstance& world = engine->getWorldInstance(userData->world);
-        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+		if(userData)
+		{
+			World::WorldInstance& world = engine->getWorldInstance(userData->world);
+			VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
 
-        VobTypes::NPC_EquipWeapon(vob, item);
+			VobTypes::NPC_EquipWeapon(vob, item);
+		}
+		else{
+			LogWarn() << "No userptr on npc: " << npcData.name[0];
+		}
     });
 
     /**

@@ -23,6 +23,11 @@ namespace Vob
         Components::PositionComponent* position;
         World::WorldInstance* world;
         Handle::EntityHandle entity;
+
+		bool isValid()
+		{
+			return entity.isValid();
+		}
     };
 
     /**

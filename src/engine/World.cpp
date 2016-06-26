@@ -129,8 +129,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             Vob::setTransform(vob, m);
             Vob::setVisual(vob, v.visual);
 
-            if(!vob.visual)
-                LogInfo() << "No visual for: " << v.visual;
+            //if(!vob.visual)
+            //    LogInfo() << "No visual for: " << v.visual;
 
             Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
                          Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),

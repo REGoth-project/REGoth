@@ -107,6 +107,10 @@ bool ModelVisual::load(const std::string& visual)
             ZenLoad::PackedMesh packed;
             m.second.packMesh(packed, 1.0f / 100.0f);
             Handle::MeshHandle amh = m_World.getStaticMeshAllocator().loadFromPacked(packed);
+
+			if(!amh.isValid())
+				continue;
+
             Meshes::WorldStaticMesh amdata = m_World.getStaticMeshAllocator().getMesh(amh);
 
             // Add the entities to our lists

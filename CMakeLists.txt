@@ -9,11 +9,14 @@ set(GAME_CONTENT_DIR ../content CACHE STRING "Content-folder, containing VDF-Arc
 set(GAME_STARTUP_WORLD addonworld.zen CACHE STRING "[Testing] World to load at program start")
 
 # Setup BGFX
-add_definitions(-DBGFX_CONFIG_MAX_MATRIX_CACHE=131072) # Need to up this since everything got it's own matrix right now
-add_definitions(-DBGFX_CONFIG_MAX_COMMAND_BUFFER_SIZE=131072) # FIXME: Flush some times at loading, so we don't exhaust the default setting of 64k
+add_definitions(-DBGFX_CONFIG_MAX_MATRIX_CACHE=231072) # Need to up this since everything got it's own matrix right now
+add_definitions(-DBGFX_CONFIG_MAX_COMMAND_BUFFER_SIZE=231072) # FIXME: Flush some times at loading, so we don't exhaust the default setting of 64k
+add_definitions(-DBGFX_CONFIG_MAX_INDEX_BUFFERS=65535)
+add_definitions(-DBGFX_CONFIG_MAX_VERTEX_BUFFERS=65535) # TODO: Don't mess around with memory so much
 
 add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
 
+# Temp
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
 if(MINGW)

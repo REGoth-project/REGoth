@@ -72,8 +72,23 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPacked(const ZenLoad::PackedMesh
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
 
-    if(!name.empty())
-        m_MeshesByName[name] = h;
+
+	// Load failed somehow, cleanup
+	if(mesh.m_VertexBufferHandle.idx == bgfx::invalidHandle
+		|| mesh.m_IndexBufferHandle.idx == bgfx::invalidHandle)
+	{
+		m_Allocator.removeObject(h);
+
+		if(mesh.m_VertexBufferHandle.idx != bgfx::invalidHandle)
+			bgfx::destroyVertexBuffer(mesh.m_VertexBufferHandle);
+
+		if(mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
+			bgfx::destroyIndexBuffer(mesh.m_IndexBufferHandle);
+
+		return Handle::MeshHandle::makeInvalidHandle();
+	}
+
+	m_MeshesByName[name] = h;
 
     return h;
 }
