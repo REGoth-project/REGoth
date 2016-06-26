@@ -10,6 +10,8 @@
 #include <engine/GameEngine.h>
 #include <logic/PlayerController.h>
 
+
+
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
 {
     Daedalus::registerDaedalusStdLib(vm, verbose);
@@ -18,6 +20,40 @@ void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool ver
 
 void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose)
 {
+    // TODO: Refractor
+    auto getNPCByInstance = [&](size_t instance)
+    {
+        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+                (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
+
+        // Get data of npc this belongs to
+        Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
+        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
+
+        World::WorldInstance& world = engine->getWorldInstance(userData->world);
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+
+        return vob;
+    };
+
+    auto getItemByInstance = [&](size_t instance)
+    {
+        Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
+                (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
+
+        // Get data of npc this belongs to
+        Daedalus::GEngineClasses::C_Item& itemData = vm->getGameState().getItem(hitem);
+        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
+
+        World::WorldInstance& world = engine->getWorldInstance(userData->world);
+        Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
+
+        return vob;
+    };
+
+    /**
+     * Mdl_SetVisual
+     */
     vm->registerExternalFunction("Mdl_SetVisual", [=](Daedalus::DaedalusVM& vm) {
         std::string visual = vm.popString();
 
@@ -41,6 +77,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         }
     });
 
+    /**
+     * Mdl_SetVisualBody
+     */
     vm->registerExternalFunction("Mdl_SetVisualBody", [=](Daedalus::DaedalusVM& vm){
 
         int32_t armorInstance = vm.popDataValue();
@@ -91,6 +130,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         }
     });
 
+    /**
+     * ta_min
+     */
     vm->registerExternalFunction("ta_min", [=](Daedalus::DaedalusVM& vm){
         std::string waypoint = vm.popString(); if(verbose) LogInfo() << "waypoint: " << waypoint;
 
@@ -126,6 +168,112 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
             }
         }
     });
+
+    /**
+     * EquipItem
+     */
+    vm->registerExternalFunction("equipitem", [=](Daedalus::DaedalusVM& vm){
+        uint32_t instance = static_cast<uint32_t>(vm.popDataValue());
+        uint32_t arr_n0;
+        uint32_t self = vm.popVar(arr_n0);
+
+        // TODO: Need a better API for this
+        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+                (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+
+        Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, hnpc);
+
+        // Get data of npc this belongs to
+        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
+        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
+
+        World::WorldInstance& world = engine->getWorldInstance(userData->world);
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
+
+        VobTypes::NPC_EquipWeapon(vob, item);
+    });
+
+    /**
+     * GetDistTo...
+     */
+    vm->registerExternalFunction("npc_getdisttonpc", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_npc2;
+        uint32_t npc2 = vm.popVar(arr_npc2); if(verbose) LogInfo() << "npc2: " << npc2;
+        uint32_t arr_npc1;
+        uint32_t npc1 = vm.popVar(arr_npc1); if(verbose) LogInfo() << "npc1: " << npc1;
+
+        VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
+        VobTypes::NpcVobInformation vob2 = getNPCByInstance(npc2);
+
+        // Calculate distance
+        float dist = (Vob::getTransform(vob1).Translation() - Vob::getTransform(vob2).Translation()).length();
+
+        // Convert to cm
+        dist *= 100.0f;
+
+        vm.setReturn(static_cast<int32_t>(dist));
+    });
+
+    vm->registerExternalFunction("npc_getdisttowp", [=](Daedalus::DaedalusVM& vm){
+        std::string wpname = vm.popString(); if(verbose) LogInfo() << "wpname: " << wpname;
+        uint32_t arr_self;
+        uint32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation vob = getNPCByInstance(self);
+
+        // Calculate distance
+        Math::Matrix selfTransform = Vob::getTransform(vob);
+        World::WorldInstance& world = Vob::getWorld(vob);
+        size_t wpidx = World::Waynet::getWaypointIndex(world.getWaynet(), wpname);
+
+        float dist = (selfTransform.Translation() - world.getWaynet().waypoints[wpidx].position).length();
+
+        // Convert to cm
+        dist *= 100.0f;
+
+        vm.setReturn(static_cast<int32_t>(dist));
+    });
+
+    vm->registerExternalFunction("npc_getdisttoitem", [=](Daedalus::DaedalusVM& vm){
+
+        uint32_t item = static_cast<uint32_t>(vm.popDataValue());
+        uint32_t arr_npc;
+        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
+
+        VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
+        Vob::VobInformation itemvob = getItemByInstance(item);
+
+        float dist = (Vob::getTransform(npcvob).Translation() - Vob::getTransform(itemvob).Translation()).length();
+
+        // Convert to cm
+        dist *= 100.0f;
+
+        vm.setReturn(static_cast<int32_t>(dist));
+    });
+
+    vm->registerExternalFunction("npc_getdisttoplayer", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_npc1;
+        uint32_t npc1 = vm.popVar(arr_npc1); if(verbose) LogInfo() << "npc1: " << npc1;
+
+
+        VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
+        VobTypes::NpcVobInformation vob2 = getNPCByInstance(vm.getDATFile().getSymbolIndexByName("hero"));
+
+        // Calculate distance
+        float dist = (Vob::getTransform(vob1).Translation() - Vob::getTransform(vob2).Translation()).length();
+
+        // Convert to cm
+        dist *= 100.0f;
+
+        vm.setReturn(static_cast<int32_t>(dist));
+    });
+
+    /*vm->registerExternalFunction("snd_getdisttosource", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+        vm.setReturn(0);
+    });*/
+
 }
 
 

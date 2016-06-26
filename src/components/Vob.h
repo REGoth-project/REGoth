@@ -1,5 +1,6 @@
 #pragma once
 #include <components/Entities.h>
+#include <engine/World.h>
 
 namespace Logic
 {
@@ -44,6 +45,16 @@ namespace Vob
      * Sets the whole transform-matrix on the given vob
      */
     void setTransform(VobInformation& vob, const Math::Matrix& transform);
+
+    /**
+     * @return Transform of the given vob
+     */
+    const Math::Matrix& getTransform(VobInformation& vob);
+
+    /**
+     * @return The world this vob is in
+     */
+    World::WorldInstance& getWorld(VobInformation& vob);
 
     /**
      * Sets the visual for the given vob to use

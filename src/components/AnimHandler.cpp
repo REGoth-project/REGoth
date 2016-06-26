@@ -50,7 +50,6 @@ void AnimHandler::playAnimation(const std::string &animName)
     // Reset velocity
     m_AnimRootVelocity = Math::float3(0, 0, 0);
 
-    // FIXME: No animation at all doesn't actually work, mesh gets scrambled
     if (animName.empty())
     {
         m_ActiveAnimation = static_cast<size_t>(-1);

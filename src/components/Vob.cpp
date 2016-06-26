@@ -94,7 +94,7 @@ void ::Vob::broadcastTransformChange(VobInformation& vob)
         vob.visual->onTransformChanged();
 }
 
-void ::Vob::setVisual(VobInformation& vob, const std::string& visual)
+void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
 {
     // Clear old visual
     delete vob.visual;
@@ -105,9 +105,13 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& visual)
     vob.visual = nullptr;
     *ppVisual = nullptr;
 
+    std::string visual = _visual;
+    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+
     // Check type of visual
     if(visual.find(".3DS") != std::string::npos
-       || visual.find(".MMB") != std::string::npos)
+       || visual.find(".MMB") != std::string::npos
+       || visual.find(".MMS") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::StaticMeshVisual(*vob.world, vob.entity);
         if(ld->load(visual))
@@ -142,6 +146,16 @@ void ::Vob::setBBox(VobInformation& vob, const Math::float3& min, const Math::fl
     vob.world->getComponentAllocator().getElement<Components::BBoxComponent>(vob.entity).m_BBox3D.min = min;
     vob.world->getComponentAllocator().getElement<Components::BBoxComponent>(vob.entity).m_BBox3D.max = max;
     vob.world->getComponentAllocator().getElement<Components::BBoxComponent>(vob.entity).m_DebugColor = debugColor;
+}
+
+const Math::Matrix &::Vob::getTransform(Vob::VobInformation &vob)
+{
+    return vob.position->m_WorldMatrix;
+}
+
+World::WorldInstance &::Vob::getWorld(Vob::VobInformation &vob)
+{
+    return *vob.world;
 }
 
 

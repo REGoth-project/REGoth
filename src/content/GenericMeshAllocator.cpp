@@ -41,9 +41,13 @@ Handle::MeshHandle GenericMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx,
 
             // Add "compiled"-extension
             vname += ".MRM";
-        } else if(vname.find(".MMB") != std::string::npos)
+        } else if(vname.find(".MMS") != std::string::npos)
         {
+            // Strip the ".MMS"
+            vname = vname.substr(0, vname.size() - 4);
 
+            // Add "compiled"-extension
+            vname += ".MMB";
         }
     }
 

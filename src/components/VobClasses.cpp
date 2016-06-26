@@ -130,13 +130,29 @@ void ::VobTypes::NPC_ReplaceMainVisual(VobTypes::NpcVobInformation &vob, const s
 void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)
 {
     Daedalus::GEngineClasses::C_Item& itemData = vob.world->getScriptEngine().getGameState().getItem(weapon);
+    Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+
+    Logic::EModelNode node = Logic::EModelNode::Bow;
+
+    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+        node = Logic::EModelNode::Longsword;
+    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
+        node = Logic::EModelNode::Longsword;
+    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
+        node = Logic::EModelNode::Crossbow;
+    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
+        node = Logic::EModelNode::Bow;
+    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
+        node = Logic::EModelNode::Sword;
 
     // TODO: This is only doing visuals right now!
     // Close-ranged (Swords, etc)
     if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
     {
-        Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
-        model->setNodeVisual(itemData.visual, Logic::EModelNode::Righthand);
+        model->setNodeVisual(itemData.visual, node);
+    }else if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0)
+    {
+        model->setNodeVisual(itemData.visual, node);
     }
 }
 
