@@ -187,7 +187,7 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
         }
     }
     LogInfo() << "Initializing scripts for world: " << worldName;
-    //m_ScriptEngine.initForWorld(worldName);
+    m_ScriptEngine.initForWorld(worldName);
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)

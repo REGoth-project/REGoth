@@ -134,6 +134,8 @@ void BaseEngine::loadArchives()
     {
         m_FileIndex.loadVDF(s);
     }
+
+	m_FileIndex.loadVDF(m_Args.gameBaseDirectory + "/Data/modvdf/Anthera.mod");
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)

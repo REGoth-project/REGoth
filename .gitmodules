@@ -6,7 +6,7 @@
 	url = git@github.com:degenerated1123/ZenLib.git
 [submodule "lib/glm"]
 	path = lib/glm
-	url = git@github.com:g-truc/glm.git
+	url = https://github.com/g-truc/glm.git
 [submodule "lib/tinydir"]
 	path = lib/tinydir
 	url = git@github.com:cxong/tinydir.git
