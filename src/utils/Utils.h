@@ -56,4 +56,15 @@ namespace Utils
      * @return True, if the given file can be opened
      */
     bool fileExists(const std::string& file);
+    
+    
+
+    /**
+     * Checks whether the given file exists
+     * @param string to find character
+     * @return int, position of first case sensitive character in given string, counted from zero
+     */
+    int getFirstCaseSensitiveChar(std::string name);
+    
+    
 }

@@ -65,3 +65,19 @@ bool Utils::fileExists(const std::string& file)
 
     return true;
 }
+
+int Utils::getFirstCaseSensitiveChar(std::string name){
+	// on start we set counter to 0
+	int counter = 0;
+	for(char & character : name){
+		// if character is not case sensitive add 1 to counter and move to next character
+        // else break the loop and return the position of case sensitive character
+		if(character == std::tolower(character) && character == std::toupper(character)){
+			counter++;
+		}
+		else{
+			break;
+		}
+	}
+	return counter;
+}
