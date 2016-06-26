@@ -29,6 +29,9 @@ mkdir build
 cd build
 cmake ..
 ```
+> If CMake complains about some folders missing a CMakeLists.txt, you most likely forgot to clone with the `--recursive`-flag!
+> Simple do `git submodule update --init --recursive` and it should work.
+
 
 Then, choose depending on your OS:
 
@@ -39,6 +42,8 @@ make -j
 
 ### Windows
 Open the generated `REGoth.sln` in VisualStudio and build as usual.
+
+
 
 # Running
 The compiled files are inside the `build/bin` directory.
