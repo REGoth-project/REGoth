@@ -142,14 +142,27 @@ namespace Math
 		}
 
 		/**
-		* @brief Converts the stored color to ARGB8
+		* @brief Converts the stored color to ABGR8
 		*/
 		uint32_t toABGR8()
 		{
-			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f), 
-				static_cast<unsigned char>(z * 255.0f), 
-				static_cast<unsigned char>(y * 255.0f),
-				static_cast<unsigned char>(x * 255.0f)};
+			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
+								  static_cast<unsigned char>(z * 255.0f),
+								  static_cast<unsigned char>(y * 255.0f),
+								  static_cast<unsigned char>(x * 255.0f)};
+
+			return *reinterpret_cast<uint32_t*>(b);
+		}
+
+		/**
+		* @brief Converts the stored color to ARGB8
+		*/
+		uint32_t toARGB8()
+		{
+			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
+								  static_cast<unsigned char>(x * 255.0f),
+								  static_cast<unsigned char>(y * 255.0f),
+								  static_cast<unsigned char>(z * 255.0f)};
 
 			return *reinterpret_cast<uint32_t*>(b);
 		}

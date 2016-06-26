@@ -113,6 +113,34 @@ namespace Components
             void destroyVisualComponent(VisualComponent& c);
         }
 
+        namespace Physics
+        {
+            /**
+             * Returns the transformation matrix of the rigid-bodys state
+             * @param c Physicsscomponent to use
+             * @return Transform of the rigid-bodys state
+             */
+            inline Math::Matrix getRigidBodyTransform(Components::PhysicsComponent& c)
+            {
+                Math::Matrix m;
+                c.m_RigidBody.getMotionState()->getOpenGLMatrix(m.mv);
+
+                return m;
+            }
+
+            /**
+             * Sets the transform of the rigid-bodys state
+             * @param c Physicsscomponent to use
+             * @param Transform of the rigid-bodys state
+             */
+            inline void setRigidBodyPosition(Components::PhysicsComponent& c, const Math::float3& position)
+            {
+                btTransform t;
+                t.setOrigin(btVector3(position.x, position.y, position.z));
+                c.m_RigidBody.getMotionState()->setWorldTransform(t);
+            }
+        }
+
         /**
          * Cleans created resources from the components
          */

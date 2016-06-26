@@ -11,6 +11,7 @@
 #include "Waynet.h"
 #include <logic/ScriptEngine.h>
 #include <content/SkeletalMeshAllocator.h>
+#include <components/Entities.h>
 
 namespace ZenLoad
 {

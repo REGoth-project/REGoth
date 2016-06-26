@@ -38,6 +38,17 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
 
+# Set up bullet
+set(USE_GRAPHICAL_BENCHMARK OFF)
+set(USE_MSVC_RUNTIME_LIBRARY_DLL ON) # Don't statically link this
+set(BUILD_CPU_DEMOS OFF) # No samples
+add_subdirectory(lib/bullet3)
+include_directories(lib/bullet3/src)
+
+set(BULLET_LIBRARIES Bullet3Common BulletSoftBody BulletDynamics BulletCollision BulletInverseDynamicsUtils BulletInverseDynamics LinearMath)
+set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geometry Bullet3OpenCL_clew BulletFileLoader BulletWorldImporter BulletXmlWorldImporter ConvexDecomposition GIMPACTUtils HACD Test_BulletDynamics Test_BulletInverseDynamics Test_Collision)
+
+
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
         "src/components/*.cpp"
@@ -49,13 +60,14 @@ file(GLOB ENGINE_SRC
         "src/utils/*.cpp"
         "src/math/*.cpp"
         "src/logic/*.cpp"
+        "src/physics/*.cpp"
         "src/logic/visuals/*.cpp"
         "src/logic/scriptExternals/*.cpp"
         )
 
 add_library(engine STATIC ${ENGINE_SRC})
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty)
+target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES})
 
 # ------------------ Other ------------------
 

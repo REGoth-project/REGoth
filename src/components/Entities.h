@@ -9,6 +9,7 @@
 #include <memory/Config.h>
 #include <engine/WorldTypes.h>
 #include "AnimHandler.h"
+#include <physics/RigidBody.h>
 
 /**
  * List of all available components
@@ -22,7 +23,8 @@
                          CompoundComponent,\
                          ObjectComponent,\
                          VisualComponent,\
-                         AnimationComponent
+                         AnimationComponent,\
+                         PhysicsComponent
 
 namespace Logic
 {
@@ -238,6 +240,24 @@ namespace Components
         Handle::EntityHandle m_ParentAnimHandler;
 
         static void init(AnimationComponent& c)
+        {
+
+        }
+    };
+
+    /**
+     * Handles collision and collision response
+     */
+    struct PhysicsComponent : public Component
+    {
+        enum { MASK = 1 << 10 };
+
+        /**
+         * The rigid-Body of this component
+         */
+        Physics::RigidBody m_RigidBody;
+
+        static void init(PhysicsComponent& c)
         {
 
         }

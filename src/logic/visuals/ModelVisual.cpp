@@ -1,4 +1,5 @@
 #include "ModelVisual.h"
+#include "StaticMeshVisual.h"
 #include <engine/World.h>
 #include <content/ContentLoad.h>
 #include <zenload/zCModelMeshLib.h>
@@ -165,7 +166,7 @@ bool ModelVisual::load(const std::string& visual)
     return true;
 }
 
-void ModelVisual::setHeadMesh(const std::string& head)
+void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, size_t teethTextureIdx)
 {
     std::string v = head;
 
@@ -173,8 +174,26 @@ void ModelVisual::setHeadMesh(const std::string& head)
         v += ".MMB";
 
     m_BodyState.headVisual = v;
+    m_BodyState.headTextureIdx = headTextureIdx;
+    m_BodyState.teethTextureIdx = teethTextureIdx;
 
-    setNodeVisual(v, findNodeIndex(MODEL_NODE_NAME_HEAD));
+    Handle::EntityHandle e = setNodeVisual(v, findNodeIndex(MODEL_NODE_NAME_HEAD));
+
+    Vob::VobInformation vob = Vob::asVob(m_World, e);
+    if(Vob::getVisual(vob))
+    {
+        // TODO: Type safety!
+        StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(vob));
+
+        // Submesh 0: Head
+        // Submesh 1: Mouthhole
+        // Submesh 2: Teeth
+        if(headTextureIdx > 0)
+            visual->setAnimationFrame(0, headTextureIdx);
+
+        if(teethTextureIdx > 0)
+            visual->setAnimationFrame(2, teethTextureIdx);
+    }
 }
 
 void ModelVisual::rebuildMainEntityList()
@@ -296,19 +315,19 @@ void ModelVisual::onTransformChanged()
     updateAttachmentTransforms();
 }
 
-void ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
+Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
 {
     if(nodeIndex > getMeshLib().getNodes().size())
-        return; // Invalid node?
+        return Handle::EntityHandle::makeInvalidHandle(); // Invalid node?
 
     // TODO: Allow to overwrite attachments!
     if(!m_VisualAttachments[nodeIndex].empty())
-        return;
+        return Handle::EntityHandle::makeInvalidHandle();
 
     if(visual.empty())
     {
         if(m_VisualAttachments[nodeIndex].empty())
-            return; // Nothing to do here
+            return Handle::EntityHandle::makeInvalidHandle(); // Nothing to do here
 
         // Clear whatever there was here
         for(Handle::EntityHandle e : m_VisualAttachments[nodeIndex])
@@ -328,6 +347,8 @@ void ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
 
 
         rebuildMainEntityList();
+
+        return Handle::EntityHandle::makeInvalidHandle();
     }else
     {
         // See these attachments as vob, for simplicities sake
@@ -344,6 +365,8 @@ void ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
         m_PartEntities.dynamicAttachments.push_back(avh);
 
         rebuildMainEntityList();
+
+        return avh;
     }
 }
 
@@ -362,22 +385,22 @@ const ZenLoad::zCModelMeshLib &ModelVisual::getMeshLib()
         return zLib;
 }
 
-void ModelVisual::setNodeVisual(const std::string &visual, EModelNode node)
+Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, EModelNode node)
 {
     switch(node)
     {
-        case EModelNode::Righthand:setNodeVisual(visual, findNodeIndex(NPC_NODE_RIGHTHAND));break;
-        case EModelNode::Lefthand:setNodeVisual(visual, findNodeIndex(NPC_NODE_LEFTHAND));break;
-        case EModelNode::Sword:setNodeVisual(visual, findNodeIndex(NPC_NODE_SWORD));break;
-        case EModelNode::Longsword:setNodeVisual(visual, findNodeIndex(NPC_NODE_LONGSWORD));break;
-        case EModelNode::Bow:setNodeVisual(visual, findNodeIndex(NPC_NODE_BOW));break;
-        case EModelNode::Crossbow:setNodeVisual(visual, findNodeIndex(NPC_NODE_CROSSBOW));break;
-        case EModelNode::Shield:setNodeVisual(visual, findNodeIndex(NPC_NODE_SHIELD));break;
-        case EModelNode::Helmet:setNodeVisual(visual, findNodeIndex(NPC_NODE_HELMET));break;
-        case EModelNode::Jaws:setNodeVisual(visual, findNodeIndex(NPC_NODE_JAWS));break;
+        case EModelNode::Righthand:return setNodeVisual(visual, findNodeIndex(NPC_NODE_RIGHTHAND));break;
+        case EModelNode::Lefthand:return setNodeVisual(visual, findNodeIndex(NPC_NODE_LEFTHAND));break;
+        case EModelNode::Sword:return setNodeVisual(visual, findNodeIndex(NPC_NODE_SWORD));break;
+        case EModelNode::Longsword:return setNodeVisual(visual, findNodeIndex(NPC_NODE_LONGSWORD));break;
+        case EModelNode::Bow:return setNodeVisual(visual, findNodeIndex(NPC_NODE_BOW));break;
+        case EModelNode::Crossbow:return setNodeVisual(visual, findNodeIndex(NPC_NODE_CROSSBOW));break;
+        case EModelNode::Shield:return setNodeVisual(visual, findNodeIndex(NPC_NODE_SHIELD));break;
+        case EModelNode::Helmet:return setNodeVisual(visual, findNodeIndex(NPC_NODE_HELMET));break;
+        case EModelNode::Jaws:return setNodeVisual(visual, findNodeIndex(NPC_NODE_JAWS));break;
 
             // TODO: Switch main mesh here
-        case EModelNode::Torso:setNodeVisual(visual, findNodeIndex(NPC_NODE_TORSO));break;
+        case EModelNode::Torso:return setNodeVisual(visual, findNodeIndex(NPC_NODE_TORSO));break;
     }
 }
 

@@ -25,6 +25,11 @@ namespace Logic
          * @brief Called when something else modified the transform of the underlaying entity
          */
         virtual void onTransformChanged();
+
+        /**
+         * @return Entites created by this visual
+         */
+        const std::vector<Handle::EntityHandle>& getVisualEntities(){ return m_VisualEntities; }
     protected:
 
         /**

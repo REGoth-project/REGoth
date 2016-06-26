@@ -34,6 +34,9 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
     Components::addComponent<Components::PositionComponent>(entity);
     Components::Actions::initComponent<Components::PositionComponent>(world.getComponentAllocator(), e);
 
+    Components::addComponent<Components::PhysicsComponent>(entity);
+    Components::Actions::initComponent<Components::PhysicsComponent>(world.getComponentAllocator(), e);
+
     return e;
 }
 
@@ -156,6 +159,11 @@ const Math::Matrix &::Vob::getTransform(Vob::VobInformation &vob)
 World::WorldInstance &::Vob::getWorld(Vob::VobInformation &vob)
 {
     return *vob.world;
+}
+
+Logic::VisualController *::Vob::getVisual(Vob::VobInformation &vob)
+{
+    return vob.visual;
 }
 
 

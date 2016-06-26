@@ -34,6 +34,8 @@ namespace Logic
         struct BodyState
         {
             std::string headVisual;
+            size_t headTextureIdx;
+            size_t teethTextureIdx;
         };
 
         /**
@@ -54,15 +56,15 @@ namespace Logic
          * Sets the headmesh for this model
          * @param head File of the mesh to use as head
          */
-        void setHeadMesh(const std::string& head);
+        void setHeadMesh(const std::string& head, size_t headTextureIdx=0, size_t teethTextureIdx=0);
 
         /**
          * Attaches a visual to the given node
          * @param visual The visual to load and attach
          * @param node to attach the visual to
          */
-        void setNodeVisual(const std::string& visual, size_t nodeIndex);
-        void setNodeVisual(const std::string& visual, EModelNode node);
+        Handle::EntityHandle setNodeVisual(const std::string& visual, size_t nodeIndex);
+        Handle::EntityHandle setNodeVisual(const std::string& visual, EModelNode node);
 
         /**
          * @brief Sets the currently playing animation. Empty string for none

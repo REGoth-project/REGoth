@@ -1,6 +1,7 @@
 #pragma once
 #include <components/Entities.h>
 #include <engine/World.h>
+#include <logic/VisualController.h>
 
 namespace Logic
 {
@@ -60,6 +61,11 @@ namespace Vob
      * @return The world this vob is in
      */
     World::WorldInstance& getWorld(VobInformation& vob);
+
+    /**
+     * @return Visual of this vob
+     */
+    Logic::VisualController* getVisual(VobInformation& vob);
 
     /**
      * Sets the visual for the given vob to use

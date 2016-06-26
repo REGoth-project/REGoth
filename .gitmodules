@@ -10,3 +10,6 @@
 [submodule "lib/tinydir"]
 	path = lib/tinydir
 	url = https://github.com/cxong/tinydir.git
+[submodule "lib/bullet3"]
+	path = lib/bullet3
+	url = https://github.com/bulletphysics/bullet3.git

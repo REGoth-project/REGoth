@@ -49,7 +49,7 @@ std::list<std::string> Utils::getFilesInDirectory(const std::string& directory, 
 
         if(ext == "*" || extlower == ext)
             l.push_back(path);
-    });
+    }, recursive);
 
     return l;
 }

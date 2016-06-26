@@ -109,7 +109,7 @@ void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::st
                                  size_t teethTextureIdx)
 {
     // TODO: Use head/teeth texture indices
-    reinterpret_cast<Logic::ModelVisual*>(vob.visual)->setHeadMesh(visual);
+    reinterpret_cast<Logic::ModelVisual*>(vob.visual)->setHeadMesh(visual,headTextureIdx,teethTextureIdx);
 }
 
 void ::VobTypes::NPC_ReplaceMainVisual(VobTypes::NpcVobInformation &vob, const std::string &visual)
@@ -124,7 +124,7 @@ void ::VobTypes::NPC_ReplaceMainVisual(VobTypes::NpcVobInformation &vob, const s
     model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
 
     // Set the other stuff again
-    model->setHeadMesh(oldState.headVisual);
+    model->setHeadMesh(oldState.headVisual, oldState.headTextureIdx, oldState.teethTextureIdx);
 }
 
 void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)

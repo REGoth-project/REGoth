@@ -35,7 +35,6 @@ namespace Meshes
         Handle::MeshHandle loadMeshVDF(const VDFS::FileIndex& idx, const std::string& name);
         Handle::MeshHandle loadMeshVDF(const std::string& name);
 
-
         /**
          * Puts all the loaded data into the target mesh
          * @param packed Packed mesh data from

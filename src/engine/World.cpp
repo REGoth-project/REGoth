@@ -189,6 +189,11 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
         } else
         {
             LogError() << "Failed to find GOTHIC.DAT!";
+
+#if !defined(WIN32) && !defined(_WIN32)
+            LogInfo() << "The path to the GOTHIC.DAT is case sensitive and must be exactly like this:" << std::endl
+                      << "   - /_work/DATA/scripts/_compiled/GOTHIC.DAT" ;
+#endif
         }
     }
     LogInfo() << "Initializing scripts for world: " << worldName;
