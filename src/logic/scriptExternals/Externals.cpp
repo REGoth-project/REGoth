@@ -220,7 +220,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
 			VobTypes::NPC_EquipWeapon(vob, item);
 		}
 		else{
-			LogWarn() << "No userptr on npc: " << npcData.name[0];
+			//LogWarn() << "No userptr on npc: " << npcData.name[0];
 		}
     });
 

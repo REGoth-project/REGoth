@@ -16,6 +16,9 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     Daedalus::GEngineClasses::C_Npc& npc = world.getScriptEngine().getGameState().getNpc(scriptInstance);
 
+	if(npc.name[0] == "Raven")
+		__debugbreak();
+
     //LogInfo() << "Instance: " << scriptInstance.index;
     //LogInfo() << "Creating vob for: " << npc.name[0];
 
