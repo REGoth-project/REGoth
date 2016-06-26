@@ -66,18 +66,41 @@ bool Utils::fileExists(const std::string& file)
     return true;
 }
 
-int Utils::getFirstCaseSensitiveChar(std::string name){
-	// on start we set counter to 0
-	int counter = 0;
-	for(char & character : name){
-		// if character is not case sensitive add 1 to counter and move to next character
-        // else break the loop and return the position of case sensitive character
-		if(character == std::tolower(character) && character == std::toupper(character)){
-			counter++;
-		}
-		else{
-			break;
-		}
+std::string Utils::getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path)
+{
+    std::string result = root_directory + case_insensitive_path;
+
+    // first check is case insensitive path isnt right
+    // if is, why should we do all of the work? :)
+    if(fileExists(root_directory + case_insensitive_path)){
+	return result;
+    }
+
+
+
+    std::list<std::string> file_paths = getFilesInDirectory(root_directory, "*");
+    std::string lowercasepath = root_directory + case_insensitive_path;
+
+    for(char & character : lowercasepath){
+	character = std::tolower(character);
+    }
+
+
+
+
+    for(std::list<std::string>::iterator file_iterator=file_paths.begin(); file_iterator!=file_paths.end(); file_iterator++)
+    {
+	std::string lowercasepath_candidate = *file_iterator;
+	for(char & character : lowercasepath_candidate){
+	    character = std::tolower(character);
 	}
-	return counter;
+	if(lowercasepath == lowercasepath_candidate){
+	    result =  *file_iterator;
+	    break;
+	}
+    }
+
+
+    return result;
+
 }

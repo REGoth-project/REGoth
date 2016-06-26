@@ -58,13 +58,12 @@ namespace Utils
     bool fileExists(const std::string& file);
     
     
-
     /**
-     * Checks whether the given file exists
-     * @param string to find character
-     * @return int, position of first case sensitive character in given string, counted from zero
+     * Returns a string with case sensitive path based on case insensitive version
+     * @param string game root directory
+     * @param string file relative path
+     * @return str, full sensitive path 
      */
-    int getFirstCaseSensitiveChar(std::string name);
-    
+    std::string getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path);
     
 }
