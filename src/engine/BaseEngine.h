@@ -15,6 +15,7 @@ namespace Engine
         {
             std::string gameBaseDirectory;
             std::string startupZEN;
+			std::string testVisual;
         };
 
 		BaseEngine();

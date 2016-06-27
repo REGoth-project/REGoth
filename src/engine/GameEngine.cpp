@@ -9,6 +9,9 @@
 #include <components/EntityActions.h>
 #include <logic/CameraController.h>
 #include <render/RenderSystem.h>
+#include <bx/commandline.h>
+#include <utils/logger.h>
+#include <components/Vob.h>
 
 using namespace Engine;
 
@@ -28,8 +31,22 @@ void GameEngine::initEngine(int argc, char** argv)
 {
     BaseEngine::initEngine(argc, argv);
 
+    bx::CommandLine cmdLine(argc, (const char**)argv);
+    const char* value = nullptr;
+
     // Initialize main render system
     m_DefaultRenderSystem.init();
+
+    // Load a test-visual
+    if(cmdLine.hasArg('v'))
+    {
+        value = cmdLine.findOption('v');
+
+        if(value)
+        {
+            m_Args.testVisual = value;
+        }
+    }
 }
 
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)

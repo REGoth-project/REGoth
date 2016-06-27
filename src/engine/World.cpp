@@ -39,113 +39,117 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	// Call other overload
 	init(engine);
 
-	// Load ZEN
-	std::vector<uint8_t> data;
-	engine.getVDFSIndex().getFileData(zen, data);
-
-	ZenLoad::ZenParser parser(data.data(), data.size());
-
-	parser.readHeader();
-	ZenLoad::oCWorldData world = parser.readWorld();
-
-	ZenLoad::zCMesh* worldMesh = parser.getWorldMesh();
-	ZenLoad::PackedMesh packedWorldMesh;
-	worldMesh->packMesh(packedWorldMesh, 0.01f);
-
-	//m_WorldMesh.load(packed);
-
-    Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh);
-    Meshes::WorldStaticMesh& worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
-
-    // TODO: Put these into a compound-component or something
-    std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData);
-
-    for(Handle::EntityHandle e : ents)
+    if(!zen.empty())
     {
-        // Init positions
-        Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
-        Components::addComponent<Components::PositionComponent>(entity);
+        // Load ZEN
+        std::vector<uint8_t> data;
+        engine.getVDFSIndex().getFileData(zen, data);
 
-        // Copy world-matrix
-        Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
-        pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
-        pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
-        pos.m_DrawDistanceFactor = 0.0f; // Always draw the worldmesh
-    }
+        ZenLoad::ZenParser parser(data.data(), data.size());
 
+        parser.readHeader();
+        ZenLoad::oCWorldData world = parser.readWorld();
 
-    // Load vobs
-    // TODO: Refractor
-    /*std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](const std::vector<ZenLoad::zCVobData>& vobs) {
-        for (const ZenLoad::zCVobData& v : vobs)
+        ZenLoad::zCMesh *worldMesh = parser.getWorldMesh();
+        ZenLoad::PackedMesh packedWorldMesh;
+        worldMesh->packMesh(packedWorldMesh, 0.01f);
+
+        //m_WorldMesh.load(packed);
+
+        Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh);
+        Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
+
+        // TODO: Put these into a compound-component or something
+        std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData);
+
+        for (Handle::EntityHandle e : ents)
         {
-            vobLoad(v.childVobs);
+            // Init positions
+            Components::EntityComponent &entity = getEntity<Components::EntityComponent>(e);
+            Components::addComponent<Components::PositionComponent>(entity);
 
-            // Check if we can render this
-            if(v.visual.find(".3DS") == std::string::npos)
-                continue;
+            // Copy world-matrix
+            Components::PositionComponent &pos = getEntity<Components::PositionComponent>(e);
+            pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
+            pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
+            pos.m_DrawDistanceFactor = 0.0f; // Always draw the worldmesh
+        }
 
-            Handle::MeshHandle msh = getStaticMeshAllocator().loadMeshVDF(v.visual);
 
-            if(!msh.isValid())
-                continue;
-
-            Meshes::WorldStaticMesh& mdata = getStaticMeshAllocator().getMesh(msh);
-
-            // TODO: Put these into a compound-component or something
-            std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, msh, mdata);
-
-            for(Handle::EntityHandle e : ents)
+        // Load vobs
+        // TODO: Refractor
+        /*std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](const std::vector<ZenLoad::zCVobData>& vobs) {
+            for (const ZenLoad::zCVobData& v : vobs)
             {
-                // Init positions
-                Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
-                Components::addComponent<Components::PositionComponent>(entity);
+                vobLoad(v.childVobs);
 
-                // Copy world-matrix
-                Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
-                pos.m_WorldMatrix = Math::Matrix(v.worldMatrix.mv);
-                pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
+                // Check if we can render this
+                if(v.visual.find(".3DS") == std::string::npos)
+                    continue;
+
+                Handle::MeshHandle msh = getStaticMeshAllocator().loadMeshVDF(v.visual);
+
+                if(!msh.isValid())
+                    continue;
+
+                Meshes::WorldStaticMesh& mdata = getStaticMeshAllocator().getMesh(msh);
+
+                // TODO: Put these into a compound-component or something
+                std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, msh, mdata);
+
+                for(Handle::EntityHandle e : ents)
+                {
+                    // Init positions
+                    Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
+                    Components::addComponent<Components::PositionComponent>(entity);
+
+                    // Copy world-matrix
+                    Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
+                    pos.m_WorldMatrix = Math::Matrix(v.worldMatrix.mv);
+                    pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
+                }
             }
-        }
-    };*/
+        };*/
 
-    std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](const std::vector<ZenLoad::zCVobData>& vobs) {
-        for (const ZenLoad::zCVobData& v : vobs)
-        {
-            vobLoad(v.childVobs);
+        std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](
+                const std::vector<ZenLoad::zCVobData> &vobs) {
+            for (const ZenLoad::zCVobData &v : vobs)
+            {
+                vobLoad(v.childVobs);
 
-            if(v.visual.empty())
-                continue; // TODO: We need those as well!
+                if (v.visual.empty())
+                    continue; // TODO: We need those as well!
 
-            // Make vob
-            Handle::EntityHandle e = Vob::constructVob(*this);
-            Vob::VobInformation vob = Vob::asVob(*this, e);
+                // Make vob
+                Handle::EntityHandle e = Vob::constructVob(*this);
+                Vob::VobInformation vob = Vob::asVob(*this, e);
 
-            // Setup
-            Vob::setName(vob, v.vobName);
+                // Setup
+                Vob::setName(vob, v.vobName);
 
-            Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
-            m.Translation(m.Translation() * (1.0f / 100.0f));
-            Vob::setTransform(vob, m);
-            Vob::setVisual(vob, v.visual);
+                Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
+                m.Translation(m.Translation() * (1.0f / 100.0f));
+                Vob::setTransform(vob, m);
+                Vob::setVisual(vob, v.visual);
 
-            //if(!vob.visual)
-            //    LogInfo() << "No visual for: " << v.visual;
+                //if(!vob.visual)
+                //    LogInfo() << "No visual for: " << v.visual;
 
-            Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
-                         Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
-                         vob.visual ? 0 : 0xFF00AA00);
+                Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
+                             Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
+                             vob.visual ? 0 : 0xFF00AA00);
 
-        }
-    };
+            }
+        };
 
-    vobLoad(world.rootVobs);
+        vobLoad(world.rootVobs);
 
-    // Load waynet
-    m_Waynet = Waynet::makeWaynetFromZen(world);
+        // Load waynet
+        m_Waynet = Waynet::makeWaynetFromZen(world);
 
-    // Init script-engine
-    initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
+        // Init script-engine
+        initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
+    }
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 

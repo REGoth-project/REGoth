@@ -9,6 +9,7 @@
 #include <utils/logger.h>
 #include <bx/commandline.h>
 #include <zenload/zCModelPrototype.h>
+#include <components/Vob.h>
 
 using namespace Engine;
 
@@ -27,7 +28,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     const char* value = nullptr;
 
     m_Args.gameBaseDirectory = ".";
-    m_Args.startupZEN = "addonworld.zen";
+    //m_Args.startupZEN = "addonworld.zen";
 
     if(cmdLine.hasArg('g'))
     {
@@ -67,16 +68,28 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
 	World::WorldInstance& world = m_WorldInstances.getElement(w);
 	onWorldCreated(w);
 
-	std::vector<uint8_t> zenData;
-	m_FileIndex.getFileData(worldFile, zenData);
+    if(!worldFile.empty())
+    {
+        std::vector<uint8_t> zenData;
+        m_FileIndex.getFileData(worldFile, zenData);
 
-	if (zenData.empty())
-	{
-		LogWarn() << "Failed to find world file: " << worldFile;
-		return Handle::WorldHandle::makeInvalidHandle();
-	}
+        if (zenData.empty())
+        {
+            LogWarn() << "Failed to find world file: " << worldFile;
+            return Handle::WorldHandle::makeInvalidHandle();
+        }
+    }
 
-	world.init(*this, worldFile);
+    world.init(*this, worldFile);
+
+    if(!m_Args.testVisual.empty())
+    {
+        LogInfo() << "Testing visual: " << m_Args.testVisual;
+        Handle::EntityHandle e = Vob::constructVob(world);
+        Vob::VobInformation vob = Vob::asVob(world, e);
+
+        Vob::setVisual(vob, m_Args.testVisual);
+    }
 
 	m_Worlds.push_back(w);
 
