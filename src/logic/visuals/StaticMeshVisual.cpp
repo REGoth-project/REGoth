@@ -20,7 +20,8 @@ StaticMeshVisual::~StaticMeshVisual()
 bool StaticMeshVisual::load(const std::string& visual)
 {
     VisualController::load(visual);
-    assert(visual.find(".3DS") != std::string::npos || visual.find(".MMB") != std::string::npos || visual.find(".MMS") != std::string::npos);
+    assert(visual.find(".3DS") != std::string::npos || visual.find(".MMB") != std::string::npos || visual.find(".MMS") != std::string::npos 
+		|| visual.find(".MDMS") != std::string::npos);
 
     m_MeshHandle = m_World.getStaticMeshAllocator().loadMeshVDF(visual);
 
@@ -103,7 +104,7 @@ void StaticMeshVisual::setAnimationFrame(size_t submeshIndex, size_t frame)
         std::string oldTex = getDiffuseTexture(submeshIndex);
         setDiffuseTexture(submeshIndex, tx);
 
-        if(oldTex == getDiffuseTexture(submeshIndex))
-            LogWarn() << "Head-tex not found!";
+        //if(oldTex == getDiffuseTexture(submeshIndex))
+        //    LogWarn() << "Head-tex not found!";
     }
 }

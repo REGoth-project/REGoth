@@ -105,8 +105,9 @@ class ExampleCubes : public entry::AppI
 		Meshes::PositionUVVertex::init();
 		Meshes::SkeletalVertex::init();
 
-		m_Engine.initEngine(_argc, _argv);
-		m_Engine.addWorld(m_Engine.getEngineArgs().startupZEN);
+		m_pEngine = new Engine::GameEngine;
+		m_pEngine->initEngine(_argc, _argv);
+		m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
 
 		m_timeOffset = bx::getHPCounter();
 
@@ -116,6 +117,8 @@ class ExampleCubes : public entry::AppI
 	virtual int shutdown() BX_OVERRIDE
 	{
 		// Cleanup.
+
+		delete m_pEngine;
 
 		ddShutdown();
 
@@ -142,7 +145,7 @@ class ExampleCubes : public entry::AppI
 
 			// Use debug font to print information about this example.
 			bgfx::dbgTextClear();
-			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_Engine.getEngineArgs().startupZEN.c_str());
+			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
 			bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
 
 
@@ -158,7 +161,7 @@ class ExampleCubes : public entry::AppI
 
 			ddBegin(0);
 
-			m_Engine.frameUpdate(dt, m_width, m_height);
+			m_pEngine->frameUpdate(dt, m_width, m_height);
 
 			ddSetTransform(nullptr);
 			ddDrawAxis(0.0f, 0.0f, 0.0f);
@@ -193,8 +196,7 @@ class ExampleCubes : public entry::AppI
 		return false;
 	}
 
-	Handle::MeshHandle m_LevelMesh;
-	Engine::GameEngine m_Engine;
+	Engine::GameEngine* m_pEngine;
 	uint32_t m_width;
 	uint32_t m_height;
 	uint32_t m_debug;

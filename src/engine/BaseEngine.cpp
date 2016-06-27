@@ -149,9 +149,9 @@ void BaseEngine::loadArchives()
         m_FileIndex.loadVDF(s);
     }
 
-    ZenLoad::zCModelPrototype p("HUMANS.MDS", m_FileIndex);
 
-    /*std::list<std::string> modArchives = Utils::getFilesInDirectory("vdf", "mod");
+	// Load mod archives with higher priority
+    std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
 
     if(!modArchives.empty())
     {
@@ -160,7 +160,7 @@ void BaseEngine::loadArchives()
         {
             m_FileIndex.loadVDF(s, 1);
         }
-    }*/
+    }
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)

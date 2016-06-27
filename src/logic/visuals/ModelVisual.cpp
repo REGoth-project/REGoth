@@ -170,6 +170,9 @@ void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, si
 {
     std::string v = head;
 
+	if(v.empty())
+		return;
+
     if(v.find(".") == std::string::npos)
         v += ".MMB";
 
@@ -178,6 +181,9 @@ void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, si
     m_BodyState.teethTextureIdx = teethTextureIdx;
 
     Handle::EntityHandle e = setNodeVisual(v, findNodeIndex(MODEL_NODE_NAME_HEAD));
+
+	if(!e.isValid())
+		return;
 
     Vob::VobInformation vob = Vob::asVob(m_World, e);
     if(Vob::getVisual(vob))

@@ -114,7 +114,8 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     // Check type of visual
     if(visual.find(".3DS") != std::string::npos
        || visual.find(".MMB") != std::string::npos
-       || visual.find(".MMS") != std::string::npos)
+		|| visual.find(".MMS") != std::string::npos
+		|| visual.find(".MDMS") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::StaticMeshVisual(*vob.world, vob.entity);
         if(ld->load(visual))

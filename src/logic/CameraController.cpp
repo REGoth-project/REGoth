@@ -13,7 +13,9 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     memset(&m_CameraSettings, 0, sizeof(m_CameraSettings));
 
     m_CameraSettings.freeCameraSettings.moveSpeed = 1.0f;
-    m_CameraSettings.freeCameraSettings.turnSpeed = 1.0f;
+    m_CameraSettings.freeCameraSettings.turnSpeed = 0.7f;
+
+	m_CameraSettings.freeCameraSettings.position = Math::float3(0.0f, 2.0f, -4.0f);
 }
 
 void Logic::CameraController::onUpdate(float deltaTime)

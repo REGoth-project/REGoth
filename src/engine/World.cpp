@@ -149,7 +149,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
         // Init script-engine
         initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
-    }
+	}
+	else
+	{
+		initializeScriptEngineForZenWorld("");
+	}
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
@@ -200,8 +204,12 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 #endif
         }
     }
-    LogInfo() << "Initializing scripts for world: " << worldName;
-    m_ScriptEngine.initForWorld(worldName);
+
+	if(!worldName.empty())
+	{
+		LogInfo() << "Initializing scripts for world: " << worldName;
+		m_ScriptEngine.initForWorld(worldName);
+	}
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)

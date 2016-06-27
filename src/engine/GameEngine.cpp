@@ -45,6 +45,9 @@ void GameEngine::initEngine(int argc, char** argv)
         if(value)
         {
             m_Args.testVisual = value;
+
+			if(m_Args.testVisual.find(".MDM"))
+				m_Args.testVisual += "S";
         }
     }
 }
@@ -123,6 +126,8 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
 	Math::Matrix lookAt = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0));
     getMainCamera<Components::PositionComponent>().m_WorldMatrix
             = lookAt.Invert();
+
+	getMainCamera<Components::PositionComponent>().m_WorldMatrix.Translation(Math::float3(0.0f, 50.0f, 50.0f));
 
     Components::LogicComponent& logic = Components::Actions::initComponent<Components::LogicComponent>(
             winst.getComponentAllocator(),
