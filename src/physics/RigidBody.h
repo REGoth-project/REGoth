@@ -75,7 +75,6 @@ namespace Physics
             // Add the body to the physicssystem
             pPhysicsSystem->addRigidBody(m_pRigidBody);
             m_pDynamicsWorld = pPhysicsSystem->getDynamicsWorld();
-            m_pRigidBody->activate(true);
 
             return true;
         }

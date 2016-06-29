@@ -53,6 +53,14 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPacked(const ZenLoad::PackedMesh
         mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;
         mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
 
+		if(!m.material.noLighmap)
+		{
+			// Lighten these up a bit
+			for(uint32_t idx : m.indices)
+			{
+				mesh.m_Vertices[idx].Color = 0xFFAAAAAA;
+			}
+		}
     }
 
     // Construct BGFX Vertex/Index-buffers
