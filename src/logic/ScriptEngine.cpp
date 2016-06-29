@@ -187,7 +187,7 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
 
         // Only switch the body-armor
-        VobTypes::NPC_ReplaceMainVisual(vob, visual);
+        VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
     if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)

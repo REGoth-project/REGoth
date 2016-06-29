@@ -34,8 +34,8 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
     Components::addComponent<Components::PositionComponent>(entity);
     Components::Actions::initComponent<Components::PositionComponent>(world.getComponentAllocator(), e);
 
-    Components::addComponent<Components::PhysicsComponent>(entity);
-    Components::Actions::initComponent<Components::PhysicsComponent>(world.getComponentAllocator(), e);
+    //Components::addComponent<Components::PhysicsComponent>(entity);
+    //Components::Actions::initComponent<Components::PhysicsComponent>(world.getComponentAllocator(), e);
 
     return e;
 }
@@ -134,7 +134,12 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
             delete ld;
     }
 
-
+    // Notify the logic controller
+    if(vob.visual != (*ppVisual))
+    {
+        if(vob.logic)
+            vob.logic->onVisualChanged();
+    }
 
     vob.visual = (*ppVisual);
 }

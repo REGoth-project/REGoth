@@ -105,6 +105,15 @@ namespace Components
 		{
 			return m_AnimationsByName.find(name) != m_AnimationsByName.end();
 		}
+
+		/**
+		 * @return Value useful to check if there was an actual change. This value is modified every time
+		 * 		  the animation was updated
+		 */
+		size_t getAnimationStateHash()
+		{
+			return m_AnimationStateHash;
+		}
 	private:
 
 		/**
@@ -139,5 +148,11 @@ namespace Components
 		 * @brief Root-Node-Veclocity in m/s
 		 */
 		Math::float3 m_AnimRootVelocity;
+
+		/**
+		 * @brief Value useful to check if there was an actual change. This value is modified every time
+		 * 		  the animation was updated
+		 */
+		size_t m_AnimationStateHash;
 	};
 }

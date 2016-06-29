@@ -123,7 +123,10 @@ namespace Components
             inline Math::Matrix getRigidBodyTransform(Components::PhysicsComponent& c)
             {
                 Math::Matrix m;
-                c.m_RigidBody.getMotionState()->getOpenGLMatrix(m.mv);
+                if(c.m_RigidBody.getMotionState())
+                    c.m_RigidBody.getMotionState()->getOpenGLMatrix(m.mv);
+                else
+                    m = Math::Matrix::CreateIdentity();
 
                 return m;
             }
@@ -135,9 +138,9 @@ namespace Components
              */
             inline void setRigidBodyPosition(Components::PhysicsComponent& c, const Math::float3& position)
             {
-                btTransform t;
-                t.setOrigin(btVector3(position.x, position.y, position.z));
-                c.m_RigidBody.getMotionState()->setWorldTransform(t);
+                Math::Matrix m = Math::Matrix::CreateTranslation(position);
+
+                c.m_RigidBody.setBodyTransform(m);
             }
         }
 

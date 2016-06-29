@@ -1,7 +1,16 @@
 #include "MotionState.h"
 
-Physics::MotionState::MotionState() :
-        btDefaultMotionState(btTransform(btQuaternion(0.0f, 0.0f, 0.0f, 1.0f), btVector3(0.0f,0.0f,0.0f)))
+// Workaround for initializer-list
+static btTransform getFromFloat(const Math::Matrix& transform)
+{
+    btTransform t;
+    t.setFromOpenGLMatrix(transform.mv);
+
+    return t;
+}
+
+Physics::MotionState::MotionState(const Math::Matrix& transform) :
+        btDefaultMotionState(getFromFloat(transform))
 {
 }
 
@@ -38,4 +47,12 @@ void Physics::MotionState::setWorldTransform(const btTransform &centerOfMassWorl
 {
     //std::unique_lock<std::shared_timed_mutex> exclusive(m_Mutex, std::defer_lock);
     btDefaultMotionState::setWorldTransform(centerOfMassWorldTrans);
+}
+
+void Physics::MotionState::setWorldTransform(const Math::Matrix &centerOfMassWorldTrans)
+{
+    btTransform t;
+    t.setFromOpenGLMatrix(centerOfMassWorldTrans.mv);
+
+    setWorldTransform(t);
 }

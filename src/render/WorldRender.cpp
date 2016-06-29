@@ -33,17 +33,24 @@ namespace Render
 		Components::BBoxComponent* bboxes = std::get<Components::BBoxComponent*>(ctuple);
 		Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
 		Components::AnimationComponent* animations = std::get<Components::AnimationComponent*>(ctuple);
+		Components::PhysicsComponent* physics = std::get<Components::PhysicsComponent*>(ctuple);
 
 		size_t numIndices = 0;
 		for (size_t i = 0; i<num; i++)
 		{
-			
+			// Simple distance-check // TODO: Frustum/Occlusion-Culling
+			auto& pos = psc[i].m_WorldMatrix;
+			float distance2 = (pos.Translation() - cameraPosition).lengthSquared() * psc[i].m_DrawDistanceFactor;
+
 			Components::ComponentMask mask = ents[i].m_ComponentMask;
 
-			auto& pos = psc[i].m_WorldMatrix;
+			// FIXME: Temporary
+			if((mask & Components::PhysicsComponent::MASK) != 0)
+			{
+				physics[i].m_RigidBody.setDebugDrawEnabled(psc[i].m_DrawDistanceFactor > 0.0f &&  distance2 < 10.0f * 10.0f);
+			}
 
-			// Simple distance-check // TODO: Frustum/Occlusion-Culling
-			if((pos.Translation() - cameraPosition).lengthSquared() * psc[i].m_DrawDistanceFactor > drawDistance2)
+			if(distance2 > drawDistance2)
 				continue;
 
 			if ((mask & Components::StaticMeshComponent::MASK) != 0)
@@ -144,10 +151,13 @@ namespace Render
 			}
 
 
+
 		}
 
 		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles: %d", numIndices/3);
 
+
+		//world.getPhysicsSystem().debugDraw();
 
 		// TODO: Debugging - remove
 		/*if(!world.getWaynet().waypoints.empty())

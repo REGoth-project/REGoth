@@ -48,10 +48,9 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPacked(const ZenLoad::PackedMesh
 
         mesh.m_Indices.insert(mesh.m_Indices.end(), m.indices.begin(), m.indices.end());
 
-        // TODO: Implement materials
-        Handle::MaterialHandle h;
-        h.invalidate();
-        mesh.m_SubmeshMaterials.push_back(h);
+        mesh.m_SubmeshMaterials.emplace_back();
+        mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
+        mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;
         mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
 
     }

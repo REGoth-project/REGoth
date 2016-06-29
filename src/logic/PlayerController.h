@@ -28,6 +28,11 @@ namespace Logic
         { m_RoutineState.routineWaypoints.push_back(wp); }
 
         /**
+         * Called when the models visual changed
+         */
+        virtual void onVisualChanged();
+
+        /**
          * Called on game-tick
          */
         void onUpdate(float deltaTime) override;
@@ -77,6 +82,19 @@ namespace Logic
          */
         ModelVisual* getModelVisual();
 
+        /**
+         * Places the playercontroller on the ground again. TODO: TESTING-ONLY!
+         */
+        void placeOnGround();
+
+        /**
+         * @return The script-side handle to this NPC
+         */
+        Daedalus::GameState::NpcHandle getScriptHandle()
+        {
+            return m_ScriptState.npcHandle;
+        }
+
     protected:
 
         /**
@@ -117,6 +135,9 @@ namespace Logic
             // Path the NPC is currently trying to take (To m_AIState.targetWaypoint)
             std::vector<size_t> currentPath;
 
+            // Node the NPC is currently going to on the path
+            size_t targetNode;
+
             // Percentage of how far the NPC has gotten so far on the current path
             float currentPathPerc;
 
@@ -128,6 +149,12 @@ namespace Logic
         {
             // Move speed in m/s
             float moveSpeed;
+
+            // BBox for collision
+            Math::float3 collisionBBox[2];
+
+            // Root offset of the model
+            Math::float3 modelRoot;
         }m_NPCProperties;
 
         struct

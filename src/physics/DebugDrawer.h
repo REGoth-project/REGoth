@@ -9,9 +9,9 @@ namespace Physics
     {
     public:
 
-        DebugDrawer();
+        DebugDrawer(){}
 
-        virtual ~DebugDrawer();
+        virtual ~DebugDrawer(){}
 
         virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)
         {
@@ -19,10 +19,10 @@ namespace Physics
             ddSetTransform(nullptr);
 
             Math::float4 f(color.x(), color.y(), color.z(), 1.0f);
-            ddSetColor(f.toARGB8());
+            ddSetColor(f.toRGBA8());
 
-            ddMoveTo(from.x(), from.y(), from.z());
-            ddLineTo(to.x(), to.y(), to.z());
+            ddMoveTo(from.x(), from.y() + 0.1f, from.z());
+            ddLineTo(to.x(), to.y() + 0.1f, to.z());
 
             ddPop();
         }

@@ -60,7 +60,7 @@ namespace LevelMesh
 		target.m_SubmeshStarts.resize(1);
 		target.m_SubmeshMaterials.resize(1);
         target.m_SubmeshStarts[0] = {static_cast<I>(0),static_cast<I>(indices.size())};
-        target.m_SubmeshMaterials[0] = materialHandle;
+        //target.m_SubmeshMaterials[0] = materialHandle;
         target.m_Vertices = vertices;
         target.m_Indices = indices;
     }

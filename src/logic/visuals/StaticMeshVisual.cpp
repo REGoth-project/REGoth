@@ -3,6 +3,7 @@
 #include <content/ContentLoad.h>
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
+#include <components/EntityActions.h>
 
 using namespace Logic;
 
@@ -43,6 +44,8 @@ bool StaticMeshVisual::load(const std::string& visual)
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
         pos.m_WorldMatrix = getEntityTransform();
     }
+
+    updateCollision();
 
     return true;
 }
@@ -107,4 +110,31 @@ void StaticMeshVisual::setAnimationFrame(size_t submeshIndex, size_t frame)
         //if(oldTex == getDiffuseTexture(submeshIndex))
         //    LogWarn() << "Head-tex not found!";
     }
+}
+
+void StaticMeshVisual::updateCollision()
+{
+    VisualController::updateCollision();
+
+    // Get mesh data
+    Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(m_MeshHandle);
+
+    // Simplify mesh
+    Physics::CollisionShape* hull = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, m_Name);
+
+    if(!hull)
+        return;
+
+    // Create the component
+    Components::Actions::initComponent<Components::PhysicsComponent>(m_World.getComponentAllocator(), m_Entity);
+    Components::PhysicsComponent& phys = m_World.getEntity<Components::PhysicsComponent>(m_Entity);
+
+    // Set up rigid body (static)
+    phys.m_RigidBody.initPhysics(&m_World.getPhysicsSystem(), *hull, 0.0f, getEntityTransform());
+    phys.m_RigidBody.setFriction(1.0f);
+    phys.m_RigidBody.setRestitution(0.1f);
+
+    // Place rigid body onto the main entity
+    //phys.m_RigidBody.setBodyTransform(getEntityTransform());
+    //phys.m_RigidBody.getMotionState()->setWorldTransform(getEntityTransform());
 }

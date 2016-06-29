@@ -140,7 +140,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
             VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
 
             // Set main visual
-            Vob::setVisual(vob, body + ".MDM");
+            VobTypes::NPC_SetBodyMesh(vob, body, bodyTexNr, bodyTexColor);
 
             // Set head-mesh
             VobTypes::NPC_SetHeadMesh(vob, head, headTexNr, teethTexNr);

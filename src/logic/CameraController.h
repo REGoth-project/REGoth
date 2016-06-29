@@ -132,5 +132,7 @@ namespace Logic
          * Current view-matrix
          */
         Math::Matrix m_ViewMatrix;
+
+        Math::float2 m_LastMousePosition;
     };
 }

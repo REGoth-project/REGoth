@@ -33,9 +33,20 @@ namespace Logic
 
         struct BodyState
         {
+            BodyState()
+            {
+                headTextureIdx = 0;
+                teethTextureIdx = 0;
+                bodySkinColorIdx = 0;
+                bodyTextureIdx = 0;
+            }
+
             std::string headVisual;
+            std::string bodyVisual;
             size_t headTextureIdx;
             size_t teethTextureIdx;
+            size_t bodySkinColorIdx;
+            size_t bodyTextureIdx;
         };
 
         /**
@@ -48,12 +59,14 @@ namespace Logic
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
+         * Note2: This should not be used directly (Only while creating the NPC), use setBodyState instead!
          * @param visual Filename of the visual. Uncompiled-version of the name!
          */
         virtual bool load(const std::string& visual);
 
         /**
          * Sets the headmesh for this model
+         * Note: Will do an implicit setBodyState!
          * @param head File of the mesh to use as head
          */
         void setHeadMesh(const std::string& head, size_t headTextureIdx=0, size_t teethTextureIdx=0);
@@ -88,6 +101,11 @@ namespace Logic
         Components::AnimHandler& getAnimationHandler();
 
         /**
+         * @brief Called every frame by the player-controler
+         */
+        void onFrameUpdate(float dt);
+
+        /**
          * @brief Called when something else modified the transform of the underlaying entity
          */
         virtual void onTransformChanged() override;
@@ -103,7 +121,33 @@ namespace Logic
          * @return Visuals this body uses other than the main one (Head, armor, etc)
          */
         const BodyState& getBodyState(){ return m_BodyState; }
+
+        /**
+         * Sets a body-state
+         */
+        void setBodyState(const BodyState& state);
+
+        /**
+         * @return Distance from (0,0,0) to the feet
+         */
+        void getCollisionBBox(Math::float3 bb[2]);
+
+        /**
+         * @return Root position of the model
+         */
+        Math::float3 getModelRoot();
     protected:
+
+        /**
+         * Replaces the current body mesh of this model from the current body-state
+         */
+        void updateBodyMesh();
+
+        /**
+         * Replaces the current headmesh of this model from the current body-state
+         */
+        void updateHeadMesh();
+
         /**
          * Rebuilds the main entity list from everything found inside the PartEntityLists
          */
@@ -126,8 +170,8 @@ namespace Logic
         {
             std::vector<Handle::EntityHandle> mainSkelMeshEntities;
             std::vector<Handle::EntityHandle> headMeshEntities;
-            std::vector<Handle::EntityHandle> armorEntities;
             std::vector<Handle::EntityHandle> dynamicAttachments;
+            Handle::EntityHandle headEntity;
         }m_PartEntities;
 
         /**
@@ -144,5 +188,10 @@ namespace Logic
          * Visuals this body uses other than the main one (Head, armor, etc)
          */
         BodyState m_BodyState;
+
+        /**
+         * Last known animation state hash from the animation controller
+         */
+        size_t m_LastKnownAnimationState;
     };
 }

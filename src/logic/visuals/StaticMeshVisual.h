@@ -41,6 +41,11 @@ namespace Logic
          * @param frame Animation-frame to use
          */
         void setAnimationFrame(size_t submeshIndex, size_t frame);
+
+        /**
+         * Updates the collision-hull depending on this visual
+         */
+        virtual void updateCollision();
     protected:
 
         /**

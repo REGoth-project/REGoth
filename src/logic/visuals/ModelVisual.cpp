@@ -28,7 +28,8 @@ const std::string NPC_NODE_JAWS			= "ZS_JAWS";
 const std::string NPC_NODE_TORSO		= "ZS_TORSO";
 
 ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity)
-        : VisualController(world, entity)
+        : VisualController(world, entity),
+          m_LastKnownAnimationState(static_cast<size_t>(-1))
 {
 
 }
@@ -41,6 +42,8 @@ ModelVisual::~ModelVisual()
 bool ModelVisual::load(const std::string& visual)
 {
     VisualController::load(visual);
+
+    m_BodyState.bodyVisual = visual;
 
     assert(visual.find(".MDM") != std::string::npos
            || visual.find(".MDL") != std::string::npos
@@ -60,7 +63,7 @@ bool ModelVisual::load(const std::string& visual)
     m_VisualEntities.insert(m_VisualEntities.end(),
                             m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
 
-    for(Handle::EntityHandle e : m_VisualEntities)
+    for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
     {
         // Init positions
         Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(e);
@@ -79,7 +82,8 @@ bool ModelVisual::load(const std::string& visual)
     }
 
     // Read attachments
-    m_VisualAttachments.resize(getAnimationHandler().getObjectSpaceTransforms().size());
+    if(m_VisualAttachments.size() < getAnimationHandler().getObjectSpaceTransforms().size())
+        m_VisualAttachments.resize(getAnimationHandler().getObjectSpaceTransforms().size());
 
     if(m_VisualAttachments.empty())
         m_VisualAttachments.resize(zLib.getNodes().size());
@@ -116,7 +120,6 @@ bool ModelVisual::load(const std::string& visual)
 
             // Add the entities to our lists
             std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata);
-            m_VisualEntities.insert(m_VisualEntities.end(), tmp.begin(), tmp.end());
             m_PartEntities.dynamicAttachments.insert(m_PartEntities.dynamicAttachments.end(),
                                                              tmp.begin(), tmp.end());
 
@@ -163,6 +166,9 @@ bool ModelVisual::load(const std::string& visual)
     Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
     m_World.getEntity<Components::BBoxComponent>(e).m_DebugColor = 0xFFFFFFFF;
 
+    // Create m_VisualEntites-list
+    rebuildMainEntityList();
+
     return true;
 }
 
@@ -180,26 +186,7 @@ void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, si
     m_BodyState.headTextureIdx = headTextureIdx;
     m_BodyState.teethTextureIdx = teethTextureIdx;
 
-    Handle::EntityHandle e = setNodeVisual(v, findNodeIndex(MODEL_NODE_NAME_HEAD));
-
-	if(!e.isValid())
-		return;
-
-    Vob::VobInformation vob = Vob::asVob(m_World, e);
-    if(Vob::getVisual(vob))
-    {
-        // TODO: Type safety!
-        StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(vob));
-
-        // Submesh 0: Head
-        // Submesh 1: Mouthhole
-        // Submesh 2: Teeth
-        if(headTextureIdx > 0)
-            visual->setAnimationFrame(0, headTextureIdx);
-
-        if(teethTextureIdx > 0)
-            visual->setAnimationFrame(2, teethTextureIdx);
-    }
+    setBodyState(m_BodyState);
 }
 
 void ModelVisual::rebuildMainEntityList()
@@ -208,7 +195,6 @@ void ModelVisual::rebuildMainEntityList()
 
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.headMeshEntities.begin(), m_PartEntities.headMeshEntities.end());
-    m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.armorEntities.begin(), m_PartEntities.armorEntities.end());
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.dynamicAttachments.begin(), m_PartEntities.dynamicAttachments.end());
 }
 
@@ -371,6 +357,7 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, size_
         m_PartEntities.dynamicAttachments.push_back(avh);
 
         rebuildMainEntityList();
+        updateAttachmentTransforms();
 
         return avh;
     }
@@ -409,4 +396,141 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, EMode
         case EModelNode::Torso:return setNodeVisual(visual, findNodeIndex(NPC_NODE_TORSO));break;
     }
 }
+
+void ModelVisual::getCollisionBBox(Math::float3* bb)
+{
+    bb[0] = Math::float3(getMeshLib().getBBoxMin().v);
+    bb[1] = Math::float3(getMeshLib().getBBoxMax().v);
+
+    // These can be in various places...
+    if(bb[0].lengthSquared() == 0.0f && bb[1].lengthSquared() == 0.0f)
+    {
+        bb[0] = Math::float3(getMeshLib().getBBoxCollisionMin().v);
+        bb[1] = Math::float3(getMeshLib().getBBoxCollisionMax().v);
+
+        if(bb[0].lengthSquared() == 0.0f && bb[1].lengthSquared() == 0.0f)
+        {
+            const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
+            bb[0] = Math::float3(zLib.getBBoxMin().v);
+            bb[1] = Math::float3(zLib.getBBoxMax().v);
+        }
+    }
+}
+
+Math::float3 ModelVisual::getModelRoot()
+{
+    return Math::float3(getMeshLib().getRootNodeTranslation().v);
+}
+
+void ModelVisual::onFrameUpdate(float dt)
+{
+    size_t newHash = getAnimationHandler().getAnimationStateHash();
+    if(newHash != m_LastKnownAnimationState)
+    {
+        updateAttachmentTransforms();
+        m_LastKnownAnimationState = newHash;
+    }
+}
+
+void ModelVisual::setBodyState(const ModelVisual::BodyState &state)
+{
+    m_BodyState = state;
+
+    updateBodyMesh();
+    updateHeadMesh();
+}
+
+void ModelVisual::updateBodyMesh()
+{
+    // Remove all created entities from the world
+    for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
+        m_World.removeEntity(e);
+
+    m_PartEntities.mainSkelMeshEntities.clear();
+
+    load(m_BodyState.bodyVisual);
+
+    // Fix body-texture and skin-color
+    if(!m_PartEntities.mainSkelMeshEntities.empty())
+    {
+        Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[0];
+
+        Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
+        if(Components::hasComponent<Components::StaticMeshComponent>(ent))
+        {
+            Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(bodyMain);
+
+            if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
+            {
+                // Get texture parts
+                std::vector<std::string> bodyTxParts = Utils::split(m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName, "0123456789");
+
+                if (bodyTxParts.size() == 3) // [HUM_HEAD_...V, _C, .TGA]
+                {
+                    std::string newBodyTx = bodyTxParts[0]
+                                            + std::to_string(m_BodyState.bodyTextureIdx)
+                                            + bodyTxParts[1]
+                                            + std::to_string(m_BodyState.bodySkinColorIdx)
+                                            + bodyTxParts[2];
+
+                    sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newBodyTx);
+                }
+            }
+
+
+        }
+    }
+}
+
+void ModelVisual::updateHeadMesh()
+{
+    for(Handle::EntityHandle e : m_PartEntities.headMeshEntities)
+        m_World.removeEntity(e);
+
+    m_PartEntities.headMeshEntities.clear();
+    m_PartEntities.headEntity.invalidate();
+
+    // Load and attach the visual
+    Handle::EntityHandle headEntity = setNodeVisual(m_BodyState.headVisual, findNodeIndex(MODEL_NODE_NAME_HEAD));
+
+    if(!headEntity.isValid())
+        return;
+
+    m_PartEntities.headEntity = headEntity;
+
+    // Fix head texture and color
+    Vob::VobInformation head = Vob::asVob(m_World, m_PartEntities.headEntity);
+    if(Vob::getVisual(head))
+    {
+        // TODO: Type safety!
+        StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(head));
+
+        if(m_BodyState.headTextureIdx > 0 || m_BodyState.bodySkinColorIdx > 0)
+        {
+            // Get head-texture parts
+            std::vector<std::string> headTxParts = Utils::split(visual->getDiffuseTexture(0), "0123456789");
+
+            if (headTxParts.size() == 3) // [HUM_HEAD_...V, _C, .TGA]
+            {
+                std::string newHeadTx = headTxParts[0]
+                                        + std::to_string(m_BodyState.headTextureIdx)
+                                        + headTxParts[1]
+                                        + std::to_string(m_BodyState.bodySkinColorIdx)
+                                        + headTxParts[2];
+
+                visual->setDiffuseTexture(0, newHeadTx);
+            }
+        }
+        // Submesh 0: Head
+        // Submesh 1: Mouthhole
+        // Submesh 2: Teeth
+        //if(headTextureIdx > 0)
+        //    visual->setAnimationFrame(0, headTextureIdx);
+
+        //if(teethTextureIdx > 0)
+        //    visual->setAnimationFrame(2, teethTextureIdx);
+    }
+}
+
+
 

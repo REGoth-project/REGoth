@@ -15,12 +15,14 @@
 #include <debugdraw/debugdraw.h>
 #include <components/Vob.h>
 #include <components/VobClasses.h>
+#include <entry/input.h>
 
 using namespace World;
 
 WorldInstance::WorldInstance()
 	: m_WorldMesh(*this),
-      m_ScriptEngine(*this)
+      m_ScriptEngine(*this),
+      m_PhysicsSystem(*this)
 {
 	
 }
@@ -62,6 +64,18 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         // TODO: Put these into a compound-component or something
         std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData);
 
+        // Create collisionmesh for the world
+        if(!ents.empty())
+        {
+            Components::PhysicsComponent& phys = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), ents.front());
+
+            Physics::CollisionShape* shape = m_PhysicsSystem.makeCollisionShapeFromMesh(worldMeshData);
+            phys.m_RigidBody.initPhysics(&m_PhysicsSystem, *shape, 0.0f);
+            phys.m_RigidBody.setFriction(1.0f);
+            phys.m_RigidBody.setRestitution(0.1f);
+            phys.m_RigidBody.setDebugDrawEnabled(false);
+        }
+
         for (Handle::EntityHandle e : ents)
         {
             // Init positions
@@ -76,40 +90,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         }
 
 
-        // Load vobs
-        // TODO: Refractor
-        /*std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](const std::vector<ZenLoad::zCVobData>& vobs) {
-            for (const ZenLoad::zCVobData& v : vobs)
-            {
-                vobLoad(v.childVobs);
-
-                // Check if we can render this
-                if(v.visual.find(".3DS") == std::string::npos)
-                    continue;
-
-                Handle::MeshHandle msh = getStaticMeshAllocator().loadMeshVDF(v.visual);
-
-                if(!msh.isValid())
-                    continue;
-
-                Meshes::WorldStaticMesh& mdata = getStaticMeshAllocator().getMesh(msh);
-
-                // TODO: Put these into a compound-component or something
-                std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, msh, mdata);
-
-                for(Handle::EntityHandle e : ents)
-                {
-                    // Init positions
-                    Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
-                    Components::addComponent<Components::PositionComponent>(entity);
-
-                    // Copy world-matrix
-                    Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
-                    pos.m_WorldMatrix = Math::Matrix(v.worldMatrix.mv);
-                    pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
-                }
-            }
-        };*/
 
         std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](
                 const std::vector<ZenLoad::zCVobData> &vobs) {
@@ -149,6 +129,14 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
         // Init script-engine
         initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
+
+
+        Handle::EntityHandle testEntity = Vob::constructVob(*this);
+
+        auto& ph = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), testEntity);
+        ph.m_RigidBody.initPhysics(&m_PhysicsSystem, *m_PhysicsSystem.makeBoxCollisionShape(Math::float3(2.5f, 2.5f, 2.5f)));
+
+        Components::Actions::Physics::setRigidBodyPosition(ph, Math::float3(0.0f, 10.0f, 0.0f));
 	}
 	else
 	{
@@ -239,30 +227,8 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
-    /*Components::LogicComponent& logic = m_Allocators.m_ComponentAllocator.getElement<Components::LogicComponent>(m_TestEntity);
-    Logic::PlayerController* ai = reinterpret_cast<Logic::PlayerController*>(logic.m_pLogicController);
-
-    // FIXME: Debug only, take out!
-    Math::float3 cp = reinterpret_cast<Engine::GameEngine*>(m_pEngine)->getMainCameraController()->getEntityTransform().Translation();
-    size_t nearest = Waynet::findNearestWaypointTo(m_Waynet, cp);
-
-    bgfx::dbgTextPrintf(0, 4, 0x0f, "Camera: %s", cp.toString().c_str());
-
-
-    if(nearest != static_cast<size_t>(-1))
-    {
-        Math::float3 npos = m_Waynet.waypoints[nearest].position;
-
-        bgfx::dbgTextPrintf(0, 5, 0x0f, "Nearest wp: (%d) %s", nearest, npos.toString().c_str());
-
-        ddPush();
-            ddSetColor(0xFFFFFFFF);
-            ddDrawOrb(npos.x, npos.y, npos.z, 1.0f);
-        ddPop();
-
-        ai->gotoWaypoint(nearest);
-    }
-*/
+    // Update physics
+    m_PhysicsSystem.update(deltaTime);
 
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;

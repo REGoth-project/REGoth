@@ -20,6 +20,11 @@ namespace Logic
         virtual ~Controller(){};
 
         /**
+         * Called when the models visual changed
+         */
+        virtual void onVisualChanged(){};
+
+        /**
          * Called on game-tick
          */
         virtual void onUpdate(float deltaTime){};

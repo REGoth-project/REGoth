@@ -108,23 +108,32 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
 void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, size_t headTextureIdx,
                                  size_t teethTextureIdx)
 {
+    Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+
     // TODO: Use head/teeth texture indices
-    reinterpret_cast<Logic::ModelVisual*>(vob.visual)->setHeadMesh(visual,headTextureIdx,teethTextureIdx);
+    model->setHeadMesh(visual,headTextureIdx,teethTextureIdx);
 }
 
-void ::VobTypes::NPC_ReplaceMainVisual(VobTypes::NpcVobInformation &vob, const std::string &visual)
+void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int bodyTexIdx, int skinColorIdx)
 {
     Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
-    Logic::ModelVisual::BodyState oldState = model->getBodyState();
+    Logic::ModelVisual::BodyState state = model->getBodyState();
 
-    // Replace visual
-    Vob::setVisual(vob, visual);
+    state.bodyVisual = visual;
 
-    // Pointer changed, re-get this
-    model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
+    if(state.bodyVisual.find_first_of('.') == std::string::npos)
+        state.bodyVisual += ".MDM";
 
-    // Set the other stuff again
-    model->setHeadMesh(oldState.headVisual, oldState.headTextureIdx, oldState.teethTextureIdx);
+    if(bodyTexIdx != -1)
+        state.bodySkinColorIdx = static_cast<size_t>(bodyTexIdx);
+
+    if(skinColorIdx != -1)
+        state.bodySkinColorIdx = static_cast<size_t>(skinColorIdx);
+
+    model->setBodyState(state);
+
+    if(vob.logic)
+        vob.logic->onVisualChanged();
 }
 
 void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)
@@ -154,6 +163,11 @@ void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::Gam
     {
         model->setNodeVisual(itemData.visual, node);
     }
+}
+
+Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInformation &vob)
+{
+    return vob.world->getScriptEngine().getGameState().getNpc(vob.playerController->getScriptHandle());
 }
 
 

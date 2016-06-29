@@ -11,7 +11,7 @@ AnimHandler::AnimHandler()
     m_ActiveAnimation = static_cast<size_t>(-1);
     m_AnimRootVelocity = Math::float3(0, 0, 0);
     m_LastProcessedFrame = static_cast<size_t>(-1);
-
+    m_AnimationStateHash = 0;
 }
 
 /**
@@ -158,6 +158,9 @@ void AnimHandler::updateAnimations(double deltaTime)
                              getActiveAnimation()->getModelAniHeader().fpsRate;
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
     }
+
+    // Updated the animation, update the hash-value
+    m_AnimationStateHash++;
 }
 
 /**

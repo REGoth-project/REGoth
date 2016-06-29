@@ -48,16 +48,22 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
 
 void Logic::PlayerController::onUpdate(float deltaTime)
 {
+    ModelVisual* model = getModelVisual();
+
     // Do waypoint-actions
     if (travelPath(deltaTime))
     {
         // Path done, stop animation
-        if(getModelVisual())
-            getModelVisual()->setAnimation(ModelVisual::Idle);
+        if(model)
+            model->setAnimation(ModelVisual::Idle);
 
         if (m_RoutineState.routineActive)
             continueRoutine();
     }
+
+    // Update model for this frame
+    if(model)
+        model->onFrameUpdate(deltaTime);
 }
 
 void Logic::PlayerController::continueRoutine()
@@ -82,8 +88,13 @@ void Logic::PlayerController::teleportToWaypoint(size_t wp)
 {
     m_AIState.closestWaypoint = wp;
 
-    // FIXME: Don't ignore wp-direction
-    setEntityTransform(Math::Matrix::CreateTranslation(m_World.getWaynet().waypoints[wp].position));
+    Math::Matrix transform = Math::Matrix::CreateLookAt(m_World.getWaynet().waypoints[wp].position,
+                                                        m_World.getWaynet().waypoints[wp].position +
+                                                                m_World.getWaynet().waypoints[wp].direction,
+                                                         Math::float3(0, 1, 0)).Invert();
+    setEntityTransform(transform);
+
+    placeOnGround();
 }
 
 void Logic::PlayerController::gotoWaypoint(size_t wp)
@@ -105,6 +116,7 @@ void Logic::PlayerController::rebuildRoute()
 
     m_MoveState.currentPathPerc = 0.0f;
     m_MoveState.currentRouteLength = World::Waynet::getPathLength(m_World.getWaynet(), m_MoveState.currentPath);
+    m_MoveState.targetNode = 0;
 }
 
 bool Logic::PlayerController::travelPath(float deltaTime)
@@ -112,13 +124,56 @@ bool Logic::PlayerController::travelPath(float deltaTime)
     if (m_MoveState.currentPath.empty())
         return true;
 
+    Math::float3 targetPosition = m_World.getWaynet().waypoints[m_MoveState.currentPath[m_MoveState.targetNode]].position;
+
+    Math::float3 currentPosition = getEntityTransform().Translation();
+    Math::float3 differenceXZ = targetPosition - currentPosition;
+
+    // Remove angle
+    differenceXZ.y = 0.0f;
+    if(differenceXZ.lengthSquared() > 0.0f)
+    {
+        Math::float3 direction = differenceXZ;
+        direction.normalize();
+
+        direction *= deltaTime * m_NPCProperties.moveSpeed;
+
+        // Move
+        setEntityTransform(Math::Matrix::CreateLookAt(currentPosition + direction,
+                                                      currentPosition + direction * 2,
+                                                      Math::float3(0, 1, 0)).Invert());
+
+    }
+
+    placeOnGround();
+
+    // Set run animation
+    getModelVisual()->setAnimation(ModelVisual::Run);
+
+    if(differenceXZ.lengthSquared() < 0.5f) // TODO: Find a nice setting for this
+    {
+        if(abs(currentPosition.y - targetPosition.y) < 2.0f)
+        {
+            m_MoveState.targetNode++;
+
+            if(m_MoveState.targetNode >= m_MoveState.currentPath.size())
+            {
+                m_MoveState.currentPath.clear();
+                return true;
+            }
+        }
+    }
+
+    return false;
+
     // Frame update...
-    m_MoveState.currentPathPerc = std::min(1.0f, m_MoveState.currentPathPerc
+    /*m_MoveState.currentPathPerc = std::min(1.0f, m_MoveState.currentPathPerc
                                                  + deltaTime
                                                    * (m_NPCProperties.moveSpeed / m_MoveState.currentRouteLength));
 
     // Get new position
     Math::float3 lastPosition = getEntityTransform().Translation();
+
     Math::float3 position = World::Waynet::interpolatePositionOnPath(m_World.getWaynet(),
                                                                      m_MoveState.currentPath,
                                                                      m_MoveState.currentPathPerc);
@@ -132,16 +187,22 @@ bool Logic::PlayerController::travelPath(float deltaTime)
         m_AIState.closestWaypoint = m_MoveState.currentPath[cwp];
 
     // FIXME: This should be taken care of by the physics engine
-    Math::float3 direction = (position - lastPosition).normalize();
+    Math::float3 direction = position - lastPosition;
+
+    // Remove angle
+    direction.y = 0.0f;
+    direction = direction.normalize();
+
     setEntityTransform(Math::Matrix::CreateLookAt(position, position + direction, Math::float3(0,1,0)).Invert());
 
-    // Set run animation
-    getModelVisual()->setAnimation(ModelVisual::Run);
+    placeOnGround();
+
+
 
     if (m_MoveState.currentPathPerc >= 1.0f) // == would be sufficient here, but why not?
         return true;
 
-    return false;
+    return false;*/
 }
 
 void Logic::PlayerController::onDebugDraw()
@@ -172,4 +233,28 @@ Logic::ModelVisual* Logic::PlayerController::getModelVisual()
 
     // TODO: Bring in some type-checking here
     return reinterpret_cast<ModelVisual*>(vob.visual);
+}
+
+void Logic::PlayerController::placeOnGround()
+{
+    // Fix position
+    Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation();
+    Math::float3 hit = m_World.getPhysicsSystem().raytrace(from, to);
+
+    if (hit != to)
+    {
+        Math::Matrix m = getEntityTransform();
+
+        float feet = m_NPCProperties.modelRoot.y;
+
+        m.Translation(hit + Math::float3(0.0f, feet, 0.0f));
+        setEntityTransform(m);
+    }
+}
+
+void Logic::PlayerController::onVisualChanged()
+{
+    getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
+    m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
 }

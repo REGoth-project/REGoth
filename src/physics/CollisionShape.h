@@ -27,9 +27,14 @@ namespace Physics
             m_pShape->setUserPointer(this);
         }
 
-        btCollisionShape *shape()
+        btCollisionShape *getShape()
         {
             return m_pShape;
+        }
+
+        void setUserPointer(void* userptr)
+        {
+            m_pShape->setUserPointer(userptr);
         }
 
     private:

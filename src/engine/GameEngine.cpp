@@ -46,7 +46,7 @@ void GameEngine::initEngine(int argc, char** argv)
         {
             m_Args.testVisual = value;
 
-			if(m_Args.testVisual.find(".MDM"))
+			if(m_Args.testVisual.find(".MDM") != std::string::npos)
 				m_Args.testVisual += "S";
         }
     }
@@ -54,8 +54,27 @@ void GameEngine::initEngine(int argc, char** argv)
 
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 {
-    for(auto s : m_Worlds)
-        m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE, getMainCamera<Components::PositionComponent>().m_WorldMatrix);
+    // Debug only
+    static bool lastLogicDisableKeyState = false;
+    static bool disableLogic = false;
+
+    if(inputGetKeyState(entry::Key::Key2) != lastLogicDisableKeyState)
+    {
+        if(!lastLogicDisableKeyState)
+            disableLogic = !disableLogic;
+
+        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
+    }
+
+    if(disableLogic)
+    {
+        getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
+    } else
+    {
+        for (auto s : m_Worlds)
+            m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
+                                                         getMainCamera<Components::PositionComponent>().m_WorldMatrix);
+    }
 
     drawFrame(width, height);
 }
@@ -136,9 +155,9 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
     Logic::CameraController* cam = new Logic::CameraController(winst, m_MainCamera);
     logic.m_pLogicController = cam;
 
-    cam->setCameraMode(Logic::CameraController::ECameraMode::Free);
-    cam->getCameraSettings().freeCameraSettings.moveSpeed = 20.0f;
-    cam->getCameraSettings().freeCameraSettings.turnSpeed = 5.0f;
+    cam->setCameraMode(Logic::CameraController::ECameraMode::FirstPerson);
+    cam->getCameraSettings().freeCameraSettings.moveSpeed = 5.0f;
+    cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
 
 	return m_MainCamera;
 }

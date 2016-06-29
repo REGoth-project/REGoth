@@ -66,7 +66,7 @@ namespace VobTypes
      * @param vob NPC to operate on
      * @param visual Visual to load and set
      */
-    void NPC_ReplaceMainVisual(NpcVobInformation& vob, const std::string& visual);
+    void NPC_SetBodyMesh(NpcVobInformation &vob, const std::string &visual, int bodyTexIdx=-1, int skinColorIdx=-1);
 
     /**
      * Equips the given weapon to the NPC
@@ -74,6 +74,13 @@ namespace VobTypes
      * @param weapon Script-Handle to the weapon
      */
     void NPC_EquipWeapon(NpcVobInformation& vob, Daedalus::GameState::ItemHandle weapon);
+
+    /**
+     * Returns the script-parameters for the given npc
+     * @param vob Npc to get the info from
+     * @return Script-side object of this npc
+     */
+    Daedalus::GEngineClasses::C_Npc& getScriptObject(NpcVobInformation& vob);
 
     /**
      * @return The engine entity handle of the given script instance of an npc

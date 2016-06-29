@@ -12,6 +12,7 @@
 #include <logic/ScriptEngine.h>
 #include <content/SkeletalMeshAllocator.h>
 #include <components/Entities.h>
+#include <physics/PhysicsSystem.h>
 
 namespace ZenLoad
 {
@@ -129,6 +130,8 @@ namespace World
 		{
 			return m_Allocators.m_LevelSkeletalMeshAllocator;
 		}
+
+		// TODO: Depricated, remove
 		WorldAllocators::MaterialAllocator& getMaterialAllocator()
 		{
 			return m_Allocators.m_MaterialAllocator;
@@ -153,6 +156,10 @@ namespace World
 		{
 			return m_pEngine;
 		}
+        Physics::PhysicsSystem& getPhysicsSystem()
+        {
+            return m_PhysicsSystem;
+        }
     protected:
 
 		/**
@@ -184,8 +191,10 @@ namespace World
 		 */
 		Logic::ScriptEngine m_ScriptEngine;
 
-		Handle::EntityHandle m_TestEntity;
-		Handle::EntityHandle m_TestPlayer;
+		/**
+		 * This worlds physics system
+		 */
+		Physics::PhysicsSystem m_PhysicsSystem;
 
 		/**
 		 * Handle of this world-instance

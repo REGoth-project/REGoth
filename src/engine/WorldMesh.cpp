@@ -16,6 +16,7 @@ void WorldMesh::load(const ZenLoad::PackedMesh & in)
 {
 	// FIXME: There is almost identical code inside StaticMeshAllocator!
 	// FIXME: Refractor to use LevelMesh::entitfyMesh!
+	// TODO: Done that! Now remove this!
 
 	m_MeshHandle = m_ParentWorld.getAllocators().m_WorldMeshAllocator.createObject();
 	WorldMeshData& mesh = m_ParentWorld.getAllocators().m_WorldMeshAllocator.getElement(m_MeshHandle);
@@ -37,9 +38,9 @@ void WorldMesh::load(const ZenLoad::PackedMesh & in)
 		mesh.m_Indices.insert(mesh.m_Indices.end(), m.indices.begin(), m.indices.end());
 
 		// TODO: Implement materials
-		Handle::MaterialHandle h;
-		h.invalidate();
-		mesh.m_SubmeshMaterials.push_back(h);
+		//Handle::MaterialHandle h;
+		//h.invalidate();
+		//mesh.m_SubmeshMaterials.push_back(h);
 	}
 
 	// Construct BGFX Vertex/Index-buffers

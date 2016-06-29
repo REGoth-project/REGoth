@@ -2,6 +2,7 @@
 #include <vector>
 #include <handle/HandleDef.h>
 #include <handle/Handle.h>
+#include "Materials.h"
 
 namespace Meshes
 {
@@ -62,7 +63,7 @@ namespace Meshes
     {
         // Submesh information
         std::vector<SubmeshVxInfo> m_SubmeshStarts;
-        std::vector<MHDL> m_SubmeshMaterials;
+        std::vector<Materials::TexturedMaterial> m_SubmeshMaterials;
         std::vector<std::string> m_SubmeshMaterialNames; // TODO: Remove this and only use handles
     };
 

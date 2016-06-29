@@ -30,6 +30,11 @@ namespace Logic
          * @return Entites created by this visual
          */
         const std::vector<Handle::EntityHandle>& getVisualEntities(){ return m_VisualEntities; }
+
+        /**
+         * Updates the collision-hull depending on this visual
+         */
+        virtual void updateCollision(){};
     protected:
 
         /**
