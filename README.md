@@ -14,6 +14,12 @@ git clone --recursive git@github.com:degenerated1123/REGoth.git
 git clone --recursive https://github.com/degenerated1123/REGoth.git
 ```
 
+To update the repo, you need to make sure to update the submodules as well. Instead of simply pulling the repository, you can do:
+```sh
+git pull --recurse-submodules
+git submodule update --remote --recursive
+```
+
 # Building
 
 You will need CMake (3.1 or newer) and a C++11-capable compiler.
