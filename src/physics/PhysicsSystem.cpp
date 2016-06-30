@@ -16,11 +16,15 @@ using namespace Physics;
 const int NUM_MAX_SUB_STEPS = 3;
 
 PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
-    : m_Dispatcher(&m_CollisionConfiguration),
+    : m_Broadphase(&m_PairCache),
+	  m_Dispatcher(&m_CollisionConfiguration),
       m_DynamicsWorld(&m_Dispatcher, &m_Broadphase, &m_Solver, &m_CollisionConfiguration),
       m_World(world)
 {
-    btGImpactCollisionAlgorithm::registerAlgorithm(&m_Dispatcher);
+	// Bullet would update each AABB, even though most of the world is static. We'll do this ourselfes for static objects.
+	m_DynamicsWorld.setForceUpdateAllAabbs(false);
+
+    //btGImpactCollisionAlgorithm::registerAlgorithm(&m_Dispatcher);
     m_DynamicsWorld.setGravity(btVector3(0, gravity, 0));
 
     m_DynamicsWorld.setDebugDrawer(new DebugDrawer);
@@ -41,7 +45,7 @@ void PhysicsSystem::debugDraw()
 
 void PhysicsSystem::update(double dt)
 {
-    m_DynamicsWorld.stepSimulation(static_cast<btScalar>(dt), NUM_MAX_SUB_STEPS);
+    m_DynamicsWorld.stepSimulation(static_cast<btScalar>(dt));
 
     const auto& ctuple = m_World.getComponentDataBundle().m_Data;
     size_t num = m_World.getComponentDataBundle().m_NumElements;
@@ -57,7 +61,7 @@ void PhysicsSystem::update(double dt)
     {
         Components::ComponentMask mask = ents[i].m_ComponentMask;
 
-        if((mask & Components::PhysicsComponent::MASK) != 0)
+        if((mask & Components::PhysicsComponent::MASK) != 0 && !phys[i].m_RigidBody.isStatic())
         {
             // Copy to position-component
             pos[i].m_WorldMatrix = Components::Actions::Physics::getRigidBodyTransform(phys[i]);
@@ -118,7 +122,7 @@ CollisionShape* PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldSta
         return nullptr;
     }
 
-    m_CollisionShapes.push_back(new CollisionShape(new btBvhTriangleMeshShape(wm, false)));
+    m_CollisionShapes.push_back(new CollisionShape(new btBvhTriangleMeshShape(wm, true)));
 
     if(!name.empty())
         m_ShapeCache[name] = m_CollisionShapes.back();

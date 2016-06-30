@@ -25,7 +25,7 @@ if(MINGW)
 endif()
 
 if(MSVC)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
 	add_definitions(-DNOMINMAX)
 endif()
 

@@ -114,6 +114,7 @@ namespace Components
 		{
 			return m_AnimationStateHash;
 		}
+
 	private:
 
 		/**

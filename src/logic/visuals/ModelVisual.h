@@ -76,7 +76,7 @@ namespace Logic
          * @param visual The visual to load and attach
          * @param node to attach the visual to
          */
-        Handle::EntityHandle setNodeVisual(const std::string& visual, size_t nodeIndex);
+        Handle::EntityHandle setNodeVisual(const std::string& visual, const std::string& nodeName);
         Handle::EntityHandle setNodeVisual(const std::string& visual, EModelNode node);
 
         /**
@@ -148,6 +148,11 @@ namespace Logic
          */
         void updateHeadMesh();
 
+		/**
+		 * Attaches the attachments in m_AttachmentVisualsByNode again
+		 */
+		void updateAttachmentVisuals();
+
         /**
          * Rebuilds the main entity list from everything found inside the PartEntityLists
          */
@@ -193,5 +198,10 @@ namespace Logic
          * Last known animation state hash from the animation controller
          */
         size_t m_LastKnownAnimationState;
+
+		/**
+		 * State of the attachments of the nodes. [Node-name, visual]
+		 */
+		std::map<std::string, std::string> m_AttachmentVisualsByNode;
     };
 }

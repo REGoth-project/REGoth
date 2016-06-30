@@ -190,7 +190,7 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
+    /*if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
     {
         Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
 
@@ -200,7 +200,7 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
         VobTypes::NPC_EquipWeapon(vob, item);
 
-    }
+    }*/
 }
 
 void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)

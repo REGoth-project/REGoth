@@ -35,6 +35,11 @@ namespace Logic
          * Updates the collision-hull depending on this visual
          */
         virtual void updateCollision(){};
+
+		/**
+		 * @return The name of this visual
+		 */
+		const std::string& getName(){ return m_Name; }
     protected:
 
         /**

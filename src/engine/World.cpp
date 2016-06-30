@@ -50,7 +50,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         ZenLoad::ZenParser parser(data.data(), data.size());
 
         parser.readHeader();
-        ZenLoad::oCWorldData world = parser.readWorld();
+        ZenLoad::oCWorldData world;
+		parser.readWorld(world);
 
         ZenLoad::zCMesh *worldMesh = parser.getWorldMesh();
         ZenLoad::PackedMesh packedWorldMesh;

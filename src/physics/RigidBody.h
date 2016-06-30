@@ -12,19 +12,22 @@ namespace Physics
     public:
         RigidBody() noexcept :
                 m_pDynamicsWorld(nullptr),
-                m_pRigidBody(nullptr)
+                m_pRigidBody(nullptr),
+				m_Static(true)
         {
         }
 
         RigidBody(const RigidBody &) noexcept :
                 m_pDynamicsWorld(nullptr),
-                m_pRigidBody(nullptr)
+                m_pRigidBody(nullptr),
+				m_Static(true)
         {
         }
 
         RigidBody(RigidBody &&other) noexcept :
                 m_pDynamicsWorld(other.m_pDynamicsWorld),
-                m_pRigidBody(other.m_pRigidBody)
+                m_pRigidBody(other.m_pRigidBody),
+				m_Static(other.m_Static)
         {
             other.invalidate();
         }
@@ -33,6 +36,7 @@ namespace Physics
         {
             m_pDynamicsWorld = other.m_pDynamicsWorld;
             m_pRigidBody = other.m_pRigidBody;
+			m_Static = other.m_Static;
 
             other.invalidate();
             return *this;
@@ -47,6 +51,7 @@ namespace Physics
         {
             m_pDynamicsWorld = nullptr;
             m_pRigidBody = nullptr;
+			m_Static = true;
         }
 
         /**
@@ -68,6 +73,8 @@ namespace Physics
             btVector3 inertia;
             if(mass)
                 collisionShape.getShape()->calculateLocalInertia(mass, inertia);
+
+			m_Static = mass == 0.0f;
 
             // Construct the actual rigidbody
             m_pRigidBody = new btRigidBody(mass, pMotionState, collisionShape.getShape(), inertia);
@@ -149,8 +156,14 @@ namespace Physics
             m_pRigidBody->setCenterOfMassTransform(t);
         }
 
+		/**
+		 * @return Whether this object can be moved by the physics engine
+		 */
+		bool isStatic(){ return m_Static; }
+
     private:
         btDiscreteDynamicsWorld *m_pDynamicsWorld;
         btRigidBody *m_pRigidBody;
+		bool m_Static;
     };
 }

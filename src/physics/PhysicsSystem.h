@@ -87,6 +87,7 @@ namespace Physics
         btCollisionDispatcher m_Dispatcher;
         btSequentialImpulseConstraintSolver m_Solver;
         btDiscreteDynamicsWorld m_DynamicsWorld;
+		btSortedOverlappingPairCache m_PairCache;
 
         /**
          * Total list of collisionshapes we created

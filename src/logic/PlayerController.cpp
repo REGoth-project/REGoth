@@ -248,6 +248,12 @@ void Logic::PlayerController::placeOnGround()
 
         float feet = m_NPCProperties.modelRoot.y;
 
+		// FIXME: Actually read the flying-flag of the MDS
+		if(feet == 0.0f)
+		{
+			feet = 0.8f;
+		}
+
         m.Translation(hit + Math::float3(0.0f, feet, 0.0f));
         setEntityTransform(m);
     }

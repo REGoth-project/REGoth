@@ -275,4 +275,3 @@ void AnimHandler::setBindPose(bool force)
     }
 }
 
-

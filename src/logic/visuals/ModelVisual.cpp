@@ -169,6 +169,9 @@ bool ModelVisual::load(const std::string& visual)
     // Create m_VisualEntites-list
     rebuildMainEntityList();
 
+	// Make sure we got the right spots for our attachments
+	updateAttachmentVisuals();
+
     return true;
 }
 
@@ -307,8 +310,12 @@ void ModelVisual::onTransformChanged()
     updateAttachmentTransforms();
 }
 
-Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
+Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const std::string& nodeName)
 {
+	// Register first
+	m_AttachmentVisualsByNode[nodeName] = visual;
+
+	size_t nodeIndex = findNodeIndex(nodeName);
     if(nodeIndex > getMeshLib().getNodes().size())
         return Handle::EntityHandle::makeInvalidHandle(); // Invalid node?
 
@@ -350,7 +357,7 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, size_
         Vob::setVisual(vob, visual);
 
         // Clear old visual, if there was one
-        setNodeVisual("", nodeIndex);
+        setNodeVisual("", nodeName);
 
         // Only add the main vob, all submeshes etc. will be updated using onTransformChanged()
         m_VisualAttachments[nodeIndex].push_back(avh);
@@ -382,19 +389,21 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, EMode
 {
     switch(node)
     {
-        case EModelNode::Righthand:return setNodeVisual(visual, findNodeIndex(NPC_NODE_RIGHTHAND));break;
-        case EModelNode::Lefthand:return setNodeVisual(visual, findNodeIndex(NPC_NODE_LEFTHAND));break;
-        case EModelNode::Sword:return setNodeVisual(visual, findNodeIndex(NPC_NODE_SWORD));break;
-        case EModelNode::Longsword:return setNodeVisual(visual, findNodeIndex(NPC_NODE_LONGSWORD));break;
-        case EModelNode::Bow:return setNodeVisual(visual, findNodeIndex(NPC_NODE_BOW));break;
-        case EModelNode::Crossbow:return setNodeVisual(visual, findNodeIndex(NPC_NODE_CROSSBOW));break;
-        case EModelNode::Shield:return setNodeVisual(visual, findNodeIndex(NPC_NODE_SHIELD));break;
-        case EModelNode::Helmet:return setNodeVisual(visual, findNodeIndex(NPC_NODE_HELMET));break;
-        case EModelNode::Jaws:return setNodeVisual(visual, findNodeIndex(NPC_NODE_JAWS));break;
+        case EModelNode::Righthand:return setNodeVisual(visual, NPC_NODE_RIGHTHAND);break;
+        case EModelNode::Lefthand:return setNodeVisual(visual, NPC_NODE_LEFTHAND);break;
+        case EModelNode::Sword:return setNodeVisual(visual, NPC_NODE_SWORD);break;
+        case EModelNode::Longsword:return setNodeVisual(visual, NPC_NODE_LONGSWORD);break;
+        case EModelNode::Bow:return setNodeVisual(visual, NPC_NODE_BOW);break;
+        case EModelNode::Crossbow:return setNodeVisual(visual, NPC_NODE_CROSSBOW);break;
+        case EModelNode::Shield:return setNodeVisual(visual, NPC_NODE_SHIELD);break;
+        case EModelNode::Helmet:return setNodeVisual(visual, NPC_NODE_HELMET);break;
+        case EModelNode::Jaws:return setNodeVisual(visual, NPC_NODE_JAWS);break;
 
             // TODO: Switch main mesh here
-        case EModelNode::Torso:return setNodeVisual(visual, findNodeIndex(NPC_NODE_TORSO));break;
+        case EModelNode::Torso:return setNodeVisual(visual, NPC_NODE_TORSO);break;
     }
+
+	return Handle::EntityHandle::makeInvalidHandle();
 }
 
 void ModelVisual::getCollisionBBox(Math::float3* bb)
@@ -491,7 +500,7 @@ void ModelVisual::updateHeadMesh()
     m_PartEntities.headEntity.invalidate();
 
     // Load and attach the visual
-    Handle::EntityHandle headEntity = setNodeVisual(m_BodyState.headVisual, findNodeIndex(MODEL_NODE_NAME_HEAD));
+    Handle::EntityHandle headEntity = setNodeVisual(m_BodyState.headVisual, MODEL_NODE_NAME_HEAD);
 
     if(!headEntity.isValid())
         return;
@@ -532,5 +541,31 @@ void ModelVisual::updateHeadMesh()
     }
 }
 
+void ModelVisual::updateAttachmentVisuals()
+{
+	for(auto& p : m_AttachmentVisualsByNode)
+	{
+		size_t nodeIdx = findNodeIndex(p.first);
+		if(nodeIdx != static_cast<size_t>(-1))
+		{
+			bool update = false;
 
+			// Update if there isn't something attached yet
+			if(m_VisualAttachments[nodeIdx].empty())
+			{
+				update = true;
+			}
+			else // Also update on change
+			{
+				Handle::EntityHandle e = m_VisualAttachments[nodeIdx][0];
+				Vob::VobInformation vob = Vob::asVob(m_World, e);
+				VisualController* vis = Vob::getVisual(vob);
+				if(vis && vis->getName() != p.second)
+					update = true;
+			}
 
+			// Set the new visual
+			setNodeVisual(p.second, p.first);
+		}
+	}
+}
