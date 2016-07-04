@@ -33,7 +33,7 @@ Then:
 cd path/to/REGoth
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 ```
 > If CMake complains about some folders missing a CMakeLists.txt, you most likely forgot to clone with the `--recursive`-flag!
 > Simple do `git submodule update --init --recursive` and it should work.
