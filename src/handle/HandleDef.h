@@ -16,7 +16,10 @@ namespace Handle
 	typedef Memory::GenericHandle<16, 16, 6> MeshHandle;
 	typedef Memory::GenericHandle<16, 16, 7> WorldHandle;
 	typedef Memory::GenericHandle<16, 16, 8> LogicHandle;
-	typedef Memory::GenericHandle<16, 16, 8> AnimationHandle;
+	typedef Memory::GenericHandle<16, 16, 9> AnimationHandle;
+	typedef Memory::GenericHandle<16, 16, 10> PhysicsObjectHandle;
+	typedef Memory::GenericHandle<16, 16, 10> CollisionShapeHandle;
+
 
     // Internal handle-types (API specific)
     typedef bgfx::TextureHandle InternalTextureHandle;

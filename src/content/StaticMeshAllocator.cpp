@@ -52,6 +52,18 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPacked(const ZenLoad::PackedMesh
         mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
         mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;
         mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
+
+        // FIXME: Hack, brighten indoor-vertices
+        for(size_t j=0;j<m.triangleLightmapIndices.size();j++)
+        {
+            if(m.triangleLightmapIndices[j] != -1)
+            {
+                const uint32_t hackIndoorBrightness = 0xFF888888;
+                mesh.m_Vertices[mesh.m_Indices[mesh.m_SubmeshStarts.back().m_StartIndex + 3*j + 0]].Color = hackIndoorBrightness;
+                mesh.m_Vertices[mesh.m_Indices[mesh.m_SubmeshStarts.back().m_StartIndex + 3*j + 1]].Color = hackIndoorBrightness;
+                mesh.m_Vertices[mesh.m_Indices[mesh.m_SubmeshStarts.back().m_StartIndex + 3*j + 2]].Color = hackIndoorBrightness;
+            }
+        }
     }
 
     // Construct BGFX Vertex/Index-buffers

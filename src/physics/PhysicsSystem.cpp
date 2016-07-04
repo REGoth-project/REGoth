@@ -22,7 +22,7 @@ PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
       m_World(world)
 {
 	// Bullet would update each AABB, even though most of the world is static. We'll do this ourselfes for static objects.
-	m_DynamicsWorld.setForceUpdateAllAabbs(false);
+	//m_DynamicsWorld.setForceUpdateAllAabbs(false);
 
     //btGImpactCollisionAlgorithm::registerAlgorithm(&m_Dispatcher);
     m_DynamicsWorld.setGravity(btVector3(0, gravity, 0));
@@ -33,6 +33,12 @@ PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
 
 PhysicsSystem::~PhysicsSystem()
 {
+    for(size_t i=0;i<m_PhysicsObjectAllocator.getNumObtainedElements();i++)
+        PhysicsObject::clean(m_PhysicsObjectAllocator.getElements()[i]);
+
+    for(size_t i=0;i<m_CollisionShapeAllocator.getNumObtainedElements();i++)
+        CollisionShape::clean(m_CollisionShapeAllocator.getElements()[i]);
+
     delete m_DynamicsWorld.getDebugDrawer();
 }
 
@@ -61,7 +67,7 @@ void PhysicsSystem::update(double dt)
     {
         Components::ComponentMask mask = ents[i].m_ComponentMask;
 
-        if((mask & Components::PhysicsComponent::MASK) != 0 && !phys[i].m_RigidBody.isStatic())
+        if((mask & Components::PhysicsComponent::MASK) != 0 && !phys[i].m_IsStatic)
         {
             // Copy to position-component
             pos[i].m_WorldMatrix = Components::Actions::Physics::getRigidBodyTransform(phys[i]);
@@ -86,7 +92,7 @@ void PhysicsSystem::removeRigidBody(btRigidBody *body)
     m_DynamicsWorld.removeRigidBody(body);
 }
 
-CollisionShape* PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
+Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
 {
     if(m_ShapeCache.find(name) != m_ShapeCache.end())
         return m_ShapeCache[name];
@@ -119,21 +125,40 @@ CollisionShape* PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldSta
     if(wm->getNumTriangles() == 0)
     {
         delete wm;
-        return nullptr;
+        return Handle::CollisionShapeHandle::makeInvalidHandle();
     }
 
-    m_CollisionShapes.push_back(new CollisionShape(new btBvhTriangleMeshShape(wm, true)));
+    Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
+    CollisionShape& cs = getCollisionShape(csh);
+    cs.collisionShape = new btBvhTriangleMeshShape(wm, true);
+    cs.shapeType = CollisionShape::TriangleMesh;
 
     if(!name.empty())
-        m_ShapeCache[name] = m_CollisionShapes.back();
+        m_ShapeCache[name] = csh;
 
-    return m_CollisionShapes.back();
+    return csh;
 }
 
-void PhysicsSystem::deleteCollisionShape(CollisionShape* shape)
+Handle::CollisionShapeHandle PhysicsSystem::makeCompoundCollisionShape(const std::string &name)
 {
-    m_CollisionShapes.remove(shape);
+    if(m_ShapeCache.find(name) != m_ShapeCache.end())
+        return m_ShapeCache[name];
 
+    Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
+    CollisionShape& cs = getCollisionShape(csh);
+
+    // TODO: Find out if "dynamicAABBTree" can be set to false for performance?
+    cs.collisionShape = new btCompoundShape();
+    cs.shapeType = CollisionShape::Compound;
+
+    if(!name.empty())
+        m_ShapeCache[name] = csh;
+
+    return csh;
+}
+
+void PhysicsSystem::deleteCollisionShape(Handle::CollisionShapeHandle shape)
+{
     // Remove from convex-cache
     for(auto& c : m_ShapeCache)
     {
@@ -144,17 +169,19 @@ void PhysicsSystem::deleteCollisionShape(CollisionShape* shape)
         }
     }
 
-    delete shape->getShape();
-    delete shape;
+
 }
 
-CollisionShape *PhysicsSystem::makeBoxCollisionShape(const Math::float3 &halfExtends)
+Handle::CollisionShapeHandle PhysicsSystem::makeBoxCollisionShape(const Math::float3 &halfExtends)
 {
     btBoxShape* s = new btBoxShape(btVector3(halfExtends.x, halfExtends.y, halfExtends.z));
 
-    m_CollisionShapes.push_back(new CollisionShape(s));
+    Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
+    CollisionShape& cs = getCollisionShape(csh);
+    cs.collisionShape = s;
+    cs.shapeType = CollisionShape::Box;
 
-    return m_CollisionShapes.back();
+    return csh;
 }
 
 Math::float3 PhysicsSystem::raytrace(const Math::float3 &from, const Math::float3 &to)
@@ -168,7 +195,7 @@ Math::float3 PhysicsSystem::raytrace(const Math::float3 &from, const Math::float
     return res.hasHit() ? Math::float3(res.m_hitPointWorld.m_floats) : to;
 }
 
-CollisionShape *PhysicsSystem::makeConvexCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
+Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
 {
     if(m_ShapeCache.find(name) != m_ShapeCache.end())
         return m_ShapeCache[name];
@@ -205,14 +232,48 @@ CollisionShape *PhysicsSystem::makeConvexCollisionShapeFromMesh(const Meshes::Wo
 
     btConvexHullShape* simplifiedConvexShape = new btConvexHullShape((btScalar*)hull->getVertexPointer(),hull->numVertices());
 
-    m_CollisionShapes.push_back(new CollisionShape(simplifiedConvexShape));
+    Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
+    CollisionShape& cs = getCollisionShape(csh);
+    cs.collisionShape = simplifiedConvexShape;
+    cs.shapeType = CollisionShape::ConvexMesh;
 
     delete tmpShape;
     delete hull;
 
     if(!name.empty())
-        m_ShapeCache[name] = m_CollisionShapes.back();
+        m_ShapeCache[name] = csh;
 
-    return m_CollisionShapes.back();
+    return csh;
 }
+
+Handle::PhysicsObjectHandle
+PhysicsSystem::makeRigidBody(Handle::CollisionShapeHandle shape, const Math::Matrix &transform, float mass)
+{
+    Handle::PhysicsObjectHandle ph = m_PhysicsObjectAllocator.createObject();
+    PhysicsObject& p = getPhysicsObject(ph);
+    CollisionShape& s = getCollisionShape(shape);
+
+    p.collisionShape = shape;
+    p.rigidBody = new btRigidBody(mass, nullptr, s.collisionShape); // TODO: Implement motionstate and inertia
+
+    // Add to physics-world
+    m_DynamicsWorld.addRigidBody(p.rigidBody);
+
+    return Handle::PhysicsObjectHandle();
+}
+
+void PhysicsSystem::compoundShapeAddChild(Handle::CollisionShapeHandle target, Handle::CollisionShapeHandle childShape, const Math::Matrix& localTransform)
+{
+    CollisionShape& ts = getCollisionShape(target);
+    CollisionShape& cs = getCollisionShape(childShape);
+
+    assert(ts.shapeType == CollisionShape::Compound);
+
+    btCompoundShape* compShape = reinterpret_cast<btCompoundShape*>(ts.collisionShape);
+
+    btTransform btr;
+    btr.setFromOpenGLMatrix(localTransform.mv);
+    compShape->addChildShape(btr,cs.collisionShape);
+}
+
 

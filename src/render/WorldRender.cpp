@@ -45,10 +45,10 @@ namespace Render
 			Components::ComponentMask mask = ents[i].m_ComponentMask;
 
 			// FIXME: Temporary
-			if((mask & Components::PhysicsComponent::MASK) != 0)
+			/*if((mask & Components::PhysicsComponent::MASK) != 0)
 			{
 				physics[i].m_RigidBody.setDebugDrawEnabled(psc[i].m_DrawDistanceFactor > 0.0f &&  distance2 < 10.0f * 10.0f);
-			}
+			}*/
 
 			if(distance2 > drawDistance2)
 				continue;

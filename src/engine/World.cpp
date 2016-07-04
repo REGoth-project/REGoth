@@ -34,6 +34,10 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
+
+    // Create static-collision shape beforehand
+    m_StaticWorldCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape();
+    m_StaticWorldPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldCollsionShape, Math::Matrix::CreateIdentity());
 }
 
 void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
@@ -68,13 +72,15 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         // Create collisionmesh for the world
         if(!ents.empty())
         {
+            // Create world-object using the static collision-shape
             Components::PhysicsComponent& phys = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), ents.front());
 
-            Physics::CollisionShape* shape = m_PhysicsSystem.makeCollisionShapeFromMesh(worldMeshData);
-            phys.m_RigidBody.initPhysics(&m_PhysicsSystem, *shape, 0.0f);
-            phys.m_RigidBody.setFriction(1.0f);
-            phys.m_RigidBody.setRestitution(0.1f);
-            phys.m_RigidBody.setDebugDrawEnabled(false);
+            phys.m_PhysicsObject = m_StaticWorldPhysicsObject;
+            phys.m_IsStatic = true;
+
+            // Add world-mesh collision
+            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(worldMeshData);
+            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldCollsionShape, wmch);
         }
 
         for (Handle::EntityHandle e : ents)
@@ -83,7 +89,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             Components::EntityComponent &entity = getEntity<Components::EntityComponent>(e);
             Components::addComponent<Components::PositionComponent>(entity);
 
-            // Copy world-matrix
+            // Copy world-matrix (These are all identiy on the worldmesh)
             Components::PositionComponent &pos = getEntity<Components::PositionComponent>(e);
             pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
             pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
@@ -132,12 +138,12 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
 
 
-        Handle::EntityHandle testEntity = Vob::constructVob(*this);
+        /*Handle::EntityHandle testEntity = Vob::constructVob(*this);
 
         auto& ph = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), testEntity);
         ph.m_RigidBody.initPhysics(&m_PhysicsSystem, *m_PhysicsSystem.makeBoxCollisionShape(Math::float3(2.5f, 2.5f, 2.5f)));
 
-        Components::Actions::Physics::setRigidBodyPosition(ph, Math::float3(0.0f, 10.0f, 0.0f));
+        Components::Actions::Physics::setRigidBodyPosition(ph, Math::float3(0.0f, 10.0f, 0.0f));*/
 	}
 	else
 	{

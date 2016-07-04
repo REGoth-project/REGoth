@@ -9,7 +9,6 @@
 #include <memory/Config.h>
 #include <engine/WorldTypes.h>
 #include "AnimHandler.h"
-#include <physics/RigidBody.h>
 
 /**
  * List of all available components
@@ -255,11 +254,16 @@ namespace Components
         /**
          * The rigid-Body of this component
          */
-        Physics::RigidBody m_RigidBody;
+        Handle::PhysicsObjectHandle m_PhysicsObject;
+
+        /**
+         * Whether this physics-object will move by it's own
+         */
+        bool m_IsStatic;
 
         static void init(PhysicsComponent& c)
         {
-
+            c.m_IsStatic = true;
         }
     };
 

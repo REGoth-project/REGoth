@@ -120,21 +120,29 @@ void StaticMeshVisual::updateCollision()
     Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(m_MeshHandle);
 
     // Simplify mesh
-    Physics::CollisionShape* hull = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, m_Name);
+    Handle::CollisionShapeHandle hullh = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, m_Name);
 
-    if(!hull)
+    if(!hullh.isValid())
         return;
 
+    // Add static collision-mesh
+    m_World.getPhysicsSystem().compoundShapeAddChild(m_World.getStaticCollisionShape(), hullh, getEntityTransform());
+
+    // TODO: Implement dynamic bodies
+    /*
     // Create the component
     Components::Actions::initComponent<Components::PhysicsComponent>(m_World.getComponentAllocator(), m_Entity);
     Components::PhysicsComponent& phys = m_World.getEntity<Components::PhysicsComponent>(m_Entity);
 
+    //
+
     // Set up rigid body (static)
-    phys.m_RigidBody.initPhysics(&m_World.getPhysicsSystem(), *hull, 0.0f, getEntityTransform());
+    phys.m_RigidBody.initPhysics(&m_World.getPhysicsSystem(), *hull, "", 0.0f, getEntityTransform());
     phys.m_RigidBody.setFriction(1.0f);
     phys.m_RigidBody.setRestitution(0.1f);
 
     // Place rigid body onto the main entity
     //phys.m_RigidBody.setBodyTransform(getEntityTransform());
     //phys.m_RigidBody.getMotionState()->setWorldTransform(getEntityTransform());
+     */
 }
