@@ -22,7 +22,7 @@ git submodule update --remote --recursive
 
 # Building
 
-You will need CMake (3.1 or newer) and a C++11-capable compiler.
+You will need CMake (3.1 or newer) and a C++11(14?)-capable compiler.
 Currently supported are:
  - GCC
  - MinGW
