@@ -143,6 +143,7 @@ namespace Logic
 
             // Length of the current route
             float currentRouteLength;
+
         }m_MoveState;
 
         struct

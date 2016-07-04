@@ -239,7 +239,7 @@ void Logic::PlayerController::placeOnGround()
 {
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f); 
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
     Math::float3 hit = m_World.getPhysicsSystem().raytrace(from, to);
 
     if (hit != to)

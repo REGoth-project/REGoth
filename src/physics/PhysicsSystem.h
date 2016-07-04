@@ -55,6 +55,12 @@ namespace Physics
         ~PhysicsSystem();
 
         /**
+         * Post-processing after loading. This will make sure all bodies are in place and usable without running
+         * a single fake-step
+         */
+        void postProcessLoad();
+
+        /**
          * Updates the physics simulation
          * @param dt Time since last frame
          */

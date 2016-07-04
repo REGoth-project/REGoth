@@ -131,6 +131,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
         vobLoad(world.rootVobs);
 
+        // Make sure static collision is initialized before adding the NPCs
+        m_PhysicsSystem.postProcessLoad();
+
         // Load waynet
         m_Waynet = Waynet::makeWaynetFromZen(world);
 

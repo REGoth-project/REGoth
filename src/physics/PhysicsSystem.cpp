@@ -22,7 +22,7 @@ PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
       m_World(world)
 {
 	// Bullet would update each AABB, even though most of the world is static. We'll do this ourselfes for static objects.
-	//m_DynamicsWorld.setForceUpdateAllAabbs(false);
+	//m_DynamicsWorld.setForceUpdateAllAabbs(false); // FIXME: Does not acutally work yet, is this even needed?
 
     //btGImpactCollisionAlgorithm::registerAlgorithm(&m_Dispatcher);
     m_DynamicsWorld.setGravity(btVector3(0, gravity, 0));
@@ -274,6 +274,11 @@ void PhysicsSystem::compoundShapeAddChild(Handle::CollisionShapeHandle target, H
     btTransform btr;
     btr.setFromOpenGLMatrix(localTransform.mv);
     compShape->addChildShape(btr,cs.collisionShape);
+}
+
+void PhysicsSystem::postProcessLoad()
+{
+    m_DynamicsWorld.updateAabbs();
 }
 
 
