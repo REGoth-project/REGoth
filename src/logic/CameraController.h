@@ -12,7 +12,8 @@ namespace Logic
             Free,
             Static,
             FirstPerson,
-            ThirdPerson
+            ThirdPerson,
+            Viewer // name is open to change
         };
 
         struct CameraSettings
@@ -56,6 +57,18 @@ namespace Logic
                 float turnSmoothness;
                 float yaw, height, distance;
             } thirdPersonCameraSettings;
+
+            /**
+             * Settings for camera mode "viewer"
+             */
+            struct
+            {
+                Math::float3 oldLookAt, lookAt;
+                Math::float2 oldMousePosition, mousePosition;
+                Math::float3 up, right, in;
+                float oldYaw, oldPitch, oldZoom;
+                float yaw, pitch, zoom;
+            } viewerCameraSettings;
         };
 
         /**
