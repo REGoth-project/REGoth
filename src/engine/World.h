@@ -100,6 +100,24 @@ namespace World
 		}
 
         /**
+         * @return The vob-entity of a vob using the given name
+         */
+        Handle::EntityHandle getVobEntityByName(const std::string& name)
+        {
+            auto it = m_VobsByNames.find(name);
+            if(it == m_VobsByNames.end())
+                return Handle::EntityHandle::makeInvalidHandle();
+
+            return (*it).second;
+        }
+
+        /**
+         * Goes through the list of all vobs and returns a list of the startwaypoint-indices
+         * @return List indices of the waypoints which are used as starting-position
+         */
+        std::vector<size_t> findStartPoints();
+
+        /**
          * Data access
          */
         Components::ComponentAllocator::DataBundle getComponentDataBundle()
@@ -210,5 +228,10 @@ namespace World
 		 * Handle of this world-instance
 		 */
 		Handle::WorldHandle m_MyHandle;
+
+        /**
+         * Map of vobs by their names (If they have one)
+         */
+        std::unordered_map<std::string, Handle::EntityHandle> m_VobsByNames;
     };
 }

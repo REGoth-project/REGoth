@@ -40,7 +40,7 @@ namespace Vob
      * Extracts the vob-information from the given entity
      * NOTE: ONLY FOR TEMPORARY USE. DO NOT SAVE THE RETURNED OBJECT FOR LATER USE.
      */
-    VobInformation asVob(World::WorldInstance& world, Handle::EntityHandle& e);
+    VobInformation asVob(World::WorldInstance& world, Handle::EntityHandle e);
 
     /**
      * Sets the position on the given vob
@@ -68,6 +68,11 @@ namespace Vob
     Logic::VisualController* getVisual(VobInformation& vob);
 
     /**
+     * @return Name of the vob
+     */
+    std::string getName(VobInformation& vob);
+
+    /**
      * Sets the visual for the given vob to use
      */
     void setVisual(VobInformation& vob, const std::string& visual);
@@ -81,6 +86,12 @@ namespace Vob
      * Sets the BBox of the given vob
      */
     void setBBox(VobInformation& vob, const Math::float3& min, const Math::float3& max, uint32_t debugColor = 0xFFFFFFFF);
+
+    /**
+     * Sets/Gets whether to enable collision on this vob
+     */
+    void setCollisionEnabled(VobInformation& vob, bool value);
+    bool getCollisionEnabled(VobInformation& vob);
 
     /**
      * Notifies all controllers about a transform-change on the given vob

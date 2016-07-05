@@ -67,7 +67,7 @@ namespace Logic
         /**
          * Called on game-tick
          */
-        void onUpdate(float deltaTime) override;
+        void onUpdateExplicit(float deltaTime);
 
         /**
          * @brief Sets how the camera should behave
@@ -100,6 +100,11 @@ namespace Logic
         {
             return m_CameraSettings;
         }
+
+        /**
+         * Sets the transform of this camera
+         */
+        void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
     protected:
 
         /**

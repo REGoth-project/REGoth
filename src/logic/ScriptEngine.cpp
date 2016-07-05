@@ -8,6 +8,7 @@
 #include <handle/HandleDef.h>
 #include <components/VobClasses.h>
 #include <engine/World.h>
+#include <engine/GameEngine.h>
 
 using namespace Logic;
 
@@ -128,11 +129,35 @@ void ScriptEngine::initForWorld(const std::string& world)
     m_pVM->getGameState().setGameExternals(ext);
 
     // FIXME: Call the startup-one only on a fresh load of the game
-    prepareRunFunction();
-    runFunction("startup_" + world);
+    if(m_pVM->getDATFile().hasSymbolName("startup_" + world))
+    {
+        prepareRunFunction();
+        runFunction("startup_" + world);
+    }
 
-    prepareRunFunction();
-    runFunction("init_" + world);
+    if(m_pVM->getDATFile().hasSymbolName("init_" + world))
+    {
+        prepareRunFunction();
+        runFunction("init_" + world);
+    }
+
+    // Create player
+    std::vector<size_t> startpoints = m_World.findStartPoints();
+
+    if(!startpoints.empty())
+    {
+        std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
+
+        LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
+
+        m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", startpoint); // FIXME: Read startpoint at levelchange
+
+        if(!m_PlayerEntity.isValid())
+            LogWarn() << "Failed to insert player!";
+
+        Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
+        e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
+    }
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)

@@ -112,7 +112,16 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
                 Vob::VobInformation vob = Vob::asVob(*this, e);
 
                 // Setup
-                Vob::setName(vob, v.vobName);
+                if(!v.vobName.empty())
+                {
+                    Vob::setName(vob, v.vobName);
+
+                    // Add to name-map
+                    m_VobsByNames[v.vobName] = e;
+                }
+
+                // Set whether we want collision with this vob
+                Vob::setCollisionEnabled(vob, v.cdDyn);
 
                 Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
                 m.Translation(m.Translation() * (1.0f / 100.0f));
@@ -240,6 +249,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Update physics
     m_PhysicsSystem.update(deltaTime);
 
+
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;
 
@@ -247,6 +257,8 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
     Components::AnimationComponent* anims = std::get<Components::AnimationComponent*>(ctuple);
     Components::PositionComponent* positions = std::get<Components::PositionComponent*>(ctuple);
+
+    //#pragma omp parallel for
     for (size_t i = 0; i<num; i++)
     {
         // Simple distance-check // TODO: Frustum/Occlusion-Culling
@@ -272,6 +284,16 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         {
             anims[i].m_AnimHandler.updateAnimations(deltaTime);
         }
+    }
+
+    // TODO: Move this somewhere else, where other game-logic is!
+    // TODO: Must be done before the main-camera gets updated, actually
+    if(m_ScriptEngine.getPlayerEntity().isValid())
+    {
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(*this, m_ScriptEngine.getPlayerEntity());
+
+        if(player.playerController)
+            player.playerController->onUpdateByInput(deltaTime);
     }
 
     /*static float s_testp = 0.0f;
@@ -333,6 +355,50 @@ void WorldInstance::removeEntity(Handle::EntityHandle h)
     });
 
     getComponentAllocator().removeObject(h);
+}
+
+std::vector<size_t> WorldInstance::findStartPoints()
+{
+    std::vector<size_t> pts;
+
+    // TODO: Find out how this stuff works, or is it even needed? I need to get he zCVobStartpoint out of the zen!
+    /*for(size_t i=0;i<m_Waynet.waypoints.size();i++)
+    {
+        // From spacer-doc:
+        // Der Name eines Startpoints muss den Instanznamen des Spielers enthalten, der an diesem Punkt starten soll.
+        // Format: Beispiel: START_PC_HERO für die Instanz "PC_HERO" oder START_OLD_MAN ...
+        // => Name of a startpoint always starts with "START_"
+
+        // Main start point seems to be called "GAME_START"
+
+        if(m_Waynet.waypoints[i].name.find("START") != 0)
+            pts.push_back(i);
+    }*/
+
+    // Gothic 1
+    auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
+    if(it != m_Waynet.waypointsByName.end())
+        pts.push_back((*it).second);
+
+    for(size_t i=0;i<m_Waynet.waypoints.size();i++)
+    {
+        // From spacer-doc:
+        // Der Name eines Startpoints muss den Instanznamen des Spielers enthalten, der an diesem Punkt starten soll.
+        // Format: Beispiel: START_PC_HERO für die Instanz "PC_HERO" oder START_OLD_MAN ...
+        // => Name of a startpoint always starts with "START_"
+
+        // Take anything with START for now
+        if(m_Waynet.waypoints[i].name.find("START") != std::string::npos)
+            pts.push_back(i);
+    }
+
+    if(pts.empty() && !m_Waynet.waypoints.empty())
+    {
+        // Use first waypoint available
+        //pts.push_back(0);
+    }
+
+    return pts;
 }
 
 

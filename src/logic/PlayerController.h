@@ -38,6 +38,11 @@ namespace Logic
         void onUpdate(float deltaTime) override;
 
         /**
+         * Updates the controller using input read from the user
+         */
+        void onUpdateByInput(float deltaTime);
+
+        /**
          * Called at rendertime
          */
         void onDebugDraw() override;
@@ -143,6 +148,12 @@ namespace Logic
 
             // Length of the current route
             float currentRouteLength;
+
+            // Where the npc currently is
+            Math::float3 position;
+
+            // Where the npc currently is looking at
+            Math::float3 direction;
 
         }m_MoveState;
 

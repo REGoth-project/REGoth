@@ -102,6 +102,16 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN", vob.world->getEngine()->getVDFSIndex());
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN", vob.world->getEngine()->getVDFSIndex());
 
+    anim.m_AnimHandler.addAnimation(libName + "-T_JUMPB.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFEL.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFER.MAN", vob.world->getEngine()->getVDFSIndex());
+
+    // Fist
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN", vob.world->getEngine()->getVDFSIndex());
+
+    // 1H
+    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN", vob.world->getEngine()->getVDFSIndex());
+
     anim.m_AnimHandler.playAnimation("S_RUNL");
 }
 
@@ -125,7 +135,7 @@ void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::st
         state.bodyVisual += ".MDM";
 
     if(bodyTexIdx != -1)
-        state.bodySkinColorIdx = static_cast<size_t>(bodyTexIdx);
+        state.bodyTextureIdx = static_cast<size_t>(bodyTexIdx);
 
     if(skinColorIdx != -1)
         state.bodySkinColorIdx = static_cast<size_t>(skinColorIdx);
@@ -168,6 +178,15 @@ void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::Gam
 Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInformation &vob)
 {
     return vob.world->getScriptEngine().getGameState().getNpc(vob.playerController->getScriptHandle());
+}
+
+Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string &instanceName, const std::string &wpName)
+{
+    // Use script-engine to insert the NPC
+    Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceName, wpName);
+
+    // Get engine-side entity of the created npc
+    return getEntityFromScriptInstance(world, npc);
 }
 
 

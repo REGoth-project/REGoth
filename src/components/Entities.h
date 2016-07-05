@@ -213,10 +213,16 @@ namespace Components
          */
         EObjectType m_Type;
 
+        /**
+         * Whether collision should be enabled on this
+         */
+        bool m_EnableCollision;
+
 
         static void init(ObjectComponent& c)
         {
             c.m_Type = Other;
+            c.m_EnableCollision = false;
         }
     };
 

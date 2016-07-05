@@ -40,7 +40,7 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
     return e;
 }
 
-Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle& e)
+Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle e)
 {
     VobInformation info;
     Components::ComponentAllocator& alloc = world.getComponentAllocator();
@@ -170,6 +170,28 @@ World::WorldInstance &::Vob::getWorld(Vob::VobInformation &vob)
 Logic::VisualController *::Vob::getVisual(Vob::VobInformation &vob)
 {
     return vob.visual;
+}
+
+std::string Vob::getName(Vob::VobInformation& vob)
+{
+    if(vob.object)
+        return vob.object->m_Name;
+
+    return "";
+}
+
+void ::Vob::setCollisionEnabled(VobInformation& vob, bool value)
+{
+    if(vob.object)
+        vob.object->m_EnableCollision = value;
+}
+
+bool ::Vob::getCollisionEnabled(VobInformation& vob)
+{
+    if(vob.object)
+        return vob.object->m_EnableCollision;
+
+    return false;
 }
 
 

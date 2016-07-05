@@ -28,7 +28,12 @@ namespace Logic
             Run,
             FistWalk,
             FistRun,
-            Idle
+            Idle,
+            Backpedal,
+            StrafeLeft,
+            StrafeRight,
+            AttackFist,
+            Attack1h,
         };
 
         struct BodyState
@@ -136,6 +141,8 @@ namespace Logic
          * @return Root position of the model
          */
         Math::float3 getModelRoot();
+
+
     protected:
 
         /**

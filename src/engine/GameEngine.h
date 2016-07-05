@@ -46,6 +46,14 @@ namespace Engine
         {
             return m_WorldInstances.getElement(m_MainWorld);
         }
+
+        /**
+         * @return Default set of shaders and constants
+         */
+        Render::RenderSystem& getDefaultRenderSystem()
+        {
+            return m_DefaultRenderSystem;
+        }
     protected:
 
         /**

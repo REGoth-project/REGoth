@@ -16,6 +16,7 @@ namespace World
         struct Waypoint
         {
             std::string name;
+            std::string classname;
             Math::float3 position;
             Math::float3 direction;
             float waterDepth;

@@ -5,6 +5,8 @@
 #include "CameraController.h"
 #include <entry/input.h>
 #include <engine/World.h>
+#include <components/Vob.h>
+#include <components/VobClasses.h>
 
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity),
@@ -25,7 +27,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     //inputSetMouseLock(true);
 }
 
-void Logic::CameraController::onUpdate(float deltaTime)
+void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {
     if(!m_Active)
         return; // TODO: Should do automatic movement anyways!
@@ -41,8 +43,32 @@ void Logic::CameraController::onUpdate(float deltaTime)
     if(inputGetKeyState(entry::Key::Space))
         moveSpeed *= 2.0f;
 
+    if(m_World.getScriptEngine().getPlayerEntity().isValid())
+        m_CameraMode = ECameraMode::ThirdPerson;
+
     switch(m_CameraMode)
     {
+        case ECameraMode::ThirdPerson:
+        {
+            // Get player position
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
+
+            if(player.isValid())
+            {
+                Math::Matrix ptrans = Vob::getTransform(player);
+
+                Math::float3 ppos = ptrans.Translation();
+                Math::float3 pdir = -1.0f * ptrans.Forward();
+
+                m_ViewMatrix = Math::Matrix::CreateLookAt(ppos - pdir * 4.0f + Math::float3(0.0f, 2.0f, 0.0f),
+                                                          ppos + Math::float3(0.0f, 1.0f, 0.0f),
+                                                          Math::float3(0, 1, 0));
+
+                setEntityTransform(m_ViewMatrix.Invert());
+            }
+        }
+            break;
+
         case ECameraMode::FirstPerson:
         {
             /*float mouseState[3];
@@ -172,4 +198,11 @@ std::pair<Math::float3, Math::float3> Logic::CameraController::getDirectionVecto
     );
 
     return std::make_pair(direction.normalize(), right.normalize());
+}
+
+void Logic::CameraController::setTransforms(const Math::float3 &position, float yaw, float pitch)
+{
+    m_CameraSettings.freeCameraSettings.position = position;
+    m_CameraSettings.freeCameraSettings.yaw = yaw;
+    m_CameraSettings.freeCameraSettings.pitch = pitch;
 }

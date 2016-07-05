@@ -4,6 +4,7 @@
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
 #include <components/EntityActions.h>
+#include <components/Vob.h>
 
 using namespace Logic;
 
@@ -115,6 +116,11 @@ void StaticMeshVisual::setAnimationFrame(size_t submeshIndex, size_t frame)
 void StaticMeshVisual::updateCollision()
 {
     VisualController::updateCollision();
+
+    Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
+
+    if(!Vob::getCollisionEnabled(vob))
+        return;
 
     // Get mesh data
     Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(m_MeshHandle);

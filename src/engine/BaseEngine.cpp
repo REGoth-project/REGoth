@@ -44,6 +44,17 @@ void BaseEngine::initEngine(int argc, char** argv)
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
     }
 
+    if(cmdLine.hasArg('m'))
+    {
+        value = cmdLine.findOption('m');
+
+        if(value)
+        {
+            m_Args.modfile = value;
+            LogInfo() << "Using modfile " << m_Args.modfile;
+        }
+    }
+
     if(cmdLine.hasArg('w'))
     {
         value = cmdLine.findOption('w');
@@ -161,6 +172,9 @@ void BaseEngine::loadArchives()
             m_FileIndex.loadVDF(s, 1);
         }
     }
+
+    // Load explicit modfile with even higher priority
+    m_FileIndex.loadVDF(m_Args.modfile, 2);
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)

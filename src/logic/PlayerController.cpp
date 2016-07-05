@@ -10,6 +10,7 @@
 #include <render/WorldRender.h>
 #include <components/Vob.h>
 #include <utils/logger.h>
+#include <entry/input.h>
 #include "visuals/ModelVisual.h"
 
 /**
@@ -43,6 +44,9 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
     m_MoveState.currentPathPerc = 0;
     m_NPCProperties.moveSpeed = 5.0f;
 
+    m_MoveState.direction = Math::float3(1,0,0);
+    m_MoveState.position = Math::float3(0,0,0);
+
     m_ScriptState.npcHandle = scriptInstance;
 }
 
@@ -50,20 +54,31 @@ void Logic::PlayerController::onUpdate(float deltaTime)
 {
     ModelVisual* model = getModelVisual();
 
-    // Do waypoint-actions
-    if (travelPath(deltaTime))
+    if(!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
-        // Path done, stop animation
-        if(model)
-            model->setAnimation(ModelVisual::Idle);
+        // Do waypoint-actions
+        if (travelPath(deltaTime))
+        {
+            // Path done, stop animation
+            if (model)
+                model->setAnimation(ModelVisual::Idle);
 
-        if (m_RoutineState.routineActive)
-            continueRoutine();
+            if (m_RoutineState.routineActive)
+                continueRoutine();
+        }
     }
 
-    // Update model for this frame
     if(model)
+    {
+        // Make sure the idle-animation is running
+        if(!model->getAnimationHandler().getActiveAnimation())
+        {
+            model->setAnimation(ModelVisual::Idle);
+        }
+
+        // Update model for this frame
         model->onFrameUpdate(deltaTime);
+    }
 }
 
 void Logic::PlayerController::continueRoutine()
@@ -92,9 +107,15 @@ void Logic::PlayerController::teleportToWaypoint(size_t wp)
                                                         m_World.getWaynet().waypoints[wp].position +
                                                                 m_World.getWaynet().waypoints[wp].direction,
                                                          Math::float3(0, 1, 0)).Invert();
+
+    m_MoveState.direction = m_World.getWaynet().waypoints[wp].direction;
+    m_MoveState.position = m_World.getWaynet().waypoints[wp].position;
+
     setEntityTransform(transform);
 
     placeOnGround();
+
+
 }
 
 void Logic::PlayerController::gotoWaypoint(size_t wp)
@@ -136,7 +157,10 @@ bool Logic::PlayerController::travelPath(float deltaTime)
         Math::float3 direction = differenceXZ;
         direction.normalize();
 
+        m_MoveState.direction = direction;
+
         direction *= deltaTime * m_NPCProperties.moveSpeed;
+        m_MoveState.position = currentPosition + direction;
 
         // Move
         setEntityTransform(Math::Matrix::CreateLookAt(currentPosition + direction,
@@ -239,7 +263,8 @@ void Logic::PlayerController::placeOnGround()
 {
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
+
     Math::float3 hit = m_World.getPhysicsSystem().raytrace(from, to);
 
     if (hit != to)
@@ -254,7 +279,8 @@ void Logic::PlayerController::placeOnGround()
 			feet = 0.8f;
 		}
 
-        m.Translation(hit + Math::float3(0.0f, feet, 0.0f));
+        m_MoveState.position = hit + Math::float3(0.0f, feet, 0.0f);
+        m.Translation(m_MoveState.position);
         setEntityTransform(m);
     }
 }
@@ -263,4 +289,62 @@ void Logic::PlayerController::onVisualChanged()
 {
     getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
+}
+
+void Logic::PlayerController::onUpdateByInput(float deltaTime)
+{
+    ModelVisual* model = getModelVisual();
+
+    if(!model)
+        return;
+
+    if (inputGetKeyState(entry::Key::KeyA))
+    {
+        model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
+    } else if (inputGetKeyState(entry::Key::KeyD))
+    {
+        model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
+    } else if (inputGetKeyState(entry::Key::KeyW))
+    {
+        model->setAnimation(ModelVisual::EModelAnimType::Run);
+    } else if (inputGetKeyState(entry::Key::KeyS))
+    {
+        model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
+    } else if (inputGetKeyState(entry::Key::KeyQ))
+    {
+        model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
+    } else {
+        model->setAnimation(ModelVisual::Idle);
+    }
+
+    float yaw = 0.0f;
+    const float turnSpeed = 2.5f;
+    if (inputGetKeyState(entry::Key::Left))
+    {
+        yaw -= turnSpeed * deltaTime;
+    } else if (inputGetKeyState(entry::Key::Right))
+    {
+        yaw += turnSpeed * deltaTime;
+    }
+
+    // TODO: HACK, take this out!
+    if(inputGetKeyState(entry::Key::Space))
+        deltaTime *= 4.0f;
+
+    // Apply animation-velocity
+    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
+
+
+
+    float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
+    m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
+    angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
+
+
+    m_MoveState.position += Math::Matrix::CreateRotationY(angle + yaw) * rootNodeVel;
+
+    Math::Matrix newTransform = Math::Matrix::CreateTranslation(m_MoveState.position) * Math::Matrix::CreateRotationY(angle + yaw);
+    setEntityTransform(newTransform);
+
+    placeOnGround();
 }

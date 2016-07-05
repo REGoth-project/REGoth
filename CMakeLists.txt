@@ -29,6 +29,14 @@ if(MSVC)
 	add_definitions(-DNOMINMAX)
 endif()
 
+# Setup OpenMP
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+    message("OPENMP FOUND")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 
 # ------------------ Config-Header ------------------
@@ -41,7 +49,11 @@ add_subdirectory(lib/ZenLib)
 # Set up bullet
 set(USE_GRAPHICAL_BENCHMARK OFF)
 set(USE_MSVC_RUNTIME_LIBRARY_DLL ON) # Don't statically link this
+set(BUILD_BULLET2_DEMOS OFF) # No samples
+set(BUILD_OPENGL3_DEMOS OFF) # No samples
+set(BUILD_UNIT_TESTS OFF) # No tests
 set(BUILD_CPU_DEMOS OFF) # No samples
+
 add_subdirectory(lib/bullet3)
 include_directories(lib/bullet3/src)
 

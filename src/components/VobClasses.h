@@ -41,6 +41,16 @@ namespace VobTypes
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
 
     /**
+     * Helper-function to insert an NPC into the world (With script initialization)
+     * Same as calling Wld_InsertNPC from script!
+     * @param world World to add the npc to
+     * @param instanceName Script-instance to create
+     * @param wpName Waypoint to put the npc on
+     * @return Handle to the NPCs entity
+     */
+    Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, const std::string& instanceName, const std::string& wpName = "");
+
+    /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.
      */
     void unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);

@@ -30,6 +30,7 @@ Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zen
 
         wp.waterDepth = static_cast<float>(zwp.waterDepth);
         wp.underWater = zwp.underWater;
+        wp.classname = zwp.objectClass;
 
         // Note: Edges are emplaced later
 

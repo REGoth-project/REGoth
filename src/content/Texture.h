@@ -38,6 +38,7 @@ namespace Textures
 		 * @brief Loads a texture from the given DDS-Data
 		 */
 		Handle::TextureHandle loadTextureDDS(const std::vector<uint8_t>& data, const std::string& name = "");
+		Handle::TextureHandle loadTextureRGBA8(const std::vector<uint8_t>& data, const std::string& name = "");
 
 		/**
 		 * @brief Loads a ZTEX-texture from the given or stored VDFS-FileIndex

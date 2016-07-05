@@ -11,6 +11,7 @@ namespace Render
         {
             bgfx::ProgramHandle mainWorldProgram;
             bgfx::ProgramHandle mainSkinnedMeshProgram;
+            bgfx::ProgramHandle fullscreenQuadProgram;
         }programs;
 
         struct

@@ -76,6 +76,11 @@ namespace Logic
          * @return Symbol-index, -1 of not found
          */
         size_t getSymbolIndexByName(const std::string& name);
+
+        /**
+         * @return The entity of the NPC the player is currently playing as
+         */
+        Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
     protected:
 
         /**
@@ -107,5 +112,10 @@ namespace Logic
          * All NPCs currently in the world
          */
         std::set<Handle::EntityHandle> m_WorldNPCs;
+
+        /**
+         * NPC-Entity of the player
+         */
+        Handle::EntityHandle m_PlayerEntity;
     };
 }

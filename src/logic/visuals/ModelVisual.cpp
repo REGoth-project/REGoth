@@ -250,6 +250,31 @@ void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
             else if(getAnimationHandler().hasAnimation("S_FISTWALK"))
                 setAnimation("S_FISTWALK");
             break;
+
+        case Backpedal:
+            if(getAnimationHandler().hasAnimation("T_JUMPB"))
+                setAnimation("T_JUMPB");
+            break;
+
+        case StrafeLeft:
+            if(getAnimationHandler().hasAnimation("T_RUNSTRAFEL"))
+                setAnimation("T_RUNSTRAFEL");
+            break;
+
+        case StrafeRight:
+            if(getAnimationHandler().hasAnimation("T_RUNSTRAFER"))
+                setAnimation("T_RUNSTRAFER");
+            break;
+
+        case AttackFist:
+            if(getAnimationHandler().hasAnimation("S_FISTATTACK"))
+                setAnimation("S_FISTATTACK");
+            break;
+
+        case Attack1h:
+            if(getAnimationHandler().hasAnimation("S_1HATTACK"))
+                setAnimation("S_1HATTACK");
+            break;
     }
 }
 

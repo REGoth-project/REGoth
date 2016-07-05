@@ -6,6 +6,11 @@
 
 using namespace Textures;
 
+// These are compiled inside bgfx
+typedef unsigned char stbi_uc;
+extern "C" stbi_uc* stbi_load_from_memory(stbi_uc const* _buffer, int _len, int* _x, int* _y, int* _comp, int _req_comp);
+extern "C" void stbi_image_free(void* _ptr);
+
 TextureAllocator::TextureAllocator(const VDFS::FileIndex* vdfidx)
 	: m_pVDFSIndex(vdfidx)
 {
@@ -56,6 +61,48 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
 	return h;
 }
 
+Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8_t>& data, const std::string & name)
+{
+	// Check if this was already loaded
+	auto it = m_TexturesByName.find(name);
+	if (it != m_TexturesByName.end())
+		return (*it).second;
+
+	// Load image
+	int width, height, comp;
+	void* out = stbi_load_from_memory( data.data(), data.size(), (int*)&width, (int*)&height, &comp, 4);
+
+	// Try to load the texture first, so we don't have to clean up if this fails
+	//TODO: Avoid the second copy here
+	const bgfx::Memory* mem = bgfx::alloc(data.size());
+	memcpy(mem->data, data.data(), data.size());
+	bgfx::TextureHandle bth = bgfx::createTexture(mem);
+
+	// Free imange
+	stbi_image_free(out);
+
+	// Couldn't load this one?
+	if (bth.idx == bgfx::invalidHandle)
+		return Handle::TextureHandle::makeInvalidHandle();
+
+	// Make wrapper-object
+	Handle::TextureHandle h = m_Allocator.createObject();
+
+	m_Allocator.getElement(h).m_TextureHandle = bth;
+	m_Allocator.getElement(h).m_TextureName = name;
+
+	// Add handle to name-map, if it got one
+	if(!name.empty())
+		m_TexturesByName[name] = h;
+
+	// Flush the pipeline
+	// TODO: There must be something better than "frame"?
+	//bgfx::touch(0);
+	//bgfx::frame();
+
+	return h;
+}
+
 Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & idx, const std::string & name)
 {
 	// Check if this was already loaded
@@ -78,17 +125,32 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
 	}
 
 	// Load from archive
+	bool asDDS = true;
 	idx.getFileData(vname, ztex);
+
+	// No compiled version? Try again as TGA
+	if(ztex.empty())
+	{
+		vname = name;
+		idx.getFileData(vname, ztex);
+		asDDS = false;
+	}
 
 	// Failed?
 	if (ztex.empty())
 		return Handle::TextureHandle::makeInvalidHandle();
 
-	// Convert to usual DDS
-	ZenLoad::convertZTEX2DDS(ztex, dds);
+	if(asDDS)
+	{
+		// Convert to usual DDS
+		ZenLoad::convertZTEX2DDS(ztex, dds);
 
-	// Proceed to load as usual dds-file and the input-name
-	return loadTextureDDS(dds, name);
+		// Proceed to load as usual dds-file and the input-name
+		return loadTextureDDS(dds, name);
+	} else
+	{
+		return loadTextureRGBA8(ztex, name);
+	}
 }
 
 Handle::TextureHandle TextureAllocator::loadTextureVDF(const std::string & name)

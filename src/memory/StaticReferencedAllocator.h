@@ -58,6 +58,11 @@ namespace Memory
         {
             return index == r.index && generation == r.generation;
         }
+
+        bool operator!=(const GenericHandle<N1,N2,dif>& r) const
+        {
+            return index != r.index || generation != r.generation;
+        }
     };
 
 
