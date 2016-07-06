@@ -157,6 +157,7 @@ void ScriptEngine::initForWorld(const std::string& world)
 
         Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
         e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
+        e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
     }
 }
 

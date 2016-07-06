@@ -47,12 +47,11 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
         m_CameraMode = ECameraMode::Free;
     else if(inputGetKeyState(entry::Key::Key2))
         m_CameraMode = ECameraMode::Viewer;
+    else if(inputGetKeyState(entry::Key::Key3) && m_World.getScriptEngine().getPlayerEntity().isValid())
+        m_CameraMode = ECameraMode::ThirdPerson;
 
     if(inputGetKeyState(entry::Key::Space))
         moveSpeed *= 2.0f;
-
-    if(m_World.getScriptEngine().getPlayerEntity().isValid())
-        m_CameraMode = ECameraMode::ThirdPerson;
 
     switch(m_CameraMode)
     {

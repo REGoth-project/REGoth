@@ -163,7 +163,7 @@ bool ModelVisual::load(const std::string& visual)
         updateAttachmentTransforms(m_BindPoseTransforms);
     }
 
-    Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
+    /*Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
     m_World.getEntity<Components::BBoxComponent>(e).m_DebugColor = 0xFFFFFFFF;
 
     Math::float3 bb[2];
@@ -171,7 +171,7 @@ bool ModelVisual::load(const std::string& visual)
 
     // Assign BBox as debug
     m_World.getEntity<Components::BBoxComponent>(e).m_BBox3D.min = bb[0];
-    m_World.getEntity<Components::BBoxComponent>(e).m_BBox3D.max = bb[1];
+    m_World.getEntity<Components::BBoxComponent>(e).m_BBox3D.max = bb[1];*/
 
     // Create m_VisualEntites-list
     rebuildMainEntityList();
