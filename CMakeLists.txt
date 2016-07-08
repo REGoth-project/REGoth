@@ -47,7 +47,6 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
-add_subdirectory(lib/octree)
 
 # Set up bullet
 set(USE_GRAPHICAL_BENCHMARK OFF)
@@ -82,7 +81,7 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty octree ${BULLET_LIBRARIES})
+target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES})
 
 # ------------------ Other ------------------
 
