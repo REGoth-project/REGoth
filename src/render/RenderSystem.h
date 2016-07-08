@@ -18,6 +18,7 @@ namespace Render
         {
             bgfx::UniformHandle diffuseTexture;
             bgfx::UniformHandle nodeTransforms;
+            bgfx::UniformHandle objectColor;
         }uniforms;
 
         struct

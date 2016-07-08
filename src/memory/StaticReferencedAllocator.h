@@ -131,12 +131,20 @@ namespace Memory
         }
 
         /**
-         * @return the actual element to the handle h
+         * @return the actual element to the handle h (Checks generation)
          */
         T& getElement(const typename T::HandleType& h)
         {
             assert(m_InternalHandles[h.index].m_Handle.generation == h.generation);
 
+            return m_Elements[m_InternalHandles[h.index].m_Handle.index];
+        }
+
+        /**
+         * @return the actual element to the handle h (Does not check generation)
+         */
+        T& getElementForce(const typename T::HandleType& h)
+        {
             return m_Elements[m_InternalHandles[h.index].m_Handle.index];
         }
 

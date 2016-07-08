@@ -32,13 +32,56 @@ namespace Physics
             Other
         };
 
+        enum ECollisionType
+        {
+            CT_Any = -1,
+            CT_WorldMesh = (1 << 1),
+            CT_Object = (1 << 2),
+        };
+
         btCollisionShape* collisionShape;
         EShapeType shapeType;
+        ECollisionType collisionType;
 
         static void clean(CollisionShape& s)
         {
             delete s.collisionShape;
         }
+    };
+
+
+
+    struct RayTestResult
+    {
+        /**
+         * Whether this result contains valid results
+         */
+        bool hasHit;
+
+        /**
+         * @brief Position of where the ray hit
+         */
+        Math::float3 hitPosition;
+
+        /**
+         * @brief Index of the trianlge the ray has potentially hit
+         */
+        uint32_t hitTriangleIndex;
+
+        /**
+         * @brief Userflags set in the hit rigidbody
+         */
+        uint32_t hitFlags;
+
+        /**
+         * @brief Hit collision shape
+         */
+        Handle::CollisionShapeHandle hitCollisionShape;
+
+        /**
+         * @brief Hit rigidbody
+         */
+        Handle::PhysicsObjectHandle hitPhysicsObject;
     };
 
     /**
@@ -81,7 +124,8 @@ namespace Physics
          * @param mesh Mesh to use as base
          * @return Static collision-shape using this mesh
          */
-        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh& mesh, const std::string &name = "");
+        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh& mesh, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string &name = "");
+        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const std::vector<Math::float3> triangles, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string &name = "");
 
         /**
          * Creates a box-like collision-shape
@@ -103,7 +147,7 @@ namespace Physics
          * @param name Cache-name of this shape
          * @return Handle to the created shape
          */
-        Handle::CollisionShapeHandle makeCompoundCollisionShape(const std::string& name = "");
+        Handle::CollisionShapeHandle makeCompoundCollisionShape(CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
 
         /**
          * Creates a new rigid-body using the given collision-shape
@@ -133,7 +177,7 @@ namespace Physics
          * @param to Destination
          * @return Distance between source and destination. "to" if not hit
          */
-        Math::float3 raytrace(const Math::float3& from, const Math::float3& to);
+        RayTestResult raytrace(const Math::float3& from, const Math::float3& to, CollisionShape::ECollisionType filtertype = CollisionShape::CT_Any);
 
         /**
          * @return Physics-object of the given handle

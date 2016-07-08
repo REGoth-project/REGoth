@@ -46,6 +46,11 @@ namespace Logic
          * Updates the collision-hull depending on this visual
          */
         virtual void updateCollision();
+
+        /**
+         * Sets the shadow-value from the worldmesh for this visual-controller
+         */
+        virtual void setShadowValue(float shadow);
     protected:
 
         /**

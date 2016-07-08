@@ -22,17 +22,27 @@ namespace World
 		 */
 		void load(const ZenLoad::PackedMesh& in);
 
+		/**
+		 * Interpolates the color on of the vertices on the triangle with the given index
+		 * @param triangleIdx Triangle to use for the calculation
+		 * @param worldPosition Position to interpolate to (in world-coords)
+		 * @return Interpolated color-value on the given triangle
+		 */
+		float interpolateTriangleShadowValue(size_t triangleIdx, const Math::float3& worldPosition);
+
+		/**
+		 * Returns the vertices of the given triangle
+		 * @param triangleIdx Triangle to get the vertices from
+		 * @param v3 pointer to array fo 3 Math::float3s
+		 */
+		void getTriangle(size_t triangleIdx, Math::float3* v3);
+
 	protected:
 
 		/**
-		 * Data of the whole mesh
+		 * Data of the worldmesh
 		 */
-		Handle::MeshHandle m_MeshHandle;
-
-		/**
-		 * Handles the worldmeshes submesh-entities
-		 */
-		std::vector<Handle::EntityHandle> m_MeshEntities;
+		ZenLoad::PackedMesh m_WorldMeshData;
 
 		/**
 		 * Reference to the parentworld

@@ -178,10 +178,14 @@ namespace World
         {
             return m_PhysicsSystem;
         }
-        Handle::CollisionShapeHandle getStaticCollisionShape()
+        Handle::CollisionShapeHandle getStaticObjectCollisionShape()
         {
-            return m_StaticWorldCollsionShape;
+            return m_StaticWorldObjectCollsionShape;
         }
+		WorldMesh& getWorldMesh()
+		{
+			return m_WorldMesh;
+		}
     protected:
 
 		/**
@@ -221,8 +225,10 @@ namespace World
 		/**
 		 * Static collision-shape for the world
 		 */
-        Handle::CollisionShapeHandle m_StaticWorldCollsionShape;
-        Handle::PhysicsObjectHandle m_StaticWorldPhysicsObject;
+		Handle::CollisionShapeHandle m_StaticWorldObjectCollsionShape;
+		Handle::CollisionShapeHandle m_StaticWorldMeshCollsionShape;
+		Handle::PhysicsObjectHandle m_StaticWorldMeshPhysicsObject;
+		Handle::PhysicsObjectHandle m_StaticWorldObjectPhysicsObject;
 
 		/**
 		 * Handle of this world-instance

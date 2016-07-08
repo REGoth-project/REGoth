@@ -92,7 +92,7 @@ void PhysicsSystem::removeRigidBody(btRigidBody *body)
     m_DynamicsWorld.removeRigidBody(body);
 }
 
-Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
+Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, CollisionShape::ECollisionType type, const std::string &name)
 {
     if(m_ShapeCache.find(name) != m_ShapeCache.end())
         return m_ShapeCache[name];
@@ -132,6 +132,9 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Mes
     CollisionShape& cs = getCollisionShape(csh);
     cs.collisionShape = new btBvhTriangleMeshShape(wm, true);
     cs.shapeType = CollisionShape::TriangleMesh;
+    cs.collisionType = type;
+
+    cs.collisionShape->setUserIndex(csh.index);
 
     if(!name.empty())
         m_ShapeCache[name] = csh;
@@ -139,7 +142,48 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Mes
     return csh;
 }
 
-Handle::CollisionShapeHandle PhysicsSystem::makeCompoundCollisionShape(const std::string &name)
+Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std::vector<Math::float3> triangles,
+                                                                       CollisionShape::ECollisionType type,
+                                                                       const std::string &name)
+{
+    if(m_ShapeCache.find(name) != m_ShapeCache.end())
+        return m_ShapeCache[name];
+
+    // Init collision
+    btTriangleMesh* wm = new btTriangleMesh;
+
+    for(size_t i=0;i<triangles.size();i+=3)
+    {
+        // Convert to btvector
+        btVector3 v[] = {{triangles[i].x,   triangles[i].y,   triangles[i].z},
+                         {triangles[i+1].x, triangles[i+1].y, triangles[i+1].z},
+                         {triangles[i+2].x, triangles[i+2].y, triangles[i+2].z}};
+
+        wm->addTriangle(v[0], v[1], v[2]);
+    }
+
+    if(wm->getNumTriangles() == 0)
+    {
+        delete wm;
+        return Handle::CollisionShapeHandle::makeInvalidHandle();
+    }
+
+    Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
+    CollisionShape& cs = getCollisionShape(csh);
+    cs.collisionShape = new btBvhTriangleMeshShape(wm, true);
+    cs.shapeType = CollisionShape::TriangleMesh;
+    cs.collisionType = type;
+
+    cs.collisionShape->setUserIndex(csh.index);
+
+    if(!name.empty())
+        m_ShapeCache[name] = csh;
+
+    return csh;
+}
+
+
+Handle::CollisionShapeHandle PhysicsSystem::makeCompoundCollisionShape(CollisionShape::ECollisionType type, const std::string &name)
 {
     if(m_ShapeCache.find(name) != m_ShapeCache.end())
         return m_ShapeCache[name];
@@ -150,6 +194,9 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCompoundCollisionShape(const std
     // TODO: Find out if "dynamicAABBTree" can be set to false for performance?
     cs.collisionShape = new btCompoundShape();
     cs.shapeType = CollisionShape::Compound;
+    cs.collisionType = type;
+
+    cs.collisionShape->setUserIndex(csh.index);
 
     if(!name.empty())
         m_ShapeCache[name] = csh;
@@ -180,19 +227,102 @@ Handle::CollisionShapeHandle PhysicsSystem::makeBoxCollisionShape(const Math::fl
     CollisionShape& cs = getCollisionShape(csh);
     cs.collisionShape = s;
     cs.shapeType = CollisionShape::Box;
+    cs.collisionType = CollisionShape::CT_Any;
+
+    cs.collisionShape->setUserIndex(csh.index);
 
     return csh;
 }
 
-Math::float3 PhysicsSystem::raytrace(const Math::float3 &from, const Math::float3 &to)
+RayTestResult PhysicsSystem::raytrace(const Math::float3 &from, const Math::float3 &to, CollisionShape::ECollisionType filtertype)
 {
-    btVector3 btFrom(from.x, from.y, from.z);
+    /*btVector3 btFrom(from.x, from.y, from.z);
     btVector3 btTo(to.x, to.y, to.z);
     btCollisionWorld::ClosestRayResultCallback res(btFrom, btTo);
 
     m_DynamicsWorld.rayTest(btFrom, btTo, res); // m_btWorld is btDiscreteDynamicsWorld
 
-    return res.hasHit() ? Math::float3(res.m_hitPointWorld.m_floats) : to;
+    return res.hasHit() ? Math::float3(res.m_hitPointWorld.m_floats) : to;*/
+
+    struct FilteredRayResultCallback : public btCollisionWorld::RayResultCallback
+    {
+        FilteredRayResultCallback(){}
+        virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+        {
+            const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);
+
+            if(rb->getCollisionShape()->getUserIndex() != -1)
+            {
+                // We don't have the generation of the handle here, but it should be okay!
+                Handle::CollisionShapeHandle csh;
+                csh.index = static_cast<uint32_t>(rb->getCollisionShape()->getUserIndex());
+
+                CollisionShape& s = m_ShapeAlloc->getElementForce(csh);
+
+                // TODO: There is some filtering functionality in bullet. Maybe use that instead?
+                if((s.collisionType & m_filterType) == 0)
+                    return 0;
+
+                m_hitCollisionType = s.collisionType;
+            }
+
+            if(rb)
+                return addSingleResult_close(rayResult, normalInWorldSpace);
+
+            return 0;
+        }
+
+        btVector3	m_rayFromWorld;
+        btVector3	m_rayToWorld;
+
+        btVector3	m_hitNormalWorld;
+        btVector3	m_hitPointWorld;
+        uint32_t	m_hitTriangleIndex;
+        CollisionShape::ECollisionType m_hitCollisionType;
+        CollisionShape::ECollisionType m_filterType;
+        CollisionShapeAllocator* m_ShapeAlloc;
+
+        virtual	btScalar	addSingleResult_close(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+        {
+            //caller already does the filter on the m_closestHitFraction
+            btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
+
+            m_closestHitFraction = rayResult.m_hitFraction;
+            m_collisionObject = rayResult.m_collisionObject;
+            if (normalInWorldSpace)
+            {
+                m_hitNormalWorld = rayResult.m_hitNormalLocal;
+            } else
+            {
+                ///need to transform normal into worldspace
+                m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis()*rayResult.m_hitNormalLocal;
+            }
+            m_hitPointWorld.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);
+
+            m_hitTriangleIndex = static_cast<uint32_t>(rayResult.m_localShapeInfo->m_triangleIndex);
+
+            return rayResult.m_hitFraction;
+        }
+
+    };
+
+    FilteredRayResultCallback r;
+    r.m_rayFromWorld = btVector3(from.x, from.y, from.z);
+    r.m_rayToWorld = btVector3(to.x, to.y, to.z);
+    r.m_hitPointWorld = r.m_rayFromWorld;
+    r.m_filterType = filtertype;
+    r.m_hitTriangleIndex = UINT_MAX;
+    r.m_ShapeAlloc = &m_CollisionShapeAllocator;
+
+    m_DynamicsWorld.rayTest(r.m_rayFromWorld, r.m_rayToWorld, r);
+
+    RayTestResult result;
+    result.hitFlags = r.m_hitCollisionType;
+    result.hitPosition = Math::float3(r.m_hitPointWorld.x(),r.m_hitPointWorld.y(),r.m_hitPointWorld.z());
+    result.hitTriangleIndex = r.m_hitTriangleIndex;
+    result.hasHit = r.hasHit();
+
+    return result;
 }
 
 Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, const std::string &name)
@@ -237,6 +367,8 @@ Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(con
     cs.collisionShape = simplifiedConvexShape;
     cs.shapeType = CollisionShape::ConvexMesh;
 
+    cs.collisionShape->setUserIndex(-1);
+
     delete tmpShape;
     delete hull;
 
@@ -280,5 +412,4 @@ void PhysicsSystem::postProcessLoad()
 {
     m_DynamicsWorld.updateAabbs();
 }
-
 

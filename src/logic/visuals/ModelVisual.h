@@ -142,6 +142,10 @@ namespace Logic
          */
         Math::float3 getModelRoot();
 
+        /**
+         * Sets the shadow-value from the worldmesh for this visual-controller
+         */
+        virtual void setShadowValue(float shadow);
 
     protected:
 

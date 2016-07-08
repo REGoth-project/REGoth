@@ -36,8 +36,10 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_pEngine = &engine;
 
     // Create static-collision shape beforehand
-    m_StaticWorldCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape();
-    m_StaticWorldPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldCollsionShape, Math::Matrix::CreateIdentity());
+    m_StaticWorldObjectCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
+    m_StaticWorldMeshCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_WorldMesh);
+    m_StaticWorldObjectPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldObjectCollsionShape, Math::Matrix::CreateIdentity());
+    m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
 }
 
 void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
@@ -61,7 +63,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         ZenLoad::PackedMesh packedWorldMesh;
         worldMesh->packMesh(packedWorldMesh, 0.01f);
 
-        //m_WorldMesh.load(packed);
+        // Init worldmesh-wrapper
+        m_WorldMesh.load(packedWorldMesh);
 
         Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh);
         Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
@@ -75,13 +78,33 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             // Create world-object using the static collision-shape
             Components::PhysicsComponent& phys = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), ents.front());
 
-            phys.m_PhysicsObject = m_StaticWorldPhysicsObject;
+            phys.m_PhysicsObject = m_StaticWorldMeshCollsionShape;
             phys.m_IsStatic = true;
 
+            // Create triangle-array
+            std::vector<Math::float3> triangles;
+            triangles.reserve(packedWorldMesh.vertices.size()); // Note: there are likely more
+
+            for(auto& tri : packedWorldMesh.triangles)
+            {
+                triangles.push_back(tri.vertices[0].Position.v);
+                triangles.push_back(tri.vertices[1].Position.v);
+                triangles.push_back(tri.vertices[2].Position.v);
+
+                for(int i=0;i<3;i++)
+                {
+                    if(Math::float3(tri.vertices[i].Position.v).length() < 100)
+                        tri.vertices[i].Color = 0x00000000;
+                }
+            }
+
             // Add world-mesh collision
-            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(worldMeshData);
-            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldCollsionShape, wmch);
+            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(triangles, Physics::CollisionShape::CT_WorldMesh);
+            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
         }
+
+        // Make sure static collision is initialized before adding the VOBs
+        m_PhysicsSystem.postProcessLoad();
 
         for (Handle::EntityHandle e : ents)
         {
@@ -135,6 +158,20 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
                              Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
                              vob.visual ? 0 : 0xFF00AA00);
 
+                // Trace down from this vob to get the shadow-value from the worldmesh
+                Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);
+                Math::float3 traceEnd = Math::float3(m.Translation().x, v.bbox[0].y - 5.0f, m.Translation().z);
+                Physics::RayTestResult hit = m_PhysicsSystem.raytrace(traceStart, traceEnd,
+                                                                      Physics::CollisionShape::CT_WorldMesh); // FIXME: Use boundingbox for this
+
+                if(hit.hasHit)
+                {
+                    float shadow = m_WorldMesh.interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
+
+                    if(Vob::getVisual(vob))
+                        Vob::getVisual(vob)->setShadowValue(shadow);
+
+                }
             }
         };
 

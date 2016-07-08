@@ -125,9 +125,11 @@ namespace Components
         Handle::MeshHandle m_StaticMeshVisual;
 		Meshes::SubmeshVxInfo m_SubmeshInfo;
 		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
+        uint32_t m_Color;
 
         static void init(StaticMeshComponent& c)
         {
+            c.m_Color = 0xFFFFFFFF;
         }
     };
 

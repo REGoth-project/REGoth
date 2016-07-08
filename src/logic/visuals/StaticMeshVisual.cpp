@@ -126,13 +126,13 @@ void StaticMeshVisual::updateCollision()
     Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(m_MeshHandle);
 
     // Simplify mesh
-    Handle::CollisionShapeHandle hullh = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, m_Name);
+    Handle::CollisionShapeHandle hullh = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, Physics::CollisionShape::CT_Object, m_Name);
 
     if(!hullh.isValid())
         return;
 
     // Add static collision-mesh
-    m_World.getPhysicsSystem().compoundShapeAddChild(m_World.getStaticCollisionShape(), hullh, getEntityTransform());
+    m_World.getPhysicsSystem().compoundShapeAddChild(m_World.getStaticObjectCollisionShape(), hullh, getEntityTransform());
 
     // TODO: Implement dynamic bodies
     /*
@@ -151,4 +151,14 @@ void StaticMeshVisual::updateCollision()
     //phys.m_RigidBody.setBodyTransform(getEntityTransform());
     //phys.m_RigidBody.getMotionState()->setWorldTransform(getEntityTransform());
      */
+}
+
+void StaticMeshVisual::setShadowValue(float shadow)
+{
+    for(Handle::EntityHandle e : m_VisualEntities)
+    {
+        Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(e);
+
+        sm.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+    }
 }

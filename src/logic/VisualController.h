@@ -40,6 +40,11 @@ namespace Logic
 		 * @return The name of this visual
 		 */
 		const std::string& getName(){ return m_Name; }
+
+        /**
+         * Sets the shadow-value from the worldmesh for this visual-controller
+         */
+        virtual void setShadowValue(float shadow){}
     protected:
 
         /**

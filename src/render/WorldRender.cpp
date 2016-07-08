@@ -76,6 +76,11 @@ namespace Render
 					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
 				}
 
+				// Set object-color
+				Math::float4 color;
+				color.fromABGR8(sms[i].m_Color);
+				bgfx::setUniform(config.uniforms.objectColor, color.v);
+
 				if((mask & Components::AnimationComponent::MASK) != 0)
 				{
 					Components::AnimHandler* animHandler = nullptr;

@@ -601,3 +601,22 @@ void ModelVisual::updateAttachmentVisuals()
 		}
 	}
 }
+
+void ModelVisual::setShadowValue(float shadow)
+{
+    VisualController::setShadowValue(shadow);
+
+    // Set shadow for all visual entities
+    for(Handle::EntityHandle& e : m_VisualEntities)
+    {
+        Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(e);
+        Components::VisualComponent& vis = m_World.getEntity<Components::VisualComponent>(e);
+        Components::StaticMeshComponent& msh = m_World.getEntity<Components::StaticMeshComponent>(e);
+
+        if(Components::hasComponent<Components::VisualComponent>(ent) && vis.m_pVisualController)
+            vis.m_pVisualController->setShadowValue(shadow);
+
+        if(Components::hasComponent<Components::StaticMeshComponent>(ent))
+            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+    }
+}

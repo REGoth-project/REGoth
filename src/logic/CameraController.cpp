@@ -127,11 +127,11 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
             // Fix position
             Math::float3 to = m_CameraSettings.freeCameraSettings.position + Math::float3(0.0f, -100.0f, 0.0f);
-            Math::float3 hit = m_World.getPhysicsSystem().raytrace(m_CameraSettings.freeCameraSettings.position, to);
+            Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(m_CameraSettings.freeCameraSettings.position, to);
 
-            if (hit != to)
+            if (hit.hasHit)
             {
-                m_CameraSettings.freeCameraSettings.position = hit + Math::float3(0.0f, 1.8f, 0.0f);
+                m_CameraSettings.freeCameraSettings.position = hit.hitPosition + Math::float3(0.0f, 1.8f, 0.0f);
             }
 
             m_ViewMatrix = Math::Matrix::CreateView(m_CameraSettings.freeCameraSettings.position,
@@ -247,12 +247,12 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 Math::float3 cameraSpaceRayEndpoint = maxRayLength * Math::float3( (2.0f * settings.mousePosition.x - 1.0f), (0.5f - settings.mousePosition.y), 1.0f );
                 Math::float3 to = m_ViewMatrix.Invert() * cameraSpaceRayEndpoint;
                 Math::float3 from = settings.lookAt + settings.zoom * settings.in;
-                Math::float3 hit = m_World.getPhysicsSystem().raytrace(from, to);
+                Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
 
-                if(hit != to)
+                if(hit.hasHit)
                 {
-                    settings.lookAt = hit;
-                    Math::float3 distance = from - hit;
+                    settings.lookAt = hit.hitPosition;
+                    Math::float3 distance = from - hit.hitPosition;
                     settings.zoom = distance.length();
                     settings.pitch = asin(distance.y/settings.zoom);
                     settings.yaw = atan2(distance.x, distance.z);

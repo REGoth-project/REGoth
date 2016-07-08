@@ -235,6 +235,30 @@ void Logic::PlayerController::onDebugDraw()
     {
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
     }*/
+
+
+    /*Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
+
+    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+
+    if (hit.hasHit)
+    {
+        ddDrawAxis(hit.hitPosition.x, hit.hitPosition.y, hit.hitPosition.z);
+
+        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
+
+        if(getModelVisual())
+            getModelVisual()->setShadowValue(shadow);
+
+        Math::float3 v3[3];
+        m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3);
+
+        for(int i=0;i<3;i++)
+        {
+            ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
+        }
+    }*/
 }
 
 void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
@@ -265,23 +289,35 @@ void Logic::PlayerController::placeOnGround()
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
 
-    Math::float3 hit = m_World.getPhysicsSystem().raytrace(from, to);
+    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
 
-    if (hit != to)
+
+    if (hit.hasHit)
     {
         Math::Matrix m = getEntityTransform();
 
         float feet = m_NPCProperties.modelRoot.y;
 
-		// FIXME: Actually read the flying-flag of the MDS
-		if(feet == 0.0f)
-		{
-			feet = 0.8f;
-		}
+        // FIXME: Actually read the flying-flag of the MDS
+        if (feet == 0.0f)
+        {
+            feet = 0.8f;
+        }
 
-        m_MoveState.position = hit + Math::float3(0.0f, feet, 0.0f);
+        m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
         m.Translation(m_MoveState.position);
         setEntityTransform(m);
+    }
+
+    // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
+    Physics::RayTestResult hitwm = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+    if(hitwm.hasHit)
+    {
+        // Update color
+        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hitwm.hitTriangleIndex, hitwm.hitPosition);
+
+        if(getModelVisual())
+            getModelVisual()->setShadowValue(shadow);
     }
 }
 
