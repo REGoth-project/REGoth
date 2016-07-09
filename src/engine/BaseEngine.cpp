@@ -174,7 +174,10 @@ void BaseEngine::loadArchives()
     }
 
     // Load explicit modfile with even higher priority
-    m_FileIndex.loadVDF(m_Args.modfile, 2);
+    if(!m_Args.modfile.empty())
+    {
+    	m_FileIndex.loadVDF(m_Args.modfile, 2);
+    }
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
