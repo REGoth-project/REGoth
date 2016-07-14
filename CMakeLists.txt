@@ -3,6 +3,17 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Fix up C++ standard
+if (CMAKE_COMPILER_IS_GNUCC)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
+        message(FATAL_ERROR 'Your version of GCC is too old. Please upgrade to GCC 4.9 or later or get an other compiler supporting C++14!')
+    endif()
+
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.1)
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+    endif()
+endif()
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
