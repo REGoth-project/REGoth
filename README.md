@@ -23,8 +23,8 @@ git submodule update --remote --recursive
 # Building
 
 You will need CMake (3.1 or newer) and a C++14-capable compiler.
-Currently supported are:
- - GCC
+Currently supported/tested are:
+ - GCC (6.x)
  - MinGW
  - Visual Studio 2015
 
