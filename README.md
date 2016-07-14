@@ -1,5 +1,5 @@
 # REGoth
-OpenSource-Reimplentation of the zEngine, used by the game "Gothic"
+OpenSource-Reimplentation of the zEngine, used by the game "Gothic" and "Gothic II".
 
 # Source
 Make sure to clone this repository with the `--recursive` flag:
@@ -22,7 +22,7 @@ git submodule update --remote --recursive
 
 # Building
 
-You will need CMake (3.1 or newer) and a C++11(14?)-capable compiler.
+You will need CMake (3.1 or newer) and a C++14-capable compiler.
 Currently supported are:
  - GCC
  - MinGW
