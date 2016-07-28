@@ -32,6 +32,7 @@ void WorldInstance::init(Engine::BaseEngine& engine)
 	m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
 
@@ -60,6 +61,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 		parser.readWorld(world);
 
         ZenLoad::zCMesh *worldMesh = parser.getWorldMesh();
+
+        LogInfo() << "Postprocessing worldmesh...";
+
         ZenLoad::PackedMesh packedWorldMesh;
         worldMesh->packMesh(packedWorldMesh, 0.01f);
 
@@ -75,6 +79,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         // Create collisionmesh for the world
         if(!ents.empty())
         {
+            LogInfo() << "Generating world collision mesh...";
+
             // Create world-object using the static collision-shape
             Components::PhysicsComponent& phys = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), ents.front());
 
@@ -175,6 +181,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             }
         };
 
+        LogInfo() << "Inserting vobs...";
         vobLoad(world.rootVobs);
 
         // Make sure static collision is initialized before adding the NPCs

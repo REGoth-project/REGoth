@@ -71,7 +71,7 @@ void Logic::PlayerController::onUpdate(float deltaTime)
     if(model)
     {
         // Make sure the idle-animation is running
-        if(!model->getAnimationHandler().getActiveAnimation())
+        if(!model->getAnimationHandler().getActiveAnimationPtr())
         {
             model->setAnimation(ModelVisual::Idle);
         }

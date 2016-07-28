@@ -3,6 +3,17 @@
 #include "zenload/zCModelMeshLib.h"
 #include <unordered_map>
 #include <math/mathlib.h>
+#include <handle/HandleDef.h>
+
+namespace World
+{
+	class WorldInstance;
+}
+
+namespace Animations
+{
+	struct Animation;
+}
 
 namespace Components
 {
@@ -11,6 +22,11 @@ namespace Components
 	public:
 
 		AnimHandler();
+
+		/**
+		 * Access to the world this resides in
+		 */
+		void setWorld(World::WorldInstance& world){ m_pWorld = &world; }
 
 		/**
 		 * @brief Sets the mesh-lib this operates on. Does a copy inside, so the given object can be deleted.
@@ -26,8 +42,8 @@ namespace Components
 		 * @brief Adds an animation to the library. Does a copy inside, so the given object can be deleted.
 		 *		  TODO: Should not copy the animation-samples...
 		 */
-		void addAnimation(const ZenLoad::zCModelAni& ani);
-		bool addAnimation(const std::string& file, VDFS::FileIndex& idx, float scale = 1.0f / 100.0f);
+		//void addAnimation(const ZenLoad::zCModelAni& ani);
+		bool addAnimation(const std::string& file);
 
 		/**
 		 * @brief Sets the currently playing animation. Restarts it, if this is currently running
@@ -68,9 +84,9 @@ namespace Components
 		const Math::float3& getRootNodeVelocity(){ return m_AnimRootVelocity; }
 
 		/**
-		 * @return the currently active animation. nullptr if none is active
+		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
 		 */
-		ZenLoad::zCModelAni* getActiveAnimation();
+		ZenLoad::zCModelAni* getActiveAnimationPtr();
 
 		/**
 		 * @return Number of nodes in this skeleton
@@ -115,13 +131,17 @@ namespace Components
 			return m_AnimationStateHash;
 		}
 
+		/**
+		 * @return Animation-object from the handle
+		 */
+		Animations::Animation& getAnimation(Handle::AnimationHandle h);
 	private:
 
 		/**
 		 * @brief Animations by their name
 		 */
-		std::vector<ZenLoad::zCModelAni> m_Animations;
-		std::unordered_map<std::string, size_t> m_AnimationsByName;
+		std::vector<Handle::AnimationHandle> m_Animations;
+		std::unordered_map<std::string, Handle::AnimationHandle> m_AnimationsByName;
 
 		/**
 		 * @brief Meshlib this operates on
@@ -131,7 +151,7 @@ namespace Components
 		/** 
 		 * @brief Active animation
 		 */
-		size_t m_ActiveAnimation;
+		Handle::AnimationHandle m_ActiveAnimation;
 		float m_AnimationFrame;
 		size_t m_LastProcessedFrame;
 
@@ -155,5 +175,10 @@ namespace Components
 		 * 		  the animation was updated
 		 */
 		size_t m_AnimationStateHash;
+
+		/**
+		 * @brief World this resides in
+		 */
+		World::WorldInstance* m_pWorld;
 	};
 }

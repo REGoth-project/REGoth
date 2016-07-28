@@ -13,6 +13,7 @@
 #include <content/SkeletalMeshAllocator.h>
 #include <components/Entities.h>
 #include <physics/PhysicsSystem.h>
+#include <content/AnimationAllocator.h>
 
 namespace ZenLoad
 {
@@ -43,6 +44,7 @@ namespace World
         Textures::TextureAllocator m_LevelTextureAllocator;
 		Meshes::StaticMeshAllocator m_LevelStaticMeshAllocator;
 		Meshes::SkeletalMeshAllocator m_LevelSkeletalMeshAllocator;
+		Animations::AnimationAllocator m_AnimationAllocator;
 
 		// TODO: Refractor this one into StaticMeshAllocator
 		WorldMeshAllocator m_WorldMeshAllocator;
@@ -147,6 +149,10 @@ namespace World
 		Meshes::SkeletalMeshAllocator& getSkeletalMeshAllocator()
 		{
 			return m_Allocators.m_LevelSkeletalMeshAllocator;
+		}
+		Animations::AnimationAllocator& getAnimationAllocator()
+		{
+			return m_Allocators.m_AnimationAllocator;
 		}
 
 		// TODO: Depricated, remove
