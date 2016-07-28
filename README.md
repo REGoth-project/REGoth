@@ -63,3 +63,20 @@ REGoth -g "path/to/gothic1or2" -w startworld.zen
 Where `path/to/gothic1or2` points to the root of a Gothic I or II installation and `startworld.zen` is one of the Zen-Files found in a `.vdf`-files in the games `data/`-directory. For example: `newworld.zen` or `addonworld.zen` for Gothic II.
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
+
+### Examples
+**Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`
+
+**Gothic 1 - Oldmine:** `REGoth -g "path/to/gothic1" -w oldmine.zen`
+
+**Gothic 1 - Freemine:** `REGoth -g "path/to/gothic1" -w freemine.zen`
+
+**Gothic 1 - Sleeper temple:** `REGoth -g "path/to/gothic1" -w orctemple.zen`
+
+**Gothic 2 - Overworld:** `REGoth -g "path/to/gothic2" -w newworld.zen`
+
+**Gothic 2 - Valley of mines:** `REGoth -g "path/to/gothic2" -w oldworld.zen`
+
+**Gothic 2 - Addonworld:** `REGoth -g "path/to/gothic2" -w addonworld.zen`
+
+**Gothic 2 - Dragonisland:** `REGoth -g "path/to/gothic2" -w dragonisland.zen`
