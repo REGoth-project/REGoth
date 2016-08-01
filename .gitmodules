@@ -13,6 +13,3 @@
 [submodule "lib/bullet3"]
 	path = lib/bullet3
 	url = https://github.com/bulletphysics/bullet3.git
-[submodule "lib/GLFW"]
-	path = lib/glfw
-	url = https://github.com/glfw/glfw.git
