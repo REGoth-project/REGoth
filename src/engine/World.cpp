@@ -50,10 +50,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
     if(!zen.empty())
     {
         // Load ZEN
-        std::vector<uint8_t> data;
-        engine.getVDFSIndex().getFileData(zen, data);
-
-        ZenLoad::ZenParser parser(data.data(), data.size());
+        ZenLoad::ZenParser parser(zen, engine.getVDFSIndex());
 
         parser.readHeader();
         ZenLoad::oCWorldData world;

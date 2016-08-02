@@ -218,16 +218,6 @@ namespace Physics
         void removeRigidBody(btRigidBody* body);
 
         /**
-         * Bullet engine
-         */
-        btDbvtBroadphase m_Broadphase;
-        btDefaultCollisionConfiguration m_CollisionConfiguration;
-        btCollisionDispatcher m_Dispatcher;
-        btSequentialImpulseConstraintSolver m_Solver;
-        btDiscreteDynamicsWorld m_DynamicsWorld;
-		btSortedOverlappingPairCache m_PairCache;
-
-        /**
          * World this is for
          */
         World::WorldInstance& m_World;
@@ -242,5 +232,15 @@ namespace Physics
          * Map of collision-shapes by name
          */
         std::unordered_map<std::string, Handle::CollisionShapeHandle> m_ShapeCache;
+
+		/**
+		* Bullet engine
+		*/
+		btDbvtBroadphase m_Broadphase;
+		btSortedOverlappingPairCache m_PairCache;
+		btDefaultCollisionConfiguration m_CollisionConfiguration;
+		btCollisionDispatcher m_Dispatcher;
+		btSequentialImpulseConstraintSolver m_Solver;
+		btDiscreteDynamicsWorld m_DynamicsWorld;
     };
 }
