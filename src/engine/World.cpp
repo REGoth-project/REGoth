@@ -61,8 +61,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
         LogInfo() << "Postprocessing worldmesh...";
 
+		const bool REMOVE_WORLD_MESH_DOUBLES = true; // FIXME: Only for faster loading!
         ZenLoad::PackedMesh packedWorldMesh;
-        worldMesh->packMesh(packedWorldMesh, 0.01f);
+        worldMesh->packMesh(packedWorldMesh, 0.01f, REMOVE_WORLD_MESH_DOUBLES);
 
         // Init worldmesh-wrapper
         m_WorldMesh.load(packedWorldMesh);
@@ -200,6 +201,19 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	}
 	else
 	{
+		// Dump a list of possible zens
+		auto& files = m_pEngine->getVDFSIndex().getKnownFiles();
+		std::vector<std::string> zenFiles;
+		for(auto& f : files)
+		{
+			if(f.fileName.find(".ZEN") != std::string::npos)
+			{
+				zenFiles.push_back(f.fileName);
+			}
+		}
+
+		LogInfo() << "ZEN-Files found in the currently loaded Archives: " << zenFiles;
+
 		initializeScriptEngineForZenWorld("");
 	}
 
