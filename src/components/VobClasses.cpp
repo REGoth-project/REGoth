@@ -89,28 +89,29 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     // Strip extension
     std::string libName = visual.substr(0, visual.find_last_of('.'));
 
+    anim.m_AnimHandler.setWorld(*vob.world);
     anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
     // TODO: Move to other place
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUN.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALK.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_RUN.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_WALK.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-T_JUMPB.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFEL.MAN", vob.world->getEngine()->getVDFSIndex());
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFER.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-T_JUMPB.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFEL.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFER.MAN");
 
     // Fist
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN");
 
     // 1H
-    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN", vob.world->getEngine()->getVDFSIndex());
+    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");
 
     anim.m_AnimHandler.playAnimation("S_RUNL");
 }

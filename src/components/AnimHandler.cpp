@@ -3,15 +3,17 @@
 #include "utils/logger.h"
 #include <algorithm>
 #include <zenload/zCModelPrototype.h>
+#include <engine/World.h>
 
 using namespace Components;
 
 AnimHandler::AnimHandler()
 {
-    m_ActiveAnimation = static_cast<size_t>(-1);
+    m_ActiveAnimation.invalidate();
     m_AnimRootVelocity = Math::float3(0, 0, 0);
     m_LastProcessedFrame = static_cast<size_t>(-1);
     m_AnimationStateHash = 0;
+    m_pWorld = nullptr;
 }
 
 /**
@@ -33,13 +35,17 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
     setBindPose(true);
 }
 
-/**
- * @brief Adds an animation to the library
- */
-void AnimHandler::addAnimation(const ZenLoad::zCModelAni &ani)
+bool AnimHandler::addAnimation(const std::string &file)
 {
-    m_Animations.push_back(ani);
-    m_AnimationsByName[ani.getModelAniHeader().aniName] = m_Animations.size() - 1;
+    Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
+
+    if(!h.isValid())
+        return false;
+
+    m_Animations.push_back(h);
+    m_AnimationsByName[getAnimation(h).animation.getModelAniHeader().aniName] = h;
+
+    return true;
 }
 
 /**
@@ -52,7 +58,7 @@ void AnimHandler::playAnimation(const std::string &animName)
 
     if (animName.empty())
     {
-        m_ActiveAnimation = static_cast<size_t>(-1);
+        m_ActiveAnimation.invalidate();
 
         // Restore matrices from the bind-pose
         // because the animation won't modify all of the nodes
@@ -69,7 +75,7 @@ void AnimHandler::playAnimation(const std::string &animName)
     if (it == m_AnimationsByName.end())
     {
         //LogError() << "Failed to find animation: " << animName;
-        m_ActiveAnimation = static_cast<size_t>(-1);
+        m_ActiveAnimation.invalidate();
     }
     else
     {
@@ -87,7 +93,7 @@ void AnimHandler::playAnimation(const std::string &animName)
 
 void AnimHandler::setAnimation(const std::string &animName)
 {
-    if (getActiveAnimation() && getActiveAnimation()->getModelAniHeader().aniName == animName)
+    if (getActiveAnimationPtr() && getActiveAnimationPtr()->getModelAniHeader().aniName == animName)
         return;
 
     playAnimation(animName);
@@ -98,18 +104,18 @@ void AnimHandler::setAnimation(const std::string &animName)
 */
 void AnimHandler::updateAnimations(double deltaTime)
 {
-    if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimation())
+    if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimationPtr())
         return; // Nothing to do here // TODO: There is, if interpolation was implemented!
 
-    for (size_t i = 0; i < getActiveAnimation()->getNodeIndexList().size(); i++)
+    for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
         // TODO: Lerp between this and the next frame
         size_t frameNum = static_cast<size_t>(m_AnimationFrame);
-        size_t numAnimationNodes = getActiveAnimation()->getNodeIndexList().size();
-        uint32_t nodeIdx = getActiveAnimation()->getNodeIndexList()[i];
+        size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
+        uint32_t nodeIdx = getActiveAnimationPtr()->getNodeIndexList()[i];
 
         // Extract sample at the current frame/node
-        auto &sample = getActiveAnimation()->getAniSamples()[frameNum * numAnimationNodes + i];
+        auto &sample = getActiveAnimationPtr()->getAniSamples()[frameNum * numAnimationNodes + i];
 
         // Build transformation matrix from the sample-information
         // Note: Precomputing this is hard because of interpolation
@@ -134,8 +140,8 @@ void AnimHandler::updateAnimations(double deltaTime)
     }
 
     // Increase current timeline-position
-    float framesPerSecond = getActiveAnimation()->getModelAniHeader().fpsRate;
-    float numFrames = getActiveAnimation()->getModelAniHeader().numFrames;
+    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate;
+    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
     if (m_AnimationFrame >= numFrames)
@@ -148,14 +154,14 @@ void AnimHandler::updateAnimations(double deltaTime)
     if (lastFrame != frameNum && frameNum != 0)
     {
         // Get sample of root node (Node 0) from the current and the last frame
-        auto &sampleCurrent = getActiveAnimation()->getAniSamples()[frameNum *
-                                                                    getActiveAnimation()->getNodeIndexList().size()];
-        auto &sampleLast = getActiveAnimation()->getAniSamples()[lastFrame *
-                                                                 getActiveAnimation()->getNodeIndexList().size()];
+        auto &sampleCurrent = getActiveAnimationPtr()->getAniSamples()[frameNum *
+                getActiveAnimationPtr()->getNodeIndexList().size()];
+        auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
+                getActiveAnimationPtr()->getNodeIndexList().size()];
 
         // Scale velocity to seconds
         m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) *
-                             getActiveAnimation()->getModelAniHeader().fpsRate;
+                getActiveAnimationPtr()->getModelAniHeader().fpsRate;
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
     }
 
@@ -208,12 +214,12 @@ void AnimHandler::updateSkeletalMeshInfo(Math::Matrix *target, size_t numMatrice
     //}
 }
 
-ZenLoad::zCModelAni *AnimHandler::getActiveAnimation()
+ZenLoad::zCModelAni *AnimHandler::getActiveAnimationPtr()
 {
-    if (m_ActiveAnimation == static_cast<size_t>(-1))
+    if (!m_ActiveAnimation.isValid())
         return nullptr;
 
-    return &m_Animations[m_ActiveAnimation];
+    return &getAnimation(m_ActiveAnimation).animation;
 }
 
 bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &idx)
@@ -232,28 +238,16 @@ bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &i
         addAnimation(file + "-" + anim.animationName + ".MAN", idx, 1.0f / 100.0f);
     }*/
 
-    addAnimation(file + "-" + "S_RUN" + ".MAN", idx);
+    addAnimation(file + "-" + "S_RUN" + ".MAN");
 
-    return true;
-}
-
-bool AnimHandler::addAnimation(const std::string &file, VDFS::FileIndex &idx, float scale)
-{
-    ZenLoad::zCModelAni ani(file, idx, scale);
-
-    // TODO: Insert this again after pushing changes of ZenLib
-    //if(!ani.isValid())
-    //	return false;
-
-    addAnimation(ani);
     return true;
 }
 
 void AnimHandler::setBindPose(bool force)
 {
-    if (force || getActiveAnimation())
+    if (force || getActiveAnimationPtr())
     {
-        m_ActiveAnimation = static_cast<size_t>(-1);
+        m_ActiveAnimation.invalidate();
 
         // Bind-pose
         for (size_t i = 0; i < m_MeshLib.getNodes().size(); i++)
@@ -275,3 +269,7 @@ void AnimHandler::setBindPose(bool force)
     }
 }
 
+Animations::Animation &AnimHandler::getAnimation(Handle::AnimationHandle h)
+{
+    return m_pWorld->getAnimationAllocator().getAnimation(h);
+}

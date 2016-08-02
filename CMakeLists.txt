@@ -3,6 +3,14 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Fix up C++ standard
+if (CMAKE_COMPILER_IS_GNUCC)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
+        message(WARNING 'Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!')
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+    endif()
+endif()
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -32,7 +40,7 @@ if(MSVC)
 endif()
 
 # Setup OpenMP
-FIND_PACKAGE( OpenMP REQUIRED)
+FIND_PACKAGE(OpenMP)
 if(OPENMP_FOUND)
     message("OPENMP FOUND")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
