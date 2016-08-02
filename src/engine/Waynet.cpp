@@ -10,6 +10,15 @@
 
 using namespace World;
 
+/**
+* @brief Adds a named waypoint to the given waynet instance
+*/
+void Waynet::addWaypoint(WaynetInstance& waynet, const Waypoint& wp)
+{
+	waynet.waypoints.push_back(wp);
+	waynet.waypointsByName[wp.name] = waynet.waypoints.size() - 1;
+}
+
 Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zenWorld)
 {
     WaynetInstance w;
