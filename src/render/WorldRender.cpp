@@ -167,7 +167,7 @@ namespace Render
 		// TODO: Debugging - remove
 		/*if(!world.getWaynet().waypoints.empty())
 		{
-			//debugDrawWaynet(world.getWaynet());
+			debugDrawWaynet(world.getWaynet());
 
 
 			static std::vector<size_t> path;

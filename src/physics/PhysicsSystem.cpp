@@ -38,11 +38,16 @@ PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
 
 PhysicsSystem::~PhysicsSystem()
 {
-    for(size_t i=0;i<m_PhysicsObjectAllocator.getNumObtainedElements();i++)
-        PhysicsObject::clean(m_PhysicsObjectAllocator.getElements()[i]);
+	for(size_t i = 0; i < m_PhysicsObjectAllocator.getNumObtainedElements(); i++)
+	{
+		m_pDynamicsWorld->removeRigidBody(m_PhysicsObjectAllocator.getElements()[i].rigidBody);
+		PhysicsObject::clean(m_PhysicsObjectAllocator.getElements()[i]);
+	}
 
-    for(size_t i=0;i<m_CollisionShapeAllocator.getNumObtainedElements();i++)
-        CollisionShape::clean(m_CollisionShapeAllocator.getElements()[i]);
+	for(size_t i = 0; i < m_CollisionShapeAllocator.getNumObtainedElements(); i++)
+	{
+		CollisionShape::clean(m_CollisionShapeAllocator.getElements()[i]);
+	}
 
     delete m_pDynamicsWorld->getDebugDrawer();
 

@@ -51,10 +51,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
     if(!zen.empty())
     {
         // Load ZEN
-        std::vector<uint8_t> data;
-        engine.getVDFSIndex().getFileData(zen, data);
-
-        ZenLoad::ZenParser parser(data.data(), data.size());
+        ZenLoad::ZenParser parser(zen, engine.getVDFSIndex());
 
         parser.readHeader();
         ZenLoad::oCWorldData world;
@@ -125,7 +122,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             pos.m_DrawDistanceFactor = 0.0f; // Always draw the worldmesh
         }
 
-
+		// TODO: Refractor. Make a map of all vobs by classes or something.
+		ZenLoad::zCVobData startPoint;
 
         std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](
                 const std::vector<ZenLoad::zCVobData> &vobs) {
@@ -133,51 +131,61 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             {
                 vobLoad(v.childVobs);
 
-                if (v.visual.empty())
-                    continue; // TODO: We need those as well!
+				// TODO: Need those without visual as well!
+				if(v.visual.empty())
+				{
+					// Check for startingpoint
+					if(v.objectClass == "zCVobStartpoint:zCVob")
+					{
+						startPoint = v;
+					}
+				}
+				else
+				{
 
-                // Make vob
-                Handle::EntityHandle e = Vob::constructVob(*this);
-                Vob::VobInformation vob = Vob::asVob(*this, e);
+					// Make vob
+					Handle::EntityHandle e = Vob::constructVob(*this);
+					Vob::VobInformation vob = Vob::asVob(*this, e);
 
-                // Setup
-                if(!v.vobName.empty())
-                {
-                    Vob::setName(vob, v.vobName);
+					// Setup
+					if(!v.vobName.empty())
+					{
+						Vob::setName(vob, v.vobName);
 
-                    // Add to name-map
-                    m_VobsByNames[v.vobName] = e;
-                }
+						// Add to name-map
+						m_VobsByNames[v.vobName] = e;
+					}
 
-                // Set whether we want collision with this vob
-                Vob::setCollisionEnabled(vob, v.cdDyn);
+					// Set whether we want collision with this vob
+					Vob::setCollisionEnabled(vob, v.cdDyn);
 
-                Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
-                m.Translation(m.Translation() * (1.0f / 100.0f));
-                Vob::setTransform(vob, m);
-                Vob::setVisual(vob, v.visual);
+					Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
+					m.Translation(m.Translation() * (1.0f / 100.0f));
+					Vob::setTransform(vob, m);
+					Vob::setVisual(vob, v.visual);
 
-                //if(!vob.visual)
-                //    LogInfo() << "No visual for: " << v.visual;
+					//if(!vob.visual)
+					//    LogInfo() << "No visual for: " << v.visual;
 
-                Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
-                             Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
-                             vob.visual ? 0 : 0xFF00AA00);
+					Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
+						Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
+						vob.visual ? 0 : 0xFF00AA00);
 
-                // Trace down from this vob to get the shadow-value from the worldmesh
-                Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);
-                Math::float3 traceEnd = Math::float3(m.Translation().x, v.bbox[0].y - 5.0f, m.Translation().z);
-                Physics::RayTestResult hit = m_PhysicsSystem.raytrace(traceStart, traceEnd,
-                                                                      Physics::CollisionShape::CT_WorldMesh); // FIXME: Use boundingbox for this
+					// Trace down from this vob to get the shadow-value from the worldmesh
+					Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);
+					Math::float3 traceEnd = Math::float3(m.Translation().x, v.bbox[0].y - 5.0f, m.Translation().z);
+					Physics::RayTestResult hit = m_PhysicsSystem.raytrace(traceStart, traceEnd,
+						Physics::CollisionShape::CT_WorldMesh); // FIXME: Use boundingbox for this
 
-                if(hit.hasHit)
-                {
-                    float shadow = m_WorldMesh.interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
+					if(hit.hasHit)
+					{
+						float shadow = m_WorldMesh.interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
 
-                    if(Vob::getVisual(vob))
-                        Vob::getVisual(vob)->setShadowValue(shadow);
+						if(Vob::getVisual(vob))
+							Vob::getVisual(vob)->setShadowValue(shadow);
 
-                }
+					}
+				}
             }
         };
 
@@ -189,6 +197,19 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
         // Load waynet
         m_Waynet = Waynet::makeWaynetFromZen(world);
+
+		// Insert startpoint as a waypoint with the name zCVobStartpoint:zCVob.
+		if(!startPoint.objectClass.empty())
+		{
+			Waynet::Waypoint startWP;
+			startWP.classname = startPoint.objectClass;
+			startWP.direction = Math::float3(startPoint.rotationMatrix.Forward().v);
+			startWP.name = startPoint.objectClass;
+			startWP.position = (1.0f / 100.0f) * Math::float3(startPoint.position.v);
+			startWP.underWater = false;
+			startWP.waterDepth = 0;
+			Waynet::addWaypoint(m_Waynet, startWP);
+		}
 
         // Init script-engine
         initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
@@ -203,6 +224,19 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	}
 	else
 	{
+		// Dump a list of possible zens
+		auto& files = m_pEngine->getVDFSIndex().getKnownFiles();
+		std::vector<std::string> zenFiles;
+		for(auto& f : files)
+		{
+			if(f.fileName.find(".ZEN") != std::string::npos)
+			{
+				zenFiles.push_back(f.fileName);
+			}
+		}
+
+		LogInfo() << "ZEN-Files found in the currently loaded Archives: " << zenFiles;
+
 		initializeScriptEngineForZenWorld("");
 	}
 
@@ -419,8 +453,17 @@ std::vector<size_t> WorldInstance::findStartPoints()
             pts.push_back(i);
     }*/
 
+	// General
+
+	auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
+	if(it != m_Waynet.waypointsByName.end())
+		pts.push_back((*it).second);
+
+	if(!pts.empty())
+		return pts;
+
     // Gothic 1
-    auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
+    it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
     if(it != m_Waynet.waypointsByName.end())
         pts.push_back((*it).second);
 

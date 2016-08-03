@@ -3,6 +3,8 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
+add_definitions(-DBGFX_CONFIG_DEBUG=1)
+
 # Fix up C++ standard
 if (CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
@@ -40,7 +42,7 @@ if(MSVC)
 endif()
 
 # Setup OpenMP
-FIND_PACKAGE( OpenMP REQUIRED)
+FIND_PACKAGE(OpenMP)
 if(OPENMP_FOUND)
     message("OPENMP FOUND")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")

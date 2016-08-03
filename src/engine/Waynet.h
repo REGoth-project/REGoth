@@ -41,6 +41,11 @@ namespace World
             std::map <std::string, size_t> waypointsByName;
         };
 
+		/**
+		 * @brief Adds a named waypoint to the given waynet instance
+		 */
+		void addWaypoint(WaynetInstance& waynet, const Waypoint& wp);
+
         /**
          * @brief Creates a waynet from the given loaded zen-world
          */
