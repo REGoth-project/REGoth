@@ -117,7 +117,7 @@ namespace Physics
         /**
          * @return the Dynamics world
          */
-        btDiscreteDynamicsWorld* getDynamicsWorld(){ return &m_DynamicsWorld; }
+        btDiscreteDynamicsWorld* getDynamicsWorld(){ return m_pDynamicsWorld; }
 
         /**
          * Creates a new collisionshape from the given mesh
@@ -220,12 +220,12 @@ namespace Physics
         /**
          * Bullet engine
          */
-        btDbvtBroadphase m_Broadphase;
-        btDefaultCollisionConfiguration m_CollisionConfiguration;
-        btCollisionDispatcher m_Dispatcher;
-        btSequentialImpulseConstraintSolver m_Solver;
-        btDiscreteDynamicsWorld m_DynamicsWorld;
-		btSortedOverlappingPairCache m_PairCache;
+        btDbvtBroadphase* m_pBroadphase;
+        btDefaultCollisionConfiguration* m_pCollisionConfiguration;
+        btCollisionDispatcher* m_pDispatcher;
+        btSequentialImpulseConstraintSolver* m_pSolver;
+        btDiscreteDynamicsWorld* m_pDynamicsWorld;
+		btSortedOverlappingPairCache* m_pPairCache;
 
         /**
          * World this is for

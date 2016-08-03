@@ -96,9 +96,7 @@ namespace Memory
 
         virtual ~StaticReferencedAllocator()
         {
-            delete[] m_Elements;
-            delete[] m_InternalHandles;
-            delete[] m_ElementsToInternalHandles;
+            kill();
         }
 
         /**
@@ -206,6 +204,17 @@ namespace Memory
         {
             return m_FreeList.getNumObtainedElements();
         }
+
+        /**
+         * Basically destructs the allocator and makes it unusable (frees memory)
+         */
+        void kill()
+        {
+            delete[] m_Elements; m_Elements = nullptr;
+            delete[] m_InternalHandles; m_InternalHandles = nullptr;
+            delete[] m_ElementsToInternalHandles; m_ElementsToInternalHandles = nullptr;
+        }
+
     private:
         /** Actual element data */
         T* m_Elements;

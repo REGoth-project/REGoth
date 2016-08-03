@@ -16,19 +16,24 @@ using namespace Physics;
 const int NUM_MAX_SUB_STEPS = 3;
 
 PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
-    : m_Broadphase(&m_PairCache),
-	  m_Dispatcher(&m_CollisionConfiguration),
-      m_DynamicsWorld(&m_Dispatcher, &m_Broadphase, &m_Solver, &m_CollisionConfiguration),
-      m_World(world)
+    : m_World(world)
 {
+    m_pPairCache = new btSortedOverlappingPairCache;
+    m_pBroadphase = new btDbvtBroadphase(m_pPairCache);
+    m_pCollisionConfiguration = new btDefaultCollisionConfiguration;
+    m_pDispatcher = new btCollisionDispatcher(m_pCollisionConfiguration);
+    m_pSolver = new btSequentialImpulseConstraintSolver;
+    m_pDynamicsWorld = new btDiscreteDynamicsWorld(m_pDispatcher, m_pBroadphase, m_pSolver, m_pCollisionConfiguration);
+
+
 	// Bullet would update each AABB, even though most of the world is static. We'll do this ourselfes for static objects.
 	//m_DynamicsWorld.setForceUpdateAllAabbs(false); // FIXME: Does not acutally work yet, is this even needed?
 
     //btGImpactCollisionAlgorithm::registerAlgorithm(&m_Dispatcher);
-    m_DynamicsWorld.setGravity(btVector3(0, gravity, 0));
+    m_pDynamicsWorld->setGravity(btVector3(0, gravity, 0));
 
-    m_DynamicsWorld.setDebugDrawer(new DebugDrawer);
-    m_DynamicsWorld.getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+    m_pDynamicsWorld->setDebugDrawer(new DebugDrawer);
+    m_pDynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 }
 
 PhysicsSystem::~PhysicsSystem()
@@ -39,19 +44,26 @@ PhysicsSystem::~PhysicsSystem()
     for(size_t i=0;i<m_CollisionShapeAllocator.getNumObtainedElements();i++)
         CollisionShape::clean(m_CollisionShapeAllocator.getElements()[i]);
 
-    delete m_DynamicsWorld.getDebugDrawer();
+    delete m_pDynamicsWorld->getDebugDrawer();
+
+    delete m_pDynamicsWorld;
+    delete m_pSolver;
+    delete m_pDispatcher;
+    delete m_pCollisionConfiguration;
+    delete m_pBroadphase;
+    delete m_pPairCache;
 }
 
 void PhysicsSystem::debugDraw()
 {
-    m_DynamicsWorld.debugDrawWorld();
+    m_pDynamicsWorld->debugDrawWorld();
 }
 
 
 
 void PhysicsSystem::update(double dt)
 {
-    m_DynamicsWorld.stepSimulation(static_cast<btScalar>(dt));
+    m_pDynamicsWorld->stepSimulation(static_cast<btScalar>(dt));
 
     const auto& ctuple = m_World.getComponentDataBundle().m_Data;
     size_t num = m_World.getComponentDataBundle().m_NumElements;
@@ -84,12 +96,12 @@ void PhysicsSystem::update(double dt)
 
 void PhysicsSystem::addRigidBody(btRigidBody *body)
 {
-    m_DynamicsWorld.addRigidBody(body);
+    m_pDynamicsWorld->addRigidBody(body);
 }
 
 void PhysicsSystem::removeRigidBody(btRigidBody *body)
 {
-    m_DynamicsWorld.removeRigidBody(body);
+    m_pDynamicsWorld->removeRigidBody(body);
 }
 
 Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh &mesh, CollisionShape::ECollisionType type, const std::string &name)
@@ -314,7 +326,7 @@ RayTestResult PhysicsSystem::raytrace(const Math::float3 &from, const Math::floa
     r.m_hitTriangleIndex = UINT_MAX;
     r.m_ShapeAlloc = &m_CollisionShapeAllocator;
 
-    m_DynamicsWorld.rayTest(r.m_rayFromWorld, r.m_rayToWorld, r);
+    m_pDynamicsWorld->rayTest(r.m_rayFromWorld, r.m_rayToWorld, r);
 
     RayTestResult result;
     result.hitFlags = r.m_hitCollisionType;
@@ -389,7 +401,7 @@ PhysicsSystem::makeRigidBody(Handle::CollisionShapeHandle shape, const Math::Mat
     p.rigidBody = new btRigidBody(mass, nullptr, s.collisionShape); // TODO: Implement motionstate and inertia
 
     // Add to physics-world
-    m_DynamicsWorld.addRigidBody(p.rigidBody);
+    m_pDynamicsWorld->addRigidBody(p.rigidBody);
 
     return Handle::PhysicsObjectHandle();
 }
@@ -410,6 +422,6 @@ void PhysicsSystem::compoundShapeAddChild(Handle::CollisionShapeHandle target, H
 
 void PhysicsSystem::postProcessLoad()
 {
-    m_DynamicsWorld.updateAabbs();
+    m_pDynamicsWorld->updateAabbs();
 }
 

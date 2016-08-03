@@ -178,7 +178,7 @@ class ExampleCubes : public entry::AppI
         // Set view and projection matrix for view 0.
         bgfx::setViewTransform(1, NULL, proj);
 
-        static Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
+        Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
 
         Textures::Texture& texture = alloc.getTexture(txh);

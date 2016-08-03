@@ -32,6 +32,11 @@ namespace Memory
 
         }
 
+        ~AllocatorBundle()
+        {
+
+        }
+
         /**
          * Returns a handle to a free chunk of memory and marks it as used
          */
