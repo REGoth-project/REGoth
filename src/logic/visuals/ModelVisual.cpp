@@ -27,6 +27,78 @@ const std::string NPC_NODE_HELMET		= "ZS_HELMET";
 const std::string NPC_NODE_JAWS			= "ZS_JAWS";
 const std::string NPC_NODE_TORSO		= "ZS_TORSO";
 
+
+const char* ANIMATION_NAMES[] = {
+	
+	// Normal
+	{"S_WALKL"}, // Walk,
+	{"S_RUNL"}, // Run,
+	{"S_RUN"}, // Idle,
+	{"T_JUMPB"}, // Backpedal,
+	{"T_RUNSTRAFEL"}, // StrafeLeft,
+	{"T_RUNSTRAFER"}, // StrafeRight,
+	{"S_JUMP"}, // Jump
+	
+	// 1h
+	{"S_1HWALKL"}, // Walk1h,
+	{"S_1HRUNL"}, // Run1h,
+	{"S_1HRUN"}, // Idle1h,
+	{"T_1HJUMPB"}, // Backpedal1h,
+	{"T_1HRUNSTRAFEL"}, // StrafeLeft1h,
+	{"T_1HRUNSTRAFER"}, // StrafeRight1h,
+	{"S_1HATTACK"}, // Attack1h,
+	{"T_1HATTACKL"}, // Attack1h_L,
+	{"T_1HATTACKR"}, // Attack1h_R,
+	{"T_1HATTACKMOVE"}, // Attack1h_Move,
+	{"T_1HSFINISH"}, // Attack1h_Finish,
+	{"T_1HPARADE_O"}, // Parade1h,
+	{"T_1HPARADEJUMPB"}, // Parade1h_Back,
+
+	// 2h
+	{"S_2HWALKL"}, // Walk2h,
+	{"S_2HRUNL"}, // Run2h,
+	{"S_2HRUN"}, // Idle2h,
+	{"T_2HJUMPB"}, // Backpedal2h,
+	{"T_2HRUNSTRAFEL"}, // StrafeLeft2h,
+	{"T_2HRUNSTRAFER"}, // StrafeRight2h,
+	{"S_2HATTACK"}, // Attack2h,
+	{"T_2HATTACKL"}, // Attack2h_L,
+	{"T_2HATTACKR"}, // Attack2h_R,
+	{"T_2HATTACKMOVE"}, // Attack2h_Move,
+	{"T_2HSFINISH"}, // Attack2h_Finish,
+	{"T_2HPARADE_O"}, // Parade2h,
+	{"T_2HPARADEJUMPB"}, // Parade2h_Back,
+
+	// Bow
+	{"S_BOWWALKL"}, // WalkBow,
+	{"S_BOWRUNL"}, // RunBow,
+	{"S_BOWRUN"}, // IdleBow,
+	{"T_BOWJUMPB"}, // BackpedalBow,
+	{"T_BOWRUNSTRAFEL"}, // StrafeLeftBow,
+	{"T_BOWRUNSTRAFER"}, // StrafeRightBow,
+	{"T_BOWRUN_2_BOWAIM"}, // AttackBow,
+
+	// Cbow
+	{"S_CBOWWALKL"}, // WalkCBow,
+	{"S_CBOWRUNL"}, // RunCBow,
+	{"S_CBOWRUN"}, // IdleCBow,
+	{"T_CBOWJUMPB"}, // BackpedalCBow,
+	{"T_CBOWRUNSTRAFEL"}, // StrafeLeftCBow,
+	{"T_CBOWRUNSTRAFER"}, // StrafeRightCBow,
+	{"T_CBOWRUN_2_CBOWAIM"}, // AttackCBow,
+
+	// Fist
+	{"S_FISTWALKL"}, // WalkFist,
+	{"S_FISTRUNL"}, // RunFist,
+	{"S_FIST"}, // IdleFist,
+	{"T_FISTJUMPB"}, // BackpedalFist,
+	{"T_FISTRUNSTRAFEL"}, // StrafeLeftFist,
+	{"T_FISTRUNSTRAFER"}, // StrafeRightFist,
+	{"S_FISTATTACK"}, // AttackFist,
+	{"T_FISTPARADE_O"}, //ParadeFist,
+	{"T_FISTPARADEJUMPB"}, //ParadeFist_Back,
+};
+
 ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity)
         : VisualController(world, entity),
           m_LastKnownAnimationState(static_cast<size_t>(-1))
@@ -221,68 +293,13 @@ void ModelVisual::setAnimation(const std::string& anim)
 
 void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
 {
-    switch(type)
-    {
-        case Walk:
-            if(getAnimationHandler().hasAnimation("S_WALKL"))
-            {
-                setAnimation("S_WALKL");
-                break;
-            }
-            // Walk not found, try fistwalk
-        case FistWalk:
-            if(getAnimationHandler().hasAnimation("S_FISTWALKL"))
-                setAnimation("S_FISTWALKL");
-            break;
+	const char* str = ANIMATION_NAMES[type];
 
-        case Run:
-            if(getAnimationHandler().hasAnimation("S_RUNL"))
-            {
-                setAnimation("S_RUNL");
-                break;
-            }
-            // Walk not found, try fistrun
-        case FistRun:
-            if(getAnimationHandler().hasAnimation("S_FISTRUNL"))
-                setAnimation("S_FISTRUNL");
-            break;
+	if(getAnimationHandler().hasAnimation(str))
+	{
+		setAnimation(str);
+	}
 
-        case Idle:
-            if(getAnimationHandler().hasAnimation("S_RUN"))
-                setAnimation("S_RUN");
-            else if(getAnimationHandler().hasAnimation("S_WALK"))
-                setAnimation("S_WALK");
-            else if(getAnimationHandler().hasAnimation("S_FISTRUN"))
-                setAnimation("S_FISTRUN");
-            else if(getAnimationHandler().hasAnimation("S_FISTWALK"))
-                setAnimation("S_FISTWALK");
-            break;
-
-        case Backpedal:
-            if(getAnimationHandler().hasAnimation("T_JUMPB"))
-                setAnimation("T_JUMPB");
-            break;
-
-        case StrafeLeft:
-            if(getAnimationHandler().hasAnimation("T_RUNSTRAFEL"))
-                setAnimation("T_RUNSTRAFEL");
-            break;
-
-        case StrafeRight:
-            if(getAnimationHandler().hasAnimation("T_RUNSTRAFER"))
-                setAnimation("T_RUNSTRAFER");
-            break;
-
-        case AttackFist:
-            if(getAnimationHandler().hasAnimation("S_FISTATTACK"))
-                setAnimation("S_FISTATTACK");
-            break;
-
-        case Attack1h:
-            if(getAnimationHandler().hasAnimation("S_1HATTACK"))
-                setAnimation("S_1HATTACK");
-            break;
-    }
 }
 
 void ModelVisual::updateAttachmentTransforms(const std::vector<Math::Matrix>& transforms)

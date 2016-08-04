@@ -24,16 +24,77 @@ namespace Logic
 
         enum EModelAnimType
         {
-            Walk,
-            Run,
-            FistWalk,
-            FistRun,
-            Idle,
-            Backpedal,
-            StrafeLeft,
-            StrafeRight,
-            AttackFist,
-            Attack1h,
+			// Normal
+			Walk,
+			Run,
+			Idle,
+			Backpedal,
+			StrafeLeft,
+			StrafeRight,
+			Jump,
+
+			// 1h
+			Walk1h,
+			Run1h,
+			Idle1h,
+			Backpedal1h,
+			StrafeLeft1h,
+			StrafeRight1h,
+			Attack1h,
+			Attack1h_L,
+			Attack1h_R,
+			Attack1h_Move,
+			Attack1h_Finish,
+			Parade1h,
+			Parade1h_Back,
+
+			// 2h
+			Walk2h,
+			Run2h,
+			Idle2h,
+			Backpedal2h,
+			StrafeLeft2h,
+			StrafeRight2h,
+			Attack2h,
+			Attack2h_L,
+			Attack2h_R,
+			Attack2h_Move,
+			Attack2h_Finish,
+			Parade2h,
+			Parade2h_Back,
+
+			// Bow
+			WalkBow,
+			RunBow,
+			IdleBow,
+			BackpedalBow,
+			StrafeLeftBow,
+			StrafeRightBow,
+			AttackBow,
+
+			// Cbow
+			WalkCBow,
+			RunCBow,
+			IdleCBow,
+			BackpedalCBow,
+			StrafeLeftCBow,
+			StrafeRightCBow,
+			AttackCBow,
+
+			// Fist
+			WalkFist,
+			RunFist,
+			IdleFist,
+			BackpedalFist,
+			StrafeLeftFist,
+			StrafeRightFist,
+			AttackFist,
+			ParadeFist,
+			ParadeFist_Back,
+			
+			// TODO: Transitions, Running attacks, weapon walking, sneaking, backwards walking, attack while running, magic, other
+
+			NUM_ANIMATIONS
         };
 
         struct BodyState
