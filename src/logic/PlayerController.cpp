@@ -334,24 +334,58 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     if(!model)
         return;
 
-    if (inputGetKeyState(entry::Key::KeyA))
-    {
-        model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
-    } else if (inputGetKeyState(entry::Key::KeyD))
-    {
-        model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
-    } else if (inputGetKeyState(entry::Key::KeyW))
-    {
-        model->setAnimation(ModelVisual::EModelAnimType::Run);
-    } else if (inputGetKeyState(entry::Key::KeyS))
-    {
-        model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
-    } else if (inputGetKeyState(entry::Key::KeyQ))
-    {
-        model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
-    } else {
-        model->setAnimation(ModelVisual::Idle);
-    }
+	if(!inputGetKeyState(entry::Key::KeyL))
+	{
+		if(inputGetKeyState(entry::Key::KeyA))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
+		}
+		else if(inputGetKeyState(entry::Key::KeyD))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
+		}
+		else if(inputGetKeyState(entry::Key::KeyW))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Run);
+		}
+		else if(inputGetKeyState(entry::Key::KeyS))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
+		}
+		else if(inputGetKeyState(entry::Key::KeyQ))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
+		}
+		else {
+			model->setAnimation(ModelVisual::Idle);
+		}
+	}
+	else
+	{
+		if(inputGetKeyState(entry::Key::KeyA))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Attack1h_L);
+		}
+		else if(inputGetKeyState(entry::Key::KeyD))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Attack1h_R);
+		}
+		else if(inputGetKeyState(entry::Key::KeyW))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Run1h);
+		}
+		else if(inputGetKeyState(entry::Key::KeyS))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Backpedal1h);
+		}
+		else if(inputGetKeyState(entry::Key::KeyQ))
+		{
+			model->setAnimation(ModelVisual::EModelAnimType::Attack1h);
+		}
+		else {
+			model->setAnimation(ModelVisual::Idle1h);
+		}
+	}
 
     float yaw = 0.0f;
     const float turnSpeed = 2.5f;

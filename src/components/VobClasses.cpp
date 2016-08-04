@@ -92,8 +92,16 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.setWorld(*vob.world);
     anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
-    // TODO: Move to other place
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
+	// TODO: Move to other place
+	// Load all default animations
+	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
+	{
+		const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
+
+		anim.m_AnimHandler.addAnimation(libName + "-" + name + ".MAN");
+	}
+  
+    /*anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN");
@@ -111,7 +119,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN");
 
     // 1H
-    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");*/
 
     anim.m_AnimHandler.playAnimation("S_RUNL");
 }
@@ -165,6 +173,8 @@ void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::Gam
     else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
         node = Logic::EModelNode::Sword;
 
+	node = Logic::EModelNode::Righthand; // FIXME: Temporary
+
     // TODO: This is only doing visuals right now!
     // Close-ranged (Swords, etc)
     if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
@@ -174,6 +184,11 @@ void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::Gam
     {
         model->setNodeVisual(itemData.visual, node);
     }
+}
+
+Daedalus::GameState::NpcHandle VobTypes::getScriptHandle(VobTypes::NpcVobInformation &vob)
+{
+	return vob.playerController->getScriptHandle();
 }
 
 Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInformation &vob)

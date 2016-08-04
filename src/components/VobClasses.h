@@ -92,6 +92,13 @@ namespace VobTypes
      */
     Daedalus::GEngineClasses::C_Npc& getScriptObject(NpcVobInformation& vob);
 
+	/**
+	 * Returns the script handle for the given npc 
+	 * @param vob Npc to get the info from
+	 * @return Script-side handle of this npc
+	 */
+	Daedalus::GameState::NpcHandle getScriptHandle(VobTypes::NpcVobInformation& vob);
+
     /**
      * @return The engine entity handle of the given script instance of an npc
      */

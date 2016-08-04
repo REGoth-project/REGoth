@@ -302,6 +302,11 @@ void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
 
 }
 
+const char* ModelVisual::getAnimationName(ModelVisual::EModelAnimType type)
+{
+	return ANIMATION_NAMES[type];
+}
+
 void ModelVisual::updateAttachmentTransforms(const std::vector<Math::Matrix>& transforms)
 {
     if(m_VisualAttachments.empty())

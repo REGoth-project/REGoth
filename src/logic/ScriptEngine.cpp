@@ -152,8 +152,19 @@ void ScriptEngine::initForWorld(const std::string& world)
 
         m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", startpoint); // FIXME: Read startpoint at levelchange
 
-        if(!m_PlayerEntity.isValid())
-            LogWarn() << "Failed to insert player!";
+		if(!m_PlayerEntity.isValid()){
+			LogWarn() << "Failed to insert player!";
+		}
+		else
+		{
+			VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_PlayerEntity);
+
+			Daedalus::GameState::NpcHandle hsnpc =  VobTypes::getScriptHandle(npc);
+			Daedalus::GameState::ItemHandle sword = getGameState().addInventoryItem(m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
+
+			if(sword.isValid())
+				VobTypes::NPC_EquipWeapon(npc, sword);
+		}
 
         Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
         e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);

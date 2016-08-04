@@ -155,6 +155,12 @@ namespace Logic
          */
         void setAnimation(EModelAnimType type);
 
+		/**
+		 * @return Current name of the given animation type (Reacts to overlays)
+		 */
+		static const char* getAnimationName(EModelAnimType type);
+
+
         /**
          * @brief Updates the attachments transforms using the given object-space transforms
          */
