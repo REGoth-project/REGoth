@@ -4,6 +4,7 @@
 #include <handle/HandleDef.h>
 #include <set>
 #include <daedalus/DaedalusVM.h>
+#include <math/mathlib.h>
 
 namespace Daedalus
 {
@@ -81,6 +82,19 @@ namespace Logic
          * @return The entity of the NPC the player is currently playing as
          */
         Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
+
+        /**
+         * Returns a list of all npcs found inside the given sphere
+         * @param center Center of the search-sphere
+         * @param radius Radius of the search-sphere
+         * @return List of found NPCs
+         */
+        std::set<Handle::EntityHandle> getNPCsInRadius(const Math::float3& center, float radius);
+
+        /**
+         * @return List of all registered NPCs in the world
+         */
+        const std::set<Handle::EntityHandle>& getWorldNPCs(){ return m_WorldNPCs; }
     protected:
 
         /**

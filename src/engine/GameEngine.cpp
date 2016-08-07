@@ -76,7 +76,6 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
             // Update main-world after every other world, since the camera is in there
             m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
                                                              getMainCamera<Components::PositionComponent>().m_WorldMatrix);
-
         }
 
         // Finally, update main camera

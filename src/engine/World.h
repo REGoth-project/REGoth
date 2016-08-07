@@ -14,6 +14,7 @@
 #include <components/Entities.h>
 #include <physics/PhysicsSystem.h>
 #include <content/AnimationAllocator.h>
+#include <content/Sky.h>
 
 namespace ZenLoad
 {
@@ -192,6 +193,10 @@ namespace World
 		{
 			return m_WorldMesh;
 		}
+		Content::Sky& getSky()
+		{
+			return m_Sky;
+		}
     protected:
 
 		/**
@@ -229,6 +234,11 @@ namespace World
 		Physics::PhysicsSystem m_PhysicsSystem;
 
 		/**
+		 * Sky of this world
+		 */
+		Content::Sky m_Sky;
+
+		/**
 		 * Static collision-shape for the world
 		 */
 		Handle::CollisionShapeHandle m_StaticWorldObjectCollsionShape;
@@ -245,5 +255,10 @@ namespace World
          * Map of vobs by their names (If they have one)
          */
         std::unordered_map<std::string, Handle::EntityHandle> m_VobsByNames;
+
+		/**
+		 * NPCs in this world
+		 */
+		std::set<Handle::EntityHandle> m_NPCEntities;
     };
 }

@@ -128,12 +128,25 @@ namespace Math
 		/**
 		 * @brief Converts the given ABGR8-Color to float4
 		 */
-		void fromABGR8(uint32_t argb)
+		void fromABGR8(uint32_t abgr)
 		{
-			unsigned char a = argb >> 24;
-			unsigned char b = (argb >> 16) & 0xFF;
-			unsigned char g = (argb >> 8) & 0xFF;
-			unsigned char r = argb & 0xFF;
+			unsigned char a = static_cast<unsigned char>((abgr >> 24) & 0xFF);
+			unsigned char b = static_cast<unsigned char>((abgr >> 16) & 0xFF);
+			unsigned char g = static_cast<unsigned char>((abgr >> 8) & 0xFF);
+			unsigned char r = static_cast<unsigned char>(abgr & 0xFF);
+
+			x = r / 255.0f;
+			y = g / 255.0f;
+			z = b / 255.0f;
+			w = a / 255.0f;
+		}
+
+		void fromRGBA8(uint32_t rgba)
+		{
+			unsigned char r = static_cast<unsigned char>(rgba >> 24 & 0xFF);
+			unsigned char g = static_cast<unsigned char>((rgba >> 16) & 0xFF);
+			unsigned char b = static_cast<unsigned char>((rgba >> 8) & 0xFF);
+			unsigned char a = static_cast<unsigned char>(rgba & 0xFF);
 
 			x = r / 255.0f;
 			y = g / 255.0f;
@@ -144,7 +157,7 @@ namespace Math
 		/**
 		* @brief Converts the stored color to ABGR8
 		*/
-		uint32_t toABGR8()
+		uint32_t toABGR8() const
 		{
 			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
 								  static_cast<unsigned char>(z * 255.0f),
@@ -157,7 +170,7 @@ namespace Math
 		/**
 		* @brief Converts the stored color to ARGB8
 		*/
-		uint32_t toARGB8()
+		uint32_t toARGB8() const
 		{
 			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
 								  static_cast<unsigned char>(x * 255.0f),
@@ -170,12 +183,12 @@ namespace Math
 		/**
 		* @brief Converts the stored color to RGBA8
 		*/
-		uint32_t toRGBA8()
+		uint32_t toRGBA8() const
 		{
-			unsigned char b[] = { static_cast<unsigned char>(x * 255.0f),
-								  static_cast<unsigned char>(y * 255.0f),
+			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
 								  static_cast<unsigned char>(z * 255.0f),
-								  static_cast<unsigned char>(w * 255.0f)};
+								  static_cast<unsigned char>(y * 255.0f),
+								  static_cast<unsigned char>(x * 255.0f)};
 
 			return *reinterpret_cast<uint32_t*>(b);
 		}
@@ -280,12 +293,12 @@ namespace Math
         return r;
     }
 
-    template<typename T, typename... S> t_vector<T, S...> operator* (const t_vector<T, S...>& v1, float s)
-    {
-        t_vector<T, S...> r;
-        r._glmt_vector = v1._glmt_vector * s;
-        return r;
-    }
+	template<typename T, typename... S> t_vector<T, S...> operator* (const t_vector<T, S...>& v1, float s)
+	{
+		t_vector<T, S...> r;
+		r._glmt_vector = v1._glmt_vector * s;
+		return r;
+	}
 
     template<typename T, typename... S> t_vector<T, S...> operator* (float s, const t_vector<T, S...>& v2)
     {
@@ -293,6 +306,13 @@ namespace Math
         r._glmt_vector = s * v2._glmt_vector;
         return r;
     }
+
+	template<typename T, typename... S> t_vector<T, S...> operator/ (const t_vector<T, S...>& v1, float s)
+	{
+		t_vector<T, S...> r;
+		r._glmt_vector = v1._glmt_vector / s;
+		return r;
+	}
 
     typedef t_vector<t_float2, float, float> float2;
     typedef t_vector<t_float3, float, float, float> float3;

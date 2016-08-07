@@ -18,6 +18,17 @@ namespace Utils
     };
 
     /**
+     * Rounds the given float to the nearest integer of type T
+     * @param f Float to round
+     * @return f rounded to the nearest integer
+     */
+    template<typename T>
+    T round(float f)
+    {
+        return static_cast<T>(f + 0.5f);
+    }
+
+    /**
      * @return The current timestamp since some time in milliseconds
      */
     static long long currentTimestamp() {

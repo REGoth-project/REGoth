@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <cctype>
 
+
+
 void ::Utils::forEachFile(const std::string& directory, std::function<void(const std::string&,const std::string&,const std::string&)> fn, bool recursive )
 {
     tinydir_dir dir;

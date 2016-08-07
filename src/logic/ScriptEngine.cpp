@@ -260,6 +260,22 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
 	}
 }
 
+std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 &center, float radius)
+{
+    std::set<Handle::EntityHandle> outSet;
+    float rad2 = radius * radius;
+
+    for(const Handle::EntityHandle& e : m_WorldNPCs)
+    {
+        Math::float3 translation = m_World.getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
+
+        if((center - translation).lengthSquared() < rad2)
+            outSet.insert(e);
+    }
+
+    return outSet;
+}
+
 
 
 

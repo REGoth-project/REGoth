@@ -157,33 +157,7 @@ void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::st
 
 void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)
 {
-    Daedalus::GEngineClasses::C_Item& itemData = vob.world->getScriptEngine().getGameState().getItem(weapon);
-    Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
-
-    Logic::EModelNode node = Logic::EModelNode::Bow;
-
-    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
-        node = Logic::EModelNode::Longsword;
-    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
-        node = Logic::EModelNode::Longsword;
-    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
-        node = Logic::EModelNode::Crossbow;
-    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
-        node = Logic::EModelNode::Bow;
-    else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
-        node = Logic::EModelNode::Sword;
-
-	node = Logic::EModelNode::Righthand; // FIXME: Temporary
-
-    // TODO: This is only doing visuals right now!
-    // Close-ranged (Swords, etc)
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
-    {
-        model->setNodeVisual(itemData.visual, node);
-    }else if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0)
-    {
-        model->setNodeVisual(itemData.visual, node);
-    }
+    vob.playerController->equipItem(weapon);
 }
 
 Daedalus::GameState::NpcHandle VobTypes::getScriptHandle(VobTypes::NpcVobInformation &vob)
@@ -203,6 +177,16 @@ Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const 
 
     // Get engine-side entity of the created npc
     return getEntityFromScriptInstance(world, npc);
+}
+
+Daedalus::GameState::ItemHandle VobTypes::NPC_DrawMeleeWeapon(VobTypes::NpcVobInformation& npc)
+{
+    return npc.playerController->drawWeaponMelee();
+}
+
+void ::VobTypes::NPC_UndrawWeapon(VobTypes::NpcVobInformation &npc)
+{
+    npc.playerController->undrawWeapon();
 }
 
 

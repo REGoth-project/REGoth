@@ -31,72 +31,78 @@ const std::string NPC_NODE_TORSO		= "ZS_TORSO";
 const char* ANIMATION_NAMES[] = {
 	
 	// Normal
-	{"S_WALKL"}, // Walk,
-	{"S_RUNL"}, // Run,
-	{"S_RUN"}, // Idle,
-	{"T_JUMPB"}, // Backpedal,
-	{"T_RUNSTRAFEL"}, // StrafeLeft,
-	{"T_RUNSTRAFER"}, // StrafeRight,
-	{"S_JUMP"}, // Jump
+	"S_WALKL", // Walk,
+	"S_RUNL", // Run,
+	"S_RUN", // Idle,
+	"T_JUMPB", // Backpedal,
+	"T_RUNSTRAFEL", // StrafeLeft,
+	"T_RUNSTRAFER", // StrafeRight,
+	"S_JUMP", // Jump
 	
 	// 1h
-	{"S_1HWALKL"}, // Walk1h,
-	{"S_1HRUNL"}, // Run1h,
-	{"S_1HRUN"}, // Idle1h,
-	{"T_1HJUMPB"}, // Backpedal1h,
-	{"T_1HRUNSTRAFEL"}, // StrafeLeft1h,
-	{"T_1HRUNSTRAFER"}, // StrafeRight1h,
-	{"S_1HATTACK"}, // Attack1h,
-	{"T_1HATTACKL"}, // Attack1h_L,
-	{"T_1HATTACKR"}, // Attack1h_R,
-	{"T_1HATTACKMOVE"}, // Attack1h_Move,
-	{"T_1HSFINISH"}, // Attack1h_Finish,
-	{"T_1HPARADE_O"}, // Parade1h,
-	{"T_1HPARADEJUMPB"}, // Parade1h_Back,
+	"S_1HWALKL", // Walk1h,
+	"S_1HRUNL", // Run1h,
+	"S_1HRUN", // Idle1h,
+	"T_1HJUMPB", // Backpedal1h,
+	"T_1HRUNSTRAFEL", // StrafeLeft1h,
+	"T_1HRUNSTRAFER", // StrafeRight1h,
+	"S_1HATTACK", // Attack1h,
+	"T_1HATTACKL", // Attack1h_L,
+	"T_1HATTACKR", // Attack1h_R,
+	"T_1HATTACKMOVE", // Attack1h_Move,
+	"T_1HSFINISH", // Attack1h_Finish,
+	"T_1HPARADE_O", // Parade1h,
+	"T_1HPARADEJUMPB", // Parade1h_Back,
+    "T_1H_2_1HRUN", // Draw1h,
 
 	// 2h
-	{"S_2HWALKL"}, // Walk2h,
-	{"S_2HRUNL"}, // Run2h,
-	{"S_2HRUN"}, // Idle2h,
-	{"T_2HJUMPB"}, // Backpedal2h,
-	{"T_2HRUNSTRAFEL"}, // StrafeLeft2h,
-	{"T_2HRUNSTRAFER"}, // StrafeRight2h,
-	{"S_2HATTACK"}, // Attack2h,
-	{"T_2HATTACKL"}, // Attack2h_L,
-	{"T_2HATTACKR"}, // Attack2h_R,
-	{"T_2HATTACKMOVE"}, // Attack2h_Move,
-	{"T_2HSFINISH"}, // Attack2h_Finish,
-	{"T_2HPARADE_O"}, // Parade2h,
-	{"T_2HPARADEJUMPB"}, // Parade2h_Back,
+	"S_2HWALKL", // Walk2h,
+	"S_2HRUNL", // Run2h,
+	"S_2HRUN", // Idle2h,
+	"T_2HJUMPB", // Backpedal2h,
+	"T_2HRUNSTRAFEL", // StrafeLeft2h,
+	"T_2HRUNSTRAFER", // StrafeRight2h,
+	"S_2HATTACK", // Attack2h,
+	"T_2HATTACKL", // Attack2h_L,
+	"T_2HATTACKR", // Attack2h_R,
+	"T_2HATTACKMOVE", // Attack2h_Move,
+	"T_2HSFINISH", // Attack2h_Finish,
+	"T_2HPARADE_O", // Parade2h,
+	"T_2HPARADEJUMPB", // Parade2h_Back,
+    "T_2H_2_2HRUN", // Draw2h,
 
 	// Bow
-	{"S_BOWWALKL"}, // WalkBow,
-	{"S_BOWRUNL"}, // RunBow,
-	{"S_BOWRUN"}, // IdleBow,
-	{"T_BOWJUMPB"}, // BackpedalBow,
-	{"T_BOWRUNSTRAFEL"}, // StrafeLeftBow,
-	{"T_BOWRUNSTRAFER"}, // StrafeRightBow,
-	{"T_BOWRUN_2_BOWAIM"}, // AttackBow,
+	"S_BOWWALKL", // WalkBow,
+	"S_BOWRUNL", // RunBow,
+	"S_BOWRUN", // IdleBow,
+	"T_BOWJUMPB", // BackpedalBow,
+	"T_BOWRUNSTRAFEL", // StrafeLeftBow,
+	"T_BOWRUNSTRAFER", // StrafeRightBow,
+	"T_BOWRUN_2_BOWAIM", // AttackBow,
+    "T_BOW_2_BOWRUN", // DrawBow,
 
-	// Cbow
-	{"S_CBOWWALKL"}, // WalkCBow,
-	{"S_CBOWRUNL"}, // RunCBow,
-	{"S_CBOWRUN"}, // IdleCBow,
-	{"T_CBOWJUMPB"}, // BackpedalCBow,
-	{"T_CBOWRUNSTRAFEL"}, // StrafeLeftCBow,
-	{"T_CBOWRUNSTRAFER"}, // StrafeRightCBow,
-	{"T_CBOWRUN_2_CBOWAIM"}, // AttackCBow,
+        // Cbow
+	"S_CBOWWALKL", // WalkCBow,
+	"S_CBOWRUNL", // RunCBow,
+	"S_CBOWRUN", // IdleCBow,
+	"T_CBOWJUMPB", // BackpedalCBow,
+	"T_CBOWRUNSTRAFEL", // StrafeLeftCBow,
+	"T_CBOWRUNSTRAFER", // StrafeRightCBow,
+	"T_CBOWRUN_2_CBOWAIM", // AttackCBow,
+    "T_CBOW_2_CBOWRUN", // DrawCBow,
 
-	// Fist
-	{"S_FISTWALKL"}, // WalkFist,
-	{"S_FISTRUNL"}, // RunFist,
-	{"S_FIST"}, // IdleFist,
-	{"T_FISTJUMPB"}, // BackpedalFist,
-	{"T_FISTRUNSTRAFEL"}, // StrafeLeftFist,
-	{"T_FISTRUNSTRAFER"}, // StrafeRightFist,
-	{"S_FISTATTACK"}, // AttackFist,
-	{"T_FISTPARADE_O"}, //ParadeFist,
-	{"T_FISTPARADEJUMPB"}, //ParadeFist_Back,
+        // Fist
+	"S_FISTWALKL", // WalkFist,
+	"S_FISTRUNL", // RunFist,
+	"S_FIST", // IdleFist,
+	"T_FISTJUMPB", // BackpedalFist,
+	"T_FISTRUNSTRAFEL", // StrafeLeftFist,
+	"T_FISTRUNSTRAFER", // StrafeRightFist,
+	"S_FISTATTACK", // AttackFist,
+	"T_FISTPARADE_O", //ParadeFist,
+	"T_FISTPARADEJUMPB", //ParadeFist_Back,
+    "T_FIST_2_FISTRUN", // DrawFist,
+
 };
 
 ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity)
@@ -280,12 +286,15 @@ void ModelVisual::rebuildMainEntityList()
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.dynamicAttachments.begin(), m_PartEntities.dynamicAttachments.end());
 }
 
-void ModelVisual::setAnimation(const std::string& anim)
+void ModelVisual::setAnimation(const std::string& anim, bool loop)
 {
     Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).m_AnimHandler;
 
     if(!anim.empty())
-        animHandler.setAnimation(anim);
+        if(loop)
+            animHandler.setAnimation(anim);
+        else
+            animHandler.playAnimation(anim);
     else
         animHandler.stopAnimation();
 }
@@ -297,9 +306,20 @@ void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
 
 	if(getAnimationHandler().hasAnimation(str))
 	{
-		setAnimation(str);
+		setAnimation(str, true); // Loop
 	}
+}
 
+void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
+{
+    const char* str = ANIMATION_NAMES[type];
+
+
+    // TODO: Implement the priority stuff
+    if(getAnimationHandler().hasAnimation(str))
+    {
+        setAnimation(str, false); // Don't loop
+    }
 }
 
 const char* ModelVisual::getAnimationName(ModelVisual::EModelAnimType type)
@@ -374,8 +394,8 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const
         return Handle::EntityHandle::makeInvalidHandle(); // Invalid node?
 
     // TODO: Allow to overwrite attachments!
-    if(!m_VisualAttachments[nodeIndex].empty())
-        return Handle::EntityHandle::makeInvalidHandle();
+    //if(!m_VisualAttachments[nodeIndex].empty())
+    //    return Handle::EntityHandle::makeInvalidHandle();
 
     if(visual.empty())
     {
@@ -642,3 +662,4 @@ void ModelVisual::setShadowValue(float shadow)
             msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
     }
 }
+

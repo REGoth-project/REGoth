@@ -86,6 +86,19 @@ namespace VobTypes
     void NPC_EquipWeapon(NpcVobInformation& vob, Daedalus::GameState::ItemHandle weapon);
 
     /**
+     * Draws the currently equipped melee weapon
+     * @param vob NPC which should draw the weapon
+     * @return Weapon that was drawn
+     */
+    Daedalus::GameState::ItemHandle NPC_DrawMeleeWeapon(NpcVobInformation& npc);
+
+    /**
+     * Puts back any weapon a NPC has in its hand
+     * @param npc NPC to perform the action on
+     */
+    void NPC_UndrawWeapon(NpcVobInformation& npc);
+
+    /**
      * Returns the script-parameters for the given npc
      * @param vob Npc to get the info from
      * @return Script-side object of this npc

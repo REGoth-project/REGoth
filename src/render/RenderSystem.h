@@ -19,6 +19,7 @@ namespace Render
             bgfx::UniformHandle diffuseTexture;
             bgfx::UniformHandle nodeTransforms;
             bgfx::UniformHandle objectColor;
+            bgfx::UniformHandle skyCLUT;
         }uniforms;
 
         struct

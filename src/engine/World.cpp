@@ -22,7 +22,8 @@ using namespace World;
 WorldInstance::WorldInstance()
 	: m_WorldMesh(*this),
       m_ScriptEngine(*this),
-      m_PhysicsSystem(*this)
+      m_PhysicsSystem(*this),
+      m_Sky(*this)
 {
 	
 }
@@ -327,6 +328,8 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Update physics
     m_PhysicsSystem.update(deltaTime);
 
+    // Update sky
+    m_Sky.interpolate(deltaTime);
 
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;
@@ -487,8 +490,6 @@ std::vector<size_t> WorldInstance::findStartPoints()
 
     return pts;
 }
-
-
 
 
 

@@ -1,11 +1,30 @@
 #pragma once
 
 #include <daedalus/DaedalusGameState.h>
+#include <set>
 #include "Controller.h"
 #include "Inventory.h"
 namespace Logic
 {
     class ModelVisual;
+
+    enum class EWeaponMode
+    {
+        WeaponNone,
+        Weapon1h,
+        Weapon2h,
+        WeaponBow,
+        WeaponCrossBow,
+        WeaponMagic,
+        WeaponFist
+    };
+
+    enum class EWeaponDrawType
+    {
+        Weapon_NF,
+        Weapon_FF,
+        Weapon_Magic
+    };
 
     class PlayerController : public Controller
     {
@@ -83,6 +102,17 @@ namespace Logic
         void equipItem(Daedalus::GameState::ItemHandle item);
 
         /**
+         * Draws the weapon currently in the 1h- or 2h-slot
+         * @return Handle to the just drawn weapon
+         */
+        Daedalus::GameState::ItemHandle drawWeaponMelee();
+
+        /**
+         * Puts back any weapon that was currently drawn
+         */
+        void undrawWeapon();
+
+        /**
          * @return The ModelVisual of the underlaying vob
          */
         ModelVisual* getModelVisual();
@@ -99,6 +129,13 @@ namespace Logic
         {
             return m_ScriptState.npcHandle;
         }
+
+        /**
+         * Front/Right/Left-Attack with the current weapon
+         */
+        void attackFront();
+        void attackLeft();
+        void attackRight();
 
     protected:
 
@@ -174,6 +211,29 @@ namespace Logic
             // Handle to the npc data on script-side
             Daedalus::GameState::NpcHandle npcHandle;
         }m_ScriptState;
+
+        struct
+        {
+            // Style of weapon the NPC is holding right now
+            EWeaponMode weaponMode;
+            Daedalus::GameState::ItemHandle activeWeapon;
+
+            // All equiped items. Contains weapons, rings, armor...
+            std::set<Daedalus::GameState::ItemHandle> equippedItemsAll;
+
+            // All possible equipped items on an NPC
+            struct
+            {
+                std::set<Daedalus::GameState::ItemHandle> equippedRings;
+                std::set<Daedalus::GameState::ItemHandle> equippedRunes;
+                Daedalus::GameState::ItemHandle equippedWeapon1h;
+                Daedalus::GameState::ItemHandle equippedWeapon2h;
+                Daedalus::GameState::ItemHandle equippedBow;
+                Daedalus::GameState::ItemHandle equippedCrossBow;
+                Daedalus::GameState::ItemHandle equippedBelt;
+                Daedalus::GameState::ItemHandle equippedAmulet;
+            }equippedItems;
+        }m_EquipmentState;
 
         /**
          * This players inventory

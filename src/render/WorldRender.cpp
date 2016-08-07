@@ -17,6 +17,23 @@ namespace Render
 	*/
 	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
 	{
+		// Set up sky-LUT
+		bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+
+		// Set up sky-color to match the fog-color
+		Math::float4 fogColor = Math::float4(world.getSky().getMasterState().fogColor.x,
+											 world.getSky().getMasterState().fogColor.y,
+											 world.getSky().getMasterState().fogColor.z,
+											 1.0f);
+
+		bgfx::setViewClear(0
+				, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
+				, fogColor.toRGBA8()
+				, 1.0f
+				, 0
+		);
+		bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %f", world.getSky().getTimeOfDay());
+
 		// Extract camera position
 		const Math::float3 cameraPosition = config.state.cameraWorld.Translation();
 		const float drawDistance2 = config.state.drawDistanceSquared;

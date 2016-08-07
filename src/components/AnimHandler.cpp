@@ -81,6 +81,7 @@ void AnimHandler::playAnimation(const std::string &animName)
     {
         m_ActiveAnimation = (*it).second;
         m_AnimationFrame = 0.0f;
+        m_LoopActiveAnimation = false;
 
         // Restore matrices from the bind-pose
         // because the animation won't modify all of the nodes
@@ -97,6 +98,8 @@ void AnimHandler::setAnimation(const std::string &animName)
         return;
 
     playAnimation(animName);
+
+    m_LoopActiveAnimation = true;
 }
 
 /**
@@ -145,7 +148,15 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
     if (m_AnimationFrame >= numFrames)
-        m_AnimationFrame = 0.0f;
+    {
+        if(m_LoopActiveAnimation)
+            m_AnimationFrame = 0.0f;
+        else
+        {
+            stopAnimation(); // Animation done and not looping
+            return;
+        }
+    }
 
     size_t frameNum = static_cast<size_t>(m_AnimationFrame);
 

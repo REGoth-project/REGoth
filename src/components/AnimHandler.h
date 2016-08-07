@@ -46,12 +46,12 @@ namespace Components
 		bool addAnimation(const std::string& file);
 
 		/**
-		 * @brief Sets the currently playing animation. Restarts it, if this is currently running
+		 * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
 		 */
 		void playAnimation(const std::string& animName);
 
 		/**
-		 * @brief Sets the currently playing animation without restarting it, if it is currently running
+		 * @brief Sets the currently playing animation without restarting it, if it is currently running. Loops.
 		 */
 		void setAnimation(const std::string& animName);
 
@@ -154,6 +154,7 @@ namespace Components
 		Handle::AnimationHandle m_ActiveAnimation;
 		float m_AnimationFrame;
 		size_t m_LastProcessedFrame;
+		bool m_LoopActiveAnimation;
 
 		/** 
 		 * @brief Node transforms in local space

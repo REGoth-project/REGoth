@@ -6,6 +6,7 @@ namespace Logic
 {
     enum class EModelNode
     {
+		None,
         Righthand,
         Lefthand,
         Sword,
@@ -47,6 +48,7 @@ namespace Logic
 			Attack1h_Finish,
 			Parade1h,
 			Parade1h_Back,
+			Draw1h,
 
 			// 2h
 			Walk2h,
@@ -62,6 +64,7 @@ namespace Logic
 			Attack2h_Finish,
 			Parade2h,
 			Parade2h_Back,
+			Draw2h,
 
 			// Bow
 			WalkBow,
@@ -71,6 +74,7 @@ namespace Logic
 			StrafeLeftBow,
 			StrafeRightBow,
 			AttackBow,
+			DrawBow,
 
 			// Cbow
 			WalkCBow,
@@ -80,6 +84,7 @@ namespace Logic
 			StrafeLeftCBow,
 			StrafeRightCBow,
 			AttackCBow,
+			DrawCBow,
 
 			// Fist
 			WalkFist,
@@ -91,6 +96,7 @@ namespace Logic
 			AttackFist,
 			ParadeFist,
 			ParadeFist_Back,
+			DrawFist,
 			
 			// TODO: Transitions, Running attacks, weapon walking, sneaking, backwards walking, attack while running, magic, other
 
@@ -148,12 +154,18 @@ namespace Logic
         /**
          * @brief Sets the currently playing animation. Empty string for none
          */
-        void setAnimation(const std::string& anim);
+        void setAnimation(const std::string& anim, bool loop = true);
 
         /**
          * @brief Sets the closest animation to the specified type. A goblin uses FistWalk instead of Run, for example.
          */
-        void setAnimation(EModelAnimType type);
+		void setAnimation(EModelAnimType type);
+
+		/**
+		 * Plays the given animation exactly one time. Has more priority than setAnimation.
+		 * @param type Animation to play
+		 */
+		void playAnimation(EModelAnimType type);
 
 		/**
 		 * @return Current name of the given animation type (Reacts to overlays)

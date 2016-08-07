@@ -11,6 +11,7 @@
 #include <components/Vob.h>
 #include <utils/logger.h>
 #include <entry/input.h>
+#include <components/VobClasses.h>
 #include "visuals/ModelVisual.h"
 
 /**
@@ -48,6 +49,9 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
     m_MoveState.position = Math::float3(0,0,0);
 
     m_ScriptState.npcHandle = scriptInstance;
+
+    m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
+    m_EquipmentState.activeWeapon.invalidate();
 }
 
 void Logic::PlayerController::onUpdate(float deltaTime)
@@ -265,14 +269,172 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 {
     // Get item
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
+    Logic::ModelVisual* model = getModelVisual();
 
-    if(!itemData.visual_change.empty())
+    Logic::EModelNode node = Logic::EModelNode::None;
+
+    // TODO: Don't forget if an item is already equipped before executing stat changing script-code!
+
+    // Put into set of all equipped items first, then differentiate between the item-types
+    m_EquipmentState.equippedItemsAll.insert(item);
+
+    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
-        Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
+        node = Logic::EModelNode::Longsword;
 
-        // TODO: Only replace the mesh loaded in the lib to keep attachments, etc?
-        Vob::setVisual(vob, itemData.visual_change);
+        // Take of any 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+
+        // Put on our 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
+    {
+        node = Logic::EModelNode::Longsword;
+
+        // Take of any 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+
+        // Put on our 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h = item;
+    }else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
+    {
+        node = Logic::EModelNode::Crossbow;
+
+        // Take off a bow
+        m_EquipmentState.equippedItems.equippedBow.invalidate();
+
+        // Put on our crossbow
+        m_EquipmentState.equippedItems.equippedCrossBow = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
+    {
+        node = Logic::EModelNode::Bow;
+
+        // Take off a crossbow
+        m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
+
+        // Put on our bow
+        m_EquipmentState.equippedItems.equippedBow = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
+    {
+        node = Logic::EModelNode::Sword;
+
+        // Take of any 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+
+        // Put on our 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
+    {
+        node = Logic::EModelNode::Sword;
+
+        // Take of any 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+
+        // Put on our 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
+    {
+        node = Logic::EModelNode::None;
+
+        // Put on our amulet
+        m_EquipmentState.equippedItems.equippedAmulet = item;
+    }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
+    {
+        node = Logic::EModelNode::None;
+
+        // Put on our ring
+        m_EquipmentState.equippedItems.equippedRings.insert(item);
+    }else if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0
+            || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    {
+        node = Logic::EModelNode::None;
+
+        // Put on our ring
+        m_EquipmentState.equippedItems.equippedRunes.insert(item);
     }
+
+    // Show visual on the npc-model
+    if(node != EModelNode::None)
+        model->setNodeVisual(itemData.visual, node);
+}
+
+Daedalus::GameState::ItemHandle Logic::PlayerController::drawWeaponMelee()
+{
+    // Check if we already have a weapon in our hands
+    if(m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
+        return m_EquipmentState.activeWeapon;
+
+    Logic::ModelVisual* model = getModelVisual();
+    ModelVisual::EModelAnimType drawingAnimation = ModelVisual::EModelAnimType::Idle;
+
+    // Remove anything that was active before putting something new there
+    m_EquipmentState.activeWeapon.invalidate();
+
+    // Check what kind of weapon we got here
+    if(m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
+    {
+        drawingAnimation = ModelVisual::EModelAnimType::Draw1h;
+        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
+        m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
+    }
+    else if(m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
+    {
+        drawingAnimation = ModelVisual::EModelAnimType::Draw2h;
+        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
+        m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
+    }else
+    {
+        drawingAnimation = ModelVisual::EModelAnimType::DrawFist;
+        m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
+    }
+
+    // Move the visual
+    if(m_EquipmentState.activeWeapon.isValid())
+    {
+        // Get actual data of the weapon we are going to draw
+        Daedalus::GEngineClasses::C_Item &itemData = m_World.getScriptEngine().getGameState().getItem(
+                m_EquipmentState.activeWeapon);
+
+        // Clear the possible on-body-visuals first
+        model->setNodeVisual("", Logic::EModelNode::Lefthand);
+        model->setNodeVisual("", Logic::EModelNode::Righthand);
+        model->setNodeVisual("", Logic::EModelNode::Sword);
+        model->setNodeVisual("", Logic::EModelNode::Longsword);
+
+        // Put visual into hand
+        // TODO: Listen to ani-events for this!
+        model->setNodeVisual(itemData.visual, Logic::EModelNode::Righthand);
+    }
+
+    // Play drawing animation
+    model->playAnimation(drawingAnimation);
+
+    // Couldn't draw anything
+    return m_EquipmentState.activeWeapon;
+}
+
+void Logic::PlayerController::undrawWeapon()
+{
+    Logic::ModelVisual* model = getModelVisual();
+
+    // TODO: Listen to ani-events for this!
+    // TODO: Even do an animation for this!
+
+    // Clear hands
+    model->setNodeVisual("", Logic::EModelNode::Lefthand);
+    model->setNodeVisual("", Logic::EModelNode::Righthand);
+    m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
+
+    // activeWeapon should be only invalid when using fists
+    if(m_EquipmentState.activeWeapon.isValid())
+    {
+        // reequip the currently active item
+        equipItem(m_EquipmentState.activeWeapon);
+
+        // Remove active weapon
+        m_EquipmentState.activeWeapon.invalidate();
+    }
+
 }
 
 Logic::ModelVisual* Logic::PlayerController::getModelVisual()
@@ -334,7 +496,78 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     if(!model)
         return;
 
-	if(!inputGetKeyState(entry::Key::KeyL))
+
+
+    // FIXME: Temporary test-code
+	static bool lastDraw = false;
+
+#define SINGLE_ACTION_KEY(key, fn) { \
+    static bool last = false; \
+    if(inputGetKeyState(key) && !last)\
+        last = true; \
+    else if(!inputGetKeyState(key) && last){\
+        last = false;\
+        fn();\
+    } }
+
+    SINGLE_ACTION_KEY(entry::Key::KeyK, [&](){
+        // Let all near NPCs draw their weapon
+        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+        for(const Handle::EntityHandle& h : nearNPCs)
+        {
+            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+            VobTypes::NPC_DrawMeleeWeapon(npc);
+
+            npc.playerController->setDailyRoutine({}); // FIXME: Idle-animation from routine finish overwriting other animations!
+        }
+    });
+
+    SINGLE_ACTION_KEY(entry::Key::KeyJ, [&](){
+        // Let all near NPCs draw their weapon
+        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+        for(const Handle::EntityHandle& h : nearNPCs)
+        {
+            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+            VobTypes::NPC_UndrawWeapon(npc);
+        }
+    });
+
+    SINGLE_ACTION_KEY(entry::Key::KeyH, [&](){
+        // Let all near NPCs draw their weapon
+        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+        for(const Handle::EntityHandle& h : nearNPCs)
+        {
+            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+            npc.playerController->attackFront();
+        }
+    });
+
+    if(inputGetKeyState(entry::Key::KeyL))
+    {
+        if(!lastDraw)
+        {
+            lastDraw = true;
+
+            if (m_EquipmentState.activeWeapon.isValid())
+                undrawWeapon();
+            else
+                drawWeaponMelee();
+        }
+
+        // Don't overwrite the drawing animation
+        return;
+    }
+    else if(!inputGetKeyState(entry::Key::KeyL) && lastDraw)
+    {
+        lastDraw = false;
+    }
+
+
+
+    if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
 	{
 		if(inputGetKeyState(entry::Key::KeyA))
 		{
@@ -362,28 +595,59 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
 	}
 	else
 	{
+        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
+                {
+                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
+                                                        ModelVisual::EModelAnimType::Attack1h_R,
+                                                        ModelVisual::EModelAnimType::Run1h,
+                                                        ModelVisual::EModelAnimType::Backpedal1h,
+                                                        ModelVisual::EModelAnimType::Attack1h,
+                                                        ModelVisual::EModelAnimType::Idle1h}},
+
+                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
+                                                        ModelVisual::EModelAnimType::Attack2h_R,
+                                                        ModelVisual::EModelAnimType::Run2h,
+                                                        ModelVisual::EModelAnimType::Backpedal2h,
+                                                        ModelVisual::EModelAnimType::Attack2h,
+                                                        ModelVisual::EModelAnimType::Idle2h}},
+
+                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
+                                                        ModelVisual::EModelAnimType::IdleBow,
+                                                        ModelVisual::EModelAnimType::RunBow,
+                                                        ModelVisual::EModelAnimType::BackpedalBow,
+                                                        ModelVisual::EModelAnimType::AttackBow,
+                                                        ModelVisual::EModelAnimType::IdleBow}},
+
+                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
+                                                        ModelVisual::EModelAnimType::IdleCBow,
+                                                        ModelVisual::EModelAnimType::RunCBow,
+                                                        ModelVisual::EModelAnimType::BackpedalCBow,
+                                                        ModelVisual::EModelAnimType::AttackCBow,
+                                                        ModelVisual::EModelAnimType::IdleCBow}}
+                };
+
 		if(inputGetKeyState(entry::Key::KeyA))
 		{
-			model->setAnimation(ModelVisual::EModelAnimType::Attack1h_L);
+			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
 		}
 		else if(inputGetKeyState(entry::Key::KeyD))
 		{
-			model->setAnimation(ModelVisual::EModelAnimType::Attack1h_R);
+            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
 		}
 		else if(inputGetKeyState(entry::Key::KeyW))
 		{
-			model->setAnimation(ModelVisual::EModelAnimType::Run1h);
+            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
 		}
 		else if(inputGetKeyState(entry::Key::KeyS))
 		{
-			model->setAnimation(ModelVisual::EModelAnimType::Backpedal1h);
+            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
 		}
 		else if(inputGetKeyState(entry::Key::KeyQ))
 		{
-			model->setAnimation(ModelVisual::EModelAnimType::Attack1h);
+            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
 		}
 		else {
-			model->setAnimation(ModelVisual::Idle1h);
+            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
 		}
 	}
 
@@ -417,4 +681,59 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     setEntityTransform(newTransform);
 
     placeOnGround();
+}
+
+void Logic::PlayerController::attackFront()
+{
+    if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
+        return;
+
+    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
+    switch(m_EquipmentState.weaponMode)
+    {
+        case EWeaponMode::Weapon1h: type = ModelVisual::EModelAnimType::Attack1h; break;
+        case EWeaponMode::Weapon2h: type = ModelVisual::EModelAnimType::Attack2h; break;
+        case EWeaponMode::WeaponBow: type = ModelVisual::EModelAnimType::AttackBow; break;
+        case EWeaponMode::WeaponCrossBow: type = ModelVisual::EModelAnimType::AttackCBow; break;
+        case EWeaponMode::WeaponFist: type = ModelVisual::EModelAnimType::AttackFist; break;
+        //case EWeaponMode::WeaponMagic: type = ModelVisual::EModelAnimType::AttackMagic; break; // TODO: Magic
+        default:break;
+    }
+
+    if(type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
+        getModelVisual()->playAnimation(type);
+}
+
+void Logic::PlayerController::attackLeft()
+{
+    if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
+        return;
+
+    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
+    switch(m_EquipmentState.weaponMode)
+    {
+        case EWeaponMode::Weapon1h: type = ModelVisual::EModelAnimType::Attack1h_L; break;
+        case EWeaponMode::Weapon2h: type = ModelVisual::EModelAnimType::Attack2h_L; break;
+        default:break;
+    }
+
+    if(type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
+        getModelVisual()->playAnimation(type);
+}
+
+void Logic::PlayerController::attackRight()
+{
+    if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
+        return;
+
+    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
+    switch(m_EquipmentState.weaponMode)
+    {
+        case EWeaponMode::Weapon1h: type = ModelVisual::EModelAnimType::Attack1h_R; break;
+        case EWeaponMode::Weapon2h: type = ModelVisual::EModelAnimType::Attack2h_L; break;
+        default:break;
+    }
+
+    if(type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
+        getModelVisual()->playAnimation(type);
 }
