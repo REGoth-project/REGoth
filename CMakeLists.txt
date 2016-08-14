@@ -91,7 +91,7 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES})
+target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} glfw)
 
 # ------------------ Other ------------------
 
@@ -99,5 +99,6 @@ include_directories(src)
 include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
+add_subdirectory(lib/glfw)
+include_directories(lib/glfw/include)
 add_subdirectory(src/target)
-
