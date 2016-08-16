@@ -21,7 +21,7 @@ void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool ver
 void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose)
 {
     // TODO: Refractor
-    auto getNPCByInstance = [&](size_t instance)
+    auto getNPCByInstance = [vm, engine](size_t instance)
     {
         Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
@@ -50,7 +50,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         
     };
 
-    auto getItemByInstance = [&](size_t instance)
+    auto getItemByInstance = [vm, engine](size_t instance)
     {
         Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
@@ -299,11 +299,37 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         vm.setReturn(static_cast<int32_t>(dist));
     });
 
+    vm->registerExternalFunction("npc_exchangeroutine", [=](Daedalus::DaedalusVM& vm){
+
+        std::string routinename = vm.popString();
+        uint32_t arr_npc;
+        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
+
+        VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
+
+        // TODO: Implement the others
+        if(routinename == "FOLLOW")
+        {
+            // Follow player
+            npcvob.playerController->setFollowTarget(npcvob.world->getScriptEngine().getPlayerEntity());
+        }
+    });
+
+    vm->registerExternalFunction("printdebuginstch", [=](Daedalus::DaedalusVM& vm){
+
+        uint32_t arr_npc;
+        std::string s = vm.popString();
+        int32_t ch = vm.popDataValue();
+
+        LogInfo() << "DEBUG: " << s;
+    });
+
     /*vm->registerExternalFunction("snd_getdisttosource", [=](Daedalus::DaedalusVM& vm){
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
         vm.setReturn(0);
     });*/
+
 
 }
 

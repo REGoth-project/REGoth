@@ -2,6 +2,7 @@
 #include <memory/StaticReferencedAllocator.h>
 #include "World.h"
 #include <vdfs/fileIndex.h>
+#include <ui/View.h>
 
 namespace Engine
 {
@@ -62,6 +63,11 @@ namespace Engine
          */
         EngineArgs getEngineArgs();
 
+		/**
+		 * @return Base-level UI-View. Parent of all other views.
+		 */
+		UI::View& getRootUIView() { return m_RootUIView; }
+
 	protected:
 
 		/**
@@ -81,11 +87,6 @@ namespace Engine
 		virtual void loadArchives();
 
 		/**
-		 * Currently active world instances
-		 */
-		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
-
-		/**
 		 * Main VDFS-Index
 		 */
 		VDFS::FileIndex m_FileIndex;
@@ -99,5 +100,15 @@ namespace Engine
          * Arguments
          */
         EngineArgs m_Args;
+
+		/**
+		 * Base UI-View
+		 */
+		UI::View m_RootUIView;
+
+		/**
+		 * Currently active world instances
+		 */
+		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
 	};
 }

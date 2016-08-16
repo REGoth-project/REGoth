@@ -19,7 +19,6 @@ const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine()
 {
-
 }
 
 GameEngine::~GameEngine()
@@ -82,6 +81,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         getMainCameraController()->onUpdateExplicit(dt);
     }
 
+    // Draw main frame
     drawFrame(width, height);
 }
 
@@ -90,6 +90,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().getComponentAllocator(), m_MainCamera);
 
     // Set view and projection matrix for view 0.
+    float farPlane = 1000.0f;
     const bgfx::HMD* hmd = bgfx::getHMD();
     if (NULL != hmd && 0 != (hmd->flags & BGFX_HMD_RENDERING))
     {
@@ -106,7 +107,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     else
     {
         float proj[16];
-        bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, 10000.0f);
+        bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
         bgfx::setViewTransform(0, view.mv, proj);
 
         // Set view 0 default viewport.
@@ -115,6 +116,9 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         // Update the frame-config with the cameras world-matrix
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainCamera<Components::PositionComponent>().m_WorldMatrix;
         m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
+        m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
+        m_DefaultRenderSystem.getConfig().state.viewWidth = width;
+        m_DefaultRenderSystem.getConfig().state.viewHeight = height;
     }
 
 
@@ -123,6 +127,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     // Draw all worlds
     for(auto s : m_Worlds)
         Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig());
+
 
     //bgfx::frame();
 }
@@ -167,9 +172,3 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
 
 	return m_MainCamera;
 }
-
-
-
-
-
-

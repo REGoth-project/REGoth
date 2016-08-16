@@ -23,6 +23,7 @@ Sky::Sky(World::WorldInstance& world) :
     m_World(world)
 {
     m_MasterState.time = 0.0f;
+    m_FarPlane = FLT_MAX;
     fillSkyStates();
 }
 
@@ -77,7 +78,7 @@ void Sky::interpolate(double deltaTime)
     m_MasterTime += deltaTime;
     m_MasterState.time = fmod(static_cast<float>(m_MasterTime / (60.0 * 60.0 * 24.0)), 1.0f);
 
-    size_t si0 = 0, si1 = 1;
+    size_t si0 = ESkyPresetType::ESPT_NUM_PRESETS - 1, si1 = 0;
 
     // Find the two states we're interpolating
     for(size_t i=0; i<ESkyPresetType::ESPT_NUM_PRESETS; i++)
@@ -292,5 +293,43 @@ void Sky::fillSkyStates()
     {
         initSkyState(static_cast<ESkyPresetType>(i), m_SkyStates[i], m_World.getTextureAllocator());
     }
+}
+
+void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far, Math::float3& fogColor)
+{
+    // Note: These are some magic values to match what gothic does
+    float fogMidrange = m_FarPlane * 0.4f;
+    float fogMidDelta = m_FarPlane - fogMidrange;
+
+    // Do heightfog-approximation
+    float ytotal = m_World.getWorldMesh().getBBoxMax().y - m_World.getWorldMesh().getBBoxMin().y;
+    float fogMinY = m_World.getWorldMesh().getBBoxMin().y + 0.5f * ytotal;
+    float fogMaxY = m_World.getWorldMesh().getBBoxMin().y + 0.7f * ytotal;
+
+    // Skale fog back depending on how high the camera is
+    float fogScale = fogMaxY - fogMinY != 0 ? (cameraWorld.y - fogMinY) / (fogMaxY - fogMinY) : 0;
+    fogScale = std::min(1.0f, std::max(0.0f, fogScale)); // Clamp to 0..1
+    fogScale = std::max(m_MasterState.fogDistance, fogScale); // Fog should be at least our set distance
+
+    far = fogMidrange + (1.0f - fogScale) * fogMidDelta;
+
+    // Apply some user value // FIXME: This should have a getter/setter and all that stuff
+    const float userFogScale = 1.0f;
+    far *= userFogScale;
+    near = far * 0.3f;
+
+    // Fix up the fog color. The fog should get less intense with decrasing fogFar
+
+    // Compute intensity based on the ZenGins color-base
+    Math::float3 base = Math::float3(0.299f, 0.587f, 0.114f);
+    Math::float3 baseColor = Math::float3(m_MasterState.fogColor.x, m_MasterState.fogColor.x, m_MasterState.fogColor.x); // Yup, all red.
+
+    // Calculate intensity
+    float intensityValue = std::min(baseColor.dot(base), 120.0f / 255.0f);
+    Math::float3 intensity = Math::float3(intensityValue, intensityValue, intensityValue);
+    float intensityScale = fogScale * 0.5f;
+
+    // Calculate actual fog color
+    fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
 

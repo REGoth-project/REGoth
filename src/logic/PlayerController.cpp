@@ -58,6 +58,18 @@ void Logic::PlayerController::onUpdate(float deltaTime)
 {
     ModelVisual* model = getModelVisual();
 
+    // Build the route to follow this entity
+    if(m_RoutineState.entityTarget.isValid())
+    {
+        Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
+                .m_WorldMatrix.Translation();
+
+        size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
+
+        setDailyRoutine({});
+        gotoWaypoint(targetWP);
+    }
+
     if(!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
         // Do waypoint-actions
@@ -182,6 +194,7 @@ bool Logic::PlayerController::travelPath(float deltaTime)
     {
         if(abs(currentPosition.y - targetPosition.y) < 2.0f)
         {
+            m_AIState.closestWaypoint = m_MoveState.currentPath[m_MoveState.targetNode];
             m_MoveState.targetNode++;
 
             if(m_MoveState.targetNode >= m_MoveState.currentPath.size())
@@ -545,6 +558,65 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
         }
     });
 
+    SINGLE_ACTION_KEY(entry::Key::KeyT, [&](){
+        // Let all near NPCs draw their weapon
+        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+        // Talk to the nearest NPC other than the current player, of course
+        Handle::EntityHandle nearest;
+        float shortestDist = FLT_MAX;
+        for(const Handle::EntityHandle& h : nearNPCs)
+        {
+            if(h != m_World.getScriptEngine().getPlayerEntity())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                float dist = (Vob::getTransform(npc).Translation() - getEntityTransform().Translation()).lengthSquared();
+                if(dist < shortestDist)
+                {
+                    nearest = h;
+                    shortestDist = dist;
+                }
+            }
+        }
+
+        if(nearest.isValid())
+        {
+            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
+            Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
+            m_World.getDialogManager().startDialog(shnpc);
+        }
+    });
+
+    SINGLE_ACTION_KEY(entry::Key::KeyF, [&](){
+        // Let all near NPCs draw their weapon
+        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+        // Let the nearest NPC follow us
+        Handle::EntityHandle nearest;
+        float shortestDist = FLT_MAX;
+        for(const Handle::EntityHandle& h : nearNPCs)
+        {
+            if(h != m_World.getScriptEngine().getPlayerEntity())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                float dist = (Vob::getTransform(npc).Translation() - getEntityTransform().Translation()).lengthSquared();
+                if(dist < shortestDist)
+                {
+                    nearest = h;
+                    shortestDist = dist;
+                }
+            }
+        }
+
+        if(nearest.isValid())
+        {
+            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
+            npc.playerController->setFollowTarget(m_Entity);
+        }
+    });
+
     if(inputGetKeyState(entry::Key::KeyL))
     {
         if(!lastDraw)
@@ -664,6 +736,9 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     // TODO: HACK, take this out!
     if(inputGetKeyState(entry::Key::Space))
         deltaTime *= 4.0f;
+
+    if(inputGetKeyState(entry::Key::KeyB))
+        deltaTime *= 16.0f;
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;

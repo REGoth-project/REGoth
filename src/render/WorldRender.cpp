@@ -12,27 +12,57 @@
 
 namespace Render
 {
+    /**
+     * Sets sky and fog related uniforms
+     * @param world World to take the parameters from
+     */
+    void setupSky(World::WorldInstance& world, const RenderConfig& config)
+    {
+        const Content::Sky::SkyState& masterState = world.getSky().getMasterState();
+
+        world.getSky().setFarPlane(config.state.farPlane);
+
+        // Set up sky-LUT
+        bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+
+
+        // Set fog constants
+        Math::float3 fogColor;
+        float fogNear, fogFar;
+        world.getSky().getFogValues(config.state.cameraWorld.Translation(),
+                                    fogNear, fogFar, fogColor);
+
+        // Put into float4 to convert to 32-bit RGBA
+        Math::float4 fogColorRGBA = Math::float4(fogColor.x,
+                                                 fogColor.y,
+                                                 fogColor.z,
+                                                 1.0f);
+
+        Math::float4 fogNearFar = Math::float4(fogNear, fogFar, 0,0);
+
+        bgfx::setUniform(config.uniforms.fogColor, fogColorRGBA.v);
+        bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
+
+        bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %f", world.getSky().getTimeOfDay());
+        bgfx::dbgTextPrintf(0, 11, 0x0f, "FogNear: %f", fogNear);
+        bgfx::dbgTextPrintf(0, 12, 0x0f, "FogFar : %f", fogFar);
+
+        // Set sky-color
+        bgfx::setViewClear(0
+                , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
+                , fogColorRGBA.toRGBA8()
+                , 1.0f
+                , 0
+        );
+    }
+
 	/**
-	* @brief Draws the main renderpass of the given world
-	*/
+	 * @brief Draws the main renderpass of the given world
+	 */
 	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
 	{
-		// Set up sky-LUT
-		bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
-
-		// Set up sky-color to match the fog-color
-		Math::float4 fogColor = Math::float4(world.getSky().getMasterState().fogColor.x,
-											 world.getSky().getMasterState().fogColor.y,
-											 world.getSky().getMasterState().fogColor.z,
-											 1.0f);
-
-		bgfx::setViewClear(0
-				, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-				, fogColor.toRGBA8()
-				, 1.0f
-				, 0
-		);
-		bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %f", world.getSky().getTimeOfDay());
+        // Setup sky and fog
+        setupSky(world, config);
 
 		// Extract camera position
 		const Math::float3 cameraPosition = config.state.cameraWorld.Translation();
@@ -227,6 +257,9 @@ namespace Render
 
 		ddPop();
 	}
+
+
+
 }
 
 void Render::debugDrawPath(const World::Waynet::WaynetInstance& waynet, const std::vector<size_t>& path)

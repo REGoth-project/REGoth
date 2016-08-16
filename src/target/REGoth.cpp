@@ -19,6 +19,8 @@
 #include <bx/uint32_t.h>
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
+#include <imgui/imgui.h>
+#include <ui/DialogBox.h>
 #include "config.h"
 
 struct PosColorVertex
@@ -245,6 +247,10 @@ class ExampleCubes : public entry::AppI
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
+
+        // Imgui.
+        imguiCreate();
+        m_scrollArea = 0;
 	}
 
 	virtual int shutdown() BX_OVERRIDE
@@ -255,6 +261,8 @@ class ExampleCubes : public entry::AppI
 
 		ddShutdown();
 
+        imguiDestroy();
+
 		// Shutdown bgfx.
 		bgfx::shutdown();
 
@@ -263,7 +271,7 @@ class ExampleCubes : public entry::AppI
 
 	bool update() BX_OVERRIDE
 	{
-		if (!entry::processEvents(m_width, m_height, m_debug, m_reset))
+		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState))
 		{
 			int64_t now = bx::getHPCounter();
 			static int64_t last = now;
@@ -275,6 +283,26 @@ class ExampleCubes : public entry::AppI
 			float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
 			const float dt = float(frameTime/freq);
 
+			// Prepare rendering of debug-textboxes, etc
+            imguiBeginFrame(m_mouseState.m_mx
+                    ,  m_mouseState.m_my
+                    , (m_mouseState.m_buttons[entry::MouseButton::Left  ] ? IMGUI_MBUT_LEFT   : 0)
+                      | (m_mouseState.m_buttons[entry::MouseButton::Right ] ? IMGUI_MBUT_RIGHT  : 0)
+                      | (m_mouseState.m_buttons[entry::MouseButton::Middle] ? IMGUI_MBUT_MIDDLE : 0)
+                    ,  m_mouseState.m_mz
+                    , m_width
+                    , m_height
+            );
+
+            //imguiLabel("Testing %f", time);
+            /*imguiSlider("Speed", m_speed, 0.0f, 1.0f, 0.01f);
+
+
+            imguiSlider("Middle gray", m_middleGray, 0.1f, 1.0f, 0.01f);
+            imguiSlider("White point", m_white,      0.1f, 2.0f, 0.01f);
+            imguiSlider("Threshold",   m_threshold,  0.1f, 2.0f, 0.01f);
+
+*/
 
 			// Use debug font to print information about this example.
 			bgfx::dbgTextClear();
@@ -295,6 +323,9 @@ class ExampleCubes : public entry::AppI
 			ddBegin(0);
 
 			m_pEngine->frameUpdate(dt, m_width, m_height);
+
+            // Draw and process all UI-Views
+            m_pEngine->getRootUIView().update(dt, m_mouseState, m_pEngine->getDefaultRenderSystem().getConfig());
 
 			ddSetTransform(nullptr);
 			ddDrawAxis(0.0f, 0.0f, 0.0f);
@@ -317,6 +348,8 @@ class ExampleCubes : public entry::AppI
 
 			ddEnd();
 
+            imguiEndFrame();
+
 			// Advance to next frame. Rendering thread will be kicked to
 			// process submitted rendering primitives.
 			bgfx::frame();
@@ -327,6 +360,14 @@ class ExampleCubes : public entry::AppI
 		return false;
 	}
 
+    float m_speed;
+    float m_middleGray;
+    float m_white;
+    float m_threshold;
+    int32_t m_scrollArea;
+
+
+    entry::MouseState m_mouseState;
 	Engine::GameEngine* m_pEngine;
 	uint32_t m_width;
 	uint32_t m_height;

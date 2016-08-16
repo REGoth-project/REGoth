@@ -83,6 +83,7 @@ file(GLOB ENGINE_SRC
         "src/render/*.cpp"
         "src/utils/*.cpp"
         "src/math/*.cpp"
+        "src/ui/*.cpp"
         "src/logic/*.cpp"
         "src/physics/*.cpp"
         "src/logic/visuals/*.cpp"

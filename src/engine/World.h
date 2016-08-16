@@ -15,6 +15,7 @@
 #include <physics/PhysicsSystem.h>
 #include <content/AnimationAllocator.h>
 #include <content/Sky.h>
+#include <logic/DialogManager.h>
 
 namespace ZenLoad
 {
@@ -197,6 +198,10 @@ namespace World
 		{
 			return m_Sky;
 		}
+		Logic::DialogManager& getDialogManager()
+		{
+			return m_DialogManager;
+		}
     protected:
 
 		/**
@@ -260,5 +265,10 @@ namespace World
 		 * NPCs in this world
 		 */
 		std::set<Handle::EntityHandle> m_NPCEntities;
+
+		/**
+		 * This worlds dialog-manager
+		 */
+		Logic::DialogManager m_DialogManager;
     };
 }

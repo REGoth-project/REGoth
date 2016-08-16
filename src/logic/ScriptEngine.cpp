@@ -116,11 +116,6 @@ void ScriptEngine::setInstance(const std::string& target, size_t source)
 
 void ScriptEngine::initForWorld(const std::string& world)
 {
-    // Create player
-    Daedalus::GameState::NpcHandle hero = m_pVM->getGameState().createNPC();
-    m_pVM->initializeInstance(ZMemory::toBigHandle(hero), m_pVM->getDATFile().getSymbolIndexByName("PC_Hero"), Daedalus::IC_Npc);
-    m_pVM->setInstance("hero", ZMemory::toBigHandle(hero), Daedalus::IC_Npc);
-
     // Register our externals
     Daedalus::GameState::DaedalusGameState::GameExternals ext;
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
@@ -160,6 +155,11 @@ void ScriptEngine::initForWorld(const std::string& world)
 			VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_PlayerEntity);
 
 			Daedalus::GameState::NpcHandle hsnpc =  VobTypes::getScriptHandle(npc);
+
+            // Register as hero
+            getVM().setInstance("hero", ZMemory::toBigHandle(hsnpc), Daedalus::IC_Npc);
+
+            // Equip with a sword
 			Daedalus::GameState::ItemHandle sword = getGameState().addInventoryItem(m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
 
 			if(sword.isValid())

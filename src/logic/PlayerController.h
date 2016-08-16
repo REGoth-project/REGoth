@@ -46,6 +46,8 @@ namespace Logic
         void addRoutineWaypoint(size_t wp)
         { m_RoutineState.routineWaypoints.push_back(wp); }
 
+        void setFollowTarget(Handle::EntityHandle e){ m_RoutineState.entityTarget = e; }
+
         /**
          * Called when the models visual changed
          */
@@ -157,10 +159,15 @@ namespace Logic
             bool routineActive;
 
             /**
-            * List of waypoints to move to on this AIs daily routine
-            * TODO: Implement timing for these
-            */
+             * List of waypoints to move to on this AIs daily routine
+             * TODO: Implement timing for these
+             */
             std::vector<size_t> routineWaypoints;
+
+            /**
+             * Target of where the NPC should keep trying to go to
+             */
+            Handle::EntityHandle entityTarget;
         }m_RoutineState;
 
         struct
