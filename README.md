@@ -1,5 +1,5 @@
 # REGoth
-OpenSource-Reimplentation of the zEngine, used by the game "Gothic" and "Gothic II".
+OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothic II".
 
 # Source
 Make sure to clone this repository with the `--recursive` flag:
