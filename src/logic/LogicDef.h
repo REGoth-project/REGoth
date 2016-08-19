@@ -1,8 +1,22 @@
-//
-// Created by desktop on 18.08.16.
-//
+#pragma once
 
-#ifndef REGOTH_LOGICDEF_H
-#define REGOTH_LOGICDEF_H
+namespace Logic
+{
+    enum class EWeaponMode
+    {
+        WeaponNone,
+        Weapon1h,
+        Weapon2h,
+        WeaponBow,
+        WeaponCrossBow,
+        WeaponMagic,
+        WeaponFist
+    };
 
-#endif //REGOTH_LOGICDEF_H
+    enum class EWeaponDrawType
+    {
+        Weapon_NF,
+        Weapon_FF,
+        Weapon_Magic
+    };
+}

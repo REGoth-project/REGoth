@@ -8,7 +8,8 @@
 
 Logic::Controller::Controller(World::WorldInstance& world, Handle::EntityHandle entity)
     : m_Entity(entity),
-      m_World(world)
+      m_World(world),
+      m_EventManager(world, entity)
 {
 
 }
@@ -22,4 +23,9 @@ void Logic::Controller::setEntityTransform(const Math::Matrix& transform)
 Math::Matrix& Logic::Controller::getEntityTransform()
 {
     return m_World.getEntity<Components::PositionComponent>(m_Entity).m_WorldMatrix;
+}
+
+void Logic::Controller::onUpdate(float deltaTime)
+{
+
 }

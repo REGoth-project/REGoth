@@ -138,6 +138,9 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
                                const ZenLoad::oCMsgConversationData& msg)
 {
     m_ActiveSubtitleBox->addText(getGameState().getNpc(self).name[0], msg.text);
+
+    // Make a new message for the talking NPC
+    VobTypes::getEntityFromScriptInstance(m_World, self);
 }
 
 

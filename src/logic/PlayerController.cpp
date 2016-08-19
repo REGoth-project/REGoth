@@ -14,6 +14,8 @@
 #include <components/VobClasses.h>
 #include "visuals/ModelVisual.h"
 
+using namespace Logic;
+
 /**
  * Standard node-names
  */
@@ -32,7 +34,7 @@ namespace BodyNodes
 }
 
 
-Logic::PlayerController::PlayerController(World::WorldInstance& world,
+PlayerController::PlayerController(World::WorldInstance& world,
                                           Handle::EntityHandle entity,
                                           Daedalus::GameState::NpcHandle scriptInstance)
         : Controller(world, entity),
@@ -43,10 +45,12 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
 
     m_AIState.closestWaypoint = 0;
     m_MoveState.currentPathPerc = 0;
-    m_NPCProperties.moveSpeed = 5.0f;
+    m_NPCProperties.moveSpeed = 7.0f;
 
     m_MoveState.direction = Math::float3(1,0,0);
     m_MoveState.position = Math::float3(0,0,0);
+    m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
+    m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
 
     m_ScriptState.npcHandle = scriptInstance;
 
@@ -54,8 +58,11 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
     m_EquipmentState.activeWeapon.invalidate();
 }
 
-void Logic::PlayerController::onUpdate(float deltaTime)
+void PlayerController::onUpdate(float deltaTime)
 {
+    // This vob should react to messages
+    getEM().processMessageQueue();
+
     ModelVisual* model = getModelVisual();
 
     // Build the route to follow this entity
@@ -64,6 +71,7 @@ void Logic::PlayerController::onUpdate(float deltaTime)
         Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
                 .m_WorldMatrix.Translation();
 
+        // FIXME: Doing this every frame is too often
         size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
 
         setDailyRoutine({});
@@ -97,7 +105,7 @@ void Logic::PlayerController::onUpdate(float deltaTime)
     }
 }
 
-void Logic::PlayerController::continueRoutine()
+void PlayerController::continueRoutine()
 {
     if(m_RoutineState.routineWaypoints.empty())
         return;
@@ -115,7 +123,7 @@ void Logic::PlayerController::continueRoutine()
     gotoWaypoint(m_RoutineState.routineWaypoints[m_RoutineState.routineTarget]);
 }
 
-void Logic::PlayerController::teleportToWaypoint(size_t wp)
+void PlayerController::teleportToWaypoint(size_t wp)
 {
     m_AIState.closestWaypoint = wp;
 
@@ -134,10 +142,14 @@ void Logic::PlayerController::teleportToWaypoint(size_t wp)
 
 }
 
-void Logic::PlayerController::gotoWaypoint(size_t wp)
+void PlayerController::gotoWaypoint(size_t wp)
 {
     if(wp == m_AIState.targetWaypoint)
         return;
+
+    // Set our current target as closest so we don't move back if we are following an entity
+    if(m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
+        m_AIState.closestWaypoint = m_AIState.targetWaypoint;
 
     m_AIState.targetWaypoint = wp;
 
@@ -145,8 +157,9 @@ void Logic::PlayerController::gotoWaypoint(size_t wp)
     rebuildRoute();
 }
 
-void Logic::PlayerController::rebuildRoute()
+void PlayerController::rebuildRoute()
 {
+
     m_MoveState.currentPath = World::Waynet::findWay(m_World.getWaynet(),
                                                      m_AIState.closestWaypoint,
                                                      m_AIState.targetWaypoint);
@@ -156,7 +169,7 @@ void Logic::PlayerController::rebuildRoute()
     m_MoveState.targetNode = 0;
 }
 
-bool Logic::PlayerController::travelPath(float deltaTime)
+bool PlayerController::travelPath(float deltaTime)
 {
     if (m_MoveState.currentPath.empty())
         return true;
@@ -246,7 +259,7 @@ bool Logic::PlayerController::travelPath(float deltaTime)
     return false;*/
 }
 
-void Logic::PlayerController::onDebugDraw()
+void PlayerController::onDebugDraw()
 {
     /*if (!m_MoveState.currentPath.empty())
     {
@@ -278,13 +291,13 @@ void Logic::PlayerController::onDebugDraw()
     }*/
 }
 
-void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
+void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 {
     // Get item
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
-    Logic::ModelVisual* model = getModelVisual();
+    ModelVisual* model = getModelVisual();
 
-    Logic::EModelNode node = Logic::EModelNode::None;
+    EModelNode node = EModelNode::None;
 
     // TODO: Don't forget if an item is already equipped before executing stat changing script-code!
 
@@ -293,7 +306,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
     if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
-        node = Logic::EModelNode::Longsword;
+        node = EModelNode::Longsword;
 
         // Take of any 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
@@ -302,7 +315,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
     {
-        node = Logic::EModelNode::Longsword;
+        node = EModelNode::Longsword;
 
         // Take of any 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
@@ -311,7 +324,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
     }else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
     {
-        node = Logic::EModelNode::Crossbow;
+        node = EModelNode::Crossbow;
 
         // Take off a bow
         m_EquipmentState.equippedItems.equippedBow.invalidate();
@@ -320,7 +333,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedCrossBow = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
     {
-        node = Logic::EModelNode::Bow;
+        node = EModelNode::Bow;
 
         // Take off a crossbow
         m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
@@ -329,7 +342,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedBow = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
     {
-        node = Logic::EModelNode::Sword;
+        node = EModelNode::Sword;
 
         // Take of any 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
@@ -338,7 +351,7 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
     {
-        node = Logic::EModelNode::Sword;
+        node = EModelNode::Sword;
 
         // Take of any 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
@@ -347,20 +360,20 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
     {
-        node = Logic::EModelNode::None;
+        node = EModelNode::None;
 
         // Put on our amulet
         m_EquipmentState.equippedItems.equippedAmulet = item;
     }else if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
     {
-        node = Logic::EModelNode::None;
+        node = EModelNode::None;
 
         // Put on our ring
         m_EquipmentState.equippedItems.equippedRings.insert(item);
     }else if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0
             || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
-        node = Logic::EModelNode::None;
+        node = EModelNode::None;
 
         // Put on our ring
         m_EquipmentState.equippedItems.equippedRunes.insert(item);
@@ -371,13 +384,13 @@ void Logic::PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         model->setNodeVisual(itemData.visual, node);
 }
 
-Daedalus::GameState::ItemHandle Logic::PlayerController::drawWeaponMelee()
+Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
 {
     // Check if we already have a weapon in our hands
     if(m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
         return m_EquipmentState.activeWeapon;
 
-    Logic::ModelVisual* model = getModelVisual();
+    ModelVisual* model = getModelVisual();
     ModelVisual::EModelAnimType drawingAnimation = ModelVisual::EModelAnimType::Idle;
 
     // Remove anything that was active before putting something new there
@@ -409,14 +422,14 @@ Daedalus::GameState::ItemHandle Logic::PlayerController::drawWeaponMelee()
                 m_EquipmentState.activeWeapon);
 
         // Clear the possible on-body-visuals first
-        model->setNodeVisual("", Logic::EModelNode::Lefthand);
-        model->setNodeVisual("", Logic::EModelNode::Righthand);
-        model->setNodeVisual("", Logic::EModelNode::Sword);
-        model->setNodeVisual("", Logic::EModelNode::Longsword);
+        model->setNodeVisual("", EModelNode::Lefthand);
+        model->setNodeVisual("", EModelNode::Righthand);
+        model->setNodeVisual("", EModelNode::Sword);
+        model->setNodeVisual("", EModelNode::Longsword);
 
         // Put visual into hand
         // TODO: Listen to ani-events for this!
-        model->setNodeVisual(itemData.visual, Logic::EModelNode::Righthand);
+        model->setNodeVisual(itemData.visual, EModelNode::Righthand);
     }
 
     // Play drawing animation
@@ -426,16 +439,16 @@ Daedalus::GameState::ItemHandle Logic::PlayerController::drawWeaponMelee()
     return m_EquipmentState.activeWeapon;
 }
 
-void Logic::PlayerController::undrawWeapon()
+void PlayerController::undrawWeapon()
 {
-    Logic::ModelVisual* model = getModelVisual();
+    ModelVisual* model = getModelVisual();
 
     // TODO: Listen to ani-events for this!
     // TODO: Even do an animation for this!
 
     // Clear hands
-    model->setNodeVisual("", Logic::EModelNode::Lefthand);
-    model->setNodeVisual("", Logic::EModelNode::Righthand);
+    model->setNodeVisual("", EModelNode::Lefthand);
+    model->setNodeVisual("", EModelNode::Righthand);
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
 
     // activeWeapon should be only invalid when using fists
@@ -450,7 +463,7 @@ void Logic::PlayerController::undrawWeapon()
 
 }
 
-Logic::ModelVisual* Logic::PlayerController::getModelVisual()
+ModelVisual* PlayerController::getModelVisual()
 {
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
 
@@ -458,7 +471,7 @@ Logic::ModelVisual* Logic::PlayerController::getModelVisual()
     return reinterpret_cast<ModelVisual*>(vob.visual);
 }
 
-void Logic::PlayerController::placeOnGround()
+void PlayerController::placeOnGround()
 {
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
@@ -496,13 +509,13 @@ void Logic::PlayerController::placeOnGround()
     }
 }
 
-void Logic::PlayerController::onVisualChanged()
+void PlayerController::onVisualChanged()
 {
     getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
 }
 
-void Logic::PlayerController::onUpdateByInput(float deltaTime)
+void PlayerController::onUpdateByInput(float deltaTime)
 {
     ModelVisual* model = getModelVisual();
 
@@ -727,10 +740,10 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     const float turnSpeed = 2.5f;
     if (inputGetKeyState(entry::Key::Left))
     {
-        yaw -= turnSpeed * deltaTime;
+        yaw += turnSpeed * deltaTime;
     } else if (inputGetKeyState(entry::Key::Right))
     {
-        yaw += turnSpeed * deltaTime;
+        yaw -= turnSpeed * deltaTime;
     }
 
     // TODO: HACK, take this out!
@@ -743,22 +756,21 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
 
-
-
     float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
     m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
     angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
 
+    m_MoveState.position += Math::Matrix::CreateRotationY(-angle + Math::PI * 0.5f) * rootNodeVel;
 
-    m_MoveState.position += Math::Matrix::CreateRotationY(angle + yaw) * rootNodeVel;
+    setDirection(m_MoveState.direction);
 
-    Math::Matrix newTransform = Math::Matrix::CreateTranslation(m_MoveState.position) * Math::Matrix::CreateRotationY(angle + yaw);
-    setEntityTransform(newTransform);
+    //Math::Matrix newTransform = Math::Matrix::CreateTranslation(m_MoveState.position) * Math::Matrix::CreateRotationY(angle + yaw);
+    //setEntityTransform(newTransform);
 
     placeOnGround();
 }
 
-void Logic::PlayerController::attackFront()
+void PlayerController::attackFront()
 {
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
         return;
@@ -779,7 +791,7 @@ void Logic::PlayerController::attackFront()
         getModelVisual()->playAnimation(type);
 }
 
-void Logic::PlayerController::attackLeft()
+void PlayerController::attackLeft()
 {
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
         return;
@@ -796,7 +808,7 @@ void Logic::PlayerController::attackLeft()
         getModelVisual()->playAnimation(type);
 }
 
-void Logic::PlayerController::attackRight()
+void PlayerController::attackRight()
 {
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
         return;
@@ -811,4 +823,181 @@ void Logic::PlayerController::attackRight()
 
     if(type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
         getModelVisual()->playAnimation(type);
+}
+
+void PlayerController::onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+{
+    Controller::onMessage(message, sourceVob);
+
+    bool done = false;
+    switch(message.messageType)
+    {
+        case EventMessages::EventMessageType::Event:        done = EV_Event(message, sourceVob); break;
+        case EventMessages::EventMessageType::Npc:          done = EV_Npc(reinterpret_cast<EventMessages::NpcMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Damage:       done = EV_Damage(reinterpret_cast<EventMessages::DamageMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Weapon:       done = EV_Weapon(reinterpret_cast<EventMessages::WeaponMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Movement:     done = EV_Movement(reinterpret_cast<EventMessages::MovementMessage&>(message), sourceVob);break;
+        case EventMessages::EventMessageType::Attack:       done = EV_Attack(reinterpret_cast<EventMessages::AttackMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::UseItem:      done = EV_UseItem(reinterpret_cast<EventMessages::UseItemMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::State:        done = EV_State(reinterpret_cast<EventMessages::StateMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Manipulate:   done = EV_Manipulate(reinterpret_cast<EventMessages::ManipulateMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Conversation: done = EV_Conversation(reinterpret_cast<EventMessages::ConversationMessage&>(message), sourceVob); break;
+        case EventMessages::EventMessageType::Magic:        done = EV_Magic(reinterpret_cast<EventMessages::MagicMessage&>(message), sourceVob); break;
+    }
+
+    // Flag as deleted if this is done
+    message.deleted = done;
+}
+
+bool PlayerController::EV_Event(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_Npc(EventMessages::NpcMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_Damage(EventMessages::DamageMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_Weapon(EventMessages::WeaponMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool
+PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::EntityHandle sourceVob)
+{
+    switch(static_cast<EventMessages::MovementMessage::MovementSubType>(message.subType))
+    {
+        case EventMessages::MovementMessage::ST_RobustTrace:break;
+        case EventMessages::MovementMessage::ST_GotoVob:
+        {
+            Math::float3 pos;
+
+            // Find a waypoint with that name
+            World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(), message.targetVobName);
+
+            if(wp != World::Waynet::INVALID_WAYPOINT)
+            {
+                gotoWaypoint(wp);
+                return true;
+            }else
+            {
+                // This must be an actual vob
+                Handle::EntityHandle v = m_World.getVobEntityByName(message.targetVobName);
+
+                if(v.isValid())
+                {
+
+                    Vob::VobInformation vob = Vob::asVob(m_World, v);
+                    message.targetPosition = Vob::getTransform(vob).Translation();
+
+                    // Fall through to ST_GotoPos
+                }
+            }
+        }
+
+        case EventMessages::MovementMessage::ST_GotoPos:
+            {
+                // Move to nearest waypoint for now
+                // TODO: Implement moving to arbitrary positions
+
+                World::Waynet::WaypointIndex wp = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
+                                                                                       message.targetPosition);
+
+                if (wp != World::Waynet::INVALID_WAYPOINT)
+                    gotoWaypoint(wp);
+
+                return true;
+            }
+            break;
+
+        case EventMessages::MovementMessage::ST_GoRoute:break;
+        case EventMessages::MovementMessage::ST_Turn:break;
+
+        case EventMessages::MovementMessage::ST_TurnToVob:
+            {
+                Vob::VobInformation vob = Vob::asVob(m_World, message.targetVob);
+
+                // Fill position-field
+                message.targetPosition = Vob::getTransform(vob).Translation();
+
+                // Fall through to ST_TurnToPos now
+            }
+
+        case EventMessages::MovementMessage::ST_TurnToPos:
+            {
+                Math::float3 dir = (message.targetPosition - getEntityTransform().Translation());
+                dir.y = 0.0f; // Don't let the NPC face upwards/downwards
+                dir.normalize();
+
+                // Just snap to the direction for now
+                // FIXME: Play animation
+                setDirection(dir);
+                return true;
+            }
+            break;
+
+        case EventMessages::MovementMessage::ST_TurnAway:break;
+        case EventMessages::MovementMessage::ST_Jump:break;
+        case EventMessages::MovementMessage::ST_SetWalkMode:break;
+        case EventMessages::MovementMessage::ST_WhirlAround:break;
+        case EventMessages::MovementMessage::ST_Standup:break;
+        case EventMessages::MovementMessage::ST_CanSeeNpc:break;
+        case EventMessages::MovementMessage::ST_Strafe:break;
+        case EventMessages::MovementMessage::ST_GotoFP:break;
+        case EventMessages::MovementMessage::ST_Dodge:break;
+        case EventMessages::MovementMessage::ST_BeamTo:break;
+        case EventMessages::MovementMessage::ST_AlignToFP:break;
+        case EventMessages::MovementMessage::ST_MoveMax:break;
+    }
+
+    return false;
+}
+
+bool PlayerController::EV_Attack(EventMessages::AttackMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_UseItem(EventMessages::UseItemMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool
+PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& message,
+                                              Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+bool PlayerController::EV_Magic(EventMessages::MagicMessage& message, Handle::EntityHandle sourceVob)
+{
+    return false;
+}
+
+void PlayerController::setDirection(const Math::float3& direction)
+{
+    m_MoveState.direction = direction;
+
+    // Set direction
+    setEntityTransform(Math::Matrix::CreateLookAt(m_MoveState.position,
+                                                  m_MoveState.position + direction,
+                                                  Math::float3(0, 1, 0)).Invert());
 }

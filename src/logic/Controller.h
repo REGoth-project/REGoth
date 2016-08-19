@@ -1,6 +1,7 @@
 #pragma once
 #include <handle/HandleDef.h>
 #include <components/Entities.h>
+#include "messages/EventManager.h"
 
 namespace World
 {
@@ -9,6 +10,11 @@ namespace World
 
 namespace Logic
 {
+    namespace EventMessages
+    {
+        class EventMessage;
+    }
+
     class Controller
     {
     public:
@@ -27,12 +33,17 @@ namespace Logic
         /**
          * Called on game-tick
          */
-        virtual void onUpdate(float deltaTime){};
+        virtual void onUpdate(float deltaTime);
 
         /**
          * Called at rendertime
          */
         virtual void onDebugDraw(){}
+
+        /**
+         * Called when this vob recieved a message
+         */
+        virtual void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle()){}
 
         /**
          * Sets the transform of the underlaying entity
@@ -48,6 +59,11 @@ namespace Logic
          * @brief Called when something else modified the transform of the underlaying entity
          */
         virtual void onTransformChanged(){};
+
+        /**
+         * @return Event manager for this logic-controller
+         */
+        EventManager& getEM(){ return m_EventManager; }
     protected:
         /**
          * Entity owning this controller
@@ -58,5 +74,10 @@ namespace Logic
          * Allocator the underlaying entity was created with
          */
         World::WorldInstance& m_World;
+
+        /**
+         * Event manager for this logic-controller
+         */
+        EventManager m_EventManager;
     };
 }

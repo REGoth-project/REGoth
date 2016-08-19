@@ -4,27 +4,11 @@
 #include <set>
 #include "Controller.h"
 #include "Inventory.h"
+#include "LogicDef.h"
+
 namespace Logic
 {
     class ModelVisual;
-
-    enum class EWeaponMode
-    {
-        WeaponNone,
-        Weapon1h,
-        Weapon2h,
-        WeaponBow,
-        WeaponCrossBow,
-        WeaponMagic,
-        WeaponFist
-    };
-
-    enum class EWeaponDrawType
-    {
-        Weapon_NF,
-        Weapon_FF,
-        Weapon_Magic
-    };
 
     class PlayerController : public Controller
     {
@@ -52,6 +36,13 @@ namespace Logic
          * Called when the models visual changed
          */
         virtual void onVisualChanged();
+
+        /**
+         * Handle NPC specific messages
+         * @param message Message to handle
+         * @param sourceVob Instigator vob. Can be invalid.
+         */
+        virtual void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob) override;
 
         /**
          * Called on game-tick
@@ -88,6 +79,12 @@ namespace Logic
          * @param Waypoint index to go to
          */
         void teleportToWaypoint(size_t wp);
+
+        /**
+         * Sets the direction the NPC should be facing to (snaps, doesn't interpolate nor plays animations)
+         * @param direction Direction to face
+         */
+        void setDirection(const Math::float3& direction);
 
         /**
          * @return The inventory of this player
@@ -140,6 +137,21 @@ namespace Logic
         void attackRight();
 
     protected:
+
+        /**
+         * Events
+         */
+        bool EV_Event(Logic::EventMessages::EventMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Npc(Logic::EventMessages::NpcMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Damage(Logic::EventMessages::DamageMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Weapon(Logic::EventMessages::WeaponMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Movement(Logic::EventMessages::MovementMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Attack(Logic::EventMessages::AttackMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_UseItem(Logic::EventMessages::UseItemMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_State(Logic::EventMessages::StateMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Manipulate(Logic::EventMessages::ManipulateMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Conversation(Logic::EventMessages::ConversationMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Magic(Logic::EventMessages::MagicMessage& message, Handle::EntityHandle sourceVob);
 
         /**
          * Moves the NPC to the next waypoint of the current path

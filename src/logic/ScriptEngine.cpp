@@ -70,7 +70,14 @@ int32_t ScriptEngine::runFunction(size_t addr)
     // Execute the instructions
     while(m_pVM->doStack());
 
-    int32_t ret = m_pVM->popDataValue();
+    int32_t ret = 0;
+
+    // Only pop if the VM didn't mess up
+    if(!m_pVM->isStackEmpty())
+        ret = m_pVM->popDataValue();
+    else
+        LogWarn() << "DaedalusVM: Safety int was popped by scriptcode!";
+
     // Restore to previous VM-State
     m_pVM->popState();
     return ret;

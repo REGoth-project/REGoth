@@ -88,6 +88,7 @@ file(GLOB ENGINE_SRC
         "src/physics/*.cpp"
         "src/logic/visuals/*.cpp"
         "src/logic/scriptExternals/*.cpp"
+        "src/logic/messages/*.cpp"
         )
 
 add_library(engine STATIC ${ENGINE_SRC})

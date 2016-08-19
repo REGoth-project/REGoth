@@ -312,6 +312,10 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         {
             // Follow player
             npcvob.playerController->setFollowTarget(npcvob.world->getScriptEngine().getPlayerEntity());
+        }else
+        {
+            npcvob.playerController->setFollowTarget(Handle::EntityHandle::makeInvalidHandle());
+            npcvob.playerController->setDailyRoutine({});
         }
     });
 
@@ -322,6 +326,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         int32_t ch = vm.popDataValue();
 
         LogInfo() << "DEBUG: " << s;
+    });
+
+    vm->registerExternalFunction("ai_turntonpc", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_n1;
+        int32_t target = vm.popVar(arr_n1); if(verbose) LogInfo() << "target: " << target;
+        uint32_t arr_n0;
+        int32_t self = vm.popVar(arr_n0); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation selfvob = getNPCByInstance(self);
+        VobTypes::NpcVobInformation targetvob = getNPCByInstance(target);
+
+        // Fill turn message
+        EventMessages::MovementMessage msg;
+        msg.subType = EventMessages::MovementMessage::ST_TurnToVob;
+        msg.targetVob = targetvob.entity;
+
+        // Push the message
+        selfvob.playerController->getEM().onMessage(msg);
     });
 
     /*vm->registerExternalFunction("snd_getdisttosource", [=](Daedalus::DaedalusVM& vm){
