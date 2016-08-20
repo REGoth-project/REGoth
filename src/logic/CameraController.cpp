@@ -7,6 +7,7 @@
 #include <engine/World.h>
 #include <components/Vob.h>
 #include <components/VobClasses.h>
+#include "engine/Input.h"
 
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity),
@@ -15,43 +16,239 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 {
     memset(&m_CameraSettings, 0, sizeof(m_CameraSettings));
 
-    m_CameraSettings.freeCameraSettings.moveSpeed = 0.01f;
-    m_CameraSettings.freeCameraSettings.turnSpeed = 0.2f;
+    //m_CameraSettings.freeCameraSettings.moveSpeed = 0.01f;
+    //m_CameraSettings.freeCameraSettings.turnSpeed = 0.2f;
 
-	m_CameraSettings.freeCameraSettings.position = Math::float3(0.0f, 2.0f, -4.0f);
+    //m_CameraSettings.freeCameraSettings.position = Math::float3(0.0f, 2.0f, -4.0f);
 
-    // init viewer
+    m_CameraSettings.floatingCameraSettings.position = Math::float3(0.0f, 2.0f, -4.0f);
+    m_CameraSettings.floatingCameraSettings.yaw = 0.0f;
+    m_CameraSettings.floatingCameraSettings.pitch = 0.0f;
+
+    // Init viewer
     m_CameraSettings.viewerCameraSettings.lookAt = Math::float3(0,0,0);
     m_CameraSettings.viewerCameraSettings.yaw = 0.0f;
     m_CameraSettings.viewerCameraSettings.pitch = 0.0f;
     m_CameraSettings.viewerCameraSettings.zoom = 30.0f;
 
-    float mouseState[3];
-    inputGetMouse(mouseState);
-    m_LastMousePosition = Math::float2(mouseState[0], mouseState[1]);
+    // FirstPerson action
+    {
+        using namespace Engine;
+        auto &settings = m_CameraSettings.floatingCameraSettings;
+        auto &firstPerson = m_CameraSettings.firstPersonCameraSettings;
 
-    //inputSetMouseLock(true);
+        firstPerson.actionMoveForward = Input::RegisterAction(ActionType::FirstPersonMoveForward, [&settings](bool, float intensity)
+        {
+            settings.position += 0.1f * intensity * settings.forward;
+        });
+        firstPerson.actionMoveRight = Input::RegisterAction(ActionType::FirstPersonMoveRight, [&settings](bool, float intensity)
+        {
+            settings.position -= 0.1f * intensity * settings.right;
+        });
+        firstPerson.actionLookHorizontal = Input::RegisterAction(ActionType::FirstPersonLookHorizontal, [&settings](bool, float intensity)
+        {
+            settings.yaw += 0.02f * intensity;
+        });
+        firstPerson.actionLookVertical = Input::RegisterAction(ActionType::FirstPersonLookVertical, [&settings](bool, float intensity)
+        {
+            settings.pitch += 0.02f * intensity;
+        });
+    }
+
+    // Free Actions
+    {
+        using namespace Engine;
+        auto &settings = m_CameraSettings.floatingCameraSettings;
+        auto &free = m_CameraSettings.freeCameraSettings;
+
+        free.actionMoveForward = Input::RegisterAction(ActionType::FreeMoveForward, [&settings](bool, float intensity)
+        {
+            settings.position += 0.1f * intensity * settings.forward;
+        });
+        free.actionMoveRight = Input::RegisterAction(ActionType::FreeMoveRight, [&settings](bool, float intensity)
+        {
+            settings.position -= 0.1f * intensity * settings.right;
+        });
+        free.actionMoveUp = Input::RegisterAction(ActionType::FreeMoveUp, [&settings](bool, float intensity)
+        {
+            settings.position += 0.1f * intensity * settings.up;
+        });
+        free.actionLookHorizontal = Input::RegisterAction(ActionType::FreeLookHorizontal, [&settings](bool, float intensity)
+        {
+            settings.yaw += 0.02f * intensity;
+        });
+        free.actionLookVertical = Input::RegisterAction(ActionType::FreeLookVertical, [&settings](bool, float intensity)
+        {
+            settings.pitch += 0.02f * intensity;
+        });
+    }
+
+    // Viewer actions
+    {
+        using namespace Engine;
+        auto &settings = m_CameraSettings.viewerCameraSettings;
+
+        settings.actionViewHorizontal = Input::RegisterAction(ActionType::ViewerHorizontal, [&settings](bool, float intensity)
+        {
+            if(settings.isRotateModifier)
+            {
+                // Neither pan nor zoom activated, or both -> Rotate
+                if(settings.isPanModifier == settings.isZoomModifier)
+                    settings.yaw += 0.05f * intensity;
+                else if(settings.isPanModifier)
+                    settings.lookAt -= 0.01 * settings.zoom * intensity * settings.right;
+            }
+        });
+        settings.actionViewVertical = Input::RegisterAction(ActionType::ViewerVertical, [&settings](bool, float intensity)
+        {
+            if(settings.isRotateModifier)
+            {
+                // Neither pan nor zoom activated, or both -> Rotate
+                if(settings.isPanModifier == settings.isZoomModifier)
+                    settings.pitch += 0.05f * intensity;
+                else if(settings.isPanModifier)
+                    settings.lookAt += 0.01f * settings.zoom * intensity * settings.up;
+                else if(settings.isZoomModifier)
+                {
+                    settings.zoom += 10.0f * intensity;
+                    if(settings.zoom < 1.0f)
+                        settings.zoom = 1.0f;
+                }
+            }
+        });
+        settings.actionPan = Input::RegisterAction(ActionType::ViewerPan, [&settings](bool triggered, float)
+        {
+            settings.isPanModifier = triggered;
+        });
+        settings.actionZoom = Input::RegisterAction(ActionType::ViewerZoom, [&settings](bool triggered, float)
+        {
+            settings.isZoomModifier = triggered;
+        });
+        settings.actionRotate = Input::RegisterAction(ActionType::ViewerRotate, [&settings](bool triggered, float)
+        {
+            settings.isRotateModifier = triggered;
+        });
+        settings.actionClick = Input::RegisterAction(ActionType::ViewerClick, [this,&settings](bool triggered, float)
+        {
+            if(triggered)
+            {
+                constexpr float maxRayLength = 1000.0f;
+                Math::float2 mousePosition = Input::getMouseCoordinates();
+
+                Math::float3 cameraSpaceRayEndpoint = maxRayLength * Math::float3(mousePosition.x, -mousePosition.y, 1.0f );
+                Math::float3 to = m_ViewMatrix.Invert() * cameraSpaceRayEndpoint;
+                Math::float3 from = settings.lookAt + settings.zoom * settings.in;
+                Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
+
+                if(hit.hasHit)
+                {
+                    settings.lookAt = hit.hitPosition;
+                    Math::float3 distance = from - hit.hitPosition;
+                    settings.zoom = distance.length();
+                    settings.pitch = asin(distance.y/settings.zoom);
+                    settings.yaw = atan2(distance.x, distance.z);
+                }
+            }
+        });
+        settings.actionWheel = Input::RegisterAction(ActionType::ViewerMouseWheel, [&settings](bool triggered, float intensity)
+        {
+            if(triggered)
+            {
+                settings.zoom -= 3.0 * intensity;
+                if(settings.zoom < 1.0f)
+                    settings.zoom = 1.0f;
+            }
+        });
+    }
+
+    // Disable all at first and wait until one is enabled.
+    disableActions();
+
+    Engine::Input::RegisterAction(Engine::ActionType::CameraFirstPerson, [this](bool triggered, float)
+    {
+        if(triggered)
+        {
+            disableActions();
+            m_CameraMode = ECameraMode::FirstPerson;
+            Engine::Input::setMouseLock(true);
+            m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(true);
+        }
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::CameraFree, [this](bool triggered, float)
+    {
+        if(triggered)
+        {
+            disableActions();
+            m_CameraMode = ECameraMode::Free;
+            Engine::Input::setMouseLock(true);
+            m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(true);
+        }
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::CameraViewer, [this](bool triggered, float)
+    {
+        if(triggered)
+        {
+            disableActions();
+            m_CameraMode = ECameraMode::Viewer;
+            Engine::Input::setMouseLock(false);
+            m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(true);
+        }
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::CameraThirdPerson, [this](bool triggered, float)
+    {
+        if(triggered && m_World.getScriptEngine().getPlayerEntity().isValid())
+        {
+            disableActions();
+            m_CameraMode = ECameraMode::ThirdPerson;
+            Engine::Input::setMouseLock(false);
+        }
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool, float intensity)
+    {
+        m_moveSpeedMultiplier = 1.0 + intensity;
+    });
+}
+
+void Logic::CameraController::disableActions()
+{
+    m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(false);
+    m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(false);
+    m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(false);
+    m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(false);
+
+    m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(false);
+    m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(false);
+    m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(false);
+    m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(false);
+    m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(false);
+
+    m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(false);
+    m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(false);
 }
 
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {
     if(!m_Active)
         return; // TODO: Should do automatic movement anyways!
-
-    float turnSpeed = m_CameraSettings.freeCameraSettings.turnSpeed;
-    float moveSpeed = m_CameraSettings.freeCameraSettings.moveSpeed;
-
-    if(inputGetKeyState(entry::Key::Key0))
-        m_CameraMode = ECameraMode::FirstPerson;
-    else if(inputGetKeyState(entry::Key::Key1))
-        m_CameraMode = ECameraMode::Free;
-    else if(inputGetKeyState(entry::Key::Key2))
-        m_CameraMode = ECameraMode::Viewer;
-    else if(inputGetKeyState(entry::Key::Key3) && m_World.getScriptEngine().getPlayerEntity().isValid())
-        m_CameraMode = ECameraMode::ThirdPerson;
-
-    if(inputGetKeyState(entry::Key::Space))
-        moveSpeed *= 2.0f;
 
     switch(m_CameraMode)
     {
@@ -74,191 +271,52 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 setEntityTransform(m_ViewMatrix.Invert());
             }
         }
-            break;
+        break;
 
         case ECameraMode::FirstPerson:
         {
-            /*float mouseState[3];
-            inputGetMouse(mouseState);
-            m_CameraSettings.freeCameraSettings.yaw += (m_LastMousePosition.x - mouseState[0]) * 0.5f;
-            m_CameraSettings.freeCameraSettings.pitch += (m_LastMousePosition.y - mouseState[1]) * 0.5f;
-
-            m_LastMousePosition = Math::float2(mouseState[0], mouseState[1]);*/
-
-            // Direction
-            if (inputGetKeyState(entry::Key::Left))
-            {
-                m_CameraSettings.freeCameraSettings.yaw -= deltaTime * turnSpeed;
-            } else if (inputGetKeyState(entry::Key::Right))
-            {
-                m_CameraSettings.freeCameraSettings.yaw += deltaTime * turnSpeed;
-            }
-
-            if (inputGetKeyState(entry::Key::Up))
-            {
-                m_CameraSettings.freeCameraSettings.pitch += deltaTime * turnSpeed;
-            } else if (inputGetKeyState(entry::Key::Down))
-            {
-                m_CameraSettings.freeCameraSettings.pitch -= deltaTime * turnSpeed;
-            }
+            auto &settings = m_CameraSettings.floatingCameraSettings;
 
             // Get forward/right vector
-            std::pair<Math::float3, Math::float3> fr = getDirectionVectors(m_CameraSettings.freeCameraSettings.yaw,
-                                                                           m_CameraSettings.freeCameraSettings.pitch);
-
-            if (inputGetKeyState(entry::Key::KeyA))
-            {
-                m_CameraSettings.freeCameraSettings.position +=
-                        deltaTime * fr.second * moveSpeed;
-            } else if (inputGetKeyState(entry::Key::KeyD))
-            {
-                m_CameraSettings.freeCameraSettings.position -=
-                        deltaTime * fr.second * moveSpeed;
-            }
-            if (inputGetKeyState(entry::Key::KeyW))
-            {
-                m_CameraSettings.freeCameraSettings.position +=
-                        deltaTime * fr.first * moveSpeed;
-            } else if (inputGetKeyState(entry::Key::KeyS))
-            {
-                m_CameraSettings.freeCameraSettings.position -=
-                        deltaTime * fr.first * moveSpeed;
-            }
+            std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
+            settings.up = settings.right.cross(settings.forward);
 
             // Fix position
-            Math::float3 to = m_CameraSettings.freeCameraSettings.position + Math::float3(0.0f, -100.0f, 0.0f);
-            Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(m_CameraSettings.freeCameraSettings.position, to);
+            Math::float3 to = settings.position + Math::float3(0.0f, -100.0f, 0.0f);
+            Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(settings.position, to);
 
             if (hit.hasHit)
             {
-                m_CameraSettings.freeCameraSettings.position = hit.hitPosition + Math::float3(0.0f, 1.8f, 0.0f);
+                settings.position = hit.hitPosition + Math::float3(0.0f, 1.8f, 0.0f);
             }
 
-            m_ViewMatrix = Math::Matrix::CreateView(m_CameraSettings.freeCameraSettings.position,
-                                                    m_CameraSettings.freeCameraSettings.yaw,
-                                                    m_CameraSettings.freeCameraSettings.pitch);
-
-            setEntityTransform(m_ViewMatrix.Invert());
-        }
-            break;
-        case ECameraMode::Free:
-        {
-            // Direction
-            if (inputGetKeyState(entry::Key::Left))
-            {
-                m_CameraSettings.freeCameraSettings.yaw -= deltaTime * turnSpeed;
-            } else if (inputGetKeyState(entry::Key::Right))
-            {
-                m_CameraSettings.freeCameraSettings.yaw += deltaTime * turnSpeed;
-            }
-
-            if (inputGetKeyState(entry::Key::Up))
-            {
-                m_CameraSettings.freeCameraSettings.pitch += deltaTime * turnSpeed;
-            } else if (inputGetKeyState(entry::Key::Down))
-            {
-                m_CameraSettings.freeCameraSettings.pitch -= deltaTime * turnSpeed;
-            }
-
-            // Get forward/right vector
-            std::pair<Math::float3, Math::float3> fr = getDirectionVectors(m_CameraSettings.freeCameraSettings.yaw,
-                                                                           m_CameraSettings.freeCameraSettings.pitch );
-
-            if (inputGetKeyState(entry::Key::KeyA))
-            {
-                m_CameraSettings.freeCameraSettings.position += deltaTime * fr.second * moveSpeed;
-            } else if (inputGetKeyState(entry::Key::KeyD))
-            {
-                m_CameraSettings.freeCameraSettings.position -= deltaTime * fr.second * moveSpeed;
-            }
-            if (inputGetKeyState(entry::Key::KeyW))
-            {
-                m_CameraSettings.freeCameraSettings.position += deltaTime * fr.first * moveSpeed;
-            } else if (inputGetKeyState(entry::Key::KeyS))
-            {
-                m_CameraSettings.freeCameraSettings.position -= deltaTime * fr.first * moveSpeed;
-            }
-
-            m_ViewMatrix = Math::Matrix::CreateView(m_CameraSettings.freeCameraSettings.position,
-                                                    m_CameraSettings.freeCameraSettings.yaw,
-                                                    m_CameraSettings.freeCameraSettings.pitch);
+            m_ViewMatrix = Math::Matrix::CreateView(settings.position,
+                                                    settings.yaw,
+                                                    settings.pitch);
 
             setEntityTransform(m_ViewMatrix.Invert());
         }
         break;
+
+        case ECameraMode::Free:
+        {
+            auto &settings = m_CameraSettings.floatingCameraSettings;
+
+            // Get forward/right vector
+            std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
+            settings.up = settings.right.cross(settings.forward);
+
+            m_ViewMatrix = Math::Matrix::CreateView(settings.position,
+                                                    settings.yaw,
+                                                    settings.pitch);
+
+            setEntityTransform(m_ViewMatrix.Invert());
+        }
+        break;
+
         case ECameraMode::Viewer:
         {
             auto &settings = m_CameraSettings.viewerCameraSettings;
-
-            // I do not know how to properly retrieve that input. change at will.
-            //bool shift = inputGetModifiersState() & entry::Modifier::LeftShift;
-            //bool ctrl = inputGetModifiersState() & entry::Modifier::LeftCtrl;
-            bool shift  = inputGetKeyState(entry::Key::KeyQ); // should be left shift
-            bool ctrl   = inputGetKeyState(entry::Key::KeyE); // should be left ctrl
-            bool mmb    = inputGetKeyState(entry::Key::KeyX); // should be middle mouse button
-            bool lmb    = inputGetKeyState(entry::Key::KeyY); // should be left mouse button
-
-
-            float mouseState[3];
-            inputGetMouse(mouseState);
-            if(mouseState[0] != 0.0f && mouseState[1] != 0.0f)
-                settings.mousePosition = Math::float2(mouseState[0], mouseState[1]);
-
-            if(mmb)
-            {
-                Math::float2 translationVector = settings.mousePosition - settings.oldMousePosition;
-
-                if( shift == ctrl ) // neither pan nor zoom activated, or both -> rotate
-                {
-                    settings.yaw   = settings.oldYaw    + 5.0f * translationVector.x;
-                    settings.pitch = settings.oldPitch  + 5.0f * translationVector.y;
-                }
-                else if(shift) // pan view
-                {
-                    settings.lookAt = settings.oldLookAt
-                            - 50.0f * settings.right * translationVector.x + 50.0f * settings.up * translationVector.y;
-                }
-                else if(ctrl) // zoom
-                {
-                    settings.zoom = settings.oldZoom + 100.0f * translationVector.y;
-                    if(settings.zoom < 1.0f)
-                        settings.zoom = 1.0f;
-                }
-            }
-            else
-            {
-                settings.oldYaw             = settings.yaw;
-                settings.oldPitch           = settings.pitch;
-                settings.oldZoom            = settings.zoom;
-                settings.oldLookAt          = settings.lookAt;
-                settings.oldMousePosition   = settings.mousePosition;
-            }
-
-            static uint32_t lmbFrames = 30;
-            // execute this function only once in 30 frames for better usability of the tool
-            // this is a very bad solution. better set the mouse in the center of the frame
-            if(lmb && lmbFrames >= 30)
-            {
-                lmbFrames = 0;
-
-                const float maxRayLength = 1000.0f;
-
-                // these relations are found by trial and error
-                Math::float3 cameraSpaceRayEndpoint = maxRayLength * Math::float3( (2.0f * settings.mousePosition.x - 1.0f), (0.5f - settings.mousePosition.y), 1.0f );
-                Math::float3 to = m_ViewMatrix.Invert() * cameraSpaceRayEndpoint;
-                Math::float3 from = settings.lookAt + settings.zoom * settings.in;
-                Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
-
-                if(hit.hasHit)
-                {
-                    settings.lookAt = hit.hitPosition;
-                    Math::float3 distance = from - hit.hitPosition;
-                    settings.zoom = distance.length();
-                    settings.pitch = asin(distance.y/settings.zoom);
-                    settings.yaw = atan2(distance.x, distance.z);
-                }
-            }
-            lmbFrames++;
 
             // getDirectionVectors only returns 2 of 3 direction vectors
             std::tie(settings.in, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
@@ -292,7 +350,7 @@ std::pair<Math::float3, Math::float3> Logic::CameraController::getDirectionVecto
 
 void Logic::CameraController::setTransforms(const Math::float3 &position, float yaw, float pitch)
 {
-    m_CameraSettings.freeCameraSettings.position = position;
-    m_CameraSettings.freeCameraSettings.yaw = yaw;
-    m_CameraSettings.freeCameraSettings.pitch = pitch;
+    m_CameraSettings.floatingCameraSettings.position = position;
+    m_CameraSettings.floatingCameraSettings.yaw = yaw;
+    m_CameraSettings.floatingCameraSettings.pitch = pitch;
 }

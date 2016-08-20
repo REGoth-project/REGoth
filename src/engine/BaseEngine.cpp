@@ -125,6 +125,7 @@ Handle::WorldHandle  BaseEngine::addWorld()
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
 	onFrameUpdate(dt, width, height);
+
 }
 
 void BaseEngine::loadArchives()

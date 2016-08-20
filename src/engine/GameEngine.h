@@ -2,8 +2,7 @@
 #include "BaseEngine.h"
 #include <render/RenderSystem.h>
 #include <logic/CameraController.h>
-
-
+#include "Input.h"
 
 namespace Engine
 {
@@ -56,7 +55,6 @@ namespace Engine
         {
             return m_DefaultRenderSystem;
         }
-
     protected:
 
         /**
@@ -88,5 +86,10 @@ namespace Engine
          * Default rendering system
          */
         Render::RenderSystem m_DefaultRenderSystem;
+
+        /**
+         * Debug only
+         */
+        bool m_disableLogic;
     };
 }

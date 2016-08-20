@@ -23,8 +23,7 @@ WorldInstance::WorldInstance()
 	: m_WorldMesh(*this),
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
-      m_Sky(*this),
-      m_DialogManager(*this)
+      m_Sky(*this)
 {
 	
 }
@@ -297,9 +296,6 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 		LogInfo() << "Initializing scripts for world: " << worldName;
 		m_ScriptEngine.initForWorld(worldName);
 	}
-
-    // Initialize dialog manager
-    m_DialogManager.init();
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)
@@ -381,8 +377,54 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
             player.playerController->onUpdateByInput(deltaTime);
     }
 
-    // Update dialogs
-    m_DialogManager.update(deltaTime);
+    /*static float s_testp = 0.0f;
+    static std::vector<size_t> path;
+    static float pathLength;
+
+    if(m_Waynet.waypoints.empty())
+        return;
+
+    if(path.empty())
+    {
+        path = World::Waynet::findWay(m_Waynet,
+                                      493,
+                                      342);
+
+        pathLength = World::Waynet::getPathLength(m_Waynet, path);
+    }
+
+    s_testp += deltaTime / pathLength * 20.0f;
+
+    if(s_testp > 1.0f)
+        s_testp = 0.0f;
+
+    Components::PositionComponent& testPosition = getEntity<Components::PositionComponent>(m_TestEntity);
+
+    testPosition.m_WorldMatrix = Math::Matrix::CreateTranslation(World::Waynet::interpolatePositionOnPath(m_Waynet, path, s_testp));
+
+    //testPosition.m_WorldMatrix = Math::Matrix::CreateTranslation(m_Waynet.waypoints[path[s_testp * path.size()]].position);
+
+    LogInfo() << "Position: [" << s_testp << "]" << testPosition.m_WorldMatrix.Translation().toString();*/
+
+    /*Components::EntityComponent* entities = m_Allocators.m_ComponentAllocator.getElements<Components::EntityComponent>();
+    Components::PositionComponent* positions = m_Allocators.m_ComponentAllocator.getElements<Components::PositionComponent>();
+    Components::BBoxComponent* bboxes = m_Allocators.m_ComponentAllocator.getElements<Components::BBoxComponent>();
+    size_t range = m_Allocators.m_ComponentAllocator.getNumObtainedElements();
+
+    m_TransientEntityFeatures.m_VisibleEntities.clear();
+
+    for (size_t i = 0; i < range; i++)
+    {
+        // Try to cull the entities
+        // TODO: Can do this in paralell! (Don't forget to aggregate m_VisibleEntities afterwards against cache-trashing)
+        if((entities[i].m_ComponentMask & Components::BBoxComponent::MASK) != 0)
+        {
+            // TODO: Actually cull
+
+            // Entity is visible, save that
+            m_TransientEntityFeatures.m_VisibleEntities.push_back(i);
+        }
+    }*/
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)

@@ -19,9 +19,10 @@
 #include <bx/uint32_t.h>
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
-#include <imgui/imgui.h>
-#include <ui/DialogBox.h>
 #include "config.h"
+#include "engine/Platform.h"
+
+
 
 struct PosColorVertex
 {
@@ -97,9 +98,10 @@ struct PosColorTexCoord0Vertex
 
 bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
-class ExampleCubes : public entry::AppI
-{
 
+
+class ExampleCubes : public /*entry::AppI*/ Engine::Platform
+{
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
     {
         bgfx::TransientVertexBuffer tvb;
@@ -201,7 +203,7 @@ class ExampleCubes : public entry::AppI
 	{
         std::cout << "Running REGoth Engine" << std::endl;
 
-		Args args(_argc, _argv);
+//		Args args(_argc, _argv);
 
 		axis = 0;
 		m_width = 1280;
@@ -209,7 +211,8 @@ class ExampleCubes : public entry::AppI
 		m_debug = BGFX_DEBUG_TEXT;
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
 
-		bgfx::init(args.m_type, args.m_pciId);
+//		bgfx::init(args.m_type, args.m_pciId);
+        bgfx::init();
 		bgfx::reset(m_width, m_height, m_reset);
 
 		// Enable debug text.
@@ -247,10 +250,6 @@ class ExampleCubes : public entry::AppI
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
-
-        // Imgui.
-        imguiCreate();
-        m_scrollArea = 0;
 	}
 
 	virtual int shutdown() BX_OVERRIDE
@@ -261,8 +260,6 @@ class ExampleCubes : public entry::AppI
 
 		ddShutdown();
 
-        imguiDestroy();
-
 		// Shutdown bgfx.
 		bgfx::shutdown();
 
@@ -271,103 +268,67 @@ class ExampleCubes : public entry::AppI
 
 	bool update() BX_OVERRIDE
 	{
-		if (!entry::processEvents(m_width, m_height, m_debug, m_reset, &m_mouseState))
-		{
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency());
-			const double toMs = 1000.0 / freq;
+        Engine::Input::fireBindings();
 
-			float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
-			const float dt = float(frameTime/freq);
+        int64_t now = bx::getHPCounter();
+        static int64_t last = now;
+        const int64_t frameTime = now - last;
+        last = now;
+        const double freq = double(bx::getHPFrequency());
+        const double toMs = 1000.0 / freq;
 
-			// Prepare rendering of debug-textboxes, etc
-            imguiBeginFrame(m_mouseState.m_mx
-                    ,  m_mouseState.m_my
-                    , (m_mouseState.m_buttons[entry::MouseButton::Left  ] ? IMGUI_MBUT_LEFT   : 0)
-                      | (m_mouseState.m_buttons[entry::MouseButton::Right ] ? IMGUI_MBUT_RIGHT  : 0)
-                      | (m_mouseState.m_buttons[entry::MouseButton::Middle] ? IMGUI_MBUT_MIDDLE : 0)
-                    ,  m_mouseState.m_mz
-                    , m_width
-                    , m_height
-            );
-
-            //imguiLabel("Testing %f", time);
-            /*imguiSlider("Speed", m_speed, 0.0f, 1.0f, 0.01f);
+        float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
+        const float dt = float(frameTime/freq);
 
 
-            imguiSlider("Middle gray", m_middleGray, 0.1f, 1.0f, 0.01f);
-            imguiSlider("White point", m_white,      0.1f, 2.0f, 0.01f);
-            imguiSlider("Threshold",   m_threshold,  0.1f, 2.0f, 0.01f);
-
-*/
-
-			// Use debug font to print information about this example.
-			bgfx::dbgTextClear();
-			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-			bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+        // Use debug font to print information about this example.
+        bgfx::dbgTextClear();
+        bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+        bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
 
 
-			// This dummy draw call is here to make sure that view 0 is cleared
-			// if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
-			//bgfx::touch(0);
+        // This dummy draw call is here to make sure that view 0 is cleared
+        // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
+        //bgfx::touch(0);
 
-			
 
-			// Set render states.
-			//bgfx::setState(BGFX_STATE_DEFAULT);
-			//bgfx::setTexture(0, m_texUniform, m_texHandle);
 
-			ddBegin(0);
+        // Set render states.
+        //bgfx::setState(BGFX_STATE_DEFAULT);
+        //bgfx::setTexture(0, m_texUniform, m_texHandle);
 
-			m_pEngine->frameUpdate(dt, m_width, m_height);
+        ddBegin(0);
 
-            // Draw and process all UI-Views
-            m_pEngine->getRootUIView().update(dt, m_mouseState, m_pEngine->getDefaultRenderSystem().getConfig());
+        m_pEngine->frameUpdate(dt, m_width, m_height);
 
-			ddSetTransform(nullptr);
-			ddDrawAxis(0.0f, 0.0f, 0.0f);
+        ddSetTransform(nullptr);
+        ddDrawAxis(0.0f, 0.0f, 0.0f);
 
-			ddPush();
-			ddSetColor(0xff00ff00);
-			ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
-			Aabb aabb =
-					{
-							{  -1.0f, -1.0f, -1.0f },
-							{ 1.0f, 1.0f, 1.0f },
-					};
-			ddDraw(aabb);
+        ddPush();
+        ddSetColor(0xff00ff00);
+        ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
+        Aabb aabb =
+                {
+                        {  -1.0f, -1.0f, -1.0f },
+                        { 1.0f, 1.0f, 1.0f },
+                };
+        ddDraw(aabb);
 
-			ddSetTransform(nullptr);
-			ddSetColor(0xff0000ff);
-			ddMoveTo(0,0,0);
-			ddLineTo(10,0,0);
-			ddPop();
+        ddSetTransform(nullptr);
+        ddSetColor(0xff0000ff);
+        ddMoveTo(0,0,0);
+        ddLineTo(10,0,0);
+        ddPop();
 
-			ddEnd();
+        ddEnd();
 
-            imguiEndFrame();
+        // Advance to next frame. Rendering thread will be kicked to
+        // process submitted rendering primitives.
+        bgfx::frame();
 
-			// Advance to next frame. Rendering thread will be kicked to
-			// process submitted rendering primitives.
-			bgfx::frame();
-
-			return true;
-		}
-
-		return false;
+        return true;
 	}
 
-    float m_speed;
-    float m_middleGray;
-    float m_white;
-    float m_threshold;
-    int32_t m_scrollArea;
-
-
-    entry::MouseState m_mouseState;
 	Engine::GameEngine* m_pEngine;
 	uint32_t m_width;
 	uint32_t m_height;
@@ -377,4 +338,12 @@ class ExampleCubes : public entry::AppI
 	float axis;
 };
 
-ENTRY_IMPLEMENT_MAIN(ExampleCubes);
+//ENTRY_IMPLEMENT_MAIN(ExampleCubes);
+
+//Usage of Platform:
+
+int main(int argc, char** argv)
+{
+    ExampleCubes app;
+    return app.run(argc, argv);
+}

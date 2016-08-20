@@ -37,11 +37,6 @@ namespace World
 		 */
 		void getTriangle(size_t triangleIdx, Math::float3* v3);
 
-		/**
-		 * @return Boundingbox max/min
-		 */
-		const Math::float3& getBBoxMin(){ return m_BBox3d[0]; }
-		const Math::float3& getBBoxMax(){ return m_BBox3d[1]; }
 	protected:
 
 		/**
@@ -53,10 +48,5 @@ namespace World
 		 * Reference to the parentworld
 		 */
 		World::WorldInstance& m_ParentWorld;
-
-		/**
-		 * Total boundingbox of this worldmesh
-		 */
-		Math::float3 m_BBox3d[2];
 	};
 }

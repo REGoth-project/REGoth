@@ -13,6 +13,7 @@
 #include <entry/input.h>
 #include <components/VobClasses.h>
 #include "visuals/ModelVisual.h"
+#include <engine/Input.h>
 
 /**
  * Standard node-names
@@ -52,23 +53,48 @@ Logic::PlayerController::PlayerController(World::WorldInstance& world,
 
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
     m_EquipmentState.activeWeapon.invalidate();
+
+    m_isDrawWeaponMelee     = false;
+    m_isForward             = false;
+    m_isBackward            = false;
+    m_isTurnLeft            = false;
+    m_isTurnRight           = false;
+    m_isStrafeLeft          = false;
+    m_isStrafeRight         = false;
+
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float)
+    {
+        m_isDrawWeaponMelee = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerForward, [this](bool triggered, float)
+    {
+        m_isForward = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float)
+    {
+        m_isBackward = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float)
+    {
+        m_isTurnLeft = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnRight, [this](bool triggered, float)
+    {
+        m_isTurnRight = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeLeft, [this](bool triggered, float)
+    {
+        m_isStrafeLeft = triggered;
+    });
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float)
+    {
+        m_isStrafeRight = triggered;
+    });
 }
 
 void Logic::PlayerController::onUpdate(float deltaTime)
 {
     ModelVisual* model = getModelVisual();
-
-    // Build the route to follow this entity
-    if(m_RoutineState.entityTarget.isValid())
-    {
-        Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
-                .m_WorldMatrix.Translation();
-
-        size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
-
-        setDailyRoutine({});
-        gotoWaypoint(targetWP);
-    }
 
     if(!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
@@ -194,7 +220,6 @@ bool Logic::PlayerController::travelPath(float deltaTime)
     {
         if(abs(currentPosition.y - targetPosition.y) < 2.0f)
         {
-            m_AIState.closestWaypoint = m_MoveState.currentPath[m_MoveState.targetNode];
             m_MoveState.targetNode++;
 
             if(m_MoveState.targetNode >= m_MoveState.currentPath.size())
@@ -504,6 +529,7 @@ void Logic::PlayerController::onVisualChanged()
 
 void Logic::PlayerController::onUpdateByInput(float deltaTime)
 {
+
     ModelVisual* model = getModelVisual();
 
     if(!model)
@@ -514,6 +540,7 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     // FIXME: Temporary test-code
 	static bool lastDraw = false;
 
+    /*
 #define SINGLE_ACTION_KEY(key, fn) { \
     static bool last = false; \
     if(inputGetKeyState(key) && !last)\
@@ -557,67 +584,8 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
             npc.playerController->attackFront();
         }
     });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyT, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        // Talk to the nearest NPC other than the current player, of course
-        Handle::EntityHandle nearest;
-        float shortestDist = FLT_MAX;
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            if(h != m_World.getScriptEngine().getPlayerEntity())
-            {
-                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-
-                float dist = (Vob::getTransform(npc).Translation() - getEntityTransform().Translation()).lengthSquared();
-                if(dist < shortestDist)
-                {
-                    nearest = h;
-                    shortestDist = dist;
-                }
-            }
-        }
-
-        if(nearest.isValid())
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
-            Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
-            m_World.getDialogManager().startDialog(shnpc);
-        }
-    });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyF, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        // Let the nearest NPC follow us
-        Handle::EntityHandle nearest;
-        float shortestDist = FLT_MAX;
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            if(h != m_World.getScriptEngine().getPlayerEntity())
-            {
-                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-
-                float dist = (Vob::getTransform(npc).Translation() - getEntityTransform().Translation()).lengthSquared();
-                if(dist < shortestDist)
-                {
-                    nearest = h;
-                    shortestDist = dist;
-                }
-            }
-        }
-
-        if(nearest.isValid())
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
-            npc.playerController->setFollowTarget(m_Entity);
-        }
-    });
-
-    if(inputGetKeyState(entry::Key::KeyL))
+    */
+    if(m_isDrawWeaponMelee)
     {
         if(!lastDraw)
         {
@@ -632,7 +600,7 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
         // Don't overwrite the drawing animation
         return;
     }
-    else if(!inputGetKeyState(entry::Key::KeyL) && lastDraw)
+    else if(!m_isDrawWeaponMelee && lastDraw)
     {
         lastDraw = false;
     }
@@ -641,104 +609,101 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
 
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
 	{
-		if(inputGetKeyState(entry::Key::KeyA))
+        if(m_isStrafeLeft)
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
 		}
-		else if(inputGetKeyState(entry::Key::KeyD))
+        else if(m_isStrafeRight)
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
 		}
-		else if(inputGetKeyState(entry::Key::KeyW))
+        else if(m_isForward)
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::Run);
 		}
-		else if(inputGetKeyState(entry::Key::KeyS))
+        else if(m_isBackward)
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
 		}
-		else if(inputGetKeyState(entry::Key::KeyQ))
-		{
-			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
-		}
+//		else if(inputGetKeyState(entry::Key::KeyQ))
+//		{
+//			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
+//		}
 		else {
 			model->setAnimation(ModelVisual::Idle);
 		}
 	}
-	else
-	{
-        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
-                {
-                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
-                                                        ModelVisual::EModelAnimType::Attack1h_R,
-                                                        ModelVisual::EModelAnimType::Run1h,
-                                                        ModelVisual::EModelAnimType::Backpedal1h,
-                                                        ModelVisual::EModelAnimType::Attack1h,
-                                                        ModelVisual::EModelAnimType::Idle1h}},
+//	else
+//	{
+//        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
+//                {
+//                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
+//                                                        ModelVisual::EModelAnimType::Attack1h_R,
+//                                                        ModelVisual::EModelAnimType::Run1h,
+//                                                        ModelVisual::EModelAnimType::Backpedal1h,
+//                                                        ModelVisual::EModelAnimType::Attack1h,
+//                                                        ModelVisual::EModelAnimType::Idle1h}},
 
-                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
-                                                        ModelVisual::EModelAnimType::Attack2h_R,
-                                                        ModelVisual::EModelAnimType::Run2h,
-                                                        ModelVisual::EModelAnimType::Backpedal2h,
-                                                        ModelVisual::EModelAnimType::Attack2h,
-                                                        ModelVisual::EModelAnimType::Idle2h}},
+//                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
+//                                                        ModelVisual::EModelAnimType::Attack2h_R,
+//                                                        ModelVisual::EModelAnimType::Run2h,
+//                                                        ModelVisual::EModelAnimType::Backpedal2h,
+//                                                        ModelVisual::EModelAnimType::Attack2h,
+//                                                        ModelVisual::EModelAnimType::Idle2h}},
 
-                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
-                                                        ModelVisual::EModelAnimType::IdleBow,
-                                                        ModelVisual::EModelAnimType::RunBow,
-                                                        ModelVisual::EModelAnimType::BackpedalBow,
-                                                        ModelVisual::EModelAnimType::AttackBow,
-                                                        ModelVisual::EModelAnimType::IdleBow}},
+//                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
+//                                                        ModelVisual::EModelAnimType::IdleBow,
+//                                                        ModelVisual::EModelAnimType::RunBow,
+//                                                        ModelVisual::EModelAnimType::BackpedalBow,
+//                                                        ModelVisual::EModelAnimType::AttackBow,
+//                                                        ModelVisual::EModelAnimType::IdleBow}},
 
-                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
-                                                        ModelVisual::EModelAnimType::IdleCBow,
-                                                        ModelVisual::EModelAnimType::RunCBow,
-                                                        ModelVisual::EModelAnimType::BackpedalCBow,
-                                                        ModelVisual::EModelAnimType::AttackCBow,
-                                                        ModelVisual::EModelAnimType::IdleCBow}}
-                };
+//                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
+//                                                        ModelVisual::EModelAnimType::IdleCBow,
+//                                                        ModelVisual::EModelAnimType::RunCBow,
+//                                                        ModelVisual::EModelAnimType::BackpedalCBow,
+//                                                        ModelVisual::EModelAnimType::AttackCBow,
+//                                                        ModelVisual::EModelAnimType::IdleCBow}}
+//                };
 
-		if(inputGetKeyState(entry::Key::KeyA))
-		{
-			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
-		}
-		else if(inputGetKeyState(entry::Key::KeyD))
-		{
-            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
-		}
-		else if(inputGetKeyState(entry::Key::KeyW))
-		{
-            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
-		}
-		else if(inputGetKeyState(entry::Key::KeyS))
-		{
-            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
-		}
-		else if(inputGetKeyState(entry::Key::KeyQ))
-		{
-            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
-		}
-		else {
-            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
-		}
-	}
+//		if(inputGetKeyState(entry::Key::KeyA))
+//		{
+//			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
+//		}
+//		else if(inputGetKeyState(entry::Key::KeyD))
+//		{
+//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
+//		}
+//		else if(inputGetKeyState(entry::Key::KeyW))
+//		{
+//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
+//		}
+//		else if(inputGetKeyState(entry::Key::KeyS))
+//		{
+//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
+//		}
+//		else if(inputGetKeyState(entry::Key::KeyQ))
+//		{
+//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
+//		}
+//		else {
+//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
+//		}
+//	}
 
     float yaw = 0.0f;
     const float turnSpeed = 2.5f;
-    if (inputGetKeyState(entry::Key::Left))
+    if (m_isTurnLeft)
     {
         yaw -= turnSpeed * deltaTime;
-    } else if (inputGetKeyState(entry::Key::Right))
+    } else if (m_isTurnRight)
     {
         yaw += turnSpeed * deltaTime;
     }
 
     // TODO: HACK, take this out!
-    if(inputGetKeyState(entry::Key::Space))
-        deltaTime *= 4.0f;
-
-    if(inputGetKeyState(entry::Key::KeyB))
-        deltaTime *= 16.0f;
+//    if(inputGetKeyState(entry::Key::Space))
+//        deltaTime *= 4.0f;
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
@@ -756,6 +721,7 @@ void Logic::PlayerController::onUpdateByInput(float deltaTime)
     setEntityTransform(newTransform);
 
     placeOnGround();
+
 }
 
 void Logic::PlayerController::attackFront()

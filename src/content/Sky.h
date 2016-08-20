@@ -105,19 +105,6 @@ namespace Content
          * @return current interpolated sky-state
          */
         const SkyState& getMasterState(){ return m_MasterState; }
-
-        /**
-         * Calculates the near- and farplanes for the fog
-         * @param cameraWorld current cameras world position
-         * @param near target for nearplane
-         * @param far target for farplane
-         */
-        void getFogValues(const Math::float3& cameraWorld, float& near, float& far, Math::float3& fogColor);
-
-        /**
-         * Sets the farplane, needed to do the fog-calculation
-         */
-        void setFarPlane(float far){ m_FarPlane = far; }
     private:
 
         /**
@@ -151,8 +138,8 @@ namespace Content
         World::WorldInstance& m_World;
 
         /**
-         * Global Farplane
+         * Debug only
          */
-        float m_FarPlane;
+        bool m_skySpeedMultiplier;
     };
 }

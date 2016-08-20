@@ -1,5 +1,6 @@
 #pragma once
 #include "Controller.h"
+#include <engine/Input.h>
 
 namespace Logic
 {
@@ -23,50 +24,61 @@ namespace Logic
              */
             struct
             {
-                float turnSpeed;
-                float moveSpeed;
-                float yaw, pitch;
-                Math::float3 position;
+                Engine::Action* actionMoveForward;
+                Engine::Action* actionMoveRight;
+                Engine::Action* actionMoveUp;
+                Engine::Action* actionLookHorizontal;
+                Engine::Action* actionLookVertical;
             } freeCameraSettings;
-
-            /**
-             * Settings for camera mode static
-             */
-            struct
-            {
-                Math::float3 position;
-                Math::float3 lookAt;
-            } staticCameraSettings;
 
             /**
              * Settings for camera mode "firstperson"
              */
             struct
             {
-                float turnSpeed;
-                float moveSpeed;
-                float yaw, pitch;
+                Engine::Action* actionMoveForward;
+                Engine::Action* actionMoveRight;
+                Engine::Action* actionLookHorizontal;
+                Engine::Action* actionLookVertical;
             } firstPersonCameraSettings;
 
-            /**
-             * Settings for camera mode "thirdperson"
-             */
+//            /**
+//             * Settings for camera mode "thirdperson"
+//             */
+//            struct
+//            {
+//                float turnSpeed;
+//                float turnSmoothness;
+//                float yaw, height, distance;
+//            } thirdPersonCameraSettings;
+
             struct
             {
-                float turnSpeed;
-                float turnSmoothness;
-                float yaw, height, distance;
-            } thirdPersonCameraSettings;
+                float yaw, pitch;
+                Math::float3 position;
+                Math::float3 up, right, forward;
+            } floatingCameraSettings;
 
             /**
              * Settings for camera mode "viewer"
              */
             struct
             {
-                Math::float3 oldLookAt, lookAt;
-                Math::float2 oldMousePosition, mousePosition;
+                Engine::Action* actionViewHorizontal;
+                Engine::Action* actionViewVertical;
+                Engine::Action* actionPan;
+                Engine::Action* actionZoom;
+                Engine::Action* actionRotate;
+                Engine::Action* actionClick;
+                Engine::Action* actionWheel;
+
+                bool isPanModifier;
+                bool isZoomModifier;
+                bool isRotateModifier;
+
+                Math::float3 lookAt;
+                float mouseWheel;
                 Math::float3 up, right, in;
-                float oldYaw, oldPitch, oldZoom;
                 float yaw, pitch, zoom;
             } viewerCameraSettings;
         };
@@ -131,6 +143,8 @@ namespace Logic
          */
         bool m_Active;
 
+        void disableActions();
+
         /**
          * How the camera should behave regarding the followed entity
          */
@@ -151,6 +165,11 @@ namespace Logic
          */
         Math::Matrix m_ViewMatrix;
 
-        Math::float2 m_LastMousePosition;
+        //Math::float2 m_LastMousePosition;
+
+        /**
+         * Debug
+         */
+        float m_moveSpeedMultiplier;
     };
 }
