@@ -125,7 +125,7 @@ namespace World
          * Data access
          */
         Components::ComponentAllocator::DataBundle getComponentDataBundle()
-        {
+		{
             return m_Allocators.m_ComponentAllocator.getDataBundle();
         }
 		WorldAllocators& getAllocators()
@@ -183,11 +183,11 @@ namespace World
 			return m_pEngine;
 		}
         Physics::PhysicsSystem& getPhysicsSystem()
-        {
+		{
             return m_PhysicsSystem;
         }
         Handle::CollisionShapeHandle getStaticObjectCollisionShape()
-        {
+		{
             return m_StaticWorldObjectCollsionShape;
         }
 		WorldMesh& getWorldMesh()
@@ -202,7 +202,12 @@ namespace World
 		{
 			return m_DialogManager;
 		}
-    protected:
+
+		/**
+		 * This worlds print-screen manager
+		 */
+		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+	protected:
 
 		/**
 		 * Initializes the Script-Engine for a ZEN-World.
@@ -270,5 +275,10 @@ namespace World
 		 * This worlds dialog-manager
 		 */
 		Logic::DialogManager m_DialogManager;
+
+		/**
+		 * This worlds print-screen manager
+		 */
+		UI::PrintScreenMessages* m_PrintScreenMessageView;
     };
 }

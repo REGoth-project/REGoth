@@ -16,6 +16,7 @@
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include <entry/input.h>
+#include <ui/PrintScreenMessages.h>
 
 using namespace World;
 
@@ -24,7 +25,8 @@ WorldInstance::WorldInstance()
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
       m_Sky(*this),
-      m_DialogManager(*this)
+      m_DialogManager(*this),
+      m_PrintScreenMessageView(nullptr)
 {
 	
 }
@@ -43,6 +45,10 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_StaticWorldMeshCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_WorldMesh);
     m_StaticWorldObjectPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldObjectCollsionShape, Math::Matrix::CreateIdentity());
     m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
+
+    // Create UI-Views
+    m_PrintScreenMessageView = new UI::PrintScreenMessages();
+    getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
 }
 
 void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
