@@ -33,6 +33,8 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
         m = Math::Matrix::CreateIdentity();
 
     setBindPose(true);
+
+    m_SpeedMultiplier = 1.0f;
 }
 
 bool AnimHandler::addAnimation(const std::string &file)
@@ -70,11 +72,15 @@ void AnimHandler::playAnimation(const std::string &animName)
         return;
     }
 
+    // If we currently don't have this animation, try to load it
+    if(!hasAnimation(animName))
+        addAnimation(animName + ".MAN");
+
     // find and apply given animation name
     auto it = m_AnimationsByName.find(animName);
     if (it == m_AnimationsByName.end())
     {
-        //LogError() << "Failed to find animation: " << animName;
+        LogError() << "Failed to find animation: " << animName;
         m_ActiveAnimation.invalidate();
     }
     else
@@ -143,7 +149,7 @@ void AnimHandler::updateAnimations(double deltaTime)
     }
 
     // Increase current timeline-position
-    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate;
+    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
     float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
@@ -171,13 +177,40 @@ void AnimHandler::updateAnimations(double deltaTime)
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
         // Scale velocity to seconds
-        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) *
-                getActiveAnimationPtr()->getModelAniHeader().fpsRate;
+        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) * (framesPerSecond * deltaTime);
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
     }
 
     // Updated the animation, update the hash-value
     m_AnimationStateHash++;
+}
+
+Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
+{
+    if(!getActiveAnimationPtr())
+        return Math::float3(0,0,0);
+
+    size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
+
+    // Root node is always node 0
+    return Math::float3(getActiveAnimationPtr()->getAniSamples()[numAnimationNodes * frame].position.v);
+}
+
+
+Math::float3 AnimHandler::getRootNodeVelocity()
+{
+    if(!getActiveAnimationPtr())
+        return Math::float3(0,0,0);
+
+    // Get length of the animation in seconds
+    float length = getActiveAnimationPtr()->getModelAniHeader().numFrames
+                   / (getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier);
+
+    size_t numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
+    Math::float3 start = getRootNodePositionAt(0);
+    Math::float3 end = getRootNodePositionAt(numFrames - 1);
+
+    return (end - start) / length ;
 }
 
 /**

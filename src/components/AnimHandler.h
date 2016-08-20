@@ -81,7 +81,12 @@ namespace Components
 		/**
 		 * @return Velocity of the root node in m/s
 		 */
-		const Math::float3& getRootNodeVelocity(){ return m_AnimRootVelocity; }
+		Math::float3 getRootNodeVelocity();
+
+		/**
+		 * Returns the position of the node at the given frame
+		 */
+		Math::float3 getRootNodePositionAt(size_t frame);
 
 		/**
 		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
@@ -135,6 +140,11 @@ namespace Components
 		 * @return Animation-object from the handle
 		 */
 		Animations::Animation& getAnimation(Handle::AnimationHandle h);
+
+		/**
+		 * Sets the speed multiplier for all animations
+		 */
+		void setSpeedMultiplier(float mult){ m_SpeedMultiplier = mult; }
 	private:
 
 		/**
@@ -181,5 +191,10 @@ namespace Components
 		 * @brief World this resides in
 		 */
 		World::WorldInstance* m_pWorld;
+
+		/**
+		 * @brief Speed multiplier for all animations
+		 */
+		float m_SpeedMultiplier;
 	};
 }
