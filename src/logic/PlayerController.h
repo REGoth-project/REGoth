@@ -130,6 +130,11 @@ namespace Logic
         }
 
         /**
+         * @return Looks up the script instance to our handle
+         */
+        Daedalus::GEngineClasses::C_Npc& getScriptInstance();
+
+        /**
          * Front/Right/Left-Attack with the current weapon
          */
         void attackFront();

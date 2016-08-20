@@ -113,6 +113,19 @@ void PlayerController::onUpdate(float deltaTime)
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
     }
+
+    // TODO: HACK, take this out!
+    // Make following NPCs a bit faster...
+    if(m_RoutineState.entityTarget.isValid())
+    {
+        float defSpeed = 7.0f;
+        if (inputGetKeyState(entry::Key::Space))
+            m_NPCProperties.moveSpeed = defSpeed * 4;
+        else if (inputGetKeyState(entry::Key::KeyB))
+            m_NPCProperties.moveSpeed = defSpeed * 8;
+        else
+            m_NPCProperties.moveSpeed = defSpeed;
+    }
 }
 
 void PlayerController::continueRoutine()
@@ -199,6 +212,9 @@ bool PlayerController::travelPath(float deltaTime)
 
         m_MoveState.direction = direction;
 
+        // FIXME: This is right, but somehow NPCs don't appear where they belong
+        //m_NPCProperties.moveSpeed = getModelVisual()->getAnimationHandler().getRootNodeVelocity().length();
+
         direction *= deltaTime * m_NPCProperties.moveSpeed;
         m_MoveState.position = currentPosition + direction;
 
@@ -230,44 +246,6 @@ bool PlayerController::travelPath(float deltaTime)
     }
 
     return false;
-
-    // Frame update...
-    /*m_MoveState.currentPathPerc = std::min(1.0f, m_MoveState.currentPathPerc
-                                                 + deltaTime
-                                                   * (m_NPCProperties.moveSpeed / m_MoveState.currentRouteLength));
-
-    // Get new position
-    Math::float3 lastPosition = getEntityTransform().Translation();
-
-    Math::float3 position = World::Waynet::interpolatePositionOnPath(m_World.getWaynet(),
-                                                                     m_MoveState.currentPath,
-                                                                     m_MoveState.currentPathPerc);
-
-    // TODO: Merge this with the interpolate-call!
-    size_t cwp = World::Waynet::getWaypointOnPath(m_World.getWaynet(),
-                                                  m_MoveState.currentPath,
-                                                  m_MoveState.currentPathPerc);
-
-    if(cwp != static_cast<size_t>(-1))
-        m_AIState.closestWaypoint = m_MoveState.currentPath[cwp];
-
-    // FIXME: This should be taken care of by the physics engine
-    Math::float3 direction = position - lastPosition;
-
-    // Remove angle
-    direction.y = 0.0f;
-    direction = direction.normalize();
-
-    setEntityTransform(Math::Matrix::CreateLookAt(position, position + direction, Math::float3(0,1,0)).Invert());
-
-    placeOnGround();
-
-
-
-    if (m_MoveState.currentPathPerc >= 1.0f) // == would be sufficient here, but why not?
-        return true;
-
-    return false;*/
 }
 
 void PlayerController::onDebugDraw()
@@ -585,6 +563,11 @@ void PlayerController::onUpdateByInput(float deltaTime)
     });
 
     SINGLE_ACTION_KEY(entry::Key::KeyT, [&](){
+
+        // Force "not talking-mode"
+        const int AIV_INVINCIBLE = 33;
+        getScriptInstance().ai[AIV_INVINCIBLE] = 0;
+
         // Let all near NPCs draw their weapon
         std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
 
@@ -641,6 +624,11 @@ void PlayerController::onUpdateByInput(float deltaTime)
             VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
             npc.playerController->setFollowTarget(m_Entity);
         }
+    });
+
+    SINGLE_ACTION_KEY(entry::Key::KeyG, [&](){
+        m_World.getScriptEngine().prepareRunFunction();
+        m_World.getScriptEngine().runFunction("Use_XP_Map");
     });
 
     if(inputGetKeyState(entry::Key::KeyL))
@@ -1101,4 +1089,9 @@ void PlayerController::startDialogAnimation()
         ns = "0" + ns;
 
     getModelVisual()->setAnimation("T_DIALOGGESTURE_" + ns, false);
+}
+
+Daedalus::GEngineClasses::C_Npc& PlayerController::getScriptInstance()
+{
+    return m_World.getScriptEngine().getGameState().getNpc(getScriptHandle());
 }
