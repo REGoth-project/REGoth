@@ -29,7 +29,7 @@ void DialogBox::update(double dt, entry::MouseState& mstate, Render::RenderConfi
     View::update(dt, mstate, config);
 
     // Draw our choices
-    const int height = config.state.viewHeight / 6;
+    const int height = config.state.viewHeight / 5;
     imguiBeginScrollArea(m_TargetName.c_str(), 10, config.state.viewHeight - height - 10, config.state.viewWidth - 20, height, &m_ScrollArea);
 
     for(size_t i=0;i<m_Choices.size();i++)
