@@ -10,6 +10,8 @@
 #include <engine/BaseEngine.h>
 #include <logic/messages/EventManager.h>
 #include <logic/PlayerController.h>
+#include <ui/SubtitleBox.h>
+#include <ui/PrintScreenMessages.h>
 
 /**
  * File containing the dialouges
@@ -18,6 +20,8 @@
 const char* OU_FILE = "_work/DATA/scripts/content/CUTSCENE/OU.BIN";
 
 using namespace Logic;
+
+
 
 DialogManager::DialogManager(World::WorldInstance& world) :
     m_World(world)
@@ -145,6 +149,18 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
     VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
 
+    if(!targetnpc.playerController)
+    {
+        LogWarn() << "AI_Output: Target not found/invalid!";
+        return;
+    }
+
+    if(!selfnpc.playerController)
+    {
+        LogWarn() << "AI_Output: Self not found/invalid!";
+        return;
+    }
+
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;
     conv.target = targetnpc.entity;
@@ -167,7 +183,10 @@ void DialogManager::update(double dt)
 {
     if(m_ActiveDialogBox)
     {
-        m_ActiveDialogBox->setHidden(!m_ActiveSubtitleBox->isHidden());
+        static bool visibilityHack = m_ActiveSubtitleBox->isHidden();
+        m_ActiveDialogBox->setHidden(!(m_ActiveSubtitleBox->isHidden() && visibilityHack));
+
+        visibilityHack = m_ActiveSubtitleBox->isHidden();
 
         if (m_ActiveDialogBox->getChoiceTaken() != -1)
         {
@@ -266,6 +285,8 @@ void DialogManager::init()
     m_ActiveSubtitleBox = new UI::SubtitleBox();
     m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
     m_ActiveSubtitleBox->setHidden(true);
+
+    m_PrintScreenMessageView = new UI::PrintScreenMessages();
 }
 
 void DialogManager::displaySubtitle(const std::string& subtitle, const std::string& self)
@@ -278,3 +299,4 @@ void DialogManager::stopDisplaySubtitle()
 {
     m_ActiveSubtitleBox->setHidden(true);
 }
+

@@ -2,7 +2,6 @@
 
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
-#include <ui/SubtitleBox.h>
 
 namespace World
 {
@@ -12,6 +11,8 @@ namespace World
 namespace UI
 {
     class DialogBox;
+    class PrintScreenMessages;
+    class SubtitleBox;
 }
 
 namespace Logic
@@ -64,6 +65,8 @@ namespace Logic
 
     protected:
 
+
+
         /**
          * @return Daedalus script-VM
          */
@@ -102,6 +105,11 @@ namespace Logic
          * Currently active subtitle box
          */
         UI::SubtitleBox* m_ActiveSubtitleBox;
+
+        /**
+         * View for print-screen messages
+         */
+        UI::PrintScreenMessages* m_PrintScreenMessageView;
 
         /**
          * World this runs in
