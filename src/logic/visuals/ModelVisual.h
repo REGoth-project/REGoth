@@ -159,7 +159,7 @@ namespace Logic
         /**
          * @brief Sets the closest animation to the specified type. A goblin uses FistWalk instead of Run, for example.
          */
-		void setAnimation(EModelAnimType type);
+		void setAnimation(EModelAnimType type, bool loop = true);
 
 		/**
 		 * Plays the given animation exactly one time. Has more priority than setAnimation.

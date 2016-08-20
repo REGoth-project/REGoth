@@ -8,6 +8,8 @@
 #include <ui/DialogBox.h>
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
+#include <logic/messages/EventManager.h>
+#include <logic/PlayerController.h>
 
 /**
  * File containing the dialouges
@@ -137,10 +139,27 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    m_ActiveSubtitleBox->addText(getGameState().getNpc(self).name[0], msg.text);
+    m_ActiveSubtitleBox->setText(getGameState().getNpc(self).name[0], msg.text);
 
     // Make a new message for the talking NPC
-    VobTypes::getEntityFromScriptInstance(m_World, self);
+    VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
+    VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
+
+    EventMessages::ConversationMessage conv;
+    conv.subType = EventMessages::ConversationMessage::ST_Output;
+    conv.target = targetnpc.entity;
+    conv.name = msg.name;
+    conv.text = msg.text;
+
+    // Check if the target is currently talking to us
+    EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(selfnpc.entity);
+
+    // Wait for the other npc to complete first
+    if(otherconv)
+        selfnpc.playerController->getEM().waitForMessage(otherconv);
+
+    // Push the actual conversation-message
+    selfnpc.playerController->getEM().onMessage(conv);
 }
 
 
@@ -148,9 +167,7 @@ void DialogManager::update(double dt)
 {
     if(m_ActiveDialogBox)
     {
-        // Hide dialog-box as long as we have text left
-        // FIXME: Actually wait for the animations to finish!
-        m_ActiveDialogBox->setHidden(m_ActiveSubtitleBox && m_ActiveSubtitleBox->hasText());
+        m_ActiveDialogBox->setHidden(!m_ActiveSubtitleBox->isHidden());
 
         if (m_ActiveDialogBox->getChoiceTaken() != -1)
         {
@@ -182,6 +199,9 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
 bool DialogManager::performChoice(size_t choice)
 {
     assert(choice < m_Interaction.optionsSorted.size());
+
+    // Hide the options box
+    endDialog();
 
     // Get actual selected info-object
     Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.infos[m_Interaction.optionsSorted[choice].second]);
@@ -245,5 +265,16 @@ void DialogManager::init()
     // Add subtitle box (Hidden if there is nothing to display)
     m_ActiveSubtitleBox = new UI::SubtitleBox();
     m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
+    m_ActiveSubtitleBox->setHidden(true);
 }
 
+void DialogManager::displaySubtitle(const std::string& subtitle, const std::string& self)
+{
+    m_ActiveSubtitleBox->setHidden(false);
+    m_ActiveSubtitleBox->setText(self, subtitle);
+}
+
+void DialogManager::stopDisplaySubtitle()
+{
+    m_ActiveSubtitleBox->setHidden(true);
+}

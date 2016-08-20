@@ -2,6 +2,7 @@
 
 #include <handle/HandleDef.h>
 #include <engine/Waynet.h>
+#include <list>
 #include "../LogicDef.h"
 
 namespace Logic
@@ -28,6 +29,8 @@ namespace Logic
          */
         struct EventMessage
         {
+            typedef const void* MessageIdentifier;
+
             EventMessage()
             {
                 subType = 0;
@@ -83,6 +86,11 @@ namespace Logic
              * Whether this message should not block further execution of the message-queue
              */
             bool isOverlay;
+
+            /**
+             * External callbacks to trigger if this message gets processed. Must also store the waiting entity.
+             */
+            std::list<std::pair<Handle::EntityHandle, std::function<void(EventMessage*)>>> onMessageDone;
         };
 
         struct NpcMessage : public EventMessage
@@ -334,9 +342,10 @@ namespace Logic
 
         struct ConversationMessage : public NpcMessage
         {
+            // These need to be compatible with scripts
             enum ConversationSubType
             {
-                ST_PlayAniSound,
+                ST_PlayAniSound = 0,
                 ST_PlayAni,
                 ST_PlaySound,
                 ST_LookAt,
@@ -368,6 +377,7 @@ namespace Logic
             ConversationMessage()
             {
                 messageType = EventMessageType::Conversation;
+                internInProgress = false;
             }
 
             /**
@@ -399,6 +409,16 @@ namespace Logic
              * Animation name to be used. If empty, index will be checked.
              */
             std::string animation;
+
+            /**
+             * Something to identify whatever we are waiting for at ST_WaitTillEnd
+             */
+            MessageIdentifier waitIdentifier;
+
+            /**
+             * Whether this is currently in progress. Set by the PlayerController.
+             */
+            bool internInProgress;
         };
 
         struct MagicMessage : public NpcMessage

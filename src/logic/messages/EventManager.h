@@ -43,6 +43,23 @@ namespace Logic
          */
         bool isEmpty(){ return m_EventQueue.empty(); }
 
+        /**
+         * Searches the messages for one that is a conversation message and has the NPC with the entity "other" as target
+         * @param other NPC-Entity to search for
+         * @return Pointer to the first non-overlay message before the conv-message, if found. If not, nullptr. DO NOT STORE THIS!
+         */
+        EventMessages::EventMessage* getTalkingWithMessage(Handle::EntityHandle other);
+
+        /**
+         * Triggers an event for the given identifier
+         */
+        void triggerWaitEvent(EventMessages::EventMessage::MessageIdentifier identifier);
+
+        /**
+         * Blocks the event-queue until the given event was processed. Can be from another NPC!
+         * @param other Message to wait for
+         */
+        void waitForMessage(EventMessages::EventMessage* other);
     protected:
 
         /**
@@ -71,5 +88,10 @@ namespace Logic
          * World this is in
          */
         World::WorldInstance& m_World;
+
+        /**
+         * List of message we are currently waiting for. Used to clean up should this object get destroyed
+         */
+        std::list<EventMessages::EventMessage*> m_WaitingFor;
     };
 }

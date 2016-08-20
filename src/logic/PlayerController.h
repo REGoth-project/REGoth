@@ -136,6 +136,16 @@ namespace Logic
         void attackLeft();
         void attackRight();
 
+        /**
+         * @return True, if this is the currently controlled charakter
+         */
+        bool isPlayerControlled();
+
+        /**
+         * Starts a random dialog-gesture
+         */
+        void startDialogAnimation();
+
     protected:
 
         /**

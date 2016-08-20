@@ -50,6 +50,18 @@ namespace Logic
          */
         void endDialog();
 
+        /**
+         * Displays a subtitle text
+         * @param subtitle Text to display
+         * @param self Name of the person saying that line
+         */
+        void displaySubtitle(const std::string& subtitle, const std::string& self);
+
+        /**
+         * Stops displaying whatever subtitle there currently is
+         */
+        void stopDisplaySubtitle();
+
     protected:
 
         /**

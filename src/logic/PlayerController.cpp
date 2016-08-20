@@ -13,6 +13,8 @@
 #include <entry/input.h>
 #include <components/VobClasses.h>
 #include "visuals/ModelVisual.h"
+#include <engine/BaseEngine.h>
+#include <stdlib.h>
 
 using namespace Logic;
 
@@ -33,6 +35,14 @@ namespace BodyNodes
     const char* NPC_NODE_TORSO		= "ZS_TORSO";
 }
 
+#define SINGLE_ACTION_KEY(key, fn) { \
+    static bool last = false; \
+    if(inputGetKeyState(key) && !last)\
+        last = true; \
+    else if(!inputGetKeyState(key) && last){\
+        last = false;\
+        fn();\
+    } }
 
 PlayerController::PlayerController(World::WorldInstance& world,
                                           Handle::EntityHandle entity,
@@ -127,15 +137,16 @@ void PlayerController::teleportToWaypoint(size_t wp)
 {
     m_AIState.closestWaypoint = wp;
 
-    Math::Matrix transform = Math::Matrix::CreateLookAt(m_World.getWaynet().waypoints[wp].position,
+    /*Math::Matrix transform = Math::Matrix::CreateLookAt(m_World.getWaynet().waypoints[wp].position,
                                                         m_World.getWaynet().waypoints[wp].position +
                                                                 m_World.getWaynet().waypoints[wp].direction,
-                                                         Math::float3(0, 1, 0)).Invert();
+                                                         Math::float3(0, 1, 0)).Invert();*/
 
-    m_MoveState.direction = m_World.getWaynet().waypoints[wp].direction;
     m_MoveState.position = m_World.getWaynet().waypoints[wp].position;
 
-    setEntityTransform(transform);
+    setDirection(m_World.getWaynet().waypoints[wp].direction);
+
+    // setEntityTransform(transform);
 
     placeOnGround();
 
@@ -289,6 +300,15 @@ void PlayerController::onDebugDraw()
             ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
         }
     }*/
+
+    if(isPlayerControlled())
+    {
+        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
+        Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
+
+        bgfx::dbgTextPrintf(0, 6, 0x0f, "Level: %d", scriptnpc.level);
+        bgfx::dbgTextPrintf(0, 7, 0x0f, "XP   : %d", scriptnpc.exp);
+    }
 }
 
 void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
@@ -527,14 +547,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     // FIXME: Temporary test-code
 	static bool lastDraw = false;
 
-#define SINGLE_ACTION_KEY(key, fn) { \
-    static bool last = false; \
-    if(inputGetKeyState(key) && !last)\
-        last = true; \
-    else if(!inputGetKeyState(key) && last){\
-        last = false;\
-        fn();\
-    } }
+
 
     SINGLE_ACTION_KEY(entry::Key::KeyK, [&](){
         // Let all near NPCs draw their weapon
@@ -654,27 +667,34 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
 	{
+        static std::string lastMovementAni = "";
 		if(inputGetKeyState(entry::Key::KeyA))
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
 		}
 		else if(inputGetKeyState(entry::Key::KeyD))
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
 		}
 		else if(inputGetKeyState(entry::Key::KeyW))
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::Run);
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
 		}
 		else if(inputGetKeyState(entry::Key::KeyS))
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
 		}
 		else if(inputGetKeyState(entry::Key::KeyQ))
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
 		}
-		else {
+		else if(getModelVisual()->getAnimationHandler().getActiveAnimationPtr()
+                && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni){
 			model->setAnimation(ModelVisual::Idle);
 		}
 	}
@@ -748,10 +768,11 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     // TODO: HACK, take this out!
     if(inputGetKeyState(entry::Key::Space))
-        deltaTime *= 4.0f;
-
-    if(inputGetKeyState(entry::Key::KeyB))
-        deltaTime *= 16.0f;
+        getModelVisual()->getAnimationHandler().setSpeedMultiplier(4);
+    else if(inputGetKeyState(entry::Key::KeyB))
+        getModelVisual()->getAnimationHandler().setSpeedMultiplier(8);
+    else
+        getModelVisual()->getAnimationHandler().setSpeedMultiplier(1);
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
@@ -984,6 +1005,65 @@ PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handl
 bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& message,
                                               Handle::EntityHandle sourceVob)
 {
+    switch(static_cast<EventMessages::ConversationMessage::ConversationSubType>(message.subType))
+    {
+
+        case EventMessages::ConversationMessage::ST_PlayAniSound:break;
+        case EventMessages::ConversationMessage::ST_PlayAni:break;
+        case EventMessages::ConversationMessage::ST_PlaySound:break;
+        case EventMessages::ConversationMessage::ST_LookAt:break;
+
+        case EventMessages::ConversationMessage::ST_Output:
+        {
+            m_World.getDialogManager().displaySubtitle(message.text, message.name);
+
+            // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
+            if(!message.internInProgress)
+            {
+                // Don't let the routine overwrite our animations
+                setDailyRoutine({});
+
+                // Play the random dialog gesture
+                startDialogAnimation();
+
+                message.internInProgress = true;
+            }
+
+
+            bool done = false;
+            SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
+                done = true;
+                m_World.getDialogManager().stopDisplaySubtitle();
+            });
+
+            return done;
+        }
+            break;
+
+        case EventMessages::ConversationMessage::ST_OutputSVM:
+            break;
+
+        case EventMessages::ConversationMessage::ST_Cutscene:break;
+        case EventMessages::ConversationMessage::ST_WaitTillEnd:break;
+        case EventMessages::ConversationMessage::ST_Ask:break;
+        case EventMessages::ConversationMessage::ST_WaitForQuestion:break;
+        case EventMessages::ConversationMessage::ST_StopLookAt:break;
+        case EventMessages::ConversationMessage::ST_StopPointAt:break;
+        case EventMessages::ConversationMessage::ST_PointAt:break;
+        case EventMessages::ConversationMessage::ST_QuickLook:break;
+        case EventMessages::ConversationMessage::ST_PlayAni_NoOverlay:break;
+        case EventMessages::ConversationMessage::ST_PlayAni_Face:break;
+        case EventMessages::ConversationMessage::ST_ProcessInfos:break;
+        case EventMessages::ConversationMessage::ST_StopProcessInfos:break;
+        case EventMessages::ConversationMessage::ST_OutputSVM_Overlay:break;
+        case EventMessages::ConversationMessage::ST_SndPlay:break;
+        case EventMessages::ConversationMessage::ST_SndPlay3d:break;
+        case EventMessages::ConversationMessage::ST_PrintScreen:break;
+        case EventMessages::ConversationMessage::ST_StartFx:break;
+        case EventMessages::ConversationMessage::ST_StopFx:break;
+        case EventMessages::ConversationMessage::ST_ConvMax:break;
+    }
+
     return false;
 }
 
@@ -1000,4 +1080,25 @@ void PlayerController::setDirection(const Math::float3& direction)
     setEntityTransform(Math::Matrix::CreateLookAt(m_MoveState.position,
                                                   m_MoveState.position + direction,
                                                   Math::float3(0, 1, 0)).Invert());
+}
+
+bool PlayerController::isPlayerControlled()
+{
+    return m_World.getScriptEngine().getPlayerEntity() == m_Entity;
+}
+
+void PlayerController::startDialogAnimation()
+{
+    // TODO: Check for: Empty hands, no weapon, not sitting
+    if(!getModelVisual())
+        return;
+
+    const int NUM_DIALOG_ANIMATIONS = 20; // This is hardcoded in the game
+    size_t num = (rand() % NUM_DIALOG_ANIMATIONS) + 1;
+
+    std::string ns = std::to_string(num);
+    if(ns.size() == 1)
+        ns = "0" + ns;
+
+    getModelVisual()->setAnimation("T_DIALOGGESTURE_" + ns, false);
 }

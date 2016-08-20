@@ -300,13 +300,13 @@ void ModelVisual::setAnimation(const std::string& anim, bool loop)
 }
 
 
-void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
+void ModelVisual::setAnimation(ModelVisual::EModelAnimType type, bool loop)
 {
 	const char* str = ANIMATION_NAMES[type];
 
 	if(getAnimationHandler().hasAnimation(str))
 	{
-		setAnimation(str, true); // Loop
+		setAnimation(str, loop);
 	}
 }
 
