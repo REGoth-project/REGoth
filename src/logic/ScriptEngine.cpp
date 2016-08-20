@@ -9,6 +9,7 @@
 #include <components/VobClasses.h>
 #include <engine/World.h>
 #include <engine/GameEngine.h>
+#include <ui/PrintScreenMessages.h>
 
 using namespace Logic;
 
@@ -38,7 +39,7 @@ bool ScriptEngine::loadDAT(const std::string& file)
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
     Logic::ScriptExternals::registerStdLib(*m_pVM, verbose);
     m_pVM->getGameState().registerExternals();
-    Logic::ScriptExternals::registerEngineExternals(m_World.getEngine(), m_pVM, verbose);
+    Logic::ScriptExternals::registerEngineExternals(m_World, m_pVM, verbose);
     return false;
 }
 
@@ -128,6 +129,8 @@ void ScriptEngine::initForWorld(const std::string& world)
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
     ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
     ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onItemInserted(item, npc); };
+    ext.log_addentry = [this](std::string topic, std::string entry){ onLogEntryAdded(topic, entry); };
+
     m_pVM->getGameState().setGameExternals(ext);
 
     // FIXME: Call the startup-one only on a fresh load of the game
@@ -281,6 +284,12 @@ std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 
     }
 
     return outSet;
+}
+
+void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& entry)
+{
+    m_World.getPrintScreenManager().printMessage("Topic: " + topic);
+    m_World.getPrintScreenManager().printMessage(entry);
 }
 
 

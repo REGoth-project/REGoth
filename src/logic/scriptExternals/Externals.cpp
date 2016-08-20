@@ -9,7 +9,7 @@
 #include <components/VobClasses.h>
 #include <engine/GameEngine.h>
 #include <logic/PlayerController.h>
-
+#include <ui/PrintScreenMessages.h>
 
 
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
@@ -18,8 +18,11 @@ void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool ver
     Daedalus::registerGothicEngineClasses(vm);
 }
 
-void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose)
+void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose)
 {
+    Engine::BaseEngine* engine = world.getEngine();
+    World::WorldInstance* pWorld = &world;
+
     // TODO: Refractor
     auto getNPCByInstance = [vm, engine](size_t instance)
     {
@@ -352,7 +355,35 @@ void ::Logic::ScriptExternals::registerEngineExternals(Engine::BaseEngine* engin
         vm.setReturn(0);
     });*/
 
+    vm->registerExternalFunction("printscreen", [=](Daedalus::DaedalusVM& vm){
+        int32_t timesec = vm.popDataValue(); if(verbose) LogInfo() << "timesec: " << timesec;
+        std::string font = vm.popString(); if(verbose) LogInfo() << "font: " << font;
+        int32_t posy = vm.popDataValue(); if(verbose) LogInfo() << "posy: " << posy;
+        int32_t posx = vm.popDataValue(); if(verbose) LogInfo() << "posx: " << posx;
+        std::string msg = vm.popString(); if(verbose) LogInfo() << "msg: " << msg;
+        int32_t dialognr = vm.popDataValue(); if(verbose) LogInfo() << "dialognr: " << dialognr;
 
+        pWorld->getPrintScreenManager().printMessageTimed(posx / 100.0f,
+                                                        posy / 100.0f,
+                                                        msg,
+                                                        static_cast<double>(timesec));
+    });
+
+    vm->registerExternalFunction("npc_isplayer", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_player;
+        uint32_t player = vm.popVar(arr_player); if(verbose) LogInfo() << "player: " << player;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(player);
+
+        if(npc.world)
+        {
+            int r = npc.world->getScriptEngine().getPlayerEntity() == npc.entity;
+            vm.setReturn(r);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
 }
 
 

@@ -113,6 +113,11 @@ namespace Logic
         void onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
 
         /**
+         * Called when a log-entry was inserted
+         */
+        void onLogEntryAdded(const std::string& topic, const std::string& entry);
+
+        /**
          * Script-VM
          */
         Daedalus::DaedalusVM* m_pVM;

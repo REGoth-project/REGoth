@@ -4,6 +4,10 @@ namespace Engine
 {
     class BaseEngine;
 }
+namespace World
+{
+    class WorldInstance;
+};
 
 namespace Daedalus
 {
@@ -22,6 +26,6 @@ namespace Logic
         /**
          * Registers our externals
          */
-        void registerEngineExternals(Engine::BaseEngine* engine, Daedalus::DaedalusVM* vm, bool verbose = false);
+        void registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose = false);
     }
 }
