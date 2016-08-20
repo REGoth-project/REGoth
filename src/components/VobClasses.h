@@ -116,4 +116,5 @@ namespace VobTypes
      * @return The engine entity handle of the given script instance of an npc
      */
     Handle::EntityHandle getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
+    NpcVobInformation getVobFromScriptHandle(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
 }

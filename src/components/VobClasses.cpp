@@ -92,7 +92,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.setWorld(*vob.world);
     anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
-	// TODO: Move to other place
+	// TODO: Move to other place (MDS)
 	// Load all default animations
 	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
 	{
@@ -100,7 +100,16 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
 
 		anim.m_AnimHandler.addAnimation(libName + "-" + name + ".MAN");
 	}
-  
+
+    for(int i=0;i<20;i++)
+    {
+        std::string ns = std::to_string(i+1);
+        if(ns.size() == 1)
+            ns = "0" + ns;
+
+        anim.m_AnimHandler.addAnimation(libName + "-" + "T_DIALOGGESTURE_" + ns + ".MAN");
+    }
+
     /*anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
@@ -187,6 +196,13 @@ Daedalus::GameState::ItemHandle VobTypes::NPC_DrawMeleeWeapon(VobTypes::NpcVobIn
 void ::VobTypes::NPC_UndrawWeapon(VobTypes::NpcVobInformation &npc)
 {
     npc.playerController->undrawWeapon();
+}
+
+VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
+{
+    Handle::EntityHandle e = getEntityFromScriptInstance(world, npc);
+
+    return VobTypes::asNpcVob(world, e);
 }
 
 

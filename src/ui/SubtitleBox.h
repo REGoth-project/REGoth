@@ -19,12 +19,8 @@ namespace UI
         /**
          * Sets the text to be displayed inside the box
          */
-        void addText(const std::string& speaker, const std::string& text);
+        void setText(const std::string& speaker, const std::string& text);
 
-        /**
-         * Whether this subtitle-box still has text left
-         */
-        bool hasText(){ return !m_Text.empty(); }
     protected:
 
         struct Text
@@ -38,9 +34,7 @@ namespace UI
              * Text of the person speaking
              */
             std::string speaker;
-        };
-
-        std::list<Text> m_Text;
+        }m_Text;
 
         /**
          * Current state of the scroll-area

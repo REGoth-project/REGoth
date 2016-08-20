@@ -30,6 +30,7 @@ namespace UI
          */
         int getChoiceTaken(){ return m_ChoiceTaken; }
 
+
     private:
 
         /**

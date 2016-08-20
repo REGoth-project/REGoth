@@ -20,45 +20,28 @@ UI::SubtitleBox::~SubtitleBox()
 
 void UI::SubtitleBox::update(double dt, entry::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     View::update(dt, mstate, config);
 
-    if(!m_Text.empty())
-    {
-        // Draw our choices
-        const int height = config.state.viewHeight / 10;
-        const int halfwidth = config.state.viewHeight / 2;
-        imguiBeginScrollArea(m_Text.front().speaker.c_str(), (config.state.viewWidth / 2) - halfwidth, 10, halfwidth * 2, height,
-                             &m_ScrollArea);
 
-        imguiLabel(m_Text.front().text.c_str());
+    // Draw our choices
+    const int height = config.state.viewHeight / 10;
+    const int halfwidth = config.state.viewHeight / 2;
+    imguiBeginScrollArea(m_Text.speaker.c_str(), (config.state.viewWidth / 2) - halfwidth, 10, halfwidth * 2, height,
+                         &m_ScrollArea);
 
-        imguiEndScrollArea();
-    }
+    imguiLabel(m_Text.text.c_str());
 
-#define SINGLE_ACTION_KEY(key, fn) { \
-    static bool last = false; \
-    if(inputGetKeyState(key) && !last)\
-        last = true; \
-    else if(!inputGetKeyState(key) && last){\
-        last = false;\
-        fn();\
-    } }
+    imguiEndScrollArea();
 
-    // FIXME: Actually wait for the text and animation to finish
-    // Go to next text if Return was pressed
-    SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
-        if(!m_Text.empty())
-            m_Text.pop_front();
-    });
+
+
 }
 
-void UI::SubtitleBox::addText(const std::string& speaker, const std::string& text)
+void UI::SubtitleBox::setText(const std::string& speaker, const std::string& text)
 {
-    Text t;
-    t.text = text;
-    t.speaker = speaker;
-    m_Text.push_back(t);
+    m_Text.text = text;
+    m_Text.speaker = speaker;
 }
