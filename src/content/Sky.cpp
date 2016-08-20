@@ -70,7 +70,7 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
 
 void Sky::interpolate(double deltaTime)
 {
-    deltaTime *= 1000.0f;
+    deltaTime *= 100.0f;
 
     if(inputGetKeyState(entry::Key::KeyO))
         deltaTime *= 10.0;
