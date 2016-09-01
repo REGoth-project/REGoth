@@ -2,6 +2,11 @@
 #include <string>
 #include <functional>
 
+// HACK: Work around windows.h messing this up with its define
+#ifdef DialogBox
+#undef DialogBox
+#endif
+
 namespace UI
 {
     class DialogBox : public View

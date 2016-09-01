@@ -112,12 +112,12 @@ namespace Content
          * @param near target for nearplane
          * @param far target for farplane
          */
-        void getFogValues(const Math::float3& cameraWorld, float& near, float& far, Math::float3& fogColor);
+        void getFogValues(const Math::float3& cameraWorld, float& nearFog, float& farFog, Math::float3& fogColor);
 
         /**
          * Sets the farplane, needed to do the fog-calculation
          */
-        void setFarPlane(float far){ m_FarPlane = far; }
+        void setFarPlane(float farPlane){ m_FarPlane = farPlane; }
     private:
 
         /**
