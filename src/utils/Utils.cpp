@@ -3,7 +3,7 @@
 #include <utils/logger.h>
 #include <algorithm>
 #include <cctype>
-
+#include <utils/split.h>
 
 
 void ::Utils::forEachFile(const std::string& directory, std::function<void(const std::string&,const std::string&,const std::string&)> fn, bool recursive )
@@ -69,41 +69,71 @@ bool Utils::fileExists(const std::string& file)
     return true;
 }
 
-std::string Utils::getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path)
+std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath)
 {
-    std::string result = root_directory + case_insensitive_path;
+    // Transform input path to lower
+    std::string pathLower = caseInsensitivePath;
+    std::transform(pathLower.begin(), pathLower.end(), pathLower.begin(), ::tolower);
 
-    // first check is case insensitive path isnt right
-    // if is, why should we do all of the work? :)
-    if(fileExists(root_directory + case_insensitive_path)){
-	return result;
-    }
+    // Split the input-path at /
+    std::vector<std::string> parts = Utils::split(pathLower, "/\\");
 
+    // Get a complete directory listing
+    auto getListing = [&](const std::string& directory){
 
+        std::vector<std::string> content;
 
-    std::list<std::string> file_paths = getFilesInDirectory(root_directory, "*");
-    std::string lowercasepath = root_directory + case_insensitive_path;
+        tinydir_dir dir;
+        if (tinydir_open(&dir, directory.c_str()) == -1)
+        {
+            tinydir_close(&dir);
+            return content;
+        }
 
-    for(char & character : lowercasepath){
-	character = std::tolower(character);
-    }
+        while (dir.has_next)
+        {
+            tinydir_file file;
+            if (tinydir_readfile(&dir, &file) == -1)
+            {
+                tinydir_close(&dir);
+                return content;
+            }
 
+            content.push_back(file.name);
 
+            tinydir_next(&dir);
+        }
 
+        tinydir_close(&dir);
+    };
 
-    for(std::list<std::string>::iterator file_iterator=file_paths.begin(); file_iterator!=file_paths.end(); file_iterator++)
+    // Get the case sensitive version for every part of the path
+    std::string result = caseInsensitivePath.front() == '/' ? "/." : "./.";
+    for(size_t i=0;i<parts.size();i++)
     {
-	std::string lowercasepath_candidate = *file_iterator;
-	for(char & character : lowercasepath_candidate){
-	    character = std::tolower(character);
-	}
-	if(lowercasepath == lowercasepath_candidate){
-	    result =  *file_iterator;
-	    break;
-	}
-    }
+        std::vector<std::string> listing = getListing(result);
 
+
+        bool found = false;
+        for(size_t j=0;j<listing.size();j++)
+        {
+            // Transform to lowercase
+            std::string lw = listing[j];
+            std::transform(lw.begin(), lw.end(), lw.begin(), ::tolower);
+
+            // Append the path in original casing
+            if(parts[i] == lw)
+            {
+                found = true;
+                result += "/" + listing[j];
+                break;
+            }
+        }
+
+        // Did not find anything?
+        if(!found)
+            return "";
+    }
 
     return result;
-
 }

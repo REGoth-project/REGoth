@@ -274,7 +274,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName)
 {
     // Default to the path G2 uses
-    std::string datFile = Utils::getCaseSensitivePath(m_pEngine->getEngineArgs().gameBaseDirectory,"/_work/data/Scripts/_compiled/GOTHIC.DAT");
+    std::string datFile = Utils::getCaseSensitivePath(getEngine()->getEngineArgs().gameBaseDirectory + "/_work/data/Scripts/_compiled/GOTHIC.DAT");
 
     // Check G2 variant
     if(Utils::fileExists(datFile))
@@ -282,20 +282,7 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
         m_ScriptEngine.loadDAT(datFile);
     } else
     {
-        // Check G1 variant
-        datFile = Utils::getCaseSensitivePath(m_pEngine->getEngineArgs().gameBaseDirectory,"/_work/DATA/scripts/_compiled/GOTHIC.DAT");
-        if(Utils::fileExists(datFile))
-        {
-            m_ScriptEngine.loadDAT(datFile);
-        } else
-        {
-            LogError() << "Failed to find GOTHIC.DAT!";
-
-#if !defined(WIN32) && !defined(_WIN32)
-            LogInfo() << "The path to the GOTHIC.DAT is case sensitive and must be exactly like this:" << std::endl
-                      << "   - /_work/DATA/scripts/_compiled/GOTHIC.DAT" ;
-#endif
-        }
+        LogError() << "Failed to find GOTHIC.DAT!";
     }
 
 	if(!worldName.empty())

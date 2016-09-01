@@ -71,10 +71,9 @@ namespace Utils
     
     /**
      * Returns a string with case sensitive path based on case insensitive version
-     * @param string game root directory
      * @param string file relative path
-     * @return str, full sensitive path 
+     * @return str, full sensitive path. Empty if path is invalid/could not be found
      */
-    std::string getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path);
+    std::string getCaseSensitivePath(const std::string& caseInsensitivePath);
     
 }

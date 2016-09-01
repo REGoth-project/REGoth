@@ -17,7 +17,8 @@
  * File containing the dialouges
  * // TODO: Be able to read this from VDF
  */
-const char* OU_FILE = "_work/DATA/scripts/content/CUTSCENE/OU.BIN";
+const char* OU_FILE = "_work/DATA/scripts/content/CUTSCENE/OU.BIN"; // German and international versions use different extensions (bin/dat)
+const char* OU_FILE_2 = "_work/DATA/scripts/content/CUTSCENE/OU.DAT";
 
 using namespace Logic;
 
@@ -265,7 +266,15 @@ void DialogManager::endDialog()
 
 void DialogManager::init()
 {
-    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE);
+    std::string ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE);
+
+    if(ou.empty())
+        ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE_2);
+
+    if(ou.empty())
+        LogWarn() << "Failed to read OU-file!";
+
+    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), ou);
 
     // Register externals
     auto onAIOutput = [&](Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg)
