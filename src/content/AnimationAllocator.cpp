@@ -3,6 +3,7 @@
 //
 
 #include "AnimationAllocator.h"
+#include <utils/logger.h>
 
 Animations::AnimationAllocator::AnimationAllocator(const VDFS::FileIndex *vdfidx)
 {
@@ -21,7 +22,12 @@ Handle::AnimationHandle Animations::AnimationAllocator::loadAnimationVDF(const V
     if (it != m_AnimationsByName.end())
         return (*it).second;
 
+	LogInfo() << "New animation: " << name;
+
     ZenLoad::zCModelAni zani(name, idx, 1.0f / 100.0f);
+
+	if(!zani.isValid())
+		return Handle::AnimationHandle::makeInvalidHandle();
 
     Handle::AnimationHandle h = m_Allocator.createObject();
     Animation& aniObject = m_Allocator.getElement(h);
