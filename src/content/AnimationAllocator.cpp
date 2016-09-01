@@ -22,7 +22,7 @@ Handle::AnimationHandle Animations::AnimationAllocator::loadAnimationVDF(const V
     if (it != m_AnimationsByName.end())
         return (*it).second;
 
-	LogInfo() << "New animation: " << name;
+	//LogInfo() << "New animation: " << name;
 
     ZenLoad::zCModelAni zani(name, idx, 1.0f / 100.0f);
 
