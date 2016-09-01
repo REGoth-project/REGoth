@@ -80,7 +80,7 @@ void AnimHandler::playAnimation(const std::string &animName)
     auto it = m_AnimationsByName.find(animName);
     if (it == m_AnimationsByName.end())
     {
-        LogError() << "Failed to find animation: " << animName;
+        //LogError() << "Failed to find animation: " << animName;
         m_ActiveAnimation.invalidate();
     }
     else
