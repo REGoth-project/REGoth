@@ -65,6 +65,10 @@ set(BUILD_BULLET2_DEMOS OFF) # No samples
 set(BUILD_OPENGL3_DEMOS OFF) # No samples
 set(BUILD_UNIT_TESTS OFF) # No tests
 set(BUILD_CPU_DEMOS OFF) # No samples
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+
 
 add_subdirectory(lib/bullet3)
 include_directories(lib/bullet3/src)
