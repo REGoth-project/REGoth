@@ -328,6 +328,10 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string s = vm.popString();
         int32_t ch = vm.popDataValue();
 
+		// Remove some really annoying debug-output
+		if(s == "### (0) ### -> B_Scale")
+			return;
+
         LogInfo() << "DEBUG: " << s;
     });
 
