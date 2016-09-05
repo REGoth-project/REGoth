@@ -62,7 +62,7 @@ void EventManager::sendMessageToHost(EventMessages::EventMessage& message, Handl
 void EventManager::processMessageQueue()
 {
     // Remove deleted messages from last time
-    for(auto it = m_EventQueue.begin();it != m_EventQueue.end(); it++)
+    for(auto it = m_EventQueue.begin();it != m_EventQueue.end();)
     {
         if((*it)->deleted)
         {
@@ -74,7 +74,11 @@ void EventManager::processMessageQueue()
 
             delete (*it);
             it = m_EventQueue.erase(it);
-        }
+		}
+		else
+		{
+			it++;
+		}
     }
 
     if(m_EventQueue.empty())
