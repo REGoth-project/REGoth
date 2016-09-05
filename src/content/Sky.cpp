@@ -24,6 +24,7 @@ Sky::Sky(World::WorldInstance& world) :
 {
     m_MasterState.time = 0.0f;
     m_FarPlane = FLT_MAX;
+	m_MasterTime = 0.0f;
     fillSkyStates();
 }
 
