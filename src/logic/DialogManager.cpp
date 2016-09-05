@@ -17,8 +17,8 @@
  * File containing the dialouges
  * // TODO: Be able to read this from VDF
  */
-const char* OU_FILE = "_work/DATA/scripts/content/CUTSCENE/OU.BIN"; // German and international versions use different extensions (bin/dat)
-const char* OU_FILE_2 = "_work/DATA/scripts/content/CUTSCENE/OU.DAT";
+const char* OU_FILE = "/_work/DATA/scripts/content/CUTSCENE/OU.BIN"; // German and international versions use different extensions (bin/dat)
+const char* OU_FILE_2 = "/_work/DATA/scripts/content/CUTSCENE/OU.DAT";
 
 using namespace Logic;
 
