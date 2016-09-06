@@ -4,7 +4,7 @@
 
 #include <utils/logger.h>
 #include "AudioEngine.h"
-#include <adpcm/codec.h>
+#include <adpcm/adpcm-lib.h>
 
 using namespace Content;
 
@@ -40,7 +40,12 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     AudioFile& a = m_Allocator.getElement(h);
 
     // Decode the ADPCM compressed audio gothic uses
-    static bool s_initDone = false;
+    
+    //
+    // ###### This is broken! Decode using new lib, load samples directly into sfml (44100 khz, 1 channel)
+    //
+    
+    /*static bool s_initDone = false;
     if(!s_initDone)
     {
         initDecode68000();
@@ -56,7 +61,7 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     {      
         m_Allocator.removeObject(h);
         return Handle::AudioHandle::makeInvalidHandle();
-    }
+    }*/
 
     m_SoundMap[name] = h;
 
