@@ -37,6 +37,7 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    m_AudioEngine.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
 

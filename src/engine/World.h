@@ -16,6 +16,7 @@
 #include <content/AnimationAllocator.h>
 #include <content/Sky.h>
 #include <logic/DialogManager.h>
+#include <content/AudioEngine.h>
 
 namespace ZenLoad
 {
@@ -202,6 +203,10 @@ namespace World
 		{
 			return m_DialogManager;
 		}
+		Content::AudioEngine& getAudioEngine()
+		{
+			return m_AudioEngine;
+		}
 
 		/**
 		 * This worlds print-screen manager
@@ -242,6 +247,11 @@ namespace World
 		 * This worlds physics system
 		 */
 		Physics::PhysicsSystem m_PhysicsSystem;
+
+		/**
+		 * Audio-Engine of this world
+		 */
+		Content::AudioEngine m_AudioEngine;
 
 		/**
 		 * Sky of this world

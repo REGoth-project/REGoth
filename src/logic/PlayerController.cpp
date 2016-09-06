@@ -15,6 +15,7 @@
 #include "visuals/ModelVisual.h"
 #include <engine/BaseEngine.h>
 #include <stdlib.h>
+#include <content/AudioEngine.h>
 
 using namespace Logic;
 
@@ -1013,6 +1014,9 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
                 // Play the random dialog gesture
                 startDialogAnimation();
+
+                // Play sound of this conv-message
+                m_World.getAudioEngine().playSound(message.name);
 
                 message.internInProgress = true;
             }
