@@ -71,6 +71,10 @@ bool Utils::fileExists(const std::string& file)
 
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath)
 {
+#if defined(WIN32) || defined(_WIN32)
+	return caseInsensitivePath;
+#else
+
     // Transform input path to lower
     std::string pathLower = caseInsensitivePath;
     std::transform(pathLower.begin(), pathLower.end(), pathLower.begin(), ::tolower);
@@ -136,4 +140,5 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath)
     }
 
     return result;
+#endif
 }
