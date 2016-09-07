@@ -374,8 +374,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("npc_isplayer", [=](Daedalus::DaedalusVM& vm){
-        uint32_t arr_player;
-        uint32_t player = vm.popVar(arr_player); if(verbose) LogInfo() << "player: " << player;
+        uint32_t player = vm.popVar(); if(verbose) LogInfo() << "player: " << player;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(player);
 
@@ -388,6 +387,48 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             vm.setReturn(0);
         }
     });
+
+    vm->registerExternalFunction("npc_canseenpc", [=](Daedalus::DaedalusVM& vm){
+        uint32_t other = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation vnpc1 = getNPCByInstance(self);
+        VobTypes::NpcVobInformation vnpc2 = getNPCByInstance(other);
+
+        if(vnpc1.isValid() && vnpc2.isValid())
+            vm.setReturn(vnpc1.playerController->canSee(vnpc2.entity) ? 1 : 0);
+        else
+            vm.setReturn(0);
+
+    });
+
+    vm->registerExternalFunction("npc_canseenpcfreelos", [=](Daedalus::DaedalusVM& vm){
+        uint32_t other = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation vnpc1 = getNPCByInstance(self);
+        VobTypes::NpcVobInformation vnpc2 = getNPCByInstance(other);
+
+        if(vnpc1.isValid() && vnpc2.isValid())
+            vm.setReturn(vnpc1.playerController->canSee(vnpc2.entity, false) ? 1 : 0);
+        else
+            vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("npc_canseeitem", [=](Daedalus::DaedalusVM& vm){
+
+        uint32_t other = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation vnpc1 = getNPCByInstance(self);
+        Vob::VobInformation vitem = getItemByInstance(other);
+
+        if(vnpc1.isValid() && vitem.isValid())
+            vm.setReturn(vnpc1.playerController->canSee(vitem.entity) ? 1 : 0);
+        else
+            vm.setReturn(0);
+    });
+
 }
 
 

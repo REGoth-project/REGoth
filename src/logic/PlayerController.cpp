@@ -965,7 +965,7 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
         case EventMessages::MovementMessage::ST_SetWalkMode:break;
         case EventMessages::MovementMessage::ST_WhirlAround:break;
         case EventMessages::MovementMessage::ST_Standup:break;
-        case EventMessages::MovementMessage::ST_CanSeeNpc:break;
+        case EventMessages::MovementMessage::ST_CanSeeNpc:break; // Unused
         case EventMessages::MovementMessage::ST_Strafe:break;
         case EventMessages::MovementMessage::ST_GotoFP:break;
         case EventMessages::MovementMessage::ST_Dodge:break;
@@ -1148,4 +1148,48 @@ void PlayerController::interrupt()
 {
     // TODO: More! Cancel all animations, etc
     undrawWeapon(true);
+}
+
+bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
+{
+    const float MAX_ANGLE = 0.5f * Math::PI; // 90 degrees
+
+    Components::PositionComponent& otherPos = m_World.getEntity<Components::PositionComponent>(entity);
+
+    // Trace from the top of our BBox (eyes)
+    Math::float3 start = getEntityTransform().Translation()
+                         + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
+
+    Math::float3 end = otherPos.m_WorldMatrix.Translation();
+
+    // Check senses_range first
+    float len2 = (end - start).length();
+
+    unsigned int sensesRange = static_cast<unsigned int >(getScriptInstance().senses_range);
+    if(static_cast<uint32_t>(len2) > sensesRange * sensesRange)
+        return false;
+
+    // Do the raytest to the other object
+    Physics::RayTestResult res =  m_World.getPhysicsSystem().raytrace(
+            start,
+            end,
+            Physics::CollisionShape::CT_WorldMesh); // FIXME: Should trace everything except the two objects in question!
+
+    if(!res.hasHit)
+    {
+        if(ignoreAngles)
+            return true;
+
+        // Check face-direction
+        return getAngleTo(end) <= MAX_ANGLE;
+    }
+
+    return false;
+}
+
+float PlayerController::getAngleTo(const Math::float3& pos)
+{
+    Math::float3 dir = (getEntityTransform().Translation() - pos).normalize();
+
+    return atan(m_MoveState.direction.dot(dir));
 }

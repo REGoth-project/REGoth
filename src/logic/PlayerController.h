@@ -158,6 +158,20 @@ namespace Logic
          */
         void interrupt();
 
+        /**
+         * Traces from this position to the position of the entity and checks if something is between them
+         * or if the entity is out of range
+         * @param ignoreAngles Usually, the direction the NPC is facing to is checked as well, this turns off the check
+         * @return whether this NPC can see the given entity
+         */
+        bool canSee(Handle::EntityHandle entity, bool ignoreAngles = false);
+
+        /**
+         * Checks the angle from the facing direction of the NPC to the given point
+         * @param pos Point to get the angle to from
+         * @return Angle between the forward direction of the npc and pos as radians, [0, pi]
+         */
+        float getAngleTo(const Math::float3& pos);
     protected:
 
         /**
