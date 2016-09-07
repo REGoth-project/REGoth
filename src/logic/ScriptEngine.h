@@ -61,6 +61,7 @@ namespace Logic
          */
         int32_t runFunction(const std::string& fname);
         int32_t runFunction(size_t addr);
+        int32_t runFunctionBySymIndex(size_t symIdx);
 
         /**
          * Returns the current script-gamestate

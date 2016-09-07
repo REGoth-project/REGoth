@@ -49,7 +49,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
                                           Handle::EntityHandle entity,
                                           Daedalus::GameState::NpcHandle scriptInstance)
         : Controller(world, entity),
-          m_Inventory(*world.getEngine(), world.getMyHandle(), scriptInstance)
+          m_Inventory(*world.getEngine(), world.getMyHandle(), scriptInstance),
+          m_AIStateMachine(world, entity)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
     m_RoutineState.routineActive = true;
@@ -73,6 +74,8 @@ void PlayerController::onUpdate(float deltaTime)
 {
     // This vob should react to messages
     getEM().processMessageQueue();
+
+    m_AIStateMachine.doAIState(deltaTime);
 
     ModelVisual* model = getModelVisual();
 
@@ -192,6 +195,9 @@ void PlayerController::rebuildRoute()
     m_MoveState.currentPathPerc = 0.0f;
     m_MoveState.currentRouteLength = World::Waynet::getPathLength(m_World.getWaynet(), m_MoveState.currentPath);
     m_MoveState.targetNode = 0;
+
+    // Update script-instance with target waypoint
+    getScriptInstance().wp = m_World.getWaynet().waypoints[m_AIState.targetWaypoint].name;
 }
 
 bool PlayerController::travelPath(float deltaTime)
@@ -438,12 +444,13 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
     return m_EquipmentState.activeWeapon;
 }
 
-void PlayerController::undrawWeapon()
+void PlayerController::undrawWeapon(bool force)
 {
     ModelVisual* model = getModelVisual();
 
     // TODO: Listen to ani-events for this!
     // TODO: Even do an animation for this!
+    // TODO: Implement force-flag
 
     // Clear hands
     model->setNodeVisual("", EModelNode::Lefthand);
@@ -982,6 +989,43 @@ bool PlayerController::EV_UseItem(EventMessages::UseItemMessage& message, Handle
 
 bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::EntityHandle sourceVob)
 {
+    switch(message.subType)
+    {
+        case EventMessages::StateMessage::EV_StartState:
+        {
+            if(!message.wpname.empty())
+            {
+                // Set wp of script instance
+                getScriptInstance().wp = message.wpname;
+            }
+
+            // Set up script instances. // TODO: Self is originally not set by gothic here! Why?
+            m_World.getScriptEngine().setInstance("SELF", getScriptInstance().instanceSymbol);
+            m_World.getScriptEngine().setInstance("OTHER", message.symOther);
+            m_World.getScriptEngine().setInstance("VICTIM", message.symVictim);
+
+            getEM().clear();
+
+            if(message.functionSymbol == 0)
+            {
+                // Start daily routine
+                m_AIStateMachine.startRoutineState();
+            }
+        }
+            break;
+
+        case EventMessages::StateMessage::EV_Wait:
+            message.waitTime -= static_cast<float>(m_World.getWorldInfo().lastFrameDeltaTime);
+            return message.waitTime < 0.0f;
+            break;
+
+        case EventMessages::StateMessage::EV_SetNpcsToState:break;
+        case EventMessages::StateMessage::EV_SetTime:break;
+        case EventMessages::StateMessage::EV_ApplyTimedOverlay:break;
+        case EventMessages::StateMessage::EV_StateMax:break;
+        default:
+            break;
+    }
     return false;
 }
 
@@ -1098,4 +1142,10 @@ void PlayerController::startDialogAnimation()
 Daedalus::GEngineClasses::C_Npc& PlayerController::getScriptInstance()
 {
     return m_World.getScriptEngine().getGameState().getNpc(getScriptHandle());
+}
+
+void PlayerController::interrupt()
+{
+    // TODO: More! Cancel all animations, etc
+    undrawWeapon(true);
 }

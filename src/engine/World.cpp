@@ -323,6 +323,9 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
+    // Set frametime in worldinfo
+    m_WorldInfo.lastFrameDeltaTime = deltaTime;
+
     // Update physics
     m_PhysicsSystem.update(deltaTime);
 

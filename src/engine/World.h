@@ -68,6 +68,20 @@ namespace World
     {
     public:
 
+		/**
+		 * Information about the state of the world
+		 */
+		struct WorldInfo
+		{
+			WorldInfo()
+			{
+				lastFrameDeltaTime = 0.0f;
+			}
+
+			// Last deltatime-value we have gotten here
+			double lastFrameDeltaTime;
+		};
+
 		WorldInstance();
 
 		/**
@@ -212,6 +226,11 @@ namespace World
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+
+		/**
+		 * @return Information about the state of the world
+		 */
+		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
 	protected:
 
 		/**
@@ -290,5 +309,10 @@ namespace World
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages* m_PrintScreenMessageView;
+
+		/**
+		 * Information about the state of the world
+		 */
+		WorldInfo m_WorldInfo;
     };
 }

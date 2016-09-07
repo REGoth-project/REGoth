@@ -60,6 +60,11 @@ namespace Logic
          * @param other Message to wait for
          */
         void waitForMessage(EventMessages::EventMessage* other);
+
+        /**
+         * Removes all pending messages
+         */
+        void clear();
     protected:
 
         /**
