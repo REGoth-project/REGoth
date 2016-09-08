@@ -76,19 +76,33 @@ set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geomet
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
         "src/components/*.cpp"
+        "src/components/*.h"
         "src/engine/*.cpp"
+        "src/engine/*.h"
         "src/handle/*.cpp"
+        "src/handle/*.h"
         "src/memory/*.cpp"
+        "src/memory/*.h"
         "src/content/*.cpp"
+        "src/content/*.h"
         "src/render/*.cpp"
+        "src/render/*.h"
         "src/utils/*.cpp"
+        "src/utils/*.h"
         "src/math/*.cpp"
+        "src/math/*.h"
         "src/ui/*.cpp"
+        "src/ui/*.h"
         "src/logic/*.cpp"
+        "src/logic/*.h"
         "src/physics/*.cpp"
+        "src/physics/*.h"
         "src/logic/visuals/*.cpp"
+        "src/logic/visuals/*.h"
         "src/logic/scriptExternals/*.cpp"
+        "src/logic/scriptExternals/*.h"
         "src/logic/messages/*.cpp"
+        "src/logic/messages/*.h"
         )
 
 add_library(engine STATIC ${ENGINE_SRC})
