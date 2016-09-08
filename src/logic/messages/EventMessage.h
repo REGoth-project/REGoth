@@ -304,7 +304,36 @@ namespace Logic
                 messageType = EventMessageType::State;
             }
 
-            // TODO: Implement
+            /**
+             * Symbol to the Setupfunction for this state (ZS_...)
+             */
+            size_t functionSymbol;
+
+            /**
+             * Whether the old state should be ended properly (true), or just interrupted (false)
+             */
+            bool endOldState;
+
+            /**
+             * Symbols for other and victim
+             */
+            size_t symOther;
+            size_t symVictim;
+
+            /**
+             * Whether this belongs to the daily routine
+             */
+            bool isRoutineState;
+
+            /**
+             * If this is a wait-message, this is how long we should wait
+             */
+            float waitTime;
+
+            /**
+             * Waypoint name to got to, in case the state needs that
+             */
+            std::string wpname;
         };
 
         class ManipulateMessage : public NpcMessage

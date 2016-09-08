@@ -37,6 +37,7 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    m_AudioEngine.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
 
@@ -322,6 +323,9 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
+    // Set frametime in worldinfo
+    m_WorldInfo.lastFrameDeltaTime = deltaTime;
+
     // Update physics
     m_PhysicsSystem.update(deltaTime);
 

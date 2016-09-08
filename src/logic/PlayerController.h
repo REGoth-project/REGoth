@@ -5,6 +5,7 @@
 #include "Controller.h"
 #include "Inventory.h"
 #include "LogicDef.h"
+#include "NpcScriptState.h"
 
 namespace Logic
 {
@@ -108,8 +109,9 @@ namespace Logic
 
         /**
          * Puts back any weapon that was currently drawn
+         * @param force If true, no animation will be played
          */
-        void undrawWeapon();
+        void undrawWeapon(bool force = false);
 
         /**
          * @return The ModelVisual of the underlaying vob
@@ -150,6 +152,11 @@ namespace Logic
          * Starts a random dialog-gesture
          */
         void startDialogAnimation();
+
+        /**
+         * Lets this NPC stop everything that it is currently doing and goes to the usual "just standing"-mode
+         */
+        void interrupt();
 
     protected:
 
@@ -273,5 +280,10 @@ namespace Logic
          * This players inventory
          */
         Inventory m_Inventory;
+
+        /**
+         * State manager
+         */
+        NpcScriptState m_AIStateMachine;
     };
 }

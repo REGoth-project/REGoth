@@ -163,3 +163,11 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     }));
 
 }
+
+void EventManager::clear()
+{
+    for(EventMessages::EventMessage* ev : m_EventQueue)
+    {
+        ev->deleted = true;
+    }
+}

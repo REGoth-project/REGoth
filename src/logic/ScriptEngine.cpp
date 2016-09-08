@@ -84,6 +84,13 @@ int32_t ScriptEngine::runFunction(size_t addr)
     return ret;
 }
 
+int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
+{
+    return runFunction(getVM().getDATFile().getSymbolByIndex(symIdx).address);
+}
+
+
+
 void ScriptEngine::pushInt(int32_t v)
 {
     m_pVM->pushInt(v);

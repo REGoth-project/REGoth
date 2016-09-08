@@ -65,6 +65,10 @@ set(BUILD_BULLET2_DEMOS OFF) # No samples
 set(BUILD_OPENGL3_DEMOS OFF) # No samples
 set(BUILD_UNIT_TESTS OFF) # No tests
 set(BUILD_CPU_DEMOS OFF) # No samples
+set(GLFW_BUILD_EXAMPLES OFF)
+set(GLFW_BUILD_TESTS OFF)
+set(GLFW_BUILD_DOCS OFF)
+
 
 add_subdirectory(lib/bullet3)
 include_directories(lib/bullet3/src)
@@ -105,16 +109,24 @@ file(GLOB ENGINE_SRC
         "src/logic/messages/*.h"
         )
 
-add_library(engine STATIC ${ENGINE_SRC})
+add_library(engine STATIC ${ENGINE_SRC} src/content/AudioEngine.cpp src/content/AudioEngine.h)
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} glfw)
 
 # ------------------ Other ------------------
 
 include_directories(src)
+include_directories(lib)
 include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
+
 add_subdirectory(lib/glfw)
 include_directories(lib/glfw/include)
+
+add_subdirectory(lib/SFML)
+include_directories(lib/SFML/include)
+
+add_subdirectory(lib/adpcm)
+
 add_subdirectory(src/target)

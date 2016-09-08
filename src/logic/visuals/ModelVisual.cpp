@@ -663,3 +663,8 @@ void ModelVisual::setShadowValue(float shadow)
     }
 }
 
+void ModelVisual::stopAnimations()
+{
+    getAnimationHandler().stopAnimation();
+}
+

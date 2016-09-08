@@ -16,6 +16,7 @@
 #include <content/AnimationAllocator.h>
 #include <content/Sky.h>
 #include <logic/DialogManager.h>
+#include <content/AudioEngine.h>
 
 namespace ZenLoad
 {
@@ -66,6 +67,20 @@ namespace World
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
     public:
+
+		/**
+		 * Information about the state of the world
+		 */
+		struct WorldInfo
+		{
+			WorldInfo()
+			{
+				lastFrameDeltaTime = 0.0f;
+			}
+
+			// Last deltatime-value we have gotten here
+			double lastFrameDeltaTime;
+		};
 
 		WorldInstance();
 
@@ -202,11 +217,20 @@ namespace World
 		{
 			return m_DialogManager;
 		}
+		Content::AudioEngine& getAudioEngine()
+		{
+			return m_AudioEngine;
+		}
 
 		/**
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+
+		/**
+		 * @return Information about the state of the world
+		 */
+		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
 	protected:
 
 		/**
@@ -242,6 +266,11 @@ namespace World
 		 * This worlds physics system
 		 */
 		Physics::PhysicsSystem m_PhysicsSystem;
+
+		/**
+		 * Audio-Engine of this world
+		 */
+		Content::AudioEngine m_AudioEngine;
 
 		/**
 		 * Sky of this world
@@ -280,5 +309,10 @@ namespace World
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages* m_PrintScreenMessageView;
+
+		/**
+		 * Information about the state of the world
+		 */
+		WorldInfo m_WorldInfo;
     };
 }

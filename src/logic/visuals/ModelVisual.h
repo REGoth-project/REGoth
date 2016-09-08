@@ -168,6 +168,11 @@ namespace Logic
 		void playAnimation(EModelAnimType type);
 
 		/**
+		 * Stops all playing animations
+		 */
+		void stopAnimations();
+
+		/**
 		 * @return Current name of the given animation type (Reacts to overlays)
 		 */
 		static const char* getAnimationName(EModelAnimType type);

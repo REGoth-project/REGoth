@@ -12,13 +12,14 @@ namespace Handle
     typedef Memory::GenericHandle<16, 16, 2> TextureHandle;
     typedef Memory::GenericHandle<16, 16, 3> VBHandle;
     typedef Memory::GenericHandle<16, 16, 4> IBHandle;
-    typedef Memory::GenericHandle<16, 16, 5> EntityHandle;
+    typedef Memory::GenericHandle<24, 8,  5> EntityHandle;
 	typedef Memory::GenericHandle<16, 16, 6> MeshHandle;
 	typedef Memory::GenericHandle<16, 16, 7> WorldHandle;
 	typedef Memory::GenericHandle<16, 16, 8> LogicHandle;
 	typedef Memory::GenericHandle<16, 16, 9> AnimationHandle;
 	typedef Memory::GenericHandle<16, 16, 10> PhysicsObjectHandle;
 	typedef Memory::GenericHandle<16, 16, 10> CollisionShapeHandle;
+	typedef Memory::GenericHandle<16, 16, 11> AudioHandle;
 
 
     // Internal handle-types (API specific)
