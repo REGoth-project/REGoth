@@ -21,7 +21,8 @@ static const std::string s_EnabledPlayerStates[] = {
 };
 
 NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob) :
-    m_World(world)
+    m_World(world),
+	m_HostVob(hostVob)
 {
 
 }

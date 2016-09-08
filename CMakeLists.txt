@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
+# define SFML_STATIC if the build type is not set to 'shared'
+# This is actually done inside SFMLs CMakeLists.txt, but we need to have it propergate to the headers used by our files
+if(NOT BUILD_SHARED_LIBS)
+    add_definitions(-DSFML_STATIC)
+endif()
+
 # Fix up C++ standard
 if (CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
@@ -50,6 +56,10 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# Setup bullet 
+if(MSVC)
+	set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
+endif()
 
 # ------------------ Config-Header ------------------
 configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
