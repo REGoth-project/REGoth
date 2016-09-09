@@ -5,6 +5,12 @@ set(CMAKE_CXX_STANDARD 14)
 
 add_definitions(-DBGFX_CONFIG_DEBUG=1)
 
+# define SFML_STATIC if the build type is not set to 'shared'
+# This is actually done inside SFMLs CMakeLists.txt, but we need to have it propergate to the headers used by our files
+if(NOT BUILD_SHARED_LIBS)
+    add_definitions(-DSFML_STATIC)
+endif()
+
 # Fix up C++ standard
 if (CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
@@ -50,6 +56,10 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# Setup bullet 
+if(MSVC)
+	set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
+endif()
 
 # ------------------ Config-Header ------------------
 configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
@@ -80,19 +90,33 @@ set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geomet
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
         "src/components/*.cpp"
+        "src/components/*.h"
         "src/engine/*.cpp"
+        "src/engine/*.h"
         "src/handle/*.cpp"
+        "src/handle/*.h"
         "src/memory/*.cpp"
+        "src/memory/*.h"
         "src/content/*.cpp"
+        "src/content/*.h"
         "src/render/*.cpp"
+        "src/render/*.h"
         "src/utils/*.cpp"
+        "src/utils/*.h"
         "src/math/*.cpp"
+        "src/math/*.h"
         "src/ui/*.cpp"
+        "src/ui/*.h"
         "src/logic/*.cpp"
+        "src/logic/*.h"
         "src/physics/*.cpp"
+        "src/physics/*.h"
         "src/logic/visuals/*.cpp"
+        "src/logic/visuals/*.h"
         "src/logic/scriptExternals/*.cpp"
+        "src/logic/scriptExternals/*.h"
         "src/logic/messages/*.cpp"
+        "src/logic/messages/*.h"
         )
 
 add_library(engine STATIC ${ENGINE_SRC} src/content/AudioEngine.cpp src/content/AudioEngine.h)

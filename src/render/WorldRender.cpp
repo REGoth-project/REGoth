@@ -54,6 +54,9 @@ namespace Render
                 , 1.0f
                 , 0
         );
+
+		// Don't complain about setting uniforms twice when not actually drawing anything
+		bgfx::touch(0);
     }
 
 	/**
