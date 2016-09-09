@@ -21,9 +21,12 @@ static const std::string s_EnabledPlayerStates[] = {
 };
 
 NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob) :
-    m_World(world)
+    m_World(world),
+    m_HostVob(hostVob)
 {
-
+    m_Routine.startNewRoutine = true;
+    m_Routine.hasRoutine = false;
+    m_Routine.routineActiveIdx = 0;
 }
 
 NpcScriptState::~NpcScriptState()
@@ -40,12 +43,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
 
     m_NextState.name = dat.getSymbolByIndex(symIdx).name;
 
-    if(!dat.hasSymbolName(m_NextState.name + "_END")
-        || !dat.hasSymbolName(m_NextState.name + "_LOOP"))
-    {
-        LogWarn() << "Did not find script functions '" << m_NextState.name + "_END" << "' or '" << m_NextState.name + "_LOOP" << "' in .DAT-file!";
-        return false;
-    }
+    LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0];
 
     // Check if this is just a usual action (ZS = German "Zustand" = State, B = German "Befehl" = Instruction)
     if(m_NextState.name.substr(0, 3) != "ZS_")
@@ -56,7 +54,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
 
         // Just call the function
         s.prepareRunFunction();
-        s.setInstance("SELF", VobTypes::getScriptObject(vob).instanceSymbol);
+        s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
         s.runFunctionBySymIndex(symIdx);
 
         m_CurrentState.isRoutineState = oldIsRoutineState;
@@ -64,8 +62,18 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     }
 
     m_NextState.isRoutineState = isRoutineState;
-    m_NextState.symEnd = dat.getSymbolIndexByName(m_NextState.name + "_END");
-    m_NextState.symLoop = dat.getSymbolIndexByName(m_NextState.name + "_LOOP");
+
+    m_NextState.symIndex = symIdx;
+    m_NextState.symEnd = 0;
+    m_NextState.symLoop = 0;
+
+    if(dat.hasSymbolName(m_NextState.name + "_END"))
+        m_NextState.symEnd = dat.getSymbolIndexByName(m_NextState.name + "_END");
+
+    if(dat.hasSymbolName(m_NextState.name + "_LOOP"))
+        m_NextState.symLoop = dat.getSymbolIndexByName(m_NextState.name + "_LOOP");
+
+
     m_NextState.valid = true;
 
     if(endOldState)
@@ -131,7 +139,12 @@ bool NpcScriptState::doAIState(float deltaTime)
     // Only do states if we do not have messages pending
     if(vob.playerController->getEM().isEmpty())
     {
-        // TODO: Routine
+        // Check for routine first
+        if(m_Routine.startNewRoutine
+           && m_Routine.hasRoutine
+           && isInRoutine()
+           && !vob.playerController->isPlayerControlled())
+            startRoutineState();
 
         if(!m_CurrentState.valid)
         {
@@ -148,7 +161,7 @@ bool NpcScriptState::doAIState(float deltaTime)
                 m_NextState.valid = false;
             } else
             {
-                // TODO: Start routine state here
+                startRoutineState();
             }
         }
 
@@ -159,7 +172,8 @@ bool NpcScriptState::doAIState(float deltaTime)
         if(m_CurrentState.valid)
         {
             // Prepare state function call
-            s.setInstance("SELF", VobTypes::getScriptObject(vob).instanceSymbol);
+            auto& inst = VobTypes::getScriptObject(vob);
+            s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
 
             // These are set by the game, but seem to be always 0
             //s.setInstance("OTHER", );
@@ -220,7 +234,7 @@ bool NpcScriptState::doAIState(float deltaTime)
     return false;
 }
 
-bool NpcScriptState::startRoutineState()
+bool NpcScriptState::startRoutineState(bool force)
 {
     VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
 
@@ -228,11 +242,134 @@ bool NpcScriptState::startRoutineState()
     if(npc.playerController->isPlayerControlled())
         return true;
 
-    // TODO: Implement
-    /**
-    bool r =
+    // Turn off, so we don't recurse
+    m_Routine.startNewRoutine = false;
 
-    return r;*/
-    return true;
+    // Start new state
+    bool res = activateRoutineState(force);
+    m_Routine.startNewRoutine = !res;
+
+    return res;
+}
+
+bool NpcScriptState::isInRoutine()
+{
+    return (m_CurrentState.valid && m_CurrentState.isRoutineState)
+            || (!m_CurrentState.valid && !m_NextState.valid);
+}
+
+bool NpcScriptState::activateRoutineState(bool force)
+{
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
+
+    // Player can't have routines
+    if(npc.playerController->isPlayerControlled())
+        return false;
+
+    // Check for death, etc
+    if(!npc.playerController->isNpcReady())
+        return false;
+
+    if(m_Routine.hasRoutine)
+    {
+        // No routine present?
+        if(m_Routine.routine.empty())
+            return false;
+
+        if(!force)
+        {
+            if(!npc.playerController->getEM().isEmpty())
+                return false; // EM not empty, don't start routine yet!
+
+            // Check if the routine is already running
+            if(getCurrentStateSym() == m_Routine.routine[m_Routine.routineActiveIdx].symFunc)
+                return true;
+
+            if(!isInRoutine())
+                return false; // Currently in other state...
+        }
+
+        // Set current waypoint of script instance
+        npc.playerController->getScriptInstance().wp = m_Routine.routine[m_Routine.routineActiveIdx].waypoint;
+
+        return startAIState(m_Routine.routine[m_Routine.routineActiveIdx].symFunc, true, true);
+    }else if(isNpcStateDriven())
+    {
+        return false;
+        if(force)
+        {
+            // Make it look like we don't have anything running now
+            m_NextState.valid = false;
+            m_CurrentState.valid = false;
+        }
+
+        // Don't make a new state if we already have something running
+        if(m_CurrentState.valid || m_NextState.valid)
+            return false;
+
+        return startAIState(VobTypes::getScriptObject(npc).start_aistate, true);
+    }
+
+    return false;
+}
+
+void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEnd, int minutesEnd, size_t symFunc,
+                                   const std::string& waypoint)
+{
+    m_Routine.hasRoutine = true; // At least one routine-target present
+
+    // Make new routine entry
+    RoutineEntry entry;
+    entry.hoursStart = hoursStart;
+    entry.hoursEnd = hoursEnd;
+    entry.minutesStart = minutesStart;
+    entry.minutesEnd = minutesEnd;
+    entry.symFunc = symFunc;
+    entry.waypoint = waypoint;
+    entry.isOverlay = false;
+
+    m_Routine.routine.push_back(entry);
+}
+
+bool NpcScriptState::isNpcStateDriven()
+{
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
+
+    return VobTypes::getScriptObject(npc).start_aistate != 0;
+}
+
+size_t NpcScriptState::getCurrentStateSym()
+{
+    if(m_CurrentState.valid)
+    {
+        if(m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
+            return static_cast<size_t>(m_CurrentState.prgState);
+
+        return m_CurrentState.symIndex;
+    }
+
+    return 0;
+}
+
+void NpcScriptState::reinitRoutine()
+{
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
+    ScriptEngine& s = m_World.getScriptEngine();
+
+    size_t newSymFn = VobTypes::getScriptObject(npc).daily_routine;
+
+    if(newSymFn != 0)
+    {
+        // Clear old routine
+        m_Routine.routine.clear();
+
+        s.prepareRunFunction();
+        s.runFunctionBySymIndex(newSymFn);
+
+        LogInfo() << "Changed routine on "
+                  << VobTypes::getScriptObject(npc).name[0]
+                  << " to: "
+                  << s.getVM().getDATFile().getSymbolByIndex(m_Routine.routine[0].symFunc).name;
+    }
 }
 

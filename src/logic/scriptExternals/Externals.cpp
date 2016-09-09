@@ -29,6 +29,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
 
+        if(!hnpc.isValid())
+        {
+            LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
+
+            VobTypes::NpcVobInformation vob;
+            vob.entity.invalidate();
+
+            return vob;
+        }
+
         // Get data of npc this belongs to
         Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
         VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
@@ -164,7 +174,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("ta_min", [=](Daedalus::DaedalusVM& vm){
         std::string waypoint = vm.popString(); if(verbose) LogInfo() << "waypoint: " << waypoint;
 
-        int32_t action = vm.popDataValue();
+        uint32_t action = vm.popDataValue();
         int32_t stop_m = vm.popDataValue(); if(verbose) LogInfo() << "stop_m: " << stop_m;
         int32_t stop_h = vm.popDataValue(); if(verbose) LogInfo() << "stop_h: " << stop_h;
         int32_t start_m = vm.popDataValue(); if(verbose) LogInfo() << "start_m: " << start_m;
@@ -172,28 +182,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
 
-        // TODO: Need a better API for this
-        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
-                (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
-        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
-        if(verbose) LogInfo() << "Self: " << self << ", " << vm.getDATFile().getSymbolByIndex(self).name << "  ...  hdl idx:" << vm.getDATFile().getSymbolByIndex(self).instanceDataHandle.index << ", Valid: " << vm.getDATFile().getSymbolByIndex(self).instanceDataHandle.isValid();
-        if(verbose) LogInfo() << " - Userdata: " << npcData.userPtr;
-
-        if(npcData.userPtr && vm.getDATFile().getSymbolByIndex(self).instanceDataHandle.isValid())
+        if(npc.isValid())
         {
-            VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
-
-            World::WorldInstance& world = engine->getWorldInstance(userData->world);
-            VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
-
-            if(verbose) LogInfo() << "NPC " << npcData.name[0] << " going to wp: " << waypoint;
-
-            if(World::Waynet::waypointExists(world.getWaynet(), waypoint))
-            {
-                vob.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
-                vob.playerController->addRoutineWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
-            }
+            npc.playerController->getAIStateMachine().insertRoutine(start_h, start_m, stop_h, stop_m, action, waypoint);
         }
     });
 
@@ -202,25 +195,14 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
      */
     vm->registerExternalFunction("equipitem", [=](Daedalus::DaedalusVM& vm){
         uint32_t instance = static_cast<uint32_t>(vm.popDataValue());
-        uint32_t arr_n0;
-        uint32_t self = vm.popVar(arr_n0);
+        uint32_t self = vm.popVar();
 
-        // TODO: Need a better API for this
-        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
-                (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, VobTypes::getScriptHandle(npc));
 
-        Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, hnpc);
-
-        // Get data of npc this belongs to
-        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
-        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
-
-		if(userData)
+		if(npc.isValid())
 		{
-			World::WorldInstance& world = engine->getWorldInstance(userData->world);
-			VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
-
-			VobTypes::NPC_EquipWeapon(vob, item);
+			VobTypes::NPC_EquipWeapon(npc, item);
 		}
 		else{
 			//LogWarn() << "No userptr on npc: " << npcData.name[0];
@@ -428,6 +410,64 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         else
             vm.setReturn(0);
     });
+
+    vm->registerExternalFunction("npc_clearaiqueue", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+            npc.playerController->getEM().clear();
+    });
+
+    vm->registerExternalFunction("ai_standupquick", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar(); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Fill standup message
+            EventMessages::MovementMessage msg;
+            msg.subType = EventMessages::MovementMessage::ST_Standup;
+
+            // Push the message
+            npc.playerController->getEM().onMessage(msg);
+        }
+    });
+
+    vm->registerExternalFunction("npc_exchangeroutine", [=](Daedalus::DaedalusVM& vm){
+        std::string routinename = vm.popString(); if(verbose) LogInfo() << "routinename: " << routinename;
+        uint32_t arr_self;
+        uint32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->changeRoutine(routinename);
+        }
+    });
+
+    vm->registerExternalFunction("ai_gotowp", [=](Daedalus::DaedalusVM& vm){
+        std::string wp = vm.popString();
+        int32_t self = vm.popVar();
+
+        if(!World::Waynet::waypointExists(pWorld->getWaynet(), wp))
+            return;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+        }
+    });
+
+    vm->registerExternalFunction("infomanager_hasfinished", [=](Daedalus::DaedalusVM& vm){
+       vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
+    });
+
 
 }
 

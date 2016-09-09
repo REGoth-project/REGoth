@@ -129,6 +129,13 @@ void ScriptEngine::setInstance(const std::string& target, size_t source)
     m_pVM->setInstance(target, sym.instanceDataHandle, sym.instanceDataClass);
 }
 
+void ScriptEngine::setInstance(const std::string& target, Daedalus::GameState::NpcHandle& npc)
+{
+    assert(m_pVM->getDATFile().hasSymbolName(target));
+
+    m_pVM->setInstance(target, ZMemory::toBigHandle(npc), Daedalus::EInstanceClass::IC_Npc);
+}
+
 void ScriptEngine::initForWorld(const std::string& world)
 {
     // Register our externals
@@ -297,6 +304,11 @@ void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& 
 {
     m_World.getPrintScreenManager().printMessage("Topic: " + topic);
     m_World.getPrintScreenManager().printMessage(entry);
+}
+
+bool ScriptEngine::hasSymbol(const std::string& name)
+{
+    return m_pVM->getDATFile().hasSymbolName(name);
 }
 
 

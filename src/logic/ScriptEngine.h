@@ -52,6 +52,7 @@ namespace Logic
          */
         void setInstance(const std::string& target, const std::string& source);
         void setInstance(const std::string& target, size_t source);
+        void setInstance(const std::string& target, Daedalus::GameState::NpcHandle& npc);
 
         /**
          * Runs a complete function with the arguments given by pushing onto the stack
@@ -78,6 +79,13 @@ namespace Logic
          * @return Symbol-index, -1 of not found
          */
         size_t getSymbolIndexByName(const std::string& name);
+
+        /**
+         * Checks whether the given symbol exists
+         * @param name Symbol to check
+         * @return Whether a symbol with the given name exists
+         */
+        bool hasSymbol(const std::string& name);
 
         /**
          * @return The entity of the NPC the player is currently playing as

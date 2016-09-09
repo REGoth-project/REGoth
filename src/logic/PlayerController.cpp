@@ -178,6 +178,8 @@ void PlayerController::gotoWaypoint(size_t wp)
     // Set our current target as closest so we don't move back if we are following an entity
     if(m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
         m_AIState.closestWaypoint = m_AIState.targetWaypoint;
+    else
+        m_AIState.closestWaypoint = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
 
     m_AIState.targetWaypoint = wp;
 
@@ -239,7 +241,7 @@ bool PlayerController::travelPath(float deltaTime)
 
     if(differenceXZ.lengthSquared() < 0.5f) // TODO: Find a nice setting for this
     {
-        if(abs(currentPosition.y - targetPosition.y) < 2.0f)
+        //if(abs(currentPosition.y - targetPosition.y) < 2.0f)
         {
             m_AIState.closestWaypoint = m_MoveState.currentPath[m_MoveState.targetNode];
             m_MoveState.targetNode++;
@@ -964,7 +966,11 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
         case EventMessages::MovementMessage::ST_Jump:break;
         case EventMessages::MovementMessage::ST_SetWalkMode:break;
         case EventMessages::MovementMessage::ST_WhirlAround:break;
-        case EventMessages::MovementMessage::ST_Standup:break;
+        case EventMessages::MovementMessage::ST_Standup:
+            standUp();
+            return true;
+            break;
+
         case EventMessages::MovementMessage::ST_CanSeeNpc:break; // Unused
         case EventMessages::MovementMessage::ST_Strafe:break;
         case EventMessages::MovementMessage::ST_GotoFP:break;
@@ -1000,18 +1006,21 @@ bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::En
             }
 
             // Set up script instances. // TODO: Self is originally not set by gothic here! Why?
-            m_World.getScriptEngine().setInstance("SELF", getScriptInstance().instanceSymbol);
-            m_World.getScriptEngine().setInstance("OTHER", message.symOther);
-            m_World.getScriptEngine().setInstance("VICTIM", message.symVictim);
+            m_World.getScriptEngine().setInstance("self", getScriptInstance().instanceSymbol);
+            m_World.getScriptEngine().setInstance("other", message.other);
+            m_World.getScriptEngine().setInstance("victim", message.victim);
 
             getEM().clear();
 
-            if(message.functionSymbol == 0)
+            if(message.functionSymbol != 0)
             {
+                m_AIStateMachine.startAIState(message.functionSymbol, true, message.isRoutineState);
+            } else{
                 // Start daily routine
                 m_AIStateMachine.startRoutineState();
             }
         }
+        return true;
             break;
 
         case EventMessages::StateMessage::EV_Wait:
@@ -1192,4 +1201,41 @@ float PlayerController::getAngleTo(const Math::float3& pos)
     Math::float3 dir = (getEntityTransform().Translation() - pos).normalize();
 
     return atan(m_MoveState.direction.dot(dir));
+}
+
+void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
+{
+    // TODO: Implement properly
+    stopRoute();
+
+}
+
+void PlayerController::stopRoute()
+{
+    m_MoveState.currentPath.clear();
+    m_RoutineState.routineActive = false;
+    m_RoutineState.entityTarget.invalidate();
+}
+
+void PlayerController::setRoutineFunc(size_t symRoutine)
+{
+    getScriptInstance().daily_routine = static_cast<uint32_t>(symRoutine);
+    m_AIStateMachine.reinitRoutine();
+}
+
+void PlayerController::changeRoutine(const std::string& routineName)
+{
+    // Build new name for the routine
+    std::string namecomp = "RTN_" + routineName + "_" + std::to_string(getScriptInstance().id);
+
+    if(m_World.getScriptEngine().hasSymbol(namecomp))
+        setRoutineFunc(m_World.getScriptEngine().getSymbolIndexByName(namecomp));
+    else
+        LogWarn() << "Could not find routine " << namecomp << " on NPC: " << getScriptInstance().name[0];
+}
+
+bool PlayerController::isNpcReady()
+{
+    // TODO: Implement
+    return true;
 }

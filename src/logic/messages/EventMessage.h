@@ -3,6 +3,7 @@
 #include <handle/HandleDef.h>
 #include <engine/Waynet.h>
 #include <list>
+#include <ZenLib/daedalus/DaedalusGameState.h>
 #include "../LogicDef.h"
 
 namespace Logic
@@ -185,7 +186,7 @@ namespace Logic
 
             enum class WalkMode
             {
-                Run,
+                Run = 0,
                 Walk,
                 Sneak,
                 Water,
@@ -317,8 +318,8 @@ namespace Logic
             /**
              * Symbols for other and victim
              */
-            size_t symOther;
-            size_t symVictim;
+            Daedalus::GameState::NpcHandle other;
+            Daedalus::GameState::NpcHandle victim;
 
             /**
              * Whether this belongs to the daily routine

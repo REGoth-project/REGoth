@@ -105,7 +105,45 @@ namespace Logic
          * Starts the routine-state set for this NPC
          * @return Whether the state could be started
          */
-        bool startRoutineState();
+        bool startRoutineState(bool force = false);
+
+		/**
+		 * @return Whether this NPC currently is in a routine state or no state at all
+		 */
+		bool isInRoutine();
+
+		/**
+		 * Activates the currently set routine state
+		 * @param force Do it, even though we are in an other state ATM
+		 * @return Success
+		 */
+		bool activateRoutineState(bool force);
+
+		/**
+		 * Inserts a new routine target for this npc
+		 * @param hoursStart Starting time (hours)
+		 * @param minutesStart Starting time (minutes)
+		 * @param hoursEnd Ending time (hours)
+		 * @param minutesEnd Ending time (minutes)
+		 * @param symFunc Symbol of the states init function
+		 * @param waypoint Waypoint to go to
+		 */
+		void insertRoutine(int hoursStart, int minutesStart, int hoursEnd, int minutesEnd, size_t symFunc, const std::string& waypoint);
+
+		/**
+		 * @return Whether this NPC has a start-ai-state set inside the script object (monsters, mostly)
+		 */
+		bool isNpcStateDriven();
+
+		/**
+		 * @return Setup-function of the state we are currently in
+		 */
+		size_t getCurrentStateSym();
+
+		/**
+		 * Gets the current routine function from the script instance and replaces the routine stored with the new one
+		 */
+		void reinitRoutine();
 	protected:
 
 		/**
@@ -132,5 +170,35 @@ namespace Logic
          * Vob this belongs to
          */
         Handle::EntityHandle m_HostVob;
+
+		/**
+		 * One entry for the routines. See insertRoutine for more info
+		 */
+		struct RoutineEntry
+		{
+			int hoursStart;
+			int minutesStart;
+			int hoursEnd;
+			int minutesEnd;
+			size_t symFunc;
+			std::string waypoint;
+			bool isOverlay;
+		};
+
+
+		struct
+		{
+			/**
+			 * Currently active routine. FIXME: There is actually always only a single one, should remove the std::vector
+			 */
+			std::vector<RoutineEntry> routine;
+			size_t routineActiveIdx;
+
+			/**
+			 * Whether to start a new routine as soon as possible
+			 */
+			bool startNewRoutine;
+			bool hasRoutine;
+		}m_Routine;
 	};
 }

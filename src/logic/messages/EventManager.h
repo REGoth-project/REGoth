@@ -82,7 +82,7 @@ namespace Logic
         /**
          * Events registered and managed here.
          */
-        std::list<EventMessages::EventMessage*> m_EventQueue;
+        std::vector<EventMessages::EventMessage*> m_EventQueue;
 
         /**
          * Vob this belongs to

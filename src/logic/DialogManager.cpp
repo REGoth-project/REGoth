@@ -30,6 +30,7 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveDialogBox = nullptr;
     m_ScriptDialogMananger = nullptr;
     m_ActiveSubtitleBox = nullptr;
+    m_DialogActive = false;
 }
 
 DialogManager::~DialogManager()
@@ -84,6 +85,9 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
         if(valid)
         {
+            if(info.description.empty() && info.important)
+                info.description = "<important>";
+
             if(!info.description.empty()/* || info.important*/)
                 m_Interaction.optionsSorted.push_back(std::make_pair(info.nr, i));
 
@@ -162,6 +166,8 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         return;
     }
 
+    LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
+
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;
     conv.target = targetnpc.entity;
@@ -226,6 +232,10 @@ bool DialogManager::performChoice(size_t choice)
     // Get actual selected info-object
     Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.infos[m_Interaction.optionsSorted[choice].second]);
 
+    // Set instances again, since they could have been changed across the frames
+    getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
+    getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
+
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
     m_World.getScriptEngine().runFunction(info.information);
@@ -233,11 +243,12 @@ bool DialogManager::performChoice(size_t choice)
     // We now know this information
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
 
-    m_World.getScriptEngine().prepareRunFunction();
+
 
     // Finish dialog
     // TODO: Find out how these "loop"-functions work
-    m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk_Loop").address);
+    //m_World.getScriptEngine().prepareRunFunction();
+    //m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk_Loop").address);
 
     return info.nr != 999;
 
@@ -247,13 +258,28 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 {
     Handle::EntityHandle playerEntity = m_World.getScriptEngine().getPlayerEntity();
     VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, playerEntity);
+    VobTypes::NpcVobInformation targetVob = VobTypes::asNpcVob(m_World, VobTypes::getEntityFromScriptInstance(m_World, target));
 
     // Self is the NPC we're talking to here. Kind of reversed, but what do I know.
     getVM().setInstance("self", ZMemory::toBigHandle(target), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(VobTypes::getScriptHandle(playerVob)), Daedalus::IC_Npc);
 
-    m_World.getScriptEngine().prepareRunFunction();
-    m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk").address);
+    targetVob.playerController->standUp();
+
+    m_DialogActive = true;
+
+    EventMessages::StateMessage msg;
+    msg.subType = EventMessages::StateMessage::EV_StartState;
+    msg.functionSymbol = m_World.getScriptEngine().getSymbolIndexByName("ZS_TALK");
+
+    // Set other/victum // TODO: Refractor
+    msg.other = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("OTHER").instanceDataHandle);
+    msg.victim = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("VICTIM").instanceDataHandle);
+
+    targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+    /*m_World.getScriptEngine().prepareRunFunction();
+    m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk").address);*/
 }
 
 void DialogManager::endDialog()
@@ -262,6 +288,8 @@ void DialogManager::endDialog()
 
     delete m_ActiveDialogBox;
     m_ActiveDialogBox = nullptr;
+
+    m_DialogActive = false;
 }
 
 void DialogManager::init()

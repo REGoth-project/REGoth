@@ -76,6 +76,11 @@ namespace Logic
         void rebuildRoute();
 
         /**
+         * Stops going along the current route
+         */
+        void stopRoute();
+
+        /**
          * Teleports the entity to the given waypoint
          * @param Waypoint index to go to
          */
@@ -172,6 +177,35 @@ namespace Logic
          * @return Angle between the forward direction of the npc and pos as radians, [0, pi]
          */
         float getAngleTo(const Math::float3& pos);
+
+        /**
+         * Lets the NPC stop all it's actions
+         * @param walkingAllowed Whether walking should be allowed and not be stopped
+         * @param startAniTransition Starts a transition animation from the current state to standing
+         */
+        void standUp(bool walkingAllowed = false, bool startAniTransition = false);
+
+        /**
+         * Sets the current routine-state function
+         * @param symRoutine Routine to use now
+         */
+        void setRoutineFunc(size_t symRoutine);
+
+        /**
+         * Changes the routine for this NPC. Possible values: GUIDE, FOLLOW, START, more?
+         * @param routineName Routine-type to start
+         */
+        void changeRoutine(const std::string& routineName);
+
+        /**
+         * @return True, if the NPC is not dead, unconscious, etc
+         */
+        bool isNpcReady();
+
+        /**
+         * @return The ai-state machine of this NPC
+         */
+        NpcScriptState& getAIStateMachine(){ return m_AIStateMachine; }
     protected:
 
         /**

@@ -63,6 +63,11 @@ namespace Logic
          */
         void stopDisplaySubtitle();
 
+        /**
+         * @return Whether a dialog is currently active
+         */
+        bool isDialogActive() { return m_DialogActive; }
+
     protected:
 
 
@@ -131,5 +136,10 @@ namespace Logic
          * Scriptside dialog manager
          */
         Daedalus::GameState::DaedalusDialogManager* m_ScriptDialogMananger;
+
+        /**
+         * Whether a dialog is currently active
+         */
+        bool m_DialogActive;
     };
 }
