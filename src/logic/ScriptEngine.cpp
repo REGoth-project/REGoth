@@ -129,12 +129,20 @@ void ScriptEngine::setInstance(const std::string& target, size_t source)
     m_pVM->setInstance(target, sym.instanceDataHandle, sym.instanceDataClass);
 }
 
-void ScriptEngine::setInstance(const std::string& target, Daedalus::GameState::NpcHandle& npc)
+void ScriptEngine::setInstanceNPC(const std::string& target, Daedalus::GameState::NpcHandle npc)
 {
     assert(m_pVM->getDATFile().hasSymbolName(target));
 
     m_pVM->setInstance(target, ZMemory::toBigHandle(npc), Daedalus::EInstanceClass::IC_Npc);
 }
+
+void ScriptEngine::setInstanceItem(const std::string& target, Daedalus::GameState::ItemHandle item)
+{
+    assert(m_pVM->getDATFile().hasSymbolName(target));
+
+    m_pVM->setInstance(target, ZMemory::toBigHandle(item), Daedalus::EInstanceClass::IC_Item);
+}
+
 
 void ScriptEngine::initForWorld(const std::string& world)
 {
@@ -310,6 +318,27 @@ bool ScriptEngine::hasSymbol(const std::string& name)
 {
     return m_pVM->getDATFile().hasSymbolName(name);
 }
+
+Daedalus::GameState::NpcHandle ScriptEngine::getNPCFromSymbol(const std::string& symName)
+{
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if(sym.instanceDataClass != Daedalus::IC_Npc)
+        return Daedalus::GameState::NpcHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::NpcHandle>(sym.instanceDataHandle);
+}
+
+Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::string& symName)
+{
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if(sym.instanceDataClass != Daedalus::IC_Npc)
+        return Daedalus::GameState::ItemHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
+}
+
 
 
 

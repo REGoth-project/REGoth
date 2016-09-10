@@ -206,6 +206,16 @@ namespace Logic
          * @return The ai-state machine of this NPC
          */
         NpcScriptState& getAIStateMachine(){ return m_AIStateMachine; }
+
+        /**
+         * @return Waypoint closest to the NPC
+         */
+        size_t getClosestWaypoint() { return m_AIState.closestWaypoint; }
+
+        /**
+         * @return Waypoint the NPC is currently going to
+         */
+        size_t getTargetWaypoint(){ return m_AIState.targetWaypoint; }
     protected:
 
         /**

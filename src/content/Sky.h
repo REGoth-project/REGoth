@@ -102,6 +102,13 @@ namespace Content
         float getTimeOfDay(){ return m_MasterState.time; }
 
         /**
+         * Converts time to hours/minutes (24h format)
+         * @param hours
+         * @param minues
+         */
+        void getTimeOfDay(int& hours, int& minutes);
+
+        /**
          * @return current interpolated sky-state
          */
         const SkyState& getMasterState(){ return m_MasterState; }

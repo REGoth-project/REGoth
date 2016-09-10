@@ -152,6 +152,7 @@ void PlayerController::continueRoutine()
 
 void PlayerController::teleportToWaypoint(size_t wp)
 {
+
     m_AIState.closestWaypoint = wp;
 
     /*Math::Matrix transform = Math::Matrix::CreateLookAt(m_World.getWaynet().waypoints[wp].position,
@@ -174,6 +175,14 @@ void PlayerController::gotoWaypoint(size_t wp)
 {
     if(wp == m_AIState.targetWaypoint)
         return;
+
+    // If this is the first ever waypoint this NPC has to go to, just teleport him there
+    // FIXME: This is a hack to get around daily routines not doing that yet
+    if(m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
+    {
+        teleportToWaypoint(wp);
+        return;
+    }
 
     // Set our current target as closest so we don't move back if we are following an entity
     if(m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
@@ -259,10 +268,10 @@ bool PlayerController::travelPath(float deltaTime)
 
 void PlayerController::onDebugDraw()
 {
-    /*if (!m_MoveState.currentPath.empty())
+    if (!m_MoveState.currentPath.empty())
     {
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
-    }*/
+    }
 
 
     /*Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
@@ -904,7 +913,8 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
             if(wp != World::Waynet::INVALID_WAYPOINT)
             {
                 gotoWaypoint(wp);
-                return true;
+
+                return m_AIState.closestWaypoint == wp;
             }else
             {
                 // This must be an actual vob
@@ -932,7 +942,7 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
                 if (wp != World::Waynet::INVALID_WAYPOINT)
                     gotoWaypoint(wp);
 
-                return true;
+                return m_AIState.closestWaypoint == wp;
             }
             break;
 
@@ -1007,8 +1017,8 @@ bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::En
 
             // Set up script instances. // TODO: Self is originally not set by gothic here! Why?
             m_World.getScriptEngine().setInstance("self", getScriptInstance().instanceSymbol);
-            m_World.getScriptEngine().setInstance("other", message.other);
-            m_World.getScriptEngine().setInstance("victim", message.victim);
+            m_World.getScriptEngine().setInstanceNPC("other", message.other);
+            m_World.getScriptEngine().setInstanceNPC("victim", message.victim);
 
             getEM().clear();
 

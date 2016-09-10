@@ -113,6 +113,13 @@ namespace Logic
 		bool isInRoutine();
 
 		/**
+		 * Checks whether this NPC is currently in the state with stateMainSymbol as starting function
+		 * @param stateMainSymbol Starting function of the state to check
+		 * @return Whether the NPC is inside the given state
+		 */
+		bool isInState(size_t stateMainSymbol);
+
+		/**
 		 * Activates the currently set routine state
 		 * @param force Do it, even though we are in an other state ATM
 		 * @return Success
@@ -172,10 +179,46 @@ namespace Logic
         Handle::EntityHandle m_HostVob;
 
 		/**
+		 * Other/victim/item set when we started the state
+		 */
+		Daedalus::GameState::NpcHandle m_StateOther;
+		Daedalus::GameState::NpcHandle m_StateVictim;
+		Daedalus::GameState::ItemHandle m_StateItem;
+
+
+		/**
 		 * One entry for the routines. See insertRoutine for more info
 		 */
 		struct RoutineEntry
 		{
+			/**
+			 * @return Whether the given hours/minutes match to this state
+			 */
+			bool timeInRange(int hours, int minutes)
+			{
+				auto tbigger = [&](int h1, int m1, int h2, int m2){
+					return h1 > h2 || (h1 == h2 && m1 > m2);
+				};
+
+				auto tsmaller = [&](int h1, int m1, int h2, int m2){
+					return h1 < h2 || (h1 == h2 && m1 < m2);
+				};
+
+				auto trange = [&](int h1, int m1, int h, int m, int h2, int m2){
+					return tbigger(h,m,h1,m1) && tsmaller(h,m,h2,m2);
+				};
+
+				bool crossesZero = hoursEnd < hoursStart;
+
+				if(!crossesZero)
+					return trange(hoursStart, minutesStart, hours, minutes, hoursEnd, minutesEnd);
+				else
+				{
+					return trange(hoursStart, minutesStart, hours, minutes, 24, 0)
+							&& trange(0, 0, hours, minutes, hoursEnd, minutesEnd);
+				}
+			}
+
 			int hoursStart;
 			int minutesStart;
 			int hoursEnd;
@@ -189,7 +232,7 @@ namespace Logic
 		struct
 		{
 			/**
-			 * Currently active routine. FIXME: There is actually always only a single one, should remove the std::vector
+			 * Currently active routine.
 			 */
 			std::vector<RoutineEntry> routine;
 			size_t routineActiveIdx;

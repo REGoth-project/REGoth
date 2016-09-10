@@ -298,7 +298,7 @@ namespace Logic
                 EV_SetTime,
                 EV_ApplyTimedOverlay,
                 EV_StateMax
-            };
+            }ConversationMessage;
 
             StateMessage()
             {

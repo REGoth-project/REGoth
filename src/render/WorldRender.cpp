@@ -43,7 +43,9 @@ namespace Render
         bgfx::setUniform(config.uniforms.fogColor, fogColorRGBA.v);
         bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
 
-        bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %f", world.getSky().getTimeOfDay());
+		int h,m;
+		world.getSky().getTimeOfDay(h, m);
+        bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %d:%d (%f)", h, m, world.getSky().getTimeOfDay());
         bgfx::dbgTextPrintf(0, 11, 0x0f, "FogNear: %f", fogNear);
         bgfx::dbgTextPrintf(0, 12, 0x0f, "FogFar : %f", fogFar);
 

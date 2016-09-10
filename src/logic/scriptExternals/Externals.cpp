@@ -23,6 +23,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     Engine::BaseEngine* engine = world.getEngine();
     World::WorldInstance* pWorld = &world;
 
+    auto isSymInstanceValid = [vm](size_t instance)
+    {
+        return vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle.isValid();
+    };
+
     // TODO: Refractor
     auto getNPCByInstance = [vm, engine](size_t instance)
     {
@@ -35,6 +40,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             VobTypes::NpcVobInformation vob;
             vob.entity.invalidate();
+
+            LogInfo() << "Callstack: " << vm->getCallStack();
 
             return vob;
         }
@@ -218,6 +225,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         uint32_t arr_npc1;
         uint32_t npc1 = vm.popVar(arr_npc1); if(verbose) LogInfo() << "npc1: " << npc1;
 
+        if(!isSymInstanceValid(npc1) || !isSymInstanceValid(npc2))
+            return INT32_MAX;
+
         VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
         VobTypes::NpcVobInformation vob2 = getNPCByInstance(npc2);
 
@@ -323,6 +333,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         uint32_t arr_n0;
         int32_t self = vm.popVar(arr_n0); if(verbose) LogInfo() << "self: " << self;
 
+        if(!isSymInstanceValid(self) || !isSymInstanceValid(target))
+            return;
+
         VobTypes::NpcVobInformation selfvob = getNPCByInstance(self);
         VobTypes::NpcVobInformation targetvob = getNPCByInstance(target);
 
@@ -333,6 +346,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         // Push the message
         selfvob.playerController->getEM().onMessage(msg);
+
+        vm.setReturn(0);
     });
 
     /*vm->registerExternalFunction("snd_getdisttosource", [=](Daedalus::DaedalusVM& vm){
@@ -373,6 +388,12 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("npc_canseenpc", [=](Daedalus::DaedalusVM& vm){
         uint32_t other = vm.popVar();
         uint32_t self = vm.popVar();
+
+        if(!isSymInstanceValid(other) || !isSymInstanceValid(self))
+        {
+            vm.setReturn(0);
+            return;
+        }
 
         VobTypes::NpcVobInformation vnpc1 = getNPCByInstance(self);
         VobTypes::NpcVobInformation vnpc2 = getNPCByInstance(other);
@@ -468,7 +489,137 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
        vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
     });
 
+    vm->registerExternalFunction("npc_getnearestwp", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
 
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            size_t wp = npc.playerController->getClosestWaypoint();
+
+            if(wp != World::Waynet::INVALID_WAYPOINT)
+            {
+                vm.setReturn(pWorld->getWaynet().waypoints[wp].name);
+                return;
+            }
+        }
+
+        vm.setReturn("");
+    });
+
+    vm->registerExternalFunction("npc_getnextwp", [=](Daedalus::DaedalusVM& vm){
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            size_t wp = npc.playerController->getTargetWaypoint();
+
+            if(wp != World::Waynet::INVALID_WAYPOINT)
+            {
+                vm.setReturn(pWorld->getWaynet().waypoints[wp].name);
+                return;
+            }
+        }
+
+        vm.setReturn("");
+    });
+
+    vm->registerExternalFunction("ai_startstate", [=](Daedalus::DaedalusVM& vm){
+        std::string wpname = vm.popString();
+        int32_t statebehaviour = vm.popDataValue();
+        uint32_t fnSym = vm.popVar();
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            EventMessages::StateMessage sm;
+            sm.subType = EventMessages::StateMessage::EV_StartState;
+            sm.wpname = wpname;
+            sm.functionSymbol = fnSym;
+
+            npc.playerController->getEM().onMessage(sm);
+        }
+    });
+
+    vm->registerExternalFunction("wld_detectnpc", [=](Daedalus::DaedalusVM& vm){
+        int32_t guild = vm.popDataValue();
+        int32_t aiState = vm.popDataValue();
+        int32_t instance = vm.popDataValue();
+        uint32_t self = vm.popVar();
+
+        // TODO: Find using guild, etc
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            const std::set<Handle::EntityHandle>& worldNPCs = pWorld->getScriptEngine().getWorldNPCs();
+
+            // Find the nearest NPC with the given criteria
+            Math::float3 center = npc.position->m_WorldMatrix.Translation();
+            float nearest = FLT_MAX;
+            Handle::EntityHandle nearestEnt;
+            for(Handle::EntityHandle e : worldNPCs)
+            {
+                if(e == npc.entity)
+                    continue;
+
+                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, e);
+                Daedalus::GEngineClasses::C_Npc& scriptInstance = VobTypes::getScriptObject(vob);
+
+                if(instance >= 0 && scriptInstance.instanceSymbol != instance) continue;
+                if(guild >= 0 && scriptInstance.guild != guild) continue;
+                if(aiState >= 0 && vob.playerController->getAIStateMachine().isInState((size_t)aiState)) continue;
+
+                Math::float3 translation = pWorld->getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
+
+                float dist = (center - translation).lengthSquared();
+                if(dist < nearest)
+                {
+                    nearestEnt = e;
+                    nearest = dist;
+                }
+            }
+
+            // If found, put it into other
+            if(nearestEnt.isValid())
+            {
+                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, nearestEnt);
+
+                pWorld->getScriptEngine().setInstanceNPC("other", VobTypes::getScriptHandle(vob));
+            }
+
+            vm.setReturn(nearestEnt.isValid() ? 1 : 0);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
+    vm->registerExternalFunction("ai_wait", [=](Daedalus::DaedalusVM& vm){
+        float duration = vm.popFloatValue();
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            EventMessages::StateMessage sm;
+            sm.subType = EventMessages::StateMessage::EV_Wait;
+            sm.waitTime = duration;
+
+            npc.playerController->getEM().onMessage(sm);
+        }
+
+        vm.setReturn(0);
+    });
 }
 
 

@@ -41,9 +41,14 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     ScriptEngine& s = m_World.getScriptEngine();
     Daedalus::DATFile& dat = s.getVM().getDATFile();
 
+    // Save script variables
+    m_StateOther = s.getNPCFromSymbol("other");
+    m_StateVictim = s.getNPCFromSymbol("victim");
+    m_StateItem = s.getItemFromSymbol("item");
+
     m_NextState.name = dat.getSymbolByIndex(symIdx).name;
 
-    LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0];
+    LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
     // Check if this is just a usual action (ZS = German "Zustand" = State, B = German "Befehl" = Instruction)
     if(m_NextState.name.substr(0, 3) != "ZS_")
@@ -136,6 +141,31 @@ bool NpcScriptState::doAIState(float deltaTime)
     if(m_CurrentState.valid && m_CurrentState.phase == NpcAIState::EPhase::Loop)
         m_CurrentState.stateTime += deltaTime;
 
+
+
+    if(m_Routine.hasRoutine && isInRoutine())
+    {
+        int h, m;
+        m_World.getSky().getTimeOfDay(h, m);
+
+        if(!m_Routine.routine[m_Routine.routineActiveIdx].timeInRange(h, m))
+        {
+            // Find next
+            size_t i=0;
+            for(RoutineEntry& e : m_Routine.routine)
+            {
+                if(e.timeInRange(h, m) && i != m_Routine.routineActiveIdx)
+                {
+                    m_Routine.routineActiveIdx = i;
+                    m_Routine.startNewRoutine = true;
+                    break;
+                }
+
+                i++;
+            }
+        }
+    }
+
     // Only do states if we do not have messages pending
     if(vob.playerController->getEM().isEmpty())
     {
@@ -161,6 +191,7 @@ bool NpcScriptState::doAIState(float deltaTime)
                 m_NextState.valid = false;
             } else
             {
+                LogInfo() << "No active state for NPC: " << VobTypes::getScriptObject(vob).name[0];
                 startRoutineState();
             }
         }
@@ -176,9 +207,9 @@ bool NpcScriptState::doAIState(float deltaTime)
             s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
 
             // These are set by the game, but seem to be always 0
-            //s.setInstance("OTHER", );
-            //s.setInstance("VICTIM", );
-            //s.setInstance("ITEM", );
+            s.setInstanceNPC("OTHER", m_StateOther);
+            s.setInstanceNPC("VICTIM", m_StateVictim);
+            s.setInstanceItem("ITEM", m_StateItem);
 
             if(m_CurrentState.phase == NpcAIState::EPhase::Uninitialized)
             {
@@ -231,7 +262,7 @@ bool NpcScriptState::doAIState(float deltaTime)
         }
     }
 
-    return false;
+    return true;
 }
 
 bool NpcScriptState::startRoutineState(bool force)
@@ -316,6 +347,13 @@ bool NpcScriptState::activateRoutineState(bool force)
 void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEnd, int minutesEnd, size_t symFunc,
                                    const std::string& waypoint)
 {
+    // FIXME: HACK, let the npc teleport to the first entry of the routine
+    if(!m_Routine.hasRoutine)
+    {
+        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
+        npc.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), waypoint));
+    }
+
     m_Routine.hasRoutine = true; // At least one routine-target present
 
     // Make new routine entry
@@ -329,6 +367,8 @@ void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEn
     entry.isOverlay = false;
 
     m_Routine.routine.push_back(entry);
+
+
 }
 
 bool NpcScriptState::isNpcStateDriven()
@@ -362,6 +402,7 @@ void NpcScriptState::reinitRoutine()
     {
         // Clear old routine
         m_Routine.routine.clear();
+        m_Routine.routineActiveIdx = 0;
 
         s.prepareRunFunction();
         s.runFunctionBySymIndex(newSymFn);
@@ -371,5 +412,18 @@ void NpcScriptState::reinitRoutine()
                   << " to: "
                   << s.getVM().getDATFile().getSymbolByIndex(m_Routine.routine[0].symFunc).name;
     }
+}
+
+bool NpcScriptState::isInState(size_t stateMain)
+{
+    if (m_CurrentState.valid)
+    {
+        return m_CurrentState.symIndex == stateMain;
+    } else if (m_NextState.valid)
+    {
+        return m_NextState.symIndex == stateMain;
+    }
+
+    return false;
 }
 

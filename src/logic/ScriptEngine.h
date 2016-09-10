@@ -52,7 +52,8 @@ namespace Logic
          */
         void setInstance(const std::string& target, const std::string& source);
         void setInstance(const std::string& target, size_t source);
-        void setInstance(const std::string& target, Daedalus::GameState::NpcHandle& npc);
+        void setInstanceNPC(const std::string& target, Daedalus::GameState::NpcHandle npc);
+        void setInstanceItem(const std::string& target, Daedalus::GameState::NpcHandle npc);
 
         /**
          * Runs a complete function with the arguments given by pushing onto the stack
@@ -104,6 +105,15 @@ namespace Logic
          * @return List of all registered NPCs in the world
          */
         const std::set<Handle::EntityHandle>& getWorldNPCs(){ return m_WorldNPCs; }
+
+        /**
+         * Looks up the handle currently stored inside the given symbol. If it doesn't hold the right type or nothing
+         * at all, an invalid handle is returned
+         * @param symName Symbol to look up
+         * @return Handle to the instance. Invalid, if empty or wrong type.
+         */
+        Daedalus::GameState::NpcHandle getNPCFromSymbol(const std::string& symName);
+        Daedalus::GameState::ItemHandle getItemFromSymbol(const std::string& symName);
     protected:
 
         /**

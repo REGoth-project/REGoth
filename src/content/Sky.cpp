@@ -74,7 +74,7 @@ void Sky::interpolate(double deltaTime)
     deltaTime *= 100.0f;
 
     if(inputGetKeyState(entry::Key::KeyO))
-        deltaTime *= 10.0;
+        deltaTime *= 100.0;
 
     m_MasterTime += deltaTime;
     m_MasterState.time = fmod(static_cast<float>(m_MasterTime / (60.0 * 60.0 * 24.0)), 1.0f);
@@ -332,5 +332,12 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far,
 
     // Calculate actual fog color
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
+}
+
+void Sky::getTimeOfDay(int& hours, int& minutes)
+{
+    float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
+    hours = (int)fh;
+    minutes = (int)((fh - hours) * 60.0f);
 }
 
