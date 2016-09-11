@@ -155,17 +155,21 @@ void ScriptEngine::initForWorld(const std::string& world)
 
     m_pVM->getGameState().setGameExternals(ext);
 
-    // FIXME: Call the startup-one only on a fresh load of the game
-    if(m_pVM->getDATFile().hasSymbolName("startup_" + world))
+    if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('c'))
     {
-        prepareRunFunction();
-        runFunction("startup_" + world);
-    }
 
-    if(m_pVM->getDATFile().hasSymbolName("init_" + world))
-    {
-        prepareRunFunction();
-        runFunction("init_" + world);
+        // FIXME: Call the startup-one only on a fresh load of the game
+        if (m_pVM->getDATFile().hasSymbolName("startup_" + world))
+        {
+            prepareRunFunction();
+            runFunction("startup_" + world);
+        }
+
+        if (m_pVM->getDATFile().hasSymbolName("init_" + world))
+        {
+            prepareRunFunction();
+            runFunction("init_" + world);
+        }
     }
 
     // Create player

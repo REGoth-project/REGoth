@@ -3,6 +3,7 @@
 #include "World.h"
 #include <vdfs/fileIndex.h>
 #include <ui/View.h>
+#include <bx/commandline.h>
 
 namespace Engine
 {
@@ -14,10 +15,13 @@ namespace Engine
 
         struct EngineArgs
         {
+			EngineArgs() : cmdline(0, NULL) {}
+
             std::string gameBaseDirectory;
             std::string startupZEN;
 			std::string testVisual;
 			std::string modfile;
+			bx::CommandLine cmdline;
         };
 
 		BaseEngine();

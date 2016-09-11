@@ -98,7 +98,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
 	{
 		const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
 
-		anim.m_AnimHandler.addAnimation(libName + "-" + name + ".MAN");
+		anim.m_AnimHandler.addAnimation(name);
 	}
 
     for(int i=0;i<20;i++)
@@ -107,7 +107,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         if(ns.size() == 1)
             ns = "0" + ns;
 
-        anim.m_AnimHandler.addAnimation(libName + "-" + "T_DIALOGGESTURE_" + ns + ".MAN");
+        anim.m_AnimHandler.addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
     /*anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");

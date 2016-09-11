@@ -43,7 +43,7 @@ namespace Components
 		 *		  TODO: Should not copy the animation-samples...
 		 */
 		//void addAnimation(const ZenLoad::zCModelAni& ani);
-		bool addAnimation(const std::string& file);
+		bool addAnimation(const std::string& name);
 
 		/**
 		 * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
@@ -54,6 +54,11 @@ namespace Components
 		 * @brief Sets the currently playing animation without restarting it, if it is currently running. Loops.
 		 */
 		void setAnimation(const std::string& animName);
+
+		/**
+		 * @brief Sets the overlay for this animation manager
+		 */
+		void setOverlay(const std::string& mds);
 
 		/**
 		 * @brief Updates the currently playing animations
@@ -157,6 +162,7 @@ namespace Components
 		 * @brief Meshlib this operates on
 		 */
 		ZenLoad::zCModelMeshLib m_MeshLib;
+		std::string m_MeshLibName;
 
 		/** 
 		 * @brief Active animation
@@ -165,6 +171,11 @@ namespace Components
 		float m_AnimationFrame;
 		size_t m_LastProcessedFrame;
 		bool m_LoopActiveAnimation;
+
+		/**
+		 * @brief Active overlay
+		 */
+		std::string m_ActiveOverlay;
 
 		/** 
 		 * @brief Node transforms in local space

@@ -98,8 +98,8 @@ void PlayerController::onUpdate(float deltaTime)
         if (travelPath(deltaTime))
         {
             // Path done, stop animation
-            if (model)
-                model->setAnimation(ModelVisual::Idle);
+            //if (model)
+            //    model->setAnimation(ModelVisual::Idle);
 
             if (m_RoutineState.routineActive)
                 continueRoutine();
@@ -168,7 +168,8 @@ void PlayerController::teleportToWaypoint(size_t wp)
 
     placeOnGround();
 
-
+    // Start with idle-animation
+    getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
 void PlayerController::gotoWaypoint(size_t wp)
@@ -650,6 +651,15 @@ void PlayerController::onUpdateByInput(float deltaTime)
         m_World.getScriptEngine().runFunction("Use_XP_Map");
     });
 
+    SINGLE_ACTION_KEY(entry::Key::KeyP, [&](){
+        size_t cwp = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+        Handle::EntityHandle npc = VobTypes::Wld_InsertNpc(m_World, "Molerat", m_World.getWaynet().waypoints[cwp].name);
+    });
+
+    SINGLE_ACTION_KEY(entry::Key::Backspace, [&](){
+        m_World.getDialogManager().stopDisplaySubtitle();
+    });
+
     if(inputGetKeyState(entry::Key::KeyL))
     {
         if(!lastDraw)
@@ -914,7 +924,14 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
             {
                 gotoWaypoint(wp);
 
-                return m_AIState.closestWaypoint == wp;
+                if(m_MoveState.currentPath.empty())
+                {
+                    // Back to idle-animation when done
+                    getModelVisual()->setAnimation(ModelVisual::Idle);
+                    return true;
+                }
+
+                return false;
             }else
             {
                 // This must be an actual vob
@@ -942,7 +959,14 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
                 if (wp != World::Waynet::INVALID_WAYPOINT)
                     gotoWaypoint(wp);
 
-                return m_AIState.closestWaypoint == wp;
+                if(m_MoveState.currentPath.empty())
+                {
+                    // Back to idle-animation when done
+                    getModelVisual()->setAnimation(ModelVisual::Idle);
+                    return true;
+                }
+
+                return false;
             }
             break;
 
@@ -1060,9 +1084,30 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
     switch(static_cast<EventMessages::ConversationMessage::ConversationSubType>(message.subType))
     {
 
-        case EventMessages::ConversationMessage::ST_PlayAniSound:break;
-        case EventMessages::ConversationMessage::ST_PlayAni:break;
+        case EventMessages::ConversationMessage::ST_PlayAniSound:
+            break;
+
+        case EventMessages::ConversationMessage::ST_PlayAni:
+        {
+            ZenLoad::zCModelAni* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+
+            if(!message.internInProgress)
+            {
+                getModelVisual()->setAnimation(message.animation, false);
+                active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+                message.internInProgress = true;
+            }
+
+            // Go as long as this animation is playing
+            bool done = !active
+                        || active->getModelAniHeader().aniName != message.animation;
+
+            return done;
+        }
+            break;
+
         case EventMessages::ConversationMessage::ST_PlaySound:break;
+
         case EventMessages::ConversationMessage::ST_LookAt:break;
 
         case EventMessages::ConversationMessage::ST_Output:

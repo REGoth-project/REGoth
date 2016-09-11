@@ -4,6 +4,7 @@
 
 #include <components/Vob.h>
 #include <components/VobClasses.h>
+#include <ZenLib/utils/logger.h>
 #include "EventManager.h"
 
 using namespace Logic;
@@ -47,6 +48,16 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
         message->deleted = true;
     }else
     {
+        if(message->messageType == EventMessages::EventMessageType::Conversation)
+        {
+            EventMessages::ConversationMessage* conv = (EventMessages::ConversationMessage*)message;
+
+            if(conv->subType == EventMessages::ConversationMessage::ST_PlayAni)
+            {
+                LogInfo() << "Set state from: " << m_World.getScriptEngine().getVM().getCallStack();
+            }
+        }
+
         // Queue this
         m_EventQueue.push_back(message);
     }
@@ -170,4 +181,15 @@ void EventManager::clear()
     {
         ev->deleted = true;
     }
+}
+
+bool EventManager::isEmpty()
+{
+    for(EventMessages::EventMessage* ev : m_EventQueue)
+    {
+        if(!ev->deleted)
+            return false;
+    }
+
+    return true;
 }

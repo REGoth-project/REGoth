@@ -23,6 +23,7 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 {
     m_MeshLib = meshLib;
 
+
     m_NodeTransforms.resize(m_MeshLib.getNodes().size());
     m_ObjectSpaceNodeTransforms.resize(m_MeshLib.getNodes().size());
 
@@ -37,12 +38,22 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
     m_SpeedMultiplier = 1.0f;
 }
 
-bool AnimHandler::addAnimation(const std::string &file)
+bool AnimHandler::addAnimation(const std::string &name)
 {
+    // Add overlay/lib
+    std::string file = m_ActiveOverlay + "-" + name + ".MAN";
+
     Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
 
-    if(!h.isValid())
-        return false;
+    // Try again with lib only
+    if(!h.isValid() && m_ActiveOverlay != m_MeshLibName)
+    {
+        file = m_MeshLibName + "-" + name + ".MAN";
+        h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
+
+        if(!h.isValid())
+            return false;
+    }
 
     m_Animations.push_back(h);
     m_AnimationsByName[getAnimation(h).animation.getModelAniHeader().aniName] = h;
@@ -74,7 +85,7 @@ void AnimHandler::playAnimation(const std::string &animName)
 
     // If we currently don't have this animation, try to load it
     if(!hasAnimation(animName))
-        addAnimation(animName + ".MAN");
+        addAnimation(animName);
 
     // find and apply given animation name
     auto it = m_AnimationsByName.find(animName);
@@ -116,6 +127,9 @@ void AnimHandler::updateAnimations(double deltaTime)
     if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimationPtr())
         return; // Nothing to do here // TODO: There is, if interpolation was implemented!
 
+    if(getActiveAnimationPtr()->getModelAniHeader().aniName == "T_1HSFREE")
+        LogInfo() << "!!!";
+
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
         // TODO: Lerp between this and the next frame
@@ -155,6 +169,22 @@ void AnimHandler::updateAnimations(double deltaTime)
     m_AnimationFrame += deltaTime * framesPerSecond;
     if (m_AnimationFrame >= numFrames)
     {
+        // If there is a next animation, play this now
+        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
+        if(!next.empty())
+        {
+            if(next != "S_RUN" && next != "S_RUNL")
+                LogInfo() << "Setting next Ani: " << next;
+
+            bool oldLoop = m_LoopActiveAnimation;
+            playAnimation(next);
+
+            // Make sure we loop that one if we wanted to loop the starting animation
+            m_LoopActiveAnimation = oldLoop;
+
+            return;
+        }
+
         if(m_LoopActiveAnimation)
             m_AnimationFrame = 0.0f;
         else
@@ -272,6 +302,10 @@ bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &i
     ZenLoad::zCModelMeshLib lib(file + ".MDH", idx, 1.0f / 100.0f);
     setMeshLib(lib);
 
+    // Save name of this meshlib loading more animations later
+    m_MeshLibName = file;
+    m_ActiveOverlay = m_MeshLibName;
+
     // Load animations from MDS-file
     // TODO: This is different for G2!
     /*ZenLoad::zCModelPrototype modelPrototype(file + ".MDS", idx);
@@ -281,8 +315,6 @@ bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &i
         LogInfo() << "Loading animation: " << file + "-" + anim.animationName + ".MAN";
         addAnimation(file + "-" + anim.animationName + ".MAN", idx, 1.0f / 100.0f);
     }*/
-
-    addAnimation(file + "-" + "S_RUN" + ".MAN");
 
     return true;
 }
@@ -316,4 +348,29 @@ void AnimHandler::setBindPose(bool force)
 Animations::Animation &AnimHandler::getAnimation(Handle::AnimationHandle h)
 {
     return m_pWorld->getAnimationAllocator().getAnimation(h);
+}
+
+void AnimHandler::setOverlay(const std::string& mds)
+{
+    if(mds.find_last_of('.') != std::string::npos)
+    {
+        m_ActiveOverlay = mds.substr(0, mds.find_last_of('.'));
+    }else
+    {
+        m_ActiveOverlay = mds;
+    }
+
+    if(mds.empty())
+        m_ActiveOverlay = m_MeshLibName;
+
+    // Try to switch loaded animations
+    for(auto& a : m_AnimationsByName)
+    {
+        std::string name = getAnimation(a.second).animation.getModelAniHeader().aniName;
+        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_ActiveOverlay + "-" + name + ".MAN");
+
+        // Update with overlay variant
+        if(h.isValid())
+            a.second = h;
+    }
 }

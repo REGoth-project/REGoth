@@ -320,6 +320,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string s = vm.popString();
         int32_t ch = vm.popDataValue();
 
+        return;
+
 		// Remove some really annoying debug-output
 		if(s == "### (0) ### -> B_Scale")
 			return;
@@ -481,7 +483,12 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if(npc.isValid())
         {
-            npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+            EventMessages::MovementMessage sm;
+            sm.subType = EventMessages::MovementMessage::ST_GotoVob;
+            sm.targetVobName = wp;
+
+            npc.playerController->getEM().onMessage(sm);
+            //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
         }
     });
 
@@ -616,6 +623,53 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.waitTime = duration;
 
             npc.playerController->getEM().onMessage(sm);
+        }
+
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("ai_playani", [=](Daedalus::DaedalusVM& vm){
+        std::string ani = vm.popString();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            EventMessages::ConversationMessage sm;
+            sm.subType = EventMessages::ConversationMessage::ST_PlayAni;
+            sm.animation = ani;
+
+            npc.playerController->getEM().onMessage(sm);
+        }
+
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("mdl_applyoverlaymds", [=](Daedalus::DaedalusVM& vm){
+        std::string overlayname = vm.popString();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->getModelVisual()->applyOverlay(overlayname);
+        }
+
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("mdl_removeoverlaymds", [=](Daedalus::DaedalusVM& vm){
+        std::string overlayname = vm.popString();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // TODO: Implement using of multiple overlays!
+            npc.playerController->getModelVisual()->applyOverlay("");
         }
 
         vm.setReturn(0);

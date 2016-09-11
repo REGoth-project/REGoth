@@ -668,3 +668,8 @@ void ModelVisual::stopAnimations()
     getAnimationHandler().stopAnimation();
 }
 
+void ModelVisual::applyOverlay(const std::string& mds)
+{
+    getAnimationHandler().setOverlay(mds);
+}
+

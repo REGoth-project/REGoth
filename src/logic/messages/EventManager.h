@@ -41,7 +41,7 @@ namespace Logic
         /**
          * @return
          */
-        bool isEmpty(){ return m_EventQueue.empty(); }
+        bool isEmpty();
 
         /**
          * Searches the messages for one that is a conversation message and has the NPC with the entity "other" as target

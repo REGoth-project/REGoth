@@ -162,6 +162,11 @@ namespace Logic
 		void setAnimation(EModelAnimType type, bool loop = true);
 
 		/**
+		 * @brief Applys the given animation overlay
+		 */
+		void applyOverlay(const std::string& mds);
+
+		/**
 		 * Plays the given animation exactly one time. Has more priority than setAnimation.
 		 * @param type Animation to play
 		 */

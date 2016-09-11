@@ -24,15 +24,15 @@ BaseEngine::~BaseEngine()
 
 void BaseEngine::initEngine(int argc, char** argv)
 {
-    bx::CommandLine cmdLine(argc, (const char**)argv);
+    m_Args.cmdline = bx::CommandLine(argc, (const char**)argv);
     const char* value = nullptr;
 
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-    if(cmdLine.hasArg('g'))
+    if(m_Args.cmdline.hasArg('g'))
     {
-        value = cmdLine.findOption('g');
+        value = m_Args.cmdline.findOption('g');
 
         if(value)
         {
@@ -44,9 +44,9 @@ void BaseEngine::initEngine(int argc, char** argv)
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
     }
 
-    if(cmdLine.hasArg('m'))
+    if(m_Args.cmdline.hasArg('m'))
     {
-        value = cmdLine.findOption('m');
+        value = m_Args.cmdline.findOption('m');
 
         if(value)
         {
@@ -55,9 +55,9 @@ void BaseEngine::initEngine(int argc, char** argv)
         }
     }
 
-    if(cmdLine.hasArg('w'))
+    if(m_Args.cmdline.hasArg('w'))
     {
-        value = cmdLine.findOption('w');
+        value = m_Args.cmdline.findOption('w');
 
         if(value)
         {

@@ -191,7 +191,7 @@ bool NpcScriptState::doAIState(float deltaTime)
                 m_NextState.valid = false;
             } else
             {
-                LogInfo() << "No active state for NPC: " << VobTypes::getScriptObject(vob).name[0];
+                //LogInfo() << "No active state for NPC: " << VobTypes::getScriptObject(vob).name[0];
                 startRoutineState();
             }
         }
@@ -215,6 +215,8 @@ bool NpcScriptState::doAIState(float deltaTime)
             {
                 // TODO: Set perception-time to 5000
 
+                LogInfo() << "AISTATE-INIT: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+
                 if(m_CurrentState.symIndex > 0)
                 {
                     // Call setup-function
@@ -227,6 +229,8 @@ bool NpcScriptState::doAIState(float deltaTime)
             }else if(m_CurrentState.phase == NpcAIState::EPhase::Loop)
             {
                 bool end = true;
+
+                LogInfo() << "AISTATE-LOOP: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 // Call looping-function
                 if(m_CurrentState.symLoop > 0)
@@ -248,6 +252,8 @@ bool NpcScriptState::doAIState(float deltaTime)
 
             }else if(m_CurrentState.phase == NpcAIState::EPhase::End)
             {
+                LogInfo() << "AISTATE-END: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+
                 // Call end-function
                 if(m_CurrentState.symEnd > 0)
                 {
@@ -326,7 +332,7 @@ bool NpcScriptState::activateRoutineState(bool force)
         return startAIState(m_Routine.routine[m_Routine.routineActiveIdx].symFunc, true, true);
     }else if(isNpcStateDriven())
     {
-        return false;
+        //return false;
         if(force)
         {
             // Make it look like we don't have anything running now
