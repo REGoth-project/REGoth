@@ -115,9 +115,5 @@ namespace Engine
 		 */
 		UI::View m_RootUIView;
 
-		/**
-		 * Currently active world instances
-		 */
-		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
 	};
 }

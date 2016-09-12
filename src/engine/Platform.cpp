@@ -1,7 +1,27 @@
 #include "Platform.h"
 #include "utils/Utils.h"
-#include <bgfx/bgfxplatform.h>
 #include <thread>
+
+#include <bx/platform.h>
+#if defined(_glfw3_h_)
+// If GLFW/glfw3.h is included before bgfxplatform.h we can enable GLFW3
+// window interop convenience code.
+
+#	if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+#		define GLFW_EXPOSE_NATIVE_X11
+#		define GLFW_EXPOSE_NATIVE_GLX
+#	elif BX_PLATFORM_OSX
+#		define GLFW_EXPOSE_NATIVE_COCOA
+#		define GLFW_EXPOSE_NATIVE_NSGL
+#	elif BX_PLATFORM_WINDOWS
+#		define GLFW_EXPOSE_NATIVE_WIN32
+#		define GLFW_EXPOSE_NATIVE_WGL
+#	endif //
+#	include <GLFW/glfw3native.h>
+#endif
+#include <bgfx/bgfxplatform.h>
+
+
 
 //#include <bx/bx.h>
 //#include <bgfx/bgfx.h>
@@ -31,6 +51,27 @@
 
 using namespace Engine;
 
+inline void glfwSetWindow(GLFWwindow* _window)
+{
+    bgfx::PlatformData pd;
+#	if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+    pd.ndt = glfwGetX11Display();
+    pd.nwh = (void*) (uintptr_t) glfwGetGLXWindow(_window);
+    pd.context = glfwGetGLXContext(_window);
+#	elif BX_PLATFORM_OSX
+    pd.ndt          = NULL;
+    pd.nwh          = glfwGetCocoaWindow(_window);
+    pd.context      = glfwGetNSGLContext(_window);
+#	elif BX_PLATFORM_WINDOWS
+    pd.ndt          = NULL;
+    pd.nwh          = glfwGetWin32Window(_window);
+    pd.context      = NULL;
+#	endif // BX_PLATFORM_WINDOWS
+    pd.backBuffer = NULL;
+    pd.backBufferDS = NULL;
+    setPlatformData(pd);
+}
+
 int32_t Platform::run(int argc, char** argv)
 {
     constexpr int width = 1280;
@@ -54,7 +95,7 @@ int32_t Platform::run(int argc, char** argv)
     //glfwMakeContextCurrent(window);
 
     // Initialize bgfx
-    bgfx::glfwSetWindow(window);
+    glfwSetWindow(window);
 
     glfwSetKeyCallback(window, keyEvent);
     glfwSetMouseButtonCallback(window, mouseButtonEvent);
@@ -64,9 +105,8 @@ int32_t Platform::run(int argc, char** argv)
     glfwSetWindowSizeCallback(window, windowSizeEvent);
     windowSizeEvent(window, width, height);
 
-    setMouseLockCallback([&window](bool lock)
-    {
-        if(lock)
+    setMouseLockCallback([&window](bool lock) {
+        if (lock)
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         else
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -159,7 +199,7 @@ int32_t Platform::run(int argc, char** argv)
     return future.get();
 }
 
-void Platform::mainLoop(std::promise<int32_t> && returnValue, int argc, char** argv)
+void Platform::mainLoop(std::promise<int32_t>&& returnValue, int argc, char** argv)
 {
     //DBG(BX_COMPILER_NAME " / " BX_CPU_NAME " / " BX_ARCH_NAME " / " BX_PLATFORM_NAME);
 
@@ -215,10 +255,10 @@ void Platform::mainLoop(std::promise<int32_t> && returnValue, int argc, char** a
 //    s_app = _app;
 //    emscripten_set_main_loop(&updateApp, -1, 1);
 //#else
-    while ( update() );
+    while (update());
 //#endif // BX_PLATFORM_EMSCRIPTEN
 
-    returnValue.set_value( shutdown() );
+    returnValue.set_value(shutdown());
 
 //    inputRemoveBindings("bindings");
 //    inputShutdown();

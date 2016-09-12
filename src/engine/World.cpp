@@ -284,7 +284,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName)
 {
     // Default to the path G2 uses
-    std::string datFile = Utils::getCaseSensitivePath(getEngine()->getEngineArgs().gameBaseDirectory + "/_work/data/Scripts/_compiled/GOTHIC.DAT");
+    std::string datPath = m_pEngine->getEngineArgs().gameBaseDirectory
+                          + "/_work/data/Scripts/_compiled/GOTHIC.DAT";
+    std::string datFile = Utils::getCaseSensitivePath(datPath);
 
     // Check G2 variant
     if(Utils::fileExists(datFile))
@@ -292,7 +294,7 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
         m_ScriptEngine.loadDAT(datFile);
     } else
     {
-        LogError() << "Failed to find GOTHIC.DAT!";
+        LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
     }
 
 	if(!worldName.empty())

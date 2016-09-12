@@ -160,6 +160,11 @@ namespace Content
         /**
          * Debug only
          */
-        bool m_skySpeedMultiplier;
+        float m_skySpeedMultiplier;
+
+        /**
+         * Global Farplane
+         */
+        float m_FarPlane;
     };
 }

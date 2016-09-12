@@ -12,27 +12,39 @@
 
 namespace Render
 {
-	/**
-	* @brief Draws the main renderpass of the given world
-	*/
-	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
-	{
-		// Set up sky-LUT
-		bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+    /**
+     * Sets sky and fog related uniforms
+     * @param world World to take the parameters from
+     */
+    void setupSky(World::WorldInstance& world, const RenderConfig& config)
+    {
+        const Content::Sky::SkyState& masterState = world.getSky().getMasterState();
 
-		// Set up sky-color to match the fog-color
-		Math::float4 fogColor = Math::float4(world.getSky().getMasterState().fogColor.x,
-											 world.getSky().getMasterState().fogColor.y,
-											 world.getSky().getMasterState().fogColor.z,
-											 1.0f);
+        world.getSky().setFarPlane(config.state.farPlane);
+
+        // Set up sky-LUT
+        bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+
+
+        // Set fog constants
+        Math::float3 fogColor;
+        float fogNear, fogFar;
+        world.getSky().getFogValues(config.state.cameraWorld.Translation(),
+                                    fogNear, fogFar, fogColor);
+
+        // Put into float4 to convert to 32-bit RGBA
+        Math::float4 fogColorRGBA = Math::float4(fogColor.x,
+                                                 fogColor.y,
+                                                 fogColor.z,
+                                                 1.0f);
 
         Math::float4 fogNearFar = Math::float4(fogNear, fogFar, 0,0);
 
         bgfx::setUniform(config.uniforms.fogColor, fogColorRGBA.v);
         bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
 
-		int h,m;
-		world.getSky().getTimeOfDay(h, m);
+        int h,m;
+        world.getSky().getTimeOfDay(h, m);
         bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %d:%d (%f)", h, m, world.getSky().getTimeOfDay());
         bgfx::dbgTextPrintf(0, 11, 0x0f, "FogNear: %f", fogNear);
         bgfx::dbgTextPrintf(0, 12, 0x0f, "FogFar : %f", fogFar);
@@ -45,10 +57,9 @@ namespace Render
                 , 0
         );
 
-		// Don't complain about setting uniforms twice when not actually drawing anything
-		bgfx::touch(0);
+        // Don't complain about setting uniforms twice when not actually drawing anything
+        bgfx::touch(0);
     }
-
 	/**
 	 * @brief Draws the main renderpass of the given world
 	 */

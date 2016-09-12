@@ -158,7 +158,7 @@ void PlayerController::onUpdate(float deltaTime)
 
     // TODO: HACK, take this out!
     // Make following NPCs a bit faster...
-    if(m_RoutineState.entityTarget.isValid())
+    /*if(m_RoutineState.entityTarget.isValid())
     {
         float defSpeed = 7.0f;
         if (inputGetKeyState(entry::Key::Space))
@@ -167,7 +167,7 @@ void PlayerController::onUpdate(float deltaTime)
             m_NPCProperties.moveSpeed = defSpeed * 8;
         else
             m_NPCProperties.moveSpeed = defSpeed;
-    }
+    }*/
 }
 
 void PlayerController::continueRoutine()
@@ -653,6 +653,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if(m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
 	{
+        static std::string lastMovementAni = "";
         if(m_isStrafeLeft)
 		{
 			model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
@@ -748,9 +749,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
     } else if (m_isTurnRight)
     {
         yaw += turnSpeed * deltaTime;
-    } else if (inputGetKeyState(entry::Key::Right))
-    {
-        yaw -= turnSpeed * deltaTime;
     }
 
     // TODO: HACK, take this out!
@@ -1134,10 +1132,10 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
 
             bool done = false;
-            SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
+            /*SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
                 done = true;
                 m_World.getDialogManager().stopDisplaySubtitle();
-            });
+            });*/
 
             return done;
         }

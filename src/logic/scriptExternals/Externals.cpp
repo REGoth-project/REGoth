@@ -29,7 +29,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     };
 
     // TODO: Refractor
-    auto getNPCByInstance = [&](size_t instance)
+    auto getNPCByInstance = [vm, engine](size_t instance)
     {
         Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);

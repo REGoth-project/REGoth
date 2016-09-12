@@ -79,7 +79,7 @@ namespace Utils
      * @param string file relative path
      * @return str, full sensitive path. Empty if path is invalid/could not be found
      */
-    std::string getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path);
+    std::string getCaseSensitivePath(const std::string& case_insensitive_path);
 
     bgfx::ShaderHandle loadShader(const char* _name);
 

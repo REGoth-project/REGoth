@@ -27,6 +27,8 @@ Sky::Sky(World::WorldInstance& world) :
     m_MasterState.time = 0.0f;
     m_FarPlane = FLT_MAX;
 	m_MasterTime = 0.0f;
+    m_skySpeedMultiplier = 1.0f;
+
     fillSkyStates();
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugSkySpeed, [this](bool, float intensity)
@@ -342,3 +344,9 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far,
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
 
+void Sky::getTimeOfDay(int& hours, int& minutes)
+{
+    float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
+    hours = (int)fh;
+    minutes = (int)((fh - hours) * 60.0f);
+}
