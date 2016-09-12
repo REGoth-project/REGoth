@@ -91,6 +91,11 @@ namespace Engine
 		virtual void loadArchives();
 
 		/**
+		 * Currently active world instances
+		 */
+		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
+
+		/**
 		 * Main VDFS-Index
 		 */
 		VDFS::FileIndex m_FileIndex;

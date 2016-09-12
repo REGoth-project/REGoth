@@ -158,8 +158,8 @@ namespace Content
         World::WorldInstance& m_World;
 
         /**
-         * Global Farplane
+         * Debug only
          */
-        float m_FarPlane;
+        bool m_skySpeedMultiplier;
     };
 }

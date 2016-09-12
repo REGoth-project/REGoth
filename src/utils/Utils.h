@@ -8,9 +8,14 @@
 #include <math/mathlib.h>
 #include <functional>
 #include <list>
+#include <bgfx/bgfx.h>
 
 namespace Utils
 {
+
+    void initializeFileReaderWriter();
+    void destroyFileReaderWriter();
+
     struct BBox3D
     {
         Math::float3 min;
@@ -74,6 +79,12 @@ namespace Utils
      * @param string file relative path
      * @return str, full sensitive path. Empty if path is invalid/could not be found
      */
-    std::string getCaseSensitivePath(const std::string& caseInsensitivePath);
-    
+    std::string getCaseSensitivePath(std::string root_directory, std::string case_insensitive_path);
+
+    bgfx::ShaderHandle loadShader(const char* _name);
+
+    bgfx::ProgramHandle loadProgram(const char* _vsName, const char* _fsName);
+
+    //bgfx::TextureHandle loadTexture(const char* _name, uint32_t _flags = BGFX_TEXTURE_NONE, uint8_t _skip = 0, bgfx::TextureInfo* _info = NULL);
+
 }

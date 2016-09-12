@@ -29,7 +29,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     };
 
     // TODO: Refractor
-    auto getNPCByInstance = [vm, engine](size_t instance)
+    auto getNPCByInstance = [&](size_t instance)
     {
         Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
@@ -70,7 +70,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         
     };
 
-    auto getItemByInstance = [vm, engine](size_t instance)
+    auto getItemByInstance = [&](size_t instance)
     {
         Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);

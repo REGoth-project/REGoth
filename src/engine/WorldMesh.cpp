@@ -15,8 +15,6 @@ WorldMesh::WorldMesh(World::WorldInstance& parentWorld)
 void WorldMesh::load(const ZenLoad::PackedMesh& in)
 {
 	m_WorldMeshData = in;
-	m_BBox3d[0] = Math::float3(in.bbox[0].v);
-	m_BBox3d[1] = Math::float3(in.bbox[1].v);
 }
 
 float WorldMesh::interpolateTriangleShadowValue(size_t triangleIdx, const Math::float3 &worldPosition)

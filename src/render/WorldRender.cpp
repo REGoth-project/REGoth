@@ -12,31 +12,19 @@
 
 namespace Render
 {
-    /**
-     * Sets sky and fog related uniforms
-     * @param world World to take the parameters from
-     */
-    void setupSky(World::WorldInstance& world, const RenderConfig& config)
-    {
-        const Content::Sky::SkyState& masterState = world.getSky().getMasterState();
+	/**
+	* @brief Draws the main renderpass of the given world
+	*/
+	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
+	{
+		// Set up sky-LUT
+		bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
 
-        world.getSky().setFarPlane(config.state.farPlane);
-
-        // Set up sky-LUT
-        bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
-
-
-        // Set fog constants
-        Math::float3 fogColor;
-        float fogNear, fogFar;
-        world.getSky().getFogValues(config.state.cameraWorld.Translation(),
-                                    fogNear, fogFar, fogColor);
-
-        // Put into float4 to convert to 32-bit RGBA
-        Math::float4 fogColorRGBA = Math::float4(fogColor.x,
-                                                 fogColor.y,
-                                                 fogColor.z,
-                                                 1.0f);
+		// Set up sky-color to match the fog-color
+		Math::float4 fogColor = Math::float4(world.getSky().getMasterState().fogColor.x,
+											 world.getSky().getMasterState().fogColor.y,
+											 world.getSky().getMasterState().fogColor.z,
+											 1.0f);
 
         Math::float4 fogNearFar = Math::float4(fogNear, fogFar, 0,0);
 
@@ -262,9 +250,6 @@ namespace Render
 
 		ddPop();
 	}
-
-
-
 }
 
 void Render::debugDrawPath(const World::Waynet::WaynetInstance& waynet, const std::vector<size_t>& path)

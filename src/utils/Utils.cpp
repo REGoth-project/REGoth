@@ -3,8 +3,28 @@
 #include <utils/logger.h>
 #include <algorithm>
 #include <cctype>
+#include <bx/readerwriter.h>
+#include <bx/crtimpl.h>
 #include <utils/split.h>
 
+static bx::FileReaderI* fileReader = nullptr;
+static bx::FileWriterI* fileWriter = nullptr;
+
+
+void Utils::initializeFileReaderWriter()
+{
+    fileReader = new bx::CrtFileReader;
+    fileWriter = new bx::CrtFileWriter;
+}
+
+void Utils::destroyFileReaderWriter()
+{
+    delete fileReader;
+    fileReader = nullptr;
+
+    delete fileWriter;
+    fileWriter = nullptr;
+}
 
 void ::Utils::forEachFile(const std::string& directory, std::function<void(const std::string&,const std::string&,const std::string&)> fn, bool recursive )
 {
@@ -141,4 +161,81 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath)
 
     return result;
 #endif
+}
+
+namespace Utils
+{
+static const bgfx::Memory* loadMem(bx::FileReaderI* _reader, const char* _filePath)
+{
+    if (bx::open(_reader, _filePath) )
+    {
+        uint32_t size = (uint32_t)bx::getSize(_reader);
+        const bgfx::Memory* mem = bgfx::alloc(size+1);
+        bx::read(_reader, mem->data, size);
+        bx::close(_reader);
+        mem->data[mem->size-1] = '\0';
+        return mem;
+    }
+
+    //DBG("Failed to load %s.", _filePath);
+    return NULL;
+}
+
+static bgfx::ShaderHandle loadShader(bx::FileReaderI* _reader, const char* _name)
+{
+    char filePath[512];
+
+    const char* shaderPath = "shaders/dx9/";
+
+    switch (bgfx::getRendererType() )
+    {
+    case bgfx::RendererType::Direct3D11:
+    case bgfx::RendererType::Direct3D12:
+        shaderPath = "shaders/dx11/";
+        break;
+
+    case bgfx::RendererType::OpenGL:
+        shaderPath = "shaders/glsl/";
+        break;
+
+    case bgfx::RendererType::Metal:
+        shaderPath = "shaders/metal/";
+        break;
+
+    case bgfx::RendererType::OpenGLES:
+        shaderPath = "shaders/gles/";
+        break;
+
+    default:
+        break;
+    }
+
+    strcpy(filePath, shaderPath);
+    strcat(filePath, _name);
+    strcat(filePath, ".bin");
+
+    return bgfx::createShader(loadMem(_reader, filePath) );
+}
+
+bgfx::ProgramHandle loadProgram(bx::FileReaderI* _reader, const char* _vsName, const char* _fsName)
+{
+    bgfx::ShaderHandle vsh = loadShader(_reader, _vsName);
+    bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
+    if (NULL != _fsName)
+    {
+        fsh = loadShader(_reader, _fsName);
+    }
+
+    return bgfx::createProgram(vsh, fsh, true /* destroy shaders when program is destroyed */);
+}
+} // namespace Utils
+
+bgfx::ShaderHandle Utils::loadShader(const char* _name)
+{
+    return loadShader(fileReader, _name);
+}
+
+bgfx::ProgramHandle Utils::loadProgram(const char* _vsName, const char* _fsName)
+{
+    return loadProgram(fileReader, _vsName, _fsName);
 }

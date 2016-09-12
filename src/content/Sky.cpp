@@ -7,6 +7,8 @@
 #include <engine/World.h>
 #include <entry/input.h>
 #include "Sky.h"
+#include "engine/Input.h"
+#include <iostream>
 
 using namespace Content;
 
@@ -26,11 +28,15 @@ Sky::Sky(World::WorldInstance& world) :
     m_FarPlane = FLT_MAX;
 	m_MasterTime = 0.0f;
     fillSkyStates();
+
+    Engine::Input::RegisterAction(Engine::ActionType::DebugSkySpeed, [this](bool, float intensity)
+    {
+        m_skySpeedMultiplier = 1.0 + 99.0 * intensity;
+    });
 }
 
 Sky::~Sky()
 {
-
 }
 
 
@@ -73,13 +79,15 @@ void Sky::interpolate(double deltaTime)
 {
     deltaTime *= 100.0f;
 
-    if(inputGetKeyState(entry::Key::KeyO))
-        deltaTime *= 100.0;
+    deltaTime *= m_skySpeedMultiplier;
+
+//    if(inputGetKeyState(entry::Key::KeyO))
+//        deltaTime *= 10.0;
 
     m_MasterTime += deltaTime;
     m_MasterState.time = fmod(static_cast<float>(m_MasterTime / (60.0 * 60.0 * 24.0)), 1.0f);
 
-    size_t si0 = ESkyPresetType::ESPT_NUM_PRESETS - 1, si1 = 0;
+    size_t si0 = 0, si1 = 1;
 
     // Find the two states we're interpolating
     for(size_t i=0; i<ESkyPresetType::ESPT_NUM_PRESETS; i++)
@@ -332,12 +340,5 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far,
 
     // Calculate actual fog color
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
-}
-
-void Sky::getTimeOfDay(int& hours, int& minutes)
-{
-    float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
-    hours = (int)fh;
-    minutes = (int)((fh - hours) * 60.0f);
 }
 

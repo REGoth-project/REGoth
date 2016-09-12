@@ -56,7 +56,7 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-# Setup bullet 
+# Setup bullet
 if(MSVC)
 	set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
 endif()
@@ -130,7 +130,6 @@ include_directories(lib)
 include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
-
 add_subdirectory(lib/glfw)
 include_directories(lib/glfw/include)
 

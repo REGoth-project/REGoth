@@ -20,17 +20,12 @@ namespace Render
             bgfx::UniformHandle nodeTransforms;
             bgfx::UniformHandle objectColor;
             bgfx::UniformHandle skyCLUT;
-            bgfx::UniformHandle fogColor;
-            bgfx::UniformHandle fogNearFar;
         }uniforms;
 
         struct
         {
             Math::Matrix cameraWorld;
             float drawDistanceSquared;
-            float farPlane;
-            uint32_t viewWidth;
-            uint32_t viewHeight;
         }state;
     };
 

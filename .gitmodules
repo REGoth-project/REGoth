@@ -16,9 +16,6 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "lib/portaudio"]
-	path = lib/portaudio
-	url = https://git.assembla.com/portaudio.git
 [submodule "lib/SFML"]
 	path = lib/SFML
 	url = https://github.com/SFML/SFML.git
