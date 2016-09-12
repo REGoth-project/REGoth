@@ -80,7 +80,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
         if(info.condition)
         {
             m_World.getScriptEngine().prepareRunFunction();
-            valid = m_World.getScriptEngine().runFunction(info.condition);
+            valid = m_World.getScriptEngine().runFunctionBySymIndex(info.condition);
         }
 
         if(valid)
@@ -238,7 +238,7 @@ bool DialogManager::performChoice(size_t choice)
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
-    m_World.getScriptEngine().runFunction(info.information);
+    m_World.getScriptEngine().runFunctionBySymIndex(info.information);
 
     // We now know this information
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);

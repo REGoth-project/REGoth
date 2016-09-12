@@ -292,7 +292,7 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
 		m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
 		m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
 
-		runFunction(npcData.daily_routine);
+		runFunctionBySymIndex(npcData.daily_routine);
 	}
 }
 

@@ -23,7 +23,8 @@
                          ObjectComponent,\
                          VisualComponent,\
                          AnimationComponent,\
-                         PhysicsComponent
+                         PhysicsComponent,\
+                         SpotComponent
 
 namespace Logic
 {
@@ -272,6 +273,26 @@ namespace Components
         static void init(PhysicsComponent& c)
         {
             c.m_IsStatic = true;
+        }
+    };
+
+    struct SpotComponent : public Component
+    {
+        enum { MASK = 1 << 11 };
+
+        /**
+         * Entity currently on this spot
+         */
+        Handle::EntityHandle m_UsingEntity;
+
+        /**
+         * Time when this spot will be free again
+         */
+        float m_UseEndTime;
+
+        static void init(SpotComponent& c)
+        {
+            c.m_UseEndTime = 0.0f;
         }
     };
 

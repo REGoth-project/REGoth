@@ -148,6 +148,15 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 					{
 						startPoint = v;
 					}
+
+                    // Check for freepoint
+                    if(v.objectClass == "zCVobSpot:zCVob")
+                    {
+                        // Register freepoint
+                        Handle::EntityHandle h = addEntity(Components::ObjectComponent::MASK | Components::SpotComponent::MASK | Components::PositionComponent::MASK);
+                        getEntity<Components::ObjectComponent>(h).m_Name = v.vobName;
+                        m_FreePoints[v.vobName] = h;
+                    }
 				}
 				else
 				{
@@ -325,6 +334,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 {
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
+    m_WorldInfo.time += deltaTime;
 
     // Update physics
     m_PhysicsSystem.update(deltaTime);
@@ -397,20 +407,6 @@ std::vector<size_t> WorldInstance::findStartPoints()
 {
     std::vector<size_t> pts;
 
-    // TODO: Find out how this stuff works, or is it even needed? I need to get he zCVobStartpoint out of the zen!
-    /*for(size_t i=0;i<m_Waynet.waypoints.size();i++)
-    {
-        // From spacer-doc:
-        // Der Name eines Startpoints muss den Instanznamen des Spielers enthalten, der an diesem Punkt starten soll.
-        // Format: Beispiel: START_PC_HERO für die Instanz "PC_HERO" oder START_OLD_MAN ...
-        // => Name of a startpoint always starts with "START_"
-
-        // Main start point seems to be called "GAME_START"
-
-        if(m_Waynet.waypoints[i].name.find("START") != 0)
-            pts.push_back(i);
-    }*/
-
 	// General
 
 	auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
@@ -432,18 +428,71 @@ std::vector<size_t> WorldInstance::findStartPoints()
         // Format: Beispiel: START_PC_HERO für die Instanz "PC_HERO" oder START_OLD_MAN ...
         // => Name of a startpoint always starts with "START_"
 
+        // Doesn't actually seem the case, tho!
+
         // Take anything with START for now
         if(m_Waynet.waypoints[i].name.find("START") != std::string::npos)
             pts.push_back(i);
     }
 
-    if(pts.empty() && !m_Waynet.waypoints.empty())
+    return pts;
+}
+
+std::vector<Handle::EntityHandle>
+WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, const std::string& name, bool closestOnly,
+                                    Handle::EntityHandle inst)
+{
+    std::vector<Handle::EntityHandle> m;
+    Handle::EntityHandle closestFP;
+
+    float closest2 = FLT_MAX;
+    float distance2 = distance * distance;
+    std::vector<Handle::EntityHandle> fps = getFreepoints(name);
+    for(auto& fp : fps)
     {
-        // Use first waypoint available
-        //pts.push_back(0);
+        Components::ObjectComponent& obj = getEntity<Components::ObjectComponent>(fp);
+        if(name.empty() || obj.m_Name == name)
+        {
+            Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
+            Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
+
+            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < m_WorldInfo.time)
+               && (!inst.isValid() || sp.m_UsingEntity != inst))
+            {
+
+                float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
+                if (fpd2 < distance2)
+                {
+                    if (fpd2 < closest2)
+                    {
+                        closest2 = fpd2;
+                        closestFP = fp;
+                    }
+                }
+
+                if (!closestOnly)
+                    m.push_back(fp);
+            }
+        }
     }
 
-    return pts;
+    if(closestOnly)
+        return closestFP.isValid() ? std::vector<Handle::EntityHandle>( {closestFP} ) : std::vector<Handle::EntityHandle>();
+    else
+        return m;
+}
+
+std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string& tag)
+{
+    std::vector<Handle::EntityHandle> mp;
+
+    for(auto& fp : m_FreePoints)
+    {
+        if(fp.first.substr(0, tag.size()) == tag)
+            mp.push_back(fp.second);
+    }
+
+    return mp;
 }
 
 

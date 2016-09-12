@@ -75,11 +75,15 @@ namespace World
 		{
 			WorldInfo()
 			{
-				lastFrameDeltaTime = 0.0f;
+				lastFrameDeltaTime = 0.0;
+				time = 0.0;
 			}
 
 			// Last deltatime-value we have gotten here
 			double lastFrameDeltaTime;
+
+			// Total running time
+			double time;
 		};
 
 		WorldInstance();
@@ -231,6 +235,26 @@ namespace World
 		 * @return Information about the state of the world
 		 */
 		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
+
+		/**
+		 * @return Map of freepoints
+		 */
+		std::vector<Handle::EntityHandle> getFreepoints(const std::string& tag);
+
+		/**
+		 * Returns a map of freepoints in the given range of the center
+		 * @param center Center of distance search
+		 * @param distance Max distance to check for
+		 * @param name Name-filter
+		 * @param closestOnly Put only the closest one into the result
+		 * @param inst Entity that want's a new freepoint, aka, should not be on any of the returned ones
+		 * @return Vector of closest freepoints
+		 */
+		std::vector<Handle::EntityHandle> getFreepointsInRange(const Math::float3& center,
+															   float distance,
+															   const std::string& name = "",
+															   bool closestOnly = false,
+															   Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
 	protected:
 
 		/**
@@ -294,6 +318,11 @@ namespace World
          * Map of vobs by their names (If they have one)
          */
         std::unordered_map<std::string, Handle::EntityHandle> m_VobsByNames;
+
+		/**
+		 * List of freepoints
+		 */
+		std::map<std::string, Handle::EntityHandle> m_FreePoints;
 
 		/**
 		 * NPCs in this world

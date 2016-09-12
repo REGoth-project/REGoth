@@ -492,6 +492,22 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+    vm->registerExternalFunction("ai_gotonextfp", [=](Daedalus::DaedalusVM& vm){
+        std::string fp = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            EventMessages::MovementMessage sm;
+            sm.subType = EventMessages::MovementMessage::ST_GotoFP;
+            sm.targetVobName = fp;
+            npc.playerController->getEM().onMessage(sm);
+            //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+        }
+    });
+
     vm->registerExternalFunction("infomanager_hasfinished", [=](Daedalus::DaedalusVM& vm){
        vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
     });
@@ -673,6 +689,62 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
 
         vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("wld_isfpavailable", [=](Daedalus::DaedalusVM& vm){
+        std::string fpname = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true);
+
+            vm.setReturn(!fp.empty());
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
+    vm->registerExternalFunction("wld_isnextfpavailable", [=](Daedalus::DaedalusVM& vm){
+        std::string fpname = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true, npc.entity);
+
+            vm.setReturn(!fp.empty());
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
+    vm->registerExternalFunction("npc_isonfp", [=](Daedalus::DaedalusVM& vm){
+        std::string fpname = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Find fp with given name
+            // TODO
+            /*Handle::EntityHandle fp = (*pWorld->getFreepoints().find(fpname)).second;
+            Components::SpotComponent& sp = pWorld->getEntity<Components::SpotComponent>(fp);
+
+            vm.setReturn(sp.m_UsingEntity == npc.entity && sp.m_UseEndTime < pWorld->getWorldInfo().time);*/
+        }else
+        {
+            vm.setReturn(0);
+        }
     });
 }
 

@@ -85,6 +85,7 @@ namespace Logic
          * @param Waypoint index to go to
          */
         void teleportToWaypoint(size_t wp);
+        void teleportToPosition(const Math::float3& pos);
 
         /**
          * Sets the direction the NPC should be facing to (snaps, doesn't interpolate nor plays animations)

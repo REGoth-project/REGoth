@@ -155,16 +155,17 @@ void PlayerController::teleportToWaypoint(size_t wp)
 
     m_AIState.closestWaypoint = wp;
 
-    /*Math::Matrix transform = Math::Matrix::CreateLookAt(m_World.getWaynet().waypoints[wp].position,
-                                                        m_World.getWaynet().waypoints[wp].position +
-                                                                m_World.getWaynet().waypoints[wp].direction,
-                                                         Math::float3(0, 1, 0)).Invert();*/
-
-    m_MoveState.position = m_World.getWaynet().waypoints[wp].position;
+    teleportToPosition(m_World.getWaynet().waypoints[wp].position);
 
     setDirection(m_World.getWaynet().waypoints[wp].direction);
+}
 
-    // setEntityTransform(transform);
+void PlayerController::teleportToPosition(const Math::float3& pos)
+{
+    m_MoveState.position = pos;
+
+    // This also update the entity transform from m_MoveState.position
+    setDirection(m_MoveState.direction);
 
     placeOnGround();
 
@@ -913,6 +914,40 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
     switch(static_cast<EventMessages::MovementMessage::MovementSubType>(message.subType))
     {
         case EventMessages::MovementMessage::ST_RobustTrace:break;
+        case EventMessages::MovementMessage::ST_GotoFP:
+        {
+            if(!message.targetVob.isValid())
+            {
+                std::vector<Handle::EntityHandle> fp = m_World.getFreepointsInRange(getEntityTransform().Translation(), 100.0f, message.targetVobName, true, m_Entity);
+
+                if(fp.empty())
+                    return true; // End message on invalid freepoint
+
+                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(fp.front());
+                message.targetPosition = pos.m_WorldMatrix.Translation();
+
+                // Find closest position from the waynet
+                World::Waynet::WaypointIndex wp = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
+                                                                                       message.targetPosition);
+
+                if (wp != World::Waynet::INVALID_WAYPOINT)
+                    gotoWaypoint(wp);
+            }
+
+            if(m_MoveState.currentPath.empty())
+            {
+                // Just teleport to position // TODO: Implement properly
+                teleportToPosition(message.targetPosition);
+
+                // Back to idle-animation when done
+                getModelVisual()->setAnimation(ModelVisual::Idle);
+                return true;
+            }
+
+            return false;
+        }
+            break;
+
         case EventMessages::MovementMessage::ST_GotoVob:
         {
             Math::float3 pos;
@@ -1007,7 +1042,6 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
 
         case EventMessages::MovementMessage::ST_CanSeeNpc:break; // Unused
         case EventMessages::MovementMessage::ST_Strafe:break;
-        case EventMessages::MovementMessage::ST_GotoFP:break;
         case EventMessages::MovementMessage::ST_Dodge:break;
         case EventMessages::MovementMessage::ST_BeamTo:break;
         case EventMessages::MovementMessage::ST_AlignToFP:break;
@@ -1294,3 +1328,5 @@ bool PlayerController::isNpcReady()
     // TODO: Implement
     return true;
 }
+
+
