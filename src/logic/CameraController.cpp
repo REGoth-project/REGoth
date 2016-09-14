@@ -216,11 +216,6 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
             Engine::Input::setMouseLock(false);
         }
     });
-
-    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool, float intensity)
-    {
-        m_moveSpeedMultiplier = 1.0 + intensity;
-    });
 }
 
 void Logic::CameraController::disableActions()

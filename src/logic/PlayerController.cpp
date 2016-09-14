@@ -106,6 +106,54 @@ PlayerController::PlayerController(World::WorldInstance& world,
     {
         m_isStrafeRight = triggered;
     });
+
+    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity)
+    {
+        m_MoveSpeed1 = triggered;
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity)
+    {
+        m_MoveSpeed2 = triggered;
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity)
+    {
+        if(triggered)
+        {
+            LogInfo() << "Triggered!";
+        }
+        return;
+        {
+            std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
+
+            // Talk to the nearest NPC other than the current player, of course
+            Handle::EntityHandle nearest;
+            float shortestDist = FLT_MAX;
+            for(const Handle::EntityHandle& h : nearNPCs)
+            {
+                if(h != m_World.getScriptEngine().getPlayerEntity())
+                {
+                    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                    float dist = (Vob::getTransform(npc).Translation() - getEntityTransform().Translation()).lengthSquared();
+                    if(dist < shortestDist)
+                    {
+                        nearest = h;
+                        shortestDist = dist;
+                    }
+                }
+            }
+
+            if(nearest.isValid())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
+                Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
+                m_World.getDialogManager().startDialog(shnpc);
+            }
+        }
+    });
+
 }
 
 void PlayerController::onUpdate(float deltaTime)
@@ -745,18 +793,20 @@ void PlayerController::onUpdateByInput(float deltaTime)
     const float turnSpeed = 2.5f;
     if (m_isTurnLeft)
     {
-        yaw -= turnSpeed * deltaTime;
+        yaw += turnSpeed * deltaTime;
     } else if (m_isTurnRight)
     {
-        yaw += turnSpeed * deltaTime;
+        yaw -= turnSpeed * deltaTime;
     }
 
     // TODO: HACK, take this out!
-    /*if(inputGetKeyState(entry::Key::Space))
+    if(m_MoveSpeed1)
         deltaTime *= 4.0f;
 
-    if(inputGetKeyState(entry::Key::KeyB))
-        deltaTime *= 16.0f;*/
+    if(m_MoveSpeed2)
+        deltaTime *= 16.0f;
+
+
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;

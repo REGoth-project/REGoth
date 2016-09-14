@@ -355,5 +355,6 @@ namespace Logic
         bool m_isTurnRight;
         bool m_isStrafeLeft;
         bool m_isStrafeRight;
+        bool m_MoveSpeed1, m_MoveSpeed2;
     };
 }

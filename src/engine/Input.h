@@ -21,6 +21,7 @@ enum class ActionType
     CameraThirdPerson,
 
     DebugMoveSpeed,
+    DebugMoveSpeed2,
 
     FirstPersonMoveForward,
     FirstPersonMoveRight,
@@ -48,6 +49,7 @@ enum class ActionType
     PlayerStrafeLeft,
     PlayerStrafeRight,
     PlayerDrawWeaponMelee,
+    PlayerAction,
 
     AllNpcDrawWeapon,
     AllNpcUndrawWeapon,

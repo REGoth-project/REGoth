@@ -48,7 +48,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
 
     m_NextState.name = dat.getSymbolByIndex(symIdx).name;
 
-    LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+    //LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
     // Check if this is just a usual action (ZS = German "Zustand" = State, B = German "Befehl" = Instruction)
     if(m_NextState.name.substr(0, 3) != "ZS_")
@@ -215,7 +215,7 @@ bool NpcScriptState::doAIState(float deltaTime)
             {
                 // TODO: Set perception-time to 5000
 
-                LogInfo() << "AISTATE-INIT: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+                //LogInfo() << "AISTATE-INIT: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 if(m_CurrentState.symIndex > 0)
                 {
@@ -230,7 +230,7 @@ bool NpcScriptState::doAIState(float deltaTime)
             {
                 bool end = true;
 
-                LogInfo() << "AISTATE-LOOP: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+                //LogInfo() << "AISTATE-LOOP: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 // Call looping-function
                 if(m_CurrentState.symLoop > 0)
@@ -252,7 +252,7 @@ bool NpcScriptState::doAIState(float deltaTime)
 
             }else if(m_CurrentState.phase == NpcAIState::EPhase::End)
             {
-                LogInfo() << "AISTATE-END: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+                //LogInfo() << "AISTATE-END: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 // Call end-function
                 if(m_CurrentState.symEnd > 0)
