@@ -126,7 +126,7 @@ void AnimHandler::updateAnimations(double deltaTime)
 {
     if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimationPtr())
         return; // Nothing to do here // TODO: There is, if interpolation was implemented!
-    
+
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
         // TODO: Lerp between this and the next frame

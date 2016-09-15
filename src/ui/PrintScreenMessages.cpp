@@ -23,7 +23,7 @@ PrintScreenMessages::~PrintScreenMessages()
 
 }
 
-void PrintScreenMessages::update(double dt, entry::MouseState& mstate, Render::RenderConfig& config)
+void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

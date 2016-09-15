@@ -13,7 +13,6 @@ DialogBox::DialogBox()
 {
     m_ChoiceTaken = -1;
     m_ScrollArea = 0;
-    fillChoices({"Hi, ich bin neu hier.", "Du scheinst nicht von hier zu kommen?", "ENDE"}, "Melvin");
 }
 
 DialogBox::~DialogBox()
@@ -21,7 +20,7 @@ DialogBox::~DialogBox()
 
 }
 
-void DialogBox::update(double dt, entry::MouseState& mstate, Render::RenderConfig& config)
+void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;
@@ -34,7 +33,7 @@ void DialogBox::update(double dt, entry::MouseState& mstate, Render::RenderConfi
 
     for(size_t i=0;i<m_Choices.size();i++)
     {
-        if(imguiButton(m_Choices[i].c_str()))
+        if(imguiButton(m_Choices[i].text.c_str()))
         {
             m_ChoiceTaken = static_cast<int>(i);
         }
@@ -43,9 +42,9 @@ void DialogBox::update(double dt, entry::MouseState& mstate, Render::RenderConfi
     imguiEndScrollArea();
 }
 
-void DialogBox::fillChoices(const std::vector<std::string>& choices, const std::string& name)
+size_t DialogBox::addChoice(Logic::DialogManager::ChoiceEntry& entry)
 {
-    m_Choices = choices;
-    m_TargetName = name;
+    m_Choices.push_back(entry);
+    return m_Choices.size() - 1;
 }
 

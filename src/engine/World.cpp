@@ -302,6 +302,9 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 		LogInfo() << "Initializing scripts for world: " << worldName;
 		m_ScriptEngine.initForWorld(worldName);
 	}
+
+    // Initialize dialog manager
+    m_DialogManager.init();
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)
@@ -386,6 +389,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         if(player.playerController)
             player.playerController->onUpdateByInput(deltaTime);
     }
+
+    // Update dialogs
+    m_DialogManager.update(deltaTime);
 
     /*static float s_testp = 0.0f;
     static std::vector<size_t> path;

@@ -8,6 +8,48 @@
 
 using namespace Content;
 
+static int adpcm_decode_data (uint8_t* infile, std::vector<uint8_t>& outfile, size_t num_samples, int num_channels = 1, int block_size = 1024)
+{
+    int samples_per_block = (block_size - num_channels * 4) * (num_channels ^ 3) + 1, percent;
+    int16_t *pcm_block;
+    uint8_t *adpcm_block;
+    size_t progress_divider = 0;
+
+    if (!pcm_block || !adpcm_block) {
+        fprintf (stderr, "could not allocate memory for buffers!\n");
+        return -1;
+    }
+
+    while (num_samples) {
+        int this_block_adpcm_samples = samples_per_block;
+        int this_block_pcm_samples = samples_per_block;
+
+        if (this_block_adpcm_samples > num_samples) {
+            this_block_adpcm_samples = ((num_samples + 6) & ~7) + 1;
+            block_size = (this_block_adpcm_samples - 1) / (num_channels ^ 3) + (num_channels * 4);
+            this_block_pcm_samples = num_samples;
+        }
+
+        // Read in-wav
+        adpcm_block = infile;
+        infile += block_size;
+
+        // Add to out-wav
+        size_t ofidx = outfile.size();
+        outfile.resize(outfile.size() + this_block_pcm_samples * num_channels * 2);
+        pcm_block = (int16_t*)&outfile[ofidx];
+
+        if (adpcm_decode_block (pcm_block, adpcm_block, block_size, num_channels) != this_block_adpcm_samples) {
+            fprintf (stderr, "adpcm_decode_block() did not return expected value!\n");
+            return -1;
+        }
+
+        num_samples -= this_block_pcm_samples;
+    }
+
+    return 0;
+}
+
 AudioEngine::AudioEngine(const VDFS::FileIndex* vdfidx) :
     m_pVDFSIndex(vdfidx)
 {
@@ -40,7 +82,19 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     AudioFile& a = m_Allocator.getElement(h);
 
     // Decode the ADPCM compressed audio gothic uses
-    
+    // Gothics wav-files have a headersize of 60 bytes, 1 channel, blocksize of 1024
+    size_t numNibbles = (data.size() - 60) * 2;
+
+    std::vector<uint8_t> decoded;
+    adpcm_decode_data(data.data() + 60, decoded, numNibbles);
+
+    // Load the buffer with the data from the VDF
+    if(!a.buffer.loadFromSamples((int16_t*)decoded.data(), numNibbles, 1, 44100))
+    {
+        m_Allocator.removeObject(h);
+        return Handle::AudioHandle::makeInvalidHandle();
+    }
+
     //
     // ###### This is broken! Decode using new lib, load samples directly into sfml (44100 khz, 1 channel)
     //

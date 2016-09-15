@@ -47,9 +47,6 @@ DialogManager::~DialogManager()
 void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
                                      std::vector<Daedalus::GameState::InfoHandle> infos)
 {
-    if(m_ActiveDialogBox)
-        return; // Can't open two dialog-boxes at once
-
     // Set information about the current interaction
     m_Interaction.target = self;
     m_Interaction.infos = infos;
@@ -61,22 +58,19 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     if(infos.empty())
         return;
 
+
     LogInfo() << "Started talking with: " << getGameState().getNpc(m_Interaction.target).name[0];
     LogInfo() << "Options: ";
 
+    clearChoices();
+
     // Acquire all information we should be able to see right now
-    m_Interaction.optionsSorted.clear();
-    size_t importantChoice = static_cast<size_t>(-1);
-    int32_t importantNr = INT32_MAX;
     for(size_t i=0;i<infos.size();i++)
     {
         Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infos[i]);
 
-        // Check condition
-        std::string vstr;
-        int32_t valid = 0;
-
         // Test if we should be able to see this info
+        int32_t valid = 0;
         if(info.condition)
         {
             m_World.getScriptEngine().prepareRunFunction();
@@ -88,50 +82,17 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
             if(info.description.empty() && info.important)
                 info.description = "<important>";
 
-            if(!info.description.empty()/* || info.important*/)
-                m_Interaction.optionsSorted.push_back(std::make_pair(info.nr, i));
+            ChoiceEntry entry;
+            entry.nr = info.nr;
+            entry.functionSym = info.information;
+            entry.text = info.description;
+            entry.info = infos[i];
 
-            if(info.important)
-            {
-                if(importantNr > info.nr)
-                {
-                    importantChoice = i;
-                    importantNr = info.nr;
-                }
-            }
+            addChoice(entry);
         }
     }
 
-    // Sort by importance index
-    std::sort(m_Interaction.optionsSorted.begin(), m_Interaction.optionsSorted.end(), [](const std::pair<size_t, size_t>& a, const std::pair<size_t, size_t>& b){
-        return a.first < b.first;
-    });
-
-    // Find our important option again
-    // FIXME: This is pretty hacky
-    for(size_t i=0;i<m_Interaction.optionsSorted.size();i++)
-    {
-        if(m_Interaction.optionsSorted[i].second == importantChoice)
-        {
-            importantChoice = i;
-            break;
-        }
-    }
-
-    // FIXME: Debugoutput
-    std::vector<std::string> choices;
-    for(size_t i=0;i<m_Interaction.optionsSorted.size();i++) {
-        auto& info = getGameState().getInfo(infos[m_Interaction.optionsSorted[i].second]);
-        LogInfo() << " - [" << i + 1 << "]" << ": " << info.description;
-
-        choices.push_back(info.description);
-    }
-
-    // Open dialog box
-    m_ActiveDialogBox = new UI::DialogBox();
-    m_ActiveDialogBox->fillChoices(choices);
-
-    m_World.getEngine()->getRootUIView().addChild(m_ActiveDialogBox);
+    flushChoices();
 
     // Do the important choice right now
     // TODO: Let the NPC begin talking in that case
@@ -192,6 +153,7 @@ void DialogManager::update(double dt)
     {
         static bool visibilityHack = m_ActiveSubtitleBox->isHidden();
         m_ActiveDialogBox->setHidden(!(m_ActiveSubtitleBox->isHidden() && visibilityHack));
+        m_DialogActive = !m_ActiveSubtitleBox->isHidden() || !m_ActiveDialogBox->isHidden();
 
         visibilityHack = m_ActiveSubtitleBox->isHidden();
 
@@ -205,11 +167,14 @@ void DialogManager::update(double dt)
             } else
             {
                 // There is more! Start talking again.
-                endDialog();
-                startDialog(m_Interaction.target);
+                flushChoices();
+                //endDialog();
+                //startDialog(m_Interaction.target);
             }
         }
     }
+
+    m_DialogActive = !(!m_ActiveDialogBox && m_ActiveSubtitleBox->isHidden());
 }
 
 Daedalus::DaedalusVM& DialogManager::getVM()
@@ -224,31 +189,35 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
 
 bool DialogManager::performChoice(size_t choice)
 {
-    assert(choice < m_Interaction.optionsSorted.size());
+    assert(choice < m_Interaction.choices.size());
 
     // Hide the options box
     endDialog();
 
     // Get actual selected info-object
-    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.infos[m_Interaction.optionsSorted[choice].second]);
+    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.choices[choice].info);
 
     // Set instances again, since they could have been changed across the frames
     getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
 
+    size_t fnSym = m_Interaction.choices[choice].functionSym;
+
+    clearChoices();
+
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
-    m_World.getScriptEngine().runFunctionBySymIndex(info.information);
+    m_World.getScriptEngine().runFunctionBySymIndex(fnSym);
 
-    // We now know this information
+    // We now know this information. Do this before actually triggering the dialog, since then we can update the
+    // choices right away. This is important because scripts may overwrite these again!
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
 
-
-
-    // Finish dialog
-    // TODO: Find out how these "loop"-functions work
-    //m_World.getScriptEngine().prepareRunFunction();
-    //m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk_Loop").address);
+    if(m_Interaction.choices.empty())
+    {
+        // We chose "back" or haven't gotten to a sub-dialog
+        updateChoices();
+    }
 
     return info.nr != 999;
 
@@ -256,9 +225,14 @@ bool DialogManager::performChoice(size_t choice)
 
 void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 {
+    if(m_DialogActive)
+        return;
+
     Handle::EntityHandle playerEntity = m_World.getScriptEngine().getPlayerEntity();
     VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, playerEntity);
     VobTypes::NpcVobInformation targetVob = VobTypes::asNpcVob(m_World, VobTypes::getEntityFromScriptInstance(m_World, target));
+
+    LogInfo() << "Talk to: " << VobTypes::getScriptObject(targetVob).name[0];
 
     // Self is the NPC we're talking to here. Kind of reversed, but what do I know.
     getVM().setInstance("self", ZMemory::toBigHandle(target), Daedalus::IC_Npc);
@@ -335,5 +309,50 @@ void DialogManager::displaySubtitle(const std::string& subtitle, const std::stri
 void DialogManager::stopDisplaySubtitle()
 {
     m_ActiveSubtitleBox->setHidden(true);
+}
+
+void DialogManager::clearChoices()
+{
+    m_Interaction.choices.clear();
+
+    flushChoices();
+}
+
+size_t DialogManager::addChoice(ChoiceEntry& entry)
+{
+    m_Interaction.choices.push_back(entry);
+
+    if(m_Interaction.choices.back().nr == -2)
+        m_Interaction.choices.back().nr = static_cast<int>(m_Interaction.choices.size()) - 1;
+
+    flushChoices();
+}
+
+void DialogManager::sortChoices()
+{
+    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
+        return a.nr < b.nr;
+    });
+}
+
+void DialogManager::flushChoices()
+{
+    // Sort by importance index
+    sortChoices();
+
+    if(m_ActiveDialogBox)
+        endDialog();
+
+    // Open dialog box
+    m_ActiveDialogBox = new UI::DialogBox();
+    for(ChoiceEntry& e : m_Interaction.choices)
+        m_ActiveDialogBox->addChoice(e);
+
+    m_World.getEngine()->getRootUIView().addChild(m_ActiveDialogBox);
+}
+
+void DialogManager::updateChoices()
+{
+    m_ScriptDialogMananger->processInfosFor(m_Interaction.target);
 }
 

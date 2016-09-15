@@ -48,7 +48,7 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
         message->deleted = true;
     }else
     {
-        if(message->messageType == EventMessages::EventMessageType::Conversation)
+        /*if(message->messageType == EventMessages::EventMessageType::Conversation)
         {
             EventMessages::ConversationMessage* conv = (EventMessages::ConversationMessage*)message;
 
@@ -56,7 +56,7 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
             {
                 LogInfo() << "Set state from: " << m_World.getScriptEngine().getVM().getCallStack();
             }
-        }
+        }*/
 
         // Queue this
         m_EventQueue.push_back(message);

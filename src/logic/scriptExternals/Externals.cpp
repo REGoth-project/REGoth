@@ -70,7 +70,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         
     };
 
-    auto getItemByInstance = [&](size_t instance)
+    auto getItemByInstance = [vm, engine](size_t instance)
     {
         Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
@@ -745,6 +745,29 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             vm.setReturn(0);
         }
+    });
+
+    vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
+        uint32_t func = vm.popVar();
+        std::string text = vm.popString();
+        uint32_t info = vm.popVar();
+
+        Daedalus::GameState::InfoHandle hinfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
+                pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
+
+        Logic::DialogManager::ChoiceEntry choice;
+        choice.info = hinfo;
+        choice.text = text;
+        choice.nr = -2; // This means: Ascending order
+        choice.functionSym = func;
+
+        pWorld->getDialogManager().addChoice(choice);
+    });
+
+    vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
+        uint32_t info = vm.popVar();
+
+        pWorld->getDialogManager().clearChoices();
     });
 }
 

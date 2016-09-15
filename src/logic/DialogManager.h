@@ -24,6 +24,21 @@ namespace Logic
         DialogManager(World::WorldInstance& world);
         ~DialogManager();
 
+        struct ChoiceEntry
+        {
+            // Text displayed for the user
+            std::string text;
+
+            // Function symbol to be executed
+            size_t functionSym;
+
+            // Info-handle this belongs to
+            Daedalus::GameState::InfoHandle info;
+
+            // Sort index
+            int32_t nr;
+        };
+
         /**
          * Called after the world got initialized
          */
@@ -68,9 +83,34 @@ namespace Logic
          */
         bool isDialogActive() { return m_DialogActive; }
 
+        /**
+         * Removes all choices currently in the dialogbox
+         */
+        void clearChoices();
+
+        /**
+         * Adds a single choice to the box
+         * @param entry Choice entry. Note: nr of -1 means: Sort ascending
+         * @return Index of the choice
+         */
+        size_t addChoice(ChoiceEntry& entry);
+
+        /**
+         * Sorts registered choices depending on their sort index
+         */
+        void sortChoices();
+
+        /**
+         * Pushes all registered choices to the dialog-box and opens it
+         */
+        void flushChoices();
+
+        /**
+         * Updates the choices from script-side. Restores the original set.
+         */
+        void updateChoices();
+
     protected:
-
-
 
         /**
          * @return Daedalus script-VM
@@ -126,9 +166,12 @@ namespace Logic
          */
         struct
         {
+            std::vector<ChoiceEntry> choices;
+
             Daedalus::GameState::NpcHandle player;
             Daedalus::GameState::NpcHandle target;
             std::vector<Daedalus::GameState::InfoHandle> infos;
+            std::vector<size_t> functions;
             std::vector<std::pair<size_t, size_t>> optionsSorted;
         } m_Interaction;
 

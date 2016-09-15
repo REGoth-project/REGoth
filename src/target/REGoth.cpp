@@ -20,6 +20,8 @@
 #include <render/RenderSystem.h>
 #include "config.h"
 #include "engine/Platform.h"
+#include <imgui/imgui.h>
+#include <ui/DialogBox.h>
 
 
 
@@ -249,6 +251,11 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
+
+
+        // Imgui.
+        imguiCreate();
+        m_scrollArea = 0;
 	}
 
 	virtual int shutdown() BX_OVERRIDE
@@ -258,6 +265,8 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 		delete m_pEngine;
 
 		ddShutdown();
+
+        imguiDestroy();
 
 		// Shutdown bgfx.
 		bgfx::shutdown();
@@ -279,6 +288,17 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
         float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
         const float dt = float(frameTime/freq);
 
+        Engine::Input::MouseState ms; Engine::Input::getMouseState(ms);
+        // Prepare rendering of debug-textboxes, etc
+        imguiBeginFrame(ms.m_mx
+                ,  ms.m_my
+                , (ms.m_buttons[0] ? IMGUI_MBUT_LEFT   : 0)
+                  | (ms.m_buttons[1] ? IMGUI_MBUT_RIGHT  : 0)
+                  | (ms.m_buttons[2] ? IMGUI_MBUT_MIDDLE : 0)
+                ,  ms.m_mz
+                , m_width
+                , m_height
+        );
 
         // Use debug font to print information about this example.
         bgfx::dbgTextClear();
@@ -299,6 +319,11 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
         ddBegin(0);
 
         m_pEngine->frameUpdate(dt, m_width, m_height);
+        // Draw and process all UI-Views
+        // Set render states.
+
+
+        m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
         ddSetTransform(nullptr);
         ddDrawAxis(0.0f, 0.0f, 0.0f);
@@ -321,6 +346,8 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
         ddEnd();
 
+        imguiEndFrame();
+
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
@@ -335,6 +362,7 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 	uint32_t m_reset;
 	int64_t m_timeOffset;
 	float axis;
+    int32_t m_scrollArea;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);

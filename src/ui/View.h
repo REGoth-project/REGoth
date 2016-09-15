@@ -2,6 +2,7 @@
 #include <common.h>
 #include <vector>
 #include <render/RenderSystem.h>
+#include <engine/Input.h>
 
 namespace UI
 {
@@ -35,7 +36,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        virtual void update(double dt, entry::MouseState &mstate, Render::RenderConfig &config);
+        virtual void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config);
 
         /**
          * Set/get hidden

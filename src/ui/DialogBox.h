@@ -1,6 +1,7 @@
 #include "View.h"
 #include <string>
 #include <functional>
+#include <logic/DialogManager.h>
 
 // HACK: Work around windows.h messing this up with its define
 #ifdef DialogBox
@@ -21,27 +22,31 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, entry::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig &config) override;
 
         /**
-         * Calls script-routines to fill up the choices
-         * @param Choices presented to the user
+         * Adds a single choice
+         * @param choice Choice presented to the user
          * @param name Name of the person or thing we are interacting with
          */
-        void fillChoices(const std::vector<std::string> &choices, const std::string &name = "");
+        size_t addChoice(Logic::DialogManager::ChoiceEntry& entry);
 
         /**
          * @return Choice the user clicked the last time. -1 if none.
          */
         int getChoiceTaken(){ return m_ChoiceTaken; }
 
+        /**
+         * @return List of choices registered
+         */
+        const std::vector<Logic::DialogManager::ChoiceEntry>& getChoices(){ return m_Choices; }
 
     private:
 
         /**
          * Choices presented to the player
          */
-        std::vector<std::string> m_Choices;
+        std::vector<Logic::DialogManager::ChoiceEntry> m_Choices;
 
         /**
          * Choice the user clicked the last time. -1 if none.
