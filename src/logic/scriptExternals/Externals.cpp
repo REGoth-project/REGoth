@@ -231,14 +231,22 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
         VobTypes::NpcVobInformation vob2 = getNPCByInstance(npc2);
 
-        // Calculate distance
-        float dist = (Vob::getTransform(vob1).Translation() - Vob::getTransform(vob2).Translation()).length();
+		if(vob1.isValid() && vob2.isValid())
+		{
+			// Calculate distance
+			float dist = (Vob::getTransform(vob1).Translation() - Vob::getTransform(vob2).Translation()).length();
 
-        // Convert to cm
-        dist *= 100.0f;
+			// Convert to cm
+			dist *= 100.0f;
 
-        vm.setReturn(static_cast<int32_t>(dist));
-    });
+			vm.setReturn(static_cast<int32_t>(dist));
+		}
+		else
+		{
+			vm.setReturn(INT32_MAX);
+		}
+	
+	});
 
     vm->registerExternalFunction("npc_getdisttowp", [=](Daedalus::DaedalusVM& vm){
         std::string wpname = vm.popString(); if(verbose) LogInfo() << "wpname: " << wpname;

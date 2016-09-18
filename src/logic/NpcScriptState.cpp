@@ -357,7 +357,11 @@ void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEn
     if(!m_Routine.hasRoutine)
     {
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
-        npc.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), waypoint));
+
+		World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(), waypoint);
+
+		if(wp != World::Waynet::INVALID_WAYPOINT)
+			npc.playerController->teleportToWaypoint(wp);
     }
 
     m_Routine.hasRoutine = true; // At least one routine-target present
