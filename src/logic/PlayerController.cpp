@@ -321,6 +321,22 @@ void PlayerController::onDebugDraw()
 
         bgfx::dbgTextPrintf(0, 6, 0x0f, "Level: %d", scriptnpc.level);
         bgfx::dbgTextPrintf(0, 7, 0x0f, "XP   : %d", scriptnpc.exp);
+
+        // Print inventory
+        const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
+
+        uint16_t idx=20;
+        bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
+        for(Daedalus::GameState::ItemHandle i : items)
+        {
+            Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
+
+            if(idata.count[0] > 1)
+                bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.name.c_str(), idata.count[0]);
+            else
+                bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.name.c_str());
+
+        }
     }
 }
 
@@ -509,6 +525,9 @@ void PlayerController::placeOnGround()
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
+
+    if(to == from)
+        return; // FIXME: This happens if an NPC falls out of the world
 
     Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
 
@@ -960,15 +979,21 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
             } else
             {
                 // This must be an actual vob
-                Handle::EntityHandle v = m_World.getVobEntityByName(message.targetVobName);
+                Handle::EntityHandle v = message.targetVob;
+
+                if(!v.isValid())
+                {
+                    v = m_World.getVobEntityByName(message.targetVobName);
+                }
 
                 if (v.isValid())
                 {
-
                     Vob::VobInformation vob = Vob::asVob(m_World, v);
                     message.targetPosition = Vob::getTransform(vob).Translation();
 
                     // Fall through to ST_GotoPos
+                }else{
+                    return true;
                 }
             }
         }
@@ -1347,6 +1372,12 @@ void PlayerController::setRoutineFunc(size_t symRoutine)
 
 void PlayerController::changeRoutine(const std::string& routineName)
 {
+    if(routineName.empty())
+    {
+        setRoutineFunc(0);
+        return;
+    }
+
     // Build new name for the routine
     std::string namecomp = "RTN_" + routineName + "_" + std::to_string(getScriptInstance().id);
 
@@ -1436,6 +1467,15 @@ void PlayerController::setupKeyBindings()
                 VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
                 Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
                 m_World.getDialogManager().startDialog(shnpc);
+            }else
+            {
+                size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+                Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
+                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
+
+                vob.playerController->changeRoutine("");
+                vob.playerController->teleportToWaypoint(targetWP);
+
             }
         }
     });

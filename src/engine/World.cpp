@@ -140,6 +140,23 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             {
                 vobLoad(v.childVobs);
 
+                Handle::EntityHandle e = Vob::constructVob(*this);
+                Vob::VobInformation vob = Vob::asVob(*this, e);
+
+                // Setup
+                if(!v.vobName.empty())
+                {
+                    Vob::setName(vob, v.vobName);
+
+                    // Add to name-map
+                    m_VobsByNames[v.vobName] = e;
+                }
+
+                // Set position
+                Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
+                m.Translation(m.Translation() * (1.0f / 100.0f));
+                Vob::setTransform(vob, m);
+
 				// TODO: Need those without visual as well!
 				if(v.visual.empty())
 				{
@@ -157,29 +174,14 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
                         getEntity<Components::ObjectComponent>(h).m_Name = v.vobName;
                         m_FreePoints[v.vobName] = h;
                     }
+
+
 				}
 				else
 				{
-
-					// Make vob
-					Handle::EntityHandle e = Vob::constructVob(*this);
-					Vob::VobInformation vob = Vob::asVob(*this, e);
-
-					// Setup
-					if(!v.vobName.empty())
-					{
-						Vob::setName(vob, v.vobName);
-
-						// Add to name-map
-						m_VobsByNames[v.vobName] = e;
-					}
-
 					// Set whether we want collision with this vob
 					Vob::setCollisionEnabled(vob, v.cdDyn);
 
-					Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
-					m.Translation(m.Translation() * (1.0f / 100.0f));
-					Vob::setTransform(vob, m);
 					Vob::setVisual(vob, v.visual);
 
 					//if(!vob.visual)

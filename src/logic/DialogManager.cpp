@@ -113,13 +113,13 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
 
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
-    VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
 
-    if(!targetnpc.playerController)
+
+    /*if(!targetnpc.playerController)
     {
         LogWarn() << "AI_Output: Target not found/invalid!";
         return;
-    }
+    }*/
 
     if(!selfnpc.playerController)
     {
@@ -127,20 +127,30 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         return;
     }
 
-    LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
+    if(target.isValid())
+        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
+    else
+        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
 
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;
-    conv.target = targetnpc.entity;
     conv.name = msg.name;
     conv.text = msg.text;
 
-    // Check if the target is currently talking to us
-    EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(selfnpc.entity);
+    if(target.isValid())
+    {
+        VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
+        conv.target = targetnpc.entity;
 
-    // Wait for the other npc to complete first
-    if(otherconv)
-        selfnpc.playerController->getEM().waitForMessage(otherconv);
+
+        // Check if the target is currently talking to us
+        EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
+                selfnpc.entity);
+
+        // Wait for the other npc to complete first
+        if (otherconv)
+            selfnpc.playerController->getEM().waitForMessage(otherconv);
+    }
 
     // Push the actual conversation-message
     selfnpc.playerController->getEM().onMessage(conv);

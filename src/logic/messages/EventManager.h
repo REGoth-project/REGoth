@@ -65,6 +65,7 @@ namespace Logic
          * Removes all pending messages
          */
         void clear();
+
     protected:
 
         /**

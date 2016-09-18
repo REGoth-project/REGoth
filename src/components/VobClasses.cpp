@@ -19,7 +19,7 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
     //LogInfo() << "Instance: " << scriptInstance.index;
     //LogInfo() << "Creating vob for: " << npc.name[0];
 
-              // Link the script instance to our entity
+    // Link the script instance to our entity
     ScriptInstanceUserData* userData = new ScriptInstanceUserData;
     userData->vobEntity = e;
     userData->world = world.getMyHandle();
@@ -42,6 +42,26 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     return e;
 }
+
+Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance)
+{
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    Daedalus::GEngineClasses::C_Item& scriptObj = world.getScriptEngine().getGameState().getItem(scriptInstance);
+
+    // Link the script instance to our entity
+    ScriptInstanceUserData* userData = new ScriptInstanceUserData;
+    userData->vobEntity = e;
+    userData->world = world.getMyHandle();
+    scriptObj.userPtr = userData;
+
+    // Assign a default visual
+    Vob::VobInformation vob = Vob::asVob(world, e);
+    Vob::setVisual(vob, scriptObj.visual);
+
+    return e;
+}
+
 
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
@@ -204,6 +224,7 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
 
     return VobTypes::asNpcVob(world, e);
 }
+
 
 
 
