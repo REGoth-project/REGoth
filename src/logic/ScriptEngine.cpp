@@ -172,7 +172,7 @@ void ScriptEngine::initForWorld(const std::string& world)
         }
     }
 
-    // Create player
+    // Create player 
     std::vector<size_t> startpoints = m_World.findStartPoints();
 
     if(!startpoints.empty())

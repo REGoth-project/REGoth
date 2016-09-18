@@ -336,6 +336,8 @@ size_t DialogManager::addChoice(ChoiceEntry& entry)
         m_Interaction.choices.back().nr = static_cast<int>(m_Interaction.choices.size()) - 1;
 
     flushChoices();
+
+	return 0;
 }
 
 void DialogManager::sortChoices()
