@@ -6,7 +6,7 @@
 namespace Engine
 {
 
-class Platform : private Input
+class Platform : public Input
 {
 public:
     virtual void init(int _argc, char** _argv) = 0;
