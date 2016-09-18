@@ -273,3 +273,13 @@ void Input::setMouseLock(bool mouseLock)
         isMouseLocked = mouseLock;
     }
 }
+
+void Input::getMouseState(Input::MouseState& ms)
+{
+    ms.m_mx = (int)((mousePosition.x + 1) * windowHalfWidth);
+    ms.m_my = (int)((mousePosition.y + 1) * windowHalfHeight);
+    ms.m_mz = (int)axisPosition[static_cast<std::size_t>(MouseAxis::ScrollY)];
+    ms.m_buttons[0] = (uint8_t)mouseButtonState[0];
+    ms.m_buttons[1] = (uint8_t)mouseButtonState[1];
+    ms.m_buttons[2] = (uint8_t)mouseButtonState[2];
+}

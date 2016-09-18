@@ -408,12 +408,12 @@ void NpcScriptState::reinitRoutine()
 
     size_t newSymFn = VobTypes::getScriptObject(npc).daily_routine;
 
+    // Clear old routine
+    m_Routine.routine.clear();
+    m_Routine.routineActiveIdx = 0;
+
     if(newSymFn != 0)
     {
-        // Clear old routine
-        m_Routine.routine.clear();
-        m_Routine.routineActiveIdx = 0;
-
         s.prepareRunFunction();
         s.runFunctionBySymIndex(newSymFn);
 

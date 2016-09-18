@@ -70,7 +70,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         
     };
 
-    auto getItemByInstance = [&](size_t instance)
+    auto getItemByInstance = [vm, engine](size_t instance)
     {
         Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
@@ -302,26 +302,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         vm.setReturn(static_cast<int32_t>(dist));
     });
 
-    vm->registerExternalFunction("npc_exchangeroutine", [=](Daedalus::DaedalusVM& vm){
-
-        std::string routinename = vm.popString();
-        uint32_t arr_npc;
-        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
-
-        VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
-
-        // TODO: Implement the others
-        if(routinename == "FOLLOW")
-        {
-            // Follow player
-            npcvob.playerController->setFollowTarget(npcvob.world->getScriptEngine().getPlayerEntity());
-        }else
-        {
-            npcvob.playerController->setFollowTarget(Handle::EntityHandle::makeInvalidHandle());
-            npcvob.playerController->setDailyRoutine({});
-        }
-    });
-
     vm->registerExternalFunction("printdebuginstch", [=](Daedalus::DaedalusVM& vm){
 
         uint32_t arr_npc;
@@ -512,6 +492,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.subType = EventMessages::MovementMessage::ST_GotoFP;
             sm.targetVobName = fp;
             npc.playerController->getEM().onMessage(sm);
+            //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+        }
+    });
+
+    vm->registerExternalFunction("ai_gotonpc", [=](Daedalus::DaedalusVM& vm){
+        uint32_t other = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation nself = getNPCByInstance(self);
+        VobTypes::NpcVobInformation nother = getNPCByInstance(other);
+
+        if(nself.isValid())
+        {
+            EventMessages::MovementMessage sm;
+            sm.subType = EventMessages::MovementMessage::ST_GotoVob;
+            sm.targetVob = nother.entity;
+
+            nself.playerController->getEM().onMessage(sm);
             //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
         }
     });
@@ -753,6 +751,69 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             vm.setReturn(0);
         }
+    });
+
+    vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
+        uint32_t func = vm.popVar();
+        std::string text = vm.popString();
+        uint32_t info = vm.popVar();
+
+        Daedalus::GameState::InfoHandle hinfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
+                pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
+
+        Logic::DialogManager::ChoiceEntry choice;
+        choice.info = hinfo;
+        choice.text = text;
+        choice.nr = -2; // This means: Ascending order
+        choice.functionSym = func;
+
+        pWorld->getDialogManager().addChoice(choice);
+    });
+
+    vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
+        uint32_t info = vm.popVar();
+
+        pWorld->getDialogManager().clearChoices();
+    });
+
+    vm->registerExternalFunction("wld_insertitem", [=](Daedalus::DaedalusVM& vm){
+        std::string spawnpoint = vm.popString(true);
+        uint32_t iteminstance = vm.popDataValue();
+
+        // Create script-object
+        Daedalus::GameState::ItemHandle it = vm.getGameState().insertItem(iteminstance);
+
+        // Link item to world object
+        Handle::EntityHandle e = VobTypes::initItemFromScript(*pWorld, it);
+
+        // Position the vob
+        Vob::VobInformation vob = Vob::asVob(*pWorld, e);
+
+        // Try vobs first
+        Handle::EntityHandle spawnEnt = pWorld->getVobEntityByName(spawnpoint);
+
+        Math::float3 position;
+        if(spawnEnt.isValid())
+        {
+            // Get position from object
+            Components::PositionComponent& pos = pWorld->getEntity<Components::PositionComponent>(spawnEnt);
+            position = pos.m_WorldMatrix.Translation();
+        }else
+        {
+            // Then try waypoints
+            World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(pWorld->getWaynet(), spawnpoint);
+
+            if(wp == World::Waynet::INVALID_WAYPOINT)
+            {
+                LogWarn() << "Invalid location: " << spawnpoint;
+                return;
+            }
+
+            position = pWorld->getWaynet().waypoints[wp].position;
+        }
+
+        // Move item to right place
+        Vob::setPosition(vob, position);
     });
 }
 

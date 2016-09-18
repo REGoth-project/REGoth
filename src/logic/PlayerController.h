@@ -217,6 +217,12 @@ namespace Logic
          * @return Waypoint the NPC is currently going to
          */
         size_t getTargetWaypoint(){ return m_AIState.targetWaypoint; }
+
+        /**
+         * Sets up the bindings for this playercontroller // TODO: REMOVE THIS AND DO IT OUTSIDE OF THE PLAYERCONTROLLER
+         */
+        void setupKeyBindings();
+
     protected:
 
         /**

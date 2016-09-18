@@ -33,7 +33,7 @@ void View::removeChild(View *pView)
     }
 }
 
-void View::update(double dt, entry::MouseState& mstate, Render::RenderConfig& config)
+void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

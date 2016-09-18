@@ -18,7 +18,7 @@ UI::SubtitleBox::~SubtitleBox()
 
 }
 
-void UI::SubtitleBox::update(double dt, entry::MouseState& mstate, Render::RenderConfig& config)
+void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if (m_IsHidden)
         return;

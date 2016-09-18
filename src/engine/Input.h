@@ -95,12 +95,21 @@ namespace Engine
 			Count
 		};
 
+		struct MouseState
+		{
+			int32_t m_mx;
+			int32_t m_my;
+			int32_t m_mz;
+			uint8_t m_buttons[3];
+		};
+
 	public:
-		static Action* RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
+		static Action* RegisterAction( ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
 		static bool RemoveAction(ActionType actionType, Action* action);
 		static void fireBindings();
 		static void setMouseLock(bool mouseLock);
 		static Math::float2 getMouseCoordinates();
+		static void getMouseState(MouseState& ms);
 
 	protected:
 		static void bindKey(int key, ActionType actionType, bool isContinuous, bool isInverted = false);

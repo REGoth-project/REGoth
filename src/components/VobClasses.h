@@ -39,6 +39,7 @@ namespace VobTypes
      * Creates a generic vob from script
      */
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
+    Handle::EntityHandle initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance);
 
     /**
      * Helper-function to insert an NPC into the world (With script initialization)
