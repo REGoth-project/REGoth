@@ -46,14 +46,21 @@ bool AnimHandler::addAnimation(const std::string &name)
     Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
 
     // Try again with lib only
-    if(!h.isValid() && m_ActiveOverlay != m_MeshLibName)
-    {
-        file = m_MeshLibName + "-" + name + ".MAN";
-        h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
+	if(!h.isValid())
+	{
+		if(m_ActiveOverlay != m_MeshLibName)
+		{
+			file = m_MeshLibName + "-" + name + ".MAN";
+			h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
 
-        if(!h.isValid())
-            return false;
-    }
+			if(!h.isValid())
+				return false;
+		}
+		else
+		{
+			return false;
+		}
+	}
 
     m_Animations.push_back(h);
     m_AnimationsByName[getAnimation(h).animation.getModelAniHeader().aniName] = h;
