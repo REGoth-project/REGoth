@@ -205,10 +205,10 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         uint32_t self = vm.popVar();
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
-        Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, VobTypes::getScriptHandle(npc));
 
 		if(npc.isValid())
 		{
+			Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, VobTypes::getScriptHandle(npc));
 			VobTypes::NPC_EquipWeapon(npc, item);
 		}
 		else{
@@ -260,12 +260,19 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         World::WorldInstance& world = Vob::getWorld(vob);
         size_t wpidx = World::Waynet::getWaypointIndex(world.getWaynet(), wpname);
 
-        float dist = (selfTransform.Translation() - world.getWaynet().waypoints[wpidx].position).length();
+		if(wpidx != World::Waynet::INVALID_WAYPOINT)
+		{
+			float dist = (selfTransform.Translation() - world.getWaynet().waypoints[wpidx].position).length();
 
-        // Convert to cm
-        dist *= 100.0f;
+			// Convert to cm
+			dist *= 100.0f;
 
-        vm.setReturn(static_cast<int32_t>(dist));
+			vm.setReturn(static_cast<int32_t>(dist));
+		}
+		else {
+			vm.setReturn(INT32_MAX);
+		}
+        
     });
 
     vm->registerExternalFunction("npc_getdisttoitem", [=](Daedalus::DaedalusVM& vm){
