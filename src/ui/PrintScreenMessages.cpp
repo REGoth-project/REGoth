@@ -96,10 +96,12 @@ void PrintScreenMessages::drawTimedMessages(double dt, Render::RenderConfig& con
     }
 
     // Remove outtimed message
-    for(auto it=m_TimedMessages.begin();it!=m_TimedMessages.end();it++)
+    for(auto it=m_TimedMessages.begin();it!=m_TimedMessages.end();)
     {
         if((*it).timeLeft < 0)
             it = m_TimedMessages.erase(it);
+		else 
+			it++;
     }
 };
 
