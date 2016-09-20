@@ -38,6 +38,11 @@ namespace Content
     private:
 
         /**
+         * Decode a IMA ADPCM-Wave file
+         */
+        int adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfile, size_t num_samples, int num_channels = 1, int block_size = 1024);
+        
+        /**
          * Checks if we currently have a stopped sound to use or creates a new one, if not
          * @return sound object to use for a new sound
          */
