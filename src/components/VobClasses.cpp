@@ -5,6 +5,7 @@
 #include "VobClasses.h"
 #include <engine/World.h>
 #include <logic/PlayerController.h>
+#include <logic/ItemController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
 #include "EntityActions.h"
@@ -54,6 +55,10 @@ Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, D
     userData->vobEntity = e;
     userData->world = world.getMyHandle();
     scriptObj.userPtr = userData;
+
+	// Setup itemcontroller
+	Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+	logic.m_pLogicController = new Logic::ItemController(world, e, scriptInstance);
 
     // Assign a default visual
     Vob::VobInformation vob = Vob::asVob(world, e);
