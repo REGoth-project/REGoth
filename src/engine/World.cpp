@@ -57,6 +57,20 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	// Call other overload
 	init(engine);
 
+	// Init daedalus-vm
+	std::string datPath = m_pEngine->getEngineArgs().gameBaseDirectory
+		+ "/_work/data/Scripts/_compiled/GOTHIC.DAT";
+	std::string datFile = Utils::getCaseSensitivePath(datPath);
+
+	if(Utils::fileExists(datFile))
+	{
+		m_ScriptEngine.loadDAT(datFile);
+	} else
+	{
+		LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
+	}
+
+	// Load world
     if(!zen.empty())
     {
         // Load ZEN
@@ -139,18 +153,41 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             for (const ZenLoad::zCVobData &v : vobs)
             {
                 vobLoad(v.childVobs);
+          
+				// Check for special vobs // FIXME: Should be somewhere else
+				Vob::VobInformation vob;
+				Handle::EntityHandle e;
+				if(v.objectClass == "oCItem:zCVob")
+				{
+					// Get item instance
+					if(getScriptEngine().hasSymbol(v.oCItem.instanceName))
+					{
+						Daedalus::GameState::ItemHandle h = getScriptEngine().getGameState().insertItem(v.oCItem.instanceName);
 
-                Handle::EntityHandle e = Vob::constructVob(*this);
-                Vob::VobInformation vob = Vob::asVob(*this, e);
+						e = VobTypes::initItemFromScript(*this, h);
+						vob = Vob::asVob(*this, e);
+					}
+					else{
+						LogWarn() << "Invalid item instance: " << v.oCItem.instanceName;
+					}
+				}
+				else {
+					// Normal zCVob or not implemented subclass
+					e = Vob::constructVob(*this);
+					vob = Vob::asVob(*this, e);
+				}
 
-                // Setup
-                if(!v.vobName.empty())
-                {
-                    Vob::setName(vob, v.vobName);
+				if(!vob.isValid())
+					continue;
 
-                    // Add to name-map
-                    m_VobsByNames[v.vobName] = e;
-                }
+				// Setup
+				if(!v.vobName.empty())
+				{
+					Vob::setName(vob, v.vobName);
+
+					// Add to name-map
+					m_VobsByNames[v.vobName] = e;
+				}
 
                 // Set position
                 Math::Matrix m = Math::Matrix(v.worldMatrix.mv);
@@ -174,8 +211,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
                         getEntity<Components::ObjectComponent>(h).m_Name = v.vobName;
                         m_FreePoints[v.vobName] = h;
                     }
-
-
 				}
 				else
 				{
@@ -285,20 +320,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
 void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName)
 {
-    // Default to the path G2 uses
-    std::string datPath = m_pEngine->getEngineArgs().gameBaseDirectory
-                          + "/_work/data/Scripts/_compiled/GOTHIC.DAT";
-    std::string datFile = Utils::getCaseSensitivePath(datPath);
-
-    // Check G2 variant
-    if(Utils::fileExists(datFile))
-    {
-        m_ScriptEngine.loadDAT(datFile);
-    } else
-    {
-        LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
-    }
-
 	if(!worldName.empty())
 	{
 		LogInfo() << "Initializing scripts for world: " << worldName;
