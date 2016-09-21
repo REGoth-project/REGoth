@@ -178,7 +178,7 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
 
 
-        bgfx::setViewRect(1, 0, 0, m_width, m_height);
+        bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 
         // Set view and projection matrix for view 0.
         bgfx::setViewTransform(1, NULL, proj);
@@ -207,14 +207,15 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 //		Args args(_argc, _argv);
 
 		axis = 0;
-		m_width = 1280;
-		m_height = 720;
 		m_debug = BGFX_DEBUG_TEXT;
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
 
+        m_Width = getWindowWidth();
+        m_Height = getWindowHeight();
+
 //		bgfx::init(args.m_type, args.m_pciId);
         bgfx::init();
-		bgfx::reset(m_width, m_height, m_reset);
+		bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height, m_reset);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);
@@ -278,6 +279,17 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 	{
         Engine::Input::fireBindings();
 
+
+        // Check for resize
+        if(m_Width != getWindowWidth() || m_Height != getWindowHeight())
+        {
+            m_Width = getWindowWidth();
+            m_Height = getWindowHeight();
+
+            // Notify bgfx about framebuffer resize
+            bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height);
+        }
+
         int64_t now = bx::getHPCounter();
         static int64_t last = now;
         const int64_t frameTime = now - last;
@@ -296,8 +308,8 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
                   | (ms.m_buttons[1] ? IMGUI_MBUT_RIGHT  : 0)
                   | (ms.m_buttons[2] ? IMGUI_MBUT_MIDDLE : 0)
                 ,  ms.m_mz
-                , m_width
-                , m_height
+                , (uint16_t)getWindowWidth()
+                , (uint16_t)getWindowHeight()
         );
 
         // Use debug font to print information about this example.
@@ -318,7 +330,7 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
         ddBegin(0);
 
-        m_pEngine->frameUpdate(dt, m_width, m_height);
+        m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
         // Draw and process all UI-Views
         // Set render states.
 
@@ -356,10 +368,9 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 	}
 
 	Engine::GameEngine* m_pEngine;
-	uint32_t m_width;
-	uint32_t m_height;
 	uint32_t m_debug;
 	uint32_t m_reset;
+    int m_Width, m_Height;
 	int64_t m_timeOffset;
 	float axis;
     int32_t m_scrollArea;

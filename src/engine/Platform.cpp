@@ -20,6 +20,7 @@
 #	include <GLFW/glfw3native.h>
 #endif
 #include <bgfx/bgfxplatform.h>
+#include <bgfx-cmake/bx/include/bx/commandline.h>
 
 
 
@@ -51,6 +52,9 @@
 
 using namespace Engine;
 
+int Platform::m_WindowWidth;
+int Platform::m_WindowHeight;
+
 inline void glfwSetWindow(GLFWwindow* _window)
 {
     bgfx::PlatformData pd;
@@ -72,19 +76,41 @@ inline void glfwSetWindow(GLFWwindow* _window)
     setPlatformData(pd);
 }
 
+
+void Platform::windowSizeEvent(GLFWwindow* window, int width, int height)
+{
+    Input::windowSizeEvent(window, width, height);
+
+    m_WindowHeight = height;
+    m_WindowWidth = width;
+}
+
 int32_t Platform::run(int argc, char** argv)
 {
-    constexpr int width = 1280;
-    constexpr int height = 720;
-
-    GLFWwindow* window;
+    int width = 1280;
+    int height = 720;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
+    bx::CommandLine cmd(argc, (const char**)argv);
+
+    bool fullscreen = false;
+    if(cmd.hasArg('f'))
+    {
+        fullscreen = true;
+
+        // Get native resolution
+        const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        width = mode->width;
+        height = mode->height;
+    }
+
+    GLFWwindow* window;
+    
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "REGoth", NULL, NULL);
+    window = glfwCreateWindow(width, height, "REGoth", fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window)
     {
         glfwTerminate();
