@@ -344,8 +344,12 @@ int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize,
         *outbuf++ = pcmdata[ch] = (int16_t) (inbuf [0] | (inbuf [1] << 8));
         index[ch] = inbuf [2];
 
-        if (index [ch] < 0 || index [ch] > 88 || inbuf [3])     // sanitize the input a little...
-            return 0;
+        // REGoth: This happens for the gothic soundfiles...
+        CLIP(index[ch], 0, 88);
+
+
+        //if (index [ch] < 0 || index [ch] > 88 || inbuf [3])     // sanitize the input a little...
+        //    return 0;
 
         inbufsize -= 4;
         inbuf += 4;

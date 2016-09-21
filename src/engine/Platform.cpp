@@ -108,7 +108,7 @@ int32_t Platform::run(int argc, char** argv)
     }
 
     GLFWwindow* window;
-    
+
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(width, height, "REGoth", fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window)

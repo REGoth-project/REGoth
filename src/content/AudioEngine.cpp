@@ -46,10 +46,6 @@ int AudioEngine::adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfil
 		outfile.resize(outfile.size() + this_block_pcm_samples * num_channels * 2);
 		pcm_block = (int16_t*)&outfile[ofidx];
 
-		if (num_samples == 364)
-		{
-			fprintf(stderr, "364 samples");
-		}
 		if (adpcm_decode_block(pcm_block, adpcm_block, block_size, num_channels) != this_block_adpcm_samples) {
 			fprintf(stderr, "adpcm_decode_block() did not return expected value!\n");
 			return -1;
