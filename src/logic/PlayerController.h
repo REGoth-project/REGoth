@@ -14,6 +14,7 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
+
         /**
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
@@ -21,8 +22,13 @@ namespace Logic
         PlayerController(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);
 
         /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::PlayerController; }
+
+        /**
          * Sets the daily routine for this.
-         * TODO: Add timing for these
+         * TODO: Add timing for these // TODO: Done, now remove this
          *
          * @param wps List of waypoints the NPC should visit, in order
          */
@@ -118,6 +124,27 @@ namespace Logic
          * @param force If true, no animation will be played
          */
         void undrawWeapon(bool force = false);
+
+        /**
+         * Uses the given Item on this NPC
+         * @param item Item to use
+         * @return Whether the item should be deleted from the inventory now
+         */
+        bool useItem(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * Checks if this NPC can use the given item. If not, messages will be displayed if this is also the player
+         * @param item Item to check
+         * @return Whether we can equip or use this
+         */
+        bool canUse(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * Changes one of the script attributes. Checks for godmode, immortality, maxima, etc
+         * @param atr Attribute of the script-object
+         * @param change Delta value of the change
+         */
+        void changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int change);
 
         /**
          * @return The ModelVisual of the underlaying vob

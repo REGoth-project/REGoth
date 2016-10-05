@@ -82,14 +82,43 @@ VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Hand
     Vob::VobInformation v = Vob::asVob(world, e);
     NpcVobInformation npc;
 
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::PlayerController)
+    {
+        // Invalidate instance and return
+        npc = {};
+        return npc;
+    }
+
     // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
     memcpy(&npc, &v, sizeof(v));
 
-    // TODO: Add some typechecking
     // Enter new information
     npc.playerController = reinterpret_cast<Logic::PlayerController*>(npc.logic);
 
     return npc;
+}
+
+VobTypes::ItemVobInformation VobTypes::asItemVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    ItemVobInformation item;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::ItemController)
+    {
+        // Invalidate instance and return
+        item = {};
+        return item;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&item, &v, sizeof(v));
+
+    // Enter new information
+    item.itemController = reinterpret_cast<Logic::ItemController*>(item.logic);
+
+    return item;
 }
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)

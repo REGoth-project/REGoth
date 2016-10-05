@@ -339,6 +339,7 @@ namespace Logic
 
         class ManipulateMessage : public NpcMessage
         {
+        public:
             enum ManipulateSubType
             {
                 ST_TakeVob = 0,
@@ -347,12 +348,12 @@ namespace Logic
                 ST_Exchange,
                 ST_UseMob,
                 ST_UseItem,
-                ST_InsertInteractitem,
-                ST_RemoveInteractitem,
-                ST_CreateInteractitem,
-                ST_DestroyInteractitem,
-                ST_PlaceInteractitem,
-                ST_ExchangeInteractitem,
+                ST_InsertInteractItem,
+                ST_RemoveInteractItem,
+                ST_CreateInteractItem,
+                ST_DestroyInteractItem,
+                ST_PlaceInteractItem,
+                ST_ExchangeInteractItem,
                 ST_UseMobWithItem,
                 ST_CallScript,
                 ST_EquipItem,
@@ -365,9 +366,48 @@ namespace Logic
             ManipulateMessage()
             {
                 messageType = EventMessageType::Manipulate;
+                flag = false;
+                pickupAniY = 0.0f;
+                targetState = 0;
+                symIdx = static_cast<size_t>(-1);
             }
 
-            // TODO: Implement
+            /**
+             * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
+             * Alternatively, you can set "targetItem" to a valid handle.
+             */
+            size_t symIdx;
+
+            /**
+             * Handle of the item to use. Alternatively you could set "name" to something found in the inventory
+             */
+            Daedalus::GameState::ItemHandle targetItem;
+
+            /**
+             * Slot the item should be put in, in case this is a ST_*InteractItem
+             */
+            std::string slot;
+
+            /**
+             * General purpose flag
+             */
+            bool flag;
+
+
+            /**
+             * Y-coord of the the pickup animation?
+             */
+            float pickupAniY;
+
+            /**
+             * State to go to when using the item
+             */
+            int	targetState;
+
+            /**
+             * Animation to play, for example on pickup
+             */
+            std::string	animation;
         };
 
         struct ConversationMessage : public NpcMessage

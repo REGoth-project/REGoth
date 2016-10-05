@@ -15,6 +15,11 @@ namespace Logic
         virtual ~VisualController();
 
         /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::VisualController; }
+
+        /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
          * @param visual Filename of the visual. Uncompiled-version of the name!

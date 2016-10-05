@@ -150,7 +150,7 @@ void ScriptEngine::initForWorld(const std::string& world)
     Daedalus::GameState::DaedalusGameState::GameExternals ext;
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
     ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
-    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onItemInserted(item, npc); };
+    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onInventoryItemInserted(item, npc); };
     ext.log_addentry = [this](std::string topic, std::string entry){ onLogEntryAdded(topic, entry); };
 
     m_pVM->getGameState().setGameExternals(ext);
@@ -196,7 +196,8 @@ void ScriptEngine::initForWorld(const std::string& world)
             setInstanceNPC("hero", VobTypes::getScriptHandle(npc));
 
 			Daedalus::GameState::NpcHandle hsnpc =  VobTypes::getScriptHandle(npc);
-			Daedalus::GameState::ItemHandle sword = getGameState().addInventoryItem(m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
+			Daedalus::GameState::ItemHandle sword = getGameState().createInventoryItem(
+                    m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
 
 			if(sword.isValid())
 				VobTypes::NPC_EquipWeapon(npc, sword);
@@ -217,16 +218,19 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
     Vob::VobInformation v = Vob::asVob(m_World, e);
     m_WorldNPCs.insert(e);
 
+    VobTypes::NpcVobInformation vob = VobTypes::getVobFromScriptHandle(m_World, npc);
 
-    // Place NPC to it's location
-    // TODO: Find some better solution to the casting
-    Logic::PlayerController* pc = reinterpret_cast<Logic::PlayerController*>(v.logic);
+    if(vob.isValid())
+    {
+        // Place NPC to it's location
+        Logic::PlayerController* pc = reinterpret_cast<Logic::PlayerController*>(v.logic);
 
-    //LogInfo() << "Spawnpoint: " << spawnpoint;
+        //LogInfo() << "Spawnpoint: " << spawnpoint;
 
-    // FIXME: Some waypoints don't seem to exist?
-    if(World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
-        pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+        // FIXME: Some waypoints don't seem to exist?
+        if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
+            pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+    }
 }
 
 Daedalus::GameState::DaedalusGameState& ScriptEngine::getGameState()
@@ -239,7 +243,7 @@ size_t ScriptEngine::getSymbolIndexByName(const std::string& name)
     return m_pVM->getDATFile().getSymbolIndexByName(name);
 }
 
-void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc)
+void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc)
 {
     Daedalus::GEngineClasses::C_Item& itemData = getGameState().getItem(item);
     //LogInfo() << "Inserted item '" << itemData.name
@@ -341,6 +345,43 @@ Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::strin
         return Daedalus::GameState::ItemHandle();
 
     return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
+}
+
+void ScriptEngine::registerItem(Handle::EntityHandle e)
+{
+    m_WorldItems.insert(e);
+}
+
+void ScriptEngine::unregisterItem(Handle::EntityHandle e)
+{
+    m_WorldItems.erase(e);
+}
+
+bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::EntityHandle hnpc)
+{
+    // Get item data
+    Daedalus::GEngineClasses::C_Item& data = getGameState().getItem(hitem);
+
+    // Check if we can even use this item
+    if(!data.on_state[0]
+        && !data.on_equip)
+    {
+        // Nothing to use here
+        return false;
+    }
+
+    // Push the message to the npc
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, hnpc);
+
+    EventMessages::ManipulateMessage msg;
+    msg.targetItem = hitem;
+
+    if(data.on_state[0])
+        msg.subType = EventMessages::ManipulateMessage::ST_UseItem;
+    else
+        msg.subType = EventMessages::ManipulateMessage::ST_EquipItem;
+
+    npc.playerController->getEM().onMessage(msg);
 }
 
 

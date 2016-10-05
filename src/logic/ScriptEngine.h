@@ -35,7 +35,8 @@ namespace Logic
         void initForWorld(const std::string& world);
 
         /**
-         * Saves the state of the VM and prepares it for a call to runFunction
+         * Saves the state of the VM and prepares it for a call to runFunction.
+         * You can push function arguments after this call.
          */
         void prepareRunFunction();
 
@@ -114,6 +115,26 @@ namespace Logic
          */
         Daedalus::GameState::NpcHandle getNPCFromSymbol(const std::string& symName);
         Daedalus::GameState::ItemHandle getItemFromSymbol(const std::string& symName);
+
+        /**
+         * (Un)Registers an item-instance currently sitting inside the world
+         * @param e Entity of the item-instance
+         */
+        void registerItem(Handle::EntityHandle e);
+        void unregisterItem(Handle::EntityHandle e);
+
+        /**
+         * Applies the given items effects on the given NPC or equips it. Does not delete the item or anything else.
+         * @param item Item to apply the effects from
+         * @param npc NPC to apply the effects to
+         * @return false, if this item is not usable and can not be equipped
+         */
+        bool useItemOn(Daedalus::GameState::ItemHandle item, Handle::EntityHandle npc);
+
+        /**
+         * @return All items found inside the World
+         */
+        const std::set<Handle::EntityHandle>& getWorldItems(){ return m_WorldItems; }
     protected:
 
         /**
@@ -129,7 +150,7 @@ namespace Logic
         /**
          * Called when an item got inserted into some NPCs inventory
          */
-        void onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
+        void onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
 
         /**
          * Called when a log-entry was inserted
@@ -147,9 +168,10 @@ namespace Logic
         World::WorldInstance& m_World;
 
         /**
-         * All NPCs currently in the world
+         * All NPCs/Items currently in the world
          */
         std::set<Handle::EntityHandle> m_WorldNPCs;
+        std::set<Handle::EntityHandle> m_WorldItems;
 
         /**
          * NPC-Entity of the player

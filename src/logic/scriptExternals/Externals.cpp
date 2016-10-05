@@ -171,7 +171,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if(armorInstance != -1)
         {
             // TODO: Right now, this equips the item automatically. When this is done properly, call the equip-method here
-            vm.getGameState().addInventoryItem(static_cast<size_t>(armorInstance), hnpc);
+            vm.getGameState().createInventoryItem(static_cast<size_t>(armorInstance), hnpc);
         }
     });
 
@@ -208,7 +208,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
 		if(npc.isValid())
 		{
-			Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, VobTypes::getScriptHandle(npc));
+			Daedalus::GameState::ItemHandle item = vm.getGameState().createInventoryItem(instance,
+                                                                                         VobTypes::getScriptHandle(npc));
 			VobTypes::NPC_EquipWeapon(npc, item);
 		}
 		else{
@@ -821,6 +822,19 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         // Move item to right place
         Vob::setPosition(vob, position);
+    });
+
+    vm->registerExternalFunction("npc_changeattribute", [=](Daedalus::DaedalusVM& vm){
+        int32_t value = vm.popDataValue();
+        int32_t atr = vm.popDataValue();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->changeAttribute((Daedalus::GEngineClasses::C_Npc::EAttributes)atr, value);
+        }
     });
 }
 

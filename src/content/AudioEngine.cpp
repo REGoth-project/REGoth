@@ -83,7 +83,7 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
 	size_t numNibbles = (data.size() - 60) * 2;
 	adpcm_decode_data(data.data()+60, outData, numNibbles);
 
-	if (!a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), outData.size()/2 , 1,  44100))
+	if (!a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), (outData.size()/2) - 512 , 1,  44100))
 	{      
         m_Allocator.removeObject(h);
         return Handle::AudioHandle::makeInvalidHandle();

@@ -321,6 +321,9 @@ void PlayerController::onDebugDraw()
 
         bgfx::dbgTextPrintf(0, 6, 0x0f, "Level: %d", scriptnpc.level);
         bgfx::dbgTextPrintf(0, 7, 0x0f, "XP   : %d", scriptnpc.exp);
+        bgfx::dbgTextPrintf(0, 8, 0x0f, "HP   : %d/%d",
+                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
         // Print inventory
         const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
@@ -359,6 +362,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take of any 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+        model->setNodeVisual("", EModelNode::Sword);
 
         // Put on our 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
@@ -368,6 +372,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take of any 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+        model->setNodeVisual("", EModelNode::Sword);
 
         // Put on our 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
@@ -377,6 +382,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take off a bow
         m_EquipmentState.equippedItems.equippedBow.invalidate();
+        model->setNodeVisual("", EModelNode::Bow);
 
         // Put on our crossbow
         m_EquipmentState.equippedItems.equippedCrossBow = item;
@@ -386,6 +392,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take off a crossbow
         m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
+        model->setNodeVisual("", EModelNode::Crossbow);
 
         // Put on our bow
         m_EquipmentState.equippedItems.equippedBow = item;
@@ -395,6 +402,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take of any 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+        model->setNodeVisual("", EModelNode::Longsword);
 
         // Put on our 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
@@ -404,6 +412,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Take of any 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+        model->setNodeVisual("", EModelNode::Longsword);
 
         // Put on our 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
@@ -745,13 +754,14 @@ void PlayerController::onUpdateByInput(float deltaTime)
     }
 
     // TODO: HACK, take this out!
+    float moveMod = 1.0f;
     if (m_MoveSpeed1)
-        deltaTime *= 4.0f;
+        moveMod *= 4.0f;
 
     if (m_MoveSpeed2)
-        deltaTime *= 16.0f;
+        moveMod *= 16.0f;
 
-
+    getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
@@ -1141,6 +1151,53 @@ bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::En
 bool
 PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handle::EntityHandle sourceVob)
 {
+    switch (static_cast<EventMessages::ManipulateMessage::ManipulateSubType>(message.subType))
+    {
+        case EventMessages::ManipulateMessage::ST_TakeVob:break;
+        case EventMessages::ManipulateMessage::ST_DropVob:break;
+        case EventMessages::ManipulateMessage::ST_ThrowVob:break;
+        case EventMessages::ManipulateMessage::ST_Exchange:break;
+        case EventMessages::ManipulateMessage::ST_UseMob:break;
+
+        case EventMessages::ManipulateMessage::ST_UseItem:
+        {
+            if(!message.targetItem.isValid())
+            {
+                // We need a name now
+                if(message.symIdx == static_cast<size_t>(-1))
+                    return true;
+
+                // Try to find this in our inventory
+                Daedalus::GameState::ItemHandle h = m_Inventory.getItem(message.symIdx);
+
+                if(h.isValid())
+                    message.targetItem = h;
+                else
+                    return true; // Could not find that item
+            }
+
+            // Get item data
+
+            // Execute the items script-function
+
+            return true;
+        }
+            break;
+
+        case EventMessages::ManipulateMessage::ST_InsertInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_RemoveInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_CreateInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_DestroyInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_PlaceInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_ExchangeInteractItem:break;
+        case EventMessages::ManipulateMessage::ST_UseMobWithItem:break;
+        case EventMessages::ManipulateMessage::ST_CallScript:break;
+        case EventMessages::ManipulateMessage::ST_EquipItem:break;
+        case EventMessages::ManipulateMessage::ST_UseItemToState:break;
+        case EventMessages::ManipulateMessage::ST_TakeMob:break;
+        case EventMessages::ManipulateMessage::ST_DropMob:break;
+        case EventMessages::ManipulateMessage::ST_ManipMax:break;
+    }
     return false;
 }
 
@@ -1393,6 +1450,120 @@ bool PlayerController::isNpcReady()
     return true;
 }
 
+
+bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
+{
+    if(!canUse(item))
+        return false;
+
+    Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+
+    // Food?
+    if(data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD != 0)
+    {
+        // Nutrition doesn't seem to be used anywhere...
+        changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
+    }
+
+    // Weapon?
+    if((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0
+       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0
+       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
+       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    {
+        equipItem(item);
+        return false;
+    }
+
+    // Call script function to be executed on use
+    if(data.on_state[0])
+    {
+        m_World.getScriptEngine().setInstanceNPC("self", getScriptHandle());
+        m_World.getScriptEngine().prepareRunFunction();
+        m_World.getScriptEngine().runFunctionBySymIndex(data.on_state[0]);
+    }
+
+    return true;
+}
+
+bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
+{
+    if(!item.isValid())
+        return false;
+
+    // TODO: Check talents
+
+    // Check attributes
+    Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+    Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
+    ScriptEngine& s = m_World.getScriptEngine();
+
+    for(int i=0; i < Daedalus::GEngineClasses::C_Item::COND_ATR_MAX; i++)
+    {
+        // Why is 0 not allowed? That's how gothic is doing it though, as it seems...
+        if(data.cond_atr[i] > 0)
+        {
+            // Check for enough strength, etc.
+            if(npc.attribute[data.cond_atr[i]] < data.cond_value[i])
+            {
+                // Display messages, if this is the player and do debug-output
+                s.setInstanceNPC("self", getScriptHandle());
+                s.setInstanceItem("item", item);
+
+                s.prepareRunFunction();
+
+                s.pushInt(data.cond_value[i]);
+                s.pushInt(data.cond_atr[i]);
+                s.pushInt(isPlayerControlled() ? 1 : 0);
+                s.runFunction("G_CANNOTUSE");
+
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int change)
+{
+    Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
+    // TODO: Godmode right here
+
+    if(!change)
+        return; // Nothing to do here...
+
+    if((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
+        return; // Invalid value set from script?
+
+    // Check for immortality
+    if( atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS
+        && npc.flags & Daedalus::GEngineClasses::C_Npc::EFLAG_IMMORTAL
+        && change != -999) // Yep, this is in the game!
+    {
+        return;
+    }
+
+    // Apply change
+    npc.attribute[atr] += change;
+
+    // Clamp to 0
+    if(npc.attribute[atr] < 0)
+        npc.attribute[atr] = 0;
+
+    // Clamp to max
+    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+        npc.attribute[atr] = std::min(npc.attribute[atr],
+                                      npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
+        npc.attribute[atr] = std::min(npc.attribute[atr],
+                                      npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+
+    // TODO: Switch animation overlay (wounded, etc)
+}
+
+
 void PlayerController::setupKeyBindings()
 {
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
@@ -1440,12 +1611,40 @@ void PlayerController::setupKeyBindings()
             if(m_World.getDialogManager().isDialogActive())
                 return;
 
+            // ----- ITEMS -----
+            Handle::EntityHandle nearestItem;
+            float shortestDistItem = FLT_MAX;
+            const std::set<Handle::EntityHandle>& items = m_World.getScriptEngine().getWorldItems();
+            for(Handle::EntityHandle h : items)
+            {
+                Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
+
+                float dist = (m.Translation() -
+                              getEntityTransform().Translation()).lengthSquared();
+                if (dist < shortestDistItem && dist < 10.0f * 10.0f)
+                {
+                    nearestItem = h;
+                    shortestDistItem = dist;
+                }
+            }
+
+            if(nearestItem.isValid())
+            {
+                // Pick it up
+                VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
+                item.itemController->pickUp(m_Entity);
+
+                return;
+            }
+
+            // ----- TALKING ----
+
             std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(
                     getEntityTransform().Translation(), 10.0f);
 
             // Talk to the nearest NPC other than the current player, of course
-            Handle::EntityHandle nearest;
-            float shortestDist = FLT_MAX;
+            Handle::EntityHandle nearestNPC;
+            float shortestDistNPC = FLT_MAX;
             for (const Handle::EntityHandle& h : nearNPCs)
             {
                 if (h != m_World.getScriptEngine().getPlayerEntity())
@@ -1454,32 +1653,39 @@ void PlayerController::setupKeyBindings()
 
                     float dist = (Vob::getTransform(npc).Translation() -
                                   getEntityTransform().Translation()).lengthSquared();
-                    if (dist < shortestDist)
+                    if (dist < shortestDistNPC)
                     {
-                        nearest = h;
-                        shortestDist = dist;
+                        nearestNPC = h;
+                        shortestDistNPC = dist;
                     }
                 }
             }
 
-            if (nearest.isValid())
+            if (nearestNPC.isValid())
             {
-                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearest);
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
                 Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
                 m_World.getDialogManager().startDialog(shnpc);
             }else
             {
-                size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+                /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
                 Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
                 VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
 
                 vob.playerController->changeRoutine("");
-                vob.playerController->teleportToWaypoint(targetWP);
+                vob.playerController->teleportToWaypoint(targetWP);*/
+
+                // Use item last picked up
+                Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+                if(lastItem.isValid())
+                {
+                    if(useItem(lastItem))
+                        getInventory().removeItem(lastItem);
+                }
 
             }
         }
     });
 
+
 }
-
-

@@ -3,6 +3,7 @@
 #include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
 #include <logic/visuals/ModelVisual.h>
+#include <logic/ItemController.h>
 #include "Vob.h"
 
 namespace Logic
@@ -26,6 +27,11 @@ namespace VobTypes
         Logic::PlayerController* playerController;
     };
 
+    struct ItemVobInformation : Vob::VobInformation
+    {
+        Logic::ItemController* itemController;
+    };
+
     /**
      * Returns an Entity as NPC-Vob
      */
@@ -34,6 +40,7 @@ namespace VobTypes
      * NOTE: ONLY FOR TEMPORARY USE. DO NOT SAVE THE RETURNED OBJECT FOR LATER USE.
      */
     NpcVobInformation asNpcVob(World::WorldInstance& world, Handle::EntityHandle e);
+    VobTypes::ItemVobInformation asItemVob(World::WorldInstance& world, Handle::EntityHandle e);
 
     /**
      * Creates a generic vob from script
