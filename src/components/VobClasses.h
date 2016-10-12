@@ -2,13 +2,14 @@
 
 #include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
-#include <logic/visuals/ModelVisual.h>
-#include <logic/ItemController.h>
 #include "Vob.h"
 
 namespace Logic
 {
     class PlayerController;
+    class MobController;
+    class ItemController;
+    class ModelVisual;
 }
 
 namespace VobTypes
@@ -32,6 +33,11 @@ namespace VobTypes
         Logic::ItemController* itemController;
     };
 
+    struct MobVobInformation : Vob::VobInformation
+    {
+        Logic::MobController* mobController;
+    };
+
     /**
      * Returns an Entity as NPC-Vob
      */
@@ -40,13 +46,22 @@ namespace VobTypes
      * NOTE: ONLY FOR TEMPORARY USE. DO NOT SAVE THE RETURNED OBJECT FOR LATER USE.
      */
     NpcVobInformation asNpcVob(World::WorldInstance& world, Handle::EntityHandle e);
-    VobTypes::ItemVobInformation asItemVob(World::WorldInstance& world, Handle::EntityHandle e);
+    ItemVobInformation asItemVob(World::WorldInstance& world, Handle::EntityHandle e);
+    MobVobInformation asMobVob(World::WorldInstance& world, Handle::EntityHandle e);
 
     /**
      * Creates a generic vob from script
      */
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
     Handle::EntityHandle initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance);
+
+    /**
+     * Creates a mob from the given zenlib-info
+     * @param world World to create mob in
+     * @param vobInfo Vob-Info from zenfile
+     * @return Handle to the newly created mob-vob
+     */
+    Handle::EntityHandle createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo);
 
     /**
      * Helper-function to insert an NPC into the world (With script initialization)

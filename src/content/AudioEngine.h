@@ -1,5 +1,5 @@
 #pragma once
-#include <SFML/Audio.hpp>
+
 #include <memory/Config.h>
 #include <memory/StaticReferencedAllocator.h>
 #include <vdfs/fileIndex.h>
@@ -7,6 +7,10 @@
 #include <handle/Handle.h>
 #include <map>
 #include <list>
+
+#ifdef RE_USE_SFML 
+#include <SFML/Audio.hpp>
+#endif
 
 namespace Content
 {
@@ -42,6 +46,7 @@ namespace Content
          */
         int adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfile, size_t num_samples, int num_channels = 1, int block_size = 1024);
         
+#ifdef RE_USE_SFML
         /**
          * Checks if we currently have a stopped sound to use or creates a new one, if not
          * @return sound object to use for a new sound
@@ -53,6 +58,7 @@ namespace Content
          */
         struct AudioFile : public Handle::HandleTypeDescriptor<Handle::AudioHandle>
         {
+
             sf::SoundBuffer buffer;
         };
 
@@ -62,6 +68,12 @@ namespace Content
         Memory::StaticReferencedAllocator<AudioFile, Config::MAX_NUM_LEVEL_AUDIO_FILES> m_Allocator;
 
         /**
+         * List of currently playing sounds or sounds that have been playing
+         */
+        std::list<sf::Sound> m_PlayingSounds;
+#endif
+        
+        /**
          * Pointer to a vdfs-index to work on (can be nullptr)
          */
         const VDFS::FileIndex* m_pVDFSIndex;
@@ -70,10 +82,5 @@ namespace Content
          * Contains all loaded sounds by name
          */
         std::map<std::string, Handle::AudioHandle> m_SoundMap;
-
-        /**
-         * List of currently playing sounds or sounds that have been playing
-         */
-        std::list<sf::Sound> m_PlayingSounds;
     };
 }

@@ -123,6 +123,9 @@ namespace Logic
         void registerItem(Handle::EntityHandle e);
         void unregisterItem(Handle::EntityHandle e);
 
+        void registerMob(Handle::EntityHandle e);
+        void unregisterMob(Handle::EntityHandle e);
+
         /**
          * Applies the given items effects on the given NPC or equips it. Does not delete the item or anything else.
          * @param item Item to apply the effects from
@@ -135,6 +138,12 @@ namespace Logic
          * @return All items found inside the World
          */
         const std::set<Handle::EntityHandle>& getWorldItems(){ return m_WorldItems; }
+
+        /**
+         * @return All mobs found inside the World
+         */
+        const std::set<Handle::EntityHandle>& getWorldMobs(){ return m_WorldMobs; }
+
     protected:
 
         /**
@@ -172,6 +181,7 @@ namespace Logic
          */
         std::set<Handle::EntityHandle> m_WorldNPCs;
         std::set<Handle::EntityHandle> m_WorldItems;
+        std::set<Handle::EntityHandle> m_WorldMobs;
 
         /**
          * NPC-Entity of the player

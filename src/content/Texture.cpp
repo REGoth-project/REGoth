@@ -61,7 +61,7 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
 	return h;
 }
 
-Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8_t>& data, const std::string & name)
+Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8_t>& data, uint16_t width, uint16_t height, const std::string & name)
 {
 	// Check if this was already loaded
 	auto it = m_TexturesByName.find(name);
@@ -69,17 +69,17 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
 		return (*it).second;
 
 	// Load image
-	int width, height, comp;
-	void* out = stbi_load_from_memory( data.data(), data.size(), (int*)&width, (int*)&height, &comp, 4);
+	//int width, height, comp;
+	//void* out = stbi_load_from_memory( data.data(), data.size(), (int*)&width, (int*)&height, &comp, 4);
 
 	// Try to load the texture first, so we don't have to clean up if this fails
 	//TODO: Avoid the second copy here
 	const bgfx::Memory* mem = bgfx::alloc(data.size());
 	memcpy(mem->data, data.data(), data.size());
-	bgfx::TextureHandle bth = bgfx::createTexture(mem);
+	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
 
 	// Free imange
-	stbi_image_free(out);
+	//stbi_image_free(out);
 
 	// Couldn't load this one?
 	if (bth.idx == bgfx::invalidHandle)
@@ -140,16 +140,30 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
 	if (ztex.empty())
 		return Handle::TextureHandle::makeInvalidHandle();
 
+    if(asDDS)
+    {
+        // Convert to usual DDS
+        ZenLoad::convertZTEX2DDS(ztex, dds);
+    }
+
+#if ANDROID
+    if(asDDS)
+    {
+        // Android doesn't support DDS for the most part
+        ztex.clear();
+        ZenLoad::convertDDSToRGBA8(dds, ztex);
+        asDDS = false;
+    }
+#endif
+
 	if(asDDS)
 	{
-		// Convert to usual DDS
-		ZenLoad::convertZTEX2DDS(ztex, dds);
-
 		// Proceed to load as usual dds-file and the input-name
 		return loadTextureDDS(dds, name);
 	} else
 	{
-		return loadTextureRGBA8(ztex, name);
+		ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(dds);
+		return loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
 	}
 }
 

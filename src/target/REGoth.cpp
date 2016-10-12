@@ -19,10 +19,18 @@
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
 #include "config.h"
-#include "engine/Platform.h"
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
 
+#if BX_PLATFORM_ANDROID
+#include "engine/PlatformAndroid.h"
+#define PLATFORM_CLASS Engine::PlatformAndroid
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS
+#include "engine/PlatformGLFW.h"
+#define PLATFORM_CLASS Engine::PlatformGLFW
+#else
+#error Unknown platform
+#endif
 
 
 struct PosColorVertex
@@ -101,7 +109,7 @@ bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 
 
-class ExampleCubes : public /*entry::AppI*/ Engine::Platform
+class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 {
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
     {
@@ -241,6 +249,12 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
         PosColorTexCoord0Vertex::init();
 
 		m_pEngine = new Engine::GameEngine;
+
+#if BX_PLATFORM_ANDROID
+        // Content is somewhere else on android
+        m_pEngine->setContentBasePath("/sdcard/REGoth/");
+#endif
+
 		m_pEngine->initEngine(_argc, _argv);
 
 
@@ -255,7 +269,13 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
 
         // Imgui.
-        imguiCreate();
+        float fontSize = 18.0f;//18
+
+#ifdef ANDROID
+        fontSize = 23.0f;
+#endif
+
+        imguiCreate(nullptr, 0, fontSize);
         m_scrollArea = 0;
 	}
 

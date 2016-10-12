@@ -2,10 +2,11 @@
 #include "RenderSystem.h"
 #include "bgfx_utils.h"
 #include "utils/Utils.h"
+#include <engine/BaseEngine.h>
 
 using namespace Render;
 
-RenderSystem::RenderSystem()
+RenderSystem::RenderSystem(Engine::BaseEngine& engine) : m_Engine(engine)
 {
 
 }
@@ -19,10 +20,10 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::init()
 {
-    m_Config.programs.mainWorldProgram = Utils::loadProgram("vs_stencil_texture", "fs_stencil_texture_clip");
-    m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram("vs_skinned", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_stencil_texture", "fs_stencil_texture_clip");
+    m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
 
-    m_Config.programs.fullscreenQuadProgram = Utils::loadProgram("vs_screenquad", "fs_screenquad");
+    m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
 
     m_Config.uniforms.diffuseTexture = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
     m_Config.uniforms.objectColor = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);

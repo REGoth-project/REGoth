@@ -2,6 +2,8 @@
 
 using namespace Engine;
 
+
+
 ActionBinding::ActionBinding(ActionType actionType, bool isContinuous, bool isInverted)
     : actionType(actionType)
     , isContinuous(isContinuous)
@@ -44,11 +46,11 @@ std::map<ActionBinding, Input::MouseAxis> Input::actionBindingToMouseAxisMap;
 
 std::multimap<ActionType, Action> Input::actionTypeToActionMap;
 
-std::bitset<GLFW_KEY_LAST + 1> Input::keyState;
-std::bitset<GLFW_KEY_LAST + 1> Input::keyTriggered;
+std::bitset<Input::NUM_KEYS> Input::keyState;
+std::bitset<Input::NUM_KEYS> Input::keyTriggered;
 
-std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> Input::mouseButtonState;
-std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> Input::mouseButtonTriggered;
+std::bitset<Input::NUM_MOUSEBUTTONS> Input::mouseButtonState;
+std::bitset<Input::NUM_MOUSEBUTTONS> Input::mouseButtonTriggered;
 
 float Input::axisPosition[static_cast<std::size_t>(Input::MouseAxis::Count)];
 std::bitset<static_cast<std::size_t>(Input::MouseAxis::Count)> Input::mouseAxisState;
@@ -102,33 +104,33 @@ void Input::bindMouseAxis(MouseAxis mouseAxis, ActionType actionType, bool isCon
     actionBindingToMouseAxisMap[ActionBinding(actionType, isContinuous, isInverted)] = mouseAxis;
 }
 
-void Input::keyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
+void Input::keyEvent(int key, int scancode, int action, int mods)
 {
-    if(GLFW_PRESS == action)
+    if(KEY_ACTION_PRESS == action)
     {
         keyState[key] = true;
         keyTriggered[key] = true;
     }
-    else if(GLFW_RELEASE == action)
+    else if(KEY_ACTION_RELEASE == action)
     {
         keyState[key] = false;
     }
 }
 
-void Input::mouseButtonEvent(GLFWwindow *window, int button, int action, int mods)
+void Input::mouseButtonEvent(int button, int action, int mods)
 {
-    if(GLFW_PRESS == action)
+    if(KEY_ACTION_PRESS == action)
     {
         mouseButtonState[button] = true;
         mouseButtonTriggered[button] = true;
     }
-    else if(GLFW_RELEASE == action)
+    else if(KEY_ACTION_RELEASE == action)
     {
         mouseButtonState[button] = false;
     }
 }
 
-void Input::mouseMoveEvent(GLFWwindow *window, double xPos, double yPos)
+void Input::mouseMoveEvent(double xPos, double yPos)
 {
     constexpr size_t cursorXIndex = static_cast<std::size_t>(MouseAxis::CursorX);
     constexpr size_t cursorYIndex = static_cast<std::size_t>(MouseAxis::CursorY);
@@ -156,7 +158,7 @@ void Input::mouseMoveEvent(GLFWwindow *window, double xPos, double yPos)
     axisPosition[cursorYIndex] = y;
 }
 
-void Input::scrollEvent(GLFWwindow *window, double xOffset, double yOffset)
+void Input::scrollEvent(double xOffset, double yOffset)
 {
     float x = static_cast<float>(xOffset);
     float y = static_cast<float>(yOffset);
@@ -180,10 +182,10 @@ void Input::scrollEvent(GLFWwindow *window, double xOffset, double yOffset)
     axisPosition[static_cast<std::size_t>(MouseAxis::ScrollY)] = y;
 }
 
-void Input::windowSizeEvent(GLFWwindow *window, int width, int height)
+void Input::windowSizeEvent(int width, int height)
 {
-    windowHalfWidth = static_cast<float>(width) / 2.0;
-    windowHalfHeight = static_cast<float>(height) / 2.0;
+    windowHalfWidth = static_cast<float>(width) / 2.0f;
+    windowHalfHeight = static_cast<float>(height) / 2.0f;
 }
 
 void Input::setMouseLockCallback(std::function<void (bool)> callback)
@@ -198,7 +200,7 @@ void Input::fireBindings()
         //                             is key currently pressed   AND ( is continuous                    OR key has just been triggered )
         bool triggerAction = keyState.test(itBindingToKey.second) && ( itBindingToKey.first.isContinuous || keyTriggered.test(itBindingToKey.second) );
         // Key causes a constant intensity of 1.0, when pressed.
-        float intensity = triggerAction ? 1.0 : 0.0;
+        float intensity = triggerAction ? 1.0f : 0.0f;
         // Invert intensity if isInverted is true
         intensity = itBindingToKey.first.isInverted ? -intensity : intensity;
 
@@ -216,7 +218,7 @@ void Input::fireBindings()
     {
         bool triggerAction = mouseButtonState.test(itBindingToButton.second) && ( itBindingToButton.first.isContinuous || mouseButtonTriggered.test(itBindingToButton.second) );
         // Button causes a constant intensity of 1.0 when pressed
-        float intensity = triggerAction ? 1.0 : 0.0;
+        float intensity = triggerAction ? 1.0f : 0.0f;
         // Invert intensity if isInverted is true
         intensity = itBindingToButton.first.isInverted ? -intensity : intensity;
 

@@ -236,6 +236,11 @@ namespace Logic
          */
         virtual void setShadowValue(float shadow);
 
+		/**
+         * @return Skeleton-information for the currently set mesh
+         */
+		const ZenLoad::zCModelMeshLib& getMeshLib();
+
     protected:
 
         /**
@@ -257,11 +262,6 @@ namespace Logic
          * Rebuilds the main entity list from everything found inside the PartEntityLists
          */
         void rebuildMainEntityList();
-
-        /**
-         * @return Skeleton-information for the currently set mesh
-         */
-        const ZenLoad::zCModelMeshLib& getMeshLib();
 
         /**
          * Handle to the main-mesh and it's skeleton information

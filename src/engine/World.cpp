@@ -58,9 +58,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 	init(engine);
 
 	// Init daedalus-vm
-	std::string datPath = m_pEngine->getEngineArgs().gameBaseDirectory
-		+ "/_work/data/Scripts/_compiled/GOTHIC.DAT";
-	std::string datFile = Utils::getCaseSensitivePath(datPath);
+	std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
+	std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
 
 	if(Utils::fileExists(datFile))
 	{
@@ -170,7 +169,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 					else{
 						LogWarn() << "Invalid item instance: " << v.oCItem.instanceName;
 					}
-				}
+				}else if(v.objectClass.find("oCMobInter:oCMOB") != std::string::npos)
+                {
+                    e = VobTypes::createMob(*this, v);
+                    vob = Vob::asVob(*this, e);
+                }
 				else {
 					// Normal zCVob or not implemented subclass
 					e = Vob::constructVob(*this);

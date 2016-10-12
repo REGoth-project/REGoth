@@ -13,10 +13,12 @@
 #include <entry/input.h>
 #include <components/VobClasses.h>
 #include "visuals/ModelVisual.h"
+#include "MobController.h"
 #include <engine/BaseEngine.h>
 #include <stdlib.h>
 #include <content/AudioEngine.h>
 #include <engine/Input.h>
+#include "ItemController.h"
 
 using namespace Logic;
 
@@ -1191,7 +1193,16 @@ PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handl
         case EventMessages::ManipulateMessage::ST_PlaceInteractItem:break;
         case EventMessages::ManipulateMessage::ST_ExchangeInteractItem:break;
         case EventMessages::ManipulateMessage::ST_UseMobWithItem:break;
-        case EventMessages::ManipulateMessage::ST_CallScript:break;
+
+        case EventMessages::ManipulateMessage::ST_CallScript:
+
+            if(message.symIdx != static_cast<size_t>(-1))
+            {
+                m_World.getScriptEngine().prepareRunFunction();
+                m_World.getScriptEngine().runFunctionBySymIndex(message.symIdx);
+            }
+            return false;
+
         case EventMessages::ManipulateMessage::ST_EquipItem:break;
         case EventMessages::ManipulateMessage::ST_UseItemToState:break;
         case EventMessages::ManipulateMessage::ST_TakeMob:break;
@@ -1399,6 +1410,23 @@ bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
 
     return false;
 }
+
+bool PlayerController::freeLineOfSight(const Math::float3& target)
+{
+    // Trace from the top of our BBox (eyes)
+    Math::float3 start = getEntityTransform().Translation()
+                         + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
+
+
+    // Do the raytest to the other object
+    Physics::RayTestResult res = m_World.getPhysicsSystem().raytrace(
+            start,
+            target,
+            Physics::CollisionShape::CT_WorldMesh); // FIXME: Should trace everything except the two objects in question!
+
+    return !res.hasHit;
+}
+
 
 float PlayerController::getAngleTo(const Math::float3& pos)
 {
@@ -1668,24 +1696,51 @@ void PlayerController::setupKeyBindings()
                 m_World.getDialogManager().startDialog(shnpc);
             }else
             {
-                /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
-                Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
-                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
+                std::set<Handle::EntityHandle> mobs = m_World.getScriptEngine().getWorldMobs();
 
-                vob.playerController->changeRoutine("");
-                vob.playerController->teleportToWaypoint(targetWP);*/
-
-                // Use item last picked up
-                Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
-                if(lastItem.isValid())
+                // Use the nearest mob
+                Handle::EntityHandle nearestMob;
+                float shortestDistMob = FLT_MAX;
+                for (const Handle::EntityHandle& h : mobs)
                 {
-                    if(useItem(lastItem))
-                        getInventory().removeItem(lastItem);
+                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
+
+                    float dist = (Vob::getTransform(vob).Translation() -
+                                  getEntityTransform().Translation()).lengthSquared();
+
+                    if (dist < shortestDistMob)
+                    {
+                        nearestMob = h;
+                        shortestDistMob = dist;
+                    }
                 }
 
+                if(nearestMob.isValid())
+                {
+                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, nearestMob);
+
+                    vob.mobController->useMobToState(m_Entity, 1);
+                }else
+                {
+                    /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+                    Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
+                    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
+
+                    vob.playerController->changeRoutine("");
+                    vob.playerController->teleportToWaypoint(targetWP);*/
+
+                    // Use item last picked up
+                    Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+                    if (lastItem.isValid())
+                    {
+                        if (useItem(lastItem))
+                            getInventory().removeItem(lastItem);
+                    }
+                }
             }
         }
     });
 
 
 }
+

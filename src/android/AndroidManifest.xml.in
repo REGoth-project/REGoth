@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- IMPORTANT: Do not manually manipulate this automatically generated file, changes will be gone after the next build! -->
+
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="${ANDROID_APK_PACKAGE}" android:versionCode="1" android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="${ANDROID_API_LEVEL}" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:required="true" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:required="true" />
+    <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="true" />
+    <application android:label="@string/ApplicationName" android:debuggable="${ANDROID_APK_DEBUGGABLE}">
+        
+        <activity android:name=".LoadLibraries" android:label="@string/ApplicationName" android:configChanges="orientation|keyboardHidden" ${ANDROID_APK_THEME}>
+            <meta-data android:name="android.app.lib_name" android:value="${ANDROID_NAME}" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest> 

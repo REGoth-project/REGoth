@@ -12,5 +12,6 @@ namespace Logic
         VisualController,
         CameraController,
         ItemController,
+        MobController,
     };
 }

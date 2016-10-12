@@ -27,6 +27,15 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.cmdline = bx::CommandLine(argc, (const char**)argv);
     const char* value = nullptr;
 
+    LogInfo() << "Initializing...";
+
+    for(int i=0;i<argc;i++)
+    {
+        LogInfo() << "Arg " << i;
+        LogInfo() << " - " << argv[i];
+    }
+
+
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 

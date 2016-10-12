@@ -1,11 +1,11 @@
 #pragma once
-#include <GLFW/glfw3.h>
 #include <bitset>
 #include <functional>
 #include <map>
 #include <unordered_map>
 #include <type_traits>
 #include <cstring>
+#include <cstdint>
 
 #include "math/mathlib.h"
 
@@ -86,6 +86,13 @@ namespace Engine
 	class Input
 	{
 	public:
+
+        static const int NUM_KEYS = 349;
+        static const int NUM_MOUSEBUTTONS = 8;
+        static const int KEY_ACTION_RELEASE = 0;
+        static const int KEY_ACTION_PRESS = 1;
+        static const int KEY_ACTION_REPEAT = 2;
+
 		enum class MouseAxis
 		{
 			CursorX = 0,
@@ -116,12 +123,11 @@ namespace Engine
 		static void bindMouseButton(int mouseButton, ActionType actionType, bool isContinuous, bool isInverted = false);
 		static void bindMouseAxis(MouseAxis mouseAxis, ActionType actionType, bool isContinuous, bool isInverted = false);
 
-		static void keyEvent(GLFWwindow *window, int key, int scancode, int action, int mods);
-		static void mouseButtonEvent(GLFWwindow *window, int button, int action, int mods);
-		static void mouseMoveEvent(GLFWwindow *window, double xPos, double yPos);
-		static void scrollEvent(GLFWwindow *window, double xOffset, double yOffset);
-
-		static void windowSizeEvent(GLFWwindow *window, int width, int height);
+		static void keyEvent(int key, int scancode, int action, int mods);
+		static void mouseButtonEvent(int button, int action, int mods);
+		static void mouseMoveEvent(double xPos, double yPos);
+		static void scrollEvent(double xOffset, double yOffset);
+		static void windowSizeEvent(int width, int height);
 
 		static void setMouseLockCallback(std::function<void(bool /* lock */)> callback);
 
@@ -132,11 +138,11 @@ namespace Engine
 
 		static std::multimap<ActionType, Action> actionTypeToActionMap;
 
-		static std::bitset<GLFW_KEY_LAST + 1> keyState;
-		static std::bitset<GLFW_KEY_LAST + 1> keyTriggered;
+		static std::bitset<NUM_KEYS> keyState;
+		static std::bitset<NUM_KEYS> keyTriggered;
 
-		static std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> mouseButtonState;
-		static std::bitset<GLFW_MOUSE_BUTTON_LAST + 1> mouseButtonTriggered;
+		static std::bitset<NUM_MOUSEBUTTONS> mouseButtonState;
+		static std::bitset<NUM_MOUSEBUTTONS> mouseButtonTriggered;
 
 		static float axisPosition[static_cast<std::size_t>(MouseAxis::Count)];
 		static std::bitset<static_cast<std::size_t>(MouseAxis::Count)> mouseAxisState;

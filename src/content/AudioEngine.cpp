@@ -59,6 +59,7 @@ int AudioEngine::adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfil
 
 Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
 {
+#ifdef RE_USE_SFML 
     std::vector<uint8_t> data;
 	std::vector<uint8_t> outData;
     // Check cache first
@@ -92,6 +93,9 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     m_SoundMap[name] = h;
 
     return h;
+#else
+    return Handle::AudioHandle::makeInvalidHandle();
+#endif
 }
 
 Handle::AudioHandle AudioEngine::loadAudioVDF(const std::string& name)
@@ -104,6 +108,7 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const std::string& name)
 
 void AudioEngine::playSound(Handle::AudioHandle h)
 {
+#ifdef RE_USE_SFML 
     AudioFile& a = m_Allocator.getElement(h);
 
     // Get a cached sound-object
@@ -112,6 +117,7 @@ void AudioEngine::playSound(Handle::AudioHandle h)
 
     // Play our sound. If this runs out, we can later use the sf::Sound again, for an other buffer
     s.play();
+#endif
 }
 
 void AudioEngine::playSound(const std::string& name)
@@ -134,6 +140,7 @@ void AudioEngine::playSound(const std::string& name)
     }
 }
 
+#ifdef RE_USE_SFML 
 sf::Sound& AudioEngine::getFreeSoundObject()
 {
     // Check if we could re-use one
@@ -147,3 +154,4 @@ sf::Sound& AudioEngine::getFreeSoundObject()
     m_PlayingSounds.push_back(sf::Sound());
     return m_PlayingSounds.back();
 }
+#endif

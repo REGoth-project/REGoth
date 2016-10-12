@@ -11,6 +11,23 @@ namespace Logic
 {
     class ModelVisual;
 
+    /**
+     * Useful script functions for reporting
+     */
+    namespace PlayerScriptInfo
+    {
+        const char* const PLAYER_MOB_MISSING_KEY				=	"PLAYER_MOB_MISSING_KEY";
+        const char* const PLAYER_MOB_MISSING_LOCKPICK			=	"PLAYER_MOB_MISSING_LOCKPICK";
+        const char* const PLAYER_MOB_MISSING_KEY_OR_LOCKPICK	=	"PLAYER_MOB_MISSING_KEY_OR_LOCKPICK";
+        const char* const PLAYER_MOB_NEVER_OPEN				    =	"PLAYER_MOB_NEVER_OPEN";
+        const char* const PLAYER_MOB_TOO_FAR_AWAY				=	"PLAYER_MOB_TOO_FAR_AWAY";
+        const char* const PLAYER_MOB_WRONG_SIDE				    =	"PLAYER_MOB_WRONG_SIDE";
+        const char* const PLAYER_MOB_MISSING_ITEM				=	"PLAYER_MOB_MISSING_ITEM";
+        const char* const PLAYER_MOB_ANOTHER_IS_USING			=	"PLAYER_MOB_ANOTHER_IS_USING";
+        const char* const PLAYER_PLUNDER_IS_EMPTY				=	"PLAYER_PLUNDER_IS_EMPTY";
+        const char* const PLAYER_RANGED_NO_AMMO				    =	"PLAYER_RANGED_NO_AMMO";
+    }
+
     class PlayerController : public Controller
     {
     public:
@@ -200,6 +217,13 @@ namespace Logic
         bool canSee(Handle::EntityHandle entity, bool ignoreAngles = false);
 
         /**
+         * Traces from the npcs eyes to the given target position and checks if something is in between them
+         * @param target Target position to trace to
+         * @return true, if nothing is in between the npc and the target position
+         */
+        bool freeLineOfSight(const Math::float3& target);
+
+        /**
          * Checks the angle from the facing direction of the NPC to the given point
          * @param pos Point to get the angle to from
          * @return Angle between the forward direction of the npc and pos as radians, [0, pi]
@@ -250,6 +274,10 @@ namespace Logic
          */
         void setupKeyBindings();
 
+        /**
+         * @return Item this NPC is currently interacting with
+         */
+        Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
     protected:
 
         /**

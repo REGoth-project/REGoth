@@ -3,6 +3,11 @@
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
 
+namespace Engine
+{
+    class BaseEngine;
+}
+
 namespace Render
 {
     struct RenderConfig
@@ -38,7 +43,7 @@ namespace Render
     {
     public:
 
-        RenderSystem();
+        RenderSystem(Engine::BaseEngine& engine);
         virtual ~RenderSystem();
 
         /**
@@ -56,5 +61,7 @@ namespace Render
          * Generated config of this system
          */
         RenderConfig m_Config;
+
+        Engine::BaseEngine& m_Engine;
     };
 }

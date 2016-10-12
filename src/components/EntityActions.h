@@ -175,5 +175,6 @@ namespace Components
                f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
             });
         }
+
     }
 }

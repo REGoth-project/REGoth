@@ -278,10 +278,10 @@ void DialogManager::endDialog()
 
 void DialogManager::init()
 {
-    std::string ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE);
+    std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
-        ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE_2);
+        ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
         LogWarn() << "Failed to read OU-file!";

@@ -129,7 +129,9 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     {
         Logic::VisualController* ld = new Logic::ModelVisual(*vob.world, vob.entity);
         if(ld->load(visual))
+        {
             (*ppVisual) = ld;
+        }
         else
             delete ld;
     }

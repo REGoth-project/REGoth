@@ -17,7 +17,7 @@ using namespace Engine;
 
 const float DRAW_DISTANCE = 100.0f;
 
-GameEngine::GameEngine()
+GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 {
     m_disableLogic = false;
 }

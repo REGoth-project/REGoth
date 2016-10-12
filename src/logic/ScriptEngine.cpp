@@ -357,6 +357,17 @@ void ScriptEngine::unregisterItem(Handle::EntityHandle e)
     m_WorldItems.erase(e);
 }
 
+void ScriptEngine::registerMob(Handle::EntityHandle e)
+{
+    m_WorldMobs.insert(e);
+}
+
+void ScriptEngine::unregisterMob(Handle::EntityHandle e)
+{
+    m_WorldMobs.erase(e);
+}
+
+
 bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::EntityHandle hnpc)
 {
     // Get item data
@@ -383,6 +394,7 @@ bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::Enti
 
     npc.playerController->getEM().onMessage(msg);
 }
+
 
 
 

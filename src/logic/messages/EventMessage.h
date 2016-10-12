@@ -23,6 +23,7 @@ namespace Logic
             Manipulate,
             Conversation,
             Magic,
+            Mob
         };
 
         /**
@@ -493,7 +494,7 @@ namespace Logic
 
         struct MagicMessage : public NpcMessage
         {
-            enum ConversationSubType
+            enum MagicSubType
             {
                 ST_Open,
                 ST_Close,
@@ -515,6 +516,40 @@ namespace Logic
             }
 
             // TODO: Implement
+        };
+
+        struct MobMessage : public EventMessage
+        {
+            enum MobSubType
+            {
+                ST_STARTINTERACTION = 0,
+                ST_STARTSTATECHANGE,
+                ST_ENDINTERACTION,
+                ST_UNLOCK,
+                ST_LOCK,
+                ST_CALLSCRIPT
+            };
+
+            MobMessage()
+            {
+                messageType = EventMessageType::Mob;
+                stateFrom = 0;
+                stateTo = 0;
+            }
+
+            // NPC this message is from
+            Handle::EntityHandle npc;
+
+            // State to change from
+            int stateFrom;
+
+            // State to change to
+            int stateTo;
+
+            // Whether to play an animation
+            bool playAnimation;
+
+
         };
     }
 }

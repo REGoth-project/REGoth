@@ -10,6 +10,7 @@
 #include <engine/GameEngine.h>
 #include <logic/PlayerController.h>
 #include <ui/PrintScreenMessages.h>
+#include <logic/visuals/ModelVisual.h>
 
 
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)

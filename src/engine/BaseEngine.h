@@ -72,6 +72,17 @@ namespace Engine
 		 */
 		UI::View& getRootUIView() { return m_RootUIView; }
 
+		/**
+		 * Sets the path the engine is looking for files
+		 * @param path New path
+		 */
+		void setContentBasePath(const std::string& path){ m_ContentBasePath = path; }
+
+		/*+
+         * @return The path where the engine is looking for content files
+         */
+		const std::string& getContentBasePath(){ return m_ContentBasePath; }
+
 	protected:
 
 		/**
@@ -115,5 +126,9 @@ namespace Engine
 		 */
 		UI::View m_RootUIView;
 
+		/**
+		 * Folder where the content is
+		 */
+		std::string m_ContentBasePath;
 	};
 }

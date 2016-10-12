@@ -6,6 +6,7 @@
 #include <engine/World.h>
 #include <logic/PlayerController.h>
 #include <logic/ItemController.h>
+#include <logic/MobController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
 #include "EntityActions.h"
@@ -67,6 +68,22 @@ Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, D
     return e;
 }
 
+Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo)
+{
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    // Setup controller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::MobController(world, e, vobInfo);
+
+    // Initialize animations
+    Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(world.getComponentAllocator(), e);
+
+    //anim.m_AnimHandler.setWorld(world);
+    //anim.m_AnimHandler.loadMeshLibFromVDF(libName, world->getEngine()->getVDFSIndex());
+
+    return e;
+}
 
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
@@ -120,6 +137,29 @@ VobTypes::ItemVobInformation VobTypes::asItemVob(World::WorldInstance& world, Ha
 
     return item;
 }
+
+VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    MobVobInformation mob;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::MobController)
+    {
+        // Invalidate instance and return
+        mob = {};
+        return mob;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&mob, &v, sizeof(v));
+
+    // Enter new information
+    mob.mobController = reinterpret_cast<Logic::MobController*>(mob.logic);
+
+    return mob;
+}
+
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
@@ -258,6 +298,9 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
 
     return VobTypes::asNpcVob(world, e);
 }
+
+
+
 
 
 
