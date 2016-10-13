@@ -3,9 +3,12 @@
 #include <ZenLib/zenload/zTypes.h>
 #include <ZenLib/utils/logger.h>
 #include <logic/mobs/Bed.h>
+#include <components/EntityActions.h>
 #include "MobController.h"
 #include "visuals/ModelVisual.h"
 #include "PlayerController.h"
+#include <engine/BaseEngine.h>
+#include <debugdraw/debugdraw.h>
 
 using namespace Logic;
 
@@ -37,24 +40,48 @@ ModelVisual* MobController::getModelVisual()
 {
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
 
-    // TODO: Bring in some type-checking here
+    if(!vob.visual || vob.visual->getVisualType() != EVisualType::Model)
+        return nullptr;
+
     return reinterpret_cast<ModelVisual*>(vob.visual);
 }
 
 void MobController::onUpdate(float deltaTime)
 {
     Controller::onUpdate(deltaTime);
+
+    /*ddPush();
+
+    ddSetTransform(nullptr);
+    ddSetColor(0xFFFFFFFF);
+    //ddSetStipple(true, 1.0f);
+
+    const float wpAxisLen = 1.0f;
+
+    for(auto& i : m_InteractPositions)
+    {
+        Math::float3 p = getEntityTransform() * i.transform.Translation();
+        ddMoveTo(getEntityTransform().Translation().v);
+        ddLineTo(p.v);
+
+        ddDrawAxis(p.x, p.y, p.z, wpAxisLen);
+    }
+
+
+    ddPop();*/
 }
 
 void MobController::findInteractPositions()
 {
     ModelVisual* model = getModelVisual();
 
-    assert(model);
+    // Some mobs seem to be just static meshes without any nodes
+    if(!model || model->getAnimationHandler().getObjectSpaceTransforms().empty())
+        return;
 
     const std::vector<ZenLoad::ModelNode>& nodes = model->getMeshLib().getNodes();
 
-    for(size_t i=0;nodes.size();i++)
+    for(size_t i=0;i<nodes.size();i++)
     {
         const ZenLoad::ModelNode& n = nodes[i];
 
@@ -67,6 +94,8 @@ void MobController::findInteractPositions()
             m_InteractPositions.back().transform = model->getAnimationHandler().getObjectSpaceTransforms()[i];
             m_InteractPositions.back().distance = n.name.find("DIST") != std::string::npos;
             m_InteractPositions.back().nodeName = n.name;
+
+            LogInfo() << "Interact-position: " << n.name;
 
             // Check if this can be used by multiple npcs
             if(n.name.find("NPC") != std::string::npos)
@@ -163,14 +192,21 @@ void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 {
     LogInfo() << "Creating mob: " << vob.oCMOB.focusName;
 
+    // TODO: There has to be some localization or something going on with the name
+    m_FocusName = vob.vobName;
+
     if(vob.oCMOB.focusName == "Bed")
         m_MobCore = new MobCores::Bed(m_World, m_Entity);
+    else
+        m_MobCore = new MobCore(m_World, m_Entity);
 
-    Vob::VobInformation v = Vob::asVob(m_World, m_Entity);
-    Vob::setVisual(v, vob.visual);
+    assert(m_MobCore);
 
-    if(getModelVisual())
-        findInteractPositions();
+    // Apply animation scheme
+    m_MobCore->setSchemeName(vob.vobName);
+
+    // Setting the visual AFTER the mobcore is important, since then the scheme-name will be propergated
+    // since it is derived from the visual-name
 }
 
 void MobController::onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
@@ -181,8 +217,8 @@ void MobController::onMessage(EventMessages::EventMessage& message, Handle::Enti
     EventMessages::MobMessage& msg = (EventMessages::MobMessage&)message;
     switch((EventMessages::MobMessage::MobSubType)msg.subType)
     {
-        case EventMessages::MobMessage::ST_STARTINTERACTION:break;
-        case EventMessages::MobMessage::ST_STARTSTATECHANGE:break;
+        case EventMessages::MobMessage::ST_STARTINTERACTION: startInteraction(msg.npc); break;
+        case EventMessages::MobMessage::ST_STARTSTATECHANGE: startStateChange(msg.npc, msg.stateFrom, msg.stateTo); break;
         case EventMessages::MobMessage::ST_ENDINTERACTION:break;
         case EventMessages::MobMessage::ST_UNLOCK:break;
         case EventMessages::MobMessage::ST_LOCK:break;
@@ -231,13 +267,73 @@ void MobController::startInteraction(Handle::EntityHandle npc)
 
     // Play starting animation
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
-    nv.playerController->getModelVisual()->setAnimation("T_" + m_MobCore->getSchemeName() + "_STAND_2_S" + std::to_string(m_MobCore->getState()));
+
+    std::string ani = "T_" + m_MobCore->getSchemeName() + "_STAND_2_S" + std::to_string(m_MobCore->getState());
+
+    LogInfo() << "MOB: Playing animation on player: " << ani;
+    nv.playerController->getModelVisual()->setAnimation(ani);
+
+    EventMessages::ConversationMessage sm;
+    sm.subType = EventMessages::ConversationMessage::ST_PlayAni;
+    sm.animation = ani;
+
+    // This is save, because vobs generally won't be deleted from the map.
+    // If not, this will just do nothing
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
+
+        // Re-get everything to make sure it is still there
+        VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
+        VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, hostVob);
+
+        if(!nv.isValid() || !mob.isValid())
+            return; // Either mob or NPC isn't there anymore
+
+        // Go to next state immediately, G2 style. // TODO: This is still only for testing
+        mob.mobController->startStateChange(npc, 0, 1);
+    });
+
+    nv.playerController->getEM().onMessage(sm);
+
 
     m_NumNpcsCurrent++;
 }
 
 void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 {
+    VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
+
+
+    m_MobCore->onBeginStateChange(npc, from, to);
+
+    // Find out which animations to play
+    std::string mobAni, npcAni;
+    getAnimationTransitionNames(from, to, mobAni, npcAni);
+
+    // Push an animation-message for the npc
+    EventMessages::ConversationMessage sm;
+    sm.subType = EventMessages::ConversationMessage::ST_PlayAni;
+    sm.animation = npcAni;
+
+    // This is save, because vobs generally won't be deleted from the map.
+    // If not, this will just do nothing
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
+
+        // Re-get everything to make sure it is still there
+        VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
+        VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, hostVob);
+
+        if(!nv.isValid() || !mob.isValid())
+            return; // Either mob or NPC isn't there anymore
+
+        // First animation is done, thus, go to the next state
+        mob.mobController->m_MobCore->onEndStateChange(npc, from, to);
+    });
+
+    nv.playerController->getEM().onMessage(sm);
+
+    // Play the mobs animation
+    if(getModelVisual())
+        getModelVisual()->setAnimation(mobAni, false);
 
 }
 
@@ -306,6 +402,8 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
 
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
+    Math::float3 pWorld = getEntityTransform() * p->transform.Translation();
+
     if(p->distance)
     {
         // Just look at the mob
@@ -313,7 +411,7 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
                                            - nv.position->m_WorldMatrix.Translation()).normalize());
     }else
     {
-        nv.playerController->teleportToPosition(p->transform.Translation());
+        nv.playerController->teleportToPosition(pWorld);
 
         // Just look at the mob for now //TODO: Implement the transform-stuff
         nv.playerController->setDirection((getEntityTransform().Translation()
@@ -348,5 +446,37 @@ void MobController::useMobToState(Handle::EntityHandle npc, int target)
 
     // FIXME: Already interacting with a mob!
     LogInfo() << "FIXME: Already interacting with a mob!";
+
+}
+
+void MobController::onVisualChanged()
+{
+    Controller::onVisualChanged();
+
+    /****
+    * Initialize animations
+    ****/
+    Vob::VobInformation v = Vob::asVob(m_World, m_Entity);
+
+    if(!v.visual || v.visual->getVisualType() != EVisualType::Model)
+        return;
+
+    // Add animation-component, if not already done
+    Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(
+                m_World.getComponentAllocator(), m_Entity);
+
+    // Strip extension
+    std::string libName = v.visual->getName().substr(0, v.visual->getName().find_last_of('.'));
+
+    anim.m_AnimHandler.setWorld(m_World);
+    anim.m_AnimHandler.loadMeshLibFromVDF(libName, m_World.getEngine()->getVDFSIndex());
+
+    // find new interact positions now that the visual changed
+    findInteractPositions();
+
+    // Get new animation scheme. This is done by taking everything in front of the first _ inside the visual name.
+    std::string scheme = v.visual->getName().substr(0, v.visual->getName().find_first_of('_'));
+    if(m_MobCore)
+        m_MobCore->setSchemeName(scheme);
 
 }

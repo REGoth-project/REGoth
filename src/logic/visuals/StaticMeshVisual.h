@@ -15,6 +15,11 @@ namespace Logic
         virtual ~StaticMeshVisual();
 
         /**
+         * @return Classtype of this visual
+         */
+        virtual EVisualType getVisualType(){ return EVisualType::StaticMesh; }
+
+        /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
          * @param visual Filename of the visual. Uncompiled-version of the name!

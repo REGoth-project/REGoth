@@ -320,7 +320,7 @@ namespace Components
      * Checks if the given component is present in the entity
      */
     template<typename T>
-    bool hasComponent(EntityComponent& e)
+    bool hasComponent(const EntityComponent& e)
     {
         // See "EntityComponent" for further information
         return (e.m_ComponentMask & T::MASK) != 0;

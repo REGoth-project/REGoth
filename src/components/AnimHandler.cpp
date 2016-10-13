@@ -302,8 +302,19 @@ ZenLoad::zCModelAni *AnimHandler::getActiveAnimationPtr()
 
 bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &idx)
 {
+    ZenLoad::zCModelMeshLib lib;
+
     // Load heirachy
-    ZenLoad::zCModelMeshLib lib(file + ".MDH", idx, 1.0f / 100.0f);
+    if(idx.hasFile(file + ".MDH"))
+        lib = ZenLoad::zCModelMeshLib(file + ".MDH", idx, 1.0f / 100.0f);
+    else if(idx.hasFile(file + ".MDL")) // Some mobs have .MDL
+        lib = ZenLoad::zCModelMeshLib(file + ".MDL", idx, 1.0f / 100.0f);
+    else if(idx.hasFile(file + ".MDM")) // Some mobs have .MDL
+        lib = ZenLoad::zCModelMeshLib(file + ".MDM", idx, 1.0f / 100.0f);
+
+    if(!lib.isValid())
+        LogWarn() << "Could not load MeshLib for Visual: " << file;
+
     setMeshLib(lib);
 
     // Save name of this meshlib loading more animations later

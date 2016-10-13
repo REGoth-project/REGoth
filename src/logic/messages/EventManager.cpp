@@ -72,17 +72,25 @@ void EventManager::sendMessageToHost(EventMessages::EventMessage& message, Handl
 
 void EventManager::processMessageQueue()
 {
+    // Not using iterators here, because a message might get pushed inside a callback, which
+    // would make them invalid. This has to be done before deleting the message for this very reason.
+    for(size_t i=0, end=m_EventQueue.size();i<end;i++)
+    {
+        if(m_EventQueue[i]->deleted)
+        {
+            // Trigger done-callbacks
+            for(auto cb : m_EventQueue[i]->onMessageDone)
+            {
+                cb.second(cb.first, m_EventQueue[i]);
+            }
+        }
+    }
+
     // Remove deleted messages from last time
     for(auto it = m_EventQueue.begin();it != m_EventQueue.end();)
     {
         if((*it)->deleted)
         {
-            // Trigger done-callbacks
-            for(auto cb : (*it)->onMessageDone)
-            {
-                cb.second((*it));
-            }
-
             delete (*it);
             it = m_EventQueue.erase(it);
 		}
@@ -167,7 +175,7 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     // Let the EM wait for this talking-action to complete
     onMessage(wait);
 
-    other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](EventMessages::EventMessage* inst) {
+    other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
 
         // Let the other NPC know we are done
         triggerWaitEvent(inst);

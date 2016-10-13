@@ -35,9 +35,15 @@ namespace Logic
     public:
         MobCore(World::WorldInstance& world, Handle::EntityHandle entity) : m_Entity(entity), m_World(world)
         {
-            m_StateNum = 1;
+            m_StateNum = 0;
         }
         virtual ~MobCore(){}
+
+        /**
+         * Sets the base animation-scheme to use
+         * @param name New scheme
+         */
+        void setSchemeName(const std::string& name){ m_Scheme = name; }
 
         /**
          * Called when this mob was activated
@@ -59,7 +65,7 @@ namespace Logic
          * @param from Current state
          * @param to State to go to
          */
-        virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to){}
+        virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to){ m_StateNum = to; }
 
         /**
          * Current animation-scheme to use.
@@ -67,7 +73,7 @@ namespace Logic
          *  Animations for front and backside of a bed
          * @return Current animation sceme name
          */
-        virtual std::string getSchemeName(){ return ""; }
+        virtual std::string getSchemeName(){ return m_Scheme; }
 
         /**
          * Called right after the MobController found a new position for a new npc asking to use this mob
@@ -90,7 +96,7 @@ namespace Logic
         World::WorldInstance& m_World;
 
         // Animationsceme this mob should use
-        std::string m_Sceme;
+        std::string m_Scheme;
 
         // State this mob is currently in
         int m_StateNum;
@@ -176,6 +182,21 @@ namespace Logic
 
         void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob) override;
 
+        /**
+         * Called when the models visual changed
+         */
+        virtual void onVisualChanged() override;
+
+        /**
+         * @return Focus name the player sees
+         */
+        const std::string& getFocusName(){ return m_FocusName; }
+
+        /**
+         * @return Main animation scheme name prefix
+         */
+        const std::string& getMainSchemeName(){ return m_MainSchemeName; }
+
 
     protected:
 
@@ -230,5 +251,11 @@ namespace Logic
 
         // Active Mob-Core
         MobCore* m_MobCore;
+
+        // Focus name
+        std::string m_FocusName;
+
+        // Main sceme name
+        std::string m_MainSchemeName;
     };
 }

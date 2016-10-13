@@ -99,6 +99,13 @@ void ::Vob::broadcastTransformChange(VobInformation& vob)
 
 void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
 {
+    std::string visual = _visual;
+    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+
+    // Don't set twice
+    if(vob.visual && vob.visual->getName() == visual)
+        return;
+
     // Clear old visual
     delete vob.visual;
 
@@ -108,8 +115,7 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     vob.visual = nullptr;
     *ppVisual = nullptr;
 
-    std::string visual = _visual;
-    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+
 
     // Check type of visual
     if(visual.find(".3DS") != std::string::npos

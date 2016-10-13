@@ -90,9 +90,19 @@ namespace Logic
             bool isOverlay;
 
             /**
+             * Adds a callback, triggered when this message has been successfully and completely processed
+             * @param hostVob Vob which the callback is set from
+             * @param callback Callback function
+             */
+            void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, EventMessage*)> callback)
+            {
+                onMessageDone.push_back(std::make_pair(hostVob, callback));
+            }
+
+            /**
              * External callbacks to trigger if this message gets processed. Must also store the waiting entity.
              */
-            std::list<std::pair<Handle::EntityHandle, std::function<void(EventMessage*)>>> onMessageDone;
+            std::list<std::pair<Handle::EntityHandle, std::function<void(Handle::EntityHandle, EventMessage*)>>> onMessageDone;
         };
 
         struct NpcMessage : public EventMessage

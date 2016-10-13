@@ -3,7 +3,7 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_definitions(-DBGFX_CONFIG_DEBUG=1)
+set(BGFX_DEBUG 0)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
@@ -15,6 +15,7 @@ endif()
 
 
 if(ANDROID)
+    set(BGFX_DEBUG 0)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 ..
 
@@ -46,7 +47,7 @@ if(ANDROID)
     set(ANDROID_STL gnustl_static CACHE STRING "" FORCE) # Static STL
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++") # Static libc++
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-unaligned-access") # Unaligned access not supported on ARM
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -ffor-scope -fno-rtti -pipe -ffunction-sections -fdata-sections -ffast-math -Wnon-virtual-dtor -Wreorder -Wsign-promo -fvisibility=hidden -fvisibility-inlines-hidden -Wstrict-null-sentinel -Os -funroll-all-loops -fpeel-loops -ftree-vectorize")
     set(LINKER_FLAGS "${LINKER_FLAGS} -nostartfiles, -Wl,--as-needed -Wl,--gc-sections -Wl,--no-undefined -Wl,--strip-all -Wl,-rpath-link=${ANDROID_NDK_SYSROOT}/usr/lib/ -L${ANDROID_NDK_SYSROOT}/usr/lib/")
         
@@ -118,6 +119,7 @@ endif()
 configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
+add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
 

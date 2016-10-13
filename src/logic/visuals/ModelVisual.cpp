@@ -6,6 +6,8 @@
 #include <utils/logger.h>
 #include <content/SkeletalMeshAllocator.h>
 #include <components/Vob.h>
+#include <components/EntityActions.h>
+#include <engine/BaseEngine.h>
 
 using namespace Logic;
 
@@ -136,6 +138,10 @@ bool ModelVisual::load(const std::string& visual)
     Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(m_MainMeshHandle);
     const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
 
+    /****
+     * Push all parts of the skeletal mesh as entity
+     ****/
+
     // TODO: Put these into a compound-component or something
     m_PartEntities.mainSkelMeshEntities = Content::entitifyMesh(m_World, m_MainMeshHandle, mdata);
     m_VisualEntities.insert(m_VisualEntities.end(),
@@ -159,6 +165,10 @@ bool ModelVisual::load(const std::string& visual)
         anim.m_ParentAnimHandler = m_Entity;
     }
 
+    /****
+     * Read nodes and attachments
+     ****/
+
     // Read attachments
     if(m_VisualAttachments.size() < getAnimationHandler().getObjectSpaceTransforms().size())
         m_VisualAttachments.resize(getAnimationHandler().getObjectSpaceTransforms().size());
@@ -169,7 +179,7 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_VisualAttachments.empty())
     {
         // Need to get the bind-pose out
-        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh. NPC for example.
+        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh
             getAnimationHandler().setBindPose(true);
 
         for (size_t i = 0; i < zLib.getAttachments().size(); i++)

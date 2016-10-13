@@ -227,7 +227,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
 					Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
 						Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
-						vob.visual ? 0 : 0xFF00AA00);
+						0 /*vob.visual ? 0 : 0xFF00AA00*/);
 
 					// Trace down from this vob to get the shadow-value from the worldmesh
 					Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);

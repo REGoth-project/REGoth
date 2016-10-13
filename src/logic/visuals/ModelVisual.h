@@ -128,6 +128,11 @@ namespace Logic
         ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~ModelVisual();
 
+		/**
+         * @return Classtype of this visual
+         */
+		virtual EVisualType getVisualType(){ return EVisualType::Model; }
+
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class

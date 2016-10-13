@@ -217,7 +217,6 @@ void PlayerController::gotoWaypoint(size_t wp)
 
 void PlayerController::rebuildRoute()
 {
-
     m_MoveState.currentPath = World::Waynet::findWay(m_World.getWaynet(),
                                                      m_AIState.closestWaypoint,
                                                      m_AIState.targetWaypoint);
@@ -1641,7 +1640,7 @@ void PlayerController::setupKeyBindings()
 
             // ----- ITEMS -----
             Handle::EntityHandle nearestItem;
-            float shortestDistItem = FLT_MAX;
+            float shortestDistItem = 5.0f;
             const std::set<Handle::EntityHandle>& items = m_World.getScriptEngine().getWorldItems();
             for(Handle::EntityHandle h : items)
             {
@@ -1656,23 +1655,12 @@ void PlayerController::setupKeyBindings()
                 }
             }
 
-            if(nearestItem.isValid())
-            {
-                // Pick it up
-                VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
-                item.itemController->pickUp(m_Entity);
-
-                return;
-            }
-
-            // ----- TALKING ----
-
             std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(
-                    getEntityTransform().Translation(), 10.0f);
+                    getEntityTransform().Translation(), 5.0f);
 
             // Talk to the nearest NPC other than the current player, of course
             Handle::EntityHandle nearestNPC;
-            float shortestDistNPC = FLT_MAX;
+            float shortestDistNPC = 5.0f;
             for (const Handle::EntityHandle& h : nearNPCs)
             {
                 if (h != m_World.getScriptEngine().getPlayerEntity())
@@ -1689,55 +1677,84 @@ void PlayerController::setupKeyBindings()
                 }
             }
 
-            if (nearestNPC.isValid())
+            std::set<Handle::EntityHandle> mobs = m_World.getScriptEngine().getWorldMobs();
+
+            // Use the nearest mob
+            Handle::EntityHandle nearestMob;
+            float shortestDistMob = 5.0f;
+            for (const Handle::EntityHandle& h : mobs)
+            {
+                VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
+
+                float dist = (Vob::getTransform(vob).Translation() -
+                              getEntityTransform().Translation()).lengthSquared();
+
+                if (dist < shortestDistMob)
+                {
+                    nearestMob = h;
+                    shortestDistMob = dist;
+                }
+            }
+
+            int nearest = 0;
+
+            if(shortestDistItem < shortestDistMob && shortestDistItem < shortestDistNPC)
+                nearest = 1;
+
+            if(shortestDistMob < shortestDistItem && shortestDistMob < shortestDistNPC)
+                nearest = 3;
+
+            if(shortestDistNPC < shortestDistItem && shortestDistNPC < shortestDistMob)
+                nearest = 2;
+
+            if(nearest == 1 && nearestItem.isValid())
+            {
+                // Pick it up
+                VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
+                item.itemController->pickUp(m_Entity);
+
+                return;
+            }
+
+            // ----- TALKING ----
+
+
+
+            if (nearest == 2 && nearestNPC.isValid())
             {
                 VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
                 Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
                 m_World.getDialogManager().startDialog(shnpc);
-            }else
-            {
-                std::set<Handle::EntityHandle> mobs = m_World.getScriptEngine().getWorldMobs();
 
-                // Use the nearest mob
-                Handle::EntityHandle nearestMob;
-                float shortestDistMob = FLT_MAX;
-                for (const Handle::EntityHandle& h : mobs)
-                {
-                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
-
-                    float dist = (Vob::getTransform(vob).Translation() -
-                                  getEntityTransform().Translation()).lengthSquared();
-
-                    if (dist < shortestDistMob)
-                    {
-                        nearestMob = h;
-                        shortestDistMob = dist;
-                    }
-                }
-
-                if(nearestMob.isValid())
-                {
-                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, nearestMob);
-
-                    vob.mobController->useMobToState(m_Entity, 1);
-                }else
-                {
-                    /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
-                    Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
-                    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
-
-                    vob.playerController->changeRoutine("");
-                    vob.playerController->teleportToWaypoint(targetWP);*/
-
-                    // Use item last picked up
-                    Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
-                    if (lastItem.isValid())
-                    {
-                        if (useItem(lastItem))
-                            getInventory().removeItem(lastItem);
-                    }
-                }
+                return;
             }
+
+            if (nearest == 3 && nearestMob.isValid())
+            {
+                VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, nearestMob);
+
+                LogInfo() << "Using mob: " << vob.mobController->getFocusName();
+
+                vob.mobController->useMobToState(m_Entity, 1);
+                return;
+            }
+
+            /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+                Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
+                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
+
+                vob.playerController->changeRoutine("");
+                vob.playerController->teleportToWaypoint(targetWP);*/
+
+            // Use item last picked up
+            Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+            if (lastItem.isValid())
+            {
+                if (useItem(lastItem))
+                    getInventory().removeItem(lastItem);
+            }
+
+
         }
     });
 

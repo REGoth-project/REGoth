@@ -19,7 +19,7 @@ Bed::~Bed()
 
 std::string Bed::getSchemeName()
 {
-    return m_Sceme + "_" + (m_EnteringBackside ? "BACK" : "FRONT");
+    return m_Scheme + "_" + (m_EnteringBackside ? "BACK" : "FRONT");
 }
 
 void Bed::onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos)
