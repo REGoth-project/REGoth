@@ -174,6 +174,23 @@ void DialogManager::update(double dt)
             {
                 // END was chosen, don't continue the dialog
                 endDialog();
+
+                // Clear the dialog partners EMs
+                // FIXME: I dont think the original game does this, but NPCs won't change their state after talking
+                //        sometimes (baar parvez for example)
+                VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World, m_Interaction.player);
+                VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World, m_Interaction.target);
+
+                // Start routine
+                EventMessages::StateMessage msg;
+                msg.subType = EventMessages::StateMessage::EV_StartState;
+                msg.functionSymbol = 0;
+
+                if(playerVob.isValid())
+                    playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+                if(targetVob.isValid())
+                    targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
             } else
             {
                 // There is more! Start talking again.

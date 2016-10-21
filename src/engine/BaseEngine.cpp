@@ -80,6 +80,17 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 
     loadArchives();
+
+    if(m_Args.startupZEN.empty() || !m_FileIndex.hasFile(m_Args.startupZEN))
+    {
+        // Try Gothic 1
+        if(m_FileIndex.hasFile("world.zen"))
+            m_Args.startupZEN = "world.zen";
+        else if(m_FileIndex.hasFile("newworld.zen"))
+            m_Args.startupZEN = "newworld.zen";
+        else
+            LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
+    }
 }
 
 Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
@@ -165,6 +176,15 @@ void BaseEngine::loadArchives()
 
     LogInfo() << "Loading VDF-Archives: " << vdfArchives;
     for(std::string& s : vdfArchives)
+    {
+        m_FileIndex.loadVDF(s);
+    }
+
+    // Happens on modded games
+    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
+
+    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
+    for(std::string& s : vdfArchivesDisabled)
     {
         m_FileIndex.loadVDF(s);
     }

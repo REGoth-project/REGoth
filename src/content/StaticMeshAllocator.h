@@ -17,7 +17,20 @@ namespace Meshes
 {
     typedef Meshes::UVNormColorVertex WorldStaticMeshVertex;
     typedef uint32_t WorldStaticMeshIndex;
-    typedef LevelMesh::StaticLevelMesh<WorldStaticMeshVertex, WorldStaticMeshIndex> WorldStaticMesh;
+    typedef LevelMesh::StaticLevelMesh<WorldStaticMeshVertex, WorldStaticMeshIndex> WorldStaticMeshData;
+
+    struct WorldStaticMesh : public Handle::HandleTypeDescriptor<Handle::MeshHandle>
+    {
+        void init()
+        {
+            instanceDataBufferIndex = (uint32_t)-1;
+        }
+
+        WorldStaticMeshData mesh;
+
+        // Slot where the instance-buffer for meshes of these kind is. Needs to be initialized manually.
+        uint32_t instanceDataBufferIndex;
+    };
 
     class StaticMeshAllocator : public GenericMeshAllocator
     {

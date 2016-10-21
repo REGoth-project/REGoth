@@ -13,10 +13,14 @@
 
 using namespace Logic;
 
+// Set to 1 to generate valid timing data for script-calls
+#define PROFILE_SCRIPT_CALLS 0
+
 ScriptEngine::ScriptEngine(World::WorldInstance& world)
     : m_World(world)
 {
     m_pVM = nullptr;
+    m_ProfilingDataFrame = 0;
 }
 
 ScriptEngine::~ScriptEngine()
@@ -86,7 +90,17 @@ int32_t ScriptEngine::runFunction(size_t addr)
 
 int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
 {
-    return runFunction(getVM().getDATFile().getSymbolByIndex(symIdx).address);
+#if PROFILE_SCRIPT_CALLS
+    startProfiling(symIdx);
+#endif
+
+    int32_t r = runFunction(getVM().getDATFile().getSymbolByIndex(symIdx).address);
+
+#if PROFILE_SCRIPT_CALLS
+    stopProfiling(symIdx);
+#endif
+
+    return r;
 }
 
 
@@ -393,6 +407,84 @@ bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::Enti
         msg.subType = EventMessages::ManipulateMessage::ST_EquipItem;
 
     npc.playerController->getEM().onMessage(msg);
+}
+
+void ScriptEngine::startProfiling(size_t fnSym)
+{
+    const int64_t now = bx::getHPCounter();
+
+    // Store starting time
+    m_TimeStartStack.push(now);
+}
+
+void ScriptEngine::stopProfiling(size_t fnSym)
+{
+    const double freq = double(bx::getHPFrequency() );
+
+    if(m_TimeByFunctionSymbol[m_ProfilingDataFrame].find(fnSym) == m_TimeByFunctionSymbol[m_ProfilingDataFrame].end())
+        m_TimeByFunctionSymbol[m_ProfilingDataFrame][fnSym] = 0.0;
+
+    // Make delta-time
+    m_TimeByFunctionSymbol[m_ProfilingDataFrame][fnSym] += (bx::getHPCounter() - m_TimeStartStack.top()) / freq;
+
+    m_TimeStartStack.pop();
+}
+
+
+void ScriptEngine::resetProfilingData()
+{
+    while(!m_TimeStartStack.empty())
+        m_TimeStartStack.pop();
+
+    m_TimeByFunctionSymbol[m_ProfilingDataFrame].clear();
+}
+
+void ScriptEngine::onFrameStart()
+{
+#if PROFILE_SCRIPT_CALLS
+    m_ProfilingDataFrame = (m_ProfilingDataFrame + 1) % 10;
+
+    resetProfilingData();
+#endif
+}
+
+void ScriptEngine::onFrameEnd()
+{
+#if PROFILE_SCRIPT_CALLS
+    // Get the 5 most costly calls
+    std::vector<std::pair<size_t, double>> calls;
+    std::map<size_t, double> combined;
+
+    volatile double sum = 0.0;
+    for(int i=0;i<10;i++)
+    {
+        for (auto& p : m_TimeByFunctionSymbol[i])
+        {
+            if(combined.find(p.first) == combined.end())
+                combined[p.first] = 0;
+
+            combined[p.first] += p.second / 10;
+        }
+    }
+
+    for (auto& p : combined)
+    {
+        sum += p.second;
+        calls.push_back(p);
+    }
+
+    // Sort descending
+    std::sort(calls.begin(), calls.end(), [](const std::pair<size_t, double>& a, const std::pair<size_t, double>& b){
+        return a.second > b.second;
+    });
+
+    bgfx::dbgTextPrintf(60, 0, 0x0f, "Script profiling [ms] (Total: %.3f):", sum * 1000.0);
+    for(int i=0;i<std::min(5, (int)calls.size()); i++)
+    {
+        std::string name = getVM().getDATFile().getSymbolByIndex(calls[i].first).name;
+        bgfx::dbgTextPrintf(60, 1 + i, 0x0f, "  %s: %.3f", name.c_str(), calls[i].second * 1000.0);
+    }
+#endif
 }
 
 

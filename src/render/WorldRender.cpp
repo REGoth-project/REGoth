@@ -63,9 +63,9 @@ namespace Render
 	/**
 	 * @brief Draws the main renderpass of the given world
 	 */
-	void drawWorld(World::WorldInstance& world, const RenderConfig& config)
+	void drawWorld(World::WorldInstance& world, const RenderConfig& config, RenderSystem& system)
 	{
-        // Setup sky and fog
+		// Setup sky and fog
         setupSky(world, config);
 
 		// Extract camera position
@@ -86,54 +86,85 @@ namespace Render
 		Components::AnimationComponent* animations = std::get<Components::AnimationComponent*>(ctuple);
 		Components::PhysicsComponent* physics = std::get<Components::PhysicsComponent*>(ctuple);
 
+		// Static mesh instancing
+		struct InstanceData
+		{
+			Math::Matrix world;
+			Math::float4 color;
+		};
+
+		struct InstanceKind
+		{
+			std::vector<size_t> entityKinds;
+			std::vector<InstanceData> instances;
+			uint32_t bufferIndex;
+		};
+
+		static std::vector<InstanceKind> instanceKinds;
+		size_t instanceKindIdx = 0;
+
+		// Prepare memory already allocated
+		for(InstanceKind& k : instanceKinds)
+		{
+			k.bufferIndex = 0xFFFFFFFF;
+			k.instances.clear();
+			k.entityKinds.clear();
+		}
+
+		size_t numDrawcalls = 0;
 		size_t numIndices = 0;
 		for (size_t i = 0; i<num; i++)
 		{
 			// Simple distance-check // TODO: Frustum/Occlusion-Culling
 			auto& pos = psc[i].m_WorldMatrix;
-			float distance2 = (pos.Translation() - cameraPosition).lengthSquared() * psc[i].m_DrawDistanceFactor;
+			float distance2 = (pos.Translation() - cameraPosition).lengthSquared();
+
+            //if(pos.Translation().lengthSquared() < 0.01f && psc[i].m_DrawDistanceFactor > 0)
+             //   continue; // FIXME: HACK, against many many drawcalls in the center of the world
 
 			Components::ComponentMask mask = ents[i].m_ComponentMask;
 
 			// FIXME: Temporary
 			/*if((mask & Components::PhysicsComponent::MASK) != 0)
 			{
-				physics[i].m_RigidBody.setDebugDrawEnabled(psc[i].m_DrawDistanceFactor > 0.0f &&  distance2 < 10.0f * 10.0f);
+				 physics[i].m_RigidBody.setDebugDrawEnabled(psc[i].m_DrawDistanceFactor > 0.0f &&  distance2 < 10.0f * 10.0f);
 			}*/
 
-			if(distance2 > drawDistance2)
-				continue;
+            if(psc[i].m_DrawDistanceFactor >= 0)
+            {
+                if (distance2 > drawDistance2 * psc[i].m_DrawDistanceFactor)
+                    continue;
+            }
 
 			if ((mask & Components::StaticMeshComponent::MASK) != 0)
 			{
 				if (!sms[i].m_StaticMeshVisual.isValid())
 					continue;
 
-				if ((mask & Components::PositionComponent::MASK) != 0)
-				{
-					// Set model matrix for rendering.
-					bgfx::setTransform(pos.m);
-				}
-
-				bgfx::setState(BGFX_STATE_DEFAULT);
-
-
-
-				numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
-
-				if(sms[i].m_Texture.isValid())
-				{
-					Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
-					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
-				}
-
-				// Set object-color
-				Math::float4 color;
-				color.fromABGR8(sms[i].m_Color);
-				bgfx::setUniform(config.uniforms.objectColor, color.v);
-
 				if((mask & Components::AnimationComponent::MASK) != 0)
 				{
+					if ((mask & Components::PositionComponent::MASK) != 0)
+					{
+						// Set model matrix for rendering.
+						bgfx::setTransform(pos.m);
+					}
+
+					bgfx::setState(BGFX_STATE_DEFAULT);
+
+					numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
+					numDrawcalls++;
+
+					if(sms[i].m_Texture.isValid())
+					{
+						Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
+						bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+					}
+
+					// Set object-color
+					Math::float4 color;
+					color.fromABGR8(sms[i].m_Color);
+					bgfx::setUniform(config.uniforms.objectColor, color.v);
+
 					Components::AnimHandler* animHandler = nullptr;
 					if(animations[i].m_ParentAnimHandler.isValid())
 					{
@@ -165,20 +196,81 @@ namespace Render
 										 sms[i].m_SubmeshInfo.m_StartIndex,
 										 sms[i].m_SubmeshInfo.m_NumIndices);
 
+					bgfx::submit(0, config.programs.mainSkinnedMeshProgram);
 				} else
 				{
 					auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
-					bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
-					bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
-										 sms[i].m_SubmeshInfo.m_StartIndex,
-										 sms[i].m_SubmeshInfo.m_NumIndices);
+
+					if(mesh.instanceDataBufferIndex != (uint32_t)-2)
+					{
+						// Set instance buffer if we haven't had this before
+						if (mesh.instanceDataBufferIndex == 0xffffffff)
+						{
+							if (instanceKindIdx == instanceKinds.size())
+							{
+								mesh.instanceDataBufferIndex = (uint32_t) instanceKinds.size();
+								instanceKinds.emplace_back();
+							} else
+							{
+								mesh.instanceDataBufferIndex = (uint32_t) instanceKindIdx;
+							}
+
+							instanceKindIdx++;
+							instanceKinds[mesh.instanceDataBufferIndex].bufferIndex = system.requestInstanceDataBuffer();
+						}
+
+						InstanceKind& kind = instanceKinds[mesh.instanceDataBufferIndex];
+						kind.entityKinds.resize(sms[i].m_SubmeshIdx + 1);
+						kind.entityKinds[sms[i].m_SubmeshIdx] = i;
+
+						if (sms[i].m_SubmeshIdx == 0)
+						{
+							kind.instances.emplace_back();
+							kind.instances.back().world = pos;
+							kind.instances.back().color.fromABGR8(sms[i].m_Color);
+						}
+
+						//uint32_t idx = mesh.instanceDataBufferIndex;
+
+						/*bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+                        bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
+                                             sms[i].m_SubmeshInfo.m_StartIndex,
+                                             sms[i].m_SubmeshInfo.m_NumIndices);*/
+					}else
+					{
+						if ((mask & Components::PositionComponent::MASK) != 0)
+						{
+							// Set model matrix for rendering.
+							bgfx::setTransform(pos.m);
+						}
+
+						bgfx::setState(BGFX_STATE_DEFAULT);
+
+						numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
+						numDrawcalls++;
+
+						if(sms[i].m_Texture.isValid())
+						{
+							Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
+							bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+						}
+
+						// Set object-color
+						Math::float4 color;
+						color.fromABGR8(sms[i].m_Color);
+						bgfx::setUniform(config.uniforms.objectColor, color.v);
+
+						auto& mesh = skelmeshes.getMesh(sms[i].m_StaticMeshVisual);
+						bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
+						bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
+											 sms[i].m_SubmeshInfo.m_StartIndex,
+											 sms[i].m_SubmeshInfo.m_NumIndices);
+
+						bgfx::submit(0, config.programs.mainWorldProgram);
+					}
 				}
 
-				// Submit primitive for rendering to view 0.
-				if((mask & Components::AnimationComponent::MASK) != 0)
-					bgfx::submit(0, config.programs.mainSkinnedMeshProgram);
-				else
-					bgfx::submit(0, config.programs.mainWorldProgram);
+				//bgfx::submit(0, config.programs.mainWorldProgram);
 			}
 
 			if ((mask & Components::BBoxComponent::MASK) != 0)
@@ -210,7 +302,50 @@ namespace Render
 
 		}
 
+		// Now draw instances
+		for(size_t i=0;i<instanceKindIdx;i++)
+		{
+			const InstanceKind& k = instanceKinds[i];
+			bgfx::DynamicVertexBufferHandle buffer = system.getFrameInstanceDataBuffer(k.bufferIndex);
+
+			// Mark as free now. This buffer won't be used until the next frame
+			// FIXME: This breaks in multiple renderpasses! Need to use a different rendersystem? Move instancebuffers to renderconfig?
+			system.unregisterInstanceDataBuffer(k.bufferIndex);
+
+			// Update buffer
+			bgfx::updateDynamicVertexBuffer(buffer, 0, bgfx::copy(k.instances.data(), sizeof(InstanceData) * k.instances.size()));
+
+			for(size_t e : k.entityKinds)
+			{
+				auto& mesh = meshes.getMesh(sms[e].m_StaticMeshVisual);
+				bgfx::setInstanceDataBuffer(buffer, 0, (uint32_t) k.instances.size());
+
+				bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+				bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
+									 sms[e].m_SubmeshInfo.m_StartIndex,
+									 sms[e].m_SubmeshInfo.m_NumIndices);
+
+				if (sms[e].m_Texture.isValid())
+				{
+					Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[e].m_Texture);
+					bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle,
+									 BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+				}
+
+				bgfx::submit(0, config.programs.mainWorldInstancedProgram);
+
+				mesh.instanceDataBufferIndex = 0xFFFFFFFF;
+				numDrawcalls++;
+				numIndices += sms[e].m_SubmeshInfo.m_NumIndices;
+			}
+
+			//bgfx::submit(0, config.programs.mainWorldProgram);
+		}
+
+
+
 		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles: %d", numIndices/3);
+		bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls: %d", numDrawcalls);
 
 
 		//world.getPhysicsSystem().debugDraw();

@@ -132,7 +132,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
 
     // Draw all worlds
     for(auto s : m_Worlds)
-        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig());
+        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
 }

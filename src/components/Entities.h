@@ -53,6 +53,9 @@ namespace Components
     {
         ComponentMask m_ComponentMask;
 
+        // Handle of this entity-component
+        Handle::EntityHandle m_ThisEntity;
+
         static void init(EntityComponent& c)
         {
         }
@@ -125,8 +128,17 @@ namespace Components
          */
         Handle::MeshHandle m_StaticMeshVisual;
 		Meshes::SubmeshVxInfo m_SubmeshInfo;
+        uint32_t m_SubmeshIdx;
 		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
         uint32_t m_Color;
+
+        /**
+         * Index of the instance-buffer used at render time
+         * Special values:
+         *  -1 no index value placed yet
+         *  -2 completely disable instancing on this
+         */
+        uint32_t m_InstanceDataIndex;
 
         static void init(StaticMeshComponent& c)
         {

@@ -71,6 +71,9 @@ PlatformAndroid::PlatformAndroid()
 {
     m_Window = nullptr;
     m_App = nullptr;
+
+    m_ThumbstickPosition[0] = Math::float2(0,0);
+    m_ThumbstickPosition[1] = Math::float2(0,0);
 }
 
 

@@ -27,8 +27,8 @@ target_link_libraries(testapk log android crystax)
 set_target_properties(testapk PROPERTIES COMPILE_DEFINITIONS "ANDROID")
      
 set(APP_SHARED_LIBRARIES "${LIBRARY_OUTPUT_PATH}/libtestapk.so")
-set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${CMAKE_CURRENT_SOURCE_DIR}/lib/armeabi-v7a/libgnustl_shared.so")
-set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${CMAKE_CURRENT_SOURCE_DIR}/lib/armeabi-v7a/libcrystax.so")
+#set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${CMAKE_CURRENT_SOURCE_DIR}/lib/armeabi-v7a/libcrystax.so")
+set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${CMAKE_CURRENT_SOURCE_DIR}/lib/x86/libcrystax.so")
      
 message(STATUS ${APP_SHARED_LIBRARIES})
      

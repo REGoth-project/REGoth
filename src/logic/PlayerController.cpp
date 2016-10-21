@@ -585,6 +585,8 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (!model)
         return;
 
+    if(m_World.getDialogManager().isDialogActive())
+        return;
 
 
     // FIXME: Temporary test-code

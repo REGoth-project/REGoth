@@ -20,7 +20,8 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::init()
 {
-    m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_stencil_texture", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
     m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
 
     m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
@@ -35,5 +36,36 @@ void RenderSystem::init()
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
 }
 
+uint32_t RenderSystem::requestInstanceDataBuffer()
+{
+    // Check for a free spot
+    if(!m_FreeInstanceDataBuffers.empty())
+    {
+        uint32_t p = m_FreeInstanceDataBuffers.back();
+        m_FreeInstanceDataBuffers.pop_back();
+
+        return p;
+    }
+
+    // TODO: Move this so we can have more than that
+    bgfx::VertexDecl decl;
+    decl.begin();
+    decl.add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Float);
+    decl.add(bgfx::Attrib::TexCoord2, 4, bgfx::AttribType::Float);
+    decl.add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float);
+    decl.add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float);
+    decl.add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float);
+    decl.end();
+
+    // Create a new spot
+    m_InstanceDataBuffers.push_back(bgfx::createDynamicVertexBuffer(1, decl, BGFX_BUFFER_ALLOW_RESIZE));
+    return (uint32_t)m_InstanceDataBuffers.size() - 1;
+}
+
+void RenderSystem::unregisterInstanceDataBuffer(uint32_t idx)
+{
+    // Mark spot as free
+    m_FreeInstanceDataBuffers.push_back(idx);
+}
 
 

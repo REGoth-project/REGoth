@@ -117,18 +117,18 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Mes
     // Init collision
     btTriangleMesh* wm = new btTriangleMesh;
 
-    for(size_t s=0;s<mesh.m_SubmeshStarts.size();s++)
+    for(size_t s=0;s<mesh.mesh.m_SubmeshStarts.size();s++)
     {
-        if(!mesh.m_SubmeshMaterials[s].m_NoCollision)
+        if(!mesh.mesh.m_SubmeshMaterials[s].m_NoCollision)
         {
-            for (size_t j = 0; j < mesh.m_SubmeshStarts[s].m_NumIndices; j += 3)
+            for (size_t j = 0; j < mesh.mesh.m_SubmeshStarts[s].m_NumIndices; j += 3)
             {
-                size_t i = mesh.m_SubmeshStarts[s].m_StartIndex + j;
+                size_t i = mesh.mesh.m_SubmeshStarts[s].m_StartIndex + j;
 
                 // TODO: Filter no-collision materials
-                auto &v0 = mesh.m_Vertices[mesh.m_Indices[i]].Position;
-                auto &v1 = mesh.m_Vertices[mesh.m_Indices[i + 1]].Position;
-                auto &v2 = mesh.m_Vertices[mesh.m_Indices[i + 2]].Position;
+                auto &v0 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i]].Position;
+                auto &v1 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i + 1]].Position;
+                auto &v2 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i + 2]].Position;
 
                 // Convert to btvector
                 btVector3 v[] = {{v0.x, v0.y, v0.z},
@@ -351,16 +351,16 @@ Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(con
     // Init collision
     btTriangleMesh* wm = new btTriangleMesh;
 
-    for(size_t s=0;s<mesh.m_SubmeshStarts.size();s++)
+    for(size_t s=0;s<mesh.mesh.m_SubmeshStarts.size();s++)
     {
-        for(size_t j=0;j<mesh.m_SubmeshStarts[s].m_NumIndices;j+=3)
+        for(size_t j=0;j<mesh.mesh.m_SubmeshStarts[s].m_NumIndices;j+=3)
         {
-            size_t i = mesh.m_SubmeshStarts[s].m_StartIndex + j;
+            size_t i = mesh.mesh.m_SubmeshStarts[s].m_StartIndex + j;
 
             // TODO: Filter no-collision materials
-            auto &v0 = mesh.m_Vertices[mesh.m_Indices[i]].Position;
-            auto &v1 = mesh.m_Vertices[mesh.m_Indices[i + 1]].Position;
-            auto &v2 = mesh.m_Vertices[mesh.m_Indices[i + 2]].Position;
+            auto &v0 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i]].Position;
+            auto &v1 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i + 1]].Position;
+            auto &v2 = mesh.mesh.m_Vertices[mesh.mesh.m_Indices[i + 2]].Position;
 
             // Convert to btvector
             btVector3 v[] = {{v0.x, v0.y, v0.z},

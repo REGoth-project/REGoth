@@ -3,7 +3,7 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(BGFX_DEBUG 0)
+set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
@@ -17,16 +17,16 @@ endif()
 if(ANDROID)
     set(BGFX_DEBUG 0)
 
-    # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 ..
+    # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 
     add_definitions(-D__gnu_linux__) # BGFX file reader needs to know this
     add_definitions(-D__ANDROID__) # Some like "ANDROID", like in the toolhain file, some expect __ANDROID__
     add_definitions(-Dalloca=__builtin_alloca) # imgui doesn't seem to take the crystax header from this
-    
+    add_definitions(-DBGFX_CONFIG_RENDERER_OPENGLES=30) # Need GLES3 for instancing
+
     # Fix other libraries
     set(BUILD_SQUISH_WITH_SSE2 OFF CACHE STRING "" FORCE) # No SSE2 on android
     set(SFML_OPENGL_ES OFF CACHE STRING "" FORCE) # No SSE2 on android
-    set(BUILD_BULLET3 OFF CACHE STRING "" FORCE) # Can use bullet2 on android, bullet3 wants to build examples...
     
     
     # Make Apk.cmake compatible
@@ -46,7 +46,7 @@ if(ANDROID)
      
     set(ANDROID_STL gnustl_static CACHE STRING "" FORCE) # Static STL
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++") # Static libc++
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-unaligned-access") # Unaligned access not supported on ARM
+    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-unaligned-access") # Unaligned access not supported on ARM
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -ffor-scope -fno-rtti -pipe -ffunction-sections -fdata-sections -ffast-math -Wnon-virtual-dtor -Wreorder -Wsign-promo -fvisibility=hidden -fvisibility-inlines-hidden -Wstrict-null-sentinel -Os -funroll-all-loops -fpeel-loops -ftree-vectorize")
     set(LINKER_FLAGS "${LINKER_FLAGS} -nostartfiles, -Wl,--as-needed -Wl,--gc-sections -Wl,--no-undefined -Wl,--strip-all -Wl,-rpath-link=${ANDROID_NDK_SYSROOT}/usr/lib/ -L${ANDROID_NDK_SYSROOT}/usr/lib/")
@@ -59,6 +59,7 @@ if(ANDROID)
     
     # Make sure to copy all libraries put into here
     file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/armeabi-v7a/*.so)
+    #file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/x86/*.so)
     set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${LIBRARY_OUTPUT_PATH}/libandroid_glue.so")
     
     include("src/android/Apk.cmake" REQUIRED)
@@ -134,6 +135,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE STRING "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE STRING "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE STRING "" FORCE)
 
+
+set(BUILD_BULLET3 OFF CACHE STRING "" FORCE) # Can use bullet2, bullet3 wants to build examples...
 
 add_subdirectory(lib/bullet3)
 include_directories(lib/bullet3/src)

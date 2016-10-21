@@ -34,7 +34,7 @@ namespace World
     {
 		template<typename V, typename I>
 		using MeshAllocator = Memory::StaticReferencedAllocator<
-			LevelMesh::StaticLevelMesh<V,I>, 
+			Meshes::WorldStaticMesh,
 			Config::MAX_NUM_LEVEL_MESHES
 		>;
 

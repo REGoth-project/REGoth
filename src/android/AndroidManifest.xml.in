@@ -9,7 +9,7 @@
     <uses-feature android:name="android.hardware.touchscreen.multitouch" android:required="true" />
     <application android:label="@string/ApplicationName" android:debuggable="${ANDROID_APK_DEBUGGABLE}">
         
-        <activity android:name=".LoadLibraries" android:label="@string/ApplicationName" android:configChanges="orientation|keyboardHidden" ${ANDROID_APK_THEME}>
+        <activity android:name=".LoadLibraries" android:label="@string/ApplicationName" android:configChanges="orientation|keyboardHidden" ${ANDROID_APK_THEME} android:screenOrientation="landscape">
             <meta-data android:name="android.app.lib_name" android:value="${ANDROID_NAME}" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

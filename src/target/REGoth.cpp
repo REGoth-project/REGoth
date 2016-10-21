@@ -21,6 +21,7 @@
 #include "config.h"
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
+#include <ZenLib/utils/logger.h>
 
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
@@ -176,6 +177,19 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         }
     }
 
+    void drawLog()
+    {
+        const std::list<std::string>& logs = Utils::Log::getLastLogLines();
+        auto it = logs.begin();
+
+        for(int i=49; i>=0 && it != logs.end() ;i++)
+        {
+            bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
+
+            it++;
+        }
+    }
+
     void showSplash()
     {
         float view[16];
@@ -191,18 +205,25 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         // Set view and projection matrix for view 0.
         bgfx::setViewTransform(1, NULL, proj);
 
+
+        bgfx::touch(0);
+
+#if !BX_PLATFORM_ANDROID
         Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
 
+        if(!txh.isValid())
+            return;
+
         Textures::Texture& texture = alloc.getTexture(txh);
         bgfx::frame();
-
-        bgfx::touch(0);
 
         bgfx::setState(BGFX_STATE_DEFAULT);
         const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
         bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
         renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
+#endif
+
 
         bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
         bgfx::frame();

@@ -8,6 +8,7 @@
 #include <components/Vob.h>
 #include <components/EntityActions.h>
 #include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 
 using namespace Logic;
 
@@ -147,6 +148,8 @@ bool ModelVisual::load(const std::string& visual)
     m_VisualEntities.insert(m_VisualEntities.end(),
                             m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
 
+    Components::PositionComponent& hostPos = m_World.getEntity<Components::PositionComponent>(m_Entity);
+
     for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
     {
         // Init positions
@@ -155,7 +158,7 @@ bool ModelVisual::load(const std::string& visual)
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
-        pos.m_WorldMatrix = getEntityTransform();
+        pos = hostPos;
 
         // Init animation components
         Components::addComponent<Components::AnimationComponent>(entity);
@@ -207,9 +210,13 @@ bool ModelVisual::load(const std::string& visual)
             Meshes::WorldStaticMesh amdata = m_World.getStaticMeshAllocator().getMesh(amh);
 
             // Add the entities to our lists
-            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata);
+            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata.mesh);
             m_PartEntities.dynamicAttachments.insert(m_PartEntities.dynamicAttachments.end(),
                                                              tmp.begin(), tmp.end());
+
+            // If we haven't already, create an instancebuffer for this mesh
+            //if(amdata.instanceDataBufferIndex == (uint32_t)-1)
+            //    amdata.instanceDataBufferIndex = ((Engine::GameEngine&)m_World.getEngine()).getDefaultRenderSystem().requestInstanceDataBuffer();
 
             m_VisualAttachments[nodeIdx].insert(m_VisualAttachments[nodeIdx].end(), tmp.begin(), tmp.end());
 
@@ -219,6 +226,10 @@ bool ModelVisual::load(const std::string& visual)
                 // Init positions
                 Components::EntityComponent &entity = m_World.getEntity<Components::EntityComponent>(e);
                 Components::addComponent<Components::PositionComponent>(entity);
+
+                // Important: Apply draw distance, and every other setting from the host
+                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
+                pos = hostPos;
             }
         }
 
@@ -438,6 +449,10 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const
         Handle::EntityHandle avh = Vob::constructVob(m_World);
 
         Vob::VobInformation vob = Vob::asVob(m_World, avh);
+
+        // Carry over draw distance-mod // TODO: Should be in some other structure, this is too arbitrary
+        vob.position->m_DrawDistanceFactor = m_World.getEntity<Components::PositionComponent>(m_Entity).m_DrawDistanceFactor;
+
         Vob::setVisual(vob, visual);
 
         // Clear old visual, if there was one
@@ -612,6 +627,7 @@ void ModelVisual::updateHeadMesh()
                                         + headTxParts[2];
 
                 visual->setDiffuseTexture(0, newHeadTx);
+                head.position->m_DrawDistanceFactor = -2; // Disable instancing because of the texture changes
             }
         }
         // Submesh 0: Head

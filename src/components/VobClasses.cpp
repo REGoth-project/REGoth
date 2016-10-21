@@ -28,6 +28,10 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     world.getScriptEngine().getGameState().getNpc(scriptInstance).userPtr = userData;
 
+    Components::PositionComponent& pos = world.getEntity<Components::PositionComponent>(e);
+    pos.m_DrawDistanceFactor = 0.25f; // TODO: Config entry for this...
+
+
     // Setup the playercontroller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
     logic.m_pLogicController = new Logic::PlayerController(world, e, scriptInstance);
@@ -96,24 +100,23 @@ void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle
 
 VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Handle::EntityHandle e)
 {
-    Vob::VobInformation v = Vob::asVob(world, e);
-    NpcVobInformation npc;
+    NpcVobInformation v;
+
+    // Fill base-class values (just POD-values in here)
+    *reinterpret_cast<Vob::VobInformation*>(&v) = Vob::asVob(world, e);
 
     // Check the controller
     if(v.logic && v.logic->getControllerType() != Logic::EControllerType::PlayerController)
     {
         // Invalidate instance and return
-        npc = {};
-        return npc;
+        v = {};
+        return v;
     }
 
-    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
-    memcpy(&npc, &v, sizeof(v));
-
     // Enter new information
-    npc.playerController = reinterpret_cast<Logic::PlayerController*>(npc.logic);
+    v.playerController = reinterpret_cast<Logic::PlayerController*>(v.logic);
 
-    return npc;
+    return v;
 }
 
 VobTypes::ItemVobInformation VobTypes::asItemVob(World::WorldInstance& world, Handle::EntityHandle e)

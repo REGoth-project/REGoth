@@ -35,6 +35,12 @@ namespace Logic
         void initForWorld(const std::string& world);
 
         /**
+         * Frame-functions
+         */
+        void onFrameStart();
+        void onFrameEnd();
+
+        /**
          * Saves the state of the VM and prepares it for a call to runFunction.
          * You can push function arguments after this call.
          */
@@ -144,7 +150,23 @@ namespace Logic
          */
         const std::set<Handle::EntityHandle>& getWorldMobs(){ return m_WorldMobs; }
 
+        /**
+         * @return Profile data for this frame. (Time by function-symbol)
+         */
+        const std::map<size_t, double>& getProfilingData(){ return m_TimeByFunctionSymbol[m_ProfilingDataFrame]; };
+
+        /**
+         * Resets profiling data for the current frame
+         */
+        void resetProfilingData();
+
     protected:
+
+        /**
+         * Starts/stops profiling on the given function-symbol
+         */
+        void startProfiling(size_t fnSym);
+        void stopProfiling(size_t fnSym);
 
         /**
          * Called when an npc got inserted into the world
@@ -187,5 +209,12 @@ namespace Logic
          * NPC-Entity of the player
          */
         Handle::EntityHandle m_PlayerEntity;
+
+        /**
+         * Profiling
+         */
+        std::map<size_t, double> m_TimeByFunctionSymbol[10];
+        std::stack<int64_t> m_TimeStartStack;
+        int m_ProfilingDataFrame;
     };
 }

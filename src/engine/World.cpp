@@ -93,7 +93,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
         Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
 
         // TODO: Put these into a compound-component or something
-        std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData);
+        std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData.mesh);
+
+        // If we haven't already, create an instancebuffer for this mesh
+        //if(worldMeshData.instanceDataBufferIndex == (uint32_t)-1)
+        //    worldMeshData.instanceDataBufferIndex = ((Engine::GameEngine*)m_pEngine)->getDefaultRenderSystem().requestInstanceDataBuffer();
 
         // Create collisionmesh for the world
         if(!ents.empty())
@@ -141,7 +145,10 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             Components::PositionComponent &pos = getEntity<Components::PositionComponent>(e);
             pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
             pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
-            pos.m_DrawDistanceFactor = 0.0f; // Always draw the worldmesh
+            pos.m_DrawDistanceFactor = -1.0f; // Always draw the worldmesh
+
+            Components::StaticMeshComponent& sm = getEntity<Components::StaticMeshComponent>(e);
+            sm.m_InstanceDataIndex = -2; // Disable instancing
         }
 
 		// TODO: Refractor. Make a map of all vobs by classes or something.
@@ -220,14 +227,25 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 					// Set whether we want collision with this vob
 					Vob::setCollisionEnabled(vob, v.cdDyn);
 
+                    Utils::BBox3D bbox = {Math::float3(v.bbox[0].v) * (1.0f / 100.0f),
+                                          Math::float3(v.bbox[1].v) * (1.0f / 100.0f)};
+
+                    LogInfo() << "Vobsize (" << v.visual << "): " << (bbox.max - bbox.min).length() / 10.0f;
+                    vob.position->m_DrawDistanceFactor = std::max(0.12f, std::min(1.0f, (bbox.max - bbox.min).length() / 10.0f));
+                    LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
+
 					Vob::setVisual(vob, v.visual);
 
 					//if(!vob.visual)
 					//    LogInfo() << "No visual for: " << v.visual;
 
+
+
 					Vob::setBBox(vob, Math::float3(v.bbox[0].v) * (1.0f / 100.0f) - m.Translation(),
 						Math::float3(v.bbox[1].v) * (1.0f / 100.0f) - m.Translation(),
 						0 /*vob.visual ? 0 : 0xFF00AA00*/);
+
+
 
 					// Trace down from this vob to get the shadow-value from the worldmesh
 					Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);
@@ -344,6 +362,7 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
     Components::EntityComponent& entity = m_Allocators.m_ComponentAllocator.getElement<Components::EntityComponent>(h);
     entity.m_ComponentMask = components;
+    entity.m_ThisEntity = h;
 
     /*Components::BBoxComponent& bbox = m_Allocators.m_ComponentAllocator.getElement<Components::BBoxComponent>(h);
     bbox.m_BBox3D.min = -1.0f * Math::float3(rand() % 1000,rand() % 1000,rand() % 1000);
@@ -364,6 +383,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
     m_WorldInfo.time += deltaTime;
 
+    // Tell script engine the frame started
+    m_ScriptEngine.onFrameStart();
+
     // Update physics
     m_PhysicsSystem.update(deltaTime);
 
@@ -374,6 +396,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     const auto& ctuple = getComponentDataBundle().m_Data;
 
     Components::EntityComponent* ents = std::get<Components::EntityComponent*>(ctuple);
+    Components::StaticMeshComponent* sms = std::get<Components::StaticMeshComponent*>(ctuple);
     Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
     Components::AnimationComponent* anims = std::get<Components::AnimationComponent*>(ctuple);
     Components::PositionComponent* positions = std::get<Components::PositionComponent*>(ctuple);
@@ -390,7 +413,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         }
 
         Components::ComponentMask mask = ents[i].m_ComponentMask;
-        if((mask & Components::LogicComponent::MASK) != 0)
+        if(Components::hasComponent<Components::LogicComponent>(ents[i]))
         {
             if(logics[i].m_pLogicController)
             {
@@ -399,10 +422,16 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         }
 
         // Update animations, only if there isn't a valid parent registered
-        if((mask & Components::AnimationComponent::MASK) != 0
-           && !anims[i].m_ParentAnimHandler.isValid())
+        if(Components::hasComponent<Components::AnimationComponent>(ents[i])
+            && !anims[i].m_ParentAnimHandler.isValid())
         {
             anims[i].m_AnimHandler.updateAnimations(deltaTime);
+        }
+
+        // Reset instance-data
+        if(Components::hasComponent<Components::StaticMeshComponent>(ents[i]))
+        {
+            sms[i].m_InstanceDataIndex = (uint32_t)-1;
         }
     }
 
@@ -418,6 +447,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     // Update dialogs
     m_DialogManager.update(deltaTime);
+
+    // Tell script engine the frame ended
+    m_ScriptEngine.onFrameEnd();
 
     /*static float s_testp = 0.0f;
     static std::vector<size_t> path;
