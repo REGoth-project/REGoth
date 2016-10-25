@@ -51,9 +51,10 @@ void GameEngine::initEngine(int argc, char** argv)
         }
     }
 
-    Input::RegisterAction(ActionType::PauseGame, [this](bool, float)
+    Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
     {
-        m_disableLogic = !m_disableLogic;
+        if(triggered > 0.0f)
+            m_disableLogic = !m_disableLogic;
     });
 }
 

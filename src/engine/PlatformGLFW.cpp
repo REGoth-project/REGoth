@@ -196,6 +196,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_B, ActionType::DebugMoveSpeed2, true);
     bindKey(GLFW_KEY_T, ActionType::PlayerAction, false);
 
+    bindKey(GLFW_KEY_P, ActionType::PauseGame, false);
+
 //    // special keys test
 //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);
 //    bindKey(GLFW_KEY_RIGHT_SHIFT, ActionType::PlayerBackward, true);

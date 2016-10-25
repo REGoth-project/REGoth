@@ -230,9 +230,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
                     Utils::BBox3D bbox = {Math::float3(v.bbox[0].v) * (1.0f / 100.0f),
                                           Math::float3(v.bbox[1].v) * (1.0f / 100.0f)};
 
-                    LogInfo() << "Vobsize (" << v.visual << "): " << (bbox.max - bbox.min).length() / 10.0f;
+                    //LogInfo() << "Vobsize (" << v.visual << "): " << (bbox.max - bbox.min).length() / 10.0f;
                     vob.position->m_DrawDistanceFactor = std::max(0.12f, std::min(1.0f, (bbox.max - bbox.min).length() / 10.0f));
-                    LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
+                    //LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
 
 					Vob::setVisual(vob, v.visual);
 
