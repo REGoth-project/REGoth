@@ -4,10 +4,13 @@
 
 #pragma once
 
+namespace UI
+{
+    class zFont
+    {
 
-class zFont {
-
-};
+    };
+}
 
 
 
