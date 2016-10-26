@@ -200,7 +200,7 @@ namespace Logic
         Components::AnimHandler& getAnimationHandler();
 
         /**
-         * @brief Called every frame by the player-controler
+         * @brief To be called every frame. You have to take care of this by yourself if you are using the model-visual!
          */
         void onFrameUpdate(float dt);
 

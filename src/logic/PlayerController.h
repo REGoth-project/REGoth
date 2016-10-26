@@ -278,6 +278,13 @@ namespace Logic
          * @return Item this NPC is currently interacting with
          */
         Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
+
+        /**
+         * Sets the mob this playercontroller is currently using
+         */
+         void setUsedMob(Handle::EntityHandle mob){ m_AIState.usedMob = mob; }
+        Handle::EntityHandle getUsedMob(){ return m_AIState.usedMob; }
+
     protected:
 
         /**
@@ -331,6 +338,9 @@ namespace Logic
 
             // Waypoint the NPC is going to
             size_t targetWaypoint;
+
+            // Handle to the Mob currently used by this NPC, if valid
+            Handle::EntityHandle usedMob;
         }m_AIState;
 
         struct
@@ -417,5 +427,9 @@ namespace Logic
         bool m_isStrafeLeft;
         bool m_isStrafeRight;
         bool m_MoveSpeed1, m_MoveSpeed2;
+
+        // FIXME: Hack for as long as animation-flags are not implemented
+        // Turns of modifying the root postion from the animation
+        bool m_NoAniRootPosHack;
     };
 }

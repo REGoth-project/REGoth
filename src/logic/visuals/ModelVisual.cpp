@@ -527,7 +527,8 @@ void ModelVisual::getCollisionBBox(Math::float3* bb)
 
 Math::float3 ModelVisual::getModelRoot()
 {
-    return Math::float3(getMeshLib().getRootNodeTranslation().v);
+    return getAnimationHandler().getRootNodePosition();
+    //return Math::float3(getMeshLib().getRootNodeTranslation().v);
 }
 
 void ModelVisual::onFrameUpdate(float dt)

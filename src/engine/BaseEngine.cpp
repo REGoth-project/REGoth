@@ -129,6 +129,12 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
 	return w;
 }
 
+void BaseEngine::removeWorld(Handle::WorldHandle world)
+{
+    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
+    m_WorldInstances.removeObject(world);
+}
+
 Handle::WorldHandle  BaseEngine::addWorld()
 {
 	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
@@ -223,6 +229,7 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 {
     return m_Args;
 }
+
 
 
 

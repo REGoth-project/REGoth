@@ -45,6 +45,12 @@ namespace Engine
 		Handle::WorldHandle addWorld();
 
 		/**
+		 * Removes a world and everything inside
+		 * @param world World to remove
+		 */
+		void removeWorld(Handle::WorldHandle world);
+
+		/**
 		 * @brief Frame update // TODO: Remove width and height
 		 */
 		void frameUpdate(double dt, uint16_t width, uint16_t m_height);

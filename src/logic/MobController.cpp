@@ -49,6 +49,14 @@ ModelVisual* MobController::getModelVisual()
 void MobController::onUpdate(float deltaTime)
 {
     Controller::onUpdate(deltaTime);
+    ModelVisual* model = getModelVisual();
+
+    // Update node attachments
+    if (model)
+    {
+        // Update model for this frame
+        model->onFrameUpdate(deltaTime);
+    }
 
     /*ddPush();
 
@@ -69,6 +77,9 @@ void MobController::onUpdate(float deltaTime)
 
 
     ddPop();*/
+
+    //if(getModelVisual())
+    //   getModelVisual()->getAnimationHandler().debugDrawSkeleton(getEntityTransform());
 }
 
 void MobController::findInteractPositions()
@@ -219,7 +230,7 @@ void MobController::onMessage(EventMessages::EventMessage& message, Handle::Enti
     {
         case EventMessages::MobMessage::ST_STARTINTERACTION: startInteraction(msg.npc); break;
         case EventMessages::MobMessage::ST_STARTSTATECHANGE: startStateChange(msg.npc, msg.stateFrom, msg.stateTo); break;
-        case EventMessages::MobMessage::ST_ENDINTERACTION:break;
+        case EventMessages::MobMessage::ST_ENDINTERACTION: stopInteraction(msg.npc); break;
         case EventMessages::MobMessage::ST_UNLOCK:break;
         case EventMessages::MobMessage::ST_LOCK:break;
         case EventMessages::MobMessage::ST_CALLSCRIPT: callOnStateFunc(msg.npc, msg.stateTo); break;
@@ -268,6 +279,9 @@ void MobController::startInteraction(Handle::EntityHandle npc)
     // Play starting animation
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
+    // This NPC is now using a mob
+    nv.playerController->setUsedMob(m_Entity);
+
     std::string ani = "T_" + m_MobCore->getSchemeName() + "_STAND_2_S" + std::to_string(m_MobCore->getState());
 
     LogInfo() << "MOB: Playing animation on player: " << ani;
@@ -277,7 +291,7 @@ void MobController::startInteraction(Handle::EntityHandle npc)
     sm.subType = EventMessages::ConversationMessage::ST_PlayAni;
     sm.animation = ani;
 
-    // This is save, because vobs generally won't be deleted from the map.
+    // This is save, because mobs generally won't be deleted from the map.
     // If not, this will just do nothing
     sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
 
@@ -302,8 +316,11 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 {
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
+    if(from == -1)
+        from = m_MobCore->getState();
 
-    m_MobCore->onBeginStateChange(npc, from, to);
+    if(to != -1)
+        m_MobCore->onBeginStateChange(npc, from, to);
 
     // Find out which animations to play
     std::string mobAni, npcAni;
@@ -326,7 +343,10 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
             return; // Either mob or NPC isn't there anymore
 
         // First animation is done, thus, go to the next state
-        mob.mobController->m_MobCore->onEndStateChange(npc, from, to);
+        if(to != -1)
+            mob.mobController->m_MobCore->onEndStateChange(npc, from, to);
+        else
+            stopInteraction(npc);
     });
 
     nv.playerController->getEM().onMessage(sm);
@@ -351,6 +371,12 @@ void MobController::stopInteraction(Handle::EntityHandle npc)
             break;
         }
     }
+
+    // Play starting animation
+    VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
+
+    // This NPC is not using a mob anymore
+    nv.playerController->setUsedMob(Handle::EntityHandle::makeInvalidHandle());
 
     m_NumNpcsCurrent--;
 }
@@ -397,6 +423,8 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
     if(!p)
         return;
 
+    p->usedByNpc = npc;
+
     // Notify the core about this position being used now
     m_MobCore->onFreePositionFound(npc, p);
 
@@ -436,6 +464,20 @@ void MobController::useMobToState(Handle::EntityHandle npc, int target)
             EventMessages::MobMessage msg;
             msg.subType = EventMessages::MobMessage::ST_STARTINTERACTION;
             msg.stateTo = target;
+            msg.npc = npc;
+
+            getEM().onMessage(msg, npc);
+
+            return;
+        }
+    }else
+    {
+        if(target < 0 && getEM().isEmpty())
+        {
+            EventMessages::MobMessage msg;
+            msg.subType = EventMessages::MobMessage::ST_STARTSTATECHANGE;
+            msg.stateTo = -1;
+            msg.stateFrom = -1;
             msg.npc = npc;
 
             getEM().onMessage(msg, npc);

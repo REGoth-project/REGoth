@@ -42,15 +42,14 @@ namespace Logic
                 Engine::Action* actionLookVertical;
             } firstPersonCameraSettings;
 
-//            /**
-//             * Settings for camera mode "thirdperson"
-//             */
-//            struct
-//            {
-//                float turnSpeed;
-//                float turnSmoothness;
-//                float yaw, height, distance;
-//            } thirdPersonCameraSettings;
+            /**
+             * Settings for camera mode "thirdperson"
+             */
+            struct
+            {
+                Math::float3 currentLookAt;
+                Math::float3 currentOffsetDirection;
+            } thirdPersonCameraSettings;
 
             struct
             {

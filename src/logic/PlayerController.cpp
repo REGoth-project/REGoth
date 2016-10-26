@@ -132,6 +132,20 @@ void PlayerController::onUpdate(float deltaTime)
 
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
+
+        // Needs to be done here to account for changes of feet-height
+        placeOnGround();
+
+        if(!m_NoAniRootPosHack)
+        {
+            // Apply model root-velcoity
+            Math::float3 position = getEntityTransform().Translation();
+            position += getModelVisual()->getAnimationHandler().getRootNodeVelocity();
+
+            Math::Matrix t = getEntityTransform();
+            t.Translation(position);
+            setEntityTransform(t);
+        }
     }
 
     // TODO: HACK, take this out!
@@ -260,8 +274,6 @@ bool PlayerController::travelPath(float deltaTime)
                                                       Math::float3(0, 1, 0)).Invert());
 
     }
-
-    placeOnGround();
 
     // Set run animation
     getModelVisual()->setAnimation(ModelVisual::Run);
@@ -546,7 +558,7 @@ void PlayerController::placeOnGround()
     {
         Math::Matrix m = getEntityTransform();
 
-        float feet = m_NPCProperties.modelRoot.y;
+        float feet = getModelVisual()->getModelRoot().y;
 
         // FIXME: Actually read the flying-flag of the MDS
         if (feet == 0.0f)
@@ -588,6 +600,19 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if(m_World.getDialogManager().isDialogActive())
         return;
 
+    if(getUsedMob().isValid())
+    {
+        VobTypes::MobVobInformation m = VobTypes::asMobVob(m_World, getUsedMob());
+
+        if(m_isBackward)
+        {
+            m.mobController->useMobToState(m_Entity, -1);
+        }
+        return;
+    }
+
+    if(!getEM().isEmpty())
+        return;
 
     // FIXME: Temporary test-code
     static bool lastDraw = false;
@@ -656,7 +681,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         lastDraw = false;
     }
 
-
+    m_NoAniRootPosHack = false;
     if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
         static std::string lastMovementAni = "";
@@ -664,18 +689,22 @@ void PlayerController::onUpdateByInput(float deltaTime)
         {
             model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            m_NoAniRootPosHack = true;
         } else if (m_isStrafeRight)
         {
             model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            m_NoAniRootPosHack = true;
         } else if (m_isForward)
         {
             model->setAnimation(ModelVisual::EModelAnimType::Run);
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            m_NoAniRootPosHack = true;
         } else if (m_isBackward)
         {
             model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            m_NoAniRootPosHack = true;
         }
 //		else if(inputGetKeyState(entry::Key::KeyQ))
 //		{
@@ -686,6 +715,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
                     lastMovementAni)
         {
             model->setAnimation(ModelVisual::Idle);
+            m_NoAniRootPosHack = true;
         }
     }
 //	else
@@ -748,12 +778,16 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     float yaw = 0.0f;
     const float turnSpeed = 2.5f;
-    if (m_isTurnLeft)
+
+    if(!m_AIState.usedMob.isValid())
     {
-        yaw += turnSpeed * deltaTime;
-    } else if (m_isTurnRight)
-    {
-        yaw -= turnSpeed * deltaTime;
+        if (m_isTurnLeft)
+        {
+            yaw += turnSpeed * deltaTime;
+        } else if (m_isTurnRight)
+        {
+            yaw -= turnSpeed * deltaTime;
+        }
     }
 
     // TODO: HACK, take this out!
@@ -767,7 +801,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     // Apply animation-velocity
-    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocity() * deltaTime;
+    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityAvg() * deltaTime;
 
     float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
     m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
@@ -1337,9 +1371,13 @@ void PlayerController::setDirection(const Math::float3& direction)
 {
     m_MoveState.direction = direction;
 
+    // FIXME: Read align-to-ground-flag
+    m_MoveState.direction.y = 0;
+    m_MoveState.direction.normalize();
+
     // Set direction
     setEntityTransform(Math::Matrix::CreateLookAt(m_MoveState.position,
-                                                  m_MoveState.position + direction,
+                                                  m_MoveState.position + m_MoveState.direction,
                                                   Math::float3(0, 1, 0)).Invert());
 }
 

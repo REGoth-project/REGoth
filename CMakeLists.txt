@@ -15,7 +15,7 @@ endif()
 
 
 if(ANDROID)
-    set(BGFX_DEBUG 0)
+    #set(BGFX_DEBUG 0)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 

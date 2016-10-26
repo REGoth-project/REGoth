@@ -11,6 +11,7 @@ AnimHandler::AnimHandler()
 {
     m_ActiveAnimation.invalidate();
     m_AnimRootVelocity = Math::float3(0, 0, 0);
+    m_AnimRootPosition = Math::float3(0, 0, 0);
     m_LastProcessedFrame = static_cast<size_t>(-1);
     m_AnimationStateHash = 0;
     m_pWorld = nullptr;
@@ -73,6 +74,9 @@ bool AnimHandler::addAnimation(const std::string &name)
 */
 void AnimHandler::playAnimation(const std::string &animName)
 {
+    if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+        LogInfo() << "Playing animation '" << animName << "' on Model: " << m_MeshLibName;
+
     // Reset velocity
     m_AnimRootVelocity = Math::float3(0, 0, 0);
 
@@ -157,7 +161,10 @@ void AnimHandler::updateAnimations(double deltaTime)
     {
         // TODO: There is a flag indicating whether the animation root should translate the vob position
         if (i == 0)
+        {
+            m_AnimRootPosition = m_NodeTransforms[i].Translation();
             m_NodeTransforms[i].Translation(Math::float3(0.0f, 0.0f, 0.0f));
+        }
 
         if (m_MeshLib.getNodes()[i].parentValid())
             m_ObjectSpaceNodeTransforms[i] =
@@ -202,7 +209,7 @@ void AnimHandler::updateAnimations(double deltaTime)
 
     // Get velocity of the current animation
     // FIXME: Need better handling of animation end
-    if (lastFrame != frameNum && frameNum != 0)
+    if (!getActiveAnimationPtr()->getAniSamples().empty() && lastFrame != frameNum && frameNum != 0)
     {
         // Get sample of root node (Node 0) from the current and the last frame
         auto &sampleCurrent = getActiveAnimationPtr()->getAniSamples()[frameNum *
@@ -210,7 +217,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
-        // Scale velocity to seconds
+        // Scale velocity to seconds // FIXME: Shouldn't be modified by deltaTime, I think!
         m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) * (framesPerSecond * deltaTime);
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
     }
@@ -226,12 +233,15 @@ Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
 
     size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
 
+    if(frame == (size_t)-1)
+        frame = getActiveAnimationPtr()->getModelAniHeader().numFrames - 1;
+
     // Root node is always node 0
     return Math::float3(getActiveAnimationPtr()->getAniSamples()[numAnimationNodes * frame].position.v);
 }
 
 
-Math::float3 AnimHandler::getRootNodeVelocity()
+Math::float3 AnimHandler::getRootNodeVelocityAvg()
 {
     if(!getActiveAnimationPtr())
         return Math::float3(0,0,0);
@@ -260,14 +270,16 @@ void AnimHandler::debugDrawSkeleton(const Math::Matrix &transform)
 
         Math::float3 p2 = transform * t2;
 
-        ddDrawAxis(p2.x, p2.y, p2.z, 0.04f);
-        ddDrawAxis(p2.x, p2.y, p2.z, -0.04f);
+        ddSetTransform((transform * m_ObjectSpaceNodeTransforms[i]).v);
+        ddDrawAxis(0,0,0, 0.04f);
+        ddDrawAxis(0,0,0, -0.04f);
 
         if (n.parentValid())
         {
             const auto &t1 = m_ObjectSpaceNodeTransforms[n.parentIndex].Translation();
             Math::float3 p1 = (transform * t1);
 
+            ddSetTransform(nullptr);
             ddSetColor(0xFFFFFFFF);
             ddMoveTo(p1.x, p1.y, p1.z);
             ddLineTo(p2.x, p2.y, p2.z);
@@ -283,6 +295,9 @@ void AnimHandler::updateSkeletalMeshInfo(Math::Matrix *target, size_t numMatrice
 {
     memcpy(target, m_ObjectSpaceNodeTransforms.data(),
            std::min(m_NodeTransforms.size(), numMatrices) * sizeof(Math::Matrix));
+
+    if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+        LogInfo() << "Updating: " << m_MeshLibName;
 
     //static float s_test = 0;
     //s_test += 0.1f;
@@ -388,4 +403,9 @@ void AnimHandler::setOverlay(const std::string& mds)
         if(h.isValid())
             a.second = h;
     }
+}
+
+Math::float3 AnimHandler::getRootNodePosition()
+{
+    return m_AnimRootPosition;
 }

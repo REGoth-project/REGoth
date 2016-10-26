@@ -201,7 +201,8 @@ namespace Render
 				{
 					auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
 
-					if(mesh.instanceDataBufferIndex != (uint32_t)-2)
+					//if(mesh.instanceDataBufferIndex != (uint32_t)-2)
+                    if(true)
 					{
 						// Set instance buffer if we haven't had this before
 						if (mesh.instanceDataBufferIndex == 0xffffffff)
