@@ -4,9 +4,12 @@ addons:
     apt:
         sources:
             - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
         packages:
             - g++-6
             - gcc-6
+            - cmake
+            - cmake-data
 
 git:
   submodules: false
