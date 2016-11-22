@@ -10,6 +10,7 @@ addons:
             - gcc-6
             - cmake
             - cmake-data
+            - libx11-xcb1
 
 git:
   submodules: false
