@@ -11,6 +11,7 @@ addons:
             - cmake
             - cmake-data
             - libx11-xcb-dev
+            - libxcb-image0-dev
 
 git:
   submodules: false
