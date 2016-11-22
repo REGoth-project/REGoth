@@ -13,6 +13,7 @@ addons:
             - libx11-xcb-dev
             - libxcb-image0-dev
             - libxcb-randr0-dev
+            - libudev
 
 git:
   submodules: false
