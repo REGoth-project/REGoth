@@ -15,6 +15,12 @@ addons:
             - libxcb-randr0-dev
             - libudev-dev
             - libopenal-dev
+            - freeglut3-dev
+            - libjpeg-dev
+            - libfreetype6-dev
+            - libxrandr-dev
+            - libglew-dev
+            - libsndfile1-dev
 
 git:
   submodules: false
