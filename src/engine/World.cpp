@@ -413,8 +413,8 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         // Simple distance-check // TODO: Frustum/Occlusion-Culling
         if(Components::hasComponent<Components::PositionComponent>(ents[i]))
         {
-            if ((positions[i].m_WorldMatrix.Translation() - cameraWorld.Translation()).lengthSquared() *
-                positions[i].m_DrawDistanceFactor > updateRangeSquared)
+            if ((positions[i].m_WorldMatrix.Translation() - cameraWorld.Translation()).lengthSquared() >
+                    updateRangeSquared * positions[i].m_DrawDistanceFactor )
                 continue;
         }
 

@@ -113,6 +113,7 @@ namespace Render
 
 		size_t numDrawcalls = 0;
 		size_t numIndices = 0;
+        size_t numSubmeshesDrawn = 0;
 		for (size_t i = 0; i<num; i++)
 		{
 			// Simple distance-check // TODO: Frustum/Occlusion-Culling
@@ -153,6 +154,7 @@ namespace Render
 
 					numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
 					numDrawcalls++;
+                    numSubmeshesDrawn++;
 
 					if(sms[i].m_Texture.isValid())
 					{
@@ -249,6 +251,7 @@ namespace Render
 
 						numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
 						numDrawcalls++;
+                        numSubmeshesDrawn++;
 
 						if(sms[i].m_Texture.isValid())
 						{
@@ -341,6 +344,7 @@ namespace Render
 
 				mesh.instanceDataBufferIndex = 0xFFFFFFFF;
 				numDrawcalls++;
+                numSubmeshesDrawn += k.instances.size();
 				numIndices += sms[e].m_SubmeshInfo.m_NumIndices;
 			}
 
@@ -349,8 +353,9 @@ namespace Render
 
 
 
-		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles: %d", numIndices/3);
-		bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls: %d", numDrawcalls);
+		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
+        bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls:    %d", numDrawcalls);
+        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);
 
 
 		//world.getPhysicsSystem().debugDraw();
