@@ -162,7 +162,7 @@ namespace Render
 
 					// Set object-color
 					Math::float4 color;
-					color.fromABGR8(sms[i].m_Color);
+					color.fromRGBA8(sms[i].m_Color);
 					bgfx::setUniform(config.uniforms.objectColor, color.v);
 
 					Components::AnimHandler* animHandler = nullptr;
@@ -228,7 +228,7 @@ namespace Render
 						{
 							kind.instances.emplace_back();
 							kind.instances.back().world = pos;
-							kind.instances.back().color.fromABGR8(sms[i].m_Color);
+							kind.instances.back().color.fromRGBA8(sms[i].m_Color);
 						}
 
 						//uint32_t idx = mesh.instanceDataBufferIndex;
@@ -258,7 +258,7 @@ namespace Render
 
 						// Set object-color
 						Math::float4 color;
-						color.fromABGR8(sms[i].m_Color);
+						color.fromRGBA8(sms[i].m_Color);
 						bgfx::setUniform(config.uniforms.objectColor, color.v);
 
 						auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);

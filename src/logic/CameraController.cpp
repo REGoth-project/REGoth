@@ -286,7 +286,14 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
                 pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
 
-                Math::float3 ppos =  ptrans.Translation() - pdir * 4.0f + Math::float3(0.0f, 2.0f, 0.0f);
+                const float bestRange = 2.5f;
+                const float bestElevation = 25.0f; // Degrees
+                //const Math::float3 targetOffset = Math::float3(0.0f, 2.0f, 0.0f);
+                //const Math::float3 cameraOffset = Math::float3(0.0f, 1.0f, 0.0f);
+                const Math::float3 targetOffset = Math::float3(0.0f, 1.0f, 0.0f);
+                const Math::float3 cameraOffset = Math::float3(0.0f, 1.2f, 0.0f);
+
+                Math::float3 ppos =  ptrans.Translation() - pdir * bestRange + cameraOffset; // Camera position
 
                 Math::float3 camPos = getEntityTransform().Translation();
 
@@ -294,7 +301,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
                 m_CameraSettings.thirdPersonCameraSettings.currentLookAt
                         = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
-                                             ptrans.Translation() + Math::float3(0.0f, 1.0f, 0.0f),
+                                             ptrans.Translation() + targetOffset,
                                              CAMERA_SMOOTHING * deltaTime);
 
                 m_ViewMatrix = Math::Matrix::CreateLookAt(ppos,

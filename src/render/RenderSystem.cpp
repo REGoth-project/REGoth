@@ -50,11 +50,11 @@ uint32_t RenderSystem::requestInstanceDataBuffer()
     // TODO: Move this so we can have more than that
     bgfx::VertexDecl decl;
     decl.begin();
+    decl.add(bgfx::Attrib::TexCoord0, 4, bgfx::AttribType::Float);
     decl.add(bgfx::Attrib::TexCoord1, 4, bgfx::AttribType::Float);
     decl.add(bgfx::Attrib::TexCoord2, 4, bgfx::AttribType::Float);
     decl.add(bgfx::Attrib::TexCoord3, 4, bgfx::AttribType::Float);
     decl.add(bgfx::Attrib::TexCoord4, 4, bgfx::AttribType::Float);
-    decl.add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float);
     decl.end();
 
     // Create a new spot

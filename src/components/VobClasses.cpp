@@ -166,6 +166,9 @@ VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Hand
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
+    if(!npc.isValid())
+        return Handle::EntityHandle::makeInvalidHandle();
+
     void* userptr = world.getScriptEngine().getGameState().getNpc(npc).userPtr;
 
     if(!userptr)

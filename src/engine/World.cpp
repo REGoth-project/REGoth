@@ -54,6 +54,8 @@ void WorldInstance::init(Engine::BaseEngine& engine)
 
 void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 {
+    m_ZenFile = zen;
+
 	// Call other overload
 	init(engine);
 
@@ -248,8 +250,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 
 
 					// Trace down from this vob to get the shadow-value from the worldmesh
-					Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y, m.Translation().z);
-					Math::float3 traceEnd = Math::float3(m.Translation().x, v.bbox[0].y - 5.0f, m.Translation().z);
+					Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y * (1.0f / 100.0f) , m.Translation().z);
+					Math::float3 traceEnd = Math::float3(m.Translation().x, (v.bbox[0].y * (1.0f / 100.0f)) - 5.0f, m.Translation().z);
 					Physics::RayTestResult hit = m_PhysicsSystem.raytrace(traceStart, traceEnd,
 						Physics::CollisionShape::CT_WorldMesh); // FIXME: Use boundingbox for this
 
@@ -260,7 +262,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 						if(Vob::getVisual(vob))
 							Vob::getVisual(vob)->setShadowValue(shadow);
 
-					}
+					}else
+                    {
+                        if(Vob::getVisual(vob))
+                            Vob::getVisual(vob)->setShadowValue(0.6);
+                    }
 				}
             }
         };
@@ -596,6 +602,23 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     }
 
     return mp;
+}
+
+EGameType WorldInstance::getBasicGameType()
+{
+    std::map<std::string, EGameType> m = {{"newworld.zen", GT_Gothic2},
+                                          {"oldworld.zen", GT_Gothic2},
+                                          {"addonworld.zen", GT_Gothic2},
+                                          {"world.zen", GT_Gothic1}};
+
+    std::string lower;
+    std::transform(m_ZenFile.begin(), m_ZenFile.end(), lower.begin(), _tolower);
+
+    if(m.find(lower) != m.end())
+        return m[lower];
+
+    // Default to gothic 2
+    return GT_Gothic2;
 }
 
 
