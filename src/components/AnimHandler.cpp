@@ -74,8 +74,8 @@ bool AnimHandler::addAnimation(const std::string &name)
 */
 void AnimHandler::playAnimation(const std::string &animName)
 {
-    if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
-        LogInfo() << "Playing animation '" << animName << "' on Model: " << m_MeshLibName;
+    //if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+    //    LogInfo() << "Playing animation '" << animName << "' on Model: " << m_MeshLibName;
 
     // Reset velocity
     m_AnimRootVelocity = Math::float3(0, 0, 0);
@@ -110,6 +110,7 @@ void AnimHandler::playAnimation(const std::string &animName)
         m_ActiveAnimation = (*it).second;
         m_AnimationFrame = 0.0f;
         m_LoopActiveAnimation = false;
+        m_LastProcessedFrame = (size_t)-1;
 
         // Restore matrices from the bind-pose
         // because the animation won't modify all of the nodes
@@ -117,6 +118,9 @@ void AnimHandler::playAnimation(const std::string &animName)
         {
             m_NodeTransforms[i] = Math::Matrix(m_MeshLib.getNodes()[i].transformLocal.mv);
         }
+
+        // Run first frame of the animation to get around the return to the bind-pose above causing the model to jump
+        updateAnimations(0.0);
     }
 }
 
@@ -135,8 +139,48 @@ void AnimHandler::setAnimation(const std::string &animName)
 */
 void AnimHandler::updateAnimations(double deltaTime)
 {
-    if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimationPtr())
+    if(!getActiveAnimationPtr())
+        return;
+
+    // Increase current timeline-position
+    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
+    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
+    size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
+    m_AnimationFrame += deltaTime * framesPerSecond;
+    if (m_AnimationFrame >= numFrames)
+    {
+        // If there is a next animation, play this now
+        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
+        if(!next.empty())
+        {
+            //if(next != "S_RUN" && next != "S_RUNL")
+            //    LogInfo() << "Setting next Ani: " << next;
+
+            bool oldLoop = m_LoopActiveAnimation;
+            playAnimation(next);
+
+            // Make sure we loop that one if we wanted to loop the starting animation
+            m_LoopActiveAnimation = oldLoop;
+
+            return;
+        }
+
+        if(m_LoopActiveAnimation)
+            m_AnimationFrame = 0.0f;
+        else
+        {
+            stopAnimation(); // Animation done and not looping
+            return;
+        }
+    }
+
+    size_t frameNum = static_cast<size_t>(m_AnimationFrame);
+
+    // Check if this changed something on our animation
+    if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
         return; // Nothing to do here // TODO: There is, if interpolation was implemented!
+
+    m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
@@ -173,39 +217,8 @@ void AnimHandler::updateAnimations(double deltaTime)
             m_ObjectSpaceNodeTransforms[i] = m_NodeTransforms[i];
     }
 
-    // Increase current timeline-position
-    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
-    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
-    size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
-    m_AnimationFrame += deltaTime * framesPerSecond;
-    if (m_AnimationFrame >= numFrames)
-    {
-        // If there is a next animation, play this now
-        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
-        if(!next.empty())
-        {
-            if(next != "S_RUN" && next != "S_RUNL")
-                LogInfo() << "Setting next Ani: " << next;
-
-            bool oldLoop = m_LoopActiveAnimation;
-            playAnimation(next);
-
-            // Make sure we loop that one if we wanted to loop the starting animation
-            m_LoopActiveAnimation = oldLoop;
-
-            return;
-        }
-
-        if(m_LoopActiveAnimation)
-            m_AnimationFrame = 0.0f;
-        else
-        {
-            stopAnimation(); // Animation done and not looping
-            return;
-        }
-    }
-
-    size_t frameNum = static_cast<size_t>(m_AnimationFrame);
+    // Updated the animation, update the hash-value
+    m_AnimationStateHash++;
 
     // Get velocity of the current animation
     // FIXME: Need better handling of animation end
@@ -218,12 +231,13 @@ void AnimHandler::updateAnimations(double deltaTime)
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
         // Scale velocity to seconds // FIXME: Shouldn't be modified by deltaTime, I think!
-        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) * (framesPerSecond * deltaTime);
+        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v));
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
+        m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
+
     }
 
-    // Updated the animation, update the hash-value
-    m_AnimationStateHash++;
+
 }
 
 Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)

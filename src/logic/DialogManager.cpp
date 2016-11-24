@@ -137,11 +137,11 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     conv.name = msg.name;
     conv.text = msg.text;
 
-    if(target.isValid())
-    {
-        VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
-        conv.target = targetnpc.entity;
+    VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
 
+    if(targetnpc.isValid())
+    {
+        conv.target = targetnpc.entity;
 
         // Check if the target is currently talking to us
         EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(

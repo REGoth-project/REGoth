@@ -150,6 +150,13 @@ namespace Logic
         bool useItem(Daedalus::GameState::ItemHandle item);
 
         /**
+         * Puts <count> instances of the given item into ths players inventory
+         * @param instanceName Instance-name of the item to put
+         * @param count How many instances to create (ie. 500 Gold)
+         */
+        void giveItem(const std::string& instanceName, unsigned int count = 1);
+
+        /**
          * Checks if this NPC can use the given item. If not, messages will be displayed if this is also the player
          * @param item Item to check
          * @return Whether we can equip or use this
@@ -285,6 +292,10 @@ namespace Logic
          void setUsedMob(Handle::EntityHandle mob){ m_AIState.usedMob = mob; }
         Handle::EntityHandle getUsedMob(){ return m_AIState.usedMob; }
 
+        /**
+         * Enables/Disables physics on this NPC
+         */
+         void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
     protected:
 
         /**
@@ -375,6 +386,9 @@ namespace Logic
 
             // Root offset of the model
             Math::float3 modelRoot;
+
+            // Whether this NPC should be put on ground every frame
+            bool enablePhysics;
         }m_NPCProperties;
 
         struct
@@ -431,5 +445,6 @@ namespace Logic
         // FIXME: Hack for as long as animation-flags are not implemented
         // Turns of modifying the root postion from the animation
         bool m_NoAniRootPosHack;
+        size_t m_LastAniRootPosUpdatedAniHash;
     };
 }

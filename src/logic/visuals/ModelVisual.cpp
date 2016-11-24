@@ -700,3 +700,9 @@ void ModelVisual::applyOverlay(const std::string& mds)
     getAnimationHandler().setOverlay(mds);
 }
 
+bool ModelVisual::isAnimPlaying(const std::string& name)
+{
+    return getAnimationHandler().getActiveAnimationPtr()
+            && getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == name;
+}
+

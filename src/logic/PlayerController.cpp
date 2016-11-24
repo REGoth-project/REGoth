@@ -64,6 +64,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_AIState.closestWaypoint = 0;
     m_MoveState.currentPathPerc = 0;
     m_NPCProperties.moveSpeed = 7.0f;
+    m_NPCProperties.enablePhysics = true;
 
     m_MoveState.direction = Math::float3(1, 0, 0);
     m_MoveState.position = Math::float3(0, 0, 0);
@@ -83,7 +84,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_isStrafeLeft = false;
     m_isStrafeRight = false;
 
-
+    m_LastAniRootPosUpdatedAniHash = 0;
+    m_NoAniRootPosHack = false;
 }
 
 void PlayerController::onUpdate(float deltaTime)
@@ -136,15 +138,18 @@ void PlayerController::onUpdate(float deltaTime)
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
 
-        if(!m_NoAniRootPosHack)
+        if(!m_NoAniRootPosHack
+           && m_LastAniRootPosUpdatedAniHash != getModelVisual()->getAnimationHandler().getAnimationStateHash())
         {
             // Apply model root-velcoity
             Math::float3 position = getEntityTransform().Translation();
-            position += getModelVisual()->getAnimationHandler().getRootNodeVelocity();
+            position += getEntityTransform().Rotate(getModelVisual()->getAnimationHandler().getRootNodeVelocity());
 
             Math::Matrix t = getEntityTransform();
             t.Translation(position);
             setEntityTransform(t);
+
+            m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
         }
     }
 
@@ -544,6 +549,9 @@ ModelVisual* PlayerController::getModelVisual()
 
 void PlayerController::placeOnGround()
 {
+    if(!m_NPCProperties.enablePhysics)
+        return;
+
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
@@ -569,6 +577,7 @@ void PlayerController::placeOnGround()
         m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
         m.Translation(m_MoveState.position);
         setEntityTransform(m);
+        setDirection(m_MoveState.direction);
     }
 
     // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
@@ -600,18 +609,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if(m_World.getDialogManager().isDialogActive())
         return;
 
-    if(getUsedMob().isValid())
-    {
-        VobTypes::MobVobInformation m = VobTypes::asMobVob(m_World, getUsedMob());
-
-        if(m_isBackward)
-        {
-            m.mobController->useMobToState(m_Entity, -1);
-        }
-        return;
-    }
-
-    if(!getEM().isEmpty())
+    if(!getEM().isEmpty() || getUsedMob().isValid())
         return;
 
     // FIXME: Temporary test-code
@@ -776,6 +774,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
 //		}
 //	}
 
+
     float yaw = 0.0f;
     const float turnSpeed = 2.5f;
 
@@ -784,11 +783,18 @@ void PlayerController::onUpdateByInput(float deltaTime)
         if (m_isTurnLeft)
         {
             yaw += turnSpeed * deltaTime;
+            m_NoAniRootPosHack = true;
         } else if (m_isTurnRight)
         {
             yaw -= turnSpeed * deltaTime;
+            m_NoAniRootPosHack = true;
         }
     }
+
+    // No direction key pressed
+    if(!m_NoAniRootPosHack)
+        return;
+
 
     // TODO: HACK, take this out!
     float moveMod = 1.0f;
@@ -1262,6 +1268,11 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
             if (!message.internInProgress)
             {
+                if(isPlayerControlled())
+                {
+                    LogInfo() << "PLAYER: New animation started: " << message.animation;
+                }
+
                 getModelVisual()->setAnimation(message.animation, false);
                 active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
                 message.internInProgress = true;
@@ -1270,6 +1281,9 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             // Go as long as this animation is playing
             bool done = !active
                         || active->getModelAniHeader().aniName != message.animation;
+
+            if(done && isPlayerControlled())
+                LogInfo() << "PLAYER: Done with animation: " << message.animation;
 
             return done;
         }
@@ -1375,9 +1389,15 @@ void PlayerController::setDirection(const Math::float3& direction)
     m_MoveState.direction.y = 0;
     m_MoveState.direction.normalize();
 
+    // This is a hack present in the original game. If the charakter is sitting and one of the following animations
+    // are played, the direction should be reversed
+    Math::float3 d = m_MoveState.direction;
+    if(getModelVisual()->isAnimPlaying("S_BENCH_S1") || getModelVisual()->isAnimPlaying("S_THRONE_S1"))
+        d *= -1.0f;
+
     // Set direction
     setEntityTransform(Math::Matrix::CreateLookAt(m_MoveState.position,
-                                                  m_MoveState.position + m_MoveState.direction,
+                                                  m_MoveState.position + d,
                                                   Math::float3(0, 1, 0)).Invert());
 }
 
@@ -1637,10 +1657,46 @@ void PlayerController::setupKeyBindings()
         m_isDrawWeaponMelee = triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerForward, [this](bool triggered, float) {
-        m_isForward = triggered;
+
+
+        // Increment state, if currently using a mob
+        if(getUsedMob().isValid() && triggered)
+        {
+            if (getEM().isEmpty())
+            {
+                VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, getUsedMob());
+                if (mob.isValid())
+                {
+                    LogInfo() << getScriptInstance().name[0] << ": Incrementing state on mob: "
+                              << mob.mobController->getFocusName();
+                    mob.mobController->useMobIncState(m_Entity, MobController::D_Forward);
+                }
+            }
+        }else
+        {
+            m_isForward = triggered;
+        }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float) {
-        m_isBackward = triggered;
+
+
+        // Increment state, if currently using a mob
+        if(getUsedMob().isValid() && triggered)
+        {
+            if (getEM().isEmpty())
+            {
+                VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, getUsedMob());
+                if (mob.isValid())
+                {
+                    LogInfo() << getScriptInstance().name[0] << ": Decrementing state on mob: "
+                              << mob.mobController->getFocusName();
+                    mob.mobController->useMobIncState(m_Entity, MobController::D_Backward);
+                }
+            }
+        }else
+        {
+            m_isBackward = triggered;
+        }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float) {
         m_isTurnLeft = triggered;
@@ -1799,5 +1855,21 @@ void PlayerController::setupKeyBindings()
     });
 
 
+}
+
+void PlayerController::giveItem(const std::string& instanceName, unsigned int count)
+{
+    size_t symIdx = m_World.getScriptEngine().getSymbolIndexByName(instanceName);
+
+    if(symIdx == static_cast<size_t>(-1))
+    {
+        LogWarn() << "Unknown item instance: " << instanceName;
+        return;
+    }
+
+    LogInfo() << "Giving " << count << "x " << instanceName << " to " << getScriptInstance().name[0];
+
+    // Add our script-instance to the npcs inventory
+    m_World.getScriptEngine().getGameState().createInventoryItem(symIdx, getScriptHandle(), count);
 }
 

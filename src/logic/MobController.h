@@ -126,6 +126,14 @@ namespace Logic
         void useMobToState(Handle::EntityHandle npc, int target);
 
         /**
+         * Increments/Decrements the current state from the currently set one
+         * @param npc NPC interacting with this/To interact with this
+         * @param direction Direction of the state-transition to go. Ie. from sitting on a chest to open it.
+         */
+        enum EDirection{ D_Forward, D_Backward, D_Left, D_Right };
+        void useMobIncState(Handle::EntityHandle npc, EDirection direction);
+
+        /**
          * Called on game-tick
          */
         virtual void onUpdate(float deltaTime);

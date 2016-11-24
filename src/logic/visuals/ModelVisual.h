@@ -246,6 +246,10 @@ namespace Logic
          */
 		const ZenLoad::zCModelMeshLib& getMeshLib();
 
+		/**
+		 * @return Whether an animation with the given name is playing
+		 */
+		 bool isAnimPlaying(const std::string& name);
     protected:
 
         /**

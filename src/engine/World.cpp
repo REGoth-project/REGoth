@@ -160,9 +160,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             {
                 vobLoad(v.childVobs);
 
-                if(v.objectClass.find("oCMobInter:oCMOB") == std::string::npos)
-                    continue;
-
 				// Check for special vobs // FIXME: Should be somewhere else
 				Vob::VobInformation vob;
 				Handle::EntityHandle e;

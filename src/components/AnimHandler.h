@@ -149,6 +149,11 @@ namespace Components
 		}
 
 		/**
+		 * @return Whether the animation-root velocity was updated this frame
+		 */
+		bool hasUpdatedAnimRootVelocity(){ return m_AnimRootNodeVelocityUpdatedHash == getAnimationStateHash(); }
+
+		/**
 		 * @return Animation-object from the handle
 		 */
 		Animations::Animation& getAnimation(Handle::AnimationHandle h);
@@ -198,6 +203,7 @@ namespace Components
 		 * @brief Root-Node-Veclocity in m/s
 		 */
 		Math::float3 m_AnimRootVelocity;
+		size_t m_AnimRootNodeVelocityUpdatedHash; // AnimHash when this was last updated
 		Math::float3 m_AnimRootPosition;
 
 		/**

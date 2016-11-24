@@ -9,6 +9,8 @@
 #include "PlayerController.h"
 #include <engine/BaseEngine.h>
 #include <debugdraw/debugdraw.h>
+#include <logic/mobs/Ladder.h>
+#include <logic/mobs/Container.h>
 
 using namespace Logic;
 
@@ -208,6 +210,17 @@ void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 
     if(vob.oCMOB.focusName == "Bed")
         m_MobCore = new MobCores::Bed(m_World, m_Entity);
+    else if(vob.oCMOB.focusName == "Ladder")
+        m_MobCore = new MobCores::Ladder(m_World, m_Entity);
+    else if(vob.objectClass.find("oCMobContainer:") != std::string::npos)
+    {
+        MobCores::Container* cnt = new MobCores::Container(m_World, m_Entity);
+
+        // Insert the items into the container (chest)
+        cnt->createContents(vob.oCMobContainer.contains);
+
+        m_MobCore = cnt;
+    }
     else
         m_MobCore = new MobCore(m_World, m_Entity);
 
@@ -296,14 +309,14 @@ void MobController::startInteraction(Handle::EntityHandle npc)
     sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
 
         // Re-get everything to make sure it is still there
-        VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
+        /*VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
         VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, hostVob);
 
         if(!nv.isValid() || !mob.isValid())
             return; // Either mob or NPC isn't there anymore
 
         // Go to next state immediately, G2 style. // TODO: This is still only for testing
-        mob.mobController->startStateChange(npc, 0, 1);
+        mob.mobController->startStateChange(npc, 0, 1);*/
     });
 
     nv.playerController->getEM().onMessage(sm);
@@ -359,8 +372,15 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 
 void MobController::stopInteraction(Handle::EntityHandle npc)
 {
+    ModelVisual* model = getModelVisual();
+
+    if(!model)
+        return;
+
     if (!isInteractingWith(npc))
         return;
+
+
 
     // Free position used by the npc
     for(InteractPosition& p : m_InteractPositions)
@@ -375,10 +395,15 @@ void MobController::stopInteraction(Handle::EntityHandle npc)
     // Play starting animation
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
+    LogInfo() << "MOB (" << m_FocusName << "): Stopping interaction with: " << nv.playerController->getScriptInstance().name[0];
+
     // This NPC is not using a mob anymore
     nv.playerController->setUsedMob(Handle::EntityHandle::makeInvalidHandle());
 
     m_NumNpcsCurrent--;
+
+    // Stop all animations to get around a single state-animation getting looped all over again (Chest S0 to S0)
+    model->getAnimationHandler().stopAnimation();
 }
 
 void MobController::getAnimationTransitionNames(int stateFrom, int stateTo,
@@ -439,11 +464,28 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
                                            - nv.position->m_WorldMatrix.Translation()).normalize());
     }else
     {
-        nv.playerController->teleportToPosition(pWorld);
+        nv.playerController->teleportToPosition(getEntityTransform() * p->transform.Translation());
+        nv.playerController->setDirection(getEntityTransform() * (-1.0f * p->transform.Forward()) - getEntityTransform().Translation());
 
         // Just look at the mob for now //TODO: Implement the transform-stuff
-        nv.playerController->setDirection((getEntityTransform().Translation()
-                                           - nv.position->m_WorldMatrix.Translation()).normalize());
+        //nv.playerController->setDirection((getEntityTransform().Translation()
+        //                                   - nv.position->m_WorldMatrix.Translation()).normalize());
+    }
+}
+
+
+void MobController::useMobIncState(Handle::EntityHandle npc, MobController::EDirection direction)
+{
+    if(!m_MobCore)
+        return;
+
+    switch(direction)
+    {
+        case D_Forward: useMobToState(npc, m_MobCore->getState() + 1); break;
+        case D_Backward: useMobToState(npc, m_MobCore->getState() - 1);  break;
+
+        case D_Left: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */ break;
+        case D_Right: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */ break;
     }
 }
 
@@ -470,20 +512,19 @@ void MobController::useMobToState(Handle::EntityHandle npc, int target)
 
             return;
         }
-    }else
+    }
+
+    //if(target < 0 && getEM().isEmpty())
     {
-        if(target < 0 && getEM().isEmpty())
-        {
-            EventMessages::MobMessage msg;
-            msg.subType = EventMessages::MobMessage::ST_STARTSTATECHANGE;
-            msg.stateTo = -1;
-            msg.stateFrom = -1;
-            msg.npc = npc;
+        EventMessages::MobMessage msg;
+        msg.subType = EventMessages::MobMessage::ST_STARTSTATECHANGE;
+        msg.stateTo = target;
+        msg.stateFrom = -1;
+        msg.npc = npc;
 
-            getEM().onMessage(msg, npc);
+        getEM().onMessage(msg, npc);
 
-            return;
-        }
+        return;
     }
 
     // FIXME: Already interacting with a mob!

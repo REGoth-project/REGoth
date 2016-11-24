@@ -400,6 +400,14 @@ namespace Math
 
         Matrix Invert() const {return glm::inverse(_glmMatrix); }
 
+		Math::float3 Rotate(const Math::float3& v)
+		{
+			Math::float3 tmp = (*this) * v;
+			tmp -= Translation();
+
+			return tmp;
+		}
+
         float Determinant() const  {return glm::determinant(_glmMatrix); }
 
 		static Matrix CreateIdentity(){return Matrix(glm::mat4(1.0)); }
