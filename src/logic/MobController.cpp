@@ -108,7 +108,7 @@ void MobController::findInteractPositions()
             m_InteractPositions.back().distance = n.name.find("DIST") != std::string::npos;
             m_InteractPositions.back().nodeName = n.name;
 
-            LogInfo() << "Interact-position: " << n.name;
+            //LogInfo() << "Interact-position: " << n.name;
 
             // Check if this can be used by multiple npcs
             if(n.name.find("NPC") != std::string::npos)
@@ -203,7 +203,7 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
 
 void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 {
-    LogInfo() << "Creating mob: " << vob.oCMOB.focusName;
+    //LogInfo() << "Creating mob: " << vob.oCMOB.focusName;
 
     // TODO: There has to be some localization or something going on with the name
     m_FocusName = vob.vobName;

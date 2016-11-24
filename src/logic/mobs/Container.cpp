@@ -29,11 +29,11 @@ void Container::createContents(const std::string& contentString)
             std::string item = i.substr(0, i.find_first_of(':'));
             std::string num = i.substr(item.size() + 1);
 
-            LogInfo() << "Chest-put: " << num << "x " << item;
+            //LogInfo() << "Chest-put: " << num << "x " << item;
             m_Contents.push_back({item, (unsigned int)atoi(num.c_str())});
         }else
         {
-            LogInfo() << "Chest-put: " << i;
+            //LogInfo() << "Chest-put: " << i;
             m_Contents.push_back({i, 1});
         }
     }
