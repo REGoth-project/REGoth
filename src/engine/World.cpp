@@ -612,7 +612,7 @@ EGameType WorldInstance::getBasicGameType()
                                           {"world.zen", GT_Gothic1}};
 
     std::string lower;
-    std::transform(m_ZenFile.begin(), m_ZenFile.end(), lower.begin(), _tolower);
+    std::transform(m_ZenFile.begin(), m_ZenFile.end(), std::back_inserter(lower), ::tolower);
 
     if(m.find(lower) != m.end())
         return m[lower];
