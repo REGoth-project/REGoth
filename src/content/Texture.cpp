@@ -76,7 +76,7 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
 	//TODO: Avoid the second copy here
 	const bgfx::Memory* mem = bgfx::alloc(data.size());
 	memcpy(mem->data, data.data(), data.size());
-	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
+	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
 
 	// Free imange
 	//stbi_image_free(out);

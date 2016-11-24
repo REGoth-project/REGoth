@@ -50,7 +50,7 @@ void Platform::windowSizeEvent(int width, int height)
 
 int32_t Platform::run(int argc, char** argv)
 {
-
+    return 0;
 }
 
 void Platform::mainLoop(std::promise<int32_t>&& returnValue, int argc, char** argv)
