@@ -137,12 +137,15 @@ namespace Components
          * Special values:
          *  -1 no index value placed yet
          *  -2 completely disable instancing on this
+         *
+         *  // FIXME: This has been moved to the mesh itself. This field is only used for instancing enabled/disabled.
          */
         uint32_t m_InstanceDataIndex;
 
         static void init(StaticMeshComponent& c)
         {
             c.m_Color = 0xFFFFFFFF;
+            c.m_InstanceDataIndex = (uint32_t)-1;
         }
     };
 

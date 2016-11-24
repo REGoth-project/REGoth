@@ -148,7 +148,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             pos.m_DrawDistanceFactor = -1.0f; // Always draw the worldmesh
 
             Components::StaticMeshComponent& sm = getEntity<Components::StaticMeshComponent>(e);
-            sm.m_InstanceDataIndex = -2; // Disable instancing
+            sm.m_InstanceDataIndex = (uint32_t)-2; // Disable instancing
         }
 
 		// TODO: Refractor. Make a map of all vobs by classes or something.
@@ -426,12 +426,6 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
             && !anims[i].m_ParentAnimHandler.isValid())
         {
             anims[i].m_AnimHandler.updateAnimations(deltaTime);
-        }
-
-        // Reset instance-data
-        if(Components::hasComponent<Components::StaticMeshComponent>(ents[i]))
-        {
-            sms[i].m_InstanceDataIndex = (uint32_t)-1;
         }
     }
 

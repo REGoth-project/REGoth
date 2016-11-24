@@ -169,3 +169,13 @@ void StaticMeshVisual::setShadowValue(float shadow)
         sm.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
     }
 }
+
+void StaticMeshVisual::setInstancingEnabled(bool value)
+{
+    for(Handle::EntityHandle e : m_VisualEntities)
+    {
+        Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(e);
+
+        sm.m_InstanceDataIndex = value ? (uint32_t)-1 : (uint32_t)-2;
+    }
+}

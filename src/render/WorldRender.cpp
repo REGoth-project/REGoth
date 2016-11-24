@@ -201,8 +201,8 @@ namespace Render
 				{
 					auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
 
-					//if(mesh.instanceDataBufferIndex != (uint32_t)-2)
-                    if(true)
+					if(sms[i].m_InstanceDataIndex != (uint32_t)-2)
+                    //if(false)
 					{
 						// Set instance buffer if we haven't had this before
 						if (mesh.instanceDataBufferIndex == 0xffffffff)
@@ -261,9 +261,9 @@ namespace Render
 						color.fromABGR8(sms[i].m_Color);
 						bgfx::setUniform(config.uniforms.objectColor, color.v);
 
-						auto& mesh = skelmeshes.getMesh(sms[i].m_StaticMeshVisual);
-						bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
-						bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
+						auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
+						bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+						bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
 											 sms[i].m_SubmeshInfo.m_StartIndex,
 											 sms[i].m_SubmeshInfo.m_NumIndices);
 
@@ -307,6 +307,10 @@ namespace Render
 		for(size_t i=0;i<instanceKindIdx;i++)
 		{
 			const InstanceKind& k = instanceKinds[i];
+
+			if(k.entityKinds.empty() || k.instances.empty())
+				continue;
+
 			bgfx::DynamicVertexBufferHandle buffer = system.getFrameInstanceDataBuffer(k.bufferIndex);
 
 			// Mark as free now. This buffer won't be used until the next frame

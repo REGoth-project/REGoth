@@ -1,6 +1,7 @@
 #pragma once
 #include "../VisualController.h"
 #include <handle/HandleDef.h>
+#include <content/StaticMeshAllocator.h>
 
 namespace Logic
 {
@@ -34,11 +35,22 @@ namespace Logic
         void setDiffuseTexture(size_t index, const std::string& texture);
 
         /**
+         * Disables/enables this mesh from instancing. This is needed if there are multiple instances of the same
+         * mesh but with different textures around, as instancing doesn't care about the texture.
+         */
+        void setInstancingEnabled(bool value);
+
+        /**
          * Returns the texture used for the mesh of the given index
          * @param index submesh index
          * @return Texture this submesh is using
          */
         std::string getDiffuseTexture(size_t index);
+
+        /**
+         * @return Mesh this visual displays
+         */
+        Handle::MeshHandle getMesh(){ return m_MeshHandle; }
 
         /**
          * Sets the textures animation from on the given submesh

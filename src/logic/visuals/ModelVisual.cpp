@@ -614,6 +614,9 @@ void ModelVisual::updateHeadMesh()
         // TODO: Type safety!
         StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(head));
 
+        Meshes::WorldStaticMesh& mesh = m_World.getStaticMeshAllocator().getMesh(visual->getMesh());
+        visual->setInstancingEnabled(false); // Disable instancing because of the texture changes
+
         if(m_BodyState.headTextureIdx > 0 || m_BodyState.bodySkinColorIdx > 0)
         {
             // Get head-texture parts
@@ -628,7 +631,6 @@ void ModelVisual::updateHeadMesh()
                                         + headTxParts[2];
 
                 visual->setDiffuseTexture(0, newHeadTx);
-                head.position->m_DrawDistanceFactor = -2; // Disable instancing because of the texture changes
             }
         }
         // Submesh 0: Head
