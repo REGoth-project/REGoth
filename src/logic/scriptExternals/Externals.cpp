@@ -31,6 +31,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     // TODO: Refractor
     auto getNPCByInstance = [vm, engine](size_t instance)
     {
+		assert(vm->getDATFile().getSymbolByIndex(instance).instanceDataClass == Daedalus::EInstanceClass::IC_Npc);
+
         Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
 
@@ -782,6 +784,19 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         pWorld->getDialogManager().clearChoices();
     });
+
+	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
+		std::string spawnpoint = vm.popString(); 
+		uint32_t npcinstance = vm.popDataValue();
+
+		if(!World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint))
+		{
+			LogWarn() << "Invalid location: " << spawnpoint;
+			return;
+		}
+
+		vm.getGameState().insertNPC(npcinstance, spawnpoint);
+	});
 
     vm->registerExternalFunction("wld_insertitem", [=](Daedalus::DaedalusVM& vm){
         std::string spawnpoint = vm.popString(true);
