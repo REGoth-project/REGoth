@@ -43,11 +43,16 @@ Then, choose depending on your OS:
 
 ### Linux
 ```sh
-make -j
+make -j4
 ```
 
 ### Windows
 Open the generated `REGoth.sln` in VisualStudio and build as usual.
+
+Alternatively, you may do this (inside the build-folder):
+```sh
+cmake --build . --config release
+``` 
 
 
 
