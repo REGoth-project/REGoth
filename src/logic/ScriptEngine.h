@@ -35,7 +35,14 @@ namespace Logic
         void initForWorld(const std::string& world);
 
         /**
-         * Saves the state of the VM and prepares it for a call to runFunction
+         * Frame-functions
+         */
+        void onFrameStart();
+        void onFrameEnd();
+
+        /**
+         * Saves the state of the VM and prepares it for a call to runFunction.
+         * You can push function arguments after this call.
          */
         void prepareRunFunction();
 
@@ -114,7 +121,52 @@ namespace Logic
          */
         Daedalus::GameState::NpcHandle getNPCFromSymbol(const std::string& symName);
         Daedalus::GameState::ItemHandle getItemFromSymbol(const std::string& symName);
+
+        /**
+         * (Un)Registers an item-instance currently sitting inside the world
+         * @param e Entity of the item-instance
+         */
+        void registerItem(Handle::EntityHandle e);
+        void unregisterItem(Handle::EntityHandle e);
+
+        void registerMob(Handle::EntityHandle e);
+        void unregisterMob(Handle::EntityHandle e);
+
+        /**
+         * Applies the given items effects on the given NPC or equips it. Does not delete the item or anything else.
+         * @param item Item to apply the effects from
+         * @param npc NPC to apply the effects to
+         * @return false, if this item is not usable and can not be equipped
+         */
+        bool useItemOn(Daedalus::GameState::ItemHandle item, Handle::EntityHandle npc);
+
+        /**
+         * @return All items found inside the World
+         */
+        const std::set<Handle::EntityHandle>& getWorldItems(){ return m_WorldItems; }
+
+        /**
+         * @return All mobs found inside the World
+         */
+        const std::set<Handle::EntityHandle>& getWorldMobs(){ return m_WorldMobs; }
+
+        /**
+         * @return Profile data for this frame. (Time by function-symbol)
+         */
+        const std::map<size_t, double>& getProfilingData(){ return m_TimeByFunctionSymbol[m_ProfilingDataFrame]; };
+
+        /**
+         * Resets profiling data for the current frame
+         */
+        void resetProfilingData();
+
     protected:
+
+        /**
+         * Starts/stops profiling on the given function-symbol
+         */
+        void startProfiling(size_t fnSym);
+        void stopProfiling(size_t fnSym);
 
         /**
          * Called when an npc got inserted into the world
@@ -129,7 +181,7 @@ namespace Logic
         /**
          * Called when an item got inserted into some NPCs inventory
          */
-        void onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
+        void onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
 
         /**
          * Called when a log-entry was inserted
@@ -147,13 +199,22 @@ namespace Logic
         World::WorldInstance& m_World;
 
         /**
-         * All NPCs currently in the world
+         * All NPCs/Items currently in the world
          */
         std::set<Handle::EntityHandle> m_WorldNPCs;
+        std::set<Handle::EntityHandle> m_WorldItems;
+        std::set<Handle::EntityHandle> m_WorldMobs;
 
         /**
          * NPC-Entity of the player
          */
         Handle::EntityHandle m_PlayerEntity;
+
+        /**
+         * Profiling
+         */
+        std::map<size_t, double> m_TimeByFunctionSymbol[10];
+        std::stack<int64_t> m_TimeStartStack;
+        int m_ProfilingDataFrame;
     };
 }

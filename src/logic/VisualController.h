@@ -1,9 +1,12 @@
 #pragma once
 #include "Controller.h"
 #include <handle/HandleDef.h>
+#include "visuals/VisualTypes.h"
+
 
 namespace Logic
 {
+
     class VisualController : public Controller
     {
     public:
@@ -13,6 +16,16 @@ namespace Logic
          */
         VisualController(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~VisualController();
+
+        /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::VisualController; }
+
+        /**
+         * @return Classtype of this visual
+         */
+        virtual EVisualType getVisualType(){ return EVisualType::Base; }
 
         /**
          * Loads the visual from the given name from the worlds VDFS

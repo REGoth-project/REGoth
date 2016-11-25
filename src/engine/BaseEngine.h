@@ -45,6 +45,12 @@ namespace Engine
 		Handle::WorldHandle addWorld();
 
 		/**
+		 * Removes a world and everything inside
+		 * @param world World to remove
+		 */
+		void removeWorld(Handle::WorldHandle world);
+
+		/**
 		 * @brief Frame update // TODO: Remove width and height
 		 */
 		void frameUpdate(double dt, uint16_t width, uint16_t m_height);
@@ -71,6 +77,17 @@ namespace Engine
 		 * @return Base-level UI-View. Parent of all other views.
 		 */
 		UI::View& getRootUIView() { return m_RootUIView; }
+
+		/**
+		 * Sets the path the engine is looking for files
+		 * @param path New path
+		 */
+		void setContentBasePath(const std::string& path){ m_ContentBasePath = path; }
+
+		/*+
+         * @return The path where the engine is looking for content files
+         */
+		const std::string& getContentBasePath(){ return m_ContentBasePath; }
 
 	protected:
 
@@ -115,5 +132,9 @@ namespace Engine
 		 */
 		UI::View m_RootUIView;
 
+		/**
+		 * Folder where the content is
+		 */
+		std::string m_ContentBasePath;
 	};
 }

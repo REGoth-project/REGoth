@@ -77,13 +77,14 @@ namespace Utils
     /**
      * Returns a string with case sensitive path based on case insensitive version
      * @param string file relative path
+     * @param prePath Path to always append, which is not checked and is expected to be right
      * @return str, full sensitive path. Empty if path is invalid/could not be found
      */
-    std::string getCaseSensitivePath(const std::string& case_insensitive_path);
+    std::string getCaseSensitivePath(const std::string& case_insensitive_path, const std::string& prePath = "");
 
-    bgfx::ShaderHandle loadShader(const char* _name);
+    bgfx::ShaderHandle loadShader(const char* basePath, const char* _name);
 
-    bgfx::ProgramHandle loadProgram(const char* _vsName, const char* _fsName);
+    bgfx::ProgramHandle loadProgram(const char* basePath, const char* _vsName, const char* _fsName);
 
     //bgfx::TextureHandle loadTexture(const char* _name, uint32_t _flags = BGFX_TEXTURE_NONE, uint8_t _skip = 0, bgfx::TextureInfo* _info = NULL);
 

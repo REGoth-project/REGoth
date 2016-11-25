@@ -17,7 +17,7 @@ using namespace Engine;
 
 const float DRAW_DISTANCE = 100.0f;
 
-GameEngine::GameEngine()
+GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 {
     m_disableLogic = false;
 }
@@ -51,9 +51,10 @@ void GameEngine::initEngine(int argc, char** argv)
         }
     }
 
-    Input::RegisterAction(ActionType::PauseGame, [this](bool, float)
+    Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
     {
-        m_disableLogic = !m_disableLogic;
+        if(triggered > 0.0f)
+            m_disableLogic = !m_disableLogic;
     });
 }
 
@@ -132,7 +133,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
 
     // Draw all worlds
     for(auto s : m_Worlds)
-        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig());
+        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
 }

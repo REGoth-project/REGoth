@@ -18,7 +18,7 @@ namespace Render
 	/**
 	 * @brief Draws the main renderpass of the given world
 	 */
-	void drawWorld(World::WorldInstance& world, const RenderConfig& config);
+	void drawWorld(World::WorldInstance& world, const RenderConfig& config, RenderSystem& system);
 
 	/**
 	 * @brief Renders the waynet of the given world

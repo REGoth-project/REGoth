@@ -46,10 +46,6 @@ int AudioEngine::adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfil
 		outfile.resize(outfile.size() + this_block_pcm_samples * num_channels * 2);
 		pcm_block = (int16_t*)&outfile[ofidx];
 
-		if (num_samples == 364)
-		{
-			fprintf(stderr, "364 samples");
-		}
 		if (adpcm_decode_block(pcm_block, adpcm_block, block_size, num_channels) != this_block_adpcm_samples) {
 			fprintf(stderr, "adpcm_decode_block() did not return expected value!\n");
 			return -1;
@@ -63,6 +59,7 @@ int AudioEngine::adpcm_decode_data(uint8_t* infile, std::vector<uint8_t>& outfil
 
 Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
 {
+#ifdef RE_USE_SFML 
     std::vector<uint8_t> data;
 	std::vector<uint8_t> outData;
     // Check cache first
@@ -87,7 +84,7 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
 	size_t numNibbles = (data.size() - 60) * 2;
 	adpcm_decode_data(data.data()+60, outData, numNibbles);
 
-	if (!a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), outData.size()/2 , 1,  44100))
+	if (!a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), (outData.size()/2) - 512 , 1,  44100))
 	{      
         m_Allocator.removeObject(h);
         return Handle::AudioHandle::makeInvalidHandle();
@@ -96,6 +93,9 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     m_SoundMap[name] = h;
 
     return h;
+#else
+    return Handle::AudioHandle::makeInvalidHandle();
+#endif
 }
 
 Handle::AudioHandle AudioEngine::loadAudioVDF(const std::string& name)
@@ -108,6 +108,7 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const std::string& name)
 
 void AudioEngine::playSound(Handle::AudioHandle h)
 {
+#ifdef RE_USE_SFML 
     AudioFile& a = m_Allocator.getElement(h);
 
     // Get a cached sound-object
@@ -116,6 +117,7 @@ void AudioEngine::playSound(Handle::AudioHandle h)
 
     // Play our sound. If this runs out, we can later use the sf::Sound again, for an other buffer
     s.play();
+#endif
 }
 
 void AudioEngine::playSound(const std::string& name)
@@ -138,6 +140,7 @@ void AudioEngine::playSound(const std::string& name)
     }
 }
 
+#ifdef RE_USE_SFML 
 sf::Sound& AudioEngine::getFreeSoundObject()
 {
     // Check if we could re-use one
@@ -151,3 +154,4 @@ sf::Sound& AudioEngine::getFreeSoundObject()
     m_PlayingSounds.push_back(sf::Sound());
     return m_PlayingSounds.back();
 }
+#endif

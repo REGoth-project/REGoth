@@ -131,6 +131,7 @@ void Sky::interpolate(double deltaTime)
 void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
 {
 
+
     switch(type)
     {
         case ESkyPresetType::ESPT_Day0:

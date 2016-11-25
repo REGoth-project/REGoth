@@ -28,6 +28,14 @@ namespace Logic
          * @return True, if the item was successfully removed, false if not found
          */
         bool removeItem(const std::string& symName);
+        bool removeItem(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * Returns a random instance of the given item
+         * @param symIndex Item to look for
+         * @return Handle to an item of the given found in the inventory. Invalid if none could be found.
+         */
+        Daedalus::GameState::ItemHandle getItem(size_t symIndex);
 
         /**
          * @param symName Name of the symbol to get the instances from

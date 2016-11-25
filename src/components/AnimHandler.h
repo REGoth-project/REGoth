@@ -86,12 +86,19 @@ namespace Components
 		/**
 		 * @return Velocity of the root node in m/s
 		 */
-		Math::float3 getRootNodeVelocity();
+		Math::float3 getRootNodeVelocityAvg();
+		Math::float3 getRootNodeVelocity(){ return m_AnimRootVelocity; };
 
 		/**
 		 * Returns the position of the node at the given frame
+		 * Note: -1 = lastFrame
 		 */
 		Math::float3 getRootNodePositionAt(size_t frame);
+
+		/**
+		 * @return Root-node position on the current frame
+		 */
+		Math::float3 getRootNodePosition();
 
 		/**
 		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
@@ -140,6 +147,11 @@ namespace Components
 		{
 			return m_AnimationStateHash;
 		}
+
+		/**
+		 * @return Whether the animation-root velocity was updated this frame
+		 */
+		bool hasUpdatedAnimRootVelocity(){ return m_AnimRootNodeVelocityUpdatedHash == getAnimationStateHash(); }
 
 		/**
 		 * @return Animation-object from the handle
@@ -191,6 +203,8 @@ namespace Components
 		 * @brief Root-Node-Veclocity in m/s
 		 */
 		Math::float3 m_AnimRootVelocity;
+		size_t m_AnimRootNodeVelocityUpdatedHash; // AnimHash when this was last updated
+		Math::float3 m_AnimRootPosition;
 
 		/**
 		 * @brief Value useful to check if there was an actual change. This value is modified every time

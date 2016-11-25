@@ -8,6 +8,9 @@
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include "engine/Input.h"
+#include "PlayerController.h"
+
+const float CAMERA_SMOOTHING = 4.0f;
 
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity),
@@ -30,6 +33,8 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.viewerCameraSettings.yaw = 0.0f;
     m_CameraSettings.viewerCameraSettings.pitch = 0.0f;
     m_CameraSettings.viewerCameraSettings.zoom = 30.0f;
+
+    m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0,0,0);
 
     // FirstPerson action
     {
@@ -73,9 +78,21 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         {
             settings.position += 0.1f * intensity * settings.up;
         });
-        free.actionLookHorizontal = Input::RegisterAction(ActionType::FreeLookHorizontal, [&settings](bool, float intensity)
+        free.actionLookHorizontal = Input::RegisterAction(ActionType::FreeLookHorizontal, [&settings, this](bool, float intensity)
         {
             settings.yaw += 0.02f * intensity;
+
+            // Rotate direction-vector, if wanted // TODO: Refractor
+
+            // Get player position
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
+
+            if(player.isValid() && !player.playerController->getUsedMob().isValid())
+            {
+                m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection =
+                        Math::Matrix::CreateRotationY(0.02f * intensity) *
+                        m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
+            }
         });
         free.actionLookVertical = Input::RegisterAction(ActionType::FreeLookVertical, [&settings](bool, float intensity)
         {
@@ -256,11 +273,39 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             {
                 Math::Matrix ptrans = Vob::getTransform(player);
 
-                Math::float3 ppos = ptrans.Translation();
                 Math::float3 pdir = -1.0f * ptrans.Forward();
 
-                m_ViewMatrix = Math::Matrix::CreateLookAt(ppos - pdir * 4.0f + Math::float3(0.0f, 2.0f, 0.0f),
-                                                          ppos + Math::float3(0.0f, 1.0f, 0.0f),
+                // Don't force rotation to match player if currently using a mob
+                if(!player.playerController->getUsedMob().isValid())
+                {
+                    m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection
+                            = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
+                                                 pdir,
+                                                 CAMERA_SMOOTHING * deltaTime);
+                }
+
+                pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
+
+                const float bestRange = 2.5f;
+                const float bestElevation = 25.0f; // Degrees
+                //const Math::float3 targetOffset = Math::float3(0.0f, 2.0f, 0.0f);
+                //const Math::float3 cameraOffset = Math::float3(0.0f, 1.0f, 0.0f);
+                const Math::float3 targetOffset = Math::float3(0.0f, 1.0f, 0.0f);
+                const Math::float3 cameraOffset = Math::float3(0.0f, 1.2f, 0.0f);
+
+                Math::float3 ppos =  ptrans.Translation() - pdir * bestRange + cameraOffset; // Camera position
+
+                Math::float3 camPos = getEntityTransform().Translation();
+
+                ppos = Math::float3::lerp(camPos, ppos, CAMERA_SMOOTHING * deltaTime);
+
+                m_CameraSettings.thirdPersonCameraSettings.currentLookAt
+                        = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
+                                             ptrans.Translation() + targetOffset,
+                                             CAMERA_SMOOTHING * deltaTime);
+
+                m_ViewMatrix = Math::Matrix::CreateLookAt(ppos,
+                                                          m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
                                                           Math::float3(0, 1, 0));
 
                 setEntityTransform(m_ViewMatrix.Invert());

@@ -53,6 +53,9 @@ namespace Components
     {
         ComponentMask m_ComponentMask;
 
+        // Handle of this entity-component
+        Handle::EntityHandle m_ThisEntity;
+
         static void init(EntityComponent& c)
         {
         }
@@ -125,12 +128,24 @@ namespace Components
          */
         Handle::MeshHandle m_StaticMeshVisual;
 		Meshes::SubmeshVxInfo m_SubmeshInfo;
+        uint32_t m_SubmeshIdx;
 		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
         uint32_t m_Color;
+
+        /**
+         * Index of the instance-buffer used at render time
+         * Special values:
+         *  -1 no index value placed yet
+         *  -2 completely disable instancing on this
+         *
+         *  // FIXME: This has been moved to the mesh itself. This field is only used for instancing enabled/disabled.
+         */
+        uint32_t m_InstanceDataIndex;
 
         static void init(StaticMeshComponent& c)
         {
             c.m_Color = 0xFFFFFFFF;
+            c.m_InstanceDataIndex = (uint32_t)-1;
         }
     };
 
@@ -320,7 +335,7 @@ namespace Components
      * Checks if the given component is present in the entity
      */
     template<typename T>
-    bool hasComponent(EntityComponent& e)
+    bool hasComponent(const EntityComponent& e)
     {
         // See "EntityComponent" for further information
         return (e.m_ComponentMask & T::MASK) != 0;

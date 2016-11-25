@@ -6,6 +6,9 @@
 #include <utils/logger.h>
 #include <content/SkeletalMeshAllocator.h>
 #include <components/Vob.h>
+#include <components/EntityActions.h>
+#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 
 using namespace Logic;
 
@@ -136,10 +139,16 @@ bool ModelVisual::load(const std::string& visual)
     Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(m_MainMeshHandle);
     const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
 
+    /****
+     * Push all parts of the skeletal mesh as entity
+     ****/
+
     // TODO: Put these into a compound-component or something
     m_PartEntities.mainSkelMeshEntities = Content::entitifyMesh(m_World, m_MainMeshHandle, mdata);
     m_VisualEntities.insert(m_VisualEntities.end(),
                             m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
+
+    Components::PositionComponent& hostPos = m_World.getEntity<Components::PositionComponent>(m_Entity);
 
     for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
     {
@@ -149,7 +158,7 @@ bool ModelVisual::load(const std::string& visual)
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
-        pos.m_WorldMatrix = getEntityTransform();
+        pos = hostPos;
 
         // Init animation components
         Components::addComponent<Components::AnimationComponent>(entity);
@@ -158,6 +167,10 @@ bool ModelVisual::load(const std::string& visual)
         // Assign the main-vob as animation controller
         anim.m_ParentAnimHandler = m_Entity;
     }
+
+    /****
+     * Read nodes and attachments
+     ****/
 
     // Read attachments
     if(m_VisualAttachments.size() < getAnimationHandler().getObjectSpaceTransforms().size())
@@ -169,7 +182,7 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_VisualAttachments.empty())
     {
         // Need to get the bind-pose out
-        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh. NPC for example.
+        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh
             getAnimationHandler().setBindPose(true);
 
         for (size_t i = 0; i < zLib.getAttachments().size(); i++)
@@ -197,9 +210,13 @@ bool ModelVisual::load(const std::string& visual)
             Meshes::WorldStaticMesh amdata = m_World.getStaticMeshAllocator().getMesh(amh);
 
             // Add the entities to our lists
-            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata);
+            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata.mesh);
             m_PartEntities.dynamicAttachments.insert(m_PartEntities.dynamicAttachments.end(),
                                                              tmp.begin(), tmp.end());
+
+            // If we haven't already, create an instancebuffer for this mesh
+            //if(amdata.instanceDataBufferIndex == (uint32_t)-1)
+            //    amdata.instanceDataBufferIndex = ((Engine::GameEngine&)m_World.getEngine()).getDefaultRenderSystem().requestInstanceDataBuffer();
 
             m_VisualAttachments[nodeIdx].insert(m_VisualAttachments[nodeIdx].end(), tmp.begin(), tmp.end());
 
@@ -209,6 +226,10 @@ bool ModelVisual::load(const std::string& visual)
                 // Init positions
                 Components::EntityComponent &entity = m_World.getEntity<Components::EntityComponent>(e);
                 Components::addComponent<Components::PositionComponent>(entity);
+
+                // Important: Apply draw distance, and every other setting from the host
+                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
+                pos = hostPos;
             }
         }
 
@@ -428,6 +449,10 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const
         Handle::EntityHandle avh = Vob::constructVob(m_World);
 
         Vob::VobInformation vob = Vob::asVob(m_World, avh);
+
+        // Carry over draw distance-mod // TODO: Should be in some other structure, this is too arbitrary
+        vob.position->m_DrawDistanceFactor = m_World.getEntity<Components::PositionComponent>(m_Entity).m_DrawDistanceFactor;
+
         Vob::setVisual(vob, visual);
 
         // Clear old visual, if there was one
@@ -502,7 +527,8 @@ void ModelVisual::getCollisionBBox(Math::float3* bb)
 
 Math::float3 ModelVisual::getModelRoot()
 {
-    return Math::float3(getMeshLib().getRootNodeTranslation().v);
+    return getAnimationHandler().getRootNodePosition();
+    //return Math::float3(getMeshLib().getRootNodeTranslation().v);
 }
 
 void ModelVisual::onFrameUpdate(float dt)
@@ -588,6 +614,9 @@ void ModelVisual::updateHeadMesh()
         // TODO: Type safety!
         StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(head));
 
+        Meshes::WorldStaticMesh& mesh = m_World.getStaticMeshAllocator().getMesh(visual->getMesh());
+        visual->setInstancingEnabled(false); // Disable instancing because of the texture changes
+
         if(m_BodyState.headTextureIdx > 0 || m_BodyState.bodySkinColorIdx > 0)
         {
             // Get head-texture parts
@@ -671,5 +700,11 @@ void ModelVisual::stopAnimations()
 void ModelVisual::applyOverlay(const std::string& mds)
 {
     getAnimationHandler().setOverlay(mds);
+}
+
+bool ModelVisual::isAnimPlaying(const std::string& name)
+{
+    return getAnimationHandler().getActiveAnimationPtr()
+            && getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == name;
 }
 

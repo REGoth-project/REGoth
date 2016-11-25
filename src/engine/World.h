@@ -34,7 +34,7 @@ namespace World
     {
 		template<typename V, typename I>
 		using MeshAllocator = Memory::StaticReferencedAllocator<
-			LevelMesh::StaticLevelMesh<V,I>, 
+			Meshes::WorldStaticMesh,
 			Config::MAX_NUM_LEVEL_MESHES
 		>;
 
@@ -63,6 +63,15 @@ namespace World
     {
         std::vector<size_t> m_VisibleEntities;
     };
+
+	/**
+	 * Basic gametype this is. Needed for sky configuration, for example
+	 */
+	enum EGameType
+	{
+		GT_Gothic1,
+		GT_Gothic2
+	};
 
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
@@ -139,6 +148,11 @@ namespace World
          * @return List indices of the waypoints which are used as starting-position
          */
         std::vector<size_t> findStartPoints();
+
+		/**
+		 * @return Basic gametype this is. Needed for sky configuration, for example
+		 */
+		EGameType getBasicGameType();
 
         /**
          * Data access
@@ -265,6 +279,11 @@ namespace World
 
         WorldAllocators m_Allocators;
         TransientEntityFeatures m_TransientEntityFeatures;
+
+		/**
+		 * Loaded zen-file
+		 */
+		std::string m_ZenFile;
 
 		/**
 		 * Worldmesh-data

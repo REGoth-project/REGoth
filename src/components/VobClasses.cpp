@@ -6,6 +6,7 @@
 #include <engine/World.h>
 #include <logic/PlayerController.h>
 #include <logic/ItemController.h>
+#include <logic/MobController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
 #include "EntityActions.h"
@@ -26,6 +27,10 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
     userData->world = world.getMyHandle();
 
     world.getScriptEngine().getGameState().getNpc(scriptInstance).userPtr = userData;
+
+    Components::PositionComponent& pos = world.getEntity<Components::PositionComponent>(e);
+    pos.m_DrawDistanceFactor = 0.25f; // TODO: Config entry for this...
+
 
     // Setup the playercontroller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
@@ -67,6 +72,22 @@ Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, D
     return e;
 }
 
+Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo)
+{
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    // Setup controller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::MobController(world, e, vobInfo);
+
+    // Initialize animations
+    Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(world.getComponentAllocator(), e);
+
+    //anim.m_AnimHandler.setWorld(world);
+    //anim.m_AnimHandler.loadMeshLibFromVDF(libName, world->getEngine()->getVDFSIndex());
+
+    return e;
+}
 
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
@@ -79,21 +100,75 @@ void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle
 
 VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Handle::EntityHandle e)
 {
+    NpcVobInformation v;
+
+    // Fill base-class values (just POD-values in here)
+    *reinterpret_cast<Vob::VobInformation*>(&v) = Vob::asVob(world, e);
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::PlayerController)
+    {
+        // Invalidate instance and return
+        v = {};
+        return v;
+    }
+
+    // Enter new information
+    v.playerController = reinterpret_cast<Logic::PlayerController*>(v.logic);
+
+    return v;
+}
+
+VobTypes::ItemVobInformation VobTypes::asItemVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
     Vob::VobInformation v = Vob::asVob(world, e);
-    NpcVobInformation npc;
+    ItemVobInformation item;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::ItemController)
+    {
+        // Invalidate instance and return
+        item = {};
+        return item;
+    }
 
     // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
-    memcpy(&npc, &v, sizeof(v));
+    memcpy(&item, &v, sizeof(v));
 
-    // TODO: Add some typechecking
     // Enter new information
-    npc.playerController = reinterpret_cast<Logic::PlayerController*>(npc.logic);
+    item.itemController = reinterpret_cast<Logic::ItemController*>(item.logic);
 
-    return npc;
+    return item;
 }
+
+VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    MobVobInformation mob;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::MobController)
+    {
+        // Invalidate instance and return
+        mob = {};
+        return mob;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&mob, &v, sizeof(v));
+
+    // Enter new information
+    mob.mobController = reinterpret_cast<Logic::MobController*>(mob.logic);
+
+    return mob;
+}
+
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
+    if(!npc.isValid())
+        return Handle::EntityHandle::makeInvalidHandle();
+
     void* userptr = world.getScriptEngine().getGameState().getNpc(npc).userPtr;
 
     if(!userptr)
@@ -117,7 +192,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.setWorld(*vob.world);
     anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
-	// TODO: Move to other place (MDS)
+    // TODO: Move to other place (MDS)
 	// Load all default animations
 	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
 	{
@@ -135,7 +210,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         anim.m_AnimHandler.addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
-    /*anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
+    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN");
@@ -153,7 +228,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN");
 
     // 1H
-    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");*/
+    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");
 
     anim.m_AnimHandler.playAnimation("S_RUNL");
 }
@@ -229,6 +304,9 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
 
     return VobTypes::asNpcVob(world, e);
 }
+
+
+
 
 
 

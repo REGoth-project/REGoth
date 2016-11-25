@@ -10,7 +10,8 @@
 #include <engine/GameEngine.h>
 #include <logic/PlayerController.h>
 #include <ui/PrintScreenMessages.h>
-
+#include <logic/visuals/ModelVisual.h>
+#include <debugdraw/debugdraw.h>
 
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
 {
@@ -173,7 +174,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if(armorInstance != -1)
         {
             // TODO: Right now, this equips the item automatically. When this is done properly, call the equip-method here
-            vm.getGameState().addInventoryItem(static_cast<size_t>(armorInstance), hnpc);
+            vm.getGameState().createInventoryItem(static_cast<size_t>(armorInstance), hnpc);
         }
     });
 
@@ -210,7 +211,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
 		if(npc.isValid())
 		{
-			Daedalus::GameState::ItemHandle item = vm.getGameState().addInventoryItem(instance, VobTypes::getScriptHandle(npc));
+			Daedalus::GameState::ItemHandle item = vm.getGameState().createInventoryItem(instance,
+                                                                                         VobTypes::getScriptHandle(npc));
 			VobTypes::NPC_EquipWeapon(npc, item);
 		}
 		else{
@@ -602,25 +604,29 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             // Find the nearest NPC with the given criteria
             Math::float3 center = npc.position->m_WorldMatrix.Translation();
+
+            //ddDrawAxis(center.x, center.y + 2, center.z, 2.0f);
+
             float nearest = FLT_MAX;
             Handle::EntityHandle nearestEnt;
             for(Handle::EntityHandle e : worldNPCs)
             {
-                if(e == npc.entity)
-                    continue;
+                // Check position first (faster)
+                Math::float3 position = pWorld->getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
 
-                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, e);
-                Daedalus::GEngineClasses::C_Npc& scriptInstance = VobTypes::getScriptObject(vob);
-
-                if(instance >= 0 && scriptInstance.instanceSymbol != instance) continue;
-                if(guild >= 0 && scriptInstance.guild != guild) continue;
-                if(aiState >= 0 && vob.playerController->getAIStateMachine().isInState((size_t)aiState)) continue;
-
-                Math::float3 translation = pWorld->getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
-
-                float dist = (center - translation).lengthSquared();
+                float dist = (center - position).lengthSquared();
                 if(dist < nearest)
                 {
+                    if(e == npc.entity)
+                        continue;
+
+                    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, e);
+                    Daedalus::GEngineClasses::C_Npc& scriptInstance = VobTypes::getScriptObject(vob);
+
+                    if(instance >= 0 && scriptInstance.instanceSymbol != instance) continue;
+                    if(guild >= 0 && scriptInstance.guild != guild) continue;
+                    if(aiState >= 0 && vob.playerController->getAIStateMachine().isInState((size_t)aiState)) continue;
+
                     nearestEnt = e;
                     nearest = dist;
                 }
@@ -836,6 +842,19 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         // Move item to right place
         Vob::setPosition(vob, position);
+    });
+
+    vm->registerExternalFunction("npc_changeattribute", [=](Daedalus::DaedalusVM& vm){
+        int32_t value = vm.popDataValue();
+        int32_t atr = vm.popDataValue();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->changeAttribute((Daedalus::GEngineClasses::C_Npc::EAttributes)atr, value);
+        }
     });
 }
 

@@ -3,6 +3,7 @@
 #include <ZenLib/utils/logger.h>
 #include <components/VobClasses.h>
 #include "PlayerController.h"
+#include <logic/visuals/ModelVisual.h>
 
 using namespace Logic;
 

@@ -161,7 +161,7 @@ namespace Memory
             if(m_OnRemoved)
                 m_OnRemoved(m_Elements[actIdx]);
 
-            // Overwrite this element with the last one
+            // Overwrite this element with the last one. // FIXME: This breaks for all non-POD-classes!
             memcpy(&m_Elements[actIdx], &m_Elements[m_LastInternalHandle->m_Handle.index], sizeof(T));
 
             // Fix the handle of the last element

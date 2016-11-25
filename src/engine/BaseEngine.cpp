@@ -27,6 +27,15 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.cmdline = bx::CommandLine(argc, (const char**)argv);
     const char* value = nullptr;
 
+    LogInfo() << "Initializing...";
+
+    for(int i=0;i<argc;i++)
+    {
+        LogInfo() << "Arg " << i;
+        LogInfo() << " - " << argv[i];
+    }
+
+
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
@@ -71,6 +80,17 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 
     loadArchives();
+
+    if(m_Args.startupZEN.empty() || !m_FileIndex.hasFile(m_Args.startupZEN))
+    {
+        // Try Gothic 1
+        if(m_FileIndex.hasFile("world.zen"))
+            m_Args.startupZEN = "world.zen";
+        else if(m_FileIndex.hasFile("newworld.zen"))
+            m_Args.startupZEN = "newworld.zen";
+        else
+            LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
+    }
 }
 
 Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
@@ -107,6 +127,12 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
 
 
 	return w;
+}
+
+void BaseEngine::removeWorld(Handle::WorldHandle world)
+{
+    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
+    m_WorldInstances.removeObject(world);
 }
 
 Handle::WorldHandle  BaseEngine::addWorld()
@@ -160,6 +186,15 @@ void BaseEngine::loadArchives()
         m_FileIndex.loadVDF(s);
     }
 
+    // Happens on modded games
+    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
+
+    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
+    for(std::string& s : vdfArchivesDisabled)
+    {
+        m_FileIndex.loadVDF(s);
+    }
+
 
 	// Load mod archives with higher priority
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
@@ -194,6 +229,7 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 {
     return m_Args;
 }
+
 
 
 

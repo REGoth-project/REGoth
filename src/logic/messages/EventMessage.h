@@ -23,6 +23,7 @@ namespace Logic
             Manipulate,
             Conversation,
             Magic,
+            Mob
         };
 
         /**
@@ -89,9 +90,19 @@ namespace Logic
             bool isOverlay;
 
             /**
+             * Adds a callback, triggered when this message has been successfully and completely processed
+             * @param hostVob Vob which the callback is set from
+             * @param callback Callback function
+             */
+            void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, EventMessage*)> callback)
+            {
+                onMessageDone.push_back(std::make_pair(hostVob, callback));
+            }
+
+            /**
              * External callbacks to trigger if this message gets processed. Must also store the waiting entity.
              */
-            std::list<std::pair<Handle::EntityHandle, std::function<void(EventMessage*)>>> onMessageDone;
+            std::list<std::pair<Handle::EntityHandle, std::function<void(Handle::EntityHandle, EventMessage*)>>> onMessageDone;
         };
 
         struct NpcMessage : public EventMessage
@@ -339,6 +350,7 @@ namespace Logic
 
         class ManipulateMessage : public NpcMessage
         {
+        public:
             enum ManipulateSubType
             {
                 ST_TakeVob = 0,
@@ -347,12 +359,12 @@ namespace Logic
                 ST_Exchange,
                 ST_UseMob,
                 ST_UseItem,
-                ST_InsertInteractitem,
-                ST_RemoveInteractitem,
-                ST_CreateInteractitem,
-                ST_DestroyInteractitem,
-                ST_PlaceInteractitem,
-                ST_ExchangeInteractitem,
+                ST_InsertInteractItem,
+                ST_RemoveInteractItem,
+                ST_CreateInteractItem,
+                ST_DestroyInteractItem,
+                ST_PlaceInteractItem,
+                ST_ExchangeInteractItem,
                 ST_UseMobWithItem,
                 ST_CallScript,
                 ST_EquipItem,
@@ -365,9 +377,48 @@ namespace Logic
             ManipulateMessage()
             {
                 messageType = EventMessageType::Manipulate;
+                flag = false;
+                pickupAniY = 0.0f;
+                targetState = 0;
+                symIdx = static_cast<size_t>(-1);
             }
 
-            // TODO: Implement
+            /**
+             * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
+             * Alternatively, you can set "targetItem" to a valid handle.
+             */
+            size_t symIdx;
+
+            /**
+             * Handle of the item to use. Alternatively you could set "name" to something found in the inventory
+             */
+            Daedalus::GameState::ItemHandle targetItem;
+
+            /**
+             * Slot the item should be put in, in case this is a ST_*InteractItem
+             */
+            std::string slot;
+
+            /**
+             * General purpose flag
+             */
+            bool flag;
+
+
+            /**
+             * Y-coord of the the pickup animation?
+             */
+            float pickupAniY;
+
+            /**
+             * State to go to when using the item
+             */
+            int	targetState;
+
+            /**
+             * Animation to play, for example on pickup
+             */
+            std::string	animation;
         };
 
         struct ConversationMessage : public NpcMessage
@@ -453,7 +504,7 @@ namespace Logic
 
         struct MagicMessage : public NpcMessage
         {
-            enum ConversationSubType
+            enum MagicSubType
             {
                 ST_Open,
                 ST_Close,
@@ -475,6 +526,40 @@ namespace Logic
             }
 
             // TODO: Implement
+        };
+
+        struct MobMessage : public EventMessage
+        {
+            enum MobSubType
+            {
+                ST_STARTINTERACTION = 0,
+                ST_STARTSTATECHANGE,
+                ST_ENDINTERACTION,
+                ST_UNLOCK,
+                ST_LOCK,
+                ST_CALLSCRIPT
+            };
+
+            MobMessage()
+            {
+                messageType = EventMessageType::Mob;
+                stateFrom = 0;
+                stateTo = 0;
+            }
+
+            // NPC this message is from
+            Handle::EntityHandle npc;
+
+            // State to change from
+            int stateFrom;
+
+            // State to change to
+            int stateTo;
+
+            // Whether to play an animation
+            bool playAnimation;
+
+
         };
     }
 }

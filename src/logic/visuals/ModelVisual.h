@@ -128,6 +128,11 @@ namespace Logic
         ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~ModelVisual();
 
+		/**
+         * @return Classtype of this visual
+         */
+		virtual EVisualType getVisualType(){ return EVisualType::Model; }
+
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
@@ -195,7 +200,7 @@ namespace Logic
         Components::AnimHandler& getAnimationHandler();
 
         /**
-         * @brief Called every frame by the player-controler
+         * @brief To be called every frame. You have to take care of this by yourself if you are using the model-visual!
          */
         void onFrameUpdate(float dt);
 
@@ -236,6 +241,15 @@ namespace Logic
          */
         virtual void setShadowValue(float shadow);
 
+		/**
+         * @return Skeleton-information for the currently set mesh
+         */
+		const ZenLoad::zCModelMeshLib& getMeshLib();
+
+		/**
+		 * @return Whether an animation with the given name is playing
+		 */
+		 bool isAnimPlaying(const std::string& name);
     protected:
 
         /**
@@ -257,11 +271,6 @@ namespace Logic
          * Rebuilds the main entity list from everything found inside the PartEntityLists
          */
         void rebuildMainEntityList();
-
-        /**
-         * @return Skeleton-information for the currently set mesh
-         */
-        const ZenLoad::zCModelMeshLib& getMeshLib();
 
         /**
          * Handle to the main-mesh and it's skeleton information

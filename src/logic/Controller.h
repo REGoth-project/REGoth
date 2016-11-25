@@ -2,6 +2,7 @@
 #include <handle/HandleDef.h>
 #include <components/Entities.h>
 #include "messages/EventManager.h"
+#include "ControllerTypes.h"
 
 namespace World
 {
@@ -24,6 +25,11 @@ namespace Logic
          */
         Controller(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~Controller(){};
+
+        /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::Controller; };
 
         /**
          * Called when the models visual changed

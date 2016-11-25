@@ -19,10 +19,19 @@
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
 #include "config.h"
-#include "engine/Platform.h"
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
+#include <ZenLib/utils/logger.h>
 
+#if BX_PLATFORM_ANDROID
+#include "engine/PlatformAndroid.h"
+#define PLATFORM_CLASS Engine::PlatformAndroid
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS
+#include "engine/PlatformGLFW.h"
+#define PLATFORM_CLASS Engine::PlatformGLFW
+#else
+#error Unknown platform
+#endif
 
 
 struct PosColorVertex
@@ -101,7 +110,7 @@ bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 
 
-class ExampleCubes : public /*entry::AppI*/ Engine::Platform
+class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 {
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
     {
@@ -168,6 +177,19 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
         }
     }
 
+    void drawLog()
+    {
+        const std::list<std::string>& logs = Utils::Log::getLastLogLines();
+        auto it = logs.begin();
+
+        for(int i=49; i>=0 && it != logs.end() ;i++)
+        {
+            bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
+
+            it++;
+        }
+    }
+
     void showSplash()
     {
         float view[16];
@@ -178,23 +200,30 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
 
 
-        bgfx::setViewRect(1, 0, 0, m_width, m_height);
+        bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 
         // Set view and projection matrix for view 0.
         bgfx::setViewTransform(1, NULL, proj);
 
+
+        bgfx::touch(0);
+
+#if !BX_PLATFORM_ANDROID
         Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
 
+        if(!txh.isValid())
+            return;
+
         Textures::Texture& texture = alloc.getTexture(txh);
         bgfx::frame();
-
-        bgfx::touch(0);
 
         bgfx::setState(BGFX_STATE_DEFAULT);
         const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
         bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
         renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
+#endif
+
 
         bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
         bgfx::frame();
@@ -207,14 +236,15 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 //		Args args(_argc, _argv);
 
 		axis = 0;
-		m_width = 1280;
-		m_height = 720;
 		m_debug = BGFX_DEBUG_TEXT;
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
 
+        m_Width = getWindowWidth();
+        m_Height = getWindowHeight();
+
 //		bgfx::init(args.m_type, args.m_pciId);
         bgfx::init();
-		bgfx::reset(m_width, m_height, m_reset);
+		bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height, m_reset);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);
@@ -240,6 +270,12 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
         PosColorTexCoord0Vertex::init();
 
 		m_pEngine = new Engine::GameEngine;
+
+#if BX_PLATFORM_ANDROID
+        // Content is somewhere else on android
+        m_pEngine->setContentBasePath("/sdcard/REGoth/");
+#endif
+
 		m_pEngine->initEngine(_argc, _argv);
 
 
@@ -254,7 +290,13 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
 
         // Imgui.
-        imguiCreate();
+        float fontSize = 18.0f;//18
+
+#ifdef ANDROID
+        fontSize = 23.0f;
+#endif
+
+        imguiCreate(nullptr, 0, fontSize);
         m_scrollArea = 0;
 	}
 
@@ -278,6 +320,17 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 	{
         Engine::Input::fireBindings();
 
+
+        // Check for resize
+        if(m_Width != getWindowWidth() || m_Height != getWindowHeight())
+        {
+            m_Width = getWindowWidth();
+            m_Height = getWindowHeight();
+
+            // Notify bgfx about framebuffer resize
+            bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height);
+        }
+
         int64_t now = bx::getHPCounter();
         static int64_t last = now;
         const int64_t frameTime = now - last;
@@ -296,8 +349,8 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
                   | (ms.m_buttons[1] ? IMGUI_MBUT_RIGHT  : 0)
                   | (ms.m_buttons[2] ? IMGUI_MBUT_MIDDLE : 0)
                 ,  ms.m_mz
-                , m_width
-                , m_height
+                , (uint16_t)getWindowWidth()
+                , (uint16_t)getWindowHeight()
         );
 
         // Use debug font to print information about this example.
@@ -318,7 +371,7 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 
         ddBegin(0);
 
-        m_pEngine->frameUpdate(dt, m_width, m_height);
+        m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
         // Draw and process all UI-Views
         // Set render states.
 
@@ -356,10 +409,9 @@ class ExampleCubes : public /*entry::AppI*/ Engine::Platform
 	}
 
 	Engine::GameEngine* m_pEngine;
-	uint32_t m_width;
-	uint32_t m_height;
 	uint32_t m_debug;
 	uint32_t m_reset;
+    int m_Width, m_Height;
 	int64_t m_timeOffset;
 	float axis;
     int32_t m_scrollArea;

@@ -1,7 +1,7 @@
 #include "StaticMeshVisual.h"
 #include <engine/World.h>
 #include <content/ContentLoad.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
@@ -33,7 +33,13 @@ bool StaticMeshVisual::load(const std::string& visual)
     Meshes::WorldStaticMesh& mdata = m_World.getStaticMeshAllocator().getMesh(m_MeshHandle);
 
     // TODO: Put these into a compound-component or something
-    m_VisualEntities = Content::entitifyMesh(m_World, m_MeshHandle, mdata);
+    m_VisualEntities = Content::entitifyMesh(m_World, m_MeshHandle, mdata.mesh);
+
+    // If we haven't already, create an instancebuffer for this mesh
+    //if(mdata.instanceDataBufferIndex == (uint32_t)-1)
+    //    mdata.instanceDataBufferIndex = ((Engine::GameEngine&)m_World.getEngine()).getDefaultRenderSystem().requestInstanceDataBuffer();
+
+    Components::PositionComponent& hostPos = m_World.getEntity<Components::PositionComponent>(m_Entity);
 
     for(Handle::EntityHandle e : m_VisualEntities)
     {
@@ -43,7 +49,8 @@ bool StaticMeshVisual::load(const std::string& visual)
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
-        pos.m_WorldMatrix = getEntityTransform();
+        pos = hostPos;
+
     }
 
     updateCollision();
@@ -160,5 +167,15 @@ void StaticMeshVisual::setShadowValue(float shadow)
         Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(e);
 
         sm.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+    }
+}
+
+void StaticMeshVisual::setInstancingEnabled(bool value)
+{
+    for(Handle::EntityHandle e : m_VisualEntities)
+    {
+        Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(e);
+
+        sm.m_InstanceDataIndex = value ? (uint32_t)-1 : (uint32_t)-2;
     }
 }

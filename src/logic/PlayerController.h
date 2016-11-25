@@ -11,9 +11,27 @@ namespace Logic
 {
     class ModelVisual;
 
+    /**
+     * Useful script functions for reporting
+     */
+    namespace PlayerScriptInfo
+    {
+        const char* const PLAYER_MOB_MISSING_KEY				=	"PLAYER_MOB_MISSING_KEY";
+        const char* const PLAYER_MOB_MISSING_LOCKPICK			=	"PLAYER_MOB_MISSING_LOCKPICK";
+        const char* const PLAYER_MOB_MISSING_KEY_OR_LOCKPICK	=	"PLAYER_MOB_MISSING_KEY_OR_LOCKPICK";
+        const char* const PLAYER_MOB_NEVER_OPEN				    =	"PLAYER_MOB_NEVER_OPEN";
+        const char* const PLAYER_MOB_TOO_FAR_AWAY				=	"PLAYER_MOB_TOO_FAR_AWAY";
+        const char* const PLAYER_MOB_WRONG_SIDE				    =	"PLAYER_MOB_WRONG_SIDE";
+        const char* const PLAYER_MOB_MISSING_ITEM				=	"PLAYER_MOB_MISSING_ITEM";
+        const char* const PLAYER_MOB_ANOTHER_IS_USING			=	"PLAYER_MOB_ANOTHER_IS_USING";
+        const char* const PLAYER_PLUNDER_IS_EMPTY				=	"PLAYER_PLUNDER_IS_EMPTY";
+        const char* const PLAYER_RANGED_NO_AMMO				    =	"PLAYER_RANGED_NO_AMMO";
+    }
+
     class PlayerController : public Controller
     {
     public:
+
         /**
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
@@ -21,8 +39,13 @@ namespace Logic
         PlayerController(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);
 
         /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::PlayerController; }
+
+        /**
          * Sets the daily routine for this.
-         * TODO: Add timing for these
+         * TODO: Add timing for these // TODO: Done, now remove this
          *
          * @param wps List of waypoints the NPC should visit, in order
          */
@@ -120,6 +143,34 @@ namespace Logic
         void undrawWeapon(bool force = false);
 
         /**
+         * Uses the given Item on this NPC
+         * @param item Item to use
+         * @return Whether the item should be deleted from the inventory now
+         */
+        bool useItem(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * Puts <count> instances of the given item into ths players inventory
+         * @param instanceName Instance-name of the item to put
+         * @param count How many instances to create (ie. 500 Gold)
+         */
+        void giveItem(const std::string& instanceName, unsigned int count = 1);
+
+        /**
+         * Checks if this NPC can use the given item. If not, messages will be displayed if this is also the player
+         * @param item Item to check
+         * @return Whether we can equip or use this
+         */
+        bool canUse(Daedalus::GameState::ItemHandle item);
+
+        /**
+         * Changes one of the script attributes. Checks for godmode, immortality, maxima, etc
+         * @param atr Attribute of the script-object
+         * @param change Delta value of the change
+         */
+        void changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int change);
+
+        /**
          * @return The ModelVisual of the underlaying vob
          */
         ModelVisual* getModelVisual();
@@ -173,6 +224,13 @@ namespace Logic
         bool canSee(Handle::EntityHandle entity, bool ignoreAngles = false);
 
         /**
+         * Traces from the npcs eyes to the given target position and checks if something is in between them
+         * @param target Target position to trace to
+         * @return true, if nothing is in between the npc and the target position
+         */
+        bool freeLineOfSight(const Math::float3& target);
+
+        /**
          * Checks the angle from the facing direction of the NPC to the given point
          * @param pos Point to get the angle to from
          * @return Angle between the forward direction of the npc and pos as radians, [0, pi]
@@ -223,6 +281,21 @@ namespace Logic
          */
         void setupKeyBindings();
 
+        /**
+         * @return Item this NPC is currently interacting with
+         */
+        Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
+
+        /**
+         * Sets the mob this playercontroller is currently using
+         */
+         void setUsedMob(Handle::EntityHandle mob){ m_AIState.usedMob = mob; }
+        Handle::EntityHandle getUsedMob(){ return m_AIState.usedMob; }
+
+        /**
+         * Enables/Disables physics on this NPC
+         */
+         void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
     protected:
 
         /**
@@ -276,6 +349,9 @@ namespace Logic
 
             // Waypoint the NPC is going to
             size_t targetWaypoint;
+
+            // Handle to the Mob currently used by this NPC, if valid
+            Handle::EntityHandle usedMob;
         }m_AIState;
 
         struct
@@ -310,6 +386,9 @@ namespace Logic
 
             // Root offset of the model
             Math::float3 modelRoot;
+
+            // Whether this NPC should be put on ground every frame
+            bool enablePhysics;
         }m_NPCProperties;
 
         struct
@@ -362,5 +441,10 @@ namespace Logic
         bool m_isStrafeLeft;
         bool m_isStrafeRight;
         bool m_MoveSpeed1, m_MoveSpeed2;
+
+        // FIXME: Hack for as long as animation-flags are not implemented
+        // Turns of modifying the root postion from the animation
+        bool m_NoAniRootPosHack;
+        size_t m_LastAniRootPosUpdatedAniHash;
     };
 }

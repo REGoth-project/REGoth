@@ -42,15 +42,14 @@ namespace Logic
                 Engine::Action* actionLookVertical;
             } firstPersonCameraSettings;
 
-//            /**
-//             * Settings for camera mode "thirdperson"
-//             */
-//            struct
-//            {
-//                float turnSpeed;
-//                float turnSmoothness;
-//                float yaw, height, distance;
-//            } thirdPersonCameraSettings;
+            /**
+             * Settings for camera mode "thirdperson"
+             */
+            struct
+            {
+                Math::float3 currentLookAt;
+                Math::float3 currentOffsetDirection;
+            } thirdPersonCameraSettings;
 
             struct
             {
@@ -88,6 +87,11 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         CameraController(World::WorldInstance& world, Handle::EntityHandle entity);
+
+        /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::CameraController; }
 
         /**
          * Called on game-tick

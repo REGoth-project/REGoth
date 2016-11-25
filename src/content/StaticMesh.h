@@ -12,7 +12,7 @@ namespace Meshes
      * Contains vertices, indices and handles to the VB/IB
      */
     template<typename V, typename I, typename VHDL, typename IHDL>
-    struct StaticMeshInfo : public Handle::HandleTypeDescriptor<Handle::MeshHandle>
+    struct StaticMeshInfo
     {
         // Global information
         std::vector<V> m_Vertices;

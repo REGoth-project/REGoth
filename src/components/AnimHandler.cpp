@@ -11,6 +11,7 @@ AnimHandler::AnimHandler()
 {
     m_ActiveAnimation.invalidate();
     m_AnimRootVelocity = Math::float3(0, 0, 0);
+    m_AnimRootPosition = Math::float3(0, 0, 0);
     m_LastProcessedFrame = static_cast<size_t>(-1);
     m_AnimationStateHash = 0;
     m_pWorld = nullptr;
@@ -73,6 +74,9 @@ bool AnimHandler::addAnimation(const std::string &name)
 */
 void AnimHandler::playAnimation(const std::string &animName)
 {
+    //if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+    //    LogInfo() << "Playing animation '" << animName << "' on Model: " << m_MeshLibName;
+
     // Reset velocity
     m_AnimRootVelocity = Math::float3(0, 0, 0);
 
@@ -106,6 +110,7 @@ void AnimHandler::playAnimation(const std::string &animName)
         m_ActiveAnimation = (*it).second;
         m_AnimationFrame = 0.0f;
         m_LoopActiveAnimation = false;
+        m_LastProcessedFrame = (size_t)-1;
 
         // Restore matrices from the bind-pose
         // because the animation won't modify all of the nodes
@@ -113,6 +118,9 @@ void AnimHandler::playAnimation(const std::string &animName)
         {
             m_NodeTransforms[i] = Math::Matrix(m_MeshLib.getNodes()[i].transformLocal.mv);
         }
+
+        // Run first frame of the animation to get around the return to the bind-pose above causing the model to jump
+        updateAnimations(0.0);
     }
 }
 
@@ -131,8 +139,48 @@ void AnimHandler::setAnimation(const std::string &animName)
 */
 void AnimHandler::updateAnimations(double deltaTime)
 {
-    if (m_LastProcessedFrame == m_AnimationFrame || !getActiveAnimationPtr())
+    if(!getActiveAnimationPtr())
+        return;
+
+    // Increase current timeline-position
+    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
+    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
+    size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
+    m_AnimationFrame += deltaTime * framesPerSecond;
+    if (m_AnimationFrame >= numFrames)
+    {
+        // If there is a next animation, play this now
+        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
+        if(!next.empty())
+        {
+            //if(next != "S_RUN" && next != "S_RUNL")
+            //    LogInfo() << "Setting next Ani: " << next;
+
+            bool oldLoop = m_LoopActiveAnimation;
+            playAnimation(next);
+
+            // Make sure we loop that one if we wanted to loop the starting animation
+            m_LoopActiveAnimation = oldLoop;
+
+            return;
+        }
+
+        if(m_LoopActiveAnimation)
+            m_AnimationFrame = 0.0f;
+        else
+        {
+            stopAnimation(); // Animation done and not looping
+            return;
+        }
+    }
+
+    size_t frameNum = static_cast<size_t>(m_AnimationFrame);
+
+    // Check if this changed something on our animation
+    if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
         return; // Nothing to do here // TODO: There is, if interpolation was implemented!
+
+    m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
@@ -157,7 +205,10 @@ void AnimHandler::updateAnimations(double deltaTime)
     {
         // TODO: There is a flag indicating whether the animation root should translate the vob position
         if (i == 0)
+        {
+            m_AnimRootPosition = m_NodeTransforms[i].Translation();
             m_NodeTransforms[i].Translation(Math::float3(0.0f, 0.0f, 0.0f));
+        }
 
         if (m_MeshLib.getNodes()[i].parentValid())
             m_ObjectSpaceNodeTransforms[i] =
@@ -166,43 +217,12 @@ void AnimHandler::updateAnimations(double deltaTime)
             m_ObjectSpaceNodeTransforms[i] = m_NodeTransforms[i];
     }
 
-    // Increase current timeline-position
-    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
-    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
-    size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
-    m_AnimationFrame += deltaTime * framesPerSecond;
-    if (m_AnimationFrame >= numFrames)
-    {
-        // If there is a next animation, play this now
-        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
-        if(!next.empty())
-        {
-            if(next != "S_RUN" && next != "S_RUNL")
-                LogInfo() << "Setting next Ani: " << next;
-
-            bool oldLoop = m_LoopActiveAnimation;
-            playAnimation(next);
-
-            // Make sure we loop that one if we wanted to loop the starting animation
-            m_LoopActiveAnimation = oldLoop;
-
-            return;
-        }
-
-        if(m_LoopActiveAnimation)
-            m_AnimationFrame = 0.0f;
-        else
-        {
-            stopAnimation(); // Animation done and not looping
-            return;
-        }
-    }
-
-    size_t frameNum = static_cast<size_t>(m_AnimationFrame);
+    // Updated the animation, update the hash-value
+    m_AnimationStateHash++;
 
     // Get velocity of the current animation
     // FIXME: Need better handling of animation end
-    if (lastFrame != frameNum && frameNum != 0)
+    if (!getActiveAnimationPtr()->getAniSamples().empty() && lastFrame != frameNum && frameNum != 0)
     {
         // Get sample of root node (Node 0) from the current and the last frame
         auto &sampleCurrent = getActiveAnimationPtr()->getAniSamples()[frameNum *
@@ -210,13 +230,14 @@ void AnimHandler::updateAnimations(double deltaTime)
         auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
-        // Scale velocity to seconds
-        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v)) * (framesPerSecond * deltaTime);
+        // Scale velocity to seconds // FIXME: Shouldn't be modified by deltaTime, I think!
+        m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v));
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
+        m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
+
     }
 
-    // Updated the animation, update the hash-value
-    m_AnimationStateHash++;
+
 }
 
 Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
@@ -226,12 +247,15 @@ Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
 
     size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
 
+    if(frame == (size_t)-1)
+        frame = getActiveAnimationPtr()->getModelAniHeader().numFrames - 1;
+
     // Root node is always node 0
     return Math::float3(getActiveAnimationPtr()->getAniSamples()[numAnimationNodes * frame].position.v);
 }
 
 
-Math::float3 AnimHandler::getRootNodeVelocity()
+Math::float3 AnimHandler::getRootNodeVelocityAvg()
 {
     if(!getActiveAnimationPtr())
         return Math::float3(0,0,0);
@@ -260,14 +284,16 @@ void AnimHandler::debugDrawSkeleton(const Math::Matrix &transform)
 
         Math::float3 p2 = transform * t2;
 
-        ddDrawAxis(p2.x, p2.y, p2.z, 0.04f);
-        ddDrawAxis(p2.x, p2.y, p2.z, -0.04f);
+        ddSetTransform((transform * m_ObjectSpaceNodeTransforms[i]).v);
+        ddDrawAxis(0,0,0, 0.04f);
+        ddDrawAxis(0,0,0, -0.04f);
 
         if (n.parentValid())
         {
             const auto &t1 = m_ObjectSpaceNodeTransforms[n.parentIndex].Translation();
             Math::float3 p1 = (transform * t1);
 
+            ddSetTransform(nullptr);
             ddSetColor(0xFFFFFFFF);
             ddMoveTo(p1.x, p1.y, p1.z);
             ddLineTo(p2.x, p2.y, p2.z);
@@ -283,6 +309,9 @@ void AnimHandler::updateSkeletalMeshInfo(Math::Matrix *target, size_t numMatrice
 {
     memcpy(target, m_ObjectSpaceNodeTransforms.data(),
            std::min(m_NodeTransforms.size(), numMatrices) * sizeof(Math::Matrix));
+
+    if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+        LogInfo() << "Updating: " << m_MeshLibName;
 
     //static float s_test = 0;
     //s_test += 0.1f;
@@ -302,8 +331,19 @@ ZenLoad::zCModelAni *AnimHandler::getActiveAnimationPtr()
 
 bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &idx)
 {
+    ZenLoad::zCModelMeshLib lib;
+
     // Load heirachy
-    ZenLoad::zCModelMeshLib lib(file + ".MDH", idx, 1.0f / 100.0f);
+    if(idx.hasFile(file + ".MDH"))
+        lib = ZenLoad::zCModelMeshLib(file + ".MDH", idx, 1.0f / 100.0f);
+    else if(idx.hasFile(file + ".MDL")) // Some mobs have .MDL
+        lib = ZenLoad::zCModelMeshLib(file + ".MDL", idx, 1.0f / 100.0f);
+    else if(idx.hasFile(file + ".MDM")) // Some mobs have .MDL
+        lib = ZenLoad::zCModelMeshLib(file + ".MDM", idx, 1.0f / 100.0f);
+
+    if(!lib.isValid())
+        LogWarn() << "Could not load MeshLib for Visual: " << file;
+
     setMeshLib(lib);
 
     // Save name of this meshlib loading more animations later
@@ -377,4 +417,9 @@ void AnimHandler::setOverlay(const std::string& mds)
         if(h.isValid())
             a.second = h;
     }
+}
+
+Math::float3 AnimHandler::getRootNodePosition()
+{
+    return m_AnimRootPosition;
 }

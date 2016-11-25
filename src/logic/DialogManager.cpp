@@ -137,11 +137,11 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     conv.name = msg.name;
     conv.text = msg.text;
 
-    if(target.isValid())
-    {
-        VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
-        conv.target = targetnpc.entity;
+    VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
 
+    if(targetnpc.isValid())
+    {
+        conv.target = targetnpc.entity;
 
         // Check if the target is currently talking to us
         EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
@@ -174,6 +174,23 @@ void DialogManager::update(double dt)
             {
                 // END was chosen, don't continue the dialog
                 endDialog();
+
+                // Clear the dialog partners EMs
+                // FIXME: I dont think the original game does this, but NPCs won't change their state after talking
+                //        sometimes (baar parvez for example)
+                VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World, m_Interaction.player);
+                VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World, m_Interaction.target);
+
+                // Start routine
+                EventMessages::StateMessage msg;
+                msg.subType = EventMessages::StateMessage::EV_StartState;
+                msg.functionSymbol = 0;
+
+                if(playerVob.isValid())
+                    playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+                if(targetVob.isValid())
+                    targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
             } else
             {
                 // There is more! Start talking again.
@@ -278,10 +295,10 @@ void DialogManager::endDialog()
 
 void DialogManager::init()
 {
-    std::string ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE);
+    std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
-        ou = Utils::getCaseSensitivePath(m_World.getEngine()->getEngineArgs().gameBaseDirectory + OU_FILE_2);
+        ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
         LogWarn() << "Failed to read OU-file!";
