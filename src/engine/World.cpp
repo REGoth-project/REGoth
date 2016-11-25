@@ -10,6 +10,7 @@
 #include <components/EntityActions.h>
 #include <logic/PlayerController.h>
 #include <stdlib.h>
+#include <iterator>
 
 #include <engine/GameEngine.h>
 #include <debugdraw/debugdraw.h>

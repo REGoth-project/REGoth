@@ -88,13 +88,16 @@ add_definitions(-DBGFX_CONFIG_MAX_INDEX_BUFFERS=65535)
 add_definitions(-DBGFX_CONFIG_MAX_VERTEX_BUFFERS=65535) # TODO: Don't mess around with memory so much
 
 add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL) # Quaternions
 
 add_definitions(-D__STDC_LIMIT_MACROS)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_FORMAT_MACROS)
 
 # Temp
+if(NOT MSVC)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
 
 if(MINGW)
     SET(COMPILER_PREFIX "i686-mingw32")
