@@ -51,7 +51,7 @@ Open the generated `REGoth.sln` in VisualStudio and build as usual.
 
 Alternatively, you may do this (inside the build-folder):
 ```sh
-cmake --build .
+cmake --build . --config release
 ``` 
 
 
