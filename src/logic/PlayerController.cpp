@@ -1546,7 +1546,7 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
 
     // Food?
-    if(data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD != 0)
+    if((data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
     {
         // Nutrition doesn't seem to be used anywhere...
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
