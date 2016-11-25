@@ -33,15 +33,23 @@ const std::list<Daedalus::GameState::ItemHandle>& Inventory::getItems()
     return vm.getGameState().getInventoryOf(m_NPC);
 }
 
-bool Inventory::removeItem(const std::string& symName)
+bool Inventory::removeItem(const std::string& symName, unsigned int count)
 {
-    // Get script-engine
-    Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
 
-    return vm.getGameState().removeInventoryItem(vm.getSymbolIndexByName(symName), m_NPC);
+	return vm.getGameState().removeInventoryItem(vm.getSymbolIndexByName(symName), m_NPC, count);
 }
 
-bool Inventory::removeItem(Daedalus::GameState::ItemHandle item)
+bool Inventory::removeItem(size_t symIndex, unsigned int count)
+{
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+
+	return vm.getGameState().removeInventoryItem(symIndex, m_NPC, count);
+}
+
+bool Inventory::removeItem(Daedalus::GameState::ItemHandle item, unsigned int count)
 {
     // Get script-engine
     Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
@@ -51,7 +59,7 @@ bool Inventory::removeItem(Daedalus::GameState::ItemHandle item)
 
     Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
 
-    return vm.getGameState().removeInventoryItem(data.instanceSymbol, m_NPC);
+    return vm.getGameState().removeInventoryItem(data.instanceSymbol, m_NPC, count);
 }
 
 Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
@@ -71,3 +79,15 @@ Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
     return Daedalus::GameState::ItemHandle();
 }
 
+int Inventory::getItemCount(size_t symIndex)
+{
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+
+	Daedalus::GameState::ItemHandle item = getItem(symIndex);
+
+	if(item.isValid())
+		return vm.getGameState().getItem(item).count[0];
+
+	return 0;
+}

@@ -569,6 +569,52 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         vm.setReturn("");
     });
 
+	vm->registerExternalFunction("npc_hasitems", [=](Daedalus::DaedalusVM& vm){
+		uint32_t iteminstance = vm.popDataValue();
+		int32_t owner = vm.popVar();
+
+		VobTypes::NpcVobInformation npc = getNPCByInstance(owner);
+
+		if(npc.isValid())
+		{
+			int count = npc.playerController->getInventory().getItemCount(iteminstance);
+			vm.setReturn(count);
+		}
+		else
+		{
+			vm.setReturn(0);
+		}
+	});
+
+	vm->registerExternalFunction("npc_removeinvitem", [=](Daedalus::DaedalusVM& vm){
+		uint32_t iteminstance = vm.popDataValue(); 
+		uint32_t owner = vm.popVar(); 
+
+		VobTypes::NpcVobInformation npc = getNPCByInstance(owner);
+
+		if(npc.isValid())
+		{
+			int count = npc.playerController->getInventory().removeItem(iteminstance);
+		}
+
+		vm.setReturn(0);
+	});
+
+	vm->registerExternalFunction("npc_removeinvitems", [=](Daedalus::DaedalusVM& vm){
+		uint32_t amount = vm.popDataValue();
+		uint32_t iteminstance = vm.popDataValue();
+		uint32_t owner = vm.popVar();
+
+		VobTypes::NpcVobInformation npc = getNPCByInstance(owner);
+
+		if(npc.isValid())
+		{
+			int count = npc.playerController->getInventory().removeItem(iteminstance, amount);
+		}
+
+		vm.setReturn(0);
+	});
+
     vm->registerExternalFunction("ai_startstate", [=](Daedalus::DaedalusVM& vm){
         std::string wpname = vm.popString();
         int32_t statebehaviour = vm.popDataValue();
