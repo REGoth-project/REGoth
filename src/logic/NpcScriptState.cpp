@@ -204,7 +204,7 @@ bool NpcScriptState::doAIState(float deltaTime)
         {
             // Prepare state function call
             auto& inst = VobTypes::getScriptObject(vob);
-            s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
+            s.setInstanceNPC("self", VobTypes::getScriptHandle(vob));
 
             // These are set by the game, but seem to be always 0
             s.setInstanceNPC("OTHER", m_StateOther);
