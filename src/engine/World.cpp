@@ -553,6 +553,10 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
                                     Handle::EntityHandle inst)
 {
     std::vector<Handle::EntityHandle> m;
+
+	// FIXME: This is too slow! (And not used anyways)
+	return m;
+
     Handle::EntityHandle closestFP;
 
     float closest2 = FLT_MAX;
@@ -596,11 +600,14 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
 {
     std::vector<Handle::EntityHandle> mp;
 
+	// FIXME: This is too slow!
+	/*
     for(auto& fp : m_FreePoints)
     {
         if(fp.first.substr(0, tag.size()) == tag)
             mp.push_back(fp.second);
     }
+	*/
 
     return mp;
 }

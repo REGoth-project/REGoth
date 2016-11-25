@@ -199,14 +199,20 @@ include_directories(lib/glm)
 include_directories(lib/tinydir)
 
 if(NOT ANDROID)
+	
+
     add_subdirectory(lib/glfw)
     include_directories(lib/glfw/include)
 
     target_link_libraries(engine glfw sfml-audio)
 
+	# We want audio if not on android
+	add_definitions(-DRE_USE_SFML)
     add_subdirectory(lib/SFML)
     include_directories(lib/SFML/include)
 else()
+
+	# TODO: Audio
     target_link_libraries(engine android_glue)
 endif()
 
