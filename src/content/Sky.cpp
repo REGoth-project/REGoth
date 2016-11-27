@@ -9,6 +9,7 @@
 #include "Sky.h"
 #include "engine/Input.h"
 #include <iostream>
+#include <engine/BaseEngine.h>
 
 using namespace Content;
 
@@ -82,6 +83,9 @@ void Sky::interpolate(double deltaTime)
     deltaTime *= 100.0f;
 
     deltaTime *= m_skySpeedMultiplier;
+
+    if(m_World.getEngine()->getEngineArgs().cmdline.hasArg('d'))
+	deltaTime = 0.0;
 
 //    if(inputGetKeyState(entry::Key::KeyO))
 //        deltaTime *= 10.0;
