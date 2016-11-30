@@ -208,7 +208,9 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         bgfx::touch(0);
 
-#if !BX_PLATFORM_ANDROID
+#if BX_PLATFORM_ANDROID
+
+#else
         Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
 
@@ -237,7 +239,11 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 		axis = 0;
 		m_debug = BGFX_DEBUG_TEXT;
+#if BX_PLATFORM_ANDROID
+        m_reset = 0;
+#else
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+#endif
 
         m_Width = getWindowWidth();
         m_Height = getWindowHeight();
