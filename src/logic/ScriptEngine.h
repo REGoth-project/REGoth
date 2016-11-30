@@ -36,6 +36,16 @@ namespace Logic
         void initForWorld(const std::string& world);
 
         /**
+         * Returns a list of all global symbols the game would have saved inside a savegame together
+         * with their values.
+         *
+         * In Gothic, only plain global int-variables are saved.
+         * @return Pairs of symbolname and current value
+         */
+        std::vector<std::pair<std::string, int32_t>> exportGlobals();
+        void importGlobals(const std::vector<std::pair<std::string, int32_t>>& globals);
+
+        /**
          * Frame-functions
          */
         void onFrameStart();

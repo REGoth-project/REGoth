@@ -288,7 +288,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         showSplash();
 
         // Add startworld
-		m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
+        Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
 
 		m_timeOffset = bx::getHPCounter();
 
@@ -383,6 +383,32 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+
+
+        imguiBeginArea("Debug", 20, 20, 200, 150);
+
+        auto loadWorld = [&](const std::string& world){
+            // Export symbols to restore them in the other world
+            auto saveState = m_pEngine->getMainWorld().get().getScriptEngine().exportGlobals();
+
+            clearActions();
+            m_pEngine->removeWorld(m_pEngine->getMainWorld());
+            m_pEngine->addWorld(world);
+
+            // Assign saved globals to new scriptengine
+            m_pEngine->getMainWorld().get().getScriptEngine().importGlobals(saveState);
+        };
+
+        if(imguiButton("Load Oldworld"))
+            loadWorld("oldworld.zen");
+
+        if(imguiButton("Load Newworld"))
+            loadWorld("newworld.zen");
+
+        if(imguiButton("Load Addonworld"))
+            loadWorld("Addonworld.zen");
+
+        imguiEndArea();
 
         ddSetTransform(nullptr);
         ddDrawAxis(0.0f, 0.0f, 0.0f);

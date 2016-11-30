@@ -10,6 +10,7 @@
 #include <engine/World.h>
 #include <engine/GameEngine.h>
 #include <ui/PrintScreenMessages.h>
+#include <ZenLib/daedalus/DATFile.h>
 
 using namespace Logic;
 
@@ -209,12 +210,19 @@ void ScriptEngine::initForWorld(const std::string& world)
 
             setInstanceNPC("hero", VobTypes::getScriptHandle(npc));
 
-			Daedalus::GameState::NpcHandle hsnpc =  VobTypes::getScriptHandle(npc);
-			Daedalus::GameState::ItemHandle sword = getGameState().createInventoryItem(
-                    m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
 
-			if(sword.isValid())
-				VobTypes::NPC_EquipWeapon(npc, sword);
+            if(m_pVM->getDATFile().hasSymbolName("ItMw_1H_Sword_Short_04"))
+            {
+                Daedalus::GameState::NpcHandle hsnpc = VobTypes::getScriptHandle(npc);
+                Daedalus::GameState::ItemHandle sword = getGameState().createInventoryItem(
+                        m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
+
+                if(sword.isValid())
+                    VobTypes::NPC_EquipWeapon(npc, sword);
+            }else
+            {
+                LogWarn() << "ItMw_1H_Sword_Short_04 somehow not found in GOTHIC.DAT!";
+            }
 		}
 
         Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
@@ -485,6 +493,47 @@ void ScriptEngine::onFrameEnd()
         bgfx::dbgTextPrintf(60, 1 + i, 0x0f, "  %s: %.3f", name.c_str(), calls[i].second * 1000.0);
     }
 #endif
+}
+
+std::vector<std::pair<std::string, int32_t>> ScriptEngine::exportGlobals()
+{
+    auto& dat = m_pVM->getDATFile();
+
+    // Walk the symtable and find any non-const integer without any flags
+    // Just like the original!
+
+    std::vector<std::pair<std::string, int32_t>> out;
+
+    for(auto& sym : dat.getSymTable().symbols)
+    {
+        // Only flat integers
+        if(sym.properties.elemProps.flags == 0
+           && sym.properties.elemProps.type == Daedalus::EParType_Int)
+        {
+            // Write arrays in order
+            for(int32_t i: sym.intData)
+                out.emplace_back(sym.name, i);
+        }
+    }
+
+    return std::move(out);
+}
+
+void ScriptEngine::importGlobals(const std::vector<std::pair<std::string, int32_t>>& globals)
+{
+    auto& dat = m_pVM->getDATFile();
+
+    // Clear any value already inside
+    for(const auto& p : globals)
+    {
+        dat.getSymbolByName(p.first).intData.clear();
+    }
+
+    // Assign imported values
+    for(const auto& p : globals)
+    {
+        dat.getSymbolByName(p.first).intData.push_back(p.second);
+    }
 }
 
 
