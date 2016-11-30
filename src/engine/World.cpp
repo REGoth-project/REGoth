@@ -432,7 +432,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         if(Components::hasComponent<Components::AnimationComponent>(ents[i])
             && !anims[i].m_ParentAnimHandler.isValid())
         {
-            anims[i].m_AnimHandler.updateAnimations(deltaTime);
+            anims[i].getAnimHandler().updateAnimations(deltaTime);
         }
     }
 
@@ -628,7 +628,6 @@ EGameType WorldInstance::getBasicGameType()
     // Default to gothic 2
     return GT_Gothic2;
 }
-
 
 
 

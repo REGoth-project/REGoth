@@ -45,3 +45,4 @@ void WorldMesh::getTriangle(size_t triangleIdx, Math::float3 *v3)
 	for(int i=0;i<3;i++)
 		v3[i] = Math::float3(tri.vertices[i].Position.v);
 }
+

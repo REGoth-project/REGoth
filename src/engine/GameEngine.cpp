@@ -77,11 +77,11 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
     } else
     {
-        for (auto s : m_Worlds)
+        for (auto& s : m_WorldInstances)
         {
             // Update main-world after every other world, since the camera is in there
-            m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
-                                                             getMainCamera<Components::PositionComponent>().m_WorldMatrix);
+            s.onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
+                                getMainCamera<Components::PositionComponent>().m_WorldMatrix);
         }
 
         // Finally, update main camera
@@ -132,8 +132,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     bgfx::touch(0);
 
     // Draw all worlds
-    for(auto s : m_Worlds)
-        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
+    for(auto& s : m_WorldInstances)
+        Render::drawWorld(s, m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
 }
@@ -155,7 +155,7 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 
 Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
 {
-    World::WorldInstance& winst = m_WorldInstances.getElement(world);
+    World::WorldInstance& winst = world.get();
     // Add player-camera
     m_MainCamera = winst.addEntity(Components::PositionComponent::MASK);
 

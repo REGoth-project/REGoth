@@ -38,7 +38,7 @@ namespace Components
 
 	struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
 	{
-
+        ~Component(){};
 	};
 
     /**
@@ -254,7 +254,7 @@ namespace Components
         /**
          * Storage for animations of this model
          */
-        AnimHandler m_AnimHandler;
+        AnimHandler* m_AnimHandler;
 
         /**
          * If this is set to something valid, the anim-handler of this will be ignored and the one of the
@@ -262,9 +262,11 @@ namespace Components
          */
         Handle::EntityHandle m_ParentAnimHandler;
 
+        AnimHandler& getAnimHandler(){ return *m_AnimHandler; }
+
         static void init(AnimationComponent& c)
         {
-
+            c.m_AnimHandler = new AnimHandler;
         }
     };
 

@@ -22,6 +22,7 @@ namespace Logic
     {
     public:
         ScriptEngine(World::WorldInstance& world);
+        ScriptEngine(World::WorldInstance& world, ScriptEngine&& other);
         virtual ~ScriptEngine();
 
         /**

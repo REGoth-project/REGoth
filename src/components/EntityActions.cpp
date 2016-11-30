@@ -12,6 +12,11 @@ void ::Components::Actions::Logic::destroyVisualComponent(VisualComponent& c)
     delete c.m_pVisualController;
 }
 
+void ::Components::Actions::Animation::destroyAnimationComponent(AnimationComponent& c)
+{
+    delete c.m_AnimHandler;
+}
+
 
 
 

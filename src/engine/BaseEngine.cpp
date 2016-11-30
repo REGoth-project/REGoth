@@ -95,9 +95,10 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
 {
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
-	onWorldCreated(w);
+    m_WorldInstances.emplace_back();
+
+	World::WorldInstance& world = m_WorldInstances.back();
+	onWorldCreated(world.getMyHandle());
 
     if(!worldFile.empty())
     {
@@ -122,30 +123,23 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
         Vob::setVisual(vob, m_Args.testVisual);
     }
 
-	m_Worlds.push_back(w);
+	m_Worlds.push_back(world.getMyHandle());
 
-
-
-	return w;
+	return world.getMyHandle();
 }
 
 void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
     std::remove(m_Worlds.begin(), m_Worlds.end(), world);
-    m_WorldInstances.removeObject(world);
-}
 
-Handle::WorldHandle  BaseEngine::addWorld()
-{
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
-
-	world.init(*this);
-	m_Worlds.push_back(w);
-
-	onWorldCreated(w);
-
-	return w;
+    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
+    {
+        if(&(*it) == &world.get())
+        {
+            m_WorldInstances.erase(it);
+            break;
+        }
+    }
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -217,12 +211,12 @@ void BaseEngine::loadArchives()
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
 {
-	m_WorldInstances.getElement(world).setMyHandle(world);
+
 }
 
 World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
 {
-	return m_WorldInstances.getElement(h);
+	return h.get();
 }
 
 BaseEngine::EngineArgs BaseEngine::getEngineArgs()

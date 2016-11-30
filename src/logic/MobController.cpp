@@ -551,8 +551,8 @@ void MobController::onVisualChanged()
     // Strip extension
     std::string libName = v.visual->getName().substr(0, v.visual->getName().find_last_of('.'));
 
-    anim.m_AnimHandler.setWorld(m_World);
-    anim.m_AnimHandler.loadMeshLibFromVDF(libName, m_World.getEngine()->getVDFSIndex());
+    anim.getAnimHandler().setWorld(m_World);
+    anim.getAnimHandler().loadMeshLibFromVDF(libName, m_World.getEngine()->getVDFSIndex());
 
     // find new interact positions now that the visual changed
     findInteractPositions();

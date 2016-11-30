@@ -171,10 +171,10 @@ namespace Render
 					if(animations[i].m_ParentAnimHandler.isValid())
 					{
 						Components::AnimationComponent& pac = world.getEntity<Components::AnimationComponent>(animations[i].m_ParentAnimHandler);
-						animHandler = &pac.m_AnimHandler;
+						animHandler = &pac.getAnimHandler();
 					} else
 					{
-						animHandler = &animations[i].m_AnimHandler;
+						animHandler = &animations[i].getAnimHandler();
 					}
 
 					//animHandler->debugDrawSkeleton(pos);

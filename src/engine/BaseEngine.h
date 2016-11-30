@@ -40,11 +40,6 @@ namespace Engine
 		Handle::WorldHandle  addWorld(const std::string& worldFile);
 
 		/**
-		 * @brief Creates an empty world
-		 */
-		Handle::WorldHandle addWorld();
-
-		/**
 		 * Removes a world and everything inside
 		 * @param world World to remove
 		 */
@@ -110,7 +105,7 @@ namespace Engine
 		/**
 		 * Currently active world instances
 		 */
-		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
+		std::list<World::WorldInstance> m_WorldInstances;
 
 		/**
 		 * Main VDFS-Index

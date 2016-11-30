@@ -189,8 +189,8 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     // Strip extension
     std::string libName = visual.substr(0, visual.find_last_of('.'));
 
-    anim.m_AnimHandler.setWorld(*vob.world);
-    anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
+    anim.getAnimHandler().setWorld(*vob.world);
+    anim.getAnimHandler().loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
     // TODO: Move to other place (MDS)
 	// Load all default animations
@@ -198,7 +198,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
 	{
 		const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
 
-		anim.m_AnimHandler.addAnimation(name);
+		anim.getAnimHandler().addAnimation(name);
 	}
 
     for(int i=0;i<20;i++)
@@ -207,30 +207,30 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         if(ns.size() == 1)
             ns = "0" + ns;
 
-        anim.m_AnimHandler.addAnimation("T_DIALOGGESTURE_" + ns);
+        anim.getAnimHandler().addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUNL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALKL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUNL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALKL.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUN.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALK.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUN.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUN.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALK.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-T_JUMPB.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFEL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFER.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_JUMPB.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFEL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFER.MAN");
 
     // Fist
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTATTACK.MAN");
 
     // 1H
-    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_1HATTACK.MAN");
 
-    anim.m_AnimHandler.playAnimation("S_RUNL");
+    anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
 void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, size_t headTextureIdx,

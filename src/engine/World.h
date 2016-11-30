@@ -78,8 +78,8 @@ namespace World
     public:
 
 		/**
-		 * Information about the state of the world
-		 */
+          * Information about the state of the world
+          */
 		struct WorldInfo
 		{
 			WorldInfo()
@@ -205,11 +205,7 @@ namespace World
 		}
 		Handle::WorldHandle getMyHandle()
 		{
-			return m_MyHandle;
-		}
-		void setMyHandle(Handle::WorldHandle handle)
-		{
-			m_MyHandle = handle;
+			return Handle::WorldHandle(this);
 		}
 		Engine::BaseEngine* getEngine()
 		{

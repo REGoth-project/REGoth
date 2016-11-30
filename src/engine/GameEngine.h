@@ -45,7 +45,7 @@ namespace Engine
          */
         World::WorldInstance& getMainWorld()
         {
-            return m_WorldInstances.getElement(m_MainWorld);
+            return m_MainWorld.get();
         }
 
         /**
