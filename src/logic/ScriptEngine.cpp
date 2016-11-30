@@ -34,9 +34,7 @@ bool ScriptEngine::loadDAT(const std::string& file)
 
     LogInfo() << "Loading Daedalus compiled script file: " << file;
 
-    Daedalus::DATFile dat = Daedalus::DATFile(file);
-    m_pVM = new Daedalus::DaedalusVM(dat);
-
+    m_pVM = new Daedalus::DaedalusVM(file);
 
     // Register externals
     const bool verbose = false;
@@ -407,6 +405,7 @@ bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::Enti
         msg.subType = EventMessages::ManipulateMessage::ST_EquipItem;
 
     npc.playerController->getEM().onMessage(msg);
+	return true;
 }
 
 void ScriptEngine::startProfiling(size_t fnSym)
