@@ -93,7 +93,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 
 void GameEngine::drawFrame(uint16_t width, uint16_t height)
 {
-    Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().getComponentAllocator(), m_MainCamera);
+    Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), m_MainCamera);
 
     // Set view and projection matrix for view 0.
     float farPlane = 1000.0f;
@@ -142,15 +142,15 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 {
     BaseEngine::onWorldCreated(world);
 
-    if(!m_MainWorld.isValid())
-    {
-        m_MainWorld = world;
-    }
+    // Needed for camera-creation
+    setMainWorld(world);
+}
 
-    if(!m_MainCamera.isValid())
-    {
-        createMainCameraIn(m_MainWorld);
-    }
+void GameEngine::onWorldRemoved(Handle::WorldHandle world)
+{
+    BaseEngine::onWorldRemoved(world);
+
+    setMainWorld(Handle::WorldHandle::makeInvalidHandle());
 }
 
 Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
@@ -177,6 +177,14 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
     //cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
 
 	return m_MainCamera;
+}
+
+void GameEngine::setMainWorld(Handle::WorldHandle world)
+{
+    m_MainWorld = world;
+
+    if(world.isValid())
+        m_MainCamera = createMainCameraIn(m_MainWorld);
 }
 
 

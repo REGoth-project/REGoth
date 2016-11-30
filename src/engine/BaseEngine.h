@@ -90,6 +90,7 @@ namespace Engine
 		 * Called when a world was added
 		 */
 		virtual void onWorldCreated(Handle::WorldHandle world);
+		virtual void onWorldRemoved(Handle::WorldHandle world){};
 
 		/**
 		 * Update-method for subclasses

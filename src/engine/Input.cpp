@@ -69,6 +69,11 @@ Action* Input::RegisterAction(ActionType actionType, std::function<void (bool, f
     return &(( *actionTypeToActionMap.insert( std::make_pair(actionType, Action(function)) ) ).second);
 }
 
+void Input::clearActions()
+{
+    actionTypeToActionMap.clear();
+}
+
 bool Input::RemoveAction(ActionType actionType, Action *action)
 {
     auto rangeIterators = actionTypeToActionMap.equal_range(actionType);
@@ -285,3 +290,4 @@ void Input::getMouseState(Input::MouseState& ms)
     ms.m_buttons[1] = (uint8_t)mouseButtonState[1];
     ms.m_buttons[2] = (uint8_t)mouseButtonState[2];
 }
+

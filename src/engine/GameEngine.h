@@ -28,7 +28,7 @@ namespace Engine
         template<typename T>
         T& getMainCamera()
         {
-            return getMainWorld().getComponentAllocator().getElement<T>(m_MainCamera);
+            return m_MainWorld.get().getComponentAllocator().getElement<T>(m_MainCamera);
         }
 
         /**
@@ -43,10 +43,16 @@ namespace Engine
         /**
          * @return data-access to the main world
          */
-        World::WorldInstance& getMainWorld()
+        Handle::WorldHandle getMainWorld()
         {
-            return m_MainWorld.get();
+            return m_MainWorld;
         }
+
+        /**
+         * Sets the currently active world. Player and camera will be taken from this world.
+         * @param world
+         */
+        void setMainWorld(Handle::WorldHandle world);
 
         /**
          * @return Default set of shaders and constants
@@ -61,6 +67,7 @@ namespace Engine
 		 * Called when a world was added
 		 */
         virtual void onWorldCreated(Handle::WorldHandle world) override;
+        virtual void onWorldRemoved(Handle::WorldHandle world) override;
 
         /**
 		 * Update-method for subclasses

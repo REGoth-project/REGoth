@@ -113,6 +113,7 @@ namespace Engine
 	public:
 		static Action* RegisterAction( ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
 		static bool RemoveAction(ActionType actionType, Action* action);
+		static void clearActions();
 		static void fireBindings();
 		static void setMouseLock(bool mouseLock);
 		static Math::float2 getMouseCoordinates();
