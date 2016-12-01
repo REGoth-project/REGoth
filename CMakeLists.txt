@@ -197,6 +197,7 @@ include_directories(lib)
 include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
+include_directories(lib/json)
 
 if(NOT ANDROID)
 	
