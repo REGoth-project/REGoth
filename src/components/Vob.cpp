@@ -34,10 +34,13 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
     Components::addComponent<Components::PositionComponent>(entity);
     Components::Actions::initComponent<Components::PositionComponent>(world.getComponentAllocator(), e);
 
+    //Components::addComponent<Components::PhysicsComponent>(entity);
+    //Components::Actions::initComponent<Components::PhysicsComponent>(world.getComponentAllocator(), e);
+
     return e;
 }
 
-Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle& e)
+Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle e)
 {
     VobInformation info;
     Components::ComponentAllocator& alloc = world.getComponentAllocator();
@@ -96,6 +99,13 @@ void ::Vob::broadcastTransformChange(VobInformation& vob)
 
 void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
 {
+    std::string visual = _visual;
+    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+
+    // Don't set twice
+    if(vob.visual && vob.visual->getName() == visual)
+        return;
+
     // Clear old visual
     delete vob.visual;
 
@@ -105,13 +115,13 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     vob.visual = nullptr;
     *ppVisual = nullptr;
 
-    std::string visual = _visual;
-    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+
 
     // Check type of visual
     if(visual.find(".3DS") != std::string::npos
        || visual.find(".MMB") != std::string::npos
-       || visual.find(".MMS") != std::string::npos)
+		|| visual.find(".MMS") != std::string::npos
+		|| visual.find(".MDMS") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::StaticMeshVisual(*vob.world, vob.entity);
         if(ld->load(visual))
@@ -125,12 +135,19 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     {
         Logic::VisualController* ld = new Logic::ModelVisual(*vob.world, vob.entity);
         if(ld->load(visual))
+        {
             (*ppVisual) = ld;
+        }
         else
             delete ld;
     }
 
-
+    // Notify the logic controller
+    if(vob.visual != (*ppVisual))
+    {
+        if(vob.logic)
+            vob.logic->onVisualChanged();
+    }
 
     vob.visual = (*ppVisual);
 }
@@ -157,6 +174,34 @@ World::WorldInstance &::Vob::getWorld(Vob::VobInformation &vob)
 {
     return *vob.world;
 }
+
+Logic::VisualController *::Vob::getVisual(Vob::VobInformation &vob)
+{
+    return vob.visual;
+}
+
+std::string Vob::getName(Vob::VobInformation& vob)
+{
+    if(vob.object)
+        return vob.object->m_Name;
+
+    return "";
+}
+
+void ::Vob::setCollisionEnabled(VobInformation& vob, bool value)
+{
+    if(vob.object)
+        vob.object->m_EnableCollision = value;
+}
+
+bool ::Vob::getCollisionEnabled(VobInformation& vob)
+{
+    if(vob.object)
+        return vob.object->m_EnableCollision;
+
+    return false;
+}
+
 
 
 

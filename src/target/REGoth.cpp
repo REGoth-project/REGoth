@@ -14,9 +14,25 @@
 #include <utils/bgfx_lib.h>
 #include <content/VertexTypes.h>
 #include <render/WorldRender.h>
-#include "entry/input.h"
 #include <debugdraw/debugdraw.h>
+#include <bx/uint32_t.h>
+#include <zenload/ztex2dds.h>
+#include <render/RenderSystem.h>
 #include "config.h"
+#include <imgui/imgui.h>
+#include <ui/DialogBox.h>
+#include <ZenLib/utils/logger.h>
+
+#if BX_PLATFORM_ANDROID
+#include "engine/PlatformAndroid.h"
+#define PLATFORM_CLASS Engine::PlatformAndroid
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS
+#include "engine/PlatformGLFW.h"
+#define PLATFORM_CLASS Engine::PlatformGLFW
+#else
+#error Unknown platform
+#endif
+
 
 struct PosColorVertex
 {
@@ -67,22 +83,174 @@ static const uint16_t s_cubeIndices[36] =
 	6, 3, 7,
 };
 
-class ExampleCubes : public entry::AppI
+
+struct PosColorTexCoord0Vertex
 {
+    float m_x;
+    float m_y;
+    float m_z;
+    uint32_t m_abgr;
+    float m_u;
+    float m_v;
+
+    static void init()
+    {
+        ms_decl
+                .begin()
+                .add(bgfx::Attrib::Position,  3, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true)
+                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+                .end();
+    }
+
+    static bgfx::VertexDecl ms_decl;
+};
+
+bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
+
+
+
+class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
+{
+    void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
+    {
+        bgfx::TransientVertexBuffer tvb;
+        bgfx::TransientIndexBuffer tib;
+
+        if (bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6) )
+        {
+            PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
+
+            float zz = 1.0f;
+
+            const float minx = _x;
+            const float maxx = _x + _width;
+            const float miny = _y;
+            const float maxy = _y + _height;
+
+            float minu = 0.0f;
+            float minv = 0.0f;
+            float maxu =  _width;
+            float maxv =  _height;
+
+            vertex[0].m_x = minx;
+            vertex[0].m_y = miny;
+            vertex[0].m_z = zz;
+            vertex[0].m_abgr = 0xffffffff;
+            vertex[0].m_u = minu;
+            vertex[0].m_v = minv;
+
+            vertex[1].m_x = maxx;
+            vertex[1].m_y = miny;
+            vertex[1].m_z = zz;
+            vertex[1].m_abgr = 0xffffffff;
+            vertex[1].m_u = maxu;
+            vertex[1].m_v = minv;
+
+            vertex[2].m_x = maxx;
+            vertex[2].m_y = maxy;
+            vertex[2].m_z = zz;
+            vertex[2].m_abgr = 0xffffffff;
+            vertex[2].m_u = maxu;
+            vertex[2].m_v = maxv;
+
+            vertex[3].m_x = minx;
+            vertex[3].m_y = maxy;
+            vertex[3].m_z = zz;
+            vertex[3].m_abgr = 0xffffffff;
+            vertex[3].m_u = minu;
+            vertex[3].m_v = maxv;
+
+            uint16_t* indices = (uint16_t*)tib.data;
+
+            indices[0] = 0;
+            indices[1] = 2;
+            indices[2] = 1;
+            indices[3] = 0;
+            indices[4] = 3;
+            indices[5] = 2;
+
+
+            bgfx::setIndexBuffer(&tib);
+            bgfx::setVertexBuffer(&tvb);
+            bgfx::submit(_view, _program);
+        }
+    }
+
+    void drawLog()
+    {
+        const std::list<std::string>& logs = Utils::Log::getLastLogLines();
+        auto it = logs.begin();
+
+        for(int i=49; i>=0 && it != logs.end() ;i++)
+        {
+            bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
+
+            it++;
+        }
+    }
+
+    void showSplash()
+    {
+        float view[16];
+        float proj[16];
+
+        bx::mtxIdentity(view);
+        bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
+
+
+
+        bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
+
+        // Set view and projection matrix for view 0.
+        bgfx::setViewTransform(1, NULL, proj);
+
+
+        bgfx::touch(0);
+
+#if BX_PLATFORM_ANDROID
+
+#else
+        Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
+        Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
+
+        if(!txh.isValid())
+            return;
+
+        Textures::Texture& texture = alloc.getTexture(txh);
+        bgfx::frame();
+
+        bgfx::setState(BGFX_STATE_DEFAULT);
+        const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+        bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
+        renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
+#endif
+
+
+        bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
+        bgfx::frame();
+    }
+
 	void init(int _argc, char** _argv) BX_OVERRIDE
 	{
         std::cout << "Running REGoth Engine" << std::endl;
 
-		Args args(_argc, _argv);
+//		Args args(_argc, _argv);
 
 		axis = 0;
-		m_width = 1280;
-		m_height = 720;
 		m_debug = BGFX_DEBUG_TEXT;
+#if BX_PLATFORM_ANDROID
+        m_reset = 0;
+#else
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+#endif
 
-		bgfx::init(args.m_type, args.m_pciId);
-		bgfx::reset(m_width, m_height, m_reset);
+        m_Width = getWindowWidth();
+        m_Height = getWindowHeight();
+
+//		bgfx::init(args.m_type, args.m_pciId);
+        bgfx::init();
+		bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height, m_reset);
 
 		// Enable debug text.
 		bgfx::setDebug(m_debug);
@@ -105,19 +273,48 @@ class ExampleCubes : public entry::AppI
 		Meshes::PositionUVVertex::init();
 		Meshes::SkeletalVertex::init();
 
-		m_Engine.initEngine(_argc, _argv);
-		m_Engine.addWorld(m_Engine.getEngineArgs().startupZEN);
+        PosColorTexCoord0Vertex::init();
+
+		m_pEngine = new Engine::GameEngine;
+
+#if BX_PLATFORM_ANDROID
+        // Content is somewhere else on android
+        m_pEngine->setContentBasePath("/sdcard/REGoth/");
+#endif
+
+		m_pEngine->initEngine(_argc, _argv);
+
+
+        showSplash();
+
+        // Add startworld
+        Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
 
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
+
+
+        // Imgui.
+        float fontSize = 18.0f;//18
+
+#ifdef ANDROID
+        fontSize = 23.0f;
+#endif
+
+        imguiCreate(nullptr, 0, fontSize);
+        m_scrollArea = 0;
 	}
 
 	virtual int shutdown() BX_OVERRIDE
 	{
 		// Cleanup.
 
+		delete m_pEngine;
+
 		ddShutdown();
+
+        imguiDestroy();
 
 		// Shutdown bgfx.
 		bgfx::shutdown();
@@ -127,80 +324,137 @@ class ExampleCubes : public entry::AppI
 
 	bool update() BX_OVERRIDE
 	{
-		if (!entry::processEvents(m_width, m_height, m_debug, m_reset))
-		{
-			int64_t now = bx::getHPCounter();
-			static int64_t last = now;
-			const int64_t frameTime = now - last;
-			last = now;
-			const double freq = double(bx::getHPFrequency());
-			const double toMs = 1000.0 / freq;
-
-			float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
-			const float dt = float(frameTime/freq);
+        Engine::Input::fireBindings();
 
 
-			// Use debug font to print information about this example.
-			bgfx::dbgTextClear();
-			bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_Engine.getEngineArgs().startupZEN.c_str());
-			bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+        // Check for resize
+        if(m_Width != getWindowWidth() || m_Height != getWindowHeight())
+        {
+            m_Width = getWindowWidth();
+            m_Height = getWindowHeight();
+
+            // Notify bgfx about framebuffer resize
+            bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height);
+        }
+
+        int64_t now = bx::getHPCounter();
+        static int64_t last = now;
+        const int64_t frameTime = now - last;
+        last = now;
+        const double freq = double(bx::getHPFrequency());
+        const double toMs = 1000.0 / freq;
+
+        float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
+        const float dt = float(frameTime/freq);
+
+        Engine::Input::MouseState ms; Engine::Input::getMouseState(ms);
+        // Prepare rendering of debug-textboxes, etc
+        imguiBeginFrame(ms.m_mx
+                ,  ms.m_my
+                , (ms.m_buttons[0] ? IMGUI_MBUT_LEFT   : 0)
+                  | (ms.m_buttons[1] ? IMGUI_MBUT_RIGHT  : 0)
+                  | (ms.m_buttons[2] ? IMGUI_MBUT_MIDDLE : 0)
+                ,  ms.m_mz
+                , (uint16_t)getWindowWidth()
+                , (uint16_t)getWindowHeight()
+        );
+
+        // Use debug font to print information about this example.
+        bgfx::dbgTextClear();
+        bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+        bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
 
 
-			// This dummy draw call is here to make sure that view 0 is cleared
-			// if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
-			//bgfx::touch(0);
-
-			
-
-			// Set render states.
-			//bgfx::setState(BGFX_STATE_DEFAULT);
-			//bgfx::setTexture(0, m_texUniform, m_texHandle);
-
-			ddBegin(0);
-
-			m_Engine.frameUpdate(dt, m_width, m_height);
-
-			ddSetTransform(nullptr);
-			ddDrawAxis(0.0f, 0.0f, 0.0f);
-
-			ddPush();
-			ddSetColor(0xff00ff00);
-			ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
-			Aabb aabb =
-					{
-							{  -1.0f, -1.0f, -1.0f },
-							{ 1.0f, 1.0f, 1.0f },
-					};
-			ddDraw(aabb);
-
-			ddSetTransform(nullptr);
-			ddSetColor(0xff0000ff);
-			ddMoveTo(0,0,0);
-			ddLineTo(10,0,0);
-			ddPop();
+        // This dummy draw call is here to make sure that view 0 is cleared
+        // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
+        //bgfx::touch(0);
 
 
 
-			ddEnd();
+        // Set render states.
+        //bgfx::setState(BGFX_STATE_DEFAULT);
+        //bgfx::setTexture(0, m_texUniform, m_texHandle);
 
-			// Advance to next frame. Rendering thread will be kicked to
-			// process submitted rendering primitives.
-			bgfx::frame();
+        ddBegin(0);
 
-			return true;
-		}
+        m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
+        // Draw and process all UI-Views
+        // Set render states.
 
-		return false;
+
+        m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+
+
+        imguiBeginArea("Debug", 20, 20, 200, 150);
+
+        auto loadWorld = [&](const std::string& world){
+            // Export symbols to restore them in the other world
+            auto saveState = m_pEngine->getMainWorld().get().getScriptEngine().exportGlobals();
+
+            clearActions();
+            m_pEngine->removeWorld(m_pEngine->getMainWorld());
+            m_pEngine->addWorld(world);
+
+            // Assign saved globals to new scriptengine
+            m_pEngine->getMainWorld().get().getScriptEngine().importGlobals(saveState);
+        };
+
+        if(imguiButton("Load Oldworld"))
+            loadWorld("oldworld.zen");
+
+        if(imguiButton("Load Newworld"))
+            loadWorld("newworld.zen");
+
+        if(imguiButton("Load Addonworld"))
+            loadWorld("Addonworld.zen");
+
+        imguiEndArea();
+
+        ddSetTransform(nullptr);
+        ddDrawAxis(0.0f, 0.0f, 0.0f);
+
+        ddPush();
+        ddSetColor(0xff00ff00);
+        ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
+        Aabb aabb =
+                {
+                        {  -1.0f, -1.0f, -1.0f },
+                        { 1.0f, 1.0f, 1.0f },
+                };
+        ddDraw(aabb);
+
+        ddSetTransform(nullptr);
+        ddSetColor(0xff0000ff);
+        ddMoveTo(0,0,0);
+        ddLineTo(10,0,0);
+        ddPop();
+
+        ddEnd();
+
+        imguiEndFrame();
+
+        // Advance to next frame. Rendering thread will be kicked to
+        // process submitted rendering primitives.
+        bgfx::frame();
+
+        return true;
 	}
 
-	Handle::MeshHandle m_LevelMesh;
-	Engine::GameEngine m_Engine;
-	uint32_t m_width;
-	uint32_t m_height;
+	Engine::GameEngine* m_pEngine;
 	uint32_t m_debug;
 	uint32_t m_reset;
+    int m_Width, m_Height;
 	int64_t m_timeOffset;
 	float axis;
+    int32_t m_scrollArea;
 };
 
-ENTRY_IMPLEMENT_MAIN(ExampleCubes);
+//ENTRY_IMPLEMENT_MAIN(ExampleCubes);
+
+//Usage of Platform:
+
+int main(int argc, char** argv)
+{
+    ExampleCubes app;
+    return app.run(argc, argv);
+}

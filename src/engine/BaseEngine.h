@@ -2,6 +2,8 @@
 #include <memory/StaticReferencedAllocator.h>
 #include "World.h"
 #include <vdfs/fileIndex.h>
+#include <ui/View.h>
+#include <bx/commandline.h>
 
 namespace Engine
 {
@@ -13,8 +15,13 @@ namespace Engine
 
         struct EngineArgs
         {
+			EngineArgs() : cmdline(0, NULL) {}
+
             std::string gameBaseDirectory;
             std::string startupZEN;
+			std::string testVisual;
+			std::string modfile;
+			bx::CommandLine cmdline;
         };
 
 		BaseEngine();
@@ -33,9 +40,10 @@ namespace Engine
 		Handle::WorldHandle  addWorld(const std::string& worldFile);
 
 		/**
-		 * @brief Creates an empty world
+		 * Removes a world and everything inside
+		 * @param world World to remove
 		 */
-		Handle::WorldHandle addWorld();
+		void removeWorld(Handle::WorldHandle world);
 
 		/**
 		 * @brief Frame update // TODO: Remove width and height
@@ -60,12 +68,29 @@ namespace Engine
          */
         EngineArgs getEngineArgs();
 
+		/**
+		 * @return Base-level UI-View. Parent of all other views.
+		 */
+		UI::View& getRootUIView() { return m_RootUIView; }
+
+		/**
+		 * Sets the path the engine is looking for files
+		 * @param path New path
+		 */
+		void setContentBasePath(const std::string& path){ m_ContentBasePath = path; }
+
+		/*+
+         * @return The path where the engine is looking for content files
+         */
+		const std::string& getContentBasePath(){ return m_ContentBasePath; }
+
 	protected:
 
 		/**
 		 * Called when a world was added
 		 */
 		virtual void onWorldCreated(Handle::WorldHandle world);
+		virtual void onWorldRemoved(Handle::WorldHandle world){};
 
 		/**
 		 * Update-method for subclasses
@@ -81,7 +106,7 @@ namespace Engine
 		/**
 		 * Currently active world instances
 		 */
-		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
+		std::list<World::WorldInstance> m_WorldInstances;
 
 		/**
 		 * Main VDFS-Index
@@ -97,5 +122,15 @@ namespace Engine
          * Arguments
          */
         EngineArgs m_Args;
+
+		/**
+		 * Base UI-View
+		 */
+		UI::View m_RootUIView;
+
+		/**
+		 * Folder where the content is
+		 */
+		std::string m_ContentBasePath;
 	};
 }

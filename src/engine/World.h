@@ -11,6 +11,12 @@
 #include "Waynet.h"
 #include <logic/ScriptEngine.h>
 #include <content/SkeletalMeshAllocator.h>
+#include <components/Entities.h>
+#include <physics/PhysicsSystem.h>
+#include <content/AnimationAllocator.h>
+#include <content/Sky.h>
+#include <logic/DialogManager.h>
+#include <content/AudioEngine.h>
 
 namespace ZenLoad
 {
@@ -28,7 +34,7 @@ namespace World
     {
 		template<typename V, typename I>
 		using MeshAllocator = Memory::StaticReferencedAllocator<
-			LevelMesh::StaticLevelMesh<V,I>, 
+			Meshes::WorldStaticMesh,
 			Config::MAX_NUM_LEVEL_MESHES
 		>;
 
@@ -41,6 +47,7 @@ namespace World
         Textures::TextureAllocator m_LevelTextureAllocator;
 		Meshes::StaticMeshAllocator m_LevelStaticMeshAllocator;
 		Meshes::SkeletalMeshAllocator m_LevelSkeletalMeshAllocator;
+		Animations::AnimationAllocator m_AnimationAllocator;
 
 		// TODO: Refractor this one into StaticMeshAllocator
 		WorldMeshAllocator m_WorldMeshAllocator;
@@ -57,9 +64,36 @@ namespace World
         std::vector<size_t> m_VisibleEntities;
     };
 
+	/**
+	 * Basic gametype this is. Needed for sky configuration, for example
+	 */
+	enum EGameType
+	{
+		GT_Gothic1,
+		GT_Gothic2
+	};
+
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
     public:
+
+		/**
+          * Information about the state of the world
+          */
+		struct WorldInfo
+		{
+			WorldInfo()
+			{
+				lastFrameDeltaTime = 0.0;
+				time = 0.0;
+			}
+
+			// Last deltatime-value we have gotten here
+			double lastFrameDeltaTime;
+
+			// Total running time
+			double time;
+		};
 
 		WorldInstance();
 
@@ -98,10 +132,33 @@ namespace World
 		}
 
         /**
+         * @return The vob-entity of a vob using the given name
+         */
+        Handle::EntityHandle getVobEntityByName(const std::string& name)
+        {
+            auto it = m_VobsByNames.find(name);
+            if(it == m_VobsByNames.end())
+                return Handle::EntityHandle::makeInvalidHandle();
+
+            return (*it).second;
+        }
+
+        /**
+         * Goes through the list of all vobs and returns a list of the startwaypoint-indices
+         * @return List indices of the waypoints which are used as starting-position
+         */
+        std::vector<size_t> findStartPoints();
+
+		/**
+		 * @return Basic gametype this is. Needed for sky configuration, for example
+		 */
+		EGameType getBasicGameType();
+
+        /**
          * Data access
          */
         Components::ComponentAllocator::DataBundle getComponentDataBundle()
-        {
+		{
             return m_Allocators.m_ComponentAllocator.getDataBundle();
         }
 		WorldAllocators& getAllocators()
@@ -128,6 +185,12 @@ namespace World
 		{
 			return m_Allocators.m_LevelSkeletalMeshAllocator;
 		}
+		Animations::AnimationAllocator& getAnimationAllocator()
+		{
+			return m_Allocators.m_AnimationAllocator;
+		}
+
+		// TODO: Depricated, remove
 		WorldAllocators::MaterialAllocator& getMaterialAllocator()
 		{
 			return m_Allocators.m_MaterialAllocator;
@@ -142,17 +205,67 @@ namespace World
 		}
 		Handle::WorldHandle getMyHandle()
 		{
-			return m_MyHandle;
-		}
-		void setMyHandle(Handle::WorldHandle handle)
-		{
-			m_MyHandle = handle;
+			return Handle::WorldHandle(this);
 		}
 		Engine::BaseEngine* getEngine()
 		{
 			return m_pEngine;
 		}
-    protected:
+        Physics::PhysicsSystem& getPhysicsSystem()
+		{
+            return m_PhysicsSystem;
+        }
+        Handle::CollisionShapeHandle getStaticObjectCollisionShape()
+		{
+            return m_StaticWorldObjectCollsionShape;
+        }
+		WorldMesh& getWorldMesh()
+		{
+			return m_WorldMesh;
+		}
+		Content::Sky& getSky()
+		{
+			return m_Sky;
+		}
+		Logic::DialogManager& getDialogManager()
+		{
+			return m_DialogManager;
+		}
+		Content::AudioEngine& getAudioEngine()
+		{
+			return m_AudioEngine;
+		}
+
+		/**
+		 * This worlds print-screen manager
+		 */
+		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+
+		/**
+		 * @return Information about the state of the world
+		 */
+		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
+
+		/**
+		 * @return Map of freepoints
+		 */
+		std::vector<Handle::EntityHandle> getFreepoints(const std::string& tag);
+
+		/**
+		 * Returns a map of freepoints in the given range of the center
+		 * @param center Center of distance search
+		 * @param distance Max distance to check for
+		 * @param name Name-filter
+		 * @param closestOnly Put only the closest one into the result
+		 * @param inst Entity that want's a new freepoint, aka, should not be on any of the returned ones
+		 * @return Vector of closest freepoints
+		 */
+		std::vector<Handle::EntityHandle> getFreepointsInRange(const Math::float3& center,
+															   float distance,
+															   const std::string& name = "",
+															   bool closestOnly = false,
+															   Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
+	protected:
 
 		/**
 		 * Initializes the Script-Engine for a ZEN-World.
@@ -162,6 +275,11 @@ namespace World
 
         WorldAllocators m_Allocators;
         TransientEntityFeatures m_TransientEntityFeatures;
+
+		/**
+		 * Loaded zen-file
+		 */
+		std::string m_ZenFile;
 
 		/**
 		 * Worldmesh-data
@@ -183,12 +301,62 @@ namespace World
 		 */
 		Logic::ScriptEngine m_ScriptEngine;
 
-		Handle::EntityHandle m_TestEntity;
-		Handle::EntityHandle m_TestPlayer;
+		/**
+		 * This worlds physics system
+		 */
+		Physics::PhysicsSystem m_PhysicsSystem;
+
+		/**
+		 * Audio-Engine of this world
+		 */
+		Content::AudioEngine m_AudioEngine;
+
+		/**
+		 * Sky of this world
+		 */
+		Content::Sky m_Sky;
+
+		/**
+		 * Static collision-shape for the world
+		 */
+		Handle::CollisionShapeHandle m_StaticWorldObjectCollsionShape;
+		Handle::CollisionShapeHandle m_StaticWorldMeshCollsionShape;
+		Handle::PhysicsObjectHandle m_StaticWorldMeshPhysicsObject;
+		Handle::PhysicsObjectHandle m_StaticWorldObjectPhysicsObject;
 
 		/**
 		 * Handle of this world-instance
 		 */
 		Handle::WorldHandle m_MyHandle;
+
+        /**
+         * Map of vobs by their names (If they have one)
+         */
+        std::unordered_map<std::string, Handle::EntityHandle> m_VobsByNames;
+
+		/**
+		 * List of freepoints
+		 */
+		std::map<std::string, Handle::EntityHandle> m_FreePoints;
+
+		/**
+		 * NPCs in this world
+		 */
+		std::set<Handle::EntityHandle> m_NPCEntities;
+
+		/**
+		 * This worlds dialog-manager
+		 */
+		Logic::DialogManager m_DialogManager;
+
+		/**
+		 * This worlds print-screen manager
+		 */
+		UI::PrintScreenMessages* m_PrintScreenMessageView;
+
+		/**
+		 * Information about the state of the world
+		 */
+		WorldInfo m_WorldInfo;
     };
 }

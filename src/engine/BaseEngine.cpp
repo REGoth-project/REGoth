@@ -9,6 +9,7 @@
 #include <utils/logger.h>
 #include <bx/commandline.h>
 #include <zenload/zCModelPrototype.h>
+#include <components/Vob.h>
 
 using namespace Engine;
 
@@ -23,15 +24,24 @@ BaseEngine::~BaseEngine()
 
 void BaseEngine::initEngine(int argc, char** argv)
 {
-    bx::CommandLine cmdLine(argc, (const char**)argv);
+    m_Args.cmdline = bx::CommandLine(argc, (const char**)argv);
     const char* value = nullptr;
 
-    m_Args.gameBaseDirectory = ".";
-    m_Args.startupZEN = "addonworld.zen";
+    LogInfo() << "Initializing...";
 
-    if(cmdLine.hasArg('g'))
+    for(int i=0;i<argc;i++)
     {
-        value = cmdLine.findOption('g');
+        LogInfo() << "Arg " << i;
+        LogInfo() << " - " << argv[i];
+    }
+
+
+    m_Args.gameBaseDirectory = ".";
+    //m_Args.startupZEN = "addonworld.zen";
+
+    if(m_Args.cmdline.hasArg('g'))
+    {
+        value = m_Args.cmdline.findOption('g');
 
         if(value)
         {
@@ -43,9 +53,20 @@ void BaseEngine::initEngine(int argc, char** argv)
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
     }
 
-    if(cmdLine.hasArg('w'))
+    if(m_Args.cmdline.hasArg('m'))
     {
-        value = cmdLine.findOption('w');
+        value = m_Args.cmdline.findOption('m');
+
+        if(value)
+        {
+            m_Args.modfile = value;
+            LogInfo() << "Using modfile " << m_Args.modfile;
+        }
+    }
+
+    if(m_Args.cmdline.hasArg('w'))
+    {
+        value = m_Args.cmdline.findOption('w');
 
         if(value)
         {
@@ -59,43 +80,66 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 
     loadArchives();
+
+    if(m_Args.startupZEN.empty() || !m_FileIndex.hasFile(m_Args.startupZEN))
+    {
+        // Try Gothic 1
+        if(m_FileIndex.hasFile("world.zen"))
+            m_Args.startupZEN = "world.zen";
+        else if(m_FileIndex.hasFile("newworld.zen"))
+            m_Args.startupZEN = "newworld.zen";
+        else
+            LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
+    }
 }
 
 Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
 {
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
-	onWorldCreated(w);
+    m_WorldInstances.emplace_back();
 
-	std::vector<uint8_t> zenData;
-	m_FileIndex.getFileData(worldFile, zenData);
+	World::WorldInstance& world = m_WorldInstances.back();
+	onWorldCreated(world.getMyHandle());
 
-	if (zenData.empty())
-	{
-		LogWarn() << "Failed to find world file: " << worldFile;
-		return Handle::WorldHandle::makeInvalidHandle();
-	}
+    if(!worldFile.empty())
+    {
+        std::vector<uint8_t> zenData;
+        m_FileIndex.getFileData(worldFile, zenData);
 
-	world.init(*this, worldFile);
+        if (zenData.empty())
+        {
+            LogWarn() << "Failed to find world file: " << worldFile;
+            return Handle::WorldHandle::makeInvalidHandle();
+        }
+    }
 
-	m_Worlds.push_back(w);
+    world.init(*this, worldFile);
 
+    if(!m_Args.testVisual.empty())
+    {
+        LogInfo() << "Testing visual: " << m_Args.testVisual;
+        Handle::EntityHandle e = Vob::constructVob(world);
+        Vob::VobInformation vob = Vob::asVob(world, e);
 
+        Vob::setVisual(vob, m_Args.testVisual);
+    }
 
-	return w;
+	m_Worlds.push_back(world.getMyHandle());
+
+	return world.getMyHandle();
 }
 
-Handle::WorldHandle  BaseEngine::addWorld()
+void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
+    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
 
-	world.init(*this);
-	m_Worlds.push_back(w);
-
-	onWorldCreated(w);
-
-	return w;
+    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
+    {
+        if(&(*it) == &world.get())
+        {
+            m_WorldInstances.erase(it);
+            break;
+        }
+    }
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -136,9 +180,18 @@ void BaseEngine::loadArchives()
         m_FileIndex.loadVDF(s);
     }
 
-    ZenLoad::zCModelPrototype p("HUMANS.MDS", m_FileIndex);
+    // Happens on modded games
+    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
 
-    /*std::list<std::string> modArchives = Utils::getFilesInDirectory("vdf", "mod");
+    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
+    for(std::string& s : vdfArchivesDisabled)
+    {
+        m_FileIndex.loadVDF(s);
+    }
+
+
+	// Load mod archives with higher priority
+    std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
 
     if(!modArchives.empty())
     {
@@ -147,23 +200,30 @@ void BaseEngine::loadArchives()
         {
             m_FileIndex.loadVDF(s, 1);
         }
-    }*/
+    }
+
+    // Load explicit modfile with even higher priority
+    if(!m_Args.modfile.empty())
+    {
+    	m_FileIndex.loadVDF(m_Args.modfile, 2);
+    }
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
 {
-	m_WorldInstances.getElement(world).setMyHandle(world);
+
 }
 
 World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
 {
-	return m_WorldInstances.getElement(h);
+	return h.get();
 }
 
 BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 {
     return m_Args;
 }
+
 
 
 

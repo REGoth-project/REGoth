@@ -113,6 +113,42 @@ namespace Components
             void destroyVisualComponent(VisualComponent& c);
         }
 
+        namespace Animation
+        {
+            void destroyAnimationComponent(AnimationComponent& c);
+        }
+
+        namespace Physics
+        {
+            /**
+             * Returns the transformation matrix of the rigid-bodys state
+             * @param c Physicsscomponent to use
+             * @return Transform of the rigid-bodys state
+             */
+            inline Math::Matrix getRigidBodyTransform(Components::PhysicsComponent& c)
+            {
+                Math::Matrix m;
+                /*if(c.m_RigidBody.getMotionState())
+                    c.m_RigidBody.getMotionState()->getOpenGLMatrix(m.mv);
+                else
+                    m = Math::Matrix::CreateIdentity();*/ // TODO: Reimplement
+
+                return m;
+            }
+
+            /**
+             * Sets the transform of the rigid-bodys state
+             * @param c Physicsscomponent to use
+             * @param Transform of the rigid-bodys state
+             */
+            inline void setRigidBodyPosition(Components::PhysicsComponent& c, const Math::float3& position)
+            {
+                /*Math::Matrix m = Math::Matrix::CreateTranslation(position);
+
+                c.m_RigidBody.setBodyTransform(m);*/ // TODO: Reimplement
+            }
+        }
+
         /**
          * Cleans created resources from the components
          */
@@ -134,6 +170,12 @@ namespace Components
             Logic::destroyVisualComponent(c);
         }
 
+        template<>
+        inline void destroyComponent<AnimationComponent>(AnimationComponent& c)
+        {
+            Animation::destroyAnimationComponent(c);
+        }
+
         template<typename F>
         inline void forAllComponents(Components::ComponentAllocator& alloc,
                                      Handle::EntityHandle e,
@@ -144,5 +186,6 @@ namespace Components
                f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
             });
         }
+
     }
 }

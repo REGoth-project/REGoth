@@ -2,6 +2,7 @@
 #include "BaseEngine.h"
 #include <render/RenderSystem.h>
 #include <logic/CameraController.h>
+#include "Input.h"
 
 namespace Engine
 {
@@ -27,7 +28,7 @@ namespace Engine
         template<typename T>
         T& getMainCamera()
         {
-            return getMainWorld().getComponentAllocator().getElement<T>(m_MainCamera);
+            return m_MainWorld.get().getComponentAllocator().getElement<T>(m_MainCamera);
         }
 
         /**
@@ -42,9 +43,23 @@ namespace Engine
         /**
          * @return data-access to the main world
          */
-        World::WorldInstance& getMainWorld()
+        Handle::WorldHandle getMainWorld()
         {
-            return m_WorldInstances.getElement(m_MainWorld);
+            return m_MainWorld;
+        }
+
+        /**
+         * Sets the currently active world. Player and camera will be taken from this world.
+         * @param world
+         */
+        void setMainWorld(Handle::WorldHandle world);
+
+        /**
+         * @return Default set of shaders and constants
+         */
+        Render::RenderSystem& getDefaultRenderSystem()
+        {
+            return m_DefaultRenderSystem;
         }
     protected:
 
@@ -52,6 +67,7 @@ namespace Engine
 		 * Called when a world was added
 		 */
         virtual void onWorldCreated(Handle::WorldHandle world) override;
+        virtual void onWorldRemoved(Handle::WorldHandle world) override;
 
         /**
 		 * Update-method for subclasses
@@ -77,5 +93,10 @@ namespace Engine
          * Default rendering system
          */
         Render::RenderSystem m_DefaultRenderSystem;
+
+        /**
+         * Debug only
+         */
+        bool m_disableLogic;
     };
 }

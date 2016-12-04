@@ -22,7 +22,7 @@ Daedalus::GameState::ItemHandle Inventory::addItem(const std::string& symName)
     // Get script-engine
     Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
 
-    return vm.getGameState().addInventoryItem(vm.getSymbolIndexByName(symName), m_NPC);
+    return vm.getGameState().createInventoryItem(vm.getSymbolIndexByName(symName), m_NPC);
 }
 
 const std::list<Daedalus::GameState::ItemHandle>& Inventory::getItems()
@@ -33,10 +33,61 @@ const std::list<Daedalus::GameState::ItemHandle>& Inventory::getItems()
     return vm.getGameState().getInventoryOf(m_NPC);
 }
 
-bool Inventory::removeItem(const std::string& symName)
+bool Inventory::removeItem(const std::string& symName, unsigned int count)
+{
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+
+	return vm.getGameState().removeInventoryItem(vm.getSymbolIndexByName(symName), m_NPC, count);
+}
+
+bool Inventory::removeItem(size_t symIndex, unsigned int count)
+{
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+
+	return vm.getGameState().removeInventoryItem(symIndex, m_NPC, count);
+}
+
+bool Inventory::removeItem(Daedalus::GameState::ItemHandle item, unsigned int count)
 {
     // Get script-engine
     Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
 
-    return vm.getGameState().removeInventoryItem(vm.getSymbolIndexByName(symName), m_NPC);
+    if(!item.isValid())
+        return false;
+
+    Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
+
+    return vm.getGameState().removeInventoryItem(data.instanceSymbol, m_NPC, count);
+}
+
+Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
+{
+    // Get script-engine
+    Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+    const std::list<Daedalus::GameState::ItemHandle>& items = getItems();
+
+    for(Daedalus::GameState::ItemHandle h : items)
+    {
+        Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(h);
+
+        if(data.instanceSymbol == symIndex)
+            return h;
+    }
+
+    return Daedalus::GameState::ItemHandle();
+}
+
+int Inventory::getItemCount(size_t symIndex)
+{
+	// Get script-engine
+	Logic::ScriptEngine& vm = m_Engine.getWorldInstance(m_World).getScriptEngine();
+
+	Daedalus::GameState::ItemHandle item = getItem(symIndex);
+
+	if(item.isValid())
+		return vm.getGameState().getItem(item).count[0];
+
+	return 0;
 }

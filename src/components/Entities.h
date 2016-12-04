@@ -22,7 +22,9 @@
                          CompoundComponent,\
                          ObjectComponent,\
                          VisualComponent,\
-                         AnimationComponent
+                         AnimationComponent,\
+                         PhysicsComponent,\
+                         SpotComponent
 
 namespace Logic
 {
@@ -36,7 +38,7 @@ namespace Components
 
 	struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
 	{
-
+        ~Component(){};
 	};
 
     /**
@@ -50,6 +52,9 @@ namespace Components
     struct EntityComponent : public Component
     {
         ComponentMask m_ComponentMask;
+
+        // Handle of this entity-component
+        Handle::EntityHandle m_ThisEntity;
 
         static void init(EntityComponent& c)
         {
@@ -123,10 +128,24 @@ namespace Components
          */
         Handle::MeshHandle m_StaticMeshVisual;
 		Meshes::SubmeshVxInfo m_SubmeshInfo;
+        uint32_t m_SubmeshIdx;
 		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
+        uint32_t m_Color;
+
+        /**
+         * Index of the instance-buffer used at render time
+         * Special values:
+         *  -1 no index value placed yet
+         *  -2 completely disable instancing on this
+         *
+         *  // FIXME: This has been moved to the mesh itself. This field is only used for instancing enabled/disabled.
+         */
+        uint32_t m_InstanceDataIndex;
 
         static void init(StaticMeshComponent& c)
         {
+            c.m_Color = 0xFFFFFFFF;
+            c.m_InstanceDataIndex = (uint32_t)-1;
         }
     };
 
@@ -212,10 +231,16 @@ namespace Components
          */
         EObjectType m_Type;
 
+        /**
+         * Whether collision should be enabled on this
+         */
+        bool m_EnableCollision;
+
 
         static void init(ObjectComponent& c)
         {
             c.m_Type = Other;
+            c.m_EnableCollision = false;
         }
     };
 
@@ -229,7 +254,7 @@ namespace Components
         /**
          * Storage for animations of this model
          */
-        AnimHandler m_AnimHandler;
+        AnimHandler* m_AnimHandler;
 
         /**
          * If this is set to something valid, the anim-handler of this will be ignored and the one of the
@@ -237,9 +262,54 @@ namespace Components
          */
         Handle::EntityHandle m_ParentAnimHandler;
 
+        AnimHandler& getAnimHandler(){ return *m_AnimHandler; }
+
         static void init(AnimationComponent& c)
         {
+            c.m_AnimHandler = new AnimHandler;
+        }
+    };
 
+    /**
+     * Handles collision and collision response
+     */
+    struct PhysicsComponent : public Component
+    {
+        enum { MASK = 1 << 10 };
+
+        /**
+         * The rigid-Body of this component
+         */
+        Handle::PhysicsObjectHandle m_PhysicsObject;
+
+        /**
+         * Whether this physics-object will move by it's own
+         */
+        bool m_IsStatic;
+
+        static void init(PhysicsComponent& c)
+        {
+            c.m_IsStatic = true;
+        }
+    };
+
+    struct SpotComponent : public Component
+    {
+        enum { MASK = 1 << 11 };
+
+        /**
+         * Entity currently on this spot
+         */
+        Handle::EntityHandle m_UsingEntity;
+
+        /**
+         * Time when this spot will be free again
+         */
+        float m_UseEndTime;
+
+        static void init(SpotComponent& c)
+        {
+            c.m_UseEndTime = 0.0f;
         }
     };
 
@@ -267,7 +337,7 @@ namespace Components
      * Checks if the given component is present in the entity
      */
     template<typename T>
-    bool hasComponent(EntityComponent& e)
+    bool hasComponent(const EntityComponent& e)
     {
         // See "EntityComponent" for further information
         return (e.m_ComponentMask & T::MASK) != 0;

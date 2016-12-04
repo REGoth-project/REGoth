@@ -13,9 +13,13 @@ namespace World
          * Note: These generally don't change, so it's okay to not use handles, but indices for them
          */
 
+        typedef size_t WaypointIndex;
+        enum : WaypointIndex { INVALID_WAYPOINT = static_cast<WaypointIndex>(-1) };
+
         struct Waypoint
         {
             std::string name;
+            std::string classname;
             Math::float3 position;
             Math::float3 direction;
             float waterDepth;
@@ -24,7 +28,7 @@ namespace World
             /**
              * Indices to all edges of this waypoint
              */
-            std::vector <size_t> edges;
+            std::vector <WaypointIndex> edges;
         };
 
         struct WaynetInstance
@@ -37,8 +41,13 @@ namespace World
             /**
              * Map of waypoint names to their indices in the waypoints-vector
              */
-            std::map <std::string, size_t> waypointsByName;
+            std::map <std::string, WaypointIndex> waypointsByName;
         };
+
+		/**
+		 * @brief Adds a named waypoint to the given waynet instance
+		 */
+		void addWaypoint(WaynetInstance& waynet, const Waypoint& wp);
 
         /**
          * @brief Creates a waynet from the given loaded zen-world
@@ -49,7 +58,7 @@ namespace World
          * @brief Finds a way between two waypoints in the given waypoint instance
          * @return list of all waypoints that need to be visited. Will be empty if none was found.
          */
-        std::vector<size_t> findWay(const WaynetInstance& waynet, size_t start, size_t end);
+        std::vector<size_t> findWay(const WaynetInstance& waynet, WaypointIndex start, WaypointIndex end);
 
         /**
          * @brief Gets the interpolated position of the given percentage on the input-path
@@ -86,6 +95,10 @@ namespace World
         inline size_t getWaypointIndex(const WaynetInstance& waynet, const std::string& wp)
         {
             auto it = waynet.waypointsByName.find(wp);
+
+            if(it == waynet.waypointsByName.end())
+                return INVALID_WAYPOINT;
+
             return (*it).second;
         }
     }

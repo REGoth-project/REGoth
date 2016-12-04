@@ -31,6 +31,9 @@
 #build dir
 build/
 winbuild/
+*build/
+and-build/
+cmake-build*/
 
 #dolphin
 .directory

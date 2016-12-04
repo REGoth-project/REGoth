@@ -10,3 +10,15 @@
 [submodule "lib/tinydir"]
 	path = lib/tinydir
 	url = https://github.com/cxong/tinydir.git
+[submodule "lib/bullet3"]
+	path = lib/bullet3
+	url = https://github.com/bulletphysics/bullet3.git
+[submodule "lib/glfw"]
+	path = lib/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "lib/SFML"]
+	path = lib/SFML
+	url = https://github.com/SFML/SFML.git
+[submodule "lib/adpcm-xq"]
+	path = lib/adpcm-xq
+	url = https://github.com/dbry/adpcm-xq.git

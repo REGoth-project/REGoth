@@ -1,10 +1,14 @@
 #include "ModelVisual.h"
+#include "StaticMeshVisual.h"
 #include <engine/World.h>
 #include <content/ContentLoad.h>
 #include <zenload/zCModelMeshLib.h>
 #include <utils/logger.h>
 #include <content/SkeletalMeshAllocator.h>
 #include <components/Vob.h>
+#include <components/EntityActions.h>
+#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 
 using namespace Logic;
 
@@ -26,8 +30,87 @@ const std::string NPC_NODE_HELMET		= "ZS_HELMET";
 const std::string NPC_NODE_JAWS			= "ZS_JAWS";
 const std::string NPC_NODE_TORSO		= "ZS_TORSO";
 
+
+const char* ANIMATION_NAMES[] = {
+	
+	// Normal
+	"S_WALKL", // Walk,
+	"S_RUNL", // Run,
+	"S_RUN", // Idle,
+	"T_JUMPB", // Backpedal,
+	"T_RUNSTRAFEL", // StrafeLeft,
+	"T_RUNSTRAFER", // StrafeRight,
+	"S_JUMP", // Jump
+	
+	// 1h
+	"S_1HWALKL", // Walk1h,
+	"S_1HRUNL", // Run1h,
+	"S_1HRUN", // Idle1h,
+	"T_1HJUMPB", // Backpedal1h,
+	"T_1HRUNSTRAFEL", // StrafeLeft1h,
+	"T_1HRUNSTRAFER", // StrafeRight1h,
+	"S_1HATTACK", // Attack1h,
+	"T_1HATTACKL", // Attack1h_L,
+	"T_1HATTACKR", // Attack1h_R,
+	"T_1HATTACKMOVE", // Attack1h_Move,
+	"T_1HSFINISH", // Attack1h_Finish,
+	"T_1HPARADE_O", // Parade1h,
+	"T_1HPARADEJUMPB", // Parade1h_Back,
+    "T_1H_2_1HRUN", // Draw1h,
+
+	// 2h
+	"S_2HWALKL", // Walk2h,
+	"S_2HRUNL", // Run2h,
+	"S_2HRUN", // Idle2h,
+	"T_2HJUMPB", // Backpedal2h,
+	"T_2HRUNSTRAFEL", // StrafeLeft2h,
+	"T_2HRUNSTRAFER", // StrafeRight2h,
+	"S_2HATTACK", // Attack2h,
+	"T_2HATTACKL", // Attack2h_L,
+	"T_2HATTACKR", // Attack2h_R,
+	"T_2HATTACKMOVE", // Attack2h_Move,
+	"T_2HSFINISH", // Attack2h_Finish,
+	"T_2HPARADE_O", // Parade2h,
+	"T_2HPARADEJUMPB", // Parade2h_Back,
+    "T_2H_2_2HRUN", // Draw2h,
+
+	// Bow
+	"S_BOWWALKL", // WalkBow,
+	"S_BOWRUNL", // RunBow,
+	"S_BOWRUN", // IdleBow,
+	"T_BOWJUMPB", // BackpedalBow,
+	"T_BOWRUNSTRAFEL", // StrafeLeftBow,
+	"T_BOWRUNSTRAFER", // StrafeRightBow,
+	"T_BOWRUN_2_BOWAIM", // AttackBow,
+    "T_BOW_2_BOWRUN", // DrawBow,
+
+        // Cbow
+	"S_CBOWWALKL", // WalkCBow,
+	"S_CBOWRUNL", // RunCBow,
+	"S_CBOWRUN", // IdleCBow,
+	"T_CBOWJUMPB", // BackpedalCBow,
+	"T_CBOWRUNSTRAFEL", // StrafeLeftCBow,
+	"T_CBOWRUNSTRAFER", // StrafeRightCBow,
+	"T_CBOWRUN_2_CBOWAIM", // AttackCBow,
+    "T_CBOW_2_CBOWRUN", // DrawCBow,
+
+        // Fist
+	"S_FISTWALKL", // WalkFist,
+	"S_FISTRUNL", // RunFist,
+	"S_FIST", // IdleFist,
+	"T_FISTJUMPB", // BackpedalFist,
+	"T_FISTRUNSTRAFEL", // StrafeLeftFist,
+	"T_FISTRUNSTRAFER", // StrafeRightFist,
+	"S_FISTATTACK", // AttackFist,
+	"T_FISTPARADE_O", //ParadeFist,
+	"T_FISTPARADEJUMPB", //ParadeFist_Back,
+    "T_FIST_2_FISTRUN", // DrawFist,
+
+};
+
 ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity)
-        : VisualController(world, entity)
+        : VisualController(world, entity),
+          m_LastKnownAnimationState(static_cast<size_t>(-1))
 {
 
 }
@@ -40,6 +123,8 @@ ModelVisual::~ModelVisual()
 bool ModelVisual::load(const std::string& visual)
 {
     VisualController::load(visual);
+
+    m_BodyState.bodyVisual = visual;
 
     assert(visual.find(".MDM") != std::string::npos
            || visual.find(".MDL") != std::string::npos
@@ -54,12 +139,18 @@ bool ModelVisual::load(const std::string& visual)
     Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(m_MainMeshHandle);
     const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
 
+    /****
+     * Push all parts of the skeletal mesh as entity
+     ****/
+
     // TODO: Put these into a compound-component or something
     m_PartEntities.mainSkelMeshEntities = Content::entitifyMesh(m_World, m_MainMeshHandle, mdata);
     m_VisualEntities.insert(m_VisualEntities.end(),
                             m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
 
-    for(Handle::EntityHandle e : m_VisualEntities)
+    Components::PositionComponent& hostPos = m_World.getEntity<Components::PositionComponent>(m_Entity);
+
+    for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
     {
         // Init positions
         Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(e);
@@ -67,7 +158,7 @@ bool ModelVisual::load(const std::string& visual)
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
-        pos.m_WorldMatrix = getEntityTransform();
+        pos = hostPos;
 
         // Init animation components
         Components::addComponent<Components::AnimationComponent>(entity);
@@ -77,8 +168,13 @@ bool ModelVisual::load(const std::string& visual)
         anim.m_ParentAnimHandler = m_Entity;
     }
 
+    /****
+     * Read nodes and attachments
+     ****/
+
     // Read attachments
-    m_VisualAttachments.resize(getAnimationHandler().getObjectSpaceTransforms().size());
+    if(m_VisualAttachments.size() < getAnimationHandler().getObjectSpaceTransforms().size())
+        m_VisualAttachments.resize(getAnimationHandler().getObjectSpaceTransforms().size());
 
     if(m_VisualAttachments.empty())
         m_VisualAttachments.resize(zLib.getNodes().size());
@@ -86,7 +182,7 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_VisualAttachments.empty())
     {
         // Need to get the bind-pose out
-        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh. NPC for example.
+        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh
             getAnimationHandler().setBindPose(true);
 
         for (size_t i = 0; i < zLib.getAttachments().size(); i++)
@@ -114,10 +210,13 @@ bool ModelVisual::load(const std::string& visual)
             Meshes::WorldStaticMesh amdata = m_World.getStaticMeshAllocator().getMesh(amh);
 
             // Add the entities to our lists
-            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata);
-            m_VisualEntities.insert(m_VisualEntities.end(), tmp.begin(), tmp.end());
+            std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata.mesh);
             m_PartEntities.dynamicAttachments.insert(m_PartEntities.dynamicAttachments.end(),
                                                              tmp.begin(), tmp.end());
+
+            // If we haven't already, create an instancebuffer for this mesh
+            //if(amdata.instanceDataBufferIndex == (uint32_t)-1)
+            //    amdata.instanceDataBufferIndex = ((Engine::GameEngine&)m_World.getEngine()).getDefaultRenderSystem().requestInstanceDataBuffer();
 
             m_VisualAttachments[nodeIdx].insert(m_VisualAttachments[nodeIdx].end(), tmp.begin(), tmp.end());
 
@@ -127,6 +226,10 @@ bool ModelVisual::load(const std::string& visual)
                 // Init positions
                 Components::EntityComponent &entity = m_World.getEntity<Components::EntityComponent>(e);
                 Components::addComponent<Components::PositionComponent>(entity);
+
+                // Important: Apply draw distance, and every other setting from the host
+                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
+                pos = hostPos;
             }
         }
 
@@ -159,22 +262,40 @@ bool ModelVisual::load(const std::string& visual)
         updateAttachmentTransforms(m_BindPoseTransforms);
     }
 
-    Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
+    /*Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
     m_World.getEntity<Components::BBoxComponent>(e).m_DebugColor = 0xFFFFFFFF;
+
+    Math::float3 bb[2];
+    getCollisionBBox(bb);
+
+    // Assign BBox as debug
+    m_World.getEntity<Components::BBoxComponent>(e).m_BBox3D.min = bb[0];
+    m_World.getEntity<Components::BBoxComponent>(e).m_BBox3D.max = bb[1];*/
+
+    // Create m_VisualEntites-list
+    rebuildMainEntityList();
+
+	// Make sure we got the right spots for our attachments
+	updateAttachmentVisuals();
 
     return true;
 }
 
-void ModelVisual::setHeadMesh(const std::string& head)
+void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, size_t teethTextureIdx)
 {
     std::string v = head;
+
+	if(v.empty())
+		return;
 
     if(v.find(".") == std::string::npos)
         v += ".MMB";
 
     m_BodyState.headVisual = v;
+    m_BodyState.headTextureIdx = headTextureIdx;
+    m_BodyState.teethTextureIdx = teethTextureIdx;
 
-    setNodeVisual(v, findNodeIndex(MODEL_NODE_NAME_HEAD));
+    setBodyState(m_BodyState);
 }
 
 void ModelVisual::rebuildMainEntityList()
@@ -183,60 +304,48 @@ void ModelVisual::rebuildMainEntityList()
 
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.mainSkelMeshEntities.begin(), m_PartEntities.mainSkelMeshEntities.end());
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.headMeshEntities.begin(), m_PartEntities.headMeshEntities.end());
-    m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.armorEntities.begin(), m_PartEntities.armorEntities.end());
     m_VisualEntities.insert(m_VisualEntities.end(), m_PartEntities.dynamicAttachments.begin(), m_PartEntities.dynamicAttachments.end());
 }
 
-void ModelVisual::setAnimation(const std::string& anim)
+void ModelVisual::setAnimation(const std::string& anim, bool loop)
 {
-    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).m_AnimHandler;
+    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).getAnimHandler();
 
     if(!anim.empty())
-        animHandler.setAnimation(anim);
+        if(loop)
+            animHandler.setAnimation(anim);
+        else
+            animHandler.playAnimation(anim);
     else
         animHandler.stopAnimation();
 }
 
 
-void ModelVisual::setAnimation(ModelVisual::EModelAnimType type)
+void ModelVisual::setAnimation(ModelVisual::EModelAnimType type, bool loop)
 {
-    switch(type)
+	const char* str = ANIMATION_NAMES[type];
+
+	if(getAnimationHandler().hasAnimation(str))
+	{
+		setAnimation(str, loop);
+	}
+}
+
+void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
+{
+    const char* str = ANIMATION_NAMES[type];
+
+
+    // TODO: Implement the priority stuff
+    if(getAnimationHandler().hasAnimation(str))
     {
-        case Walk:
-            if(getAnimationHandler().hasAnimation("S_WALKL"))
-            {
-                setAnimation("S_WALKL");
-                break;
-            }
-            // Walk not found, try fistwalk
-        case FistWalk:
-            if(getAnimationHandler().hasAnimation("S_FISTWALKL"))
-                setAnimation("S_FISTWALKL");
-            break;
-
-        case Run:
-            if(getAnimationHandler().hasAnimation("S_RUNL"))
-            {
-                setAnimation("S_RUNL");
-                break;
-            }
-            // Walk not found, try fistrun
-        case FistRun:
-            if(getAnimationHandler().hasAnimation("S_FISTRUNL"))
-                setAnimation("S_FISTRUNL");
-            break;
-
-        case Idle:
-            if(getAnimationHandler().hasAnimation("S_RUN"))
-                setAnimation("S_RUN");
-            else if(getAnimationHandler().hasAnimation("S_WALK"))
-                setAnimation("S_WALK");
-            else if(getAnimationHandler().hasAnimation("S_FISTRUN"))
-                setAnimation("S_FISTRUN");
-            else if(getAnimationHandler().hasAnimation("S_FISTWALK"))
-                setAnimation("S_FISTWALK");
-            break;
+        setAnimation(str, false); // Don't loop
     }
+}
+
+const char* ModelVisual::getAnimationName(ModelVisual::EModelAnimType type)
+{
+	return ANIMATION_NAMES[type];
 }
 
 void ModelVisual::updateAttachmentTransforms(const std::vector<Math::Matrix>& transforms)
@@ -285,7 +394,7 @@ void ModelVisual::updateAttachmentTransforms()
 Components::AnimHandler &ModelVisual::getAnimationHandler()
 {
     Components::AnimationComponent &anim = m_World.getEntity<Components::AnimationComponent>(m_Entity);
-    return anim.m_AnimHandler;
+    return anim.getAnimHandler();
 }
 
 void ModelVisual::onTransformChanged()
@@ -296,19 +405,23 @@ void ModelVisual::onTransformChanged()
     updateAttachmentTransforms();
 }
 
-void ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
+Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const std::string& nodeName)
 {
+	// Register first
+	m_AttachmentVisualsByNode[nodeName] = visual;
+
+	size_t nodeIndex = findNodeIndex(nodeName);
     if(nodeIndex > getMeshLib().getNodes().size())
-        return; // Invalid node?
+        return Handle::EntityHandle::makeInvalidHandle(); // Invalid node?
 
     // TODO: Allow to overwrite attachments!
-    if(!m_VisualAttachments[nodeIndex].empty())
-        return;
+    //if(!m_VisualAttachments[nodeIndex].empty())
+    //    return Handle::EntityHandle::makeInvalidHandle();
 
     if(visual.empty())
     {
         if(m_VisualAttachments[nodeIndex].empty())
-            return; // Nothing to do here
+            return Handle::EntityHandle::makeInvalidHandle(); // Nothing to do here
 
         // Clear whatever there was here
         for(Handle::EntityHandle e : m_VisualAttachments[nodeIndex])
@@ -328,22 +441,31 @@ void ModelVisual::setNodeVisual(const std::string &visual, size_t nodeIndex)
 
 
         rebuildMainEntityList();
+
+        return Handle::EntityHandle::makeInvalidHandle();
     }else
     {
         // See these attachments as vob, for simplicities sake
         Handle::EntityHandle avh = Vob::constructVob(m_World);
 
         Vob::VobInformation vob = Vob::asVob(m_World, avh);
+
+        // Carry over draw distance-mod // TODO: Should be in some other structure, this is too arbitrary
+        vob.position->m_DrawDistanceFactor = m_World.getEntity<Components::PositionComponent>(m_Entity).m_DrawDistanceFactor;
+
         Vob::setVisual(vob, visual);
 
         // Clear old visual, if there was one
-        setNodeVisual("", nodeIndex);
+        setNodeVisual("", nodeName);
 
         // Only add the main vob, all submeshes etc. will be updated using onTransformChanged()
         m_VisualAttachments[nodeIndex].push_back(avh);
         m_PartEntities.dynamicAttachments.push_back(avh);
 
         rebuildMainEntityList();
+        updateAttachmentTransforms();
+
+        return avh;
     }
 }
 
@@ -362,22 +484,227 @@ const ZenLoad::zCModelMeshLib &ModelVisual::getMeshLib()
         return zLib;
 }
 
-void ModelVisual::setNodeVisual(const std::string &visual, EModelNode node)
+Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, EModelNode node)
 {
     switch(node)
     {
-        case EModelNode::Righthand:setNodeVisual(visual, findNodeIndex(NPC_NODE_RIGHTHAND));break;
-        case EModelNode::Lefthand:setNodeVisual(visual, findNodeIndex(NPC_NODE_LEFTHAND));break;
-        case EModelNode::Sword:setNodeVisual(visual, findNodeIndex(NPC_NODE_SWORD));break;
-        case EModelNode::Longsword:setNodeVisual(visual, findNodeIndex(NPC_NODE_LONGSWORD));break;
-        case EModelNode::Bow:setNodeVisual(visual, findNodeIndex(NPC_NODE_BOW));break;
-        case EModelNode::Crossbow:setNodeVisual(visual, findNodeIndex(NPC_NODE_CROSSBOW));break;
-        case EModelNode::Shield:setNodeVisual(visual, findNodeIndex(NPC_NODE_SHIELD));break;
-        case EModelNode::Helmet:setNodeVisual(visual, findNodeIndex(NPC_NODE_HELMET));break;
-        case EModelNode::Jaws:setNodeVisual(visual, findNodeIndex(NPC_NODE_JAWS));break;
+        case EModelNode::Righthand:return setNodeVisual(visual, NPC_NODE_RIGHTHAND);break;
+        case EModelNode::Lefthand:return setNodeVisual(visual, NPC_NODE_LEFTHAND);break;
+        case EModelNode::Sword:return setNodeVisual(visual, NPC_NODE_SWORD);break;
+        case EModelNode::Longsword:return setNodeVisual(visual, NPC_NODE_LONGSWORD);break;
+        case EModelNode::Bow:return setNodeVisual(visual, NPC_NODE_BOW);break;
+        case EModelNode::Crossbow:return setNodeVisual(visual, NPC_NODE_CROSSBOW);break;
+        case EModelNode::Shield:return setNodeVisual(visual, NPC_NODE_SHIELD);break;
+        case EModelNode::Helmet:return setNodeVisual(visual, NPC_NODE_HELMET);break;
+        case EModelNode::Jaws:return setNodeVisual(visual, NPC_NODE_JAWS);break;
 
             // TODO: Switch main mesh here
-        case EModelNode::Torso:setNodeVisual(visual, findNodeIndex(NPC_NODE_TORSO));break;
+        case EModelNode::Torso:return setNodeVisual(visual, NPC_NODE_TORSO);break;
     }
+
+	return Handle::EntityHandle::makeInvalidHandle();
+}
+
+void ModelVisual::getCollisionBBox(Math::float3* bb)
+{
+    bb[0] = Math::float3(getMeshLib().getBBoxMin().v);
+    bb[1] = Math::float3(getMeshLib().getBBoxMax().v);
+
+    // These can be in various places...
+    if(bb[0].lengthSquared() == 0.0f && bb[1].lengthSquared() == 0.0f)
+    {
+        bb[0] = Math::float3(getMeshLib().getBBoxCollisionMin().v);
+        bb[1] = Math::float3(getMeshLib().getBBoxCollisionMax().v);
+
+        if(bb[0].lengthSquared() == 0.0f && bb[1].lengthSquared() == 0.0f)
+        {
+            const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
+            bb[0] = Math::float3(zLib.getBBoxMin().v);
+            bb[1] = Math::float3(zLib.getBBoxMax().v);
+        }
+    }
+}
+
+Math::float3 ModelVisual::getModelRoot()
+{
+    return getAnimationHandler().getRootNodePosition();
+    //return Math::float3(getMeshLib().getRootNodeTranslation().v);
+}
+
+void ModelVisual::onFrameUpdate(float dt)
+{
+    size_t newHash = getAnimationHandler().getAnimationStateHash();
+    if(newHash != m_LastKnownAnimationState)
+    {
+        updateAttachmentTransforms();
+        m_LastKnownAnimationState = newHash;
+    }
+}
+
+void ModelVisual::setBodyState(const ModelVisual::BodyState &state)
+{
+    m_BodyState = state;
+
+    updateBodyMesh();
+    updateHeadMesh();
+}
+
+void ModelVisual::updateBodyMesh()
+{
+    // Remove all created entities from the world
+    for(Handle::EntityHandle e : m_PartEntities.mainSkelMeshEntities)
+        m_World.removeEntity(e);
+
+    m_PartEntities.mainSkelMeshEntities.clear();
+
+    load(m_BodyState.bodyVisual);
+
+    // Fix body-texture and skin-color
+    if(!m_PartEntities.mainSkelMeshEntities.empty())
+    {
+        Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[0];
+
+        Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
+        if(Components::hasComponent<Components::StaticMeshComponent>(ent))
+        {
+            Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(bodyMain);
+
+            if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
+            {
+                // Get texture parts
+                std::vector<std::string> bodyTxParts = Utils::split(m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName, "0123456789");
+
+                if (bodyTxParts.size() == 3) // [HUM_HEAD_...V, _C, .TGA]
+                {
+                    std::string newBodyTx = bodyTxParts[0]
+                                            + std::to_string(m_BodyState.bodyTextureIdx)
+                                            + bodyTxParts[1]
+                                            + std::to_string(m_BodyState.bodySkinColorIdx)
+                                            + bodyTxParts[2];
+
+                    sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newBodyTx);
+                }
+            }
+
+
+        }
+    }
+}
+
+void ModelVisual::updateHeadMesh()
+{
+    for(Handle::EntityHandle e : m_PartEntities.headMeshEntities)
+        m_World.removeEntity(e);
+
+    m_PartEntities.headMeshEntities.clear();
+    m_PartEntities.headEntity.invalidate();
+
+    // Load and attach the visual
+    Handle::EntityHandle headEntity = setNodeVisual(m_BodyState.headVisual, MODEL_NODE_NAME_HEAD);
+
+    if(!headEntity.isValid())
+        return;
+
+    m_PartEntities.headEntity = headEntity;
+
+    // Fix head texture and color
+    Vob::VobInformation head = Vob::asVob(m_World, m_PartEntities.headEntity);
+    if(Vob::getVisual(head))
+    {
+        // TODO: Type safety!
+        StaticMeshVisual* visual = reinterpret_cast<StaticMeshVisual*>(Vob::getVisual(head));
+
+        Meshes::WorldStaticMesh& mesh = m_World.getStaticMeshAllocator().getMesh(visual->getMesh());
+        visual->setInstancingEnabled(false); // Disable instancing because of the texture changes
+
+        if(m_BodyState.headTextureIdx > 0 || m_BodyState.bodySkinColorIdx > 0)
+        {
+            // Get head-texture parts
+            std::vector<std::string> headTxParts = Utils::split(visual->getDiffuseTexture(0), "0123456789");
+
+            if (headTxParts.size() == 3) // [HUM_HEAD_...V, _C, .TGA]
+            {
+                std::string newHeadTx = headTxParts[0]
+                                        + std::to_string(m_BodyState.headTextureIdx)
+                                        + headTxParts[1]
+                                        + std::to_string(m_BodyState.bodySkinColorIdx)
+                                        + headTxParts[2];
+
+                visual->setDiffuseTexture(0, newHeadTx);
+            }
+        }
+        // Submesh 0: Head
+        // Submesh 1: Mouthhole
+        // Submesh 2: Teeth
+        //if(headTextureIdx > 0)
+        //    visual->setAnimationFrame(0, headTextureIdx);
+
+        //if(teethTextureIdx > 0)
+        //    visual->setAnimationFrame(2, teethTextureIdx);
+    }
+}
+
+void ModelVisual::updateAttachmentVisuals()
+{
+	for(auto& p : m_AttachmentVisualsByNode)
+	{
+		size_t nodeIdx = findNodeIndex(p.first);
+		if(nodeIdx != static_cast<size_t>(-1))
+		{
+			bool update = false;
+
+			// Update if there isn't something attached yet
+			if(m_VisualAttachments[nodeIdx].empty())
+			{
+				update = true;
+			}
+			else // Also update on change
+			{
+				Handle::EntityHandle e = m_VisualAttachments[nodeIdx][0];
+				Vob::VobInformation vob = Vob::asVob(m_World, e);
+				VisualController* vis = Vob::getVisual(vob);
+				if(vis && vis->getName() != p.second)
+					update = true;
+			}
+
+			// Set the new visual
+			setNodeVisual(p.second, p.first);
+		}
+	}
+}
+
+void ModelVisual::setShadowValue(float shadow)
+{
+    VisualController::setShadowValue(shadow);
+
+    // Set shadow for all visual entities
+    for(Handle::EntityHandle& e : m_VisualEntities)
+    {
+        Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(e);
+        Components::VisualComponent& vis = m_World.getEntity<Components::VisualComponent>(e);
+        Components::StaticMeshComponent& msh = m_World.getEntity<Components::StaticMeshComponent>(e);
+
+        if(Components::hasComponent<Components::VisualComponent>(ent) && vis.m_pVisualController)
+            vis.m_pVisualController->setShadowValue(shadow);
+
+        if(Components::hasComponent<Components::StaticMeshComponent>(ent))
+            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+    }
+}
+
+void ModelVisual::stopAnimations()
+{
+    getAnimationHandler().stopAnimation();
+}
+
+void ModelVisual::applyOverlay(const std::string& mds)
+{
+    getAnimationHandler().setOverlay(mds);
+}
+
+bool ModelVisual::isAnimPlaying(const std::string& name)
+{
+    return getAnimationHandler().getActiveAnimationPtr()
+            && getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == name;
 }
 

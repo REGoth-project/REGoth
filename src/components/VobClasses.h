@@ -2,12 +2,14 @@
 
 #include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
-#include <logic/visuals/ModelVisual.h>
 #include "Vob.h"
 
 namespace Logic
 {
     class PlayerController;
+    class MobController;
+    class ItemController;
+    class ModelVisual;
 }
 
 namespace VobTypes
@@ -26,6 +28,16 @@ namespace VobTypes
         Logic::PlayerController* playerController;
     };
 
+    struct ItemVobInformation : Vob::VobInformation
+    {
+        Logic::ItemController* itemController;
+    };
+
+    struct MobVobInformation : Vob::VobInformation
+    {
+        Logic::MobController* mobController;
+    };
+
     /**
      * Returns an Entity as NPC-Vob
      */
@@ -34,11 +46,32 @@ namespace VobTypes
      * NOTE: ONLY FOR TEMPORARY USE. DO NOT SAVE THE RETURNED OBJECT FOR LATER USE.
      */
     NpcVobInformation asNpcVob(World::WorldInstance& world, Handle::EntityHandle e);
+    ItemVobInformation asItemVob(World::WorldInstance& world, Handle::EntityHandle e);
+    MobVobInformation asMobVob(World::WorldInstance& world, Handle::EntityHandle e);
 
     /**
      * Creates a generic vob from script
      */
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
+    Handle::EntityHandle initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance);
+
+    /**
+     * Creates a mob from the given zenlib-info
+     * @param world World to create mob in
+     * @param vobInfo Vob-Info from zenfile
+     * @return Handle to the newly created mob-vob
+     */
+    Handle::EntityHandle createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo);
+
+    /**
+     * Helper-function to insert an NPC into the world (With script initialization)
+     * Same as calling Wld_InsertNPC from script!
+     * @param world World to add the npc to
+     * @param instanceName Script-instance to create
+     * @param wpName Waypoint to put the npc on
+     * @return Handle to the NPCs entity
+     */
+    Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, const std::string& instanceName, const std::string& wpName = "");
 
     /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.
@@ -66,7 +99,7 @@ namespace VobTypes
      * @param vob NPC to operate on
      * @param visual Visual to load and set
      */
-    void NPC_ReplaceMainVisual(NpcVobInformation& vob, const std::string& visual);
+    void NPC_SetBodyMesh(NpcVobInformation &vob, const std::string &visual, int bodyTexIdx=-1, int skinColorIdx=-1);
 
     /**
      * Equips the given weapon to the NPC
@@ -76,7 +109,35 @@ namespace VobTypes
     void NPC_EquipWeapon(NpcVobInformation& vob, Daedalus::GameState::ItemHandle weapon);
 
     /**
+     * Draws the currently equipped melee weapon
+     * @param vob NPC which should draw the weapon
+     * @return Weapon that was drawn
+     */
+    Daedalus::GameState::ItemHandle NPC_DrawMeleeWeapon(NpcVobInformation& npc);
+
+    /**
+     * Puts back any weapon a NPC has in its hand
+     * @param npc NPC to perform the action on
+     */
+    void NPC_UndrawWeapon(NpcVobInformation& npc);
+
+    /**
+     * Returns the script-parameters for the given npc
+     * @param vob Npc to get the info from
+     * @return Script-side object of this npc
+     */
+    Daedalus::GEngineClasses::C_Npc& getScriptObject(NpcVobInformation& vob);
+
+	/**
+	 * Returns the script handle for the given npc 
+	 * @param vob Npc to get the info from
+	 * @return Script-side handle of this npc
+	 */
+	Daedalus::GameState::NpcHandle getScriptHandle(VobTypes::NpcVobInformation& vob);
+
+    /**
      * @return The engine entity handle of the given script instance of an npc
      */
     Handle::EntityHandle getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
+    NpcVobInformation getVobFromScriptHandle(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
 }

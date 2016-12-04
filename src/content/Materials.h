@@ -20,5 +20,7 @@ namespace Materials
     struct TexturedMaterial : public Material
     {
         Textures::Texture::HandleType m_TextureHandle;
+        std::string m_TextureName;
+        bool m_NoCollision;
     };
 };

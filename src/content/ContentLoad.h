@@ -62,6 +62,7 @@ namespace Content
             // Register mesh and what part to render
             sm.m_StaticMeshVisual = mh;
             sm.m_SubmeshInfo = mesh.m_SubmeshStarts[i];
+            sm.m_SubmeshIdx = (uint32_t)i;
             sm.m_Texture = Wrap::loadTextureVDF(world, mesh.m_SubmeshMaterialNames[i]);
 
             r.push_back(entity);

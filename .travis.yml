@@ -1,0 +1,34 @@
+language: c++
+
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+            - george-edison55-precise-backports
+        packages:
+            - g++-6
+            - gcc-6
+            - cmake
+            - cmake-data
+            - libx11-xcb-dev
+            - libxcb-image0-dev
+            - libxcb-randr0-dev
+            - libudev-dev
+            - libopenal-dev
+            - freeglut3-dev
+            - libjpeg-dev
+            - libfreetype6-dev
+            - libxrandr-dev
+            - libglew-dev
+            - libsndfile1-dev
+
+git:
+  submodules: false
+
+script:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+  - git submodule update --init --recursive
+  - mkdir -p build
+  - cd build
+  - cmake ..
+  - make -j2

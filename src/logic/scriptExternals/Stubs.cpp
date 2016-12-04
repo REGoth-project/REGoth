@@ -1741,8 +1741,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         int32_t handle = vm.popDataValue(); if(verbose) LogInfo() << "handle: " << handle;
 
     });
-
-
 }
 
 

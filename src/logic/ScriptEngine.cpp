@@ -8,13 +8,20 @@
 #include <handle/HandleDef.h>
 #include <components/VobClasses.h>
 #include <engine/World.h>
+#include <engine/GameEngine.h>
+#include <ui/PrintScreenMessages.h>
+#include <ZenLib/daedalus/DATFile.h>
 
 using namespace Logic;
+
+// Set to 1 to generate valid timing data for script-calls
+#define PROFILE_SCRIPT_CALLS 0
 
 ScriptEngine::ScriptEngine(World::WorldInstance& world)
     : m_World(world)
 {
     m_pVM = nullptr;
+    m_ProfilingDataFrame = 0;
 }
 
 ScriptEngine::~ScriptEngine()
@@ -28,16 +35,14 @@ bool ScriptEngine::loadDAT(const std::string& file)
 
     LogInfo() << "Loading Daedalus compiled script file: " << file;
 
-    Daedalus::DATFile dat = Daedalus::DATFile(file);
-    m_pVM = new Daedalus::DaedalusVM(dat);
-
+    m_pVM = new Daedalus::DaedalusVM(file);
 
     // Register externals
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
     Logic::ScriptExternals::registerStdLib(*m_pVM, verbose);
     m_pVM->getGameState().registerExternals();
-    Logic::ScriptExternals::registerEngineExternals(m_World.getEngine(), m_pVM, verbose);
+    Logic::ScriptExternals::registerEngineExternals(m_World, m_pVM, verbose);
     return false;
 }
 
@@ -69,11 +74,35 @@ int32_t ScriptEngine::runFunction(size_t addr)
     // Execute the instructions
     while(m_pVM->doStack());
 
-    int32_t ret = m_pVM->popDataValue();
+    int32_t ret = 0;
+
+    // Only pop if the VM didn't mess up
+    if(!m_pVM->isStackEmpty())
+        ret = m_pVM->popDataValue();
+    else
+        LogWarn() << "DaedalusVM: Safety int was popped by scriptcode!";
+
     // Restore to previous VM-State
     m_pVM->popState();
     return ret;
 }
+
+int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
+{
+#if PROFILE_SCRIPT_CALLS
+    startProfiling(symIdx);
+#endif
+
+    int32_t r = runFunction(getVM().getDATFile().getSymbolByIndex(symIdx).address);
+
+#if PROFILE_SCRIPT_CALLS
+    stopProfiling(symIdx);
+#endif
+
+    return r;
+}
+
+
 
 void ScriptEngine::pushInt(int32_t v)
 {
@@ -113,26 +142,91 @@ void ScriptEngine::setInstance(const std::string& target, size_t source)
     m_pVM->setInstance(target, sym.instanceDataHandle, sym.instanceDataClass);
 }
 
+void ScriptEngine::setInstanceNPC(const std::string& target, Daedalus::GameState::NpcHandle npc)
+{
+    assert(m_pVM->getDATFile().hasSymbolName(target));
+
+    m_pVM->setInstance(target, ZMemory::toBigHandle(npc), Daedalus::EInstanceClass::IC_Npc);
+}
+
+void ScriptEngine::setInstanceItem(const std::string& target, Daedalus::GameState::ItemHandle item)
+{
+    assert(m_pVM->getDATFile().hasSymbolName(target));
+
+    m_pVM->setInstance(target, ZMemory::toBigHandle(item), Daedalus::EInstanceClass::IC_Item);
+}
+
+
 void ScriptEngine::initForWorld(const std::string& world)
 {
-    // Create player
-    Daedalus::GameState::NpcHandle hero = m_pVM->getGameState().createNPC();
-    m_pVM->initializeInstance(ZMemory::toBigHandle(hero), m_pVM->getDATFile().getSymbolIndexByName("PC_Hero"), Daedalus::IC_Npc);
-    m_pVM->setInstance("hero", ZMemory::toBigHandle(hero), Daedalus::IC_Npc);
-
     // Register our externals
     Daedalus::GameState::DaedalusGameState::GameExternals ext;
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
     ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
-    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onItemInserted(item, npc); };
+    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onInventoryItemInserted(item, npc); };
+    ext.log_addentry = [this](std::string topic, std::string entry){ onLogEntryAdded(topic, entry); };
+
     m_pVM->getGameState().setGameExternals(ext);
 
-    // FIXME: Call the startup-one only on a fresh load of the game
-    prepareRunFunction();
-    runFunction("startup_" + world);
+    if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('c'))
+    {
 
-    prepareRunFunction();
-    runFunction("init_" + world);
+        // FIXME: Call the startup-one only on a fresh load of the game
+        if (m_pVM->getDATFile().hasSymbolName("startup_" + world))
+        {
+            prepareRunFunction();
+            runFunction("startup_" + world);
+        }
+
+        if (m_pVM->getDATFile().hasSymbolName("init_" + world))
+        {
+            prepareRunFunction();
+            runFunction("init_" + world);
+        }
+    }
+
+    // Create player 
+    std::vector<size_t> startpoints = m_World.findStartPoints();
+
+    if(!startpoints.empty())
+    {
+        std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
+
+        LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
+
+        m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", startpoint); // FIXME: Read startpoint at levelchange
+
+		if(!m_PlayerEntity.isValid()){
+			LogWarn() << "Failed to insert player!";
+		}
+		else
+		{
+			VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_PlayerEntity);
+
+            // TODO: Take bindings out of playercontroller
+            npc.playerController->setupKeyBindings();
+
+            setInstanceNPC("hero", VobTypes::getScriptHandle(npc));
+
+
+            if(m_pVM->getDATFile().hasSymbolName("ItMw_1H_Sword_Short_04"))
+            {
+                Daedalus::GameState::NpcHandle hsnpc = VobTypes::getScriptHandle(npc);
+                Daedalus::GameState::ItemHandle sword = getGameState().createInventoryItem(
+                        m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
+
+                if(sword.isValid())
+                    VobTypes::NPC_EquipWeapon(npc, sword);
+            }else
+            {
+                LogWarn() << "ItMw_1H_Sword_Short_04 somehow not found in GOTHIC.DAT!";
+            }
+		}
+
+        Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
+        e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
+        e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+    }
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)
@@ -144,16 +238,19 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
     Vob::VobInformation v = Vob::asVob(m_World, e);
     m_WorldNPCs.insert(e);
 
+    VobTypes::NpcVobInformation vob = VobTypes::getVobFromScriptHandle(m_World, npc);
 
-    // Place NPC to it's location
-    // TODO: Find some better solution to the casting
-    Logic::PlayerController* pc = reinterpret_cast<Logic::PlayerController*>(v.logic);
+    if(vob.isValid())
+    {
+        // Place NPC to it's location
+        Logic::PlayerController* pc = reinterpret_cast<Logic::PlayerController*>(v.logic);
 
-    //LogInfo() << "Spawnpoint: " << spawnpoint;
+        //LogInfo() << "Spawnpoint: " << spawnpoint;
 
-    // FIXME: Some waypoints don't seem to exist?
-    if(World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
-        pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+        // FIXME: Some waypoints don't seem to exist?
+        if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
+            pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+    }
 }
 
 Daedalus::GameState::DaedalusGameState& ScriptEngine::getGameState()
@@ -166,7 +263,7 @@ size_t ScriptEngine::getSymbolIndexByName(const std::string& name)
     return m_pVM->getDATFile().getSymbolIndexByName(name);
 }
 
-void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc)
+void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc)
 {
     Daedalus::GEngineClasses::C_Item& itemData = getGameState().getItem(item);
     //LogInfo() << "Inserted item '" << itemData.name
@@ -187,10 +284,10 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
 
         // Only switch the body-armor
-        VobTypes::NPC_ReplaceMainVisual(vob, visual);
+        VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
+    /*if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
     {
         Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
 
@@ -200,7 +297,7 @@ void ScriptEngine::onItemInserted(Daedalus::GameState::ItemHandle item, Daedalus
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
         VobTypes::NPC_EquipWeapon(vob, item);
 
-    }
+    }*/
 }
 
 void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
@@ -219,9 +316,226 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
 		m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
 		m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
 
-		runFunction(npcData.daily_routine);
+		runFunctionBySymIndex(npcData.daily_routine);
 	}
 }
+
+std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 &center, float radius)
+{
+    std::set<Handle::EntityHandle> outSet;
+    float radSq = radius * radius;
+
+    for(const Handle::EntityHandle& e : m_WorldNPCs)
+    {
+        Math::float3 translation = m_World.getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
+
+        if((center - translation).lengthSquared() < radSq)
+            outSet.insert(e);
+    }
+
+    return outSet;
+}
+
+void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& entry)
+{
+    m_World.getPrintScreenManager().printMessage("Topic: " + topic);
+    m_World.getPrintScreenManager().printMessage(entry);
+}
+
+bool ScriptEngine::hasSymbol(const std::string& name)
+{
+    return m_pVM->getDATFile().hasSymbolName(name);
+}
+
+Daedalus::GameState::NpcHandle ScriptEngine::getNPCFromSymbol(const std::string& symName)
+{
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if(sym.instanceDataClass != Daedalus::IC_Npc)
+        return Daedalus::GameState::NpcHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::NpcHandle>(sym.instanceDataHandle);
+}
+
+Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::string& symName)
+{
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if(sym.instanceDataClass != Daedalus::IC_Npc)
+        return Daedalus::GameState::ItemHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
+}
+
+void ScriptEngine::registerItem(Handle::EntityHandle e)
+{
+    m_WorldItems.insert(e);
+}
+
+void ScriptEngine::unregisterItem(Handle::EntityHandle e)
+{
+    m_WorldItems.erase(e);
+}
+
+void ScriptEngine::registerMob(Handle::EntityHandle e)
+{
+    m_WorldMobs.insert(e);
+}
+
+void ScriptEngine::unregisterMob(Handle::EntityHandle e)
+{
+    m_WorldMobs.erase(e);
+}
+
+
+bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::EntityHandle hnpc)
+{
+    // Get item data
+    Daedalus::GEngineClasses::C_Item& data = getGameState().getItem(hitem);
+
+    // Check if we can even use this item
+    if(!data.on_state[0]
+        && !data.on_equip)
+    {
+        // Nothing to use here
+        return false;
+    }
+
+    // Push the message to the npc
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, hnpc);
+
+    EventMessages::ManipulateMessage msg;
+    msg.targetItem = hitem;
+
+    if(data.on_state[0])
+        msg.subType = EventMessages::ManipulateMessage::ST_UseItem;
+    else
+        msg.subType = EventMessages::ManipulateMessage::ST_EquipItem;
+
+    npc.playerController->getEM().onMessage(msg);
+	return true;
+}
+
+void ScriptEngine::startProfiling(size_t fnSym)
+{
+    const int64_t now = bx::getHPCounter();
+
+    // Store starting time
+    m_TimeStartStack.push(now);
+}
+
+void ScriptEngine::stopProfiling(size_t fnSym)
+{
+    const double freq = double(bx::getHPFrequency() );
+
+    if(m_TimeByFunctionSymbol[m_ProfilingDataFrame].find(fnSym) == m_TimeByFunctionSymbol[m_ProfilingDataFrame].end())
+        m_TimeByFunctionSymbol[m_ProfilingDataFrame][fnSym] = 0.0;
+
+    // Make delta-time
+    m_TimeByFunctionSymbol[m_ProfilingDataFrame][fnSym] += (bx::getHPCounter() - m_TimeStartStack.top()) / freq;
+
+    m_TimeStartStack.pop();
+}
+
+
+void ScriptEngine::resetProfilingData()
+{
+    while(!m_TimeStartStack.empty())
+        m_TimeStartStack.pop();
+
+    m_TimeByFunctionSymbol[m_ProfilingDataFrame].clear();
+}
+
+void ScriptEngine::onFrameStart()
+{
+#if PROFILE_SCRIPT_CALLS
+    m_ProfilingDataFrame = (m_ProfilingDataFrame + 1) % 10;
+
+    resetProfilingData();
+#endif
+}
+
+void ScriptEngine::onFrameEnd()
+{
+#if PROFILE_SCRIPT_CALLS
+    // Get the 5 most costly calls
+    std::vector<std::pair<size_t, double>> calls;
+    std::map<size_t, double> combined;
+
+    volatile double sum = 0.0;
+    for(int i=0;i<10;i++)
+    {
+        for (auto& p : m_TimeByFunctionSymbol[i])
+        {
+            if(combined.find(p.first) == combined.end())
+                combined[p.first] = 0;
+
+            combined[p.first] += p.second / 10;
+        }
+    }
+
+    for (auto& p : combined)
+    {
+        sum += p.second;
+        calls.push_back(p);
+    }
+
+    // Sort descending
+    std::sort(calls.begin(), calls.end(), [](const std::pair<size_t, double>& a, const std::pair<size_t, double>& b){
+        return a.second > b.second;
+    });
+
+    bgfx::dbgTextPrintf(60, 0, 0x0f, "Script profiling [ms] (Total: %.3f):", sum * 1000.0);
+    for(int i=0;i<std::min(5, (int)calls.size()); i++)
+    {
+        std::string name = getVM().getDATFile().getSymbolByIndex(calls[i].first).name;
+        bgfx::dbgTextPrintf(60, 1 + i, 0x0f, "  %s: %.3f", name.c_str(), calls[i].second * 1000.0);
+    }
+#endif
+}
+
+std::vector<std::pair<std::string, int32_t>> ScriptEngine::exportGlobals()
+{
+    auto& dat = m_pVM->getDATFile();
+
+    // Walk the symtable and find any non-const integer without any flags
+    // Just like the original!
+
+    std::vector<std::pair<std::string, int32_t>> out;
+
+    for(auto& sym : dat.getSymTable().symbols)
+    {
+        // Only flat integers
+        if(sym.properties.elemProps.flags == 0
+           && sym.properties.elemProps.type == Daedalus::EParType_Int)
+        {
+            // Write arrays in order
+            for(int32_t i: sym.intData)
+                out.emplace_back(sym.name, i);
+        }
+    }
+
+    return std::move(out);
+}
+
+void ScriptEngine::importGlobals(const std::vector<std::pair<std::string, int32_t>>& globals)
+{
+    auto& dat = m_pVM->getDATFile();
+
+    // Clear any value already inside
+    for(const auto& p : globals)
+    {
+        dat.getSymbolByName(p.first).intData.clear();
+    }
+
+    // Assign imported values
+    for(const auto& p : globals)
+    {
+        dat.getSymbolByName(p.first).intData.push_back(p.second);
+    }
+}
+
+
 
 
 

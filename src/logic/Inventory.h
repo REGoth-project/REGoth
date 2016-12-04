@@ -27,7 +27,21 @@ namespace Logic
          * @param symName Instance to remove
          * @return True, if the item was successfully removed, false if not found
          */
-        bool removeItem(const std::string& symName);
+		bool removeItem(const std::string& symName, unsigned int count = 1);
+		bool removeItem(size_t symIndex, unsigned int count = 1);
+        bool removeItem(Daedalus::GameState::ItemHandle item, unsigned int count = 1);
+
+        /**
+         * Returns a random instance of the given item
+         * @param symIndex Item to look for
+         * @return Handle to an item of the given found in the inventory. Invalid if none could be found.
+         */
+        Daedalus::GameState::ItemHandle getItem(size_t symIndex);
+
+		/**
+		 * @return Count of how many items of the given type are in this inventory
+		 */
+		int getItemCount(size_t symIndex);
 
         /**
          * @param symName Name of the symbol to get the instances from

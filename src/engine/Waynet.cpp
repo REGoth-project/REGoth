@@ -10,6 +10,15 @@
 
 using namespace World;
 
+/**
+* @brief Adds a named waypoint to the given waynet instance
+*/
+void Waynet::addWaypoint(WaynetInstance& waynet, const Waypoint& wp)
+{
+	waynet.waypoints.push_back(wp);
+	waynet.waypointsByName[wp.name] = waynet.waypoints.size() - 1;
+}
+
 Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zenWorld)
 {
     WaynetInstance w;
@@ -21,7 +30,7 @@ Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zen
         wp.name = zwp.wpName;
 
         // FIXME: Only temporary, to make NPCs walk on the ground rather than IN the ground while there is no physics engine
-        const float heightOffset = 0.5f;
+        const float heightOffset = 0.0f;
 
         // FIXME: They only seem right with the world in zyx-order. Find out why!
         wp.direction = Math::float3(zwp.direction.x, zwp.direction.y, zwp.direction.z);
@@ -30,6 +39,7 @@ Waynet::WaynetInstance Waynet::makeWaynetFromZen(const ZenLoad::oCWorldData& zen
 
         wp.waterDepth = static_cast<float>(zwp.waterDepth);
         wp.underWater = zwp.underWater;
+        wp.classname = zwp.objectClass;
 
         // Note: Edges are emplaced later
 

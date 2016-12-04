@@ -42,15 +42,14 @@ Handle::MeshHandle GenericMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx,
             // Add "compiled"-extension
             vname += ".MRM";
         } else if(vname.find(".MMS") != std::string::npos)
-        {
-            // Strip the ".MMS"
-            vname = vname.substr(0, vname.size() - 4);
+		{
+			// Strip the ".MMS"
+			vname = vname.substr(0, vname.size() - 4);
 
-            // Add "compiled"-extension
-            vname += ".MMB";
-        }
+			// Add "compiled"-extension
+			vname += ".MMB";
+		}
     }
-
 
     ZenLoad::PackedMesh packed;
 
@@ -66,16 +65,33 @@ Handle::MeshHandle GenericMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx,
         // Pack the mesh
         zmsh.packMesh(packed, 1.0f / 100.0f);
     }else if(vname.find(".MMB") != std::string::npos)
-    {
-        ZenLoad::zCMorphMesh zmm(vname, *m_pVDFSIndex);
+	{
+		ZenLoad::zCMorphMesh zmm(vname, *m_pVDFSIndex);
 
-        // Failed?
-        if (zmm.getMesh().getNumSubmeshes() == 0)
-            return Handle::MeshHandle::makeInvalidHandle();
+		// Failed?
+		if (zmm.getMesh().getNumSubmeshes() == 0)
+			return Handle::MeshHandle::makeInvalidHandle();
 
-        // Pack the mesh
-        zmm.getMesh().packMesh(packed, 1.0f / 100.0f);
-    }
+		// Pack the mesh
+		zmm.getMesh().packMesh(packed, 1.0f / 100.0f);
+	}if(vname.find(".MDMS") != std::string::npos)
+	{
+		vname = vname.substr(0, vname.size()-1);
+		ZenLoad::zCModelMeshLib zlib(vname, *m_pVDFSIndex, 1.0f / 100.0f);
+
+		// Failed?
+		if (!zlib.isValid())
+			return Handle::MeshHandle::makeInvalidHandle();
+
+		ZenLoad::PackedSkeletalMesh sp;
+		zlib.packMesh(sp, 1.0f / 100.0f);
+
+		for(auto& m : zlib.getMeshes())
+		{
+			m.getMesh().packMesh(packed, 1.0f / 100.0f);
+		}
+	}
+
 
     return loadFromPacked(packed, name);
 }

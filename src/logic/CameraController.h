@@ -1,5 +1,6 @@
 #pragma once
 #include "Controller.h"
+#include <engine/Input.h>
 
 namespace Logic
 {
@@ -12,7 +13,8 @@ namespace Logic
             Free,
             Static,
             FirstPerson,
-            ThirdPerson
+            ThirdPerson,
+            Viewer // name is open to change
         };
 
         struct CameraSettings
@@ -22,29 +24,22 @@ namespace Logic
              */
             struct
             {
-                float turnSpeed;
-                float moveSpeed;
-                float yaw, pitch;
-                Math::float3 position;
+                Engine::Action* actionMoveForward;
+                Engine::Action* actionMoveRight;
+                Engine::Action* actionMoveUp;
+                Engine::Action* actionLookHorizontal;
+                Engine::Action* actionLookVertical;
             } freeCameraSettings;
-
-            /**
-             * Settings for camera mode static
-             */
-            struct
-            {
-                Math::float3 position;
-                Math::float3 lookAt;
-            } staticCameraSettings;
 
             /**
              * Settings for camera mode "firstperson"
              */
             struct
             {
-                float turnSpeed;
-                float moveSpeed;
-                float yaw, pitch;
+                Engine::Action* actionMoveForward;
+                Engine::Action* actionMoveRight;
+                Engine::Action* actionLookHorizontal;
+                Engine::Action* actionLookVertical;
             } firstPersonCameraSettings;
 
             /**
@@ -52,10 +47,39 @@ namespace Logic
              */
             struct
             {
-                float turnSpeed;
-                float turnSmoothness;
-                float yaw, height, distance;
+                Math::float3 currentLookAt;
+                Math::float3 currentOffsetDirection;
             } thirdPersonCameraSettings;
+
+            struct
+            {
+                float yaw, pitch;
+                Math::float3 position;
+                Math::float3 up, right, forward;
+            } floatingCameraSettings;
+
+            /**
+             * Settings for camera mode "viewer"
+             */
+            struct
+            {
+                Engine::Action* actionViewHorizontal;
+                Engine::Action* actionViewVertical;
+                Engine::Action* actionPan;
+                Engine::Action* actionZoom;
+                Engine::Action* actionRotate;
+                Engine::Action* actionClick;
+                Engine::Action* actionWheel;
+
+                bool isPanModifier;
+                bool isZoomModifier;
+                bool isRotateModifier;
+
+                Math::float3 lookAt;
+                float mouseWheel;
+                Math::float3 up, right, in;
+                float yaw, pitch, zoom;
+            } viewerCameraSettings;
         };
 
         /**
@@ -65,9 +89,14 @@ namespace Logic
         CameraController(World::WorldInstance& world, Handle::EntityHandle entity);
 
         /**
+         * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
+         */
+        virtual EControllerType getControllerType(){ return EControllerType::CameraController; }
+
+        /**
          * Called on game-tick
          */
-        void onUpdate(float deltaTime) override;
+        void onUpdateExplicit(float deltaTime);
 
         /**
          * @brief Sets how the camera should behave
@@ -100,6 +129,11 @@ namespace Logic
         {
             return m_CameraSettings;
         }
+
+        /**
+         * Sets the transform of this camera
+         */
+        void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
     protected:
 
         /**
@@ -112,6 +146,8 @@ namespace Logic
          * Whether this controller should read player input
          */
         bool m_Active;
+
+        void disableActions();
 
         /**
          * How the camera should behave regarding the followed entity
@@ -132,5 +168,12 @@ namespace Logic
          * Current view-matrix
          */
         Math::Matrix m_ViewMatrix;
+
+        //Math::float2 m_LastMousePosition;
+
+        /**
+         * Debug
+         */
+        float m_moveSpeedMultiplier;
     };
 }
