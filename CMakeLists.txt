@@ -220,3 +220,6 @@ endif()
 add_subdirectory(lib/adpcm)
 
 add_subdirectory(src/target)
+
+
+file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")
