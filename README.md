@@ -3,6 +3,8 @@ OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothi
 
 Don't forget to check out the [REGoth-Wiki](../../wiki) for more information about the project!
 
+A list showing the current state of the engine, can be found [here](../../wiki/state).
+
 ### Videos showing the current state
 
 * Release-Commentary to V0.1.1:
