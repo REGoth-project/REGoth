@@ -441,32 +441,22 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             m_ConsoleOpen = !m_ConsoleOpen;
 
         if(imguiButton("Load World"))
-            loadWorld("world.zen", "testsave.txt");
+            loadWorld("world.zen", "testsave.jsav");
 
         if(imguiButton("Load Newworld"))
-            loadWorld("newworld.zen", "");
+            loadWorld("newworld.zen", "testsave.jsav");
 
         if(imguiButton("Load Addonworld"))
-            loadWorld("Addonworld.zen", "testsave.txt");
+            loadWorld("Addonworld.zen", "testsave.jsav");
 
         if(imguiButton("Save world"))
         {
             json j;
             m_pEngine->getMainWorld().get().exportWorld(j);
 
-            std::ofstream f("testsave.txt");
+            std::ofstream f("testsave.jsav");
 
             f << Utils::iso_8859_1_to_utf8(j.dump(4));
-        }
-
-        if(imguiButton("Load savegame (test)"))
-        {
-            std::ifstream f("testsave.txt");
-            std::stringstream saveData;
-            saveData << f.rdbuf();
-
-            json j = json::parse(saveData);
-            m_pEngine->getMainWorld().get().importVobs(j["vobs"]);
         }
 
         imguiEndArea();

@@ -40,3 +40,6 @@ cmake-build*/
  
 # clion
 .idea/
+
+# temp
+*.jsav
