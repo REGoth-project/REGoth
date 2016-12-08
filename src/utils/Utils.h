@@ -81,7 +81,7 @@ namespace Utils
      * @param source Any type indexable using []
      */
     template<typename A, size_t SIZE, typename T>
-    constexpr void putArray(A (&array)[SIZE], const T& source)
+    void putArray(A (&array)[SIZE], const T& source)
     {
         for(size_t i=0; i < SIZE; i++)
         {
