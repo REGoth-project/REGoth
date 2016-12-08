@@ -296,7 +296,20 @@ namespace Logic
          * Enables/Disables physics on this NPC
          */
          void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
+
+        /**
+         * @return Classes which want to get exported on save should return true here
+         */
+        virtual bool shouldExport(){ return true; }
+
+        /**
+         * Does the logic for importing an NPC/PC
+         *
+         */
+        static Handle::EntityHandle importPlayerController(World::WorldInstance& world, const json& logic);
     protected:
+
+        virtual void exportPart(json& j) override;
 
         /**
          * Events

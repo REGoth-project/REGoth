@@ -2,6 +2,8 @@
 
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
+#include <json.hpp>
+using json = nlohmann::json;
 
 namespace World
 {
@@ -110,6 +112,11 @@ namespace Logic
          */
         void updateChoices();
 
+        // TODO: Probably move this into script-engine
+        Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }
+
+        void exportDialogManager(json& h);
+        void importDialogManager(const json& j);
     protected:
 
         /**

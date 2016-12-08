@@ -22,6 +22,10 @@
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
 #include <ZenLib/utils/logger.h>
+#include <json.hpp>
+#include <fstream>
+
+using json = nlohmann::json;
 
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
@@ -385,28 +389,42 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
 
-        imguiBeginArea("Debug", 20, 20, 200, 150);
+        imguiBeginArea("Debug", 220, 20, 200, 150);
 
-        auto loadWorld = [&](const std::string& world){
-            // Export symbols to restore them in the other world
-            auto saveState = m_pEngine->getMainWorld().get().getScriptEngine().exportGlobals();
-
+        auto loadWorld = [&](const std::string& world, const std::string& save){
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld(world);
-
-            // Assign saved globals to new scriptengine
-            m_pEngine->getMainWorld().get().getScriptEngine().importGlobals(saveState);
+            m_pEngine->addWorld(world, save);
         };
 
-        if(imguiButton("Load Oldworld"))
-            loadWorld("oldworld.zen");
+        if(imguiButton("Load World"))
+            loadWorld("world.zen", "testsave.txt");
 
         if(imguiButton("Load Newworld"))
-            loadWorld("newworld.zen");
+            loadWorld("newworld.zen", "");
 
         if(imguiButton("Load Addonworld"))
-            loadWorld("Addonworld.zen");
+            loadWorld("Addonworld.zen", "testsave.txt");
+
+        if(imguiButton("Save world"))
+        {
+            json j;
+            m_pEngine->getMainWorld().get().exportWorld(j);
+
+            std::ofstream f("testsave.txt");
+
+            f << Utils::iso_8859_1_to_utf8(j.dump(4));
+        }
+
+        if(imguiButton("Load savegame (test)"))
+        {
+            std::ifstream f("testsave.txt");
+            std::stringstream saveData;
+            saveData << f.rdbuf();
+
+            json j = json::parse(saveData);
+            m_pEngine->getMainWorld().get().importVobs(j["vobs"]);
+        }
 
         imguiEndArea();
 

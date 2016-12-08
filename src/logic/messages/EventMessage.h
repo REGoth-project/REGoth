@@ -45,6 +45,11 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+            /**
              * Type of class this can be casted to
              */
             EventMessageType messageType;
@@ -114,6 +119,11 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+            /**
              * Name of the vob this message targets. This could be the attack target or a waypoint to go to.
              */
             std::string targetVobName;
@@ -132,6 +142,13 @@ namespace Logic
             {
                 messageType = EventMessageType::Damage;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             // TODO: Implement DamageDescriptor!
         };
@@ -161,6 +178,13 @@ namespace Logic
             {
                 messageType = EventMessageType::Weapon;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Type of weapon to go to
@@ -212,6 +236,13 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
+            /**
              * Route the NPC has to go if this is a ST_GoRoute.
              * If empty, targetPos is used.
              */
@@ -260,6 +291,13 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
+            /**
              * How far we are in our combo
              */
             int combo;
@@ -295,6 +333,13 @@ namespace Logic
                 messageType = EventMessageType::UseItem;
             }
 
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
             // TODO: We have no actual object for these right now, as they are explicitly in the inventory.
             // TODO: Use the itemhandle here or something
         };
@@ -315,6 +360,13 @@ namespace Logic
             {
                 messageType = EventMessageType::State;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Symbol to the Setupfunction for this state (ZS_...)
@@ -382,6 +434,13 @@ namespace Logic
                 targetState = 0;
                 symIdx = static_cast<size_t>(-1);
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
@@ -462,6 +521,13 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
+            /**
              * Text to be displayed in the subtitle box
              */
             std::string text;
@@ -525,6 +591,13 @@ namespace Logic
                 messageType = EventMessageType::Magic;
             }
 
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
             // TODO: Implement
         };
 
@@ -546,6 +619,13 @@ namespace Logic
                 stateFrom = 0;
                 stateTo = 0;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             // NPC this message is from
             Handle::EntityHandle npc;

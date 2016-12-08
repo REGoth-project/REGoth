@@ -5,6 +5,8 @@
 #include <set>
 #include <daedalus/DaedalusVM.h>
 #include <math/mathlib.h>
+#include <json.hpp>
+using json = nlohmann::json;
 
 namespace Daedalus
 {
@@ -32,8 +34,10 @@ namespace Logic
 
         /**
          * Initializes for the world with the given name (startup_x, init_x)
+         * @param Name of the world to load (name.zen, without .zen)
+         * @param firstStart Whether this is the initial load. If true, all NPCs will be put in here.
          */
-        void initForWorld(const std::string& world);
+        void initForWorld(const std::string& world, bool firstStart = true);
 
         /**
          * Returns a list of all global symbols the game would have saved inside a savegame together
@@ -42,8 +46,8 @@ namespace Logic
          * In Gothic, only plain global int-variables are saved.
          * @return Pairs of symbolname and current value
          */
-        std::vector<std::pair<std::string, int32_t>> exportGlobals();
-        void importGlobals(const std::vector<std::pair<std::string, int32_t>>& globals);
+        void exportScriptEngine(json& j);
+        void importScriptEngine(const json& j);
 
         /**
          * Frame-functions

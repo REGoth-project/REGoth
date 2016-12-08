@@ -10,6 +10,9 @@ ItemController::ItemController(World::WorldInstance& world, Handle::EntityHandle
 {
 	m_ScriptState.scriptInstance = scriptInstance;
 	m_World.getScriptEngine().registerItem(m_Entity);
+
+	Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
+    Vob::setCollisionEnabled(vob, false); // FIXME: Should be true, but right now there is no way to remove physics objects from the world without crashing
 }
 
 void Logic::ItemController::updateVobFromScript()

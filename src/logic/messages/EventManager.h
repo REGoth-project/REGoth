@@ -66,6 +66,11 @@ namespace Logic
          */
         void clear();
 
+        /**
+         * Exports this as JSON-String
+         * @return
+         */
+        std::string exportObject();
     protected:
 
         /**

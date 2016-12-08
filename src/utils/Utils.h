@@ -9,6 +9,7 @@
 #include <functional>
 #include <list>
 #include <bgfx/bgfx.h>
+#include <vector>
 
 namespace Utils
 {
@@ -21,6 +22,72 @@ namespace Utils
         Math::float3 min;
         Math::float3 max;
     };
+
+    /**
+     * Converts ISO-8859-1 to UTF-8
+     * @param str ISO-8859-1 string
+     * @return UTF-8 encoded version of the input-string
+     */
+    inline std::string iso_8859_1_to_utf8(const std::string &str)
+    {
+        std::string strOut;
+        for (auto it = str.begin(); it != str.end(); ++it)
+        {
+            uint8_t ch = (uint8_t)*it;
+            if (ch < 0x80) {
+                strOut.push_back(ch);
+            }
+            else {
+                strOut.push_back((char)(0xc0 | ch >> 6));
+                strOut.push_back((char)(0x80 | (ch & 0x3f)));
+            }
+        }
+        return strOut;
+    }
+
+    namespace _putArrayInternal
+    {
+        template<int... Is>
+        struct seq { };
+
+        template<int N, int... Is>
+        struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
+
+        template<int... Is>
+        struct gen_seq<0, Is...> : seq<Is...> { };
+
+        template<typename A, int... Is>
+        static std::array<A, sizeof...(Is)> assign(A array[], seq<Is...>)
+        {
+            return {array[Is]...};
+        }
+
+    }
+
+    /**
+     * Assigns a given static array using an initializer-list {...} to the given target (like std::vector)
+     * @param target Target to put the array into
+     * @param array Array to get the data from
+     */
+    template<typename A, size_t SIZE>
+    constexpr std::array<A, SIZE> putArray(A (&array)[SIZE])
+    {
+        return _putArrayInternal::assign(array, _putArrayInternal::gen_seq<SIZE>());
+    }
+
+    /**
+     * Copies the values from source into array
+     * @param array Standard C array (target)
+     * @param source Any type indexable using []
+     */
+    template<typename A, size_t SIZE, typename T>
+    constexpr void putArray(A (&array)[SIZE], const T& source)
+    {
+        for(size_t i=0; i < SIZE; i++)
+        {
+            array[i] = source[i];
+        }
+    }
 
     /**
      * Rounds the given float to the nearest integer of type T

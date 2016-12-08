@@ -142,7 +142,7 @@ bool NpcScriptState::doAIState(float deltaTime)
     if(m_CurrentState.valid && m_CurrentState.phase == NpcAIState::EPhase::Loop)
         m_CurrentState.stateTime += deltaTime;
 
-
+    std::string name = vob.playerController->getScriptInstance().name[0];
 
     if(m_Routine.hasRoutine && isInRoutine())
     {
@@ -436,5 +436,92 @@ bool NpcScriptState::isInState(size_t stateMain)
     }
 
     return false;
+}
+
+
+
+void NpcScriptState::importState(NpcAIState& state, const json& j) const
+{
+    state.symIndex = j["symIndex"];
+    state.symLoop = j["symLoop"];
+    state.symEnd = j["symEnd"];
+    state.phase = (NpcAIState::EPhase)((int)j["phase"]);
+    state.valid = j["valid"];
+    state.name = j["name"];
+    state.stateTime = j["stateTime"];
+    state.prgState = (EPrgStates)((int)j["prgState"]);
+    state.isRoutineState = j["isRoutineState"];
+}
+
+void NpcScriptState::exportState(const NpcAIState& state, json& j) const
+{
+    j["symIndex"] = state.symIndex;
+    j["symLoop"] = state.symLoop;
+    j["symEnd"] = state.symEnd;
+    j["phase"] = (int)state.phase;
+    j["valid"] = state.valid;
+    j["name"] = state.name;
+    j["stateTime"] = state.stateTime;
+    j["prgState"] = (int)state.prgState;
+    j["isRoutineState"] = state.isRoutineState;
+}
+
+void NpcScriptState::exportScriptState(json& j)
+{
+    // Export current state
+    exportState(m_CurrentState, j["currentState"]);
+
+    // Export next state
+    exportState(m_NextState, j["nextState"]);
+
+    j["lastStateSymIndex"] = m_LastStateSymIndex;
+
+    // TODO: Need other/victim/item?
+
+    // Export routine
+    j["routines"] = json::array();
+    for(const RoutineEntry& r : m_Routine.routine)
+    {
+        json jr;
+        jr["hoursStart"] =      r.hoursStart;
+        jr["minutesStart"] =    r.minutesStart;
+        jr["hoursEnd"] =        r.hoursEnd;
+        jr["minutesEnd"] =      r.minutesEnd;
+        jr["symFunc"] =         r.symFunc;
+        jr["waypoint"] =        r.waypoint;
+        jr["isOverlay"] =       r.isOverlay;
+
+        j["routines"].push_back(jr);
+    }
+    j["activeRoutineIdx"] = m_Routine.routineActiveIdx;
+}
+
+void NpcScriptState::importScriptState(const json& j)
+{
+    importState(m_CurrentState, j["currentState"]);
+    importState(m_NextState, j["nextState"]);
+
+    m_LastStateSymIndex = j["lastStateSymIndex"];
+
+    m_Routine.routine.clear();
+    for(const json& jr : j["routines"])
+    {
+        RoutineEntry r;
+        r.hoursStart = jr["hoursStart"];
+        r.minutesStart = jr["minutesStart"];
+        r.hoursEnd = jr["hoursEnd"];
+        r.minutesEnd = jr["minutesEnd"];
+        r.symFunc = jr["symFunc"];
+        r.waypoint = jr["waypoint"];
+        r.isOverlay = jr["isOverlay"];
+
+        m_Routine.routine.push_back(r);
+    }
+
+    m_Routine.routineActiveIdx = j["activeRoutineIdx"];
+    m_Routine.hasRoutine = !m_Routine.routine.empty();
+
+    // Start routine
+    //reinitRoutine();
 }
 

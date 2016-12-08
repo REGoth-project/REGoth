@@ -58,10 +58,17 @@ namespace VobTypes
     /**
      * Creates a mob from the given zenlib-info
      * @param world World to create mob in
-     * @param vobInfo Vob-Info from zenfile
      * @return Handle to the newly created mob-vob
      */
-    Handle::EntityHandle createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo);
+    Handle::EntityHandle createMob(World::WorldInstance& world);
+
+    /**
+     * Creates an item of the given instance
+     * @param world World to create the item in
+     * @param item Instance-name of the item to create
+     * @return Handle to the newly created item-vob
+     */
+    Handle::EntityHandle createItem(World::WorldInstance& world, const std::string& item);
 
     /**
      * Helper-function to insert an NPC into the world (With script initialization)
@@ -72,6 +79,7 @@ namespace VobTypes
      * @return Handle to the NPCs entity
      */
     Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, const std::string& instanceName, const std::string& wpName = "");
+    Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName = "");
 
     /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.

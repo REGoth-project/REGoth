@@ -19,7 +19,9 @@
 #include <content/AudioEngine.h>
 #include <engine/Input.h>
 #include "ItemController.h"
+#include <json.hpp>
 
+using json = nlohmann::json;
 using namespace Logic;
 
 // TODO: HACK, remove!
@@ -212,14 +214,6 @@ void PlayerController::gotoWaypoint(size_t wp)
 {
     if (wp == m_AIState.targetWaypoint)
         return;
-
-    // If this is the first ever waypoint this NPC has to go to, just teleport him there
-    // FIXME: This is a hack to get around daily routines not doing that yet
-    if (m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
-    {
-        teleportToWaypoint(wp);
-        return;
-    }
 
     // Set our current target as closest so we don't move back if we are following an entity
     if (m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
@@ -451,7 +445,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     {
         node = EModelNode::None;
 
-        // Put on our ring
+        // Put on our rune/scroll
         m_EquipmentState.equippedItems.equippedRunes.insert(item);
     }
 
@@ -596,6 +590,8 @@ void PlayerController::onVisualChanged()
 {
     getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
+
+    getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
@@ -1590,6 +1586,8 @@ bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
         // Why is 0 not allowed? That's how gothic is doing it though, as it seems...
         if(data.cond_atr[i] > 0)
         {
+            assert(data.cond_atr[i] < Daedalus::GEngineClasses::C_Npc::EATR_MAX);
+
             // Check for enough strength, etc.
             if(npc.attribute[data.cond_atr[i]] < data.cond_value[i])
             {
@@ -1872,4 +1870,159 @@ void PlayerController::giveItem(const std::string& instanceName, unsigned int co
     // Add our script-instance to the npcs inventory
     m_World.getScriptEngine().getGameState().createInventoryItem(symIdx, getScriptHandle(), count);
 }
+
+void PlayerController::exportPart(json& j)
+{
+    size_t sym = getScriptInstance().instanceSymbol;
+
+    Controller::exportPart(j);
+
+    j["type"] = "PlayerController";
+
+    // Export script-values
+    auto& scriptObj = getScriptInstance();
+    j["scriptObj"]["instanceSymbol"] = scriptObj.instanceSymbol;
+    j["scriptObj"]["id"] = scriptObj.id;
+    j["scriptObj"]["name"] = Utils::putArray(scriptObj.name);
+    j["scriptObj"]["slot"] = scriptObj.slot;
+    j["scriptObj"]["npcType"] = scriptObj.npcType;
+    j["scriptObj"]["flags"] = scriptObj.flags;
+    j["scriptObj"]["attribute"] = Utils::putArray(scriptObj.attribute);
+    j["scriptObj"]["protection"] = Utils::putArray(scriptObj.protection);
+    j["scriptObj"]["damage"] = Utils::putArray(scriptObj.damage);
+    j["scriptObj"]["damagetype"] = scriptObj.damagetype;
+    j["scriptObj"]["guild"] = scriptObj.guild;
+    j["scriptObj"]["level"] = scriptObj.level;
+    j["scriptObj"]["mission"] = Utils::putArray(scriptObj.mission);
+    j["scriptObj"]["fight_tactic"] = scriptObj.fight_tactic;
+    j["scriptObj"]["weapon"] = scriptObj.weapon;
+    j["scriptObj"]["voice"] = scriptObj.voice;
+    j["scriptObj"]["voicePitch"] = scriptObj.voicePitch;
+    j["scriptObj"]["bodymass"] = scriptObj.bodymass;
+    j["scriptObj"]["daily_routine"] = scriptObj.daily_routine;
+    j["scriptObj"]["start_aistate"] = scriptObj.start_aistate;
+    j["scriptObj"]["spawnPoint"] = scriptObj.spawnPoint;
+    j["scriptObj"]["spawnDelay"] = scriptObj.spawnDelay;
+    j["scriptObj"]["senses"] = scriptObj.senses;
+    j["scriptObj"]["senses_range"] = scriptObj.senses_range;
+    j["scriptObj"]["ai"] = Utils::putArray(scriptObj.ai);
+    j["scriptObj"]["wp"] = scriptObj.wp;
+    j["scriptObj"]["exp"] = scriptObj.exp;
+    j["scriptObj"]["exp_next"] = scriptObj.exp_next;
+    j["scriptObj"]["lp"] = scriptObj.lp;
+
+    // Export inventory
+    m_Inventory.exportInventory(j["inventory"]);
+
+    // Export equipped items
+    {
+        j["equipped"] = json::array();
+        for(auto item : m_EquipmentState.equippedItemsAll)
+        {
+            // Write instance of the equipped item
+            Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+            std::string instanceName = m_World.getScriptEngine().getVM()
+                    .getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+
+            j["equipped"].push_back(instanceName);
+        }
+    }
+
+    // Import state
+    m_AIStateMachine.exportScriptState(j["AIState"]);
+}
+
+Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
+{
+    unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
+
+    /*std::string name = j["scriptObj"]["name"][0];
+    if(name != "Diego" && name != "ich")
+        return Handle::EntityHandle();*/
+
+    // Create npc
+    Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
+
+    if(!e.isValid())
+        return Handle::EntityHandle::makeInvalidHandle();
+
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(world, e);
+
+    // Load controller-values
+    npc.playerController->importObject(j);
+
+    // Teleport to position
+    {
+        npc.playerController->teleportToPosition(npc.playerController->getEntityTransform().Translation());
+        npc.playerController->setDirection(-1.0f * npc.playerController->getEntityTransform().Forward());
+    }
+
+    // Set script values
+    {
+        auto& scriptObj = npc.playerController->getScriptInstance();
+
+        scriptObj.instanceSymbol = j["scriptObj"]["instanceSymbol"];
+        scriptObj.id = j["scriptObj"]["id"];
+
+        Utils::putArray(scriptObj.name, j["scriptObj"]["name"]);
+
+        scriptObj.slot = j["scriptObj"]["slot"];
+        scriptObj.npcType = j["scriptObj"]["npcType"];
+        scriptObj.flags = (Daedalus::GEngineClasses::C_Npc::ENPCFlag)((int)j["scriptObj"]["flags"]);
+
+        Utils::putArray(scriptObj.attribute, j["scriptObj"]["attribute"]);
+        Utils::putArray(scriptObj.protection, j["scriptObj"]["protection"]);
+        Utils::putArray(scriptObj.damage, j["scriptObj"]["damage"]);
+
+        scriptObj.damagetype = j["scriptObj"]["damagetype"];
+        scriptObj.guild = j["scriptObj"]["guild"];
+        scriptObj.level = j["scriptObj"]["level"];
+        Utils::putArray(scriptObj.mission, j["scriptObj"]["mission"]);
+        scriptObj.fight_tactic = j["scriptObj"]["fight_tactic"];
+        scriptObj.weapon = j["scriptObj"]["weapon"];
+        scriptObj.voice = j["scriptObj"]["voice"];
+        scriptObj.voicePitch = j["scriptObj"]["voicePitch"];
+        scriptObj.bodymass = j["scriptObj"]["bodymass"];
+        scriptObj.daily_routine = j["scriptObj"]["daily_routine"];
+        scriptObj.start_aistate = j["scriptObj"]["start_aistate"];
+        scriptObj.spawnPoint = j["scriptObj"]["spawnPoint"];
+        scriptObj.spawnDelay = j["scriptObj"]["spawnDelay"];
+        scriptObj.senses = j["scriptObj"]["senses"];
+        scriptObj.senses_range = j["scriptObj"]["senses_range"];
+        Utils::putArray(scriptObj.ai, j["scriptObj"]["ai"]);
+        scriptObj.wp = j["scriptObj"]["wp"];
+        scriptObj.exp = j["scriptObj"]["exp"];
+        scriptObj.exp_next = j["scriptObj"]["exp_next"];
+        scriptObj.lp = j["scriptObj"]["lp"];
+    }
+
+    // Import inventory
+    npc.playerController->m_Inventory.importInventory(j["inventory"]);
+
+    // Import equipments
+    {
+        Inventory& inv = npc.playerController->m_Inventory;
+
+        for(const std::string& sym : j["equipped"])
+        {
+            Daedalus::GameState::ItemHandle h = inv.getItem(sym);
+
+            assert(h.isValid()); // Item to equip MUST be inside the inventory
+
+            npc.playerController->equipItem(h);
+        }
+    }
+
+
+
+    // Import state
+    npc.playerController->m_AIStateMachine.importScriptState(j["AIState"]);
+
+    // Teleport to last waypoint
+    //npc.playerController->teleportToWaypoint(j["scriptObj"]["wp"]);
+
+    return e;
+}
+
+
 

@@ -137,19 +137,22 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     conv.name = msg.name;
     conv.text = msg.text;
 
-    VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
-
-    if(targetnpc.isValid())
+    if(target.isValid())
     {
-        conv.target = targetnpc.entity;
+        VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
 
-        // Check if the target is currently talking to us
-        EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
-                selfnpc.entity);
+        if (targetnpc.isValid())
+        {
+            conv.target = targetnpc.entity;
 
-        // Wait for the other npc to complete first
-        if (otherconv)
-            selfnpc.playerController->getEM().waitForMessage(otherconv);
+            // Check if the target is currently talking to us
+            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
+                    selfnpc.entity);
+
+            // Wait for the other npc to complete first
+            if (otherconv)
+                selfnpc.playerController->getEM().waitForMessage(otherconv);
+        }
     }
 
     // Push the actual conversation-message
@@ -201,7 +204,7 @@ void DialogManager::update(double dt)
         }
     }
 
-    m_DialogActive = !(!m_ActiveDialogBox && m_ActiveSubtitleBox->isHidden());
+    m_DialogActive = !(!m_ActiveDialogBox || m_ActiveSubtitleBox->isHidden());
 }
 
 Daedalus::DaedalusVM& DialogManager::getVM()
@@ -383,5 +386,32 @@ void DialogManager::flushChoices()
 void DialogManager::updateChoices()
 {
     m_ScriptDialogMananger->processInfosFor(m_Interaction.target);
+}
+
+void DialogManager::exportDialogManager(json& j)
+{
+    // Write the information the npc know
+    const std::map<size_t, std::set<size_t>>& info =
+            m_World.getDialogManager().getScriptDialogManager()->getKnownNPCInformation();
+
+    json& npcInfo = j["npcInfo"];
+    for(const auto& p : info)
+    {
+        // Converting to string here, because these can get pretty high with huge gaps,
+        // which would be filled with 'null'.
+        npcInfo[std::to_string(p.first)] = p.second;
+    }
+}
+
+void DialogManager::importDialogManager(const json& j)
+{
+    for(auto it=j["npcInfo"].begin(); it != j["npcInfo"].end(); it++)
+    {
+        // Map of indices -> array of numbers
+        int npcInstance = std::stoi(it.key());
+
+        for(int info : it.value())
+            m_World.getDialogManager().getScriptDialogManager()->setNpcInfoKnown((unsigned int)npcInstance, (unsigned int)info);
+    }
 }
 

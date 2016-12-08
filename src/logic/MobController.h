@@ -90,8 +90,15 @@ namespace Logic
         /**
          * @return State this mob is currently in
          */
-         int getState(){ return m_StateNum; }
+        int getState(){ return m_StateNum; }
+
+        /**
+         * Saves this cores settings to the given JSON-object
+         */
+        virtual void exportCore(json& j);
+        virtual void importCore(const json& j);
     protected:
+
         Handle::EntityHandle m_Entity;
         World::WorldInstance& m_World;
 
@@ -114,7 +121,7 @@ namespace Logic
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
          */
-        MobController(World::WorldInstance& world, Handle::EntityHandle entity, const ZenLoad::zCVobData& vob);
+        MobController(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~MobController();
 
         /**
@@ -147,6 +154,7 @@ namespace Logic
          * Initializes this mob from a vob-descriptor loaded by zenlib
          */
         void initFromVobDescriptor(const ZenLoad::zCVobData& vob);
+        void initFromJSONDescriptor(const json& j);
 
         /**
          * @return The ModelVisual of the underlaying vob
@@ -205,8 +213,15 @@ namespace Logic
          */
         const std::string& getMainSchemeName(){ return m_MainSchemeName; }
 
+        /**
+         * @return Classes which want to get exported on save should return true here
+         */
+        virtual bool shouldExport(){ return true; }
 
+        virtual void importObject(const json& j);
     protected:
+
+        virtual void exportPart(json& j) override;
 
         /**
          * Starts the interaction using the given npc
@@ -260,8 +275,11 @@ namespace Logic
         // Active Mob-Core
         MobCore* m_MobCore;
 
-        // Focus name
+        // Focus name (BED, LADDER, ...)
         std::string m_FocusName;
+
+        // Class which this vob had in the old engine
+        std::string m_zObjectClass;
 
         // Main sceme name
         std::string m_MainSchemeName;

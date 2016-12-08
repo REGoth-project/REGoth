@@ -72,13 +72,13 @@ Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, D
     return e;
 }
 
-Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo)
+Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world)
 {
     Handle::EntityHandle e = Vob::constructVob(world);
 
     // Setup controller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
-    logic.m_pLogicController = new Logic::MobController(world, e, vobInfo);
+    logic.m_pLogicController = new Logic::MobController(world, e);
 
     // Initialize animations
     Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(world.getComponentAllocator(), e);
@@ -279,6 +279,15 @@ Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInf
     return vob.world->getScriptEngine().getGameState().getNpc(vob.playerController->getScriptHandle());
 }
 
+Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName)
+{
+    // Use script-engine to insert the NPC
+    Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceSymbol, wpName);
+
+    // Get engine-side entity of the created npc
+    return getEntityFromScriptInstance(world, npc);
+}
+
 Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string &instanceName, const std::string &wpName)
 {
     // Use script-engine to insert the NPC
@@ -303,6 +312,14 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
     Handle::EntityHandle e = getEntityFromScriptInstance(world, npc);
 
     return VobTypes::asNpcVob(world, e);
+}
+
+Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std::string& item)
+{
+    Daedalus::GameState::ItemHandle h = world.getScriptEngine().getGameState().insertItem(item);
+
+    Handle::EntityHandle e = VobTypes::initItemFromScript(world, h);
+    return e;
 }
 
 

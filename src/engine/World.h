@@ -17,6 +17,9 @@
 #include <content/Sky.h>
 #include <logic/DialogManager.h>
 #include <content/AudioEngine.h>
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 namespace ZenLoad
 {
@@ -105,7 +108,7 @@ namespace World
 		/**
 		* @param zen file
 		*/
-		void init(Engine::BaseEngine& engine, const std::string& zen);
+		void init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -265,13 +268,31 @@ namespace World
 															   const std::string& name = "",
 															   bool closestOnly = false,
 															   Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
+
+		/**
+		 * Exports this world into a json-object
+		 * @param j json-object to write into
+		 */
+		void exportWorld(json& j);
+
+        /**
+         * Imports vobs from a json-object
+         * @param j
+         */
+        void importVobs(const json& j);
 	protected:
+
+        /**
+         * Imports a single vob from a json-object
+         */
+         void importSingleVob(const json& j);
 
 		/**
 		 * Initializes the Script-Engine for a ZEN-World.
 		 * Will load the .DAT-Files and setup the VM.
+         * @param firstStart Whether this is the initial load. If true, all NPCs will be put in here.
 		 */
-		void initializeScriptEngineForZenWorld(const std::string& worldName);
+		void initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
 
         WorldAllocators m_Allocators;
         TransientEntityFeatures m_TransientEntityFeatures;

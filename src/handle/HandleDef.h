@@ -23,8 +23,8 @@ namespace Handle
 	typedef Memory::GenericHandle<16, 16, 8> LogicHandle;
 	typedef Memory::GenericHandle<16, 16, 9> AnimationHandle;
 	typedef Memory::GenericHandle<16, 16, 10> PhysicsObjectHandle;
-	typedef Memory::GenericHandle<16, 16, 10> CollisionShapeHandle;
-	typedef Memory::GenericHandle<16, 16, 11> AudioHandle;
+	typedef Memory::GenericHandle<16, 16, 10> CollisionShapeHandle; // TODO: Should not be the same as PhysicsObjectHandle
+	typedef Memory::GenericHandle<16, 16, 12> AudioHandle;
 	typedef PtrHandle<World::WorldInstance> WorldHandle;
 
     // Internal handle-types (API specific)

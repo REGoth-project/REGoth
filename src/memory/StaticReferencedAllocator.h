@@ -82,7 +82,7 @@ namespace Memory
         typedef T Type;
 
         StaticReferencedAllocator() :
-                m_Elements(new uint8_t[NUM * sizeof(T)]),
+                m_Elements(new T[NUM]),
                 m_ElementsToInternalHandles(new size_t[NUM]),
                 m_InternalHandles(new FLHandle[NUM]),
                 m_FreeList(m_InternalHandles, m_InternalHandles + NUM, sizeof(m_InternalHandles[0]), NUM, sizeof(m_InternalHandles[0]), 0),
@@ -128,7 +128,7 @@ namespace Memory
             m_ElementsToInternalHandles[idx] = hOut.index;
 
             // Call constructor on object
-            new (&reinterpret_cast<T*>(m_Elements)[idx]) T;
+            //new (&reinterpret_cast<T*>(m_Elements)[idx]) T;
 
             return hOut;
         }
@@ -170,10 +170,11 @@ namespace Memory
                 m_OnRemoved(reinterpret_cast<T*>(m_Elements)[actIdx]);
 
             // Call destructor on slot to free up memory
-            reinterpret_cast<T*>(m_Elements)[actIdx].~T();
+            //reinterpret_cast<T*>(m_Elements)[actIdx].~T(); // FIXME: This leaks right here! I need to fix the moving of the last element first!
 
             // Overwrite this element with the last one.
-            reinterpret_cast<T*>(m_Elements)[actIdx] = std::move(reinterpret_cast<T*>(m_Elements)[m_LastInternalHandle->m_Handle.index]);
+            //memcpy(&reinterpret_cast<T*>(m_Elements)[actIdx], &reinterpret_cast<T*>(m_Elements)[m_LastInternalHandle->m_Handle.index], sizeof(T));
+            reinterpret_cast<T*>(m_Elements)[actIdx] = reinterpret_cast<T*>(m_Elements)[m_LastInternalHandle->m_Handle.index];
 
             // Fix the handle of the last element
             m_LastInternalHandle->m_Handle.index = actIdx;
@@ -225,7 +226,7 @@ namespace Memory
 
     private:
         /** Actual element data */
-        uint8_t* m_Elements;
+        T* m_Elements;
 
         /** Contains the index of an internal handle for each element */
         size_t* m_ElementsToInternalHandles;

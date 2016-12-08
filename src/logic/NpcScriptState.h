@@ -151,7 +151,33 @@ namespace Logic
 		 * Gets the current routine function from the script instance and replaces the routine stored with the new one
 		 */
 		void reinitRoutine();
+
+		/**
+		 * Exports this object to a JSON-object
+		 * @param j JSON-object ot export
+		 */
+		void exportScriptState(json& j);
+
+		/**
+		 * Imports this object from a savegame-json
+		 * @param j JSON to import from
+		 */
+		void importScriptState(const json& j);
 	protected:
+
+        /**
+         * Exports the given state
+         * @param state State to export
+         * @param j JSON to export to
+         */
+        void exportState(const NpcAIState& state, json& j) const;
+
+        /**
+         * Imports from the given json to the given state-object
+         * @param state State to import to
+         * @param j
+         */
+        void importState(NpcAIState& state, const json& j) const;
 
 		/**
 		 * Currently executed AI-state

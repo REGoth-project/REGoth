@@ -10,6 +10,7 @@
 #include <bx/commandline.h>
 #include <zenload/zCModelPrototype.h>
 #include <components/Vob.h>
+#include <fstream>
 
 using namespace Engine;
 
@@ -93,7 +94,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     }
 }
 
-Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
+Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile, const std::string& savegame)
 {
     m_WorldInstances.emplace_back();
 
@@ -112,7 +113,18 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
         }
     }
 
-    world.init(*this, worldFile);
+    // Try to load a savegame
+    json savegameData;
+    if(!savegame.empty())
+    {
+        std::ifstream f(savegame);
+        std::stringstream saveData;
+        saveData << f.rdbuf();
+
+        savegameData = json::parse(saveData);
+    }
+
+    world.init(*this, worldFile, savegameData);
 
     if(!m_Args.testVisual.empty())
     {

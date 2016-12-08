@@ -58,10 +58,9 @@ namespace Components
 
         static void init(EntityComponent& c)
         {
+
         }
     };
-
-
 
     struct PositionComponent : public Component
     {

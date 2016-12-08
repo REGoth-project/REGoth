@@ -455,6 +455,9 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const
 
         Vob::setVisual(vob, visual);
 
+        if(vob.visual)
+            vob.visual->setTransient(true); // Don't export these objects
+
         // Clear old visual, if there was one
         setNodeVisual("", nodeName);
 

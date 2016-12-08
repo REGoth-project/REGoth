@@ -37,7 +37,7 @@ namespace Engine
 		 * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
 		 *		  or on disk (TODO)
 		 */
-		Handle::WorldHandle  addWorld(const std::string& worldFile);
+		Handle::WorldHandle  addWorld(const std::string& worldFile, const std::string& savegame = "");
 
 		/**
 		 * Removes a world and everything inside
