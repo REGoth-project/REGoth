@@ -1,6 +1,7 @@
 #include <bgfx/bgfx.h>
 #include <ZenLib/utils/split.h>
 #include "Console.h"
+#include <cctype>
 
 using namespace UI;
 

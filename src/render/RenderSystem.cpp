@@ -69,3 +69,61 @@ void RenderSystem::unregisterInstanceDataBuffer(uint32_t idx)
 }
 
 
+void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1.0f, float _height = 1.0f)
+{
+    if (bgfx::checkAvailTransientVertexBuffer(3, Meshes::WorldStaticMeshVertex::ms_decl) )
+    {
+        const bgfx::Caps* caps = bgfx::getCaps();
+        const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
+        float _texelHalf = bgfx::RendererType::Direct3D9 == renderer ? 0.5f : 0.0f;
+
+        bgfx::TransientVertexBuffer vb;
+        bgfx::allocTransientVertexBuffer(&vb, 3, Meshes::WorldStaticMeshVertex::ms_decl);
+        Meshes::WorldStaticMeshVertex* vertex = (Meshes::WorldStaticMeshVertex*)vb.data;
+
+        const float minx = -_width;
+        const float maxx =  _width;
+        const float miny = 0.0f;
+        const float maxy = _height*2.0f;
+
+        const float texelHalfW = _texelHalf/_textureWidth;
+        const float texelHalfH = _texelHalf/_textureHeight;
+        const float minu = -1.0f + texelHalfW;
+        const float maxu =  1.0f + texelHalfH;
+
+        const float zz = 0.0f;
+
+        float minv = texelHalfH;
+        float maxv = 2.0f + texelHalfH;
+
+        if (caps->originBottomLeft)
+        {
+            float temp = minv;
+            minv = maxv;
+            maxv = temp;
+
+            minv -= 1.0f;
+            maxv -= 1.0f;
+        }
+
+        vertex[0].Position.x = minx;
+        vertex[0].Position.y = miny;
+        vertex[0].Position.z = zz;
+        vertex[0].TexCoord.x = minu;
+        vertex[0].TexCoord.y = minv;
+
+        vertex[1].Position.x = maxx;
+        vertex[1].Position.y = miny;
+        vertex[1].Position.z = zz;
+        vertex[1].TexCoord.x = maxu;
+        vertex[1].TexCoord.y = minv;
+
+        vertex[2].Position.x = maxx;
+        vertex[2].Position.y = maxy;
+        vertex[2].Position.z = zz;
+        vertex[2].TexCoord.x = maxu;
+        vertex[2].TexCoord.y = maxv;
+
+        bgfx::setVertexBuffer(&vb);
+    }
+}
