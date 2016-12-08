@@ -1,6 +1,21 @@
 # REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/degenerated1123/REGoth.svg?branch=master)](https://travis-ci.org/degenerated1123/REGoth) 
 OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothic II".
 
+Don't forget to check out the [REGoth-Wiki](../../wiki) for more information about the project!
+
+A list showing the current state of the engine, can be found [here](../../wiki/state).
+
+### Videos showing the current state
+
+* Release-Commentary to V0.1.1:
+   * https://www.youtube.com/watch?v=heg49o78Ii4
+* Dialogs, Audio, NPC script-states:
+   * https://www.youtube.com/watch?v=R3F4WY6A060
+* Day/Night-Cycle and Fighting-animations: 
+   * https://www.youtube.com/watch?v=Z1mlI9qxkzc
+* First showcase: 
+   * https://www.youtube.com/watch?v=8bLAGttYYpY
+
 # Source
 Make sure to clone this repository with the `--recursive` flag:
 
@@ -67,6 +82,10 @@ REGoth -g "path/to/gothic1or2" -w startworld.zen
 Where `path/to/gothic1or2` points to the root of a Gothic I or II installation and `startworld.zen` is one of the Zen-Files found in a `.vdf`-files in the games `data/`-directory. For example: `newworld.zen` or `addonworld.zen` for Gothic II.
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
+
+# Development
+
+If you want to help out and don't know where to start, I suggest reading the [wiki-page](wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
 
 ### Examples
 **Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`
