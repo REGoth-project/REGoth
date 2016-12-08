@@ -215,9 +215,9 @@ void Input::fireBindings()
             {
                 itAction->second.function(triggerAction, intensity);
             }
-
-        keyTriggered[itBindingToKey.second] = false;
     }
+
+    clearTriggered();
 
     for(const auto itBindingToButton : actionBindingToMouseButtonMap)
     {
@@ -289,5 +289,14 @@ void Input::getMouseState(Input::MouseState& ms)
     ms.m_buttons[0] = (uint8_t)mouseButtonState[0];
     ms.m_buttons[1] = (uint8_t)mouseButtonState[1];
     ms.m_buttons[2] = (uint8_t)mouseButtonState[2];
+}
+
+void Input::clearTriggered()
+{
+    // Reset all the keys, for text input
+    for(int i=0;i<NUM_KEYS;i++)
+    {
+        keyTriggered[i] = false;
+    }
 }
 

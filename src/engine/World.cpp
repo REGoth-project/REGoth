@@ -735,6 +735,18 @@ void WorldInstance::importSingleVob(const json& j)
         // Need to enable collision before setting the visual
         Vob::setCollisionEnabled(vob, j["visual"]["collision"]);
 
+        // Get transform before setting the visual, so staic collision doesn't end up at world-origin
+        // TODO: There must be a nicer way of writing this
+        auto& jtrans = j["visual"]["transform"];
+        Math::Matrix transform;
+
+        // Parse transform from json
+        for(int i=0;i<16;i++)
+            if(!jtrans[i].is_null())
+                transform.mv[i] = jtrans[i];
+
+        Vob::setTransform(vob, transform);
+
         // Need to set the visual before actually importing the object
         Vob::setVisual(vob, j["visual"]["name"]);
         vob = Vob::asVob(*this, entity);

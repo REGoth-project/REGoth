@@ -132,6 +132,10 @@ namespace Engine
 
 		static void setMouseLockCallback(std::function<void(bool /* lock */)> callback);
 
+		static const std::bitset<NUM_KEYS>& getKeysTriggered(){ return keyTriggered; }
+
+		static void clearTriggered();
+
 	private:
 		static std::map<ActionBinding, int /* key */> actionBindingToKeyMap;
 		static std::map<ActionBinding, int /*mouseButton*/> actionBindingToMouseButtonMap;

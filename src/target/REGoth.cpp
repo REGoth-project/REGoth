@@ -24,6 +24,7 @@
 #include <ZenLib/utils/logger.h>
 #include <json.hpp>
 #include <fstream>
+#include <ui/Console.h>
 
 using json = nlohmann::json;
 
@@ -306,6 +307,42 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         fontSize = 23.0f;
 #endif
 
+        m_Console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
+            return "Hello World!";
+        });
+
+        m_Console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 3)
+                return "Missing argument. Usage: load <zenfile> <savegame>";
+
+            std::string file = args[2];
+            if(!Utils::fileExists(file))
+                return "File '" + file + "' not found.";
+
+            clearActions();
+            m_pEngine->removeWorld(m_pEngine->getMainWorld());
+            m_pEngine->addWorld(args[1], file);
+
+            return "Successfully loaded savegame: " + file;
+        });
+
+        m_Console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: save <savegame>";
+
+            json j;
+            m_pEngine->getMainWorld().get().exportWorld(j);
+
+            // Save
+            std::ofstream f(args[1]);
+            f << Utils::iso_8859_1_to_utf8(j.dump(4));
+            f.close();
+
+            return "World saved to file: " + args[1];
+        });
+
         imguiCreate(nullptr, 0, fontSize);
         m_scrollArea = 0;
 	}
@@ -328,7 +365,10 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
-        Engine::Input::fireBindings();
+        if(!m_ConsoleOpen)
+            Engine::Input::fireBindings();
+        else
+            Engine::Input::clearTriggered();
 
 
         // Check for resize
@@ -397,6 +437,9 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             m_pEngine->addWorld(world, save);
         };
 
+        if(imguiButton(m_ConsoleOpen ? "Close Console" : "Open Console"))
+            m_ConsoleOpen = !m_ConsoleOpen;
+
         if(imguiButton("Load World"))
             loadWorld("world.zen", "testsave.txt");
 
@@ -451,6 +494,19 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         imguiEndFrame();
 
+        if(m_ConsoleOpen)
+        {
+            for (int i = 0; i < NUM_KEYS; i++)
+            {
+                if (getKeysTriggered()[i])
+                {
+                    m_Console.onKeyDown(i);
+                }
+            }
+
+            m_Console.update();
+        }
+
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
@@ -465,6 +521,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 	int64_t m_timeOffset;
 	float axis;
     int32_t m_scrollArea;
+    UI::Console m_Console;
+    bool m_ConsoleOpen = false;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);
