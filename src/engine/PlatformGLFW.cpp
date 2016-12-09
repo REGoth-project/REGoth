@@ -190,6 +190,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_S, ActionType::PlayerBackward, true);
     bindKey(GLFW_KEY_LEFT, ActionType::PlayerTurnLeft, true);
     bindKey(GLFW_KEY_RIGHT, ActionType::PlayerTurnRight, true);
+    bindKey(GLFW_KEY_Q, ActionType::PlayerTurnLeft, true);
+    bindKey(GLFW_KEY_E, ActionType::PlayerTurnRight, true);
     bindKey(GLFW_KEY_A, ActionType::PlayerStrafeLeft, true);
     bindKey(GLFW_KEY_D, ActionType::PlayerStrafeRight, true);
     bindKey(GLFW_KEY_SPACE, ActionType::DebugMoveSpeed, true);
