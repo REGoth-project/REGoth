@@ -19,7 +19,8 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 # Latest stable version
 
 Windows binaries can be found here: https://github.com/degenerated1123/REGoth/releases/tag/0.1.1
-Automatic nightly builds: https://github.com/degenerated1123/REGoth/releases
+
+Automated nightly builds: https://github.com/degenerated1123/REGoth/releases
 
 # Source
 Make sure to clone this repository with the `--recursive` flag:
