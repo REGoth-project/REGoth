@@ -280,12 +280,18 @@ namespace World
          * @param j
          */
         void importVobs(const json& j);
-	protected:
 
-        /**
+		/**
+		 * @return world-file this is built after
+		 */
+		const std::string& getZenFile(){ return m_ZenFile; }
+
+		/**
          * Imports a single vob from a json-object
          */
-         void importSingleVob(const json& j);
+		void importSingleVob(const json& j);
+
+	protected:
 
 		/**
 		 * Initializes the Script-Engine for a ZEN-World.

@@ -25,6 +25,9 @@
 #include <json.hpp>
 #include <fstream>
 #include <ui/Console.h>
+#include <components/VobClasses.h>
+#include <logic/NpcScriptState.h>
+#include <logic/PlayerController.h>
 
 using json = nlohmann::json;
 
@@ -311,20 +314,106 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hello World!";
         });
 
+        m_Console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+
+            json pex;
+            player.playerController->exportObject(pex);
+
+            std::ofstream f("hero.json");
+            f << Utils::iso_8859_1_to_utf8(pex.dump(4));
+            f.close();
+
+            return "Hero successfully exported to: hero.json";
+        });
+
+        m_Console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            std::ifstream f("hero.json");
+            std::stringstream saveData;
+            saveData << f.rdbuf();
+
+            json hero = json::parse(saveData);
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            player.playerController->importObject(hero, true);
+
+            return "Hero successfully imported from: hero.json";
+        });
+
+        m_Console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+
+            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: switchlevel <zenfile>";
+
+            std::string file = args[1];
+            if(!m_pEngine->getVDFSIndex().hasFile(file))
+                return "File '" + file + "' not found.";
+
+            // Export hero
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s1.getPlayerEntity());
+
+            json pex;
+            player.playerController->exportObject(pex);
+
+            // Temporary save
+            m_Console.submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
+
+            // Check if a savegame for this world exists
+            if(Utils::fileExists(file + ".json"))
+            {
+                m_Console.submitCommand("load " + file + " " + file + ".json");
+            }else
+            {
+                clearActions();
+                m_pEngine->removeWorld(m_pEngine->getMainWorld());
+                m_pEngine->addWorld(args[1]);
+            }
+
+            // Import hero again
+            auto& s2 = m_pEngine->getMainWorld().get().getScriptEngine();
+            if(s2.getPlayerEntity().isValid())
+            {
+                player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                            s2.getPlayerEntity()); // World and player changed
+                player.playerController->importObject(pex, true);
+            }else
+            {
+                LogError() << "Player not inserted into new world!";
+            }
+
+            return "Successfully switched world to: " + file;
+        });
+
         m_Console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
-            if(args.size() < 3)
+            if(args.size() < 2)
                 return "Missing argument. Usage: load <zenfile> <savegame>";
 
-            std::string file = args[2];
-            if(!Utils::fileExists(file))
-                return "File '" + file + "' not found.";
+            std::string savegame = "";
+
+            if(args.size() == 3)
+            {
+                std::string file = args[2];
+                if (!Utils::fileExists(file))
+                    return "File '" + file + "' not found.";
+
+                savegame = file;
+            }
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld(args[1], file);
+            m_pEngine->addWorld(args[1], savegame);
 
-            return "Successfully loaded savegame: " + file;
+            if(!savegame.empty())
+                return "Successfully loaded savegame: " + savegame;
+            else
+                return "Successfully loaded world: " + args[1];
         });
 
         m_Console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
@@ -341,6 +430,108 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             f.close();
 
             return "World saved to file: " + args[1];
+        });
+
+        m_Console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation npc;
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() == 1)
+                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            else
+            {
+                std::string n = args[1];
+                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+
+                for(Handle::EntityHandle e : s.getWorldNPCs())
+                {
+                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                    if(test.isValid())
+                    {
+                        std::string nt = test.playerController->getScriptInstance().name[0];
+                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
+                        if(n == nt)
+                        {
+                            npc = test;
+                            break;
+                        }
+                    }
+                }
+
+                if(!npc.isValid())
+                    return "Invalid NPC";
+            }
+
+
+            Logic::EventMessages::StateMessage sm;
+            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+            sm.functionSymbol = Logic::NPC_PRGAISTATE_UNCONSCIOUS;
+            sm.isPrgState = true;
+
+            npc.playerController->getEM().onMessage(sm);
+
+            return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
+        });
+
+        m_Console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation npc;
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+
+
+            if(args.size() == 1)
+                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            else
+            {
+                // Fix spaces in names happening
+                std::string name;
+                for(int i=1;i<args.size();i++)
+                    name += args[i] + " ";
+                name.pop_back();
+
+                std::string n = name;
+                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+
+                for(Handle::EntityHandle e : s.getWorldNPCs())
+                {
+                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                    if(test.isValid())
+                    {
+                        std::string nt = test.playerController->getScriptInstance().name[0];
+                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
+                        if(n == nt)
+                        {
+                            npc = test;
+                            break;
+                        }
+                    }
+                }
+
+                if(!npc.isValid())
+                    return "Invalid NPC";
+            }
+
+
+            Logic::EventMessages::StateMessage sm;
+            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+            sm.functionSymbol = Logic::NPC_PRGAISTATE_DEAD;
+            sm.isPrgState = true;
+
+            npc.playerController->die(s.getPlayerEntity());
+
+            return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
+        });
+
+        m_Console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            player.playerController->interrupt();
+
+            return "Interrupted player, cleared EM";
         });
 
         imguiCreate(nullptr, 0, fontSize);

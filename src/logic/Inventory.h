@@ -5,9 +5,9 @@
 
 using json = nlohmann::json;
 
-namespace Engine
+namespace World
 {
-    class BaseEngine;
+    class WorldInstance;
 }
 
 namespace Logic
@@ -15,7 +15,7 @@ namespace Logic
     class Inventory
     {
     public:
-        Inventory(Engine::BaseEngine& engine, Handle::WorldHandle world, Daedalus::GameState::NpcHandle npc);
+        Inventory(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
         virtual ~Inventory();
 
         /**
@@ -24,6 +24,7 @@ namespace Logic
          * @return Handle to the created item
          */
         Daedalus::GameState::ItemHandle addItem(const std::string& symName, unsigned int count = 1);
+        Daedalus::GameState::ItemHandle addItem(size_t sym, unsigned int count = 1);
 
         /**
          * Removes an item of the given instance from the inventory
@@ -47,10 +48,17 @@ namespace Logic
         Daedalus::GameState::ItemHandle getItem(size_t symIndex);
         Daedalus::GameState::ItemHandle getItem(const std::string& sym);
 
+        /**
+         * @param item Item to look up
+         * @return Data-class of the passed item handle
+         */
+        Daedalus::GEngineClasses::C_Item& getItem(Daedalus::GameState::ItemHandle item);
+
 		/**
 		 * @return Count of how many items of the given type are in this inventory
 		 */
-		int getItemCount(size_t symIndex);
+        unsigned int getItemCount(size_t symIndex);
+        unsigned int getItemCount(Daedalus::GameState::ItemHandle item);
 
         /**
          * @param symName Name of the symbol to get the instances from
@@ -79,7 +87,6 @@ namespace Logic
         /**
          * Internal
          */
-        Engine::BaseEngine& m_Engine;
-        Handle::WorldHandle m_World;
+        World::WorldInstance& m_World;
     };
 }

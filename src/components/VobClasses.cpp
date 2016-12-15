@@ -49,25 +49,26 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
     return e;
 }
 
-Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance)
+Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, size_t scriptInstance)
 {
     Handle::EntityHandle e = Vob::constructVob(world);
 
-    Daedalus::GEngineClasses::C_Item& scriptObj = world.getScriptEngine().getGameState().getItem(scriptInstance);
+    // Get values
+    Daedalus::GameState::ItemHandle h = world.getScriptEngine().getGameState().insertItem(scriptInstance);
+    Daedalus::GEngineClasses::C_Item& data = world.getScriptEngine().getGameState().getItem(h);
 
-    // Link the script instance to our entity
-    ScriptInstanceUserData* userData = new ScriptInstanceUserData;
-    userData->vobEntity = e;
-    userData->world = world.getMyHandle();
-    scriptObj.userPtr = userData;
+    // Extract visual and
+    std::string visual = data.visual;
+
+    // Kill script-object
+    world.getScriptEngine().getGameState().removeItem(h);
 
 	// Setup itemcontroller
 	Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
 	logic.m_pLogicController = new Logic::ItemController(world, e, scriptInstance);
 
-    // Assign a default visual
     Vob::VobInformation vob = Vob::asVob(world, e);
-    Vob::setVisual(vob, scriptObj.visual);
+    Vob::setVisual(vob, visual);
 
     return e;
 }
@@ -316,7 +317,7 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
 
 Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std::string& item)
 {
-    Daedalus::GameState::ItemHandle h = world.getScriptEngine().getGameState().insertItem(item);
+    size_t h = world.getScriptEngine().getVM().getDATFile().getSymbolIndexByName(item);
 
     Handle::EntityHandle e = VobTypes::initItemFromScript(world, h);
     return e;

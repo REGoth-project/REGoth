@@ -21,6 +21,19 @@ static const std::string s_EnabledPlayerStates[] = {
         "ZS_MAGICSLEEP"
 };
 
+/**
+ * Names for the program-managed states
+ */
+static const std::string s_PRGStates[] = {
+        "INVALID_PRG",
+        "ZS_ANSWER",
+        "ZS_DEAD",
+        "ZS_UNCONSCIOUS",
+        "ZS_FADEAWAY",
+        "ZS_FOLLOW"
+};
+
+
 NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob) :
     m_World(world),
     m_HostVob(hostVob)
@@ -36,7 +49,7 @@ NpcScriptState::~NpcScriptState()
 }
 
 
-bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool isRoutineState)
+bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool isRoutineState, bool isPrgState)
 {
     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, m_HostVob);
     ScriptEngine& s = m_World.getScriptEngine();
@@ -47,7 +60,21 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     m_StateVictim = s.getNPCFromSymbol("victim");
     m_StateItem = s.getItemFromSymbol("item");
 
-    m_NextState.name = dat.getSymbolByIndex(symIdx).name;
+    if(!isPrgState)
+    {
+        // Usual script-state. Find the symbols
+        m_NextState.name = dat.getSymbolByIndex(symIdx).name;
+        m_NextState.prgState = NPC_PRGAISTATE_INVALID;
+    } else
+    {
+        assert(symIdx < NUM_PRGNPC_AISTATE);
+
+        // State whose loops are managed by engine-code
+        m_NextState.name = s_PRGStates[symIdx];
+        m_NextState.prgState = (EPrgStates)symIdx;
+
+        symIdx = dat.getSymbolIndexByName(s_PRGStates[symIdx]);
+    }
 
     //LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
@@ -244,7 +271,16 @@ bool NpcScriptState::doAIState(float deltaTime)
                 if(m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
                 {
                     // Only CheckUnconscious() is called here. There is also a state for following, but it doesn't do anything here
-                    // TODO: call CheckUnconscious
+                    switch(m_CurrentState.prgState)
+                    {
+                        //case NPC_PRGAISTATE_ANSWER:break;
+                        case NPC_PRGAISTATE_DEAD:break;
+                        case NPC_PRGAISTATE_UNCONSCIOUS: vob.playerController->checkUnconscious(); break;
+                        //case NPC_PRGAISTATE_FADEAWAY:break;
+                        //case NPC_PRGAISTATE_FOLLOW:break;
+                        //default:
+                        //    LogWarn() << "Invalid PRG state";
+                    }
                 }
 
                 // Check if we're done and remove the state in the next frame
@@ -429,10 +465,12 @@ bool NpcScriptState::isInState(size_t stateMain)
 {
     if (m_CurrentState.valid)
     {
-        return m_CurrentState.symIndex == stateMain;
+        return m_CurrentState.symIndex == stateMain
+               || (m_CurrentState.prgState != NPC_PRGAISTATE_INVALID && m_CurrentState.prgState == stateMain);
     } else if (m_NextState.valid)
     {
-        return m_NextState.symIndex == stateMain;
+        return m_NextState.symIndex == stateMain
+               || (m_NextState.prgState != NPC_PRGAISTATE_INVALID && m_NextState.prgState == stateMain);
     }
 
     return false;

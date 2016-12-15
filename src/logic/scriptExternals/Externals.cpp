@@ -371,12 +371,27 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
                                                         static_cast<double>(timesec));
     });
 
+    vm->registerExternalFunction("hlp_getinstanceid", [=](Daedalus::DaedalusVM& vm){
+        int32_t sym = vm.popVar();
+
+        // Lookup what's behind this symbol. Could be a reference!
+        VobTypes::NpcVobInformation npc = getNPCByInstance(sym);
+
+        if(npc.isValid())
+        {
+            vm.setReturn((int32_t)npc.playerController->getScriptInstance().instanceSymbol);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
     vm->registerExternalFunction("npc_isplayer", [=](Daedalus::DaedalusVM& vm){
         uint32_t player = vm.popVar(); if(verbose) LogInfo() << "player: " << player;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(player);
 
-        if(npc.world)
+        if(npc.world && npc.isValid())
         {
             int r = npc.world->getScriptEngine().getPlayerEntity() == npc.entity;
             vm.setReturn(r);
@@ -442,8 +457,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             npc.playerController->getEM().clear();
     });
 
-    vm->registerExternalFunction("ai_standupquick", [=](Daedalus::DaedalusVM& vm){
-        uint32_t self = vm.popVar(); if(verbose) LogInfo() << "self: " << self;
+    vm->registerExternalFunction("ai_standup", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
@@ -452,6 +467,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             // Fill standup message
             EventMessages::MovementMessage msg;
             msg.subType = EventMessages::MovementMessage::ST_Standup;
+            msg.targetMode = 1; // Play transition-anis
+
+            // Push the message
+            npc.playerController->getEM().onMessage(msg);
+        }
+    });
+
+    vm->registerExternalFunction("ai_standupquick", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Fill standup message
+            EventMessages::MovementMessage msg;
+            msg.subType = EventMessages::MovementMessage::ST_Standup;
+            msg.targetMode = 0; // No transitions
 
             // Push the message
             npc.playerController->getEM().onMessage(msg);
@@ -631,6 +664,20 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.functionSymbol = fnSym;
 
             npc.playerController->getEM().onMessage(sm);
+        }
+    });
+
+    vm->registerExternalFunction("npc_getstatetime", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            vm.setReturn((int)npc.playerController->getAIStateMachine().getCurrentStateTime());
+        }else
+        {
+            vm.setReturn(0);
         }
     });
 
@@ -841,7 +888,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 		std::string spawnpoint = vm.popString(); 
 		uint32_t npcinstance = vm.popDataValue();
 
-		if(!World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint))
+		if(spawnpoint != "" && !World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint))
 		{
 			LogWarn() << "Invalid location: " << spawnpoint;
 			return;
@@ -854,11 +901,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string spawnpoint = vm.popString(true);
         uint32_t iteminstance = vm.popDataValue();
 
-        // Create script-object
-        Daedalus::GameState::ItemHandle it = vm.getGameState().insertItem(iteminstance);
-
-        // Link item to world object
-        Handle::EntityHandle e = VobTypes::initItemFromScript(*pWorld, it);
+        // Create object
+        Handle::EntityHandle e = VobTypes::initItemFromScript(*pWorld, iteminstance);
 
         // Position the vob
         Vob::VobInformation vob = Vob::asVob(*pWorld, e);

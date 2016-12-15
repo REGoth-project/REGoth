@@ -90,6 +90,17 @@ namespace Utils
     }
 
     /**
+     * Calculates the size of a static array
+     * @param array Array to get the size from
+     * @return Size of the passed static array
+     */
+    template<typename A, size_t SIZE>
+    size_t arraySize(const A (&array)[SIZE])
+    {
+        return SIZE;
+    }
+
+    /**
      * Rounds the given float to the nearest integer of type T
      * @param f Float to round
      * @return f rounded to the nearest integer

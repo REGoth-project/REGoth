@@ -233,6 +233,7 @@ namespace Logic
             {
                 messageType = EventMessageType::Movement;
                 walkMode = WalkMode::Run;
+                targetMode = 0;
             }
 
             /**
@@ -262,6 +263,11 @@ namespace Logic
              * How we should go to our position
              */
             WalkMode walkMode;
+
+            /**
+             * General purpose mode
+             */
+            int targetMode;
         };
 
         struct AttackMessage : public NpcMessage
@@ -359,6 +365,8 @@ namespace Logic
             StateMessage()
             {
                 messageType = EventMessageType::State;
+                isPrgState = false;
+                isRoutineState = false;
             }
 
             /**
@@ -388,6 +396,11 @@ namespace Logic
              * Whether this belongs to the daily routine
              */
             bool isRoutineState;
+
+            /**
+             * Whether this is a program-managed state. List of states in NpcScriptState.h
+             */
+             bool isPrgState;
 
             /**
              * If this is a wait-message, this is how long we should wait
@@ -518,6 +531,18 @@ namespace Logic
             {
                 messageType = EventMessageType::Conversation;
                 internInProgress = false;
+            }
+
+            /**
+             * Shortcut-function to play animations
+             */
+            static ConversationMessage playAnimation(const std::string& anim)
+            {
+                ConversationMessage msg;
+                msg.subType = ST_PlayAni;
+                msg.animation = anim;
+
+                return msg;
             }
 
             /**

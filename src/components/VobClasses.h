@@ -53,7 +53,7 @@ namespace VobTypes
      * Creates a generic vob from script
      */
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
-    Handle::EntityHandle initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance);
+    Handle::EntityHandle initItemFromScript(World::WorldInstance& world, size_t scriptInstance);
 
     /**
      * Creates a mob from the given zenlib-info

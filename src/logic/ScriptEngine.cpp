@@ -81,6 +81,8 @@ int32_t ScriptEngine::runFunction(size_t addr)
     // Place the call-operation
     m_pVM->doCallOperation(addr);
 
+    m_pVM->clearCallStack();
+
     // Execute the instructions
     while(m_pVM->doStack());
 
@@ -199,58 +201,13 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
             m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO",
                                                      startpoint); // FIXME: Read startpoint at levelchange
 
-            if (!m_PlayerEntity.isValid())
-            {
-                LogWarn() << "Failed to insert player!";
-            } else
-            {
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_PlayerEntity);
 
-                // TODO: Take bindings out of playercontroller
-                player.playerController->setupKeyBindings();
-
-                setInstanceNPC("hero", VobTypes::getScriptHandle(player));
-
-
-                if (m_pVM->getDATFile().hasSymbolName("ItMw_1H_Sword_Short_04"))
-                {
-                    Daedalus::GameState::NpcHandle hsnpc = VobTypes::getScriptHandle(player);
-                    Daedalus::GameState::ItemHandle sword = getGameState().createInventoryItem(
-                            m_pVM->getDATFile().getSymbolIndexByName("ItMw_1H_Sword_Short_04"), hsnpc);
-
-                    if (sword.isValid())
-                        VobTypes::NPC_EquipWeapon(player, sword);
-                } else
-                {
-                    LogWarn() << "ItMw_1H_Sword_Short_04 somehow not found in GOTHIC.DAT!";
-                }
-            }
-
-            Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
-            e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
-            e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
         }
-    } else
-    {
-        // Player should already be in the world and script-instances should be initialized.
-        Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
-
-        VobTypes::NpcVobInformation player = VobTypes::getVobFromScriptHandle(m_World, hplayer);
-
-        assert(player.isValid());
-
-        // Set this as our current player
-        m_PlayerEntity = player.entity;
-
-        // TODO: Take bindings out of playercontroller
-        player.playerController->setupKeyBindings();
-        setInstanceNPC("hero", VobTypes::getScriptHandle(player));
-
-        // Link camera
-        Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
-        e->getMainCameraController()->setTransforms(player.playerController->getEntityTransform().Translation());
-        e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
     }
+
+    Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
+    //e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
+    e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)
@@ -274,6 +231,24 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
         // FIXME: Some waypoints don't seem to exist?
         if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
             pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+
+        // If this is the hero, link it
+        if(vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
+        {
+            // Player should already be in the world and script-instances should be initialized.
+            Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
+
+            VobTypes::NpcVobInformation player = VobTypes::getVobFromScriptHandle(m_World, hplayer);
+
+            assert(player.isValid());
+
+            // Set this as our current player
+            m_PlayerEntity = player.entity;
+
+            // TODO: Take bindings out of playercontroller
+            player.playerController->setupKeyBindings();
+            setInstanceNPC("hero", VobTypes::getScriptHandle(player));
+        }
     }
 }
 
