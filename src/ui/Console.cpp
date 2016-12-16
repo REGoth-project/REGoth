@@ -69,6 +69,9 @@ std::string Console::submitCommand(const std::string& command)
 
     historyAdd(" >> " + command);
 
+    if(args.empty())
+        return "";
+
     if(m_Commands.find(args[0]) != m_Commands.end())
     {
 
