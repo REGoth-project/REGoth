@@ -500,13 +500,13 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             if(args.size() == 1)
             {
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
-                std::set<Handle::EntityHandle> near = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
+                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
 
-                if(near.empty())
+                if(nearNPCs.empty())
                     return "No NPCs in range!";
 
                 // Chose one at random, skip the player
-                for(Handle::EntityHandle e : near)
+                for(Handle::EntityHandle e : nearNPCs)
                 {
                     if(e != s.getPlayerEntity())
                     {
