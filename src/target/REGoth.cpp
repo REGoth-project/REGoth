@@ -28,6 +28,8 @@
 #include <components/VobClasses.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
+#include <ui/ImageView.h>
+#include <ui/BarView.h>
 
 using json = nlohmann::json;
 
@@ -314,6 +316,18 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hello World!";
         });
 
+
+        m_Console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: timeset <time (0..1)>";
+
+            float t = std::stof(args[1]);
+            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(t);
+
+            return "Set time to " + std::to_string(t);
+        });
+
         m_Console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -392,7 +406,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         m_Console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
-            if(args.size() < 2)
+            if(args.size() < 3)
                 return "Missing argument. Usage: load <zenfile> <savegame>";
 
             std::string savegame = "";
@@ -463,11 +477,13 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
                     return "Invalid NPC";
             }
 
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
 
             Logic::EventMessages::StateMessage sm;
             sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
             sm.functionSymbol = Logic::NPC_PRGAISTATE_UNCONSCIOUS;
             sm.isPrgState = true;
+            sm.other = VobTypes::getScriptHandle(player);
 
             npc.playerController->getEM().onMessage(sm);
 
@@ -482,7 +498,23 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 
             if(args.size() == 1)
-                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            {
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+                std::set<Handle::EntityHandle> near = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
+
+                if(near.empty())
+                    return "No NPCs in range!";
+
+                // Chose one at random, skip the player
+                for(Handle::EntityHandle e : near)
+                {
+                    if(e != s.getPlayerEntity())
+                    {
+                        npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                        break;
+                    }
+                }
+            }
             else
             {
                 // Fix spaces in names happening
@@ -508,11 +540,10 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
                         }
                     }
                 }
-
-                if(!npc.isValid())
-                    return "Invalid NPC";
             }
 
+            if(!npc.isValid())
+                return "Invalid NPC";
 
             Logic::EventMessages::StateMessage sm;
             sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
@@ -535,6 +566,24 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         });
 
         imguiCreate(nullptr, 0, fontSize);
+
+        /*auto& alloc = m_pEngine->getEngineTextureAlloc();
+        Handle::TextureHandle backh = alloc.loadTextureVDF("BAR_BACK.TGA");
+        Handle::TextureHandle healthh = alloc.loadTextureVDF("BAR_HEALTH.TGA");
+
+        if(backh.isValid() && healthh.isValid())
+        {
+            Textures::Texture& back = alloc.getTexture(backh);
+            Textures::Texture& health = alloc.getTexture(healthh);
+
+            UI::BarView* bar = new UI::BarView();
+            bar->setBackgroundImage(back.m_TextureHandle);
+            bar->setBarImage(health.m_TextureHandle);
+            bar->setTranslation(Math::float2(0.1f, 0.1f));
+            bar->setSize(Math::float2(0.3f, 0.1f));
+            m_pEngine->getRootUIView().addChild(bar);
+        }*/
+
         m_scrollArea = 0;
 	}
 
@@ -558,8 +607,6 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 	{
         if(!m_ConsoleOpen)
             Engine::Input::fireBindings();
-        else
-            Engine::Input::clearTriggered();
 
 
         // Check for resize
@@ -620,7 +667,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
 
-        imguiBeginArea("Debug", 220, 20, 200, 150);
+        imguiBeginArea("Debug", 250, 20, 200, 50);
 
         auto loadWorld = [&](const std::string& world, const std::string& save){
             clearActions();
@@ -630,25 +677,6 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         if(imguiButton(m_ConsoleOpen ? "Close Console" : "Open Console"))
             m_ConsoleOpen = !m_ConsoleOpen;
-
-        if(imguiButton("Load World"))
-            loadWorld("world.zen", "testsave.jsav");
-
-        if(imguiButton("Load Newworld"))
-            loadWorld("newworld.zen", "testsave.jsav");
-
-        if(imguiButton("Load Addonworld"))
-            loadWorld("Addonworld.zen", "testsave.jsav");
-
-        if(imguiButton("Save world"))
-        {
-            json j;
-            m_pEngine->getMainWorld().get().exportWorld(j);
-
-            std::ofstream f("testsave.jsav");
-
-            f << Utils::iso_8859_1_to_utf8(j.dump(4));
-        }
 
         imguiEndArea();
 
@@ -686,6 +714,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             }
 
             m_Console.update();
+
+            Engine::Input::clearTriggered();
         }
 
         // Advance to next frame. Rendering thread will be kicked to

@@ -54,7 +54,7 @@ void Console::onKeyDown(int glfwKey)
         m_TypedLine += std::tolower((char)glfwKey);
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
-        if(m_TypedLine.size() > 1)
+        if(m_TypedLine.size() >= 1)
             m_TypedLine.pop_back();
     }else if(glfwKey == Keys::GLFW_KEY_ENTER)
     {
