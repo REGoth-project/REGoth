@@ -1,4 +1,4 @@
-# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/degenerated1123/REGoth.svg?branch=master)](https://travis-ci.org/degenerated1123/REGoth) 
+# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/degenerated1123/REGoth.svg?branch=master)](https://travis-ci.org/degenerated1123/REGoth) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/REGoth/Lobby)
 OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothic II".
 
 Don't forget to check out the [REGoth-Wiki](../../wiki) for more information about the project!
@@ -15,6 +15,12 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
    * https://www.youtube.com/watch?v=Z1mlI9qxkzc
 * First showcase: 
    * https://www.youtube.com/watch?v=8bLAGttYYpY
+
+# Latest stable version
+
+Windows binaries can be found here: https://github.com/degenerated1123/REGoth/releases/tag/0.1.1
+
+Automated nightly builds: https://github.com/degenerated1123/REGoth/releases
 
 # Source
 Make sure to clone this repository with the `--recursive` flag:
