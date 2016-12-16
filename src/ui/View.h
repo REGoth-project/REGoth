@@ -6,6 +6,9 @@
 
 namespace UI
 {
+    // BGFX-View to be used for rendering views
+    const int BGFX_VIEW = 254;
+
     /**
      * Base UI-View
      */
@@ -22,8 +25,7 @@ namespace UI
          *       All children have to be removed from this, before this can be deleted, to ensure no memory leaks.
          * @param view View to add
          */
-        void addChild(View *pView)
-        { m_Children.push_back(pView); }
+        void addChild(View *pView);
 
         /**
          * Removes a subview from this view
@@ -43,16 +45,50 @@ namespace UI
          */
         bool isHidden(){ return m_IsHidden; }
         void setHidden(bool v){ m_IsHidden = v; }
+
+        /**
+         * Transforms in normalized coords
+         */
+        void setTranslation(const Math::float2& translation){ m_Translation = translation; }
+        void setSize(const Math::float2& size){ m_Size = size; }
+
+        /**
+         * Draws a texture on screen somewhere
+         * Note: Uses alpha-blending
+         * @param x/y/width/height Transforms in pixel-coords (topleft: 0,0)
+         * @param texture Texture to draw
+         */
+        static void drawTexture(uint8_t id, int x, int y, int width, int height, int surfaceWidth, int surfaceHeight,
+                                bgfx::TextureHandle texture, bgfx::ProgramHandle program, bgfx::UniformHandle texUniform);
+
+        /**
+         * @return The absolute position/size using the parents
+         */
+        Math::float2 getAbsoluteTranslation();
+        Math::float2 getAbsoluteSize();
+
     protected:
+
+        /**
+         * @param pParent Parent of this view
+         */
+        void setParent(View* pParent){ m_pParent = pParent; };
 
         /**
          * Sub-views drawn on top of this one
          */
         std::vector<View *> m_Children;
+        View* m_pParent;
 
         /**
          * Whether this should be drawn/processed
          */
         bool m_IsHidden;
+
+        /**
+         * Transforms
+         */
+        Math::float2 m_Translation;
+        Math::float2 m_Size;
     };
 }

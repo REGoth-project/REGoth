@@ -84,6 +84,10 @@ namespace Engine
          */
 		const std::string& getContentBasePath(){ return m_ContentBasePath; }
 
+		/**
+		 * @return Allocator for always present textures
+		 */
+		Textures::TextureAllocator& getEngineTextureAlloc(){ return m_EngineTextureAlloc; }
 	protected:
 
 		/**
@@ -127,6 +131,11 @@ namespace Engine
 		 * Base UI-View
 		 */
 		UI::View m_RootUIView;
+
+		/**
+		 * Allocator for always present textures
+		 */
+		Textures::TextureAllocator m_EngineTextureAlloc;
 
 		/**
 		 * Folder where the content is

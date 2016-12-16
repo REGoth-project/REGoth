@@ -29,6 +29,7 @@ namespace Render
             bgfx::UniformHandle skyCLUT;
             bgfx::UniformHandle fogColor;
             bgfx::UniformHandle fogNearFar;
+            bgfx::UniformHandle s_TexColor;
         }uniforms;
 
         struct

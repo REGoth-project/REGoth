@@ -130,7 +130,8 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     if(target.isValid())
         LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
-        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
+        return;
+        //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
 
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;

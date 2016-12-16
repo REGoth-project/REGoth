@@ -219,6 +219,9 @@ void BaseEngine::loadArchives()
     {
     	m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
+
+    // Init global texture alloc
+    m_EngineTextureAlloc.setVDFSIndex(&m_FileIndex);
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
