@@ -764,7 +764,6 @@ void WorldInstance::importVobs(const json& j)
     {
         if(!vob.is_null())
         {
-            LogInfo() << vob;
             importSingleVob(vob);
         }
     }
