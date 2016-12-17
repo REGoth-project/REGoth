@@ -567,7 +567,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         imguiCreate(nullptr, 0, fontSize);
 
-        /*auto& alloc = m_pEngine->getEngineTextureAlloc();
+        auto& alloc = m_pEngine->getEngineTextureAlloc();
         Handle::TextureHandle backh = alloc.loadTextureVDF("BAR_BACK.TGA");
         Handle::TextureHandle healthh = alloc.loadTextureVDF("BAR_HEALTH.TGA");
 
@@ -580,11 +580,11 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             bar->setAlignment(UI::A_BottomLeft);
             bar->setBackgroundImage(back);
             bar->setBarImage(health);
-            bar->setValue(1.0f);
-            bar->setTranslation(Math::float2(0.01f, 0.995f));
-            bar->setSize(Math::float2(0.7f, 0.7f));
+            bar->setValue(0.7f);
+            bar->setTranslation(Math::float2(0.01f, 0.99f));
+            bar->setSize(Math::float2(0.6f, 0.6f));
             m_pEngine->getRootUIView().addChild(bar);
-        }*/
+        }
 
         m_scrollArea = 0;
 	}

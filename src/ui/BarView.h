@@ -35,7 +35,7 @@ namespace UI
         /**
          * Views for rendering
          */
-        UI::ImageView* m_pBackground;
-        UI::ImageView* m_pBar;
+        Textures::Texture m_Background;
+        Textures::Texture m_Bar;
     };
 }

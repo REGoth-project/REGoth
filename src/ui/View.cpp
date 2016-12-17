@@ -154,8 +154,6 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
     //imguiBeginArea("Picking Render Target:", x, y, width, height);
     //imguiImage(texture, 0, width, height);
 
-    bgfx::setState(BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE);
-
     float ortho[16];
     bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
     bgfx::setViewTransform(id, NULL, ortho);

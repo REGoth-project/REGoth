@@ -46,7 +46,7 @@ void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render:
         width = (int) (absSize.x * config.state.viewWidth + 0.5f);
         height = (int) (absSize.y * config.state.viewHeight + 0.5f);
 
-        bgfx::ProgramHandle program = ::imguiGetImageProgram(1);
+        bgfx::ProgramHandle program = config.programs.imageProgram;
         drawTexture(BGFX_VIEW, px, py, width, height,
                     config.state.viewWidth, config.state.viewHeight, m_Image, program, config.uniforms.diffuseTexture);
     }
