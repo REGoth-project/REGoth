@@ -103,6 +103,7 @@ View::View()
 
     m_Translation = Math::float2(0,0);
     m_Size = Math::float2(1,1);
+    m_Alignment = EAlign::A_TopLeft;
 
     ViewUtil::PosUvVertex::init();
 
@@ -153,7 +154,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
     //imguiBeginArea("Picking Render Target:", x, y, width, height);
     //imguiImage(texture, 0, width, height);
 
-    bgfx::setState(BGFX_STATE_DEFAULT);
+    bgfx::setState(BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE);
 
     float ortho[16];
     bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
@@ -182,6 +183,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
 
 Math::float2 View::getAbsoluteTranslation()
 {
+
     if(!m_pParent)
         return m_Translation;
 
@@ -202,4 +204,21 @@ void View::addChild(View* pView)
 {
     m_Children.push_back(pView);
     pView->setParent(this);
+}
+
+Math::float2 View::getAlignOffset(EAlign align, float width, float height)
+{
+    switch(align)
+    {
+        case A_Center:          return Math::float2(-width / 2.0f, -height / 2.0f);
+        case A_LeftCenter:      return Math::float2(0, -height / 2.0f);
+        case A_RightCenter:     return Math::float2(-width, -height / 2.0f);
+        case A_TopCenter:       return Math::float2(-width / 2.0f, 0);
+        case A_BottomCenter:    return Math::float2(-width / 2.0f, -height);
+        case A_TopLeft:         return Math::float2(0, 0);
+        case A_TopRight:        return Math::float2(-width, 0);
+        case A_BottomLeft:      return Math::float2(0, -height);
+        case A_BottomRight:     return Math::float2(-width, -height);
+    }
+    return Math::float2(nullptr);
 }

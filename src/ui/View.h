@@ -9,6 +9,19 @@ namespace UI
     // BGFX-View to be used for rendering views
     const int BGFX_VIEW = 254;
 
+    enum EAlign
+    {
+        A_Center,
+        A_LeftCenter,
+        A_RightCenter,
+        A_TopCenter,
+        A_BottomCenter,
+        A_TopLeft,
+        A_TopRight,
+        A_BottomLeft,
+        A_BottomRight
+    };
+
     /**
      * Base UI-View
      */
@@ -53,6 +66,12 @@ namespace UI
         void setSize(const Math::float2& size){ m_Size = size; }
 
         /**
+         * Sets how this view should be aligned to it's translation
+         * @param alignment The alignment
+         */
+        void setAlignment(EAlign alignment){ m_Alignment = alignment; }
+
+        /**
          * Draws a texture on screen somewhere
          * Note: Uses alpha-blending
          * @param x/y/width/height Transforms in pixel-coords (topleft: 0,0)
@@ -67,6 +86,15 @@ namespace UI
         Math::float2 getAbsoluteTranslation();
         Math::float2 getAbsoluteSize();
 
+        /**
+         * From everything being aligned to "top-left" by default, we can realize other alignments by shifting the
+         * top-left translation before rendering, which is what this function outputs.
+         * @param align Alignment to account for
+         * @param width Width of the area to align
+         * @param height Height of the area to align
+         * @return Offset to the top-left translation of a view
+         */
+        static Math::float2 getAlignOffset(EAlign align, float width, float height);
     protected:
 
         /**
@@ -90,5 +118,6 @@ namespace UI
          */
         Math::float2 m_Translation;
         Math::float2 m_Size;
+        EAlign m_Alignment;
     };
 }

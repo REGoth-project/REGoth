@@ -577,10 +577,12 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             Textures::Texture& health = alloc.getTexture(healthh);
 
             UI::BarView* bar = new UI::BarView();
-            bar->setBackgroundImage(back.m_TextureHandle);
-            bar->setBarImage(health.m_TextureHandle);
-            bar->setTranslation(Math::float2(0.1f, 0.1f));
-            bar->setSize(Math::float2(0.3f, 0.1f));
+            bar->setAlignment(UI::A_BottomLeft);
+            bar->setBackgroundImage(back);
+            bar->setBarImage(health);
+            bar->setValue(1.0f);
+            bar->setTranslation(Math::float2(0.01f, 0.995f));
+            bar->setSize(Math::float2(0.7f, 0.7f));
             m_pEngine->getRootUIView().addChild(bar);
         }*/
 

@@ -22,8 +22,8 @@ namespace UI
          */
         void setValue(float v);
 
-        void setBackgroundImage(bgfx::TextureHandle tx);
-        void setBarImage(bgfx::TextureHandle tx);
+        void setBackgroundImage(const Textures::Texture& texture);
+        void setBarImage(const Textures::Texture& texture);
 
     protected:
 

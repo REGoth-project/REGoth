@@ -49,6 +49,10 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
 	m_Allocator.getElement(h).m_TextureHandle = bth;
 	m_Allocator.getElement(h).m_TextureName = name;
 
+    ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(data);
+    m_Allocator.getElement(h).m_Width = desc.dwWidth;
+    m_Allocator.getElement(h).m_Height = desc.dwHeight;
+
 	// Add handle to name-map, if it got one
 	if(!name.empty())
 		m_TexturesByName[name] = h;
