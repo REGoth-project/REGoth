@@ -14,7 +14,7 @@ extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
 UI::BarView::BarView()
 {
-
+    m_Value = 1.0f;
 }
 
 UI::BarView::~BarView()
@@ -33,6 +33,9 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
     int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
     int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
 
+    int sx = (int) (m_Background.m_Width * absSize.x + 0.5f);
+    int sy = (int) (m_Background.m_Height * absSize.y + 0.5f);
+
     px += offset.x;
     py += offset.y;
 
@@ -50,16 +53,11 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
     int pxBorderX = (int)((INNER_OFFSET_X * m_Background.m_Width) + 0.5f);
     int pxBorderY = (int)((INNER_OFFSET_Y * m_Background.m_Height) + 0.5f);
 
-    drawTexture(BGFX_VIEW, px + pxBorderX * absSize.x, py + pxBorderY * absSize.x,
-                (int)((m_Background.m_Width - pxBorderX * 2) * m_Value * absSize.x + 0.5f),
-                (int)((m_Background.m_Height - pxBorderY * 2) * absSize.x + 0.5f),
+    drawTexture(BGFX_VIEW, px + pxBorderX * absSize.x, py + pxBorderY * absSize.y,
+                (int)((sx - pxBorderX * 2 * absSize.x) * m_Value + 0.5f),
+                (int)((sy - pxBorderY * 2 * absSize.y) + 0.5f),
                 config.state.viewWidth, config.state.viewHeight, m_Bar.m_TextureHandle,
                 program, config.uniforms.diffuseTexture);
-
-
-    imguiBeginArea("", 20, 20, 100, 100);
-    imguiImage(m_Background.m_TextureHandle, 1, 100, 100);
-    imguiEndArea();
 
     View::update(dt, mstate, config);
 }

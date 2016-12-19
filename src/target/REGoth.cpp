@@ -30,6 +30,7 @@
 #include <logic/PlayerController.h>
 #include <ui/ImageView.h>
 #include <ui/BarView.h>
+#include <ui/Hud.h>
 
 using json = nlohmann::json;
 
@@ -565,26 +566,35 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Interrupted player, cleared EM";
         });
 
+        m_Console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: hurtself <damage>";
+
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, -dmg);
+
+            return "Hurt player by " + std::to_string(dmg) + " HP";
+        });
+
+        m_Console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: usemana <mana>";
+
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+
+            return "Used " + std::to_string(dmg) + " mana";
+        });
+
         imguiCreate(nullptr, 0, fontSize);
-
-        auto& alloc = m_pEngine->getEngineTextureAlloc();
-        Handle::TextureHandle backh = alloc.loadTextureVDF("BAR_BACK.TGA");
-        Handle::TextureHandle healthh = alloc.loadTextureVDF("BAR_HEALTH.TGA");
-
-        if(backh.isValid() && healthh.isValid())
-        {
-            Textures::Texture& back = alloc.getTexture(backh);
-            Textures::Texture& health = alloc.getTexture(healthh);
-
-            UI::BarView* bar = new UI::BarView();
-            bar->setAlignment(UI::A_BottomLeft);
-            bar->setBackgroundImage(back);
-            bar->setBarImage(health);
-            bar->setValue(0.7f);
-            bar->setTranslation(Math::float2(0.01f, 0.99f));
-            bar->setSize(Math::float2(0.6f, 0.6f));
-            m_pEngine->getRootUIView().addChild(bar);
-        }
 
         m_scrollArea = 0;
 	}

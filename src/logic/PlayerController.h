@@ -118,6 +118,12 @@ namespace Logic
         void onUpdateByInput(float deltaTime);
 
         /**
+         * Update routine for the NPC currently controlled by the player
+         * @param deltaTime Time since last frame
+         */
+        void onUpdateForPlayer(float deltaTime);
+
+        /**
          * Called at rendertime
          */
         void onDebugDraw() override;

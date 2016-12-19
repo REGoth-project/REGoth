@@ -1,5 +1,6 @@
 #pragma once
 #include "View.h"
+#include <content/Texture.h>
 
 namespace UI
 {

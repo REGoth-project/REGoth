@@ -11,16 +11,19 @@
 #include <zenload/zCModelPrototype.h>
 #include <components/Vob.h>
 #include <fstream>
+#include <ui/Hud.h>
 
 using namespace Engine;
 
 BaseEngine::BaseEngine()
 {
-
+    m_pHUD = nullptr;
 }
 
 BaseEngine::~BaseEngine()
 {
+    getRootUIView().removeChild(m_pHUD);
+    delete m_pHUD;
 }
 
 void BaseEngine::initEngine(int argc, char** argv)
@@ -92,6 +95,10 @@ void BaseEngine::initEngine(int argc, char** argv)
         else
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
+
+    // Init HUD
+    m_pHUD = new UI::Hud(*this);
+    getRootUIView().addChild(m_pHUD);
 }
 
 Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile, const std::string& savegame)

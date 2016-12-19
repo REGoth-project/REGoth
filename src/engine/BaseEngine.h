@@ -5,6 +5,11 @@
 #include <ui/View.h>
 #include <bx/commandline.h>
 
+namespace UI
+{
+    class Hud;
+}
+
 namespace Engine
 {
 	const int MAX_NUM_WORLDS = 4;
@@ -74,6 +79,12 @@ namespace Engine
 		UI::View& getRootUIView() { return m_RootUIView; }
 
 		/**
+		 * // TODO: Move to GameEngine, or pass GameEngine to world!
+		 * @return HUD
+		 */
+		 UI::Hud& getHud(){ return *m_pHUD; }
+
+		/**
 		 * Sets the path the engine is looking for files
 		 * @param path New path
 		 */
@@ -131,6 +142,7 @@ namespace Engine
 		 * Base UI-View
 		 */
 		UI::View m_RootUIView;
+        UI::Hud* m_pHUD;
 
 		/**
 		 * Allocator for always present textures

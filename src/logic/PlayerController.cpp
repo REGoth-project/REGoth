@@ -20,6 +20,7 @@
 #include <engine/Input.h>
 #include "ItemController.h"
 #include <json.hpp>
+#include <ui/Hud.h>
 
 using json = nlohmann::json;
 using namespace Logic;
@@ -155,18 +156,11 @@ void PlayerController::onUpdate(float deltaTime)
         }
     }
 
-    // TODO: HACK, take this out!
-    // Make following NPCs a bit faster...
-    /*if(m_RoutineState.entityTarget.isValid())
+    // Run extra stuff if this is the controlled character
+    if(isPlayerControlled())
     {
-        float defSpeed = 7.0f;
-        if (inputGetKeyState(entry::Key::Space))
-            m_NPCProperties.moveSpeed = defSpeed * 4;
-        else if (inputGetKeyState(entry::Key::KeyB))
-            m_NPCProperties.moveSpeed = defSpeed * 8;
-        else
-            m_NPCProperties.moveSpeed = defSpeed;
-    }*/
+        onUpdateForPlayer(deltaTime);
+    }
 }
 
 void PlayerController::continueRoutine()
@@ -2303,6 +2297,19 @@ void PlayerController::checkUnconscious()
     // Not yet unconscious, we can change that...
     getEM().onMessage(EventMessages::ConversationMessage::playAnimation("T_STAND_2_WOUNDEDB"));
     setBodyState(EBodyState::BS_UNCONSCIOUS);
+}
+
+void PlayerController::onUpdateForPlayer(float deltaTime)
+{
+    // Nofity hud about current stats
+    UI::Hud& hud = m_World.getEngine()->getHud();
+    auto& stats = getScriptInstance();
+
+    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] /
+                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
+                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 }
 
 
