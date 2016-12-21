@@ -245,4 +245,13 @@ namespace Utils
     {
         return loadProgram(fileReader, basePath, _vsName, _fsName);
     }
+
+    std::string stripExtension(const std::string& fileName)
+    {
+        size_t dp = fileName.find_last_of('.');
+        if(dp == std::string::npos)
+            return fileName;
+
+        return fileName.substr(0, dp);
+    }
 }
