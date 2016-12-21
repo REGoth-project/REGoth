@@ -193,10 +193,16 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_A, ActionType::PlayerStrafeLeft, true);
     bindKey(GLFW_KEY_D, ActionType::PlayerStrafeRight, true);
     bindKey(GLFW_KEY_SPACE, ActionType::DebugMoveSpeed, true);
-    bindKey(GLFW_KEY_B, ActionType::DebugMoveSpeed2, true);
-    bindKey(GLFW_KEY_T, ActionType::PlayerAction, false);
+    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::DebugMoveSpeed2, true);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, false);
 
     bindKey(GLFW_KEY_P, ActionType::PauseGame, false);
+
+    bindKey(GLFW_KEY_B, ActionType::OpenStatusMenu, false);
+    bindKey(GLFW_KEY_F10, ActionType::OpenConsole, false);
+    bindKey(GLFW_KEY_ESCAPE, ActionType::Escape, false);
+
+
 
 //    // special keys test
 //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);
