@@ -26,7 +26,15 @@ namespace Logic
 		 */
 		void pickUp(Handle::EntityHandle npc);
 
+		/**
+		 * @return Classes which want to get exported on save should return true here
+		 */
+		virtual bool shouldExport(){ return true; }
+
+		virtual void importObject(const json& j);
 	protected:
+
+		virtual void exportPart(json& j) override;
 
 		struct {
 			size_t scriptInstance;

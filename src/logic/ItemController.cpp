@@ -31,3 +31,16 @@ void ItemController::pickUp(Handle::EntityHandle npc)
 		m_World.removeEntity(m_Entity);
 	}
 }
+
+void ItemController::importObject(const json& j)
+{
+    Controller::importObject(j);
+}
+
+void ItemController::exportPart(json& j)
+{
+	Controller::exportPart(j);
+
+	j["type"] = "ItemController";
+    j["instanceSymbol"] = m_ScriptState.scriptInstance;
+}
