@@ -360,3 +360,11 @@ void Sky::getTimeOfDay(int& hours, int& minutes)
     hours = (int)fh;
     minutes = (int)((fh - hours) * 60.0f);
 }
+
+std::string Sky::getTimeOfDayFormated()
+{
+    int h, m;
+    getTimeOfDay(h, m);
+
+    return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
+}

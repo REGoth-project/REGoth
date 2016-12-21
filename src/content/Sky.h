@@ -114,6 +114,11 @@ namespace Content
         void getTimeOfDay(int& hours, int& minutes);
 
         /**
+         * @return Time of day as string
+         */
+        std::string getTimeOfDayFormated();
+
+        /**
          * @return current interpolated sky-state
          */
         const SkyState& getMasterState(){ return m_MasterState; }
