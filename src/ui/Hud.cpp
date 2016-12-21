@@ -4,19 +4,26 @@
 
 #include "Hud.h"
 #include "BarView.h"
+#include "TextView.h"
 #include <engine/BaseEngine.h>
+#include "TextView.h"
+#include "Menu_Status.h"
 
-UI::Hud::Hud(Engine::BaseEngine& engine) : m_Engine(engine)
+UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 {
-    Textures::TextureAllocator& alloc = engine.getEngineTextureAlloc();
+    Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
 
-    m_pHealthBar = new BarView();
-    m_pManaBar = new BarView();
-    m_pEnemyHealthBar = new BarView();
+    m_pHealthBar = new BarView(m_Engine);
+    m_pManaBar = new BarView(m_Engine);
+    m_pEnemyHealthBar = new BarView(m_Engine);
+    m_pClock = new TextView(m_Engine);
+    m_pStatusMenu = Menu_Status::create(m_Engine);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
+    addChild(m_pClock);
+    addChild(m_pStatusMenu);
 
     // Initialize status bars
     {
@@ -48,6 +55,14 @@ UI::Hud::Hud(Engine::BaseEngine& engine) : m_Engine(engine)
         m_pHealthBar->setTranslation(Math::float2(0.01f, 0.99f));
         m_pManaBar->setTranslation(Math::float2(0.99f, 0.99f));
         m_pEnemyHealthBar->setTranslation(Math::float2(0.5f, 0.01f));
+
+        m_pEnemyHealthBar->setHidden(true);
+    }
+
+    // Initialize clock
+    {
+        m_pClock->setTranslation(Math::float2(0.99f, 0.01f));
+        m_pClock->setAlignment(A_TopRight);
     }
 }
 
@@ -56,10 +71,14 @@ UI::Hud::~Hud()
     removeChild(m_pHealthBar);
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
+    removeChild(m_pClock);
+    removeChild(m_pStatusMenu);
 
     delete m_pManaBar;
     delete m_pHealthBar;
     delete m_pEnemyHealthBar;
+    delete m_pClock;
+    delete m_pStatusMenu;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -80,4 +99,16 @@ void UI::Hud::setMana(float value)
 void UI::Hud::setEnemyHealth(float value)
 {
     m_pEnemyHealthBar->setValue(value);
+}
+
+void UI::Hud::setTimeOfDay(const std::string& timeStr)
+{
+    m_pClock->setText(timeStr);
+}
+
+void UI::Hud::onInputAction(UI::EInputAction action)
+{
+    // Notify all menus
+    // TODO: Do this in a loop
+    m_pStatusMenu->onInputAction(action);
 }

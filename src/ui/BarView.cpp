@@ -12,7 +12,7 @@ const float INNER_OFFSET_Y = (1100.0f / 8192.0f);
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
-UI::BarView::BarView()
+UI::BarView::BarView(Engine::BaseEngine& e) : View(e)
 {
     m_Value = 1.0f;
 }
@@ -24,6 +24,9 @@ UI::BarView::~BarView()
 
 void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    if(m_IsHidden)
+        return;
+
     bgfx::ProgramHandle program = config.programs.imageProgram;
 
     // Un-normalize transforms

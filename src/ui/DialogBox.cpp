@@ -9,7 +9,7 @@
 
 using namespace UI;
 
-DialogBox::DialogBox()
+DialogBox::DialogBox(Engine::BaseEngine& e) : View(e)
 {
     m_ChoiceTaken = -1;
     m_ScrollArea = 0;

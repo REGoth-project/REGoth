@@ -5,6 +5,8 @@
 #include <render/RenderSystem.h>
 #include "PrintScreenMessages.h"
 #include "View.h"
+#include "zFont.h"
+#include <engine/BaseEngine.h>
 
 using namespace UI;
 
@@ -13,7 +15,7 @@ using namespace UI;
  */
 const double TIME_TO_POP_MESSAGE = 1.0;
 
-PrintScreenMessages::PrintScreenMessages()
+PrintScreenMessages::PrintScreenMessages(Engine::BaseEngine& e) : View(e)
 {
     m_TimeToPopMessage = TIME_TO_POP_MESSAGE;
 }
@@ -30,6 +32,11 @@ void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, R
 
     View::update(dt, mstate, config);
 
+    const UI::zFont* fnt = m_Engine.getFontCache().getFont(DEFAULT_FONT);
+
+    if(!fnt)
+        return;
+
     // Do printscreen messages
     m_TimeToPopMessage -= dt;
 
@@ -41,13 +48,17 @@ void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, R
     }
 
     // Draw printscreen messages
-    uint16_t y = 15;
+    int y = -fnt->getFontHeight() * 3; // Start over the centered timed messages
     for(std::string& s : m_PrintMessages)
     {
         if(!s.empty())
-            bgfx::dbgTextPrintf(20, y, 0x0f, s.c_str());
+            drawText(s,
+                     config.state.viewWidth / 2,
+                     (config.state.viewHeight / 2) + y,
+                     A_Center,
+                     config);
 
-        y--;
+        y -= fnt->getFontHeight();
     }
 
     // Draw and update timed message
@@ -66,20 +77,15 @@ void PrintScreenMessages::printMessage(const std::string& message)
 
 void PrintScreenMessages::drawTimedMessages(double dt, Render::RenderConfig& config)
 {
-    // TODO: Move from bgfx-debug stuff to gothic-font
-    // Values from bgfx::dbg text
-    const int divx = 8;
-    const int divy = 16;
-
     for(TimedMessage& msg : m_TimedMessages)
     {
-        uint16_t width = static_cast<uint16_t>((config.state.viewWidth / divx));
-        uint16_t height = static_cast<uint16_t>((config.state.viewHeight / divy));
+        uint16_t width = static_cast<uint16_t>((config.state.viewWidth));
+        uint16_t height = static_cast<uint16_t>((config.state.viewHeight));
         uint16_t posx, posy;
 
         // Center
         if(msg.x < 0)
-            posx = static_cast<uint16_t>((width / 2) - (msg.message.size() / 2));
+            posx = static_cast<uint16_t>((width / 2));
         else
             posx = static_cast<uint16_t>(width * msg.x);
 
@@ -88,9 +94,11 @@ void PrintScreenMessages::drawTimedMessages(double dt, Render::RenderConfig& con
         else
             posy = static_cast<uint16_t>(height * msg.y);
 
-        bgfx::dbgTextPrintf(posx,
-                            posy,
-                            0x0f, msg.message.c_str());
+        drawText(msg.message,
+                 posx,
+                 posy,
+                 A_Center, // FIXME: This doesn't have to be centered all the time, right?
+                 config);
 
         msg.timeLeft -= dt;
     }

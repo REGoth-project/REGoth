@@ -4,10 +4,31 @@
 #include <render/RenderSystem.h>
 #include <engine/Input.h>
 
+namespace Engine
+{
+    class BaseEngine;
+}
+
 namespace UI
 {
+    enum EInputAction
+    {
+        IA_Up,
+        IA_Down,
+        IA_Left,
+        IA_Right,
+        IA_Close,
+        IA_Accept
+    };
+
     // BGFX-View to be used for rendering views
     const int BGFX_VIEW = 254;
+
+    // Default font to use when drawing text
+    const char* const DEFAULT_FONT = "FONT_OLD_10_WHITE.FNT";
+    const char* const DEFAULT_FONT_HI = "FONT_OLD_10_WHITE_HI.FNT";
+    const char* const DEFAULT_FONT_LARGE = "FONT_OLD_20_WHITE.FNT";
+    const char* const DEFAULT_FONT_LARGE_HI = "FONT_OLD_20_WHITE_HI.FNT";
 
     enum EAlign
     {
@@ -28,7 +49,7 @@ namespace UI
     class View
     {
     public:
-        View();
+        View(Engine::BaseEngine& e);
 
         virtual ~View();
 
@@ -95,6 +116,14 @@ namespace UI
          * @return Offset to the top-left translation of a view
          */
         static Math::float2 getAlignOffset(EAlign align, float width, float height);
+
+        /**
+         * Draws the given lines of text (\n is allowed!) to the screen
+         * @param txt Text to draw
+         * @param px
+         * @param py
+         */
+        void drawText(const std::string& txt, int px, int py, EAlign alignment, Render::RenderConfig &config, const std::string& font = DEFAULT_FONT);
     protected:
 
         /**
@@ -119,5 +148,10 @@ namespace UI
         Math::float2 m_Translation;
         Math::float2 m_Size;
         EAlign m_Alignment;
+
+        /**
+         * Engine
+         */
+         Engine::BaseEngine& m_Engine;
     };
 }

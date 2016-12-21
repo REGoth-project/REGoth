@@ -13,7 +13,7 @@ namespace UI
     class DialogBox : public View
     {
     public:
-        DialogBox();
+        DialogBox(Engine::BaseEngine& e);
 
         ~DialogBox();
 

@@ -7,7 +7,7 @@
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
-UI::ImageView::ImageView()
+UI::ImageView::ImageView(Engine::BaseEngine& e) : View(e)
 {
     m_RelativeSize = true;
     m_ImageHeight = 0;
@@ -22,6 +22,10 @@ UI::ImageView::~ImageView()
 
 void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    if(m_IsHidden)
+        return;
+
+
     if(bgfx::isValid(m_Image))
     {
         // Un-normalize transforms

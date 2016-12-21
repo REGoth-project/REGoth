@@ -6,7 +6,7 @@ namespace UI
     class ImageView : public View
     {
     public:
-        ImageView();
+        ImageView(Engine::BaseEngine& e);
         ~ImageView();
 
         /**

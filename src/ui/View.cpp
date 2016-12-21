@@ -5,7 +5,9 @@
 #include <assert.h>
 #include <handle/HandleDef.h>
 #include "View.h"
+#include "zFont.h"
 #include <imgui/imgui.h>
+#include <engine/BaseEngine.h>
 
 using namespace UI;
 
@@ -32,7 +34,9 @@ namespace ViewUtil
 
     bgfx::VertexDecl PosUvVertex::ms_decl;
 
-    bool screenQuad(int32_t _x, int32_t _y, int32_t _width, int32_t _height, bool _originBottomLeft = false)
+    bool screenQuad(int32_t _x, int32_t _y, int32_t _width, int32_t _height,
+                    const Math::float2 uvMin = Math::float2(0.0f, 0.0f),
+                    const Math::float2 uvMax = Math::float2(1.0f, 1.0f))
     {
         if (bgfx::checkAvailTransientVertexBuffer(6, PosUvVertex::ms_decl))
         {
@@ -52,10 +56,11 @@ namespace ViewUtil
 
             const float texelHalfW = halfTexel / widthf;
             const float texelHalfH = halfTexel / heightf;
-            const float minu = texelHalfW;
-            const float maxu = 1.0f - texelHalfW;
-            const float minv = _originBottomLeft ? texelHalfH + 1.0f : texelHalfH;
-            const float maxv = _originBottomLeft ? texelHalfH : texelHalfH + 1.0f;
+
+            const float minu = uvMin.x + texelHalfW;
+            const float maxu = uvMax.x - texelHalfW;
+            const float minv = uvMin.y + texelHalfH;
+            const float maxv = texelHalfH + uvMax.y;
 
             vertex[0].m_x = minx;
             vertex[0].m_y = miny;
@@ -96,7 +101,7 @@ namespace ViewUtil
     }
 }
 
-View::View()
+View::View(Engine::BaseEngine& e) : m_Engine(e)
 {
     m_IsHidden = false;
     m_pParent = nullptr;
@@ -136,6 +141,8 @@ void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderCo
     if(m_IsHidden)
         return;
 
+    bgfx::setViewSeq(BGFX_VIEW, true);
+
     // Update all children
     for(View* v : m_Children)
     {
@@ -159,7 +166,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
     bgfx::setViewTransform(id, NULL, ortho);
     bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
 
-    if (ViewUtil::screenQuad(x, y, width, height, false))
+    if (ViewUtil::screenQuad(x, y, width, height))
     {
         bgfx::setTexture(0, texUniform, texture);
         bgfx::setState(BGFX_STATE_RGB_WRITE
@@ -167,8 +174,8 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
                        | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
         );
 
-        bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
-        );
+        //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
+        //);
 
         //setCurrentScissor();
         bgfx::submit(id, program);
@@ -185,7 +192,8 @@ Math::float2 View::getAbsoluteTranslation()
     if(!m_pParent)
         return m_Translation;
 
-    return m_Translation + m_pParent->getAbsoluteTranslation();
+    Math::float2 absSize = m_pParent->getAbsoluteSize();
+    return Math::float2(m_Translation.x * absSize.x, m_Translation.y * absSize.y) + m_pParent->getAbsoluteTranslation();
 }
 
 Math::float2 View::getAbsoluteSize()
@@ -220,3 +228,51 @@ Math::float2 View::getAlignOffset(EAlign align, float width, float height)
     }
     return Math::float2(nullptr);
 }
+
+void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font)
+{
+    const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
+
+    if(!fnt)
+        return;
+
+    // Get position of the text
+
+    Math::float2 absTranslation = getAbsoluteTranslation();
+    Math::float2 absSize = getAbsoluteSize();
+
+    int width, height;
+    fnt->calcTextMetrics(txt, width, height);
+
+    Math::float2 offset = getAlignOffset(alignment, width, height);
+    px += offset.x;
+    py += offset.y;
+
+    zFont::GlyphStream s;
+    s.setPosition(px, py);
+
+    // Fill stream
+    for(int i=0;i<txt.size();i++)
+        fnt->appendGlyph(s, (unsigned char)txt[i]);
+
+    if(UI::zFont::bindGlyphStream(s))
+    {
+        float ortho[16];
+        bx::mtxOrtho(ortho, 0.0f, (float) config.state.viewWidth, (float) config.state.viewHeight, 0.0f, 0.0f, 1000.0f);
+        bgfx::setViewTransform(BGFX_VIEW, NULL, ortho);
+        bgfx::setViewRect(BGFX_VIEW, 0, 0, (uint16_t) config.state.viewWidth, (uint16_t) config.state.viewHeight);
+
+        //Handle::TextureHandle fntTex = fnt->getFontTexture();
+        Handle::TextureHandle fntTex = fnt->getFontTexture();// m_Engine.getEngineTextureAlloc().loadTextureVDF("STARTSCREEN.TGA");
+        bgfx::setTexture(0, config.uniforms.diffuseTexture,
+                         m_Engine.getEngineTextureAlloc().getTexture(fntTex).m_TextureHandle);
+        bgfx::setState(BGFX_STATE_RGB_WRITE
+                       | BGFX_STATE_ALPHA_WRITE
+                       | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+        );
+
+        //setCurrentScissor();
+        bgfx::submit(BGFX_VIEW, config.programs.imageProgram);
+    }
+}
+

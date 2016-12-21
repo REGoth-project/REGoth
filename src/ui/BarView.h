@@ -8,7 +8,7 @@ namespace UI
     class BarView : public View
     {
     public:
-        BarView();
+        BarView(Engine::BaseEngine& e);
         ~BarView();
 
         /**
