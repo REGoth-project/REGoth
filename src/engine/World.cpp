@@ -20,6 +20,7 @@
 #include <entry/input.h>
 #include <ui/PrintScreenMessages.h>
 #include <ZenLib/zenload/zTypes.h>
+#include <ui/Hud.h>
 
 using namespace World;
 
@@ -51,7 +52,7 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
 
     // Create UI-Views
-    m_PrintScreenMessageView = new UI::PrintScreenMessages();
+    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
     getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
 }
 
@@ -469,6 +470,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Tell script engine the frame ended
     m_ScriptEngine.onFrameEnd();
 
+    // Update hud
+    m_pEngine->getHud().setTimeOfDay(m_Sky.getTimeOfDayFormated());
+
     /*static float s_testp = 0.0f;
     static std::vector<size_t> path;
     static float pathLength;
@@ -714,8 +718,11 @@ void WorldInstance::importSingleVob(const json& j)
             entity = VobTypes::createMob(*this);
             VobTypes::MobVobInformation vob = VobTypes::asMobVob(*this, entity);
             vob.mobController->importObject(j["logic"]);
-        }else
+        }else if(j["logic"]["type"] == "ItemController")
         {
+            /*size_t sym = j["logic"]["instanceSymbol"];
+            entity = VobTypes::createItem(*this, sym);
+*/
             return;
         }
     }else
