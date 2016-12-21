@@ -31,6 +31,7 @@
 #include <ui/ImageView.h>
 #include <ui/BarView.h>
 #include <ui/Hud.h>
+#include <ui/Menu.h>
 
 using json = nlohmann::json;
 
@@ -281,7 +282,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 		Meshes::UVVertex::init();
 		Meshes::PositionVertex::init();
 		Meshes::PositionColorVertex::init();
-		Meshes::PositionUVVertex::init();
+        Meshes::PositionUVVertex::init();
+        Meshes::PositionUVVertex2D::init();
 		Meshes::SkeletalVertex::init();
 
         PosColorTexCoord0Vertex::init();
@@ -596,6 +598,10 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         imguiCreate(nullptr, 0, fontSize);
 
+        /*UI::Menu* m = new UI::Menu(*m_pEngine);
+        m_pEngine->getRootUIView().addChild(m);
+        m->initializeInstance("MENU_STATUS");*/
+
         m_scrollArea = 0;
 	}
 
@@ -679,7 +685,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
 
-        imguiBeginArea("Debug", 250, 20, 200, 50);
+        imguiBeginArea("Debug", 10, 140, 200, 50);
 
         auto loadWorld = [&](const std::string& world, const std::string& save){
             clearActions();
