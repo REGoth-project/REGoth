@@ -103,10 +103,27 @@ namespace Meshes
 		static void init()
 		{
 			ms_decl
-				.begin()
-				.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-				.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-				.end();
+					.begin()
+					.add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+					.end();
+		};
+
+		static bgfx::VertexDecl ms_decl;
+	};
+
+	struct PositionUVVertex2D
+	{
+		Math::float2 Position;
+		Math::float2 TexCoord;
+
+		static void init()
+		{
+			ms_decl
+					.begin()
+					.add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+					.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+					.end();
 		};
 
 		static bgfx::VertexDecl ms_decl;
