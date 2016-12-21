@@ -12,18 +12,21 @@
 #include <components/Vob.h>
 #include <fstream>
 #include <ui/Hud.h>
+#include <ui/zFont.h>
 
 using namespace Engine;
 
-BaseEngine::BaseEngine()
+BaseEngine::BaseEngine() : m_RootUIView(*this)
 {
     m_pHUD = nullptr;
+    m_pFontCache = nullptr;
 }
 
 BaseEngine::~BaseEngine()
 {
     getRootUIView().removeChild(m_pHUD);
     delete m_pHUD;
+    delete m_pFontCache;
 }
 
 void BaseEngine::initEngine(int argc, char** argv)
@@ -97,6 +100,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     }
 
     // Init HUD
+    m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
     getRootUIView().addChild(m_pHUD);
 }

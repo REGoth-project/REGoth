@@ -8,6 +8,8 @@
 namespace UI
 {
     class Hud;
+	class zFont;
+	class zFontCache;
 }
 
 namespace Engine
@@ -82,7 +84,9 @@ namespace Engine
 		 * // TODO: Move to GameEngine, or pass GameEngine to world!
 		 * @return HUD
 		 */
-		 UI::Hud& getHud(){ return *m_pHUD; }
+		UI::Hud& getHud(){ return *m_pHUD; }
+        UI::zFontCache& getFontCache(){ return *m_pFontCache; }
+
 
 		/**
 		 * Sets the path the engine is looking for files
@@ -143,6 +147,7 @@ namespace Engine
 		 */
 		UI::View m_RootUIView;
         UI::Hud* m_pHUD;
+		UI::zFontCache* m_pFontCache;
 
 		/**
 		 * Allocator for always present textures
