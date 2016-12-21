@@ -18,6 +18,7 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     m_pEnemyHealthBar = new BarView(m_Engine);
     m_pClock = new TextView(m_Engine);
     m_pStatusMenu = Menu_Status::create(m_Engine);
+    m_pStatusMenu->setHidden(true);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
