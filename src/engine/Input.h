@@ -57,6 +57,10 @@ namespace Engine
 
 		DebugSkySpeed,
 
+		OpenStatusMenu,
+		OpenConsole,
+        Escape,
+
 		Count
 	};
 
