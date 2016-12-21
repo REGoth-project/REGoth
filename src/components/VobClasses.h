@@ -69,6 +69,7 @@ namespace VobTypes
      * @return Handle to the newly created item-vob
      */
     Handle::EntityHandle createItem(World::WorldInstance& world, const std::string& item);
+    Handle::EntityHandle createItem(World::WorldInstance& world, size_t item);
 
     /**
      * Helper-function to insert an NPC into the world (With script initialization)

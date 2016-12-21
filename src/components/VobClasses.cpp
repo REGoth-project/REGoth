@@ -323,6 +323,11 @@ Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std
     return e;
 }
 
+Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, size_t item)
+{
+    return VobTypes::initItemFromScript(world, item);
+}
+
 
 
 
