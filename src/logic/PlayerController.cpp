@@ -98,7 +98,7 @@ void PlayerController::onUpdate(float deltaTime)
     getEM().processMessageQueue();
 
     m_AIStateMachine.doAIState(deltaTime);
-
+    
     ModelVisual* model = getModelVisual();
 
     // Build the route to follow this entity

@@ -116,6 +116,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     {
         // Just interrupt the state
         m_CurrentState.phase = NpcAIState::EPhase::Interrupt;
+        m_CurrentState.valid = false;
 
         // If this is not a player, or the player is valid to perform this state...
         if(!vob.playerController->isPlayerControlled() || canPlayerUseAIState(m_NextState))
