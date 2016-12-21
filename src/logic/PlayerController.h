@@ -274,6 +274,11 @@ namespace Logic
         void checkUnconscious();
 
         /**
+         * @return Name of the guild this NPC is currently in
+         */
+        std::string getGuildName();
+
+        /**
          * Sets the body-state of this character
          * @param state State to set
          */

@@ -21,6 +21,7 @@
 #include "ItemController.h"
 #include <json.hpp>
 #include <ui/Hud.h>
+#include <ui/Menu_Status.h>
 
 using json = nlohmann::json;
 using namespace Logic;
@@ -324,12 +325,6 @@ void PlayerController::onDebugDraw()
     {
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
         Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
-
-        bgfx::dbgTextPrintf(0, 6, 0x0f, "Level: %d", scriptnpc.level);
-        bgfx::dbgTextPrintf(0, 7, 0x0f, "XP   : %d", scriptnpc.exp);
-        bgfx::dbgTextPrintf(0, 8, 0x0f, "HP   : %d/%d",
-                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
-                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
         // Print inventory
         const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
@@ -1841,6 +1836,17 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 
 void PlayerController::setupKeyBindings()
 {
+
+    Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().getStatusMenu().setHidden(!m_World.getEngine()->getHud().getStatusMenu().isHidden());
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::Escape, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Close);
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
         m_isDrawWeaponMelee = triggered;
     });
@@ -2049,11 +2055,14 @@ void PlayerController::setupKeyBindings()
                 vob.playerController->teleportToWaypoint(targetWP);*/
 
             // Use item last picked up
-            Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
-            if (lastItem.isValid())
+            if(!getInventory().getItems().empty())
             {
-                if (useItem(lastItem))
-                    getInventory().removeItem(lastItem);
+                Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+                if (lastItem.isValid())
+                {
+                    if (useItem(lastItem))
+                        getInventory().removeItem(lastItem);
+                }
             }
 
 
@@ -2161,6 +2170,10 @@ void PlayerController::importObject(const json& j, bool noTransform)
         scriptObj.id = j["scriptObj"]["id"];
 
         Utils::putArray(scriptObj.name, j["scriptObj"]["name"]);
+
+        // Need this in iso8859-1 again
+        for(std::string& s : scriptObj.name)
+            s = Utils::utf8_to_iso8859_1(s.c_str());
 
         scriptObj.slot = j["scriptObj"]["slot"];
         scriptObj.npcType = j["scriptObj"]["npcType"];
@@ -2310,6 +2323,34 @@ void PlayerController::onUpdateForPlayer(float deltaTime)
 
     hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
                   (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+
+    // Status screen
+    UI::Menu_Status& statsScreen = hud.getStatusMenu();
+    if(!statsScreen.isHidden())
+    {
+        statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+        statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+
+        statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
+                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+        statsScreen.setAttribute(UI::Menu_Status::A_HEALTH, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+        statsScreen.setGuild(getGuildName());
+        statsScreen.setLevel(stats.level);
+        statsScreen.setExperience(stats.exp);
+        statsScreen.setExperienceNext(stats.exp_next);
+        statsScreen.setLearnPoints(stats.lp);
+    }
+}
+
+std::string PlayerController::getGuildName()
+{
+    // Guilds are stored as an array in a symbol called "TXT_GUILDS"
+    auto& sym = m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("TXT_GUILDS");
+    std::string* adr = sym.getStrAddr((unsigned int)getScriptInstance().guild);
+
+    return *adr;
 }
 
 
