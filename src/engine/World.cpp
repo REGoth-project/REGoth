@@ -720,9 +720,9 @@ void WorldInstance::importSingleVob(const json& j)
             vob.mobController->importObject(j["logic"]);
         }else if(j["logic"]["type"] == "ItemController")
         {
-            /*size_t sym = j["logic"]["instanceSymbol"];
+            size_t sym = j["logic"]["instanceSymbol"];
             entity = VobTypes::createItem(*this, sym);
-*/
+
             return;
         }
     }else
