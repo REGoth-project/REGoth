@@ -43,12 +43,6 @@ namespace Render
         bgfx::setUniform(config.uniforms.fogColor, fogColorRGBA.v);
         bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
 
-        int h,m;
-        world.getSky().getTimeOfDay(h, m);
-        bgfx::dbgTextPrintf(0, 10, 0x0f, "Time: %d:%d (%f)", h, m, world.getSky().getTimeOfDay());
-        bgfx::dbgTextPrintf(0, 11, 0x0f, "FogNear: %f", fogNear);
-        bgfx::dbgTextPrintf(0, 12, 0x0f, "FogFar : %f", fogFar);
-
         // Set sky-color
         bgfx::setViewClear(0
                 , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
@@ -353,9 +347,9 @@ namespace Render
 
 
 
-		bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
+		/*bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
         bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls:    %d", numDrawcalls);
-        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);
+        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);*/
 
 
 		//world.getPhysicsSystem().debugDraw();
