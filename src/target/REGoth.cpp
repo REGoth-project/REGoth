@@ -315,12 +315,13 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         fontSize = 23.0f;
 #endif
 
-        m_Console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
+        auto& console = m_pEngine->getHud().getConsole();
+        console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
 
 
-        m_Console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: timeset <time (0..1)>";
@@ -331,7 +332,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Set time to " + std::to_string(t);
         });
 
-        m_Console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
@@ -346,7 +347,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hero successfully exported to: hero.json";
         });
 
-        m_Console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
             std::ifstream f("hero.json");
@@ -361,7 +362,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hero successfully imported from: hero.json";
         });
 
-        m_Console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
 
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -379,12 +380,12 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             player.playerController->exportObject(pex);
 
             // Temporary save
-            m_Console.submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
+            m_pEngine->getHud().getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
 
             // Check if a savegame for this world exists
             if(Utils::fileExists(file + ".json"))
             {
-                m_Console.submitCommand("load " + file + " " + file + ".json");
+                m_pEngine->getHud().getConsole().submitCommand("load " + file + " " + file + ".json");
             }else
             {
                 clearActions();
@@ -407,7 +408,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Successfully switched world to: " + file;
         });
 
-        m_Console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 3)
                 return "Missing argument. Usage: load <zenfile> <savegame>";
@@ -433,7 +434,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
                 return "Successfully loaded world: " + args[1];
         });
 
-        m_Console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: save <savegame>";
@@ -449,7 +450,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "World saved to file: " + args[1];
         });
 
-        m_Console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -493,7 +494,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
         });
 
-        m_Console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -558,7 +559,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
         });
 
-        m_Console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -568,7 +569,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Interrupted player, cleared EM";
         });
 
-        m_Console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -582,7 +583,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-        m_Console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -623,7 +624,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
-        if(!m_ConsoleOpen)
+        if(!m_pEngine->getHud().getConsole().isOpen())
             Engine::Input::fireBindings();
 
 
@@ -685,18 +686,6 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
 
-        imguiBeginArea("Debug", 10, 140, 200, 50);
-
-        auto loadWorld = [&](const std::string& world, const std::string& save){
-            clearActions();
-            m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld(world, save);
-        };
-
-        if(imguiButton(m_ConsoleOpen ? "Close Console" : "Open Console"))
-            m_ConsoleOpen = !m_ConsoleOpen;
-
-        imguiEndArea();
 
         ddSetTransform(nullptr);
         ddDrawAxis(0.0f, 0.0f, 0.0f);
@@ -721,17 +710,17 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         imguiEndFrame();
 
-        if(m_ConsoleOpen)
+        if(m_pEngine->getHud().getConsole().isOpen())
         {
             for (int i = 0; i < NUM_KEYS; i++)
             {
                 if (getKeysTriggered()[i])
                 {
-                    m_Console.onKeyDown(i);
+                    m_pEngine->getHud().getConsole().onKeyDown(i);
                 }
             }
 
-            m_Console.update();
+            m_pEngine->getHud().getConsole().update();
 
             Engine::Input::clearTriggered();
         }
@@ -750,8 +739,6 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 	int64_t m_timeOffset;
 	float axis;
     int32_t m_scrollArea;
-    UI::Console m_Console;
-    bool m_ConsoleOpen = false;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);

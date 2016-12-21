@@ -33,11 +33,20 @@ namespace Keys
     const int GLFW_KEY_NUM_LOCK = 282;
     const int GLFW_KEY_PRINT_SCREEN = 283;
     const int GLFW_KEY_PAUSE = 284;
+    const int GLFW_KEY_F10 = 299;
 };
 
 Console::Console()
 {
     m_Config.height = 10;
+    m_IsOpen = false;
+    historyAdd(" ----------- REGoth Console -----------");
+
+    registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
+        for(auto& c : m_Commands)
+            historyAdd(c.first);
+        return "";
+    });
 }
 
 void Console::update()
@@ -48,6 +57,13 @@ void Console::update()
 
 void Console::onKeyDown(int glfwKey)
 {
+    // If this is Escape or F10, close/open the console
+    if(glfwKey == Keys::GLFW_KEY_ESCAPE)
+        setOpen(false);
+
+    if(glfwKey == Keys::GLFW_KEY_F10)
+        setOpen(!isOpen());
+
     if(glfwKey >= Keys::PrintableBegin
        && glfwKey <= Keys::PrintableEnd)
     {

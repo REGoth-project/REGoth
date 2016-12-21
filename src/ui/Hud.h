@@ -1,5 +1,6 @@
 #pragma once
 #include "View.h"
+#include "Console.h"
 
 namespace Engine
 {
@@ -56,12 +57,22 @@ namespace UI
          * @return Access to the status-menu
          */
         Menu_Status& getStatusMenu(){ return *m_pStatusMenu; }
+
+        /**
+         * @return Games console
+         */
+        UI::Console& getConsole(){ return m_Console; }
     protected:
 
         BarView* m_pHealthBar;
         BarView* m_pManaBar;
         BarView* m_pEnemyHealthBar;
         TextView* m_pClock;
+
+        /**
+         * Console
+         */
+        UI::Console m_Console;
 
         /**
          * Menus

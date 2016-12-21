@@ -20,6 +20,11 @@ MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::I
     if(item.dimx != -1 && item.dimy != -1) // -1 = Default size
         setSize(Math::float2(item.dimx / 8192.0f, item.dimy / 8192.0f));
 
+    if((item.flags & Daedalus::GEngineClasses::C_Menu_Item::IT_TXT_CENTER) != 0)
+    {
+        setTranslation(m_Translation * 0.5f + (m_Translation + m_Size) * 0.5f);
+        setAlignment(A_Center);
+    }
 }
 
 void MenuItem::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -76,6 +81,9 @@ void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& m
     if(!fnt)
         return;
 
+    int width, height;
+    fnt->calcTextMetrics(item.text[0], width, height);
+
     // Get position of the text
     Math::float2 absTranslation = getAbsoluteTranslation();
     Math::float2 absSize = getAbsoluteSize();
@@ -85,6 +93,8 @@ void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& m
     for(unsigned int i=0;i<Daedalus::GEngineClasses::MenuConstants::MAX_USERSTRINGS; i++)
     {
         if(!item.text[i].empty())
-            drawText(item.text[i], px, py + fnt->getFontHeight() * i, A_TopLeft, config, item.fontName);
+        {
+            drawText(item.text[i], px, py + fnt->getFontHeight() * i, m_Alignment, config, item.fontName);
+        }
     }
 }

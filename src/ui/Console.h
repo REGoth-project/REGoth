@@ -62,6 +62,12 @@ namespace UI
          */
         void historyAdd(const std::string& msg);
 
+        /**
+         * @return Whether the console is currently shown
+         */
+        bool isOpen(){ return m_IsOpen; }
+        void setOpen(bool open){ m_IsOpen = open; }
+
     private:
 
         /**
@@ -101,6 +107,11 @@ namespace UI
          * Currently typed line
          */
         std::string m_TypedLine;
+
+        /**
+         * Whether the console is currently shown
+         */
+        bool m_IsOpen;
     };
 }
 

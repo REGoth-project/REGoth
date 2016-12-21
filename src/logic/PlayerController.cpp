@@ -1842,6 +1842,11 @@ void PlayerController::setupKeyBindings()
             m_World.getEngine()->getHud().getStatusMenu().setHidden(!m_World.getEngine()->getHud().getStatusMenu().isHidden());
     });
 
+    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().getConsole().setOpen(true);
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::Escape, [this](bool triggered, float) {
         if(triggered)
             m_World.getEngine()->getHud().onInputAction(UI::IA_Close);

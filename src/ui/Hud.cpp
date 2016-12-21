@@ -109,6 +109,9 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
+    // Close console, in case it's open
+    m_Console.setOpen(false);
+
     // Notify all menus
     // TODO: Do this in a loop
     m_pStatusMenu->onInputAction(action);
