@@ -69,6 +69,17 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     {
         Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infos[i]);
 
+        // If not permanent, don't show this twice
+        if(!info.permanent)
+        {
+            if(m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(m_Interaction.player).instanceSymbol,
+                                                    getGameState().getInfo(infos[i]).instanceSymbol))
+            {
+                // Already seen that, skip
+                continue;
+            }
+        }
+
         // Test if we should be able to see this info
         int32_t valid = 0;
         if(info.condition)
@@ -135,7 +146,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
 
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;
-    conv.name = msg.name;
+    conv.name = getGameState().getNpc(self).name[0];
     conv.text = msg.text;
 
     if(target.isValid())
@@ -324,11 +335,11 @@ void DialogManager::init()
     m_ScriptDialogMananger->registerExternals(onAIOutput, onAIProcessInfos);
 
     // Add subtitle box (Hidden if there is nothing to display)
-    m_ActiveSubtitleBox = new UI::SubtitleBox();
+    m_ActiveSubtitleBox = new UI::SubtitleBox(*m_World.getEngine());
     m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
     m_ActiveSubtitleBox->setHidden(true);
 
-    m_PrintScreenMessageView = new UI::PrintScreenMessages();
+    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_World.getEngine());
 }
 
 void DialogManager::displaySubtitle(const std::string& subtitle, const std::string& self)
@@ -377,7 +388,7 @@ void DialogManager::flushChoices()
         endDialog();
 
     // Open dialog box
-    m_ActiveDialogBox = new UI::DialogBox();
+    m_ActiveDialogBox = new UI::DialogBox(*m_World.getEngine());
     for(ChoiceEntry& e : m_Interaction.choices)
         m_ActiveDialogBox->addChoice(e);
 
