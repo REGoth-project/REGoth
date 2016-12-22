@@ -722,8 +722,6 @@ void WorldInstance::importSingleVob(const json& j)
         {
             size_t sym = j["logic"]["instanceSymbol"];
             entity = VobTypes::createItem(*this, sym);
-
-            return;
         }
     }else
     {
