@@ -841,6 +841,20 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+    vm->registerExternalFunction("npc_isdead", [=](Daedalus::DaedalusVM& vm){
+        int32_t n = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(n);
+
+        if(npc.isValid())
+        {
+            vm.setReturn(npc.playerController->getBodyState() == BS_DEAD ? 1 : 0);
+        }else
+        {
+            vm.setReturn(1); // Default to "Yes, he's dead" in case he wasn't even loaded
+        }
+    });
+
     vm->registerExternalFunction("npc_isonfp", [=](Daedalus::DaedalusVM& vm){
         std::string fpname = vm.popString(true);
         int32_t self = vm.popVar();
