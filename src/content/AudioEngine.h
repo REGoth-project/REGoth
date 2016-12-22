@@ -36,6 +36,11 @@ namespace Content
         void playSound(const std::string& name);
 
         /**
+         * Stops all playing sounds
+         */
+        void stopSounds();
+
+        /**
         * @brief Sets the VDFS-Index to use
         */
         void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }

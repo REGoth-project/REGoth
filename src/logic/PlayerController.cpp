@@ -1433,7 +1433,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
         case EventMessages::ConversationMessage::ST_Output:
         {
-            m_World.getDialogManager().displaySubtitle(message.text, message.name);
+            m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
 
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (!message.internInProgress)
@@ -1460,6 +1460,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             if(done)
             {
                 m_World.getDialogManager().stopDisplaySubtitle();
+                m_World.getAudioEngine().stopSounds();
             }
 
             return done;
