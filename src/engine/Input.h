@@ -60,6 +60,12 @@ namespace Engine
 		OpenStatusMenu,
 		OpenConsole,
         Escape,
+		UI_Up,
+		UI_Down,
+		UI_Close,
+		UI_Left,
+		UI_Right,
+        UI_Confirm,
 
 		Count
 	};
@@ -141,7 +147,7 @@ namespace Engine
 		static void clearTriggered();
 
 	private:
-		static std::map<ActionBinding, int /* key */> actionBindingToKeyMap;
+		static std::multimap<ActionBinding, int /* key */> actionBindingToKeyMap;
 		static std::map<ActionBinding, int /*mouseButton*/> actionBindingToMouseButtonMap;
 		static std::map<ActionBinding, MouseAxis> actionBindingToMouseAxisMap;
 

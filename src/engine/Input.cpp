@@ -40,7 +40,7 @@ Action::Action(std::function<void (bool, float)> func)
 {
 }
 
-std::map<ActionBinding, int /* key */> Input::actionBindingToKeyMap;
+std::multimap<ActionBinding, int /* key */> Input::actionBindingToKeyMap;
 std::map<ActionBinding, int /*mouseButton*/> Input::actionBindingToMouseButtonMap;
 std::map<ActionBinding, Input::MouseAxis> Input::actionBindingToMouseAxisMap;
 
@@ -96,7 +96,7 @@ Math::float2 Input::getMouseCoordinates()
 
 void Input::bindKey(int key, ActionType actionType, bool isContinuous, bool isInverted)
 {
-    actionBindingToKeyMap[ActionBinding(actionType, isContinuous, isInverted)] = key;
+    actionBindingToKeyMap.emplace(ActionBinding(actionType, isContinuous, isInverted), key);
 }
 
 void Input::bindMouseButton(int mouseButton, ActionType actionType, bool isContinuous, bool isInverted)
@@ -209,12 +209,20 @@ void Input::fireBindings()
         // Invert intensity if isInverted is true
         intensity = itBindingToKey.first.isInverted ? -intensity : intensity;
 
-        auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToKey.first.actionType);
+        for(const auto& action : actionTypeToActionMap)
+        {
+            if(action.first == itBindingToKey.first.actionType)
+            {
+                action.second.function(triggerAction, intensity);
+            }
+        }
+
+        /*auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToKey.first.actionType);
         for(auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
             if(itAction->second.isEnabled)
             {
                 itAction->second.function(triggerAction, intensity);
-            }
+            }*/
     }
 
     clearTriggered();
