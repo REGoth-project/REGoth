@@ -12,7 +12,6 @@ namespace World
 
 namespace UI
 {
-    class DialogBox;
     class PrintScreenMessages;
     class SubtitleBox;
 }
@@ -51,12 +50,6 @@ namespace Logic
          * @param dt time since last frame
          */
         void update(double dt);
-
-        /**
-         * Active dialog box accessors
-         */
-        UI::DialogBox* getActiveDialogBox() const
-        { return m_ActiveDialogBox; }
 
         /**
          * Start dialog
@@ -147,11 +140,6 @@ namespace Logic
          * @return Whether to continue the dialog (if false, END was selected)
          */
         bool performChoice(size_t choice);
-
-        /**
-         * Currently active dialog-box. nullptr, if none is active.
-         */
-        UI::DialogBox* m_ActiveDialogBox;
 
         /**
          * Currently active subtitle box
