@@ -120,8 +120,8 @@ void DialogBox::onInputAction(EInputAction action)
 
     switch(action)
     {
-        case IA_Up: m_CurrentlySelected = std::min(((int)m_Choices.size()) - 1, m_CurrentlySelected - 1) % (int)m_Choices.size(); break;
-        case IA_Down: m_CurrentlySelected = std::min(((int)m_Choices.size()) - 1, m_CurrentlySelected + 1) % (int)m_Choices.size();break;
+        case IA_Up: m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size()); break;
+        case IA_Down: m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size()); break;
         case IA_Left:break;
         case IA_Right:break;
         case IA_Close: m_ChoiceTaken = (int)m_Choices.size() - 1; break;

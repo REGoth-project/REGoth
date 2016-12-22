@@ -146,7 +146,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
 
     EventMessages::ConversationMessage conv;
     conv.subType = EventMessages::ConversationMessage::ST_Output;
-    conv.name = getGameState().getNpc(self).name[0];
+    conv.name = msg.name;
     conv.text = msg.text;
 
     if(target.isValid())

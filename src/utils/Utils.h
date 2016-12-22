@@ -24,6 +24,16 @@ namespace Utils
     };
 
     /**
+     * Modulo-operation which works for negative numbers as well
+     * @return a mod b
+     */
+    template<typename T>
+    T mod(T a, T b)
+    {
+        return (a%b+b)%b;
+    }
+
+    /**
      * Converts ISO-8859-1 to UTF-8
      * @param str ISO-8859-1 string
      * @return UTF-8 encoded version of the input-string
