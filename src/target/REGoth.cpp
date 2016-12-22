@@ -429,7 +429,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             std::string savegame = "";
 
 
-            std::string file = args[1];
+            std::string file = args[1] + ".json";
             if (!Utils::fileExists(file))
                 return "File '" + file + "' not found.";
 
@@ -455,11 +455,11 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             m_pEngine->getMainWorld().get().exportWorld(j);
 
             // Save
-            std::ofstream f(args[1]);
+            std::ofstream f(args[1] + ".json");
             f << Utils::iso_8859_1_to_utf8(j.dump(4));
             f.close();
 
-            return "World saved to file: " + args[1];
+            return "World saved to file: " + args[1] + ".json";
         });
 
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
