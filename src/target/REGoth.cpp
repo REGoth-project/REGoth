@@ -379,6 +379,13 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             json pex;
             player.playerController->exportObject(pex);
 
+            // Export script-symbols
+            json scriptSymbols;
+            s1.exportScriptEngine(scriptSymbols);
+
+            json dialogMan;
+            m_pEngine->getMainWorld().get().getDialogManager().exportDialogManager(dialogMan);
+
             // Temporary save
             m_pEngine->getHud().getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
 
@@ -404,6 +411,12 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             {
                 LogError() << "Player not inserted into new world!";
             }
+
+            // Import script-symbols
+            s2.importScriptEngine(scriptSymbols);
+
+            // Import dialog info
+            m_pEngine->getMainWorld().get().getDialogManager().importDialogManager(dialogMan);
 
             return "Successfully switched world to: " + file;
         });
