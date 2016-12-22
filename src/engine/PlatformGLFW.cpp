@@ -214,6 +214,7 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_A, ActionType::UI_Left, false);
     bindKey(GLFW_KEY_D, ActionType::UI_Right, false);
     bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
 
 
 
