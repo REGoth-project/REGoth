@@ -89,6 +89,23 @@ Where `path/to/gothic1or2` points to the root of a Gothic I or II installation a
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
 
+# Controls
+
+ * Movement: WASD/QE or arrow-keys (Space or Shift to run faster)
+ * Actions: Left CTRL for everything
+ * Menus: B for status-screen
+ * Console: F10
+   * Available commands:
+      * `kill`: Kill a nearby NPC
+      * `knockout`: Knockout a nearby NPC
+      * `save <name>`: Save the game
+      * `load <name>`: Load a game
+      * `switchlevel <zenfile>`: Switch to an other level in current session
+      * `usemana <amount>`: Use mana
+      * `hurtself <amount>`: Hurt yourself
+      * `timeset <x>`: Set time to 12:00. `x` doesn't matter but must be a number.
+      * `list`: Print a list of available commands
+      
 # Development
 
 If you want to help out and don't know where to start, I suggest reading the [wiki-page](wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
