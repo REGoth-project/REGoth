@@ -80,8 +80,11 @@ void Container::importCore(const json& j)
 {
     MobCore::importCore(j);
 
-    for(auto it=j["contents"].begin(); it != j["contents"].end(); it++)
+    if(j.find("contents") != j.end())
     {
-        m_Contents.push_back({it.key(), it.value()});
+        for (auto it = j["contents"].begin(); it != j["contents"].end(); it++)
+        {
+            m_Contents.push_back({it.key(), it.value()});
+        }
     }
 }

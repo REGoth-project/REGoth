@@ -244,7 +244,7 @@ void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 
 void MobController::initFromJSONDescriptor(const json& j)
 {
-    m_FocusName = j["vobName"];
+    m_FocusName = j["focusName"];
     m_zObjectClass = j["objectClass"];
 
     if(m_FocusName == "Bed")
@@ -602,7 +602,9 @@ void MobController::exportPart(json& j)
 {
     Controller::exportPart(j);
 
+    j["type"] = "MobController";
     j["focusName"] = m_FocusName;
+    j["objectClass"] = m_zObjectClass;
     m_MobCore->exportCore(j["core"]);
 }
 

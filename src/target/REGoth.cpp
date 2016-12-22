@@ -392,7 +392,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             // Check if a savegame for this world exists
             if(Utils::fileExists(file + ".json"))
             {
-                m_pEngine->getHud().getConsole().submitCommand("load " + file + " " + file + ".json");
+                m_pEngine->getHud().getConsole().submitCommand("load " + file);
             }else
             {
                 clearActions();
