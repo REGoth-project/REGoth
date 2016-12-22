@@ -184,6 +184,9 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
             prepareRunFunction();
             runFunction("init_" + world);
         }
+    }else {
+        VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
+                                "WP_INTRO_FALL3");
     }
 
     // Create player, if not already present
