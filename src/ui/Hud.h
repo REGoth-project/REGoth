@@ -12,6 +12,7 @@ namespace UI
     class BarView;
     class TextView;
     class Menu_Status;
+    class DialogBox;
     class Hud : public View
     {
     public:
@@ -62,12 +63,28 @@ namespace UI
          * @return Games console
          */
         UI::Console& getConsole(){ return m_Console; }
+
+        /**
+         * @return Dialog-box
+         */
+        DialogBox& getDialogBox(){ return *m_pDialogBox; }
+
+        /**
+         * Controls visibility of gameplay-hud
+         */
+         void setGameplayHudVisible(bool value);
     protected:
+
+        /**
+         * All views qualifying as used while normal gameplay
+         */
+        std::vector<View*> m_GameplayHudElements;
 
         BarView* m_pHealthBar;
         BarView* m_pManaBar;
         BarView* m_pEnemyHealthBar;
         TextView* m_pClock;
+        DialogBox* m_pDialogBox;
 
         /**
          * Console

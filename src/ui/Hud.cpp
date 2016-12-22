@@ -8,6 +8,7 @@
 #include <engine/BaseEngine.h>
 #include "TextView.h"
 #include "Menu_Status.h"
+#include "DialogBox.h"
 
 UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 {
@@ -17,6 +18,10 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     m_pManaBar = new BarView(m_Engine);
     m_pEnemyHealthBar = new BarView(m_Engine);
     m_pClock = new TextView(m_Engine);
+    m_pDialogBox = new DialogBox(m_Engine);
+    m_pDialogBox->setHidden(true);
+
+    // Menus
     m_pStatusMenu = Menu_Status::create(m_Engine);
     m_pStatusMenu->setHidden(true);
 
@@ -25,9 +30,15 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     addChild(m_pEnemyHealthBar);
     addChild(m_pClock);
     addChild(m_pStatusMenu);
+    addChild(m_pDialogBox);
 
     // Initialize status bars
     {
+        m_GameplayHudElements.push_back(m_pManaBar);
+        //m_GameplayHudElements.push_back(m_pEnemyHealthBar);
+        m_GameplayHudElements.push_back(m_pClock);
+        m_GameplayHudElements.push_back(m_pHealthBar);
+
         Handle::TextureHandle hBarBackground = alloc.loadTextureVDF("BAR_BACK.TGA");
         Handle::TextureHandle hBarHealth = alloc.loadTextureVDF("BAR_HEALTH.TGA");
         Handle::TextureHandle hBarMana = alloc.loadTextureVDF("BAR_MANA.TGA");
@@ -74,12 +85,14 @@ UI::Hud::~Hud()
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pClock);
     removeChild(m_pStatusMenu);
+    removeChild(m_pDialogBox);
 
     delete m_pManaBar;
     delete m_pHealthBar;
     delete m_pEnemyHealthBar;
     delete m_pClock;
     delete m_pStatusMenu;
+    delete m_pDialogBox;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -110,9 +123,20 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
     // Close console, in case it's open
-    m_Console.setOpen(false);
+    if(action == IA_Close)
+        m_Console.setOpen(false);
 
     // Notify all menus
     // TODO: Do this in a loop
-    m_pStatusMenu->onInputAction(action);
+    if(!m_pStatusMenu->isHidden())
+        m_pStatusMenu->onInputAction(action);
+
+    if(!m_pDialogBox->isHidden())
+        m_pDialogBox->onInputAction(action);
+}
+
+void UI::Hud::setGameplayHudVisible(bool value)
+{
+    for(View* v : m_GameplayHudElements)
+        v->setHidden(!value);
 }
