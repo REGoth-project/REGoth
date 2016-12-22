@@ -119,6 +119,11 @@ namespace Logic
 		bool isInRoutine();
 
 		/**
+		 * Removes the currently set routine
+		 */
+		void clearRoutine();
+
+		/**
 		 * Checks whether this NPC is currently in the state with stateMainSymbol as starting function
 		 * @param stateMainSymbol Starting function of the state to check
 		 * @return Whether the NPC is inside the given state

@@ -564,3 +564,9 @@ void NpcScriptState::importScriptState(const json& j)
     //reinitRoutine();
 }
 
+void NpcScriptState::clearRoutine()
+{
+    m_Routine.hasRoutine = false;
+    m_Routine.routine.clear();
+}
+
