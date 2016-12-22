@@ -90,6 +90,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
     m_LastAniRootPosUpdatedAniHash = 0;
     m_NoAniRootPosHack = false;
+
+    setBodyState(BS_STAND);
 }
 
 void PlayerController::onUpdate(float deltaTime)
@@ -98,7 +100,7 @@ void PlayerController::onUpdate(float deltaTime)
     getEM().processMessageQueue();
 
     m_AIStateMachine.doAIState(deltaTime);
-    
+
     ModelVisual* model = getModelVisual();
 
     // Build the route to follow this entity
@@ -940,6 +942,15 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     placeOnGround();
 
+    // Reset key-states
+    m_isStrafeLeft = false;
+    m_isStrafeRight = false;
+    m_isForward = false;
+    m_isBackward = false;
+    m_isTurnLeft = false;
+    m_isTurnRight = false;
+    m_MoveSpeed1 = false;
+    m_MoveSpeed2 = false;
 }
 
 void PlayerController::attackFront()
@@ -1716,9 +1727,11 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
         m_World.getScriptEngine().setInstanceNPC("self", getScriptHandle());
         m_World.getScriptEngine().prepareRunFunction();
         m_World.getScriptEngine().runFunctionBySymIndex(data.on_state[0]);
+
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
@@ -1847,9 +1860,34 @@ void PlayerController::setupKeyBindings()
             m_World.getEngine()->getHud().getConsole().setOpen(true);
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::Escape, [this](bool triggered, float) {
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float) {
         if(triggered)
             m_World.getEngine()->getHud().onInputAction(UI::IA_Close);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Up, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Up);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Down, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Down);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Left, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Left);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Right, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Right);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Confirm, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Accept);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
@@ -1873,7 +1911,7 @@ void PlayerController::setupKeyBindings()
             }
         }else
         {
-            m_isForward = triggered;
+            m_isForward = m_isForward || triggered;
         }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float) {
@@ -1894,28 +1932,28 @@ void PlayerController::setupKeyBindings()
             }
         }else
         {
-            m_isBackward = triggered;
+            m_isBackward = m_isBackward || triggered;
         }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float) {
-        m_isTurnLeft = triggered;
+        m_isTurnLeft = m_isTurnLeft || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnRight, [this](bool triggered, float) {
-        m_isTurnRight = triggered;
+        m_isTurnRight = m_isTurnRight || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeLeft, [this](bool triggered, float) {
-        m_isStrafeLeft = triggered;
+        m_isStrafeLeft = m_isStrafeLeft || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float) {
-        m_isStrafeRight = triggered;
+        m_isStrafeRight = m_isStrafeRight || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
-        m_MoveSpeed1 = triggered;
+        m_MoveSpeed1 = m_MoveSpeed1 || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
-        m_MoveSpeed2 = triggered;
+        m_MoveSpeed2 = m_MoveSpeed2 || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
@@ -2177,8 +2215,8 @@ void PlayerController::importObject(const json& j, bool noTransform)
         Utils::putArray(scriptObj.name, j["scriptObj"]["name"]);
 
         // Need this in iso8859-1 again
-        for(std::string& s : scriptObj.name)
-            s = Utils::utf8_to_iso8859_1(s.c_str());
+        //for(std::string& s : scriptObj.name)
+        //    s = Utils::utf8_to_iso8859_1(s.c_str());
 
         scriptObj.slot = j["scriptObj"]["slot"];
         scriptObj.npcType = j["scriptObj"]["npcType"];
@@ -2229,6 +2267,10 @@ void PlayerController::importObject(const json& j, bool noTransform)
 
     // Import state
     m_AIStateMachine.importScriptState(j["AIState"]);
+
+    // Check for death
+    if(getScriptInstance().attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] == 0)
+        die(Handle::EntityHandle::makeInvalidHandle());
 }
 
 
@@ -2277,8 +2319,15 @@ void PlayerController::die(Handle::EntityHandle attackingNPC)
     {
         Daedalus::GameState::NpcHandle oldOther = m_World.getScriptEngine().getNPCFromSymbol("other");
 
-        VobTypes::NpcVobInformation attacker = VobTypes::asNpcVob(m_World, attackingNPC);
-        m_World.getScriptEngine().setInstanceNPC("other", VobTypes::getScriptHandle(attacker));
+        if(attackingNPC.isValid())
+        {
+            VobTypes::NpcVobInformation attacker = VobTypes::asNpcVob(m_World, attackingNPC);
+            m_World.getScriptEngine().setInstanceNPC("other", VobTypes::getScriptHandle(attacker));
+        }else
+        {
+            m_World.getScriptEngine().setInstanceNPC("other",Daedalus::GameState::NpcHandle());
+        }
+
         m_AIStateMachine.startAIState(Logic::NPC_PRGAISTATE_DEAD, false, false, true);
 
         // Restore old other
@@ -2289,6 +2338,8 @@ void PlayerController::die(Handle::EntityHandle attackingNPC)
 
     // TODO: Move this into onDamage_Anim if that function exists!
     getEM().onMessage(EventMessages::ConversationMessage::playAnimation("T_DEAD"));
+
+    m_AIStateMachine.clearRoutine();
 }
 
 void PlayerController::checkUnconscious()
