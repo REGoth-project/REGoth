@@ -16,7 +16,7 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 * First showcase: 
    * https://www.youtube.com/watch?v=8bLAGttYYpY
 
-# Latest stable version
+# Download (Latest stable version)
 
 Windows binaries can be found here: https://github.com/degenerated1123/REGoth/releases/tag/0.1.1
 
