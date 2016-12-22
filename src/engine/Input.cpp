@@ -211,7 +211,7 @@ void Input::fireBindings()
 
         for(const auto& action : actionTypeToActionMap)
         {
-            if(action.first == itBindingToKey.first.actionType)
+            if(action.first == itBindingToKey.first.actionType && action.second.isEnabled)
             {
                 action.second.function(triggerAction, intensity);
             }
