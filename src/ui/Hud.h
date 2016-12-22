@@ -2,6 +2,11 @@
 #include "View.h"
 #include "Console.h"
 
+// HACK: Work around windows.h messing this up with its define
+#ifdef DialogBox
+#undef DialogBox
+#endif
+
 namespace Engine
 {
     class BaseEngine;

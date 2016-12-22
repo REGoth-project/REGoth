@@ -423,23 +423,22 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
-            if(args.size() < 3)
-                return "Missing argument. Usage: load <zenfile> <savegame>";
+            if(args.size() != 2)
+                return "Missing argument. Usage: load <savegame>";
 
             std::string savegame = "";
 
-            if(args.size() == 3)
-            {
-                std::string file = args[2];
-                if (!Utils::fileExists(file))
-                    return "File '" + file + "' not found.";
 
-                savegame = file;
-            }
+            std::string file = args[1];
+            if (!Utils::fileExists(file))
+                return "File '" + file + "' not found.";
+
+            savegame = file;
+
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld(args[1], savegame);
+            m_pEngine->addWorld("", savegame);
 
             if(!savegame.empty())
                 return "Successfully loaded savegame: " + savegame;

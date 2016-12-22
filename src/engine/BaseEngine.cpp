@@ -105,12 +105,26 @@ void BaseEngine::initEngine(int argc, char** argv)
     getRootUIView().addChild(m_pHUD);
 }
 
-Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile, const std::string& savegame)
+Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
 {
+    std::string worldFile = _worldFile;
+
     m_WorldInstances.emplace_back();
 
 	World::WorldInstance& world = m_WorldInstances.back();
 	onWorldCreated(world.getMyHandle());
+
+    // Try to load a savegame
+    json savegameData;
+    if(!savegame.empty())
+    {
+        std::ifstream f(savegame);
+        std::stringstream saveData;
+        saveData << f.rdbuf();
+
+        savegameData = json::parse(saveData);
+        worldFile = savegameData["zenfile"];
+    }
 
     if(!worldFile.empty())
     {
@@ -122,17 +136,6 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile, const s
             LogWarn() << "Failed to find world file: " << worldFile;
             return Handle::WorldHandle::makeInvalidHandle();
         }
-    }
-
-    // Try to load a savegame
-    json savegameData;
-    if(!savegame.empty())
-    {
-        std::ifstream f(savegame);
-        std::stringstream saveData;
-        saveData << f.rdbuf();
-
-        savegameData = json::parse(saveData);
     }
 
     world.init(*this, worldFile, savegameData);

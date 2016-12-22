@@ -229,6 +229,9 @@ void DialogManager::update(double dt)
                 }
             }
         }
+    }else
+    {
+        m_World.getEngine()->getHud().setGameplayHudVisible(true); // FIXME: Disable talking to monsters. The dialog end doesn't trigger and this stays hidden
     }
 }
 
