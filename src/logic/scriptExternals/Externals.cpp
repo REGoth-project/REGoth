@@ -740,6 +740,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+    vm->registerExternalFunction("wld_istime", [=](Daedalus::DaedalusVM& vm){
+
+        int32_t min2 = vm.popDataValue();
+        int32_t hour2 = vm.popDataValue();
+        int32_t min1 = vm.popDataValue();
+        int32_t hour1 = vm.popDataValue();
+
+        int32_t hour, min;
+        pWorld->getSky().getTimeOfDay(hour, min);
+
+        if (hour >= hour1 && hour <= hour2 &&
+            min >= min1 && min >= min2)
+        {
+            vm.setReturn(1);
+        } else
+            vm.setReturn(0);
+    });
+
     vm->registerExternalFunction("ai_wait", [=](Daedalus::DaedalusVM& vm){
         float duration = vm.popFloatValue();
         int32_t self = vm.popVar();

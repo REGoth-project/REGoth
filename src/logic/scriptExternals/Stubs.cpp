@@ -873,15 +873,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         vm.setReturn(0);
     });
 
-    vm.registerExternalFunction("wld_istime", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "wld_istime";
-        int min2 = vm.popDataValue(); if(verbose) LogInfo() << "min2: " << min2;
-        int hour2 = vm.popDataValue(); if(verbose) LogInfo() << "hour2: " << hour2;
-        int min1 = vm.popDataValue(); if(verbose) LogInfo() << "min1: " << min1;
-        int hour1 = vm.popDataValue(); if(verbose) LogInfo() << "hour1: " << hour1;
-        vm.setReturn(0);
-    });
-
     vm.registerExternalFunction("wld_removeitem", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "wld_removeitem";
         uint32_t arr_item;
