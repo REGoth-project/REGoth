@@ -24,6 +24,9 @@ Menu_Status* Menu_Status::create(Engine::BaseEngine& e)
 
 void Menu_Status::setAttribute(Menu_Status::EAttribute type, int value, int max)
 {
+    if(!m_MenuHandle.isValid())
+        return;
+
     bool hasMax = false;
     std::string name = "MENU_ITEM_ATTRIBUTE_" + std::to_string(type);
     switch(type)
@@ -39,26 +42,40 @@ void Menu_Status::setAttribute(Menu_Status::EAttribute type, int value, int max)
 
 void Menu_Status::setGuild(const std::string& guild)
 {
+    if(!m_MenuHandle.isValid())
+        return;
     getItemScriptData("MENU_ITEM_PLAYERGUILD").text[0] = guild;
 }
 
 void Menu_Status::setLevel(int level)
 {
+    if(!m_MenuHandle.isValid())
+        return;
+
     getItemScriptData("MENU_ITEM_LEVEL").text[0] = std::to_string(level);
 }
 
 void Menu_Status::setExperience(int xp)
 {
+    if(!m_MenuHandle.isValid())
+        return;
+
     getItemScriptData("MENU_ITEM_EXP").text[0] = std::to_string(xp);
 }
 
 void Menu_Status::setLearnPoints(int lp)
 {
+    if(!m_MenuHandle.isValid())
+        return;
+
     getItemScriptData("MENU_ITEM_LEARN").text[0] = std::to_string(lp);
 }
 
 void Menu_Status::setExperienceNext(int xpNext)
 {
+    if(!m_MenuHandle.isValid())
+        return;
+
     getItemScriptData("MENU_ITEM_LEVEL_NEXT").text[0] = std::to_string(xpNext);
 }
 

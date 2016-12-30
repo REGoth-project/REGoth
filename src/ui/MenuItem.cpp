@@ -9,7 +9,7 @@
 
 using namespace UI;
 
-MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::ItemHandle scriptHandle)
+MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle)
         : View(e), m_ScriptHandle(scriptHandle), m_BaseMenu(baseMenu)
 {
     // Set position and other values according to script-data
@@ -60,7 +60,7 @@ void MenuItem::setTextLine(const std::string& text, unsigned int line)
  */
 
 MenuItemTypes::MenuItemText::MenuItemText(  Engine::BaseEngine& e, UI::Menu& baseMenu,
-                                            const Daedalus::GameState::ItemHandle& scriptHandle)
+                                            const Daedalus::GameState::MenuItemHandle& scriptHandle)
                                             : MenuItem(e, baseMenu, scriptHandle)
 {
 

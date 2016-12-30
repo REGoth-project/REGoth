@@ -43,32 +43,35 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
         Handle::TextureHandle hBarHealth = alloc.loadTextureVDF("BAR_HEALTH.TGA");
         Handle::TextureHandle hBarMana = alloc.loadTextureVDF("BAR_MANA.TGA");
 
-        // Images
-        m_pHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-        m_pManaBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-        m_pEnemyHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
+        if(hBarMana.isValid() && hBarHealth.isValid() && hBarBackground.isValid())
+        {
+            // Images
+            m_pHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
+            m_pManaBar->setBackgroundImage(alloc.getTexture(hBarBackground));
+            m_pEnemyHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
 
-        m_pHealthBar->setBarImage(alloc.getTexture(hBarHealth));
-        m_pManaBar->setBarImage(alloc.getTexture(hBarMana));
-        m_pEnemyHealthBar->setBarImage(alloc.getTexture(hBarHealth));
+            m_pHealthBar->setBarImage(alloc.getTexture(hBarHealth));
+            m_pManaBar->setBarImage(alloc.getTexture(hBarMana));
+            m_pEnemyHealthBar->setBarImage(alloc.getTexture(hBarHealth));
 
-        // Alignment
-        m_pHealthBar->setAlignment(A_BottomLeft);
-        m_pManaBar->setAlignment(A_BottomRight);
-        m_pEnemyHealthBar->setAlignment(A_TopCenter);
+            // Alignment
+            m_pHealthBar->setAlignment(A_BottomLeft);
+            m_pManaBar->setAlignment(A_BottomRight);
+            m_pEnemyHealthBar->setAlignment(A_TopCenter);
 
-        // Size
-        Math::float2 barSize = Math::float2(0.6f, 0.6f);
-        m_pHealthBar->setSize(barSize);
-        m_pManaBar->setSize(barSize);
-        m_pEnemyHealthBar->setSize(barSize);
+            // Size
+            Math::float2 barSize = Math::float2(0.6f, 0.6f);
+            m_pHealthBar->setSize(barSize);
+            m_pManaBar->setSize(barSize);
+            m_pEnemyHealthBar->setSize(barSize);
 
-        // Position
-        m_pHealthBar->setTranslation(Math::float2(0.01f, 0.99f));
-        m_pManaBar->setTranslation(Math::float2(0.99f, 0.99f));
-        m_pEnemyHealthBar->setTranslation(Math::float2(0.5f, 0.01f));
+            // Position
+            m_pHealthBar->setTranslation(Math::float2(0.01f, 0.99f));
+            m_pManaBar->setTranslation(Math::float2(0.99f, 0.99f));
+            m_pEnemyHealthBar->setTranslation(Math::float2(0.5f, 0.01f));
 
-        m_pEnemyHealthBar->setHidden(true);
+            m_pEnemyHealthBar->setHidden(true);
+        }
     }
 
     // Initialize clock

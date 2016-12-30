@@ -13,7 +13,7 @@ namespace UI
     class MenuItem : public View
     {
     public:
-        MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::ItemHandle scriptHandle);
+        MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle);
 
         void setTextLine(const std::string& text, unsigned int line = 0);
 
@@ -38,7 +38,7 @@ namespace UI
         /**
          * Handle to this items script-data
          */
-        Daedalus::GameState::ItemHandle m_ScriptHandle;
+        Daedalus::GameState::MenuItemHandle m_ScriptHandle;
 
         /**
          * Lines of text this view can render
@@ -51,7 +51,7 @@ namespace UI
         class MenuItemText : public MenuItem
         {
         public:
-            MenuItemText(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::ItemHandle& scriptHandle);
+            MenuItemText(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
 
             /**
              * Updates/draws the UI-Views
