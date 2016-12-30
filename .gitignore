@@ -48,3 +48,7 @@ cmake-build*/
 # vim
 *.swp
 *.vim
+
+# Gothic
+_work/
+Data/
