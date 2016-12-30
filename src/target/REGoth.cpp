@@ -38,7 +38,7 @@ using json = nlohmann::json;
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
 #define PLATFORM_CLASS Engine::PlatformAndroid
-#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN
 #include "engine/PlatformGLFW.h"
 #define PLATFORM_CLASS Engine::PlatformGLFW
 #else
@@ -316,6 +316,14 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 #endif
 
         auto& console = m_pEngine->getHud().getConsole();
+        console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
+            static bool s_Stats = false;
+            s_Stats = !s_Stats;
+
+            bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
+            return "Toggled stats";
+        });
+
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
