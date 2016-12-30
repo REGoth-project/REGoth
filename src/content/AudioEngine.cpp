@@ -154,13 +154,16 @@ sf::Sound& AudioEngine::getFreeSoundObject()
     m_PlayingSounds.push_back(sf::Sound());
     return m_PlayingSounds.back();
 }
+#endif
 
 void AudioEngine::stopSounds()
 {
+
+#ifdef RE_USE_SFML 
     for(sf::Sound& s : m_PlayingSounds)
     {
         s.stop();
     }
+#endif
 }
 
-#endif
