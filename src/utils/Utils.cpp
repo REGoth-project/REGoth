@@ -92,7 +92,7 @@ bool Utils::fileExists(const std::string& file)
 
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, const std::string& prePath)
 {
-#if defined(WIN32) || defined(_WIN32)
+#if defined(WIN32) || defined(_WIN32) || defined(EMSCRIPTEN)
 	return prePath + caseInsensitivePath;
 #else
 
