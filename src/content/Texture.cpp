@@ -114,6 +114,7 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
 	if (it != m_TexturesByName.end())
 		return (*it).second;
 
+    LogInfo() << "Loading texture: " << name;
 	std::string vname = name;
 	std::vector<uint8_t> ztex;
 	std::vector<uint8_t> dds;
@@ -150,9 +151,10 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
         ZenLoad::convertZTEX2DDS(ztex, dds);
     }
 
-#if ANDROID
+#if ANDROID || EMSCRIPTEN
     if(asDDS)
     {
+        LogInfo() << "Converting DDS to RGBA8 for: " << name;
         // Android doesn't support DDS for the most part
         ztex.clear();
         ZenLoad::convertDDSToRGBA8(dds, ztex);
