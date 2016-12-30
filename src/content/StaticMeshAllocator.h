@@ -43,9 +43,13 @@ namespace Meshes
          * Puts all the loaded data into the target mesh
          * @param packed Packed mesh data from
          * @param name Name to help caching
+         * @param Whether the vertices are already triangles and we do not need to use an index buffer
          * @return Handle to the mesh from this allocator
          */
-        Handle::MeshHandle loadFromPacked(const ZenLoad::PackedMesh& packed, const std::string& name = "") override;
+        Handle::MeshHandle loadFromPackedTriList(const ZenLoad::PackedMesh& packed, const std::string& name = "", bool triangles = false);
+        Handle::MeshHandle loadFromPacked(const ZenLoad::PackedMesh& packed, const std::string& name = "") override {return loadFromPackedTriList(packed, name, false);}
+        
+        Handle::MeshHandle loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name = "");
 
         /**
          * @brief Returns the texture of the given handle
