@@ -1,7 +1,8 @@
 
 
+
 #include <bx/platform.h>
-#if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS
+#if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN
 #include "PlatformGLFW.h"
 #include "utils/Utils.h"
 #include <thread>
@@ -57,6 +58,13 @@
 using namespace Engine;
 
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
+Platform* g_Platform = nullptr;
+
+
 inline void glfwSetWindow(GLFWwindow* _window)
 {
     bgfx::PlatformData pd;
@@ -83,6 +91,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 {
     int width = 1280;
     int height = 720;
+
+    std::cout << "Initializing GLFW" << std::endl;
 
     /* Initialize the library */
     if (!glfwInit())
@@ -138,6 +148,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 //    bindKey(GLFW_KEY_W, ActionType::DebugSkySpeed, false);
 
     // Camera Switch Keys
+    
+    std::cout << "Binding keys..." << std::endl;
 
     bindKey(GLFW_KEY_F1, ActionType::CameraFirstPerson, false);
     bindKey(GLFW_KEY_F2, ActionType::CameraThirdPerson, false);
@@ -226,23 +238,38 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 //    bindKey(GLFW_KEY_LEFT_ALT, ActionType::PlayerStrafeLeft, true);
 //    bindKey(GLFW_KEY_RIGHT_ALT, ActionType::PlayerStrafeRight, true);
 
+    std::cout << "Starting logic-thread" << std::endl;
+
     // Start logic thread
     std::promise<int32_t> returnValue;
-    auto future = returnValue.get_future();
-    std::thread thread(&PlatformGLFW::mainLoop, this, std::move(returnValue), argc, argv);
 
+    mainLoop(std::move(returnValue), argc, argv); // Not actually the mainloop. TODO: Rename method
+
+#ifdef __EMSCRIPTEN__
+    
+    g_Platform = this;
+    std::cout << "Running emscripten main-loop" << std::endl;
+    emscripten_set_main_loop([](){ g_Platform->update();}, 0, 1);
+#else
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
 
         /* Poll for and process events */
-        //glfwPollEvents();
-        glfwWaitEvents();
+        glfwPollEvents();
+        //glfwWaitEvents();
+        update();
     }
 
-    thread.join();
+
+#endif
+
+
+
+
+    Utils::destroyFileReaderWriter();
     glfwTerminate();
-    return future.get();
+    return 0; 
 }
 
 void PlatformGLFW::GLFWkeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
