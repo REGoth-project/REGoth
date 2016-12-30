@@ -6,6 +6,8 @@
 
 namespace Meshes
 {
+    
+#pragma pack(push, 4)
     struct PositionVertex
     {
         Math::float3 Position;
@@ -129,7 +131,6 @@ namespace Meshes
 		static bgfx::VertexDecl ms_decl;
 	};
 
-#pragma pack(push, 1)
 	struct SkeletalVertex
 	{
 
