@@ -42,6 +42,9 @@ git pull --recurse-submodules
 
 # Building
 
+> Note: If you are missing packages or are having trouble building on your platform, you can check out this [wiki-page](../../wiki/how-to-build), which may contain more detailed instructions.
+> If you don't find your platform there, I'd kindly ask you to add some instructions for other people to that wiki-page!
+
 You will need CMake (3.1 or newer) and a C++14-capable compiler.
 Currently supported/tested are:
  - GCC (6.x)
