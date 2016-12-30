@@ -3,6 +3,9 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
+# Vim - You Complete Me
+set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+
 set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
@@ -12,6 +15,11 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 if(NOT BUILD_SHARED_LIBS)
     add_definitions(-DSFML_STATIC)
 endif()
+
+
+if(EMSCRIPTEN)
+    SET(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()   
 
 
 if(ANDROID)
@@ -202,15 +210,18 @@ include_directories(lib/json)
 if(NOT ANDROID)
 	
 
-    add_subdirectory(lib/glfw)
     include_directories(lib/glfw/include)
 
-    target_link_libraries(engine glfw sfml-audio)
+    if(NOT EMSCRIPTEN)
+        add_subdirectory(lib/glfw)
 
-	# We want audio if not on android
-	add_definitions(-DRE_USE_SFML)
-    add_subdirectory(lib/SFML)
-    include_directories(lib/SFML/include)
+        target_link_libraries(engine glfw sfml-audio)
+
+        # We want audio if not on android
+        add_definitions(-DRE_USE_SFML)
+        add_subdirectory(lib/SFML)
+        include_directories(lib/SFML/include)
+    endif()
 else()
 
 	# TODO: Audio
