@@ -259,11 +259,19 @@ namespace Render
 						bgfx::setUniform(config.uniforms.objectColor, color.v);
 
 						auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
-						bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
-						bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
-											 sms[i].m_SubmeshInfo.m_StartIndex,
-											 sms[i].m_SubmeshInfo.m_NumIndices);
 
+	                    if(mesh.mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
+                        {
+                            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+                            bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
+                                                 sms[i].m_SubmeshInfo.m_StartIndex,
+                                                 sms[i].m_SubmeshInfo.m_NumIndices);
+                        }else
+                        {
+                            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle,
+                                                 sms[i].m_SubmeshInfo.m_StartIndex,
+                                                 sms[i].m_SubmeshInfo.m_NumIndices);
+                        }
 						bgfx::submit(0, config.programs.mainWorldProgram);
 					}
 				}
@@ -301,6 +309,7 @@ namespace Render
 		}
 
 		// Now draw instances
+#if 0
 		for(size_t i=0;i<instanceKindIdx;i++)
 		{
 			const InstanceKind& k = instanceKinds[i];
@@ -344,7 +353,7 @@ namespace Render
 
 			//bgfx::submit(0, config.programs.mainWorldProgram);
 		}
-
+#endif
 
 
 		/*bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
