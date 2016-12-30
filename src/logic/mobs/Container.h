@@ -37,6 +37,11 @@ namespace Logic
              */
             virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to);
 
+            /**
+             * Saves this cores settings to the given JSON-object
+             */
+            virtual void exportCore(json& j);
+            virtual void importCore(const json& j);
         private:
 
             struct Item

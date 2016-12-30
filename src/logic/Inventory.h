@@ -1,10 +1,13 @@
 #pragma once
 #include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
+#include <json.hpp>
 
-namespace Engine
+using json = nlohmann::json;
+
+namespace World
 {
-    class BaseEngine;
+    class WorldInstance;
 }
 
 namespace Logic
@@ -12,7 +15,7 @@ namespace Logic
     class Inventory
     {
     public:
-        Inventory(Engine::BaseEngine& engine, Handle::WorldHandle world, Daedalus::GameState::NpcHandle npc);
+        Inventory(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
         virtual ~Inventory();
 
         /**
@@ -20,7 +23,8 @@ namespace Logic
          * @param symName Name of the script-symbol
          * @return Handle to the created item
          */
-        Daedalus::GameState::ItemHandle addItem(const std::string& symName);
+        Daedalus::GameState::ItemHandle addItem(const std::string& symName, unsigned int count = 1);
+        Daedalus::GameState::ItemHandle addItem(size_t sym, unsigned int count = 1);
 
         /**
          * Removes an item of the given instance from the inventory
@@ -32,22 +36,47 @@ namespace Logic
         bool removeItem(Daedalus::GameState::ItemHandle item, unsigned int count = 1);
 
         /**
+         * Removes all items
+         */
+        void clear();
+
+        /**
          * Returns a random instance of the given item
          * @param symIndex Item to look for
          * @return Handle to an item of the given found in the inventory. Invalid if none could be found.
          */
         Daedalus::GameState::ItemHandle getItem(size_t symIndex);
+        Daedalus::GameState::ItemHandle getItem(const std::string& sym);
+
+        /**
+         * @param item Item to look up
+         * @return Data-class of the passed item handle
+         */
+        Daedalus::GEngineClasses::C_Item& getItem(Daedalus::GameState::ItemHandle item);
 
 		/**
 		 * @return Count of how many items of the given type are in this inventory
 		 */
-		int getItemCount(size_t symIndex);
+        unsigned int getItemCount(size_t symIndex);
+        unsigned int getItemCount(Daedalus::GameState::ItemHandle item);
 
         /**
          * @param symName Name of the symbol to get the instances from
          * @return List of handles of the given instance-name inside this inventory
          */
         const std::list<Daedalus::GameState::ItemHandle>& getItems();
+
+        /**
+         * Exports this inventory as JSON
+         * @param j JSON-Object to export to
+         */
+        void exportInventory(json& j);
+
+        /**
+         * Imports items from the given json-object.
+         * @param j pairs of instance-name and count
+         */
+        void importInventory(const json& j);
     protected:
 
         /**
@@ -58,7 +87,6 @@ namespace Logic
         /**
          * Internal
          */
-        Engine::BaseEngine& m_Engine;
-        Handle::WorldHandle m_World;
+        World::WorldInstance& m_World;
     };
 }

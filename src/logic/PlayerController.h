@@ -28,6 +28,45 @@ namespace Logic
         const char* const PLAYER_RANGED_NO_AMMO				    =	"PLAYER_RANGED_NO_AMMO";
     }
 
+    /**
+     * All kinds of things an NPC can do
+     */
+    enum EBodyState
+    {
+        BS_STAND = 0,
+        BS_WALK = 1,
+        BS_SNEAK = 2,
+        BS_RUN = 3,
+        BS_SPRINT = 4,
+        BS_SWIM = 5,
+        BS_CRAWL = 6,
+        BS_DIVE = 7,
+        BS_JUMP = 8,
+        BS_CLIMB = 9,
+        BS_FALL = 10,
+        BS_SIT = 11,
+        BS_LIE = 12,
+        BS_INVENTORY = 13,
+        BS_ITEMINTERACT = 14,
+        BS_MOBINTERACT = 15,
+        BS_MOBINTERACT_INTERRUPT = 16,
+        BS_TAKEITEM = 17,
+        BS_DROPITEM = 18,
+        BS_THROWITEM = 19,
+        BS_PICKPOCKET = 20,
+        BS_STUMBLE = 21,
+        BS_UNCONSCIOUS = 22,
+        BS_DEAD = 23,
+        BS_AIMNEAR = 24,
+        BS_AIMFAR = 25,
+        BS_HIT = 26,
+        BS_PARADE = 27,
+        BS_CASTING = 28,
+        BS_PETRIFIED = 29,
+        BS_CONTROLLING = 30,
+        BS_MAX = 31,
+    };
+
     class PlayerController : public Controller
     {
     public:
@@ -79,6 +118,12 @@ namespace Logic
         void onUpdateByInput(float deltaTime);
 
         /**
+         * Update routine for the NPC currently controlled by the player
+         * @param deltaTime Time since last frame
+         */
+        void onUpdateForPlayer(float deltaTime);
+
+        /**
          * Called at rendertime
          */
         void onDebugDraw() override;
@@ -125,10 +170,11 @@ namespace Logic
         }
 
         /**
-         * Equips the item with the given handle
+         * (Un)Equips the item with the given handle
          * Note: Be careful that this is actually inside the inventory of the player
          */
         void equipItem(Daedalus::GameState::ItemHandle item);
+        void unequipItem(Daedalus::GameState::ItemHandle item);
 
         /**
          * Draws the weapon currently in the 1h- or 2h-slot
@@ -169,6 +215,7 @@ namespace Logic
          * @param change Delta value of the change
          */
         void changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int change);
+        void setAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int value);
 
         /**
          * @return The ModelVisual of the underlaying vob
@@ -214,6 +261,29 @@ namespace Logic
          * Lets this NPC stop everything that it is currently doing and goes to the usual "just standing"-mode
          */
         void interrupt();
+
+        /**
+         * Lets this character die
+         * @param attackingNPC Character which was the reason that this npc died
+         */
+        void die(Handle::EntityHandle attackingNPC);
+
+        /**
+         * If the character is not already unconscious, this method will play the animations and put him on the ground
+         */
+        void checkUnconscious();
+
+        /**
+         * @return Name of the guild this NPC is currently in
+         */
+        std::string getGuildName();
+
+        /**
+         * Sets the body-state of this character
+         * @param state State to set
+         */
+        void setBodyState(EBodyState state){ m_AIState.bodyState = state; }
+        EBodyState getBodyState(){ return m_AIState.bodyState; }
 
         /**
          * Traces from this position to the position of the entity and checks if something is between them
@@ -296,7 +366,34 @@ namespace Logic
          * Enables/Disables physics on this NPC
          */
          void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
+
+        /**
+         * @return Classes which want to get exported on save should return true here
+         */
+        virtual bool shouldExport(){ return true; }
+
+        /**
+         * Does the logic for importing an NPC/PC
+         * Actually adds the NPC to the world
+         * @return Entity of the imported player
+         */
+        static Handle::EntityHandle importPlayerController(World::WorldInstance& world, const json& logic);
+
+        /**
+         * Imports state from a json-object
+         * @param j
+         */
+        virtual void importObject(const json& j) override;
+
+        /**
+         * Same as the virtual importObject, but won't apply transforms
+         * @param j
+         * @param noTransform
+         */
+        void importObject(const json& j, bool noTransform);
     protected:
+
+        virtual void exportPart(json& j) override;
 
         /**
          * Events
@@ -352,6 +449,9 @@ namespace Logic
 
             // Handle to the Mob currently used by this NPC, if valid
             Handle::EntityHandle usedMob;
+
+            // Current body state
+            EBodyState bodyState;
         }m_AIState;
 
         struct

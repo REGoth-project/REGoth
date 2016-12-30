@@ -9,6 +9,7 @@
 #include <functional>
 #include <list>
 #include <bgfx/bgfx.h>
+#include <vector>
 
 namespace Utils
 {
@@ -21,6 +22,129 @@ namespace Utils
         Math::float3 min;
         Math::float3 max;
     };
+
+    /**
+     * Modulo-operation which works for negative numbers as well
+     * @return a mod b
+     */
+    template<typename T>
+    T mod(T a, T b)
+    {
+        return (a%b+b)%b;
+    }
+
+    /**
+     * Converts ISO-8859-1 to UTF-8
+     * @param str ISO-8859-1 string
+     * @return UTF-8 encoded version of the input-string
+     */
+    inline std::string iso_8859_1_to_utf8(const std::string &str)
+    {
+        std::string strOut;
+        for (auto it = str.begin(); it != str.end(); ++it)
+        {
+            uint8_t ch = (uint8_t)*it;
+            if (ch < 0x80) {
+                strOut.push_back(ch);
+            }
+            else {
+                strOut.push_back((char)(0xc0 | ch >> 6));
+                strOut.push_back((char)(0x80 | (ch & 0x3f)));
+            }
+        }
+        return strOut;
+    }
+
+    inline std::string utf8_to_iso8859_1(const char * in)
+    {
+        std::string out;
+        if (in == NULL)
+            return out;
+
+        unsigned int codepoint;
+        while (*in != 0)
+        {
+            unsigned char ch = static_cast<unsigned char>(*in);
+            if (ch <= 0x7f)
+                codepoint = ch;
+            else if (ch <= 0xbf)
+                codepoint = (codepoint << 6) | (ch & 0x3f);
+            else if (ch <= 0xdf)
+                codepoint = ch & 0x1f;
+            else if (ch <= 0xef)
+                codepoint = ch & 0x0f;
+            else
+                codepoint = ch & 0x07;
+            ++in;
+            if (((*in & 0xc0) != 0x80) && (codepoint <= 0x10ffff))
+            {
+                if (codepoint <= 255)
+                {
+                    out.append(1, static_cast<char>(codepoint));
+                }
+                else
+                {
+                    // do whatever you want for out-of-bounds characters
+                }
+            }
+        }
+        return out;
+    }
+
+    namespace _putArrayInternal
+    {
+        template<int... Is>
+        struct seq { };
+
+        template<int N, int... Is>
+        struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
+
+        template<int... Is>
+        struct gen_seq<0, Is...> : seq<Is...> { };
+
+        template<typename A, int... Is>
+        static std::array<A, sizeof...(Is)> assign(A array[], seq<Is...>)
+        {
+            return {array[Is]...};
+        }
+
+    }
+
+    /**
+     * Assigns a given static array using an initializer-list {...} to the given target (like std::vector)
+     * @param target Target to put the array into
+     * @param array Array to get the data from
+     */
+    template<typename A, size_t SIZE>
+    constexpr std::array<A, SIZE> putArray(A (&array)[SIZE])
+    {
+        return _putArrayInternal::assign(array, _putArrayInternal::gen_seq<SIZE>());
+    }
+
+    /**
+     * Copies the values from source into array
+     * @param array Standard C array (target)
+     * @param source Any type indexable using []
+     */
+    template<typename A, size_t SIZE, typename T>
+    void putArray(A (&array)[SIZE], const T& source)
+    {
+        for(size_t i=0; i < SIZE; i++)
+        {
+            array[i] = source[i];
+        }
+    }
+
+    /**
+     * Calculates the size of a static array
+     * @param array Array to get the size from
+     * @return Size of the passed static array
+     */
+    template<typename A, size_t SIZE>
+    size_t arraySize(const A (&array)[SIZE])
+    {
+        return SIZE;
+    }
 
     /**
      * Rounds the given float to the nearest integer of type T
@@ -72,7 +196,13 @@ namespace Utils
      * @return True, if the given file can be opened
      */
     bool fileExists(const std::string& file);
-    
+
+    /**
+     * Removes the last .ext from the string
+     * @param fileName Input string with extension as ".ext"
+     * @return String without file-extension
+     */
+    std::string stripExtension(const std::string& fileName);
     
     /**
      * Returns a string with case sensitive path based on case insensitive version

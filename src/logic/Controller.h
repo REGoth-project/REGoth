@@ -1,8 +1,14 @@
 #pragma once
+#include <json.hpp> // I am not sure about this. Pretty big header inside a header that is inclueded often.
+                    // But sadly you cant easily forward-declare nlohmann::json...
+using json = nlohmann::json;
+
 #include <handle/HandleDef.h>
 #include <components/Entities.h>
 #include "messages/EventManager.h"
 #include "ControllerTypes.h"
+
+
 
 namespace World
 {
@@ -70,7 +76,26 @@ namespace Logic
          * @return Event manager for this logic-controller
          */
         EventManager& getEM(){ return m_EventManager; }
+
+        /**
+         * Exports this object as json-string. Includes the whole dependency-tree.
+         */
+        void exportObject(json& j);
+        virtual void importObject(const json& j);
+        //void importPart(const std::string& part);
+
+        /**
+         * @return Classes which want to get exported on save should return true here
+         */
+        virtual bool shouldExport(){ return false; }
+
     protected:
+
+        /**
+         * Exports this class only, ignores the base-classes values, but must call the function *BEFORE* writing values
+         */
+        virtual void exportPart(json& j);
+
         /**
          * Entity owning this controller
          */

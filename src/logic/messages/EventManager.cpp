@@ -6,7 +6,9 @@
 #include <components/VobClasses.h>
 #include <ZenLib/utils/logger.h>
 #include "EventManager.h"
+#include <json.hpp>
 
+using json = nlohmann::json;
 using namespace Logic;
 
 EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob) :
@@ -200,4 +202,9 @@ bool EventManager::isEmpty()
     }
 
     return true;
+}
+
+std::string EventManager::exportObject()
+{
+    return "";
 }

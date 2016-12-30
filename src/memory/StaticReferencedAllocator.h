@@ -112,7 +112,9 @@ namespace Memory
             // Get a new handle from the free-list
             auto* handle = m_FreeList.obtainElement();
             handle->m_Handle.index = static_cast<uint32_t>(idx); // TODO: Care for bit-size of 'index'
-            // (Don't need to touch the generation, only needed on deletion)
+
+            // We're modifying this... Bump the generation;
+            handle->m_Handle.generation++;
 
             // Store this as the new handle to the end of the list
             m_LastInternalHandle = handle;
@@ -125,6 +127,9 @@ namespace Memory
             // Connect element and internal handle
             m_ElementsToInternalHandles[idx] = hOut.index;
 
+            // Call constructor on object
+            //new (&reinterpret_cast<T*>(m_Elements)[idx]) T;
+
             return hOut;
         }
 
@@ -135,7 +140,7 @@ namespace Memory
         {
             assert(m_InternalHandles[h.index].m_Handle.generation == h.generation);
 
-            return m_Elements[m_InternalHandles[h.index].m_Handle.index];
+            return reinterpret_cast<T*>(m_Elements)[m_InternalHandles[h.index].m_Handle.index];
         }
 
         /**
@@ -143,7 +148,7 @@ namespace Memory
          */
         T& getElementForce(const typename T::HandleType& h)
         {
-            return m_Elements[m_InternalHandles[h.index].m_Handle.index];
+            return reinterpret_cast<T*>(m_Elements)[m_InternalHandles[h.index].m_Handle.index];
         }
 
         /**
@@ -155,21 +160,25 @@ namespace Memory
             assert(m_InternalHandles[h.index].m_Handle.generation == h.generation);
             assert(m_LastInternalHandle != nullptr); // Must have at least one handle in there
 
+            // We're modifying this... Bump the generation;
+            m_InternalHandles[h.index].m_Handle.generation++;
+
             // Get actual index of handle-target
             uint32_t actIdx = m_InternalHandles[h.index].m_Handle.index;
 
             if(m_OnRemoved)
-                m_OnRemoved(m_Elements[actIdx]);
+                m_OnRemoved(reinterpret_cast<T*>(m_Elements)[actIdx]);
 
-            // Overwrite this element with the last one. // FIXME: This breaks for all non-POD-classes!
-            memcpy(&m_Elements[actIdx], &m_Elements[m_LastInternalHandle->m_Handle.index], sizeof(T));
+            // Call destructor on slot to free up memory
+            //reinterpret_cast<T*>(m_Elements)[actIdx].~T(); // FIXME: This leaks right here! I need to fix the moving of the last element first!
+
+            // Overwrite this element with the last one.
+            //memcpy(&reinterpret_cast<T*>(m_Elements)[actIdx], &reinterpret_cast<T*>(m_Elements)[m_LastInternalHandle->m_Handle.index], sizeof(T));
+            reinterpret_cast<T*>(m_Elements)[actIdx] = reinterpret_cast<T*>(m_Elements)[m_LastInternalHandle->m_Handle.index];
 
             // Fix the handle of the last element
             m_LastInternalHandle->m_Handle.index = actIdx;
             m_ElementsToInternalHandles[actIdx] = m_LastInternalHandle - m_InternalHandles;
-
-            // Increase generation of old element
-            m_InternalHandles[h.index].m_Handle.generation++;
 
             // Return the handle to the free-list
             m_FreeList.returnElement(&m_InternalHandles[h.index]);
@@ -194,7 +203,7 @@ namespace Memory
          */
         T* getElements()
         {
-            return m_Elements;
+            return reinterpret_cast<T*>(m_Elements);
         }
 
         /**

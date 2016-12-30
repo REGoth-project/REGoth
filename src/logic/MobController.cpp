@@ -19,7 +19,19 @@ MobController* MobCore::getMobController()
     return (MobController*)m_World.getEntity<Components::LogicComponent>(m_Entity).m_pLogicController;
 }
 
-MobController::MobController(World::WorldInstance& world, Handle::EntityHandle entity, const ZenLoad::zCVobData& vob) :
+void MobCore::exportCore(json& j)
+{
+    j["scheme"] = m_Scheme;
+    j["stateNum"] = m_StateNum;
+}
+
+void MobCore::importCore(const json& j)
+{
+    m_Scheme = j["scheme"];
+    m_StateNum = j["stateNum"];
+}
+
+MobController::MobController(World::WorldInstance& world, Handle::EntityHandle entity) :
         Controller(world, entity)
 {
     m_NumNpcsMax = 0;
@@ -27,8 +39,6 @@ MobController::MobController(World::WorldInstance& world, Handle::EntityHandle e
     m_MobCore = nullptr;
 
     m_World.getScriptEngine().registerMob(m_Entity);
-
-    initFromVobDescriptor(vob);
 }
 
 MobController::~MobController()
@@ -201,18 +211,17 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
     return found;
 }
 
+
 void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 {
-    //LogInfo() << "Creating mob: " << vob.oCMOB.focusName;
-
-    // TODO: There has to be some localization or something going on with the name
     m_FocusName = vob.vobName;
+    m_zObjectClass = vob.objectClass;
 
-    if(vob.oCMOB.focusName == "Bed")
+    if(m_FocusName == "Bed")
         m_MobCore = new MobCores::Bed(m_World, m_Entity);
-    else if(vob.oCMOB.focusName == "Ladder")
+    else if(m_FocusName == "Ladder")
         m_MobCore = new MobCores::Ladder(m_World, m_Entity);
-    else if(vob.objectClass.find("oCMobContainer:") != std::string::npos)
+    else if(m_zObjectClass.find("oCMobContainer:") != std::string::npos)
     {
         MobCores::Container* cnt = new MobCores::Container(m_World, m_Entity);
 
@@ -227,7 +236,32 @@ void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
     assert(m_MobCore);
 
     // Apply animation scheme
-    m_MobCore->setSchemeName(vob.vobName);
+    m_MobCore->setSchemeName(m_FocusName);
+
+    // Setting the visual AFTER the mobcore is important, since then the scheme-name will be propergated
+    // since it is derived from the visual-name
+}
+
+void MobController::initFromJSONDescriptor(const json& j)
+{
+    m_FocusName = j["focusName"];
+    m_zObjectClass = j["objectClass"];
+
+    if(m_FocusName == "Bed")
+        m_MobCore = new MobCores::Bed(m_World, m_Entity);
+    else if(m_FocusName == "Ladder")
+        m_MobCore = new MobCores::Ladder(m_World, m_Entity);
+    else if(m_zObjectClass.find("oCMobContainer:") != std::string::npos)
+        m_MobCore = new MobCores::Container(m_World, m_Entity);
+    else
+        m_MobCore = new MobCore(m_World, m_Entity);
+
+    assert(m_MobCore);
+
+    // Apply animation scheme
+    m_MobCore->setSchemeName(m_FocusName);
+
+    m_MobCore->importCore(j["core"]);
 
     // Setting the visual AFTER the mobcore is important, since then the scheme-name will be propergated
     // since it is derived from the visual-name
@@ -551,8 +585,8 @@ void MobController::onVisualChanged()
     // Strip extension
     std::string libName = v.visual->getName().substr(0, v.visual->getName().find_last_of('.'));
 
-    anim.m_AnimHandler.setWorld(m_World);
-    anim.m_AnimHandler.loadMeshLibFromVDF(libName, m_World.getEngine()->getVDFSIndex());
+    anim.getAnimHandler().setWorld(m_World);
+    anim.getAnimHandler().loadMeshLibFromVDF(libName, m_World.getEngine()->getVDFSIndex());
 
     // find new interact positions now that the visual changed
     findInteractPositions();
@@ -563,3 +597,21 @@ void MobController::onVisualChanged()
         m_MobCore->setSchemeName(scheme);
 
 }
+
+void MobController::exportPart(json& j)
+{
+    Controller::exportPart(j);
+
+    j["type"] = "MobController";
+    j["focusName"] = m_FocusName;
+    j["objectClass"] = m_zObjectClass;
+    m_MobCore->exportCore(j["core"]);
+}
+
+void MobController::importObject(const json& j)
+{
+    Controller::importObject(j);
+
+    initFromJSONDescriptor(j);
+}
+

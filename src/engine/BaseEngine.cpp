@@ -10,16 +10,23 @@
 #include <bx/commandline.h>
 #include <zenload/zCModelPrototype.h>
 #include <components/Vob.h>
+#include <fstream>
+#include <ui/Hud.h>
+#include <ui/zFont.h>
 
 using namespace Engine;
 
-BaseEngine::BaseEngine()
+BaseEngine::BaseEngine() : m_RootUIView(*this)
 {
-
+    m_pHUD = nullptr;
+    m_pFontCache = nullptr;
 }
 
 BaseEngine::~BaseEngine()
 {
+    getRootUIView().removeChild(m_pHUD);
+    delete m_pHUD;
+    delete m_pFontCache;
 }
 
 void BaseEngine::initEngine(int argc, char** argv)
@@ -91,13 +98,33 @@ void BaseEngine::initEngine(int argc, char** argv)
         else
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
+
+    // Init HUD
+    m_pFontCache = new UI::zFontCache(*this);
+    m_pHUD = new UI::Hud(*this);
+    getRootUIView().addChild(m_pHUD);
 }
 
-Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
+Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
 {
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
-	onWorldCreated(w);
+    std::string worldFile = _worldFile;
+
+    m_WorldInstances.emplace_back();
+
+	World::WorldInstance& world = m_WorldInstances.back();
+	onWorldCreated(world.getMyHandle());
+
+    // Try to load a savegame
+    json savegameData;
+    if(!savegame.empty())
+    {
+        std::ifstream f(savegame);
+        std::stringstream saveData;
+        saveData << f.rdbuf();
+
+        savegameData = json::parse(saveData);
+        worldFile = savegameData["zenfile"];
+    }
 
     if(!worldFile.empty())
     {
@@ -111,7 +138,7 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
         }
     }
 
-    world.init(*this, worldFile);
+    world.init(*this, worldFile, savegameData);
 
     if(!m_Args.testVisual.empty())
     {
@@ -122,30 +149,23 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & worldFile)
         Vob::setVisual(vob, m_Args.testVisual);
     }
 
-	m_Worlds.push_back(w);
+	m_Worlds.push_back(world.getMyHandle());
 
-
-
-	return w;
+	return world.getMyHandle();
 }
 
 void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
     std::remove(m_Worlds.begin(), m_Worlds.end(), world);
-    m_WorldInstances.removeObject(world);
-}
 
-Handle::WorldHandle  BaseEngine::addWorld()
-{
-	World::WorldInstance::HandleType w = m_WorldInstances.createObject();
-	World::WorldInstance& world = m_WorldInstances.getElement(w);
-
-	world.init(*this);
-	m_Worlds.push_back(w);
-
-	onWorldCreated(w);
-
-	return w;
+    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
+    {
+        if(&(*it) == &world.get())
+        {
+            m_WorldInstances.erase(it);
+            break;
+        }
+    }
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -213,16 +233,19 @@ void BaseEngine::loadArchives()
     {
     	m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
+
+    // Init global texture alloc
+    m_EngineTextureAlloc.setVDFSIndex(&m_FileIndex);
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
 {
-	m_WorldInstances.getElement(world).setMyHandle(world);
+
 }
 
 World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
 {
-	return m_WorldInstances.getElement(h);
+	return h.get();
 }
 
 BaseEngine::EngineArgs BaseEngine::getEngineArgs()

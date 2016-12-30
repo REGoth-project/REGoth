@@ -113,6 +113,11 @@ namespace Components
             void destroyVisualComponent(VisualComponent& c);
         }
 
+        namespace Animation
+        {
+            void destroyAnimationComponent(AnimationComponent& c);
+        }
+
         namespace Physics
         {
             /**
@@ -163,6 +168,12 @@ namespace Components
         inline void destroyComponent<VisualComponent>(VisualComponent& c)
         {
             Logic::destroyVisualComponent(c);
+        }
+
+        template<>
+        inline void destroyComponent<AnimationComponent>(AnimationComponent& c)
+        {
+            Animation::destroyAnimationComponent(c);
         }
 
         template<typename F>

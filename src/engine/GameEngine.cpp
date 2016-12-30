@@ -77,11 +77,11 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
     } else
     {
-        for (auto s : m_Worlds)
+        for (auto& s : m_WorldInstances)
         {
             // Update main-world after every other world, since the camera is in there
-            m_WorldInstances.getElement(s).onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
-                                                             getMainCamera<Components::PositionComponent>().m_WorldMatrix);
+            s.onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
+                                getMainCamera<Components::PositionComponent>().m_WorldMatrix);
         }
 
         // Finally, update main camera
@@ -93,7 +93,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 
 void GameEngine::drawFrame(uint16_t width, uint16_t height)
 {
-    Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().getComponentAllocator(), m_MainCamera);
+    Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), m_MainCamera);
 
     // Set view and projection matrix for view 0.
     float farPlane = 1000.0f;
@@ -132,8 +132,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     bgfx::touch(0);
 
     // Draw all worlds
-    for(auto s : m_Worlds)
-        Render::drawWorld(m_WorldInstances.getElement(s), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
+    for(auto& s : m_WorldInstances)
+        Render::drawWorld(s, m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
 }
@@ -142,20 +142,20 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 {
     BaseEngine::onWorldCreated(world);
 
-    if(!m_MainWorld.isValid())
-    {
-        m_MainWorld = world;
-    }
+    // Needed for camera-creation
+    setMainWorld(world);
+}
 
-    if(!m_MainCamera.isValid())
-    {
-        createMainCameraIn(m_MainWorld);
-    }
+void GameEngine::onWorldRemoved(Handle::WorldHandle world)
+{
+    BaseEngine::onWorldRemoved(world);
+
+    setMainWorld(Handle::WorldHandle::makeInvalidHandle());
 }
 
 Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
 {
-    World::WorldInstance& winst = m_WorldInstances.getElement(world);
+    World::WorldInstance& winst = world.get();
     // Add player-camera
     m_MainCamera = winst.addEntity(Components::PositionComponent::MASK);
 
@@ -177,6 +177,14 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
     //cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
 
 	return m_MainCamera;
+}
+
+void GameEngine::setMainWorld(Handle::WorldHandle world)
+{
+    m_MainWorld = world;
+
+    if(world.isValid())
+        m_MainCamera = createMainCameraIn(m_MainWorld);
 }
 
 

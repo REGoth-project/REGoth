@@ -57,6 +57,16 @@ namespace Engine
 
 		DebugSkySpeed,
 
+		OpenStatusMenu,
+		OpenConsole,
+        Escape,
+		UI_Up,
+		UI_Down,
+		UI_Close,
+		UI_Left,
+		UI_Right,
+        UI_Confirm,
+
 		Count
 	};
 
@@ -113,6 +123,7 @@ namespace Engine
 	public:
 		static Action* RegisterAction( ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
 		static bool RemoveAction(ActionType actionType, Action* action);
+		static void clearActions();
 		static void fireBindings();
 		static void setMouseLock(bool mouseLock);
 		static Math::float2 getMouseCoordinates();
@@ -131,8 +142,12 @@ namespace Engine
 
 		static void setMouseLockCallback(std::function<void(bool /* lock */)> callback);
 
+		static const std::bitset<NUM_KEYS>& getKeysTriggered(){ return keyTriggered; }
+
+		static void clearTriggered();
+
 	private:
-		static std::map<ActionBinding, int /* key */> actionBindingToKeyMap;
+		static std::multimap<ActionBinding, int /* key */> actionBindingToKeyMap;
 		static std::map<ActionBinding, int /*mouseButton*/> actionBindingToMouseButtonMap;
 		static std::map<ActionBinding, MouseAxis> actionBindingToMouseAxisMap;
 

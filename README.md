@@ -1,5 +1,26 @@
-# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/degenerated1123/REGoth.svg?branch=master)](https://travis-ci.org/degenerated1123/REGoth) 
+# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/degenerated1123/REGoth.svg?branch=master)](https://travis-ci.org/degenerated1123/REGoth) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/REGoth/Lobby)
 OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothic II".
+
+Don't forget to check out the [REGoth-Wiki](../../wiki) for more information about the project!
+
+A list showing the current state of the engine, can be found [here](../../wiki/state).
+
+### Videos showing the current state
+
+* Release-Commentary to V0.1.1:
+   * https://www.youtube.com/watch?v=heg49o78Ii4
+* Dialogs, Audio, NPC script-states:
+   * https://www.youtube.com/watch?v=R3F4WY6A060
+* Day/Night-Cycle and Fighting-animations: 
+   * https://www.youtube.com/watch?v=Z1mlI9qxkzc
+* First showcase: 
+   * https://www.youtube.com/watch?v=8bLAGttYYpY
+
+# Download (Latest stable version)
+
+Windows binaries can be found here: https://github.com/degenerated1123/REGoth/releases/tag/0.1.1
+
+Automated nightly builds: https://github.com/degenerated1123/REGoth/releases
 
 # Source
 Make sure to clone this repository with the `--recursive` flag:
@@ -67,6 +88,27 @@ REGoth -g "path/to/gothic1or2" -w startworld.zen
 Where `path/to/gothic1or2` points to the root of a Gothic I or II installation and `startworld.zen` is one of the Zen-Files found in a `.vdf`-files in the games `data/`-directory. For example: `newworld.zen` or `addonworld.zen` for Gothic II.
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
+
+# Controls
+
+ * Movement: WASD/QE or arrow-keys (Space or Shift to run faster)
+ * Actions: Left CTRL for everything
+ * Menus: B for status-screen
+ * Console: F10
+   * Available commands:
+      * `kill`: Kill a nearby NPC
+      * `knockout`: Knockout a nearby NPC
+      * `save <name>`: Save the game
+      * `load <name>`: Load a game
+      * `switchlevel <zenfile>`: Switch to an other level in current session
+      * `usemana <amount>`: Use mana
+      * `hurtself <amount>`: Hurt yourself
+      * `timeset <x>`: Set time to 12:00. `x` doesn't matter but must be a number.
+      * `list`: Print a list of available commands
+      
+# Development
+
+If you want to help out and don't know where to start, I suggest reading the [wiki-page](wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
 
 ### Examples
 **Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`

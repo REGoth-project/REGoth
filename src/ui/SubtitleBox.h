@@ -1,4 +1,6 @@
 #pragma once
+
+#include <handle/HandleDef.h>
 #include "View.h"
 
 namespace UI
@@ -6,7 +8,7 @@ namespace UI
     class SubtitleBox : public View
     {
     public:
-        SubtitleBox();
+        SubtitleBox(Engine::BaseEngine& e);
         ~SubtitleBox();
 
         /**
@@ -40,5 +42,10 @@ namespace UI
          * Current state of the scroll-area
          */
         int32_t m_ScrollArea;
+
+        /**
+         * Dark background behind the subtitles
+         */
+        Handle::TextureHandle m_BackgroundTexture;
     };
 }

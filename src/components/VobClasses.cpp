@@ -49,36 +49,37 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
     return e;
 }
 
-Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, Daedalus::GameState::ItemHandle scriptInstance)
+Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, size_t scriptInstance)
 {
     Handle::EntityHandle e = Vob::constructVob(world);
 
-    Daedalus::GEngineClasses::C_Item& scriptObj = world.getScriptEngine().getGameState().getItem(scriptInstance);
+    // Get values
+    Daedalus::GameState::ItemHandle h = world.getScriptEngine().getGameState().insertItem(scriptInstance);
+    Daedalus::GEngineClasses::C_Item& data = world.getScriptEngine().getGameState().getItem(h);
 
-    // Link the script instance to our entity
-    ScriptInstanceUserData* userData = new ScriptInstanceUserData;
-    userData->vobEntity = e;
-    userData->world = world.getMyHandle();
-    scriptObj.userPtr = userData;
+    // Extract visual and
+    std::string visual = data.visual;
+
+    // Kill script-object
+    world.getScriptEngine().getGameState().removeItem(h);
 
 	// Setup itemcontroller
 	Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
 	logic.m_pLogicController = new Logic::ItemController(world, e, scriptInstance);
 
-    // Assign a default visual
     Vob::VobInformation vob = Vob::asVob(world, e);
-    Vob::setVisual(vob, scriptObj.visual);
+    Vob::setVisual(vob, visual);
 
     return e;
 }
 
-Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world, const ZenLoad::zCVobData& vobInfo)
+Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world)
 {
     Handle::EntityHandle e = Vob::constructVob(world);
 
     // Setup controller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
-    logic.m_pLogicController = new Logic::MobController(world, e, vobInfo);
+    logic.m_pLogicController = new Logic::MobController(world, e);
 
     // Initialize animations
     Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(world.getComponentAllocator(), e);
@@ -189,8 +190,8 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     // Strip extension
     std::string libName = visual.substr(0, visual.find_last_of('.'));
 
-    anim.m_AnimHandler.setWorld(*vob.world);
-    anim.m_AnimHandler.loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
+    anim.getAnimHandler().setWorld(*vob.world);
+    anim.getAnimHandler().loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
     // TODO: Move to other place (MDS)
 	// Load all default animations
@@ -198,7 +199,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
 	{
 		const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
 
-		anim.m_AnimHandler.addAnimation(name);
+		anim.getAnimHandler().addAnimation(name);
 	}
 
     for(int i=0;i<20;i++)
@@ -207,30 +208,30 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         if(ns.size() == 1)
             ns = "0" + ns;
 
-        anim.m_AnimHandler.addAnimation("T_DIALOGGESTURE_" + ns);
+        anim.getAnimHandler().addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUNL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALKL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUNL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALKL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUNL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALKL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUNL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALKL.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-S_RUN.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_WALK.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTRUN.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTWALK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUN.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUN.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALK.MAN");
 
-    anim.m_AnimHandler.addAnimation(libName + "-T_JUMPB.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFEL.MAN");
-    anim.m_AnimHandler.addAnimation(libName + "-T_RUNSTRAFER.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_JUMPB.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFEL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFER.MAN");
 
     // Fist
-    anim.m_AnimHandler.addAnimation(libName + "-S_FISTATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTATTACK.MAN");
 
     // 1H
-    anim.m_AnimHandler.addAnimation(libName + "-S_1HATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_1HATTACK.MAN");
 
-    anim.m_AnimHandler.playAnimation("S_RUNL");
+    anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
 void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, size_t headTextureIdx,
@@ -279,6 +280,15 @@ Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInf
     return vob.world->getScriptEngine().getGameState().getNpc(vob.playerController->getScriptHandle());
 }
 
+Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName)
+{
+    // Use script-engine to insert the NPC
+    Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceSymbol, wpName);
+
+    // Get engine-side entity of the created npc
+    return getEntityFromScriptInstance(world, npc);
+}
+
 Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string &instanceName, const std::string &wpName)
 {
     // Use script-engine to insert the NPC
@@ -303,6 +313,19 @@ VobTypes::NpcVobInformation VobTypes::getVobFromScriptHandle(World::WorldInstanc
     Handle::EntityHandle e = getEntityFromScriptInstance(world, npc);
 
     return VobTypes::asNpcVob(world, e);
+}
+
+Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std::string& item)
+{
+    size_t h = world.getScriptEngine().getVM().getDATFile().getSymbolIndexByName(item);
+
+    Handle::EntityHandle e = VobTypes::initItemFromScript(world, h);
+    return e;
+}
+
+Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, size_t item)
+{
+    return VobTypes::initItemFromScript(world, item);
 }
 
 

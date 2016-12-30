@@ -65,3 +65,26 @@ void Container::onEndStateChange(Handle::EntityHandle npc, int from, int to)
     }
 
 }
+
+void Container::exportCore(json& j)
+{
+    MobCore::exportCore(j);
+
+    for(const Item& i : m_Contents)
+    {
+        j["contents"][i.instance] = i.count;
+    }
+}
+
+void Container::importCore(const json& j)
+{
+    MobCore::importCore(j);
+
+    if(j.find("contents") != j.end())
+    {
+        for (auto it = j["contents"].begin(); it != j["contents"].end(); it++)
+        {
+            m_Contents.push_back({it.key(), it.value()});
+        }
+    }
+}

@@ -2,6 +2,8 @@
 
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
+#include <json.hpp>
+using json = nlohmann::json;
 
 namespace World
 {
@@ -10,7 +12,6 @@ namespace World
 
 namespace UI
 {
-    class DialogBox;
     class PrintScreenMessages;
     class SubtitleBox;
 }
@@ -49,12 +50,6 @@ namespace Logic
          * @param dt time since last frame
          */
         void update(double dt);
-
-        /**
-         * Active dialog box accessors
-         */
-        UI::DialogBox* getActiveDialogBox() const
-        { return m_ActiveDialogBox; }
 
         /**
          * Start dialog
@@ -110,6 +105,11 @@ namespace Logic
          */
         void updateChoices();
 
+        // TODO: Probably move this into script-engine
+        Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }
+
+        void exportDialogManager(json& h);
+        void importDialogManager(const json& j);
     protected:
 
         /**
@@ -140,11 +140,6 @@ namespace Logic
          * @return Whether to continue the dialog (if false, END was selected)
          */
         bool performChoice(size_t choice);
-
-        /**
-         * Currently active dialog-box. nullptr, if none is active.
-         */
-        UI::DialogBox* m_ActiveDialogBox;
 
         /**
          * Currently active subtitle box

@@ -8,15 +8,15 @@ namespace Logic
     /**
      * Program based AI-states
      */
-    enum class EPrgStates
+    enum EPrgStates : size_t
     {
-        NPC_PRGAISTATE_INVALID = -1,
-        NPC_PRGAISTATE_ANSWER = 0,
-        NPC_PRGAISTATE_DEAD,
-        NPC_PRGAISTATE_UNCONSCIOUS,
-        NPC_PRGAISTATE_FADEAWAY,
-        NPC_PRGAISTATE_FOLLOW,
-        NUM_PRGNPC_AISTATE
+        NPC_PRGAISTATE_INVALID = 0,
+        NPC_PRGAISTATE_ANSWER = 1,
+        NPC_PRGAISTATE_DEAD = 2,
+        NPC_PRGAISTATE_UNCONSCIOUS = 3,
+        NPC_PRGAISTATE_FADEAWAY = 4,
+        NPC_PRGAISTATE_FOLLOW = 5,
+        NUM_PRGNPC_AISTATE = 6
     };
 
 	/**
@@ -77,9 +77,10 @@ namespace Logic
 		 * @param endOldState Whether to end the currently active state as soon as possible
 		 * @param timeBehaviour How this function should be executed
 		 * @param isRoutineState Whether this belongs to the daily routine of the npc
+		 * @param isPrgState Whether the symIndex is actually a PRG-Index
 		 * @return True, if the state was successfully activated. False if not possible or wanted for some reason.
 		 */
-		bool startAIState(size_t symIdx, bool endOldState, bool isRoutineState = false);
+		bool startAIState(size_t symIdx, bool endOldState, bool isRoutineState = false, bool isPrgState = false);
 		bool startAIState(const std::string& name, bool endOldState, bool isRoutineState = false);
 
 		/**
@@ -93,6 +94,11 @@ namespace Logic
          * @return Whether we could go to the input state
          */
         bool canPlayerUseAIState(const NpcAIState& state);
+
+		/**
+		 * Checks if the current state is still active
+		 */
+		bool isStateActive(){ return m_CurrentState.valid; }
 
         /**
          * Performs the actions needed for the current frame and the current state. Advances to the next one, if needed
@@ -111,6 +117,11 @@ namespace Logic
 		 * @return Whether this NPC currently is in a routine state or no state at all
 		 */
 		bool isInRoutine();
+
+		/**
+		 * Removes the currently set routine
+		 */
+		void clearRoutine();
 
 		/**
 		 * Checks whether this NPC is currently in the state with stateMainSymbol as starting function
@@ -148,10 +159,41 @@ namespace Logic
 		size_t getCurrentStateSym();
 
 		/**
+		 * @return Time the Character already is inside this state
+		 */
+		 float getCurrentStateTime(){ return m_CurrentState.valid ? m_CurrentState.stateTime : 0.0f; }
+
+		/**
 		 * Gets the current routine function from the script instance and replaces the routine stored with the new one
 		 */
 		void reinitRoutine();
+
+		/**
+		 * Exports this object to a JSON-object
+		 * @param j JSON-object ot export
+		 */
+		void exportScriptState(json& j);
+
+		/**
+		 * Imports this object from a savegame-json
+		 * @param j JSON to import from
+		 */
+		void importScriptState(const json& j);
 	protected:
+
+        /**
+         * Exports the given state
+         * @param state State to export
+         * @param j JSON to export to
+         */
+        void exportState(const NpcAIState& state, json& j) const;
+
+        /**
+         * Imports from the given json to the given state-object
+         * @param state State to import to
+         * @param j
+         */
+        void importState(NpcAIState& state, const json& j) const;
 
 		/**
 		 * Currently executed AI-state

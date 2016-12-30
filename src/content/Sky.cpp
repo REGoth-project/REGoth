@@ -134,6 +134,9 @@ void Sky::interpolate(double deltaTime)
 
 void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
 {
+    //Math::float3 skyColor = Math::float3(120,140,180) / 255.0f;
+
+    Math::float3 skyColor = Math::float3(114, 93, 82) / 255.0f;
 
 
     switch(type)
@@ -142,7 +145,7 @@ void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureA
             s.time = TIME_KEY_7;
 
             s.baseColor = Math::float3(255,250,235) / 255.0f;
-            s.fogColor = Math::float3(120,140,180) / 255.0f;
+            s.fogColor = skyColor;
             s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
 
             s.fogDistance = 0.2f;
@@ -162,7 +165,7 @@ void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureA
             s.time = TIME_KEY_0;
 
             s.baseColor = Math::float3(255,250,235) / 255.0f;
-            s.fogColor = Math::float3(120,140,180) / 255.0f;
+            s.fogColor = skyColor;
             s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
 
             s.fogDistance = 0.05f;
@@ -182,7 +185,7 @@ void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureA
             s.time = TIME_KEY_1;
 
             s.baseColor = Math::float3(255,250,235) / 255.0f;
-            s.fogColor = Math::float3(120,140,180) / 255.0f;
+            s.fogColor = skyColor;
             s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
 
             s.fogDistance = 0.05f;
@@ -334,6 +337,12 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far,
     far *= userFogScale;
     near = far * 0.3f;
 
+    // REGoth - specific: Let the fog be a little closer because of the long view-distances
+    near *= 0.5f;
+
+    far *= 0.4f;
+    near *= 0.4f;
+
     // Fix up the fog color. The fog should get less intense with decrasing fogFar
 
     // Compute intensity based on the ZenGins color-base
@@ -354,4 +363,12 @@ void Sky::getTimeOfDay(int& hours, int& minutes)
     float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
     hours = (int)fh;
     minutes = (int)((fh - hours) * 60.0f);
+}
+
+std::string Sky::getTimeOfDayFormated()
+{
+    int h, m;
+    getTimeOfDay(h, m);
+
+    return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
 }

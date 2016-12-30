@@ -74,6 +74,5 @@ namespace Logic
          * Mesh this is using
          */
         Handle::MeshHandle m_MeshHandle;
-
     };
 }

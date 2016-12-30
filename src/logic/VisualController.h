@@ -58,7 +58,19 @@ namespace Logic
          * Sets the shadow-value from the worldmesh for this visual-controller
          */
         virtual void setShadowValue(float shadow){}
+
+        /**
+         * @return Classes which want to get exported on save should return true here
+         */
+        virtual bool shouldExport(){ return !m_Transient; }
+
+        /**
+         * @param value Whether to save this visual when exporting a world
+         */
+        void setTransient(bool value){ m_Transient = value; }
     protected:
+
+        virtual void exportPart(json& j) override;
 
         /**
          * Entites of the visual registered here
@@ -69,5 +81,10 @@ namespace Logic
          * Name of the loaded visual
          */
         std::string m_Name;
+
+        /**
+         * Whether to put this visual into a savegame
+         */
+        bool m_Transient;
     };
 }

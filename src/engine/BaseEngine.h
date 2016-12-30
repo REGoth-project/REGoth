@@ -5,6 +5,13 @@
 #include <ui/View.h>
 #include <bx/commandline.h>
 
+namespace UI
+{
+    class Hud;
+	class zFont;
+	class zFontCache;
+}
+
 namespace Engine
 {
 	const int MAX_NUM_WORLDS = 4;
@@ -37,12 +44,7 @@ namespace Engine
 		 * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
 		 *		  or on disk (TODO)
 		 */
-		Handle::WorldHandle  addWorld(const std::string& worldFile);
-
-		/**
-		 * @brief Creates an empty world
-		 */
-		Handle::WorldHandle addWorld();
+		Handle::WorldHandle  addWorld(const std::string& worldFile, const std::string& savegame = "");
 
 		/**
 		 * Removes a world and everything inside
@@ -79,6 +81,14 @@ namespace Engine
 		UI::View& getRootUIView() { return m_RootUIView; }
 
 		/**
+		 * // TODO: Move to GameEngine, or pass GameEngine to world!
+		 * @return HUD
+		 */
+		UI::Hud& getHud(){ return *m_pHUD; }
+        UI::zFontCache& getFontCache(){ return *m_pFontCache; }
+
+
+		/**
 		 * Sets the path the engine is looking for files
 		 * @param path New path
 		 */
@@ -89,12 +99,17 @@ namespace Engine
          */
 		const std::string& getContentBasePath(){ return m_ContentBasePath; }
 
+		/**
+		 * @return Allocator for always present textures
+		 */
+		Textures::TextureAllocator& getEngineTextureAlloc(){ return m_EngineTextureAlloc; }
 	protected:
 
 		/**
 		 * Called when a world was added
 		 */
 		virtual void onWorldCreated(Handle::WorldHandle world);
+		virtual void onWorldRemoved(Handle::WorldHandle world){};
 
 		/**
 		 * Update-method for subclasses
@@ -110,7 +125,7 @@ namespace Engine
 		/**
 		 * Currently active world instances
 		 */
-		Memory::StaticReferencedAllocator<World::WorldInstance, MAX_NUM_WORLDS> m_WorldInstances;
+		std::list<World::WorldInstance> m_WorldInstances;
 
 		/**
 		 * Main VDFS-Index
@@ -131,6 +146,13 @@ namespace Engine
 		 * Base UI-View
 		 */
 		UI::View m_RootUIView;
+        UI::Hud* m_pHUD;
+		UI::zFontCache* m_pFontCache;
+
+		/**
+		 * Allocator for always present textures
+		 */
+		Textures::TextureAllocator m_EngineTextureAlloc;
 
 		/**
 		 * Folder where the content is

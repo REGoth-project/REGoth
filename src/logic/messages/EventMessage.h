@@ -45,6 +45,11 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+            /**
              * Type of class this can be casted to
              */
             EventMessageType messageType;
@@ -114,6 +119,11 @@ namespace Logic
             }
 
             /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+            /**
              * Name of the vob this message targets. This could be the attack target or a waypoint to go to.
              */
             std::string targetVobName;
@@ -132,6 +142,13 @@ namespace Logic
             {
                 messageType = EventMessageType::Damage;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             // TODO: Implement DamageDescriptor!
         };
@@ -161,6 +178,13 @@ namespace Logic
             {
                 messageType = EventMessageType::Weapon;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Type of weapon to go to
@@ -209,7 +233,15 @@ namespace Logic
             {
                 messageType = EventMessageType::Movement;
                 walkMode = WalkMode::Run;
+                targetMode = 0;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Route the NPC has to go if this is a ST_GoRoute.
@@ -231,6 +263,11 @@ namespace Logic
              * How we should go to our position
              */
             WalkMode walkMode;
+
+            /**
+             * General purpose mode
+             */
+            int targetMode;
         };
 
         struct AttackMessage : public NpcMessage
@@ -258,6 +295,13 @@ namespace Logic
                 startFrame = 0.0f;
                 animationIndex = static_cast<size_t>(-1);
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * How far we are in our combo
@@ -295,6 +339,13 @@ namespace Logic
                 messageType = EventMessageType::UseItem;
             }
 
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
             // TODO: We have no actual object for these right now, as they are explicitly in the inventory.
             // TODO: Use the itemhandle here or something
         };
@@ -314,7 +365,16 @@ namespace Logic
             StateMessage()
             {
                 messageType = EventMessageType::State;
+                isPrgState = false;
+                isRoutineState = false;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Symbol to the Setupfunction for this state (ZS_...)
@@ -336,6 +396,11 @@ namespace Logic
              * Whether this belongs to the daily routine
              */
             bool isRoutineState;
+
+            /**
+             * Whether this is a program-managed state. List of states in NpcScriptState.h
+             */
+             bool isPrgState;
 
             /**
              * If this is a wait-message, this is how long we should wait
@@ -382,6 +447,13 @@ namespace Logic
                 targetState = 0;
                 symIdx = static_cast<size_t>(-1);
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             /**
              * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
@@ -462,6 +534,25 @@ namespace Logic
             }
 
             /**
+             * Shortcut-function to play animations
+             */
+            static ConversationMessage playAnimation(const std::string& anim)
+            {
+                ConversationMessage msg;
+                msg.subType = ST_PlayAni;
+                msg.animation = anim;
+
+                return msg;
+            }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
+            /**
              * Text to be displayed in the subtitle box
              */
             std::string text;
@@ -525,6 +616,13 @@ namespace Logic
                 messageType = EventMessageType::Magic;
             }
 
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
+
             // TODO: Implement
         };
 
@@ -546,6 +644,13 @@ namespace Logic
                 stateFrom = 0;
                 stateTo = 0;
             }
+
+            /**
+             * Export as JSON-String
+             */
+            virtual std::string exportPart();
+
+
 
             // NPC this message is from
             Handle::EntityHandle npc;

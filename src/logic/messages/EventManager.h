@@ -18,7 +18,7 @@ namespace Logic
         ~EventManager();
 
         template<typename T>
-        void onMessage(T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
+        void onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
         {
             // Copy over the data from the given message so only we handle the memory allocations
             T* msgcopy = new T;
@@ -66,6 +66,11 @@ namespace Logic
          */
         void clear();
 
+        /**
+         * Exports this as JSON-String
+         * @return
+         */
+        std::string exportObject();
     protected:
 
         /**

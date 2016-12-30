@@ -102,11 +102,21 @@ namespace Content
         float getTimeOfDay(){ return m_MasterState.time; }
 
         /**
+         * @param t New time to set. Float value in range (0..1), where 0 is 12:00.
+         */
+        void setTimeOfDay(float t){ m_MasterTime = t; }
+
+        /**
          * Converts time to hours/minutes (24h format)
          * @param hours
          * @param minues
          */
         void getTimeOfDay(int& hours, int& minutes);
+
+        /**
+         * @return Time of day as string
+         */
+        std::string getTimeOfDayFormated();
 
         /**
          * @return current interpolated sky-state

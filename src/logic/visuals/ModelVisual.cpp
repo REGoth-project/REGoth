@@ -309,7 +309,7 @@ void ModelVisual::rebuildMainEntityList()
 
 void ModelVisual::setAnimation(const std::string& anim, bool loop)
 {
-    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).m_AnimHandler;
+    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).getAnimHandler();
 
     if(!anim.empty())
         if(loop)
@@ -394,7 +394,7 @@ void ModelVisual::updateAttachmentTransforms()
 Components::AnimHandler &ModelVisual::getAnimationHandler()
 {
     Components::AnimationComponent &anim = m_World.getEntity<Components::AnimationComponent>(m_Entity);
-    return anim.m_AnimHandler;
+    return anim.getAnimHandler();
 }
 
 void ModelVisual::onTransformChanged()
@@ -454,6 +454,9 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, const
         vob.position->m_DrawDistanceFactor = m_World.getEntity<Components::PositionComponent>(m_Entity).m_DrawDistanceFactor;
 
         Vob::setVisual(vob, visual);
+
+        if(vob.visual)
+            vob.visual->setTransient(true); // Don't export these objects
 
         // Clear old visual, if there was one
         setNodeVisual("", nodeName);

@@ -19,7 +19,11 @@
 #include <content/AudioEngine.h>
 #include <engine/Input.h>
 #include "ItemController.h"
+#include <json.hpp>
+#include <ui/Hud.h>
+#include <ui/Menu_Status.h>
 
+using json = nlohmann::json;
 using namespace Logic;
 
 // TODO: HACK, remove!
@@ -55,7 +59,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
                                    Handle::EntityHandle entity,
                                    Daedalus::GameState::NpcHandle scriptInstance)
         : Controller(world, entity),
-          m_Inventory(*world.getEngine(), world.getMyHandle(), scriptInstance),
+          m_Inventory(world, scriptInstance),
           m_AIStateMachine(world, entity)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
@@ -86,6 +90,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
     m_LastAniRootPosUpdatedAniHash = 0;
     m_NoAniRootPosHack = false;
+
+    setBodyState(BS_STAND);
 }
 
 void PlayerController::onUpdate(float deltaTime)
@@ -153,18 +159,11 @@ void PlayerController::onUpdate(float deltaTime)
         }
     }
 
-    // TODO: HACK, take this out!
-    // Make following NPCs a bit faster...
-    /*if(m_RoutineState.entityTarget.isValid())
+    // Run extra stuff if this is the controlled character
+    if(isPlayerControlled())
     {
-        float defSpeed = 7.0f;
-        if (inputGetKeyState(entry::Key::Space))
-            m_NPCProperties.moveSpeed = defSpeed * 4;
-        else if (inputGetKeyState(entry::Key::KeyB))
-            m_NPCProperties.moveSpeed = defSpeed * 8;
-        else
-            m_NPCProperties.moveSpeed = defSpeed;
-    }*/
+        onUpdateForPlayer(deltaTime);
+    }
 }
 
 void PlayerController::continueRoutine()
@@ -212,14 +211,6 @@ void PlayerController::gotoWaypoint(size_t wp)
 {
     if (wp == m_AIState.targetWaypoint)
         return;
-
-    // If this is the first ever waypoint this NPC has to go to, just teleport him there
-    // FIXME: This is a hack to get around daily routines not doing that yet
-    if (m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
-    {
-        teleportToWaypoint(wp);
-        return;
-    }
 
     // Set our current target as closest so we don't move back if we are following an entity
     if (m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
@@ -337,12 +328,6 @@ void PlayerController::onDebugDraw()
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
         Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
 
-        bgfx::dbgTextPrintf(0, 6, 0x0f, "Level: %d", scriptnpc.level);
-        bgfx::dbgTextPrintf(0, 7, 0x0f, "XP   : %d", scriptnpc.exp);
-        bgfx::dbgTextPrintf(0, 8, 0x0f, "HP   : %d/%d",
-                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
-                            scriptnpc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
-
         // Print inventory
         const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
 
@@ -361,11 +346,93 @@ void PlayerController::onDebugDraw()
     }
 }
 
+void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
+{
+    // Get item
+    Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
+    ModelVisual* model = getModelVisual();
+
+    EModelNode node = EModelNode::None;
+
+    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) != Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE)
+        return; // Can't equip
+
+    // TODO: Don't forget if an item is already unequipped before executing stat changing script-code!
+
+    // Put into set of all equipped items first, then differentiate between the item-types
+    m_EquipmentState.equippedItemsAll.erase(item);
+
+    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+    {
+        node = EModelNode::Longsword;
+
+        // Take off 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
+    {
+        node = EModelNode::Longsword;
+
+        // Take off 2h weapon
+        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
+    {
+        node = EModelNode::Crossbow;
+
+        // Take off crossbow
+        m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
+    {
+        node = EModelNode::Bow;
+
+        // Take off bow
+        m_EquipmentState.equippedItems.equippedBow.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
+    {
+        node = EModelNode::Sword;
+
+        // Take off 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
+    {
+        node = EModelNode::Sword;
+
+        // Take off 1h weapon
+        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
+    {
+        node = EModelNode::None;
+
+        // Take off amulet
+        m_EquipmentState.equippedItems.equippedAmulet.invalidate();
+    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
+    {
+        node = EModelNode::None;
+
+        // Take off ring
+        m_EquipmentState.equippedItems.equippedRings.erase(item);
+    } else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0
+               || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    {
+        node = EModelNode::None;
+
+        // Take off our rune/scroll
+        m_EquipmentState.equippedItems.equippedRunes.erase(item);
+    }
+
+    // Show visual on the npc-model
+    if (node != EModelNode::None)
+        model->setNodeVisual("", node);
+}
+
+
 void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 {
     // Get item
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
     ModelVisual* model = getModelVisual();
+
+    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) != Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE)
+        return; // Can't equip
 
     EModelNode node = EModelNode::None;
 
@@ -451,7 +518,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     {
         node = EModelNode::None;
 
-        // Put on our ring
+        // Put on our rune/scroll
         m_EquipmentState.equippedItems.equippedRunes.insert(item);
     }
 
@@ -552,9 +619,46 @@ void PlayerController::placeOnGround()
     if(!m_NPCProperties.enablePhysics)
         return;
 
+    // Check for states
+    /*switch(getBodyState())
+    {
+        case BS_STAND:break;
+        case BS_WALK:break;
+        case BS_SNEAK:break;
+        case BS_RUN:break;
+        case BS_SPRINT:break;
+        case BS_SWIM:break;
+        case BS_CRAWL:break;
+        case BS_DIVE:break;
+        case BS_JUMP:break;
+        case BS_CLIMB:break;
+        case BS_FALL:break;
+        case BS_SIT:break;
+        case BS_LIE:break;
+        case BS_INVENTORY:break;
+        case BS_ITEMINTERACT:break;
+        case BS_MOBINTERACT:break;
+        case BS_MOBINTERACT_INTERRUPT:break;
+        case BS_TAKEITEM:break;
+        case BS_DROPITEM:break;
+        case BS_THROWITEM:break;
+        case BS_PICKPOCKET:break;
+        case BS_STUMBLE:break;
+        case BS_UNCONSCIOUS:return; // Animation takes care of that. Would fall through the ground for some reason otherwise.
+        case BS_DEAD:break;
+        case BS_AIMNEAR:break;
+        case BS_AIMFAR:break;
+        case BS_HIT:break;
+        case BS_PARADE:break;
+        case BS_CASTING:break;
+        case BS_PETRIFIED:break;
+        case BS_CONTROLLING:break;
+        case BS_MAX:break;
+    }*/
+
     // Fix position
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
 
     if(to == from)
         return; // FIXME: This happens if an NPC falls out of the world
@@ -596,6 +700,8 @@ void PlayerController::onVisualChanged()
 {
     getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
+
+    getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
@@ -608,6 +714,20 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if(m_World.getDialogManager().isDialogActive())
         return;
+
+    // Stand up if wounded and forward is pressed
+    if(getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
+    {
+        // Only stand up if the unconscious-state has ended (aka. is not valid anymore)
+        // Otherwise, the player would fall down immediately
+        if(m_isForward && m_AIStateMachine.isStateActive())
+        {
+            // FIXME: End UNCONSCIOUS-state here
+
+            getEM().onMessage(EventMessages::ConversationMessage::playAnimation("T_WOUNDEDB_2_STAND"));
+            setBodyState(EBodyState::BS_STAND);
+        }
+    }
 
     if(!getEM().isEmpty() || getUsedMob().isValid())
         return;
@@ -822,6 +942,15 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     placeOnGround();
 
+    // Reset key-states
+    m_isStrafeLeft = false;
+    m_isStrafeRight = false;
+    m_isForward = false;
+    m_isBackward = false;
+    m_isTurnLeft = false;
+    m_isTurnRight = false;
+    m_MoveSpeed1 = false;
+    m_MoveSpeed2 = false;
 }
 
 void PlayerController::attackFront()
@@ -1110,8 +1239,15 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
         case EventMessages::MovementMessage::ST_WhirlAround:
             break;
         case EventMessages::MovementMessage::ST_Standup:
-            standUp();
-            return true;
+            // Start standing up when we first see this message
+            if(!message.inUse)
+            {
+                standUp(false, message.targetMode != 0);
+                message.inUse = true;
+            }
+
+            // Go as long as the standup-animation is playing
+            return getModelVisual()->isAnimPlaying("S_RUN"); // Fixme: This needs to be set according to walkmode/weapon!
             break;
 
         case EventMessages::MovementMessage::ST_CanSeeNpc:
@@ -1162,7 +1298,7 @@ bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::En
 
             if (message.functionSymbol != 0)
             {
-                m_AIStateMachine.startAIState(message.functionSymbol, true, message.isRoutineState);
+                m_AIStateMachine.startAIState(message.functionSymbol, true, message.isRoutineState, message.isPrgState);
             } else
             {
                 // Start daily routine
@@ -1297,7 +1433,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
         case EventMessages::ConversationMessage::ST_Output:
         {
-            m_World.getDialogManager().displaySubtitle(message.text, message.name);
+            m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
 
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (!message.internInProgress)
@@ -1324,6 +1460,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             if(done)
             {
                 m_World.getDialogManager().stopDisplaySubtitle();
+                m_World.getAudioEngine().stopSounds();
             }
 
             return done;
@@ -1431,6 +1568,8 @@ void PlayerController::interrupt()
 {
     // TODO: More! Cancel all animations, etc
     undrawWeapon(true);
+
+    getEM().clear();
 }
 
 bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
@@ -1496,9 +1635,30 @@ float PlayerController::getAngleTo(const Math::float3& pos)
 
 void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 {
-    // TODO: Implement properly
     stopRoute();
 
+    setBodyState(BS_STAND);
+
+    // TODO: Check if the Character is already standing
+
+    if(startAniTransition
+       && getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
+    {
+        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+
+        // State animation?
+        if(playingAni.substr(0, 2) == "S_")
+        {
+            // Build transition to standing
+            std::string transition = "T_" + playingAni.substr(2) + "_2_STAND";
+
+            getModelVisual()->setAnimation(transition, false);
+        }
+    }else
+    {
+        // Just jump to the idle-animation
+        getModelVisual()->stopAnimations();
+    }
 }
 
 void PlayerController::stopRoute()
@@ -1568,9 +1728,11 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
         m_World.getScriptEngine().setInstanceNPC("self", getScriptHandle());
         m_World.getScriptEngine().prepareRunFunction();
         m_World.getScriptEngine().runFunctionBySymIndex(data.on_state[0]);
+
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
@@ -1590,6 +1752,8 @@ bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
         // Why is 0 not allowed? That's how gothic is doing it though, as it seems...
         if(data.cond_atr[i] > 0)
         {
+            assert(data.cond_atr[i] < Daedalus::GEngineClasses::C_Npc::EATR_MAX);
+
             // Check for enough strength, etc.
             if(npc.attribute[data.cond_atr[i]] < data.cond_value[i])
             {
@@ -1610,6 +1774,30 @@ bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
     }
 
     return true;
+}
+
+void PlayerController::setAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int value)
+{
+    Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
+
+    if((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
+        return;
+
+    // Apply change
+    npc.attribute[atr] = value;
+
+    // Clamp to 0
+    if(npc.attribute[atr] < 0)
+        npc.attribute[atr] = 0;
+
+    // Clamp to max
+    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+        npc.attribute[atr] = std::min(npc.attribute[atr],
+                                      npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
+        npc.attribute[atr] = std::min(npc.attribute[atr],
+                                      npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 }
 
 void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes atr, int change)
@@ -1648,11 +1836,61 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
                                       npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 
     // TODO: Switch animation overlay (wounded, etc)
+
+    // Check for death
+    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+    {
+        if(npc.attribute[atr] == 0)
+            die(m_Entity);
+        //else if(npc.attribute[atr] == 1)
+        // TODO: Drop unconscious
+    }
 }
 
 
 void PlayerController::setupKeyBindings()
 {
+
+    Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().getStatusMenu().setHidden(!m_World.getEngine()->getHud().getStatusMenu().isHidden());
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().getConsole().setOpen(true);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Close);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Up, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Up);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Down, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Down);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Left, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Left);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Right, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Right);
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Confirm, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().onInputAction(UI::IA_Accept);
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
         m_isDrawWeaponMelee = triggered;
     });
@@ -1674,7 +1912,7 @@ void PlayerController::setupKeyBindings()
             }
         }else
         {
-            m_isForward = triggered;
+            m_isForward = m_isForward || triggered;
         }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float) {
@@ -1695,28 +1933,28 @@ void PlayerController::setupKeyBindings()
             }
         }else
         {
-            m_isBackward = triggered;
+            m_isBackward = m_isBackward || triggered;
         }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float) {
-        m_isTurnLeft = triggered;
+        m_isTurnLeft = m_isTurnLeft || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnRight, [this](bool triggered, float) {
-        m_isTurnRight = triggered;
+        m_isTurnRight = m_isTurnRight || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeLeft, [this](bool triggered, float) {
-        m_isStrafeLeft = triggered;
+        m_isStrafeLeft = m_isStrafeLeft || triggered;
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float) {
-        m_isStrafeRight = triggered;
+        m_isStrafeRight = m_isStrafeRight || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
-        m_MoveSpeed1 = triggered;
+        m_MoveSpeed1 = m_MoveSpeed1 || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
-        m_MoveSpeed2 = triggered;
+        m_MoveSpeed2 = m_MoveSpeed2 || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
@@ -1819,8 +2057,26 @@ void PlayerController::setupKeyBindings()
             if (nearest == 2 && nearestNPC.isValid())
             {
                 VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
-                Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
-                m_World.getDialogManager().startDialog(shnpc);
+
+                if(npc.playerController->getBodyState() == BS_STAND)
+                {
+                    Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
+                    m_World.getDialogManager().startDialog(shnpc);
+                }else if(npc.playerController->getBodyState() == BS_UNCONSCIOUS
+                        || npc.playerController->getBodyState() == BS_DEAD)
+                {
+                    // Take all his items
+                    auto& inv = npc.playerController->getInventory();
+                    for(auto h : inv.getItems())
+                    {
+                        unsigned int cnt = inv.getItemCount(h);
+                        size_t itm = inv.getItem(h).instanceSymbol;
+
+                        getInventory().addItem(itm, cnt);
+                    }
+
+                    inv.clear();
+                }
 
                 return;
             }
@@ -1843,11 +2099,14 @@ void PlayerController::setupKeyBindings()
                 vob.playerController->teleportToWaypoint(targetWP);*/
 
             // Use item last picked up
-            Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
-            if (lastItem.isValid())
+            if(!getInventory().getItems().empty())
             {
-                if (useItem(lastItem))
-                    getInventory().removeItem(lastItem);
+                Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+                if (lastItem.isValid())
+                {
+                    if (useItem(lastItem))
+                        getInventory().removeItem(lastItem);
+                }
             }
 
 
@@ -1872,4 +2131,288 @@ void PlayerController::giveItem(const std::string& instanceName, unsigned int co
     // Add our script-instance to the npcs inventory
     m_World.getScriptEngine().getGameState().createInventoryItem(symIdx, getScriptHandle(), count);
 }
+
+void PlayerController::exportPart(json& j)
+{
+    size_t sym = getScriptInstance().instanceSymbol;
+
+    Controller::exportPart(j);
+
+    j["type"] = "PlayerController";
+
+    // Export script-values
+    auto& scriptObj = getScriptInstance();
+    j["scriptObj"]["instanceSymbol"] = scriptObj.instanceSymbol;
+    j["scriptObj"]["id"] = scriptObj.id;
+    j["scriptObj"]["name"] = Utils::putArray(scriptObj.name);
+    j["scriptObj"]["slot"] = scriptObj.slot;
+    j["scriptObj"]["npcType"] = scriptObj.npcType;
+    j["scriptObj"]["flags"] = scriptObj.flags;
+    j["scriptObj"]["attribute"] = Utils::putArray(scriptObj.attribute);
+    j["scriptObj"]["protection"] = Utils::putArray(scriptObj.protection);
+    j["scriptObj"]["damage"] = Utils::putArray(scriptObj.damage);
+    j["scriptObj"]["damagetype"] = scriptObj.damagetype;
+    j["scriptObj"]["guild"] = scriptObj.guild;
+    j["scriptObj"]["level"] = scriptObj.level;
+    j["scriptObj"]["mission"] = Utils::putArray(scriptObj.mission);
+    j["scriptObj"]["fight_tactic"] = scriptObj.fight_tactic;
+    j["scriptObj"]["weapon"] = scriptObj.weapon;
+    j["scriptObj"]["voice"] = scriptObj.voice;
+    j["scriptObj"]["voicePitch"] = scriptObj.voicePitch;
+    j["scriptObj"]["bodymass"] = scriptObj.bodymass;
+    j["scriptObj"]["daily_routine"] = scriptObj.daily_routine;
+    j["scriptObj"]["start_aistate"] = scriptObj.start_aistate;
+    j["scriptObj"]["spawnPoint"] = scriptObj.spawnPoint;
+    j["scriptObj"]["spawnDelay"] = scriptObj.spawnDelay;
+    j["scriptObj"]["senses"] = scriptObj.senses;
+    j["scriptObj"]["senses_range"] = scriptObj.senses_range;
+    j["scriptObj"]["ai"] = Utils::putArray(scriptObj.ai);
+    j["scriptObj"]["wp"] = scriptObj.wp;
+    j["scriptObj"]["exp"] = scriptObj.exp;
+    j["scriptObj"]["exp_next"] = scriptObj.exp_next;
+    j["scriptObj"]["lp"] = scriptObj.lp;
+
+    // Export inventory
+    m_Inventory.exportInventory(j["inventory"]);
+
+    // Export equipped items
+    {
+        j["equipped"] = json::array();
+        for(auto item : m_EquipmentState.equippedItemsAll)
+        {
+            // Write instance of the equipped item
+            Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+            std::string instanceName = m_World.getScriptEngine().getVM()
+                    .getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+
+            j["equipped"].push_back(instanceName);
+        }
+    }
+
+    // Import state
+    m_AIStateMachine.exportScriptState(j["AIState"]);
+}
+
+void PlayerController::importObject(const json& j, bool noTransform)
+{
+    if(!noTransform)
+    {
+        Controller::importObject(j);
+
+        // Teleport to position
+        {
+            teleportToPosition(getEntityTransform().Translation());
+            setDirection(-1.0f * getEntityTransform().Forward());
+        }
+    }
+
+    // Set script values
+    {
+        auto& scriptObj = getScriptInstance();
+
+        scriptObj.instanceSymbol = j["scriptObj"]["instanceSymbol"];
+        scriptObj.id = j["scriptObj"]["id"];
+
+        Utils::putArray(scriptObj.name, j["scriptObj"]["name"]);
+
+        // Need this in iso8859-1 again
+        //for(std::string& s : scriptObj.name)
+        //    s = Utils::utf8_to_iso8859_1(s.c_str());
+
+        scriptObj.slot = j["scriptObj"]["slot"];
+        scriptObj.npcType = j["scriptObj"]["npcType"];
+        scriptObj.flags = (Daedalus::GEngineClasses::C_Npc::ENPCFlag)((int)j["scriptObj"]["flags"]);
+
+        Utils::putArray(scriptObj.attribute, j["scriptObj"]["attribute"]);
+        Utils::putArray(scriptObj.protection, j["scriptObj"]["protection"]);
+        Utils::putArray(scriptObj.damage, j["scriptObj"]["damage"]);
+
+        scriptObj.damagetype = j["scriptObj"]["damagetype"];
+        scriptObj.guild = j["scriptObj"]["guild"];
+        scriptObj.level = j["scriptObj"]["level"];
+        Utils::putArray(scriptObj.mission, j["scriptObj"]["mission"]);
+        scriptObj.fight_tactic = j["scriptObj"]["fight_tactic"];
+        scriptObj.weapon = j["scriptObj"]["weapon"];
+        scriptObj.voice = j["scriptObj"]["voice"];
+        scriptObj.voicePitch = j["scriptObj"]["voicePitch"];
+        scriptObj.bodymass = j["scriptObj"]["bodymass"];
+        scriptObj.daily_routine = j["scriptObj"]["daily_routine"];
+        scriptObj.start_aistate = j["scriptObj"]["start_aistate"];
+        scriptObj.spawnPoint = j["scriptObj"]["spawnPoint"];
+        scriptObj.spawnDelay = j["scriptObj"]["spawnDelay"];
+        scriptObj.senses = j["scriptObj"]["senses"];
+        scriptObj.senses_range = j["scriptObj"]["senses_range"];
+        Utils::putArray(scriptObj.ai, j["scriptObj"]["ai"]);
+        scriptObj.wp = j["scriptObj"]["wp"];
+        scriptObj.exp = j["scriptObj"]["exp"];
+        scriptObj.exp_next = j["scriptObj"]["exp_next"];
+        scriptObj.lp = j["scriptObj"]["lp"];
+    }
+
+    // Import inventory
+    m_Inventory.importInventory(j["inventory"]);
+
+    // Import equipments
+    {
+        Inventory& inv = m_Inventory;
+
+        for(const std::string& sym : j["equipped"])
+        {
+            Daedalus::GameState::ItemHandle h = inv.getItem(sym);
+
+            assert(h.isValid()); // Item to equip MUST be inside the inventory
+
+            equipItem(h);
+        }
+    }
+
+    // Import state
+    m_AIStateMachine.importScriptState(j["AIState"]);
+
+    // Check for death
+    if(getScriptInstance().attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] == 0)
+        die(Handle::EntityHandle::makeInvalidHandle());
+}
+
+
+void PlayerController::importObject(const json& j)
+{
+    importObject(j, false);
+
+    // Teleport to last waypoint
+    //teleportToWaypoint(j["scriptObj"]["wp"]);
+
+}
+
+
+Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
+{
+    unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
+
+    /*std::string name = j["scriptObj"]["name"][0];
+    if(name != "Diego" && name != "ich")
+        return Handle::EntityHandle();*/
+
+    // Create npc
+    Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
+
+    if(!e.isValid())
+        return Handle::EntityHandle::makeInvalidHandle();
+
+    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(world, e);
+
+    // Load controller-values
+    npc.playerController->importObject(j);
+
+
+    return e;
+}
+
+void PlayerController::die(Handle::EntityHandle attackingNPC)
+{
+    interrupt();
+
+    // TODO: Drop weapons held in hand
+
+    setBodyState(EBodyState::BS_DEAD);
+
+    if(!m_AIStateMachine.isInState(NPC_PRGAISTATE_DEAD))
+    {
+        Daedalus::GameState::NpcHandle oldOther = m_World.getScriptEngine().getNPCFromSymbol("other");
+
+        if(attackingNPC.isValid())
+        {
+            VobTypes::NpcVobInformation attacker = VobTypes::asNpcVob(m_World, attackingNPC);
+            m_World.getScriptEngine().setInstanceNPC("other", VobTypes::getScriptHandle(attacker));
+        }else
+        {
+            m_World.getScriptEngine().setInstanceNPC("other",Daedalus::GameState::NpcHandle());
+        }
+
+        m_AIStateMachine.startAIState(Logic::NPC_PRGAISTATE_DEAD, false, false, true);
+
+        // Restore old other
+        m_World.getScriptEngine().setInstanceNPC("other", oldOther);
+    }
+
+    setAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes::EATR_HITPOINTS, 0);
+
+    // TODO: Move this into onDamage_Anim if that function exists!
+    getEM().onMessage(EventMessages::ConversationMessage::playAnimation("T_DEAD"));
+
+    m_AIStateMachine.clearRoutine();
+}
+
+void PlayerController::checkUnconscious()
+{
+    // Gothic is just brute-force checking here if any of these animations are being played
+    // If so, we already put the character onto the ground
+    const std::string woundedAnims[] = {
+            "T_STAND_2_WOUNDEDB",
+            "T_STAND_2_WOUNDED",
+            "S_WOUNDEDB",
+            "S_WOUNDED",
+            "T_WOUNDEDB_2_DEADB",
+            "T_WOUNDED_2_DEAD",
+            "T_WOUNDED_TRY",
+            "T_WOUNDEDB_TRY"
+    };
+
+    for(size_t i=0; i < Utils::arraySize(woundedAnims);i++)
+    {
+        if(getModelVisual()->isAnimPlaying(woundedAnims[i]))
+            return;
+    }
+
+    // Not yet unconscious, we can change that...
+    getEM().onMessage(EventMessages::ConversationMessage::playAnimation("T_STAND_2_WOUNDEDB"));
+    setBodyState(EBodyState::BS_UNCONSCIOUS);
+}
+
+void PlayerController::onUpdateForPlayer(float deltaTime)
+{
+    // Nofity hud about current stats
+    UI::Hud& hud = m_World.getEngine()->getHud();
+    auto& stats = getScriptInstance();
+
+    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] /
+                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
+                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+
+    // Status screen
+    UI::Menu_Status& statsScreen = hud.getStatusMenu();
+    if(!statsScreen.isHidden())
+    {
+        statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+        statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+
+        statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
+                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+        statsScreen.setAttribute(UI::Menu_Status::A_HEALTH, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+
+        statsScreen.setGuild(getGuildName());
+        statsScreen.setLevel(stats.level);
+        statsScreen.setExperience(stats.exp);
+        statsScreen.setExperienceNext(stats.exp_next);
+        statsScreen.setLearnPoints(stats.lp);
+    }
+}
+
+std::string PlayerController::getGuildName()
+{
+    // Guilds are stored as an array in a symbol called "TXT_GUILDS"
+    auto& sym = m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("TXT_GUILDS");
+    std::string* adr = sym.getStrAddr((unsigned int)getScriptInstance().guild);
+
+    return *adr;
+}
+
+
+
+
+
+
 

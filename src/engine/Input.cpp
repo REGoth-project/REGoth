@@ -40,7 +40,7 @@ Action::Action(std::function<void (bool, float)> func)
 {
 }
 
-std::map<ActionBinding, int /* key */> Input::actionBindingToKeyMap;
+std::multimap<ActionBinding, int /* key */> Input::actionBindingToKeyMap;
 std::map<ActionBinding, int /*mouseButton*/> Input::actionBindingToMouseButtonMap;
 std::map<ActionBinding, Input::MouseAxis> Input::actionBindingToMouseAxisMap;
 
@@ -69,6 +69,11 @@ Action* Input::RegisterAction(ActionType actionType, std::function<void (bool, f
     return &(( *actionTypeToActionMap.insert( std::make_pair(actionType, Action(function)) ) ).second);
 }
 
+void Input::clearActions()
+{
+    actionTypeToActionMap.clear();
+}
+
 bool Input::RemoveAction(ActionType actionType, Action *action)
 {
     auto rangeIterators = actionTypeToActionMap.equal_range(actionType);
@@ -91,7 +96,7 @@ Math::float2 Input::getMouseCoordinates()
 
 void Input::bindKey(int key, ActionType actionType, bool isContinuous, bool isInverted)
 {
-    actionBindingToKeyMap[ActionBinding(actionType, isContinuous, isInverted)] = key;
+    actionBindingToKeyMap.emplace(ActionBinding(actionType, isContinuous, isInverted), key);
 }
 
 void Input::bindMouseButton(int mouseButton, ActionType actionType, bool isContinuous, bool isInverted)
@@ -204,15 +209,23 @@ void Input::fireBindings()
         // Invert intensity if isInverted is true
         intensity = itBindingToKey.first.isInverted ? -intensity : intensity;
 
-        auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToKey.first.actionType);
+        for(const auto& action : actionTypeToActionMap)
+        {
+            if(action.first == itBindingToKey.first.actionType && action.second.isEnabled)
+            {
+                action.second.function(triggerAction, intensity);
+            }
+        }
+
+        /*auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToKey.first.actionType);
         for(auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
             if(itAction->second.isEnabled)
             {
                 itAction->second.function(triggerAction, intensity);
-            }
-
-        keyTriggered[itBindingToKey.second] = false;
+            }*/
     }
+
+    clearTriggered();
 
     for(const auto itBindingToButton : actionBindingToMouseButtonMap)
     {
@@ -285,3 +298,13 @@ void Input::getMouseState(Input::MouseState& ms)
     ms.m_buttons[1] = (uint8_t)mouseButtonState[1];
     ms.m_buttons[2] = (uint8_t)mouseButtonState[2];
 }
+
+void Input::clearTriggered()
+{
+    // Reset all the keys, for text input
+    for(int i=0;i<NUM_KEYS;i++)
+    {
+        keyTriggered[i] = false;
+    }
+}
+

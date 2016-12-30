@@ -22,6 +22,18 @@
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
 #include <ZenLib/utils/logger.h>
+#include <json.hpp>
+#include <fstream>
+#include <ui/Console.h>
+#include <components/VobClasses.h>
+#include <logic/NpcScriptState.h>
+#include <logic/PlayerController.h>
+#include <ui/ImageView.h>
+#include <ui/BarView.h>
+#include <ui/Hud.h>
+#include <ui/Menu.h>
+
+using json = nlohmann::json;
 
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
@@ -208,7 +220,9 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         bgfx::touch(0);
 
-#if !BX_PLATFORM_ANDROID
+#if BX_PLATFORM_ANDROID
+
+#else
         Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
 
@@ -237,7 +251,11 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 		axis = 0;
 		m_debug = BGFX_DEBUG_TEXT;
+#if BX_PLATFORM_ANDROID
+        m_reset = 0;
+#else
 		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+#endif
 
         m_Width = getWindowWidth();
         m_Height = getWindowHeight();
@@ -264,7 +282,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 		Meshes::UVVertex::init();
 		Meshes::PositionVertex::init();
 		Meshes::PositionColorVertex::init();
-		Meshes::PositionUVVertex::init();
+        Meshes::PositionUVVertex::init();
+        Meshes::PositionUVVertex2D::init();
 		Meshes::SkeletalVertex::init();
 
         PosColorTexCoord0Vertex::init();
@@ -282,7 +301,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         showSplash();
 
         // Add startworld
-		m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
+        Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
 
 		m_timeOffset = bx::getHPCounter();
 
@@ -296,7 +315,306 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         fontSize = 23.0f;
 #endif
 
+        auto& console = m_pEngine->getHud().getConsole();
+        console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
+            return "Hello World!";
+        });
+
+
+        console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: timeset <time (0..1)>";
+
+            float t = std::stof(args[1]);
+            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(t);
+
+            return "Set time to " + std::to_string(t);
+        });
+
+        console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+
+            json pex;
+            player.playerController->exportObject(pex);
+
+            std::ofstream f("hero.json");
+            f << Utils::iso_8859_1_to_utf8(pex.dump(4));
+            f.close();
+
+            return "Hero successfully exported to: hero.json";
+        });
+
+        console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            std::ifstream f("hero.json");
+            std::stringstream saveData;
+            saveData << f.rdbuf();
+
+            json hero = json::parse(saveData);
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            player.playerController->importObject(hero, true);
+
+            return "Hero successfully imported from: hero.json";
+        });
+
+        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+
+            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: switchlevel <zenfile>";
+
+            std::string file = args[1];
+            if(!m_pEngine->getVDFSIndex().hasFile(file))
+                return "File '" + file + "' not found.";
+
+            // Export hero
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s1.getPlayerEntity());
+
+            json pex;
+            player.playerController->exportObject(pex);
+
+            // Export script-symbols
+            json scriptSymbols;
+            s1.exportScriptEngine(scriptSymbols);
+
+            json dialogMan;
+            m_pEngine->getMainWorld().get().getDialogManager().exportDialogManager(dialogMan);
+
+            // Temporary save
+            m_pEngine->getHud().getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
+
+            // Check if a savegame for this world exists
+            if(Utils::fileExists(file + ".json"))
+            {
+                m_pEngine->getHud().getConsole().submitCommand("load " + file);
+            }else
+            {
+                clearActions();
+                m_pEngine->removeWorld(m_pEngine->getMainWorld());
+                m_pEngine->addWorld(args[1]);
+            }
+
+            // Import hero again
+            auto& s2 = m_pEngine->getMainWorld().get().getScriptEngine();
+            if(s2.getPlayerEntity().isValid())
+            {
+                player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                            s2.getPlayerEntity()); // World and player changed
+                player.playerController->importObject(pex, true);
+            }else
+            {
+                LogError() << "Player not inserted into new world!";
+            }
+
+            // Import script-symbols
+            s2.importScriptEngine(scriptSymbols);
+
+            // Import dialog info
+            m_pEngine->getMainWorld().get().getDialogManager().importDialogManager(dialogMan);
+
+            return "Successfully switched world to: " + file;
+        });
+
+        console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() != 2)
+                return "Missing argument. Usage: load <savegame>";
+
+            std::string savegame = "";
+
+
+            std::string file = args[1] + ".json";
+            if (!Utils::fileExists(file))
+                return "File '" + file + "' not found.";
+
+            savegame = file;
+
+
+            clearActions();
+            m_pEngine->removeWorld(m_pEngine->getMainWorld());
+            m_pEngine->addWorld("", savegame);
+
+            if(!savegame.empty())
+                return "Successfully loaded savegame: " + savegame;
+            else
+                return "Successfully loaded world: " + args[1];
+        });
+
+        console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: save <savegame>";
+
+            json j;
+            m_pEngine->getMainWorld().get().exportWorld(j);
+
+            // Save
+            std::ofstream f(args[1] + ".json");
+            f << Utils::iso_8859_1_to_utf8(j.dump(4));
+            f.close();
+
+            return "World saved to file: " + args[1] + ".json";
+        });
+
+        console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation npc;
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() == 1)
+                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            else
+            {
+                std::string n = args[1];
+                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+
+                for(Handle::EntityHandle e : s.getWorldNPCs())
+                {
+                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                    if(test.isValid())
+                    {
+                        std::string nt = test.playerController->getScriptInstance().name[0];
+                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
+                        if(n == nt)
+                        {
+                            npc = test;
+                            break;
+                        }
+                    }
+                }
+
+                if(!npc.isValid())
+                    return "Invalid NPC";
+            }
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+
+            Logic::EventMessages::StateMessage sm;
+            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+            sm.functionSymbol = Logic::NPC_PRGAISTATE_UNCONSCIOUS;
+            sm.isPrgState = true;
+            sm.other = VobTypes::getScriptHandle(player);
+
+            npc.playerController->getEM().onMessage(sm);
+
+            return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
+        });
+
+        console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation npc;
+            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+
+
+
+            if(args.size() == 1)
+            {
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
+
+                if(nearNPCs.empty())
+                    return "No NPCs in range!";
+
+                // Chose one at random, skip the player
+                for(Handle::EntityHandle e : nearNPCs)
+                {
+                    if(e != s.getPlayerEntity())
+                    {
+                        npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Fix spaces in names happening
+                std::string name;
+                for(int i=1;i<args.size();i++)
+                    name += args[i] + " ";
+                name.pop_back();
+
+                std::string n = name;
+                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
+
+                for(Handle::EntityHandle e : s.getWorldNPCs())
+                {
+                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                    if(test.isValid())
+                    {
+                        std::string nt = test.playerController->getScriptInstance().name[0];
+                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
+                        if(n == nt)
+                        {
+                            npc = test;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if(!npc.isValid())
+                return "Invalid NPC";
+
+            Logic::EventMessages::StateMessage sm;
+            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+            sm.functionSymbol = Logic::NPC_PRGAISTATE_DEAD;
+            sm.isPrgState = true;
+
+            npc.playerController->die(s.getPlayerEntity());
+
+            return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
+        });
+
+        console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            player.playerController->interrupt();
+
+            return "Interrupted player, cleared EM";
+        });
+
+        console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: hurtself <damage>";
+
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, -dmg);
+
+            return "Hurt player by " + std::to_string(dmg) + " HP";
+        });
+
+        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: usemana <mana>";
+
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+
+            return "Used " + std::to_string(dmg) + " mana";
+        });
+
         imguiCreate(nullptr, 0, fontSize);
+
+        /*UI::Menu* m = new UI::Menu(*m_pEngine);
+        m_pEngine->getRootUIView().addChild(m);
+        m->initializeInstance("MENU_STATUS");*/
+
         m_scrollArea = 0;
 	}
 
@@ -318,7 +636,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
-        Engine::Input::fireBindings();
+        if(!m_pEngine->getHud().getConsole().isOpen())
+            Engine::Input::fireBindings();
 
 
         // Check for resize
@@ -378,6 +697,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
+
+
         ddSetTransform(nullptr);
         ddDrawAxis(0.0f, 0.0f, 0.0f);
 
@@ -400,6 +721,21 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         ddEnd();
 
         imguiEndFrame();
+
+        if(m_pEngine->getHud().getConsole().isOpen())
+        {
+            for (int i = 0; i < NUM_KEYS; i++)
+            {
+                if (getKeysTriggered()[i])
+                {
+                    m_pEngine->getHud().getConsole().onKeyDown(i);
+                }
+            }
+
+            m_pEngine->getHud().getConsole().update();
+
+            Engine::Input::clearTriggered();
+        }
 
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.

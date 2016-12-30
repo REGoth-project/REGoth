@@ -49,6 +49,10 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
 	m_Allocator.getElement(h).m_TextureHandle = bth;
 	m_Allocator.getElement(h).m_TextureName = name;
 
+    ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(data);
+    m_Allocator.getElement(h).m_Width = desc.dwWidth;
+    m_Allocator.getElement(h).m_Height = desc.dwHeight;
+
 	// Add handle to name-map, if it got one
 	if(!name.empty())
 		m_TexturesByName[name] = h;
@@ -76,7 +80,7 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
 	//TODO: Avoid the second copy here
 	const bgfx::Memory* mem = bgfx::alloc(data.size());
 	memcpy(mem->data, data.data(), data.size());
-	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, true, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
+	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
 
 	// Free imange
 	//stbi_image_free(out);

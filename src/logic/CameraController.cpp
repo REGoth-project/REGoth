@@ -320,7 +320,8 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             // Get forward/right vector
             std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
             settings.up = settings.right.cross(settings.forward);
-
+            settings.forward *= deltaTime;
+            
             // Fix position
             Math::float3 to = settings.position + Math::float3(0.0f, -100.0f, 0.0f);
             Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(settings.position, to);
@@ -346,6 +347,8 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
             settings.up = settings.right.cross(settings.forward);
 
+            settings.forward *= deltaTime * 40.0f;
+            
             m_ViewMatrix = Math::Matrix::CreateView(settings.position,
                                                     settings.yaw,
                                                     settings.pitch);

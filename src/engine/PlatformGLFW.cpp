@@ -190,13 +190,33 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_S, ActionType::PlayerBackward, true);
     bindKey(GLFW_KEY_LEFT, ActionType::PlayerTurnLeft, true);
     bindKey(GLFW_KEY_RIGHT, ActionType::PlayerTurnRight, true);
+    bindKey(GLFW_KEY_UP, ActionType::PlayerForward, true);
+    bindKey(GLFW_KEY_DOWN, ActionType::PlayerBackward, true);
     bindKey(GLFW_KEY_A, ActionType::PlayerStrafeLeft, true);
     bindKey(GLFW_KEY_D, ActionType::PlayerStrafeRight, true);
+    bindKey(GLFW_KEY_Q, ActionType::PlayerTurnLeft, true);
+    bindKey(GLFW_KEY_E, ActionType::PlayerTurnRight, true);
     bindKey(GLFW_KEY_SPACE, ActionType::DebugMoveSpeed, true);
-    bindKey(GLFW_KEY_B, ActionType::DebugMoveSpeed2, true);
-    bindKey(GLFW_KEY_T, ActionType::PlayerAction, false);
+    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::DebugMoveSpeed2, true);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, false);
 
     bindKey(GLFW_KEY_P, ActionType::PauseGame, false);
+
+    bindKey(GLFW_KEY_B, ActionType::OpenStatusMenu, false);
+    bindKey(GLFW_KEY_F10, ActionType::OpenConsole, false);
+    bindKey(GLFW_KEY_ESCAPE, ActionType::UI_Close, false);
+    bindKey(GLFW_KEY_UP, ActionType::UI_Up, false);
+    bindKey(GLFW_KEY_DOWN, ActionType::UI_Down, false);
+    bindKey(GLFW_KEY_LEFT, ActionType::UI_Left, false);
+    bindKey(GLFW_KEY_RIGHT, ActionType::UI_Right, false);
+    bindKey(GLFW_KEY_W, ActionType::UI_Up, false);
+    bindKey(GLFW_KEY_S, ActionType::UI_Down, false);
+    bindKey(GLFW_KEY_A, ActionType::UI_Left, false);
+    bindKey(GLFW_KEY_D, ActionType::UI_Right, false);
+    bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
+
+
 
 //    // special keys test
 //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);

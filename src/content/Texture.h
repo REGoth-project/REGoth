@@ -18,6 +18,8 @@ namespace Textures
     {
 		std::string m_TextureName;
         THDL m_TextureHandle;
+        uint32_t m_Width;
+        uint32_t m_Height;
     };
 
     typedef _Texture<Handle::InternalTextureHandle> Texture;

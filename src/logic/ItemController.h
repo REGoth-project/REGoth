@@ -13,7 +13,7 @@ namespace Logic
 		 * @param world World of the underlaying entity
 		 * @param entity Entity owning this controller
 		 */
-		ItemController(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::ItemHandle scriptInstance);
+		ItemController(World::WorldInstance& world, Handle::EntityHandle entity, size_t scriptInstance);
 
 		/**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
@@ -27,14 +27,17 @@ namespace Logic
 		void pickUp(Handle::EntityHandle npc);
 
 		/**
-		 * Updates this vob from the script-side values (visual, etc)
+		 * @return Classes which want to get exported on save should return true here
 		 */
-		void updateVobFromScript();
+		virtual bool shouldExport(){ return true; }
 
+		virtual void importObject(const json& j);
 	protected:
 
+		virtual void exportPart(json& j) override;
+
 		struct {
-			Daedalus::GameState::ItemHandle scriptInstance;
+			size_t scriptInstance;
 		}m_ScriptState;
 
 	};

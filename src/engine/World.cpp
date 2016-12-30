@@ -9,6 +9,7 @@
 #include <utils/logger.h>
 #include <components/EntityActions.h>
 #include <logic/PlayerController.h>
+#include <logic/MobController.h>
 #include <stdlib.h>
 #include <iterator>
 
@@ -18,6 +19,8 @@
 #include <components/VobClasses.h>
 #include <entry/input.h>
 #include <ui/PrintScreenMessages.h>
+#include <ZenLib/zenload/zTypes.h>
+#include <ui/Hud.h>
 
 using namespace World;
 
@@ -49,11 +52,11 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
 
     // Create UI-Views
-    m_PrintScreenMessageView = new UI::PrintScreenMessages();
+    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
     getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
 }
 
-void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
+void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
 {
     m_ZenFile = zen;
 
@@ -163,6 +166,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             {
                 vobLoad(v.childVobs);
 
+                bool allowCollision = true; // FIXME: Hack. Items shouldn't be placed into physicsworld right now
+
 				// Check for special vobs // FIXME: Should be somewhere else
 				Vob::VobInformation vob;
 				Handle::EntityHandle e;
@@ -171,17 +176,21 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 					// Get item instance
 					if(getScriptEngine().hasSymbol(v.oCItem.instanceName))
 					{
-						Daedalus::GameState::ItemHandle h = getScriptEngine().getGameState().insertItem(v.oCItem.instanceName);
+                        e = VobTypes::createItem(*this, v.oCItem.instanceName);
 
-						e = VobTypes::initItemFromScript(*this, h);
 						vob = Vob::asVob(*this, e);
+
+                        allowCollision = false;
 					}
 					else{
 						LogWarn() << "Invalid item instance: " << v.oCItem.instanceName;
 					}
 				}else if(v.objectClass.find("oCMobInter:oCMOB") != std::string::npos)
                 {
-                    e = VobTypes::createMob(*this, v);
+                    e = VobTypes::createMob(*this);
+                    VobTypes::MobVobInformation mob = VobTypes::asMobVob(*this, e);
+                    mob.mobController->initFromVobDescriptor(v);
+
                     vob = Vob::asVob(*this, e);
                 }
 				else {
@@ -228,7 +237,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 				else
 				{
 					// Set whether we want collision with this vob
-					Vob::setCollisionEnabled(vob, v.cdDyn);
+					Vob::setCollisionEnabled(vob, v.cdDyn && allowCollision);
 
                     Utils::BBox3D bbox = {Math::float3(v.bbox[0].v) * (1.0f / 100.0f),
                                           Math::float3(v.bbox[1].v) * (1.0f / 100.0f)};
@@ -272,8 +281,17 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
             }
         };
 
-        LogInfo() << "Inserting vobs...";
-        vobLoad(world.rootVobs);
+        if(j.empty())
+        {
+            // Load vobs from zen (initial load)
+            LogInfo() << "Inserting vobs from zen...";
+            vobLoad(world.rootVobs);
+        } else
+        {
+            // Load vobs from saved json (Savegame)
+            LogInfo() << "Inserting vobs from json...";
+            importVobs(j["vobs"]);
+        }
 
         // Make sure static collision is initialized before adding the NPCs
         m_PhysicsSystem.postProcessLoad();
@@ -295,15 +313,15 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
 		}
 
         // Init script-engine
-        initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')));
+        initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty());
+        //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
-
-        /*Handle::EntityHandle testEntity = Vob::constructVob(*this);
-
-        auto& ph = Components::Actions::initComponent<Components::PhysicsComponent>(getComponentAllocator(), testEntity);
-        ph.m_RigidBody.initPhysics(&m_PhysicsSystem, *m_PhysicsSystem.makeBoxCollisionShape(Math::float3(2.5f, 2.5f, 2.5f)));
-
-        Components::Actions::Physics::setRigidBodyPosition(ph, Math::float3(0.0f, 10.0f, 0.0f));*/
+        // Load values from savegame, if there is one
+        if(!j.empty())
+        {
+            m_ScriptEngine.importScriptEngine(j["scriptEngine"]);
+            m_DialogManager.importDialogManager(j["dialogManager"]);
+        }
 	}
 	else
 	{
@@ -346,12 +364,12 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen)
     m_TestEntity = e;*/
 }
 
-void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName)
+void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
 {
 	if(!worldName.empty())
 	{
 		LogInfo() << "Initializing scripts for world: " << worldName;
-		m_ScriptEngine.initForWorld(worldName);
+		m_ScriptEngine.initForWorld(worldName, firstStart);
 	}
 
     // Initialize dialog manager
@@ -432,7 +450,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         if(Components::hasComponent<Components::AnimationComponent>(ents[i])
             && !anims[i].m_ParentAnimHandler.isValid())
         {
-            anims[i].m_AnimHandler.updateAnimations(deltaTime);
+            anims[i].getAnimHandler().updateAnimations(deltaTime);
         }
     }
 
@@ -451,6 +469,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     // Tell script engine the frame ended
     m_ScriptEngine.onFrameEnd();
+
+    // Update hud
+    m_pEngine->getHud().setTimeOfDay(m_Sky.getTimeOfDayFormated());
 
     /*static float s_testp = 0.0f;
     static std::vector<size_t> path;
@@ -629,6 +650,129 @@ EGameType WorldInstance::getBasicGameType()
     return GT_Gothic2;
 }
 
+void WorldInstance::exportWorld(json& j)
+{
+    // Write initial ZEN for loading the worldmesh later
+    j["zenfile"] = m_ZenFile;
+
+    // Write Vobs
+    {
+        json& jvobs = j["vobs"];
+
+        size_t num = getComponentAllocator().getNumObtainedElements();
+        const auto& ctuple = getComponentDataBundle().m_Data;
+
+        Components::EntityComponent* ents = std::get<Components::EntityComponent*>(ctuple);
+        Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
+        Components::VisualComponent* visuals = std::get<Components::VisualComponent*>(ctuple);
+
+        // TODO: This could be done in parallel
+        for (size_t i = 0; i < num; i++)
+        {
+            // Only export if both logic and visual want to be exported
+            /*if(Components::hasComponent<Components::LogicComponent>(ents[i])
+               && logics[i].m_pLogicController && !logics[i].m_pLogicController->shouldExport())
+                continue;
+
+            if(Components::hasComponent<Components::VisualComponent>(ents[i])
+               && visuals[i].m_pVisualController && !visuals[i].m_pVisualController->shouldExport())
+                continue;*/
+
+            // Do the actual export
+            if (Components::hasComponent<Components::LogicComponent>(ents[i]))
+            {
+                if (logics[i].m_pLogicController && logics[i].m_pLogicController->shouldExport())
+                    logics[i].m_pLogicController->exportObject(jvobs["controllers"][i]["logic"]);
+            }
+
+            if (Components::hasComponent<Components::VisualComponent>(ents[i]))
+            {
+                if (visuals[i].m_pVisualController && visuals[i].m_pVisualController->shouldExport())
+                    visuals[i].m_pVisualController->exportObject(jvobs["controllers"][i]["visual"]);
+            }
+
+        }
+    }
+
+    // Write script-values
+    m_ScriptEngine.exportScriptEngine(j["scriptEngine"]);
+
+    // Write dialog-info
+    m_DialogManager.exportDialogManager(j["dialogManager"]);
+}
+
+void WorldInstance::importSingleVob(const json& j)
+{
+    // This has a logic and visual controller
+
+    Handle::EntityHandle entity;
+
+    if(j.find("logic") != j.end())
+    {
+        // TODO: Automate this...
+        if(j["logic"]["type"] == "PlayerController")
+        {
+            entity = Logic::PlayerController::importPlayerController(*this, j["logic"]);
+        }else if(j["logic"]["type"] == "MobController")
+        {
+            entity = VobTypes::createMob(*this);
+            VobTypes::MobVobInformation vob = VobTypes::asMobVob(*this, entity);
+            vob.mobController->importObject(j["logic"]);
+        }else if(j["logic"]["type"] == "ItemController")
+        {
+            size_t sym = j["logic"]["instanceSymbol"];
+            entity = VobTypes::createItem(*this, sym);
+        }
+    }else
+    {
+        entity = Vob::constructVob(*this);
+
+
+    }
+
+    if(!entity.isValid())
+        return;
+
+    if(j.find("visual") != j.end())
+    {
+        Vob::VobInformation vob = Vob::asVob(*this, entity);
+
+        // Need to enable collision before setting the visual
+        Vob::setCollisionEnabled(vob, j["visual"]["collision"]);
+
+        // Get transform before setting the visual, so staic collision doesn't end up at world-origin
+        // TODO: There must be a nicer way of writing this
+        auto& jtrans = j["visual"]["transform"];
+        Math::Matrix transform;
+
+        // Parse transform from json
+        for(int i=0;i<16;i++)
+            if(!jtrans[i].is_null())
+                transform.mv[i] = jtrans[i];
+
+        Vob::setTransform(vob, transform);
+
+        // Need to set the visual before actually importing the object
+        Vob::setVisual(vob, j["visual"]["name"]);
+        vob = Vob::asVob(*this, entity);
+
+        // Now proceed with the other values
+        if(vob.visual)
+            vob.visual->importObject(j["visual"]);
+    }
+}
+
+void WorldInstance::importVobs(const json& j)
+{
+    // j must be an array of vobs
+    for(const json& vob : j["controllers"])
+    {
+        if(!vob.is_null())
+        {
+            importSingleVob(vob);
+        }
+    }
+}
 
 
 
