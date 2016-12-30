@@ -175,19 +175,25 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
     {
         if (firstStart && m_pVM->getDATFile().hasSymbolName("startup_" + world))
         {
+            LogInfo() << "Running: Startup_" << world;
             prepareRunFunction();
             runFunction("startup_" + world);
+            LogInfo() << "Done!";
         }
 
         if (m_pVM->getDATFile().hasSymbolName("init_" + world))
         {
+            LogInfo() << "Running init_" << world;
             prepareRunFunction();
             runFunction("init_" + world);
+            LogInfo() << "Done!";
         }
     }else {
         VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
                                 "WP_INTRO_FALL3");
     }
+
+    LogInfo() << "Creating player";
 
     // Create player, if not already present
     Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
@@ -207,6 +213,8 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
 
         }
     }
+
+    LogInfo() << "Setting camera mode to third-person";
 
     Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
     //e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
