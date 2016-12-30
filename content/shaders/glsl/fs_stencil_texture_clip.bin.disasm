@@ -1,0 +1,23 @@
+varying vec4 v_color;
+varying vec2 v_texcoord0;
+varying vec3 v_view_pos;
+uniform sampler2D s_texColor;
+uniform vec4 u_FogColor;
+uniform vec4 u_FogNearFar;
+void main ()
+{
+  vec4 tmpvar_2_1;
+  vec4 color_1_2;
+  tmpvar_2_1 = (texture2D (s_texColor, v_texcoord0) * v_color);
+  color_1_2.w = tmpvar_2_1.w;
+  if ((tmpvar_2_1.w < 0.6)) {
+    discard;
+  };
+  color_1_2.xyz = mix (tmpvar_2_1.xyz, u_FogColor.xyz, clamp ((
+    (sqrt(dot (v_view_pos, v_view_pos)) - u_FogNearFar.x)
+   / 
+    (u_FogNearFar.y - u_FogNearFar.x)
+  ), 0.0, 1.0));
+  gl_FragColor = color_1_2;
+}
+

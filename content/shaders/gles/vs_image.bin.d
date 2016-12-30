@@ -1,4 +1,4 @@
-../../.build/shaders/gles/vs_world_instanced.bin :  \
+../../.build/shaders/gles/vs_image.bin :  \
  varying.def.sc \
  ../common/common.sh \
  ../../scripts//../src/bgfx_shader.sh \

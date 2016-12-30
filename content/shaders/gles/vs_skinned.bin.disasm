@@ -1,0 +1,53 @@
+attribute highp vec2 a_texcoord0;
+attribute highp vec3 a_texcoord1;
+attribute highp vec3 a_texcoord2;
+attribute highp vec3 a_texcoord3;
+attribute highp vec3 a_texcoord4;
+attribute highp vec4 a_texcoord5;
+attribute highp vec4 a_texcoord6;
+varying highp vec4 v_color;
+varying highp vec2 v_texcoord0;
+varying highp vec3 v_view_pos;
+uniform mat4 u_model[32];
+uniform highp mat4 u_modelView;
+uniform highp mat4 u_modelViewProj;
+uniform vec4 SKY_CLUT[256];
+void main ()
+{
+  highp vec4 tmpvar_9_1;
+  highp vec4 tmpvar_6_2;
+  highp vec4 tmpvar_5_3;
+  highp vec4 tmpvar_4_4;
+  highp vec4 tmpvar_3_5;
+  highp vec4 tmpvar_2_6;
+  highp vec3 position_1_7;
+  tmpvar_2_6.w = 1.0;
+  tmpvar_2_6.xyz = a_texcoord1;
+  position_1_7 = ((u_model[(1 + 
+    int(a_texcoord5.x)
+  )] * tmpvar_2_6).xyz * a_texcoord6.x);
+  tmpvar_3_5.w = 1.0;
+  tmpvar_3_5.xyz = a_texcoord2;
+  position_1_7 = (position_1_7 + ((u_model[
+    (1 + int(a_texcoord5.y))
+  ] * tmpvar_3_5).xyz * a_texcoord6.y));
+  tmpvar_4_4.w = 1.0;
+  tmpvar_4_4.xyz = a_texcoord3;
+  position_1_7 = (position_1_7 + ((u_model[
+    (1 + int(a_texcoord5.z))
+  ] * tmpvar_4_4).xyz * a_texcoord6.z));
+  tmpvar_5_3.w = 1.0;
+  tmpvar_5_3.xyz = a_texcoord4;
+  position_1_7 = (position_1_7 + ((u_model[
+    (1 + int(a_texcoord5.w))
+  ] * tmpvar_5_3).xyz * a_texcoord6.w));
+  tmpvar_6_2.w = 1.0;
+  tmpvar_6_2.xyz = position_1_7;
+  gl_Position = (u_modelViewProj * tmpvar_6_2);
+  v_texcoord0 = a_texcoord0;
+  v_color = SKY_CLUT[255];
+  tmpvar_9_1.w = 1.0;
+  tmpvar_9_1.xyz = position_1_7;
+  v_view_pos = (u_modelView * tmpvar_9_1).xyz;
+}
+
