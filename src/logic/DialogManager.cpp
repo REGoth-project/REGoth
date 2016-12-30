@@ -18,8 +18,8 @@
  * File containing the dialouges
  * // TODO: Be able to read this from VDF
  */
-const char* OU_FILE = "/_work/DATA/scripts/content/CUTSCENE/OU.BIN"; // German and international versions use different extensions (bin/dat)
-const char* OU_FILE_2 = "/_work/DATA/scripts/content/CUTSCENE/OU.DAT";
+const char* OU_FILE = "/_work/data/Scripts/content/CUTSCENE/OU.BIN"; // German and international versions use different extensions (bin/dat)
+const char* OU_FILE_2 = "/_work/data/Scripts/content/CUTSCENE/OU.DAT";
 
 using namespace Logic;
 
@@ -330,7 +330,10 @@ void DialogManager::init()
 
     if(ou.empty())
         LogWarn() << "Failed to read OU-file!";
+    else
+        LogInfo() << "Loading OU-file from: " << ou;
 
+    LogInfo() << "Creating script-side dialog-manager";
     m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), ou);
 
     // Register externals
@@ -347,12 +350,16 @@ void DialogManager::init()
 
     m_ScriptDialogMananger->registerExternals(onAIOutput, onAIProcessInfos);
 
+    LogInfo() << "Adding dialog-UI to root view";
     // Add subtitle box (Hidden if there is nothing to display)
     m_ActiveSubtitleBox = new UI::SubtitleBox(*m_World.getEngine());
     m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
     m_ActiveSubtitleBox->setHidden(true);
 
     m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_World.getEngine());
+
+
+    LogInfo() << "Done initializing DialogManager!";
 }
 
 void DialogManager::displaySubtitle(const std::string& subtitle, const std::string& self)
