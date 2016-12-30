@@ -314,7 +314,7 @@ void Sky::fillSkyStates()
     }
 }
 
-void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far, Math::float3& fogColor)
+void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor)
 {
     // Note: These are some magic values to match what gothic does
     float fogMidrange = m_FarPlane * 0.4f;
@@ -330,18 +330,18 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& near, float& far,
     fogScale = std::min(1.0f, std::max(0.0f, fogScale)); // Clamp to 0..1
     fogScale = std::max(m_MasterState.fogDistance, fogScale); // Fog should be at least our set distance
 
-    far = fogMidrange + (1.0f - fogScale) * fogMidDelta;
+    _far = fogMidrange + (1.0f - fogScale) * fogMidDelta;
 
     // Apply some user value // FIXME: This should have a getter/setter and all that stuff
     const float userFogScale = 1.0f;
-    far *= userFogScale;
-    near = far * 0.3f;
+    _far *= userFogScale;
+    _near = _far * 0.3f;
 
     // REGoth - specific: Let the fog be a little closer because of the long view-distances
-    near *= 0.5f;
+    _near *= 0.5f;
 
-    far *= 0.4f;
-    near *= 0.4f;
+    _far *= 0.4f;
+    _near *= 0.4f;
 
     // Fix up the fog color. The fog should get less intense with decrasing fogFar
 
