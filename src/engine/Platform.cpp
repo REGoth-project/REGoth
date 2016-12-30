@@ -39,7 +39,6 @@ using namespace Engine;
 int Platform::m_WindowWidth;
 int Platform::m_WindowHeight;
 
-
 void Platform::windowSizeEvent(int width, int height)
 {
     Input::windowSizeEvent(width, height);
@@ -55,14 +54,12 @@ int32_t Platform::run(int argc, char** argv)
 
 void Platform::mainLoop(std::promise<int32_t>&& returnValue, int argc, char** argv)
 {
+    std::cout << "Initializing file reader/writer" << std::endl;
     Utils::initializeFileReaderWriter();
 
+    std::cout << "Initializing engine...";
     init(argc, argv);
+
+    std::cout << "Flushing bgfx";
     bgfx::frame();
-
-    while (update());
-
-    returnValue.set_value(shutdown());
-
-    Utils::destroyFileReaderWriter();
 }
