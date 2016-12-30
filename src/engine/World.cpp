@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "World.h"
 #include <bitset>
 #include <zenload/zenParser.h>
@@ -90,16 +91,33 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         LogInfo() << "Postprocessing worldmesh...";
 
         ZenLoad::PackedMesh packedWorldMesh;
-        worldMesh->packMesh(packedWorldMesh, 0.01f);
+        worldMesh->packMesh(packedWorldMesh, 0.01f, false);
 
         // Init worldmesh-wrapper
         m_WorldMesh.load(packedWorldMesh);
 
-        Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh);
-        Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
-
         // TODO: Put these into a compound-component or something
-        std::vector<Handle::EntityHandle> ents = Content::entitifyMesh(*this, worldMeshHandle, worldMeshData.mesh);
+        std::vector<Handle::EntityHandle> ents;
+        Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh, "WORLDMESH.3DS");
+
+        /*Handle::EntityHandle eh = Vob::constructVob(*this);
+        Vob::VobInformation wvob = Vob::asVob(*this, eh);
+        wvob.position->m_DrawDistanceFactor = 0.0f;
+        Vob::setVisual(wvob, "WORLDMESH.3DS");
+        Vob::setTransform(wvob, Math::Matrix::CreateIdentity());
+*/
+
+        Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
+            
+        for(size_t i=0;i<packedWorldMesh.subMeshes.size();i++)
+        {
+            Handle::MeshHandle h = getStaticMeshAllocator().loadFromPackedSubmesh(packedWorldMesh, i, "");
+            Meshes::WorldStaticMesh &hdata = getStaticMeshAllocator().getMesh(h);
+
+            std::vector<Handle::EntityHandle> subents  = Content::entitifyMesh(*this, h, hdata.mesh);
+
+            ents.insert(ents.end(), subents.begin(), subents.end());
+        }
 
         // If we haven't already, create an instancebuffer for this mesh
         //if(worldMeshData.instanceDataBufferIndex == (uint32_t)-1)
@@ -125,12 +143,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
                 triangles.push_back(tri.vertices[0].Position.v);
                 triangles.push_back(tri.vertices[1].Position.v);
                 triangles.push_back(tri.vertices[2].Position.v);
-
-                for(int i=0;i<3;i++)
-                {
-                    if(Math::float3(tri.vertices[i].Position.v).length() < 100)
-                        tri.vertices[i].Color = 0x00000000;
-                }
             }
 
             // Add world-mesh collision
@@ -246,7 +258,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
                     vob.position->m_DrawDistanceFactor = std::max(0.12f, std::min(1.0f, (bbox.max - bbox.min).length() / 10.0f));
                     //LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
 
-					Vob::setVisual(vob, v.visual);
+                    Vob::setVisual(vob, v.visual);
 
 					//if(!vob.visual)
 					//    LogInfo() << "No visual for: " << v.visual;
@@ -293,6 +305,10 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
             importVobs(j["vobs"]);
         }
 
+
+        
+        LogInfo() << "Done!";
+
         // Make sure static collision is initialized before adding the NPCs
         m_PhysicsSystem.postProcessLoad();
 
@@ -311,6 +327,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 			startWP.waterDepth = 0;
 			Waynet::addWaypoint(m_Waynet, startWP);
 		}
+
+        LogInfo() << "Running startup-scripts";
 
         // Init script-engine
         initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty());
@@ -362,6 +380,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
     cnt->setDailyRoutine(routine);
 
     m_TestEntity = e;*/
+
+    LogInfo() << "Done loading world!";
 }
 
 void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
@@ -372,8 +392,11 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 		m_ScriptEngine.initForWorld(worldName, firstStart);
 	}
 
+    LogInfo() << "Initialize dialog manager";
     // Initialize dialog manager
     m_DialogManager.init();
+
+    LogInfo() << "Script-initialization done!";
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)
