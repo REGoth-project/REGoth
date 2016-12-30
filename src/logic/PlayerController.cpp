@@ -665,6 +665,12 @@ void PlayerController::placeOnGround()
 
     Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
 
+    if(!hit.hasHit)
+    {
+        // Try again, but from further above
+        from += Math::float3(0.0f, 10000.0f, 0.0f);
+        hit = m_World.getPhysicsSystem().raytrace(from, to); 
+    }
 
     if (hit.hasHit)
     {
