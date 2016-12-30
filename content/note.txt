@@ -1,3 +1,0 @@
-These are precompiled shaders for glsl, since it's hard to compile them yourself at the moment. These will later be removed and be part of the build process.
-
-You will may want to put the shaders-folder in a place your compiled executable can find.
