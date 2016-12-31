@@ -1856,6 +1856,7 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 
 void PlayerController::setupKeyBindings()
 {
+    Engine::Input::clearActions();
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
         if(triggered)
@@ -1865,36 +1866,6 @@ void PlayerController::setupKeyBindings()
     Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
         if(triggered)
             m_World.getEngine()->getHud().getConsole().setOpen(true);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Close);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Up, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Up);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Down, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Down);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Left, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Left);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Right, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Right);
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Confirm, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().onInputAction(UI::IA_Accept);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
