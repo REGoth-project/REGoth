@@ -8,7 +8,9 @@
 #include <engine/BaseEngine.h>
 #include "TextView.h"
 #include "Menu_Status.h"
+#include "Menu_Main.h"
 #include "DialogBox.h"
+#include <utils/logger.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 {
@@ -25,11 +27,14 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     m_pStatusMenu = Menu_Status::create(m_Engine);
     m_pStatusMenu->setHidden(true);
 
+    m_pMainMenu = Menu_Main::create(m_Engine);
+
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
     addChild(m_pClock);
     addChild(m_pStatusMenu);
+    addChild(m_pMainMenu);
     addChild(m_pDialogBox);
 
     // Initialize status bars
@@ -88,6 +93,7 @@ UI::Hud::~Hud()
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pClock);
     removeChild(m_pStatusMenu);
+    removeChild(m_pMainMenu);
     removeChild(m_pDialogBox);
 
     delete m_pManaBar;
@@ -95,6 +101,7 @@ UI::Hud::~Hud()
     delete m_pEnemyHealthBar;
     delete m_pClock;
     delete m_pStatusMenu;
+    delete m_pMainMenu;
     delete m_pDialogBox;
 }
 
@@ -125,10 +132,20 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
+
+    LogInfo() << "Action: " << action;
+
     // Close console, in case it's open
     if(action == IA_Close)
+    {
         m_Console.setOpen(false);
 
+        // FIXME: Menu-bindings need to be reworked!
+        if(m_pDialogBox->isHidden() && m_pStatusMenu->isHidden() )
+        {
+            m_pMainMenu->setHidden(!m_pMainMenu->isHidden());
+        }
+    }
     // Notify all menus
     // TODO: Do this in a loop
     if(!m_pStatusMenu->isHidden())
@@ -136,6 +153,9 @@ void UI::Hud::onInputAction(UI::EInputAction action)
 
     if(!m_pDialogBox->isHidden())
         m_pDialogBox->onInputAction(action);
+
+    if(!m_pMainMenu->isHidden() && action != IA_Close)
+        m_pMainMenu->onInputAction(action);
 }
 
 void UI::Hud::setGameplayHudVisible(bool value)

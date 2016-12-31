@@ -17,6 +17,7 @@ namespace UI
     class BarView;
     class TextView;
     class Menu_Status;
+    class Menu_Main;
     class DialogBox;
     class Hud : public View
     {
@@ -100,5 +101,6 @@ namespace UI
          * Menus
          */
         Menu_Status* m_pStatusMenu;
+        Menu_Main* m_pMainMenu;
     };
 }
