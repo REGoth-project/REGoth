@@ -89,7 +89,7 @@ void Menu_Status::onInputAction(EInputAction action)
         case IA_Down:break;
         case IA_Left:break;
         case IA_Right:break;
-        case IA_Close: setHidden(true); break;
+        case IA_Close: break;
         case IA_Accept:break;
     }
 }
