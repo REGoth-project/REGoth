@@ -19,10 +19,13 @@ StaticMeshAllocator::~StaticMeshAllocator()
     for (size_t i = 0; i < m_Allocator.getNumObtainedElements(); i++)
     {
         bgfx::VertexBufferHandle hv = m_Allocator.getElements()[i].mesh.m_VertexBufferHandle;
-        bgfx::destroyVertexBuffer(hv);
+        if(bgfx::isValid(hv))
+            bgfx::destroyVertexBuffer(hv);
+
 
         bgfx::IndexBufferHandle hi = m_Allocator.getElements()[i].mesh.m_IndexBufferHandle;
-        bgfx::destroyIndexBuffer(hi);
+        if(bgfx::isValid(hi))
+            bgfx::destroyIndexBuffer(hi);
     }
 }
 
