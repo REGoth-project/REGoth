@@ -18,6 +18,7 @@ namespace UI
 
     class MenuItem;
     class ImageView;
+    class TextView;
     class Menu : public View
     {
     public:
@@ -56,8 +57,19 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        virtual void onInputAction(EInputAction action){}
+        virtual void onInputAction(EInputAction action);
     protected:
+
+        /**
+         * Performs the select-action on the given item
+         * @param item Item to perform the action on
+         */
+        virtual void performSelectAction(Daedalus::GameState::MenuItemHandle item);
+
+        /**
+         * Called on a custom select-action, comming from the "onSelAction"-field
+         */
+        virtual void onCustomAction(const std::string& action){};
 
         /**
          * Initializes the items registered at the script-data-entry
@@ -85,11 +97,18 @@ namespace UI
          * Items created by this menu
          */
         std::map<Daedalus::GameState::MenuItemHandle, MenuItem*> m_Items;
+        std::vector<Daedalus::GameState::MenuItemHandle> m_SelectableItems;
+
+        /**
+         * Currently selected item (Index into m_SelectableItems)
+         */
+        size_t m_SelectedItem;
 
         /**
          * This menus background
          */
         ImageView* m_pBackgroundImage;
+        TextView* m_pInfoText; 
     };
 }
 

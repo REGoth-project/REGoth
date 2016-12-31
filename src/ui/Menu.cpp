@@ -10,10 +10,13 @@
 #include <ZenLib/utils/logger.h>
 #include <render/RenderSystem.h>
 #include "ImageView.h"
+#include "TextView.h"
 
 UI::Menu::Menu(Engine::BaseEngine& e) : View(e), m_pVM(nullptr)
 {
     m_pBackgroundImage = nullptr;
+    m_pInfoText = nullptr;
+    m_SelectedItem = 0;
 }
 
 UI::Menu::~Menu()
@@ -22,6 +25,12 @@ UI::Menu::~Menu()
 
     removeChild(m_pBackgroundImage);
     delete m_pBackgroundImage;
+
+    if(m_pInfoText)
+    {
+        removeChild(m_pInfoText);
+        delete m_pInfoText;
+    }
 
     for(auto& item: m_Items)
     {
@@ -60,6 +69,26 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         setTranslation(Math::float2((getScriptData().posx / 8192.0f) * fac.x, (getScriptData().posx / 8192.0f) * fac.y));
     }
 
+    // Lighten up the selected item
+    if(!m_SelectableItems.empty())
+    {
+        // Savety
+        m_SelectedItem = Utils::mod(m_SelectedItem, m_SelectableItems.size());
+
+        // Disable highlight on all of them
+        for(Daedalus::GameState::MenuItemHandle h : m_SelectableItems)
+            m_Items[h]->setFontHighlighted(false);
+
+        // Highlight the selected one
+        m_Items[m_SelectableItems[m_SelectedItem]]->setFontHighlighted(true);
+
+        // Update info-text
+        if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0 && m_pInfoText)
+        {
+           m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]); 
+        }
+    }
+
     View::update(dt, mstate, config);
 }
 
@@ -89,6 +118,38 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
     // Create all other items drawn on top
     m_Items = initializeItems();
+
+
+    if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0)
+    {
+        m_pInfoText = new TextView(m_Engine);
+        addChild(m_pInfoText);
+
+        float infoX = 1000.0f / 8192.0f;
+        float infoY = 7500.0f / 8192.0f;
+
+        // There could be script-defined values
+
+        if(m_pVM->getDATFile().hasSymbolName("MENU_INFO_X") && m_pVM->getDATFile().hasSymbolName("MENU_INFO_X"))
+        {
+            Daedalus::PARSymbol& symX =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_X");
+            Daedalus::PARSymbol& symY =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_Y");
+
+            infoX = symX.getIntValue() / 8192.0f;
+            infoY = symY.getIntValue() / 8192.0f;
+        }
+        float sX = 1.0f - infoX * 2.0f;
+        float sY = 1.0f - infoY;
+
+        infoX += sX / 2;
+        // infoY += sY / 2;
+
+        m_pInfoText->setTranslation(Math::float2(infoX, infoY));
+        m_pInfoText->setAlignment(A_TopCenter);
+        m_pInfoText->setText("Ein neues Abenteuer beginnen");
+        m_pInfoText->setFont(UI::DEFAULT_FONT);
+
+    }
 }
 
 bool UI::Menu::loadMenuDAT()
@@ -149,6 +210,7 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
             m_pVM->initializeInstance(ZMemory::toBigHandle(items.back()),
                                       m_pVM->getDATFile().getSymbolIndexByName(menu.items[i]),
                                       Daedalus::IC_MenuItem);
+
         }
     }
 
@@ -177,10 +239,65 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
         {
             addChild(m);
             outMap[h] = m;
+
+            if(m->isSelectable())
+                m_SelectableItems.push_back(h);
         }
     }
 
     return outMap;
 }
 
+
+void UI::Menu::onInputAction(EInputAction action)
+{
+    switch(action)
+    {
+        case IA_Up:
+            m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+            break;
+
+        case IA_Down:
+            m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            break; 
+        
+        case IA_Accept:
+            performSelectAction(m_SelectableItems[m_SelectedItem]);
+            break;
+
+        case IA_Close:
+            setHidden(true);
+            break;
+        default:
+            break;
+    }
+}
+
+
+void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
+{
+    MenuItem* iData = m_Items[item];
+
+    using namespace Daedalus::GEngineClasses::MenuConstants;
+
+    switch(iData->getSelectionEvent(0))
+    {
+        case SEL_EVENT_CLOSE:
+            setHidden(true);
+            break;
+
+        case SEL_EVENT_EXECUTE:
+            {
+            }
+            break;
+
+        default:
+            break;
+    } 
+
+
+    std::string customFn = iData->getItemScriptData().onSelAction_S[0];
+    if(!customFn.empty())
+        onCustomAction(customFn);                    
+}
 
