@@ -20,12 +20,12 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::VisualController; }
+        virtual EControllerType getControllerType() override { return EControllerType::VisualController; }
 
         /**
          * @return Classtype of this visual
          */
-        virtual EVisualType getVisualType(){ return EVisualType::Base; }
+        virtual EVisualType getVisualType() { return EVisualType::Base; }
 
         /**
          * Loads the visual from the given name from the worlds VDFS
@@ -37,7 +37,7 @@ namespace Logic
         /**
          * @brief Called when something else modified the transform of the underlaying entity
          */
-        virtual void onTransformChanged();
+        virtual void onTransformChanged() override;
 
         /**
          * @return Entites created by this visual
