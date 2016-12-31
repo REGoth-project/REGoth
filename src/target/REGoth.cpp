@@ -644,6 +644,23 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
+        for (int i = 0; i < NUM_KEYS; i++)
+        {
+            if (getKeysTriggered()[i])
+            {
+                LogInfo() << "Triggered: " << i;
+                std::map<int, UI::EInputAction> m = {   {GLFW_KEY_UP, UI::IA_Up}, 
+                                                        {GLFW_KEY_DOWN, UI::IA_Down},
+                                                        {GLFW_KEY_LEFT, UI::IA_Left}, 
+                                                        {GLFW_KEY_RIGHT, UI::IA_Right}, 
+                                                        {GLFW_KEY_ENTER, UI::IA_Accept},
+                                                        {GLFW_KEY_ESCAPE, UI::IA_Close} }; 
+
+                if(m.find(i) != m.end())
+                    m_pEngine->getHud().onInputAction(m[i]);
+            }
+        }
+
         if(!m_pEngine->getHud().getConsole().isOpen())
             Engine::Input::fireBindings();
 
@@ -689,6 +706,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         // This dummy draw call is here to make sure that view 0 is cleared
         // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
         //bgfx::touch(0);
+
 
 
 
