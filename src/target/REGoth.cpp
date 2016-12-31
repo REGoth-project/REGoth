@@ -644,19 +644,30 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
-        for (int i = 0; i < NUM_KEYS; i++)
-        {
-            if (getKeysTriggered()[i])
+        std::map<int, UI::EInputAction> keyMap = {{GLFW_KEY_UP,     UI::IA_Up},
+                                                  {GLFW_KEY_DOWN,   UI::IA_Down},
+                                                  {GLFW_KEY_LEFT,   UI::IA_Left},
+                                                  {GLFW_KEY_RIGHT,  UI::IA_Right},
+                                                  {GLFW_KEY_ENTER,  UI::IA_Accept},
+                                                  {GLFW_KEY_ESCAPE, UI::IA_Close}};
+        for (int i = 0; i < NUM_KEYS; i++) {
+            if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
-                std::map<int, UI::EInputAction> m = {   {GLFW_KEY_UP, UI::IA_Up}, 
-                                                        {GLFW_KEY_DOWN, UI::IA_Down},
-                                                        {GLFW_KEY_LEFT, UI::IA_Left}, 
-                                                        {GLFW_KEY_RIGHT, UI::IA_Right}, 
-                                                        {GLFW_KEY_ENTER, UI::IA_Accept},
-                                                        {GLFW_KEY_ESCAPE, UI::IA_Close} }; 
-
-                if(m.find(i) != m.end())
-                    m_pEngine->getHud().onInputAction(m[i]);
+                if (keyMap.find(i) != keyMap.end())
+                {
+                    m_pEngine->getHud().onInputAction(keyMap[i]);
+                    m_stopWatch.start();
+                }
+            }
+            else if (getKeysState()[i]) // If key is being held and stopwatch reached time limit, fire actions
+            {
+                if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
+                {
+                    if (m_stopWatch.DelayedByArgMS(150))
+                    {
+                        m_pEngine->getHud().onInputAction(keyMap[i]);
+                    }
+                }
             }
         }
 
@@ -776,6 +787,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 	int64_t m_timeOffset;
 	float axis;
     int32_t m_scrollArea;
+    Utils::StopWatch m_stopWatch;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);

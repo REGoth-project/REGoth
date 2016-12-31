@@ -174,6 +174,39 @@ namespace Utils
     }
 
     /**
+     * Simple class for calculating elapsed time from start() to stop()
+     */
+    class StopWatch
+    {
+    public:
+        StopWatch () : m_begin(0), m_end(0), m_delayTimeStamp(0), m_stopped(true) {}
+        /**
+         * Start checkpoint
+         */
+        void start();
+        /**
+         * End checkpoint
+         */
+        void stop();
+        /**
+         * Returns time difference in seconds between start and now
+         */
+        int getTimeDiffFromStartToNow();
+
+        bool isStopped() { return m_stopped; }
+        /**
+         * Returns true if delay amount of milliseconds have passed since previous invocation, false otherwise
+         */
+        bool DelayedByArgMS(int delay);
+
+    private:
+        long long m_begin;
+        long long m_end;
+        long long m_delayTimeStamp;
+        bool m_stopped;
+    };
+
+    /**
      * Iterates through the given directory and calls fn for each file
      * @param directory path to directory to interate through
      * @param fn function to call for each file. Arguments: full path, filename, ext

@@ -255,3 +255,30 @@ namespace Utils
         return fileName.substr(0, dp);
     }
 }
+
+void Utils::StopWatch::start()
+{
+    m_begin = m_delayTimeStamp = Utils::currentTimestamp();
+    m_stopped = false;
+}
+
+void Utils::StopWatch::stop()
+{
+    m_end = Utils::currentTimestamp();
+    m_stopped = true;
+}
+
+int Utils::StopWatch::getTimeDiffFromStartToNow()
+{
+    return Utils::currentTimestamp() - m_begin;
+}
+
+bool Utils::StopWatch::DelayedByArgMS(int delay)
+{
+    if (Utils::currentTimestamp() - m_delayTimeStamp > delay)
+    {
+        m_delayTimeStamp = Utils::currentTimestamp();
+        return true;
+    }
+    else return false;
+}

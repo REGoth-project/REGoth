@@ -143,6 +143,7 @@ namespace Engine
 		static void setMouseLockCallback(std::function<void(bool /* lock */)> callback);
 
 		static const std::bitset<NUM_KEYS>& getKeysTriggered(){ return keyTriggered; }
+        static const std::bitset<NUM_KEYS>& getKeysState() { return keyState; }
 
 		static void clearTriggered();
 
