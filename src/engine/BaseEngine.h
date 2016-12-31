@@ -46,6 +46,13 @@ namespace Engine
 		 */
 		Handle::WorldHandle  addWorld(const std::string& worldFile, const std::string& savegame = "");
 
+        /**
+         * Removes the current world and loads a new one
+         * @param worldFile Path to look for the worldfile. Can be inside a VDF-Archive
+         * @return Handle to the world
+         */
+        Handle::WorldHandle loadWorld(const std::string& worldFile, const std::string& savegame = "");
+
 		/**
 		 * Removes a world and everything inside
 		 * @param world World to remove

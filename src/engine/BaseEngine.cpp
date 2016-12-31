@@ -254,7 +254,18 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 }
 
 
+Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
+{
+    Engine::Input::clearActions(); // FIXME: This should be taken care of by the objects having something bound
 
+    while(!m_WorldInstances.empty())
+    {
+        Handle::WorldHandle w = m_Worlds.front();
+        removeWorld(w);
+    }
+
+    return addWorld(worldFile, savegame); 
+}
 
 
 
