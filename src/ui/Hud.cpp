@@ -28,6 +28,7 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     m_pStatusMenu->setHidden(true);
 
     m_pMainMenu = Menu_Main::create(m_Engine);
+    m_pMainMenu->setHidden(true);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
@@ -132,9 +133,6 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-
-    LogInfo() << "Action: " << action;
-
     // Close console, in case it's open
     if(action == IA_Close)
     {

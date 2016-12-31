@@ -648,7 +648,6 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         {
             if (getKeysTriggered()[i])
             {
-                LogInfo() << "Triggered: " << i;
                 std::map<int, UI::EInputAction> m = {   {GLFW_KEY_UP, UI::IA_Up}, 
                                                         {GLFW_KEY_DOWN, UI::IA_Down},
                                                         {GLFW_KEY_LEFT, UI::IA_Left}, 
