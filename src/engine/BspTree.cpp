@@ -145,7 +145,7 @@ void BspTree::loadBspTree(const ZenLoad::zCBspTreeData& data)
 
 void BspTree::debugDraw()
 {
-
+    return;
     Math::float3 pp = m_World.getEntity<Components::PositionComponent>(m_World.getScriptEngine().getPlayerEntity()).m_WorldMatrix.Translation();
     Utils::BBox3D bb = {pp - Math::float3(1,1,1), pp + Math::float3(1,1,1)};
     std::vector<NodeIndex> pn = findLeafOf(bb);
