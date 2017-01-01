@@ -24,6 +24,44 @@ namespace Utils
     };
 
     /**
+     * Checks on which side of the plane the given BBox is.
+     * @param bbox  BBox to check
+     * @param plane Plane to check against
+     * @return Side the box is one. 1=front, 2=back, 3=split
+     */
+    int bboxClassifyToPlane(const BBox3D& bbox, const Math::float4& plane)
+    {
+        float distance;
+        Math::float3 corners[2];
+
+        for(int i=0;i<3;i++)
+        {
+            if(plane.v[i] < 0) // Check component of planes normal vector
+            {
+                corners[0].v[i] = bbox.min.v[i];
+                corners[1].v[i] = bbox.max.v[i];
+            }else
+            {
+                corners[1].v[i] = bbox.min.v[i];
+                corners[0].v[i] = bbox.max.v[i];
+            }
+        }
+
+        
+        // Test back-side
+        if(Math::float3(plane.v).dot(corners[0]) - plane.w < 0)
+            return 2; 
+
+        // Test for split
+        if(Math::float3(plane.v).dot(corners[1]) - plane.w < 0)
+            return 3; 
+
+        // Must be front
+        return 1; 
+
+    }
+
+    /**
      * Modulo-operation which works for negative numbers as well
      * @return a mod b
      */
