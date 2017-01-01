@@ -28,18 +28,5 @@ void Menu_Save::performSelectAction(Daedalus::GameState::MenuItemHandle item)
 
     using namespace Daedalus::GEngineClasses::MenuConstants;
 
-    switch(iData->getSelectionEvent(0))
-    {
-        case SEL_ACTION_BACK:
-            setHidden(true);
-
-            // Open Main-Menu again
-            m_Engine.getHud().getMainMenu().setHidden(false);
-            return;
-
-        default:
-            break;
-    } 
-
     Menu::performSelectAction(item);
 }

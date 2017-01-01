@@ -7,6 +7,11 @@
 #include "LogicDef.h"
 #include "NpcScriptState.h"
 
+namespace UI
+{
+    class Menu_Status;
+}
+
 namespace Logic
 {
     class ModelVisual;
@@ -350,6 +355,11 @@ namespace Logic
          * Sets up the bindings for this playercontroller // TODO: REMOVE THIS AND DO IT OUTSIDE OF THE PLAYERCONTROLLER
          */
         void setupKeyBindings();
+
+        /**
+         * Updates the given status-screen once with the current attributes
+         */
+        void updateStatusScreen(UI::Menu_Status& statsScreen);
 
         /**
          * @return Item this NPC is currently interacting with

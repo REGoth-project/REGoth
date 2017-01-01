@@ -19,6 +19,7 @@ namespace UI
     class MenuItem;
     class ImageView;
     class TextView;
+    class Hud;
     class Menu : public View
     {
     public:
@@ -58,6 +59,13 @@ namespace UI
          * @param action Input action
          */
         virtual void onInputAction(EInputAction action);
+
+
+        /**
+         * @return Underlaying HUD
+         */
+        Hud& getHud();
+
     protected:
 
         /**

@@ -26,30 +26,6 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
 
-    // Menus
-    m_pStatusMenu = Menu_Status::create(m_Engine);
-    m_RegisteredMenus.push_back(m_pStatusMenu);
-    m_pStatusMenu->setHidden(true);
-
-    m_pMainMenu = Menu_Main::create(m_Engine);
-    m_RegisteredMenus.push_back(m_pMainMenu);
-    m_pMainMenu->setHidden(true);
-
-    m_pMenuLoad = Menu_Load::create(m_Engine);
-    m_RegisteredMenus.push_back(m_pMenuLoad );
-    m_pMenuLoad->setHidden(true);
-
-    m_pMenuSave = Menu_Save::create(m_Engine);
-    m_RegisteredMenus.push_back(m_pMenuSave);
-    m_pMenuSave->setHidden(false);
-
-    m_pMenuSettings = Menu_Settings::create(m_Engine);
-    m_RegisteredMenus.push_back(m_pMenuSettings);
-    m_pMenuSettings->setHidden(true);
-    
-    for(Menu* m : m_RegisteredMenus)
-        addChild(m);
-
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
@@ -113,11 +89,8 @@ UI::Hud::~Hud()
     removeChild(m_pClock);
     removeChild(m_pDialogBox);
 
-    for(Menu* m : m_RegisteredMenus)
-    {
-        removeChild(m);
-        delete m;
-    }
+    while(!m_MenuChain.empty())
+        popMenu();
 
     delete m_pManaBar;
     delete m_pHealthBar;
@@ -128,6 +101,18 @@ UI::Hud::~Hud()
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    // Free old menus
+    cleanMenus();
+
+    // Only draw last menu in the menu-chain
+    if(!m_MenuChain.empty())
+    {
+        for(Menu* m : m_MenuChain)
+            m->setHidden(true);
+
+        m_MenuChain.back()->setHidden(false);
+    }
+
     View::update(dt, mstate, config);
 }
 
@@ -153,40 +138,43 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-    // Close console, in case it's open
+    // Notify last menu in chain
+    if(!m_MenuChain.empty())
+    {
+        m_MenuChain.back()->onInputAction(action);
+    }
+    
+    // Close console or last menu, in case it's open
     if(action == IA_Close)
     {
-        m_Console.setOpen(false);
-
-        // FIXME: Menu-bindings need to be reworked!
-        if(m_pDialogBox->isHidden() && m_pStatusMenu->isHidden() )
-        {
-            m_pMainMenu->setHidden(!m_pMainMenu->isHidden());
-        }
+        if(m_Console.isOpen())
+            m_Console.setOpen(false);
+        else if(!m_MenuChain.empty()) 
+            popMenu();
+        else // Nothing is open right now. Show main-menu
+            pushMenu<UI::Menu_Main>();
     }
-    // Notify all menus
-    // TODO: Do this in a loop
-    if(!m_pStatusMenu->isHidden())
-        m_pStatusMenu->onInputAction(action);
-
-    if(!m_pMenuLoad->isHidden())
-        m_pMenuLoad->onInputAction(action);
-
-    if(!m_pMenuSave->isHidden())
-        m_pMenuSave->onInputAction(action);
-
-    if(!m_pMenuSettings->isHidden())
-        m_pMenuSettings->onInputAction(action);
-    
-    if(!m_pDialogBox->isHidden())
-        m_pDialogBox->onInputAction(action);
-
-    if(!m_pMainMenu->isHidden() && action != IA_Close)
-        m_pMainMenu->onInputAction(action);
 }
 
 void UI::Hud::setGameplayHudVisible(bool value)
 {
     for(View* v : m_GameplayHudElements)
         v->setHidden(!value);
+}
+
+void UI::Hud::popMenu()
+{
+    // Move to other list to delete in the next frame. This makes it possible for menus to close themselfes.
+    m_MenusToDelete.push_back(m_MenuChain.back());
+
+    removeChild(m_MenuChain.back());
+    m_MenuChain.pop_back();
+}
+
+void UI::Hud::cleanMenus()
+{
+    for(Menu* m : m_MenusToDelete)
+        delete m;
+    
+    m_MenusToDelete.clear();
 }

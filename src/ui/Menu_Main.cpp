@@ -2,6 +2,10 @@
 #include <engine/BaseEngine.h>
 #include "Menu_Main.h"
 #include <utils/logger.h>
+#include "Hud.h"
+#include "Menu_Load.h"
+#include "Menu_Save.h"
+#include "Menu_Settings.h"
 
 using namespace UI;
 
@@ -30,7 +34,7 @@ void Menu_Main::onInputAction(EInputAction action)
         case IA_Down:break;
         case IA_Left:break;
         case IA_Right:break;
-        case IA_Close: setHidden(true); break;
+        case IA_Close: getHud().popMenu(); break;
         case IA_Accept:break;
     }
 }
@@ -40,19 +44,21 @@ void Menu_Main::onCustomAction(const std::string& action)
 {
     if(action == "NEW_GAME")
     {
+        getHud().popMenu();
+
         LogInfo() << "Starting new game...";
         m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
-
+        getHud().pushMenu<Menu_Load>();
     }else if(action == "MENU_SAVEGAME_SAVE")
     {
-
-    }else if(action == "")
+        getHud().pushMenu<Menu_Save>();
+    }else if(action == "MENU_OPTIONS")
     {
-
-    }else if(action == "")
+        getHud().pushMenu<Menu_Settings>();
+    }else if(action == "MENU_LEAVE_GAME")
     {
-
+        exit(0); // TODO: May want to exit properly at some point.
     }
 }

@@ -1860,7 +1860,12 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
         if(triggered)
-            m_World.getEngine()->getHud().getStatusMenu().setHidden(!m_World.getEngine()->getHud().getStatusMenu().isHidden());
+        {
+            UI::Menu_Status& statsScreen = m_World.getEngine()->getHud().pushMenu<UI::Menu_Status>();
+        
+            // Update the players status menu once
+            updateStatusScreen(statsScreen); 
+        }
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
@@ -2358,24 +2363,6 @@ void PlayerController::onUpdateForPlayer(float deltaTime)
     hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
                   (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 
-    // Status screen
-    UI::Menu_Status& statsScreen = hud.getStatusMenu();
-    if(!statsScreen.isHidden())
-    {
-        statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
-        statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
-
-        statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
-                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
-        statsScreen.setAttribute(UI::Menu_Status::A_HEALTH, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
-                                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
-
-        statsScreen.setGuild(getGuildName());
-        statsScreen.setLevel(stats.level);
-        statsScreen.setExperience(stats.exp);
-        statsScreen.setExperienceNext(stats.exp_next);
-        statsScreen.setLearnPoints(stats.lp);
-    }
 }
 
 std::string PlayerController::getGuildName()
@@ -2387,9 +2374,21 @@ std::string PlayerController::getGuildName()
     return *adr;
 }
 
+void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
+{
+    auto& stats = getScriptInstance();
 
+    statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+    statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
 
+    statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
+                             stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+    statsScreen.setAttribute(UI::Menu_Status::A_HEALTH, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                             stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
-
-
-
+    statsScreen.setGuild(getGuildName());
+    statsScreen.setLevel(stats.level);
+    statsScreen.setExperience(stats.exp);
+    statsScreen.setExperienceNext(stats.exp_next);
+    statsScreen.setLearnPoints(stats.lp);
+}
