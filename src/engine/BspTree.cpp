@@ -53,6 +53,8 @@ void BspTree::loadBspTree(const ZenLoad::zCBspTreeData& data)
 
 void BspTree::debugDraw()
 {
+    return;
+
     ddPush();
 
     for(BspNode& n : m_Nodes)
