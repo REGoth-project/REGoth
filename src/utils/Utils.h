@@ -29,7 +29,7 @@ namespace Utils
      * @param plane Plane to check against
      * @return Side the box is one. 1=front, 2=back, 3=split
      */
-    int bboxClassifyToPlane(const BBox3D& bbox, const Math::float4& plane)
+    inline int bboxClassifyToPlane(const BBox3D& bbox, const Math::float4& plane)
     {
         float distance;
         Math::float3 corners[2];
