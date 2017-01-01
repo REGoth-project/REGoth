@@ -18,6 +18,7 @@
 #include <logic/DialogManager.h>
 #include <content/AudioEngine.h>
 #include <json.hpp>
+#include "BspTree.h"
 
 using json = nlohmann::json;
 
@@ -312,6 +313,11 @@ namespace World
 		 * Worldmesh-data
 		 */
 		WorldMesh m_WorldMesh;
+
+        /**
+         * BSP-Tree representing this world
+         */
+        BspTree m_BspTree;
 
 		/**
 		 * Waynet-data
