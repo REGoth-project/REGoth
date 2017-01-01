@@ -254,15 +254,15 @@ void UI::Menu::onInputAction(EInputAction action)
     switch(action)
     {
         case IA_Up:
-            m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
             break;
 
         case IA_Down:
-            m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
             break; 
         
         case IA_Accept:
-            performSelectAction(m_SelectableItems[m_SelectedItem]);
+            if(!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
             break;
 
         case IA_Close:
