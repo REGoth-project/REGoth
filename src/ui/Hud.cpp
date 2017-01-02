@@ -9,6 +9,9 @@
 #include "TextView.h"
 #include "Menu_Status.h"
 #include "Menu_Main.h"
+#include "Menu_Load.h"
+#include "Menu_Save.h"
+#include "Menu_Settings.h"
 #include "DialogBox.h"
 #include <utils/logger.h>
 
@@ -25,17 +28,32 @@ UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 
     // Menus
     m_pStatusMenu = Menu_Status::create(m_Engine);
+    m_RegisteredMenus.push_back(m_pStatusMenu);
     m_pStatusMenu->setHidden(true);
 
     m_pMainMenu = Menu_Main::create(m_Engine);
+    m_RegisteredMenus.push_back(m_pMainMenu);
     m_pMainMenu->setHidden(true);
+
+    m_pMenuLoad = Menu_Load::create(m_Engine);
+    m_RegisteredMenus.push_back(m_pMenuLoad );
+    m_pMenuLoad->setHidden(true);
+
+    m_pMenuSave = Menu_Save::create(m_Engine);
+    m_RegisteredMenus.push_back(m_pMenuSave);
+    m_pMenuSave->setHidden(false);
+
+    m_pMenuSettings = Menu_Settings::create(m_Engine);
+    m_RegisteredMenus.push_back(m_pMenuSettings);
+    m_pMenuSettings->setHidden(true);
+    
+    for(Menu* m : m_RegisteredMenus)
+        addChild(m);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
     addChild(m_pClock);
-    addChild(m_pStatusMenu);
-    addChild(m_pMainMenu);
     addChild(m_pDialogBox);
 
     // Initialize status bars
@@ -93,16 +111,18 @@ UI::Hud::~Hud()
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pClock);
-    removeChild(m_pStatusMenu);
-    removeChild(m_pMainMenu);
     removeChild(m_pDialogBox);
+
+    for(Menu* m : m_RegisteredMenus)
+    {
+        removeChild(m);
+        delete m;
+    }
 
     delete m_pManaBar;
     delete m_pHealthBar;
     delete m_pEnemyHealthBar;
     delete m_pClock;
-    delete m_pStatusMenu;
-    delete m_pMainMenu;
     delete m_pDialogBox;
 }
 
@@ -149,6 +169,15 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     if(!m_pStatusMenu->isHidden())
         m_pStatusMenu->onInputAction(action);
 
+    if(!m_pMenuLoad->isHidden())
+        m_pMenuLoad->onInputAction(action);
+
+    if(!m_pMenuSave->isHidden())
+        m_pMenuSave->onInputAction(action);
+
+    if(!m_pMenuSettings->isHidden())
+        m_pMenuSettings->onInputAction(action);
+    
     if(!m_pDialogBox->isHidden())
         m_pDialogBox->onInputAction(action);
 

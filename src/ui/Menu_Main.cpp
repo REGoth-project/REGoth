@@ -42,5 +42,17 @@ void Menu_Main::onCustomAction(const std::string& action)
     {
         LogInfo() << "Starting new game...";
         m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
+    }else if(action == "MENU_SAVEGAME_LOAD")
+    {
+
+    }else if(action == "MENU_SAVEGAME_SAVE")
+    {
+
+    }else if(action == "")
+    {
+
+    }else if(action == "")
+    {
+
     }
 }

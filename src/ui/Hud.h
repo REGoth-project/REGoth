@@ -18,7 +18,12 @@ namespace UI
     class TextView;
     class Menu_Status;
     class Menu_Main;
+    class Menu_Load;
+    class Menu_Save;
+    class Menu_Settings;
+    class Menu;
     class DialogBox;
+
     class Hud : public View
     {
     public:
@@ -61,9 +66,14 @@ namespace UI
         void onInputAction(EInputAction action);
 
         /**
-         * @return Access to the status-menu
+         * @return Access to the menus
          */
         Menu_Status& getStatusMenu(){ return *m_pStatusMenu; }
+        Menu_Load& getLoadMenu(){ return *m_pMenuLoad; }
+        Menu_Save& getSaveMenu(){ return *m_pMenuSave; }
+        Menu_Settings& getSettingsMenu(){ return *m_pMenuSettings; }
+        Menu_Main& getMainMenu(){ return *m_pMainMenu; }
+
 
         /**
          * @return Games console
@@ -102,5 +112,13 @@ namespace UI
          */
         Menu_Status* m_pStatusMenu;
         Menu_Main* m_pMainMenu;
+        Menu_Load* m_pMenuLoad;
+        Menu_Save* m_pMenuSave;
+        Menu_Settings* m_pMenuSettings;
+
+        /**
+         * All menus registered here
+         */
+        std::vector<Menu*> m_RegisteredMenus;
     };
 }
