@@ -76,31 +76,32 @@ std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
 {
     std::function<std::vector<NodeIndex>(const Utils::BBox3D&, NodeIndex)> rec = [&](const Utils::BBox3D& bbox, NodeIndex n) -> std::vector<NodeIndex> {
 
-        LogInfo() << "Traversed to: " << n;
+        // LogInfo() << "Traversed to: " << n << " (front: " << m_Nodes[n].front << ", back: " << m_Nodes[n].back << ")";
         Aabb b;
         memcpy(&b, &m_Nodes[n].bbox, sizeof(b));
 
+        ddSetColor(0xFF0000FF);
         ddDraw(b);
 
         if(m_Nodes[n].isLeaf())
             return {n};
 
-        int p = Utils::bboxClassifyToPlane(bbox, m_Nodes[n].plane);
+        int p = Utils::bboxClassifyToPlaneSides(bbox, m_Nodes[n].plane);
 
         switch(p)
         {
-        case 1: // Front
+        case Utils::PLANE_INFRONT: // Front
             if(m_Nodes[n].front != INVALID_NODE)
                 return rec(bbox, m_Nodes[n].front);
 
-        case 2: // Back
-            if(m_Nodes[n].back!= INVALID_NODE)
+        case Utils::PLANE_BEHIND: // Back
+            if(m_Nodes[n].back != INVALID_NODE)
                 return rec(bbox, m_Nodes[n].back);
 
-        case 3: // Split
+        case Utils::PLANE_SPANNING: // Split
             {
-                std::vector<NodeIndex> f = rec(bbox, m_Nodes[n].front);   
-                std::vector<NodeIndex> b = rec(bbox, m_Nodes[n].back);   
+                std::vector<NodeIndex> f = m_Nodes[n].front != INVALID_NODE ? rec(bbox, m_Nodes[n].front) : std::vector<NodeIndex>();
+                std::vector<NodeIndex> b = m_Nodes[n].back != INVALID_NODE ? rec(bbox, m_Nodes[n].back) : std::vector<NodeIndex>();
 
                 f.insert(f.end(), b.begin(), b.end());
 
@@ -111,6 +112,7 @@ std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
             return {}; 
         }
         
+        return {};
     };
 
     ddSetTransform(nullptr);

@@ -70,6 +70,32 @@ namespace Utils
     }
 
     /**
+     * Quick check on which sides of a plane the bbox is
+     */
+    inline EPlaneSide bboxClassifyToPlaneSides(const BBox3D& bbox, const Math::float4& plane) 
+    {
+        float dist;
+        Math::float3 corners[2];
+
+        for(int i=0;i<3;i++)
+        {
+            if(plane.v[i] < 0.0f)
+            {
+                corners[0].v[i] = bbox.min.v[i];
+                corners[1].v[i] = bbox.max.v[i];
+            }else{
+                corners[1].v[i] = bbox.min.v[i];
+                corners[0].v[i] = bbox.max.v[i];
+            }
+        }
+
+        dist = Math::float3(plane.v).dot(corners[0]) - plane.w; if(dist < 0.0f) { return PLANE_BEHIND; }
+        dist = Math::float3(plane.v).dot(corners[1]) - plane.w; if(dist < 0.0f) { return PLANE_SPANNING; }
+
+        return PLANE_INFRONT;
+    }
+
+    /**
      * Modulo-operation which works for negative numbers as well
      * @return a mod b
      */
