@@ -1,5 +1,7 @@
 #include "BspTree.h"
 #include <debugdraw/debugdraw.h>
+#include <engine/World.h>
+#include <utils/logger.h>
 
 using namespace World;
 
@@ -12,15 +14,110 @@ BspTree::BspTree(WorldInstance& world) : m_World(world)
 
 NodeIndex BspTree::addEntity(Handle::EntityHandle entity)
 {
-    
-}
+    Math::float3 position = m_World.getEntity<Components::PositionComponent>(entity).m_WorldMatrix.Translation();
 
+    // FIXME: Use actual BBox, but the vobs haven't got them initialized yet
+    Utils::BBox3D bbox = { position - Math::float3(1,1,1), position + Math::float3(1,1,1) };
+    
+    std::vector<NodeIndex> nodes = findLeafOf(bbox);
+
+    LogInfo() << "Nodes: " << nodes;
+
+    if(nodes.empty())
+        return INVALID_NODE;
+
+    // Return one of the leafs
+    return nodes.front();
+}
 
 NodeIndex BspTree::findLeafOf(const Math::float3& position)
 {
-    
+    std::function<NodeIndex(NodeIndex)> rec = [&](NodeIndex n) -> NodeIndex {
+
+        LogInfo() << "Traversed to: " << n;
+        Aabb b;
+        memcpy(&b, &m_Nodes[n].bbox, sizeof(b));
+
+        ddDraw(b);
+
+        if(m_Nodes[n].isLeaf())
+            return n;
+
+        int p = Utils::pointClassifyToPlane(position, m_Nodes[n].plane);
+
+        
+
+        switch(p)
+        {
+        case 1: // Front
+            if(m_Nodes[n].front != INVALID_NODE)
+                return rec(m_Nodes[n].front);
+
+        case 2: // Back
+            if(m_Nodes[n].back != INVALID_NODE)
+                return rec(m_Nodes[n].back);
+
+        case 3: // Split
+        default:
+            break;
+        }
+
+        // No front or back, but not a leaf either?
+        return n;
+    };
+
+    ddSetTransform(nullptr);
+    ddSetColor(0xFF0000FF);
+    assert(!m_Nodes.empty());
+    return rec(0);
 }
 
+std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
+{
+    std::function<std::vector<NodeIndex>(const Utils::BBox3D&, NodeIndex)> rec = [&](const Utils::BBox3D& bbox, NodeIndex n) -> std::vector<NodeIndex> {
+
+        LogInfo() << "Traversed to: " << n;
+        Aabb b;
+        memcpy(&b, &m_Nodes[n].bbox, sizeof(b));
+
+        ddDraw(b);
+
+        if(m_Nodes[n].isLeaf())
+            return {n};
+
+        int p = Utils::bboxClassifyToPlane(bbox, m_Nodes[n].plane);
+
+        switch(p)
+        {
+        case 1: // Front
+            if(m_Nodes[n].front != INVALID_NODE)
+                return rec(bbox, m_Nodes[n].front);
+
+        case 2: // Back
+            if(m_Nodes[n].back!= INVALID_NODE)
+                return rec(bbox, m_Nodes[n].back);
+
+        case 3: // Split
+            {
+                std::vector<NodeIndex> f = rec(bbox, m_Nodes[n].front);   
+                std::vector<NodeIndex> b = rec(bbox, m_Nodes[n].back);   
+
+                f.insert(f.end(), b.begin(), b.end());
+
+                return f;
+            }
+
+        default:
+            return {}; 
+        }
+        
+    };
+
+    ddSetTransform(nullptr);
+
+    assert(!m_Nodes.empty());
+    return rec(bbox, 0);
+}
 
 void BspTree::loadBspTree(const ZenLoad::zCBspTreeData& data) 
 {
@@ -41,31 +138,41 @@ void BspTree::loadBspTree(const ZenLoad::zCBspTreeData& data)
         n.bbox.min = s.bbox3dMin.v;
         n.bbox.max = s.bbox3dMax.v;
 
-        n.bbox.min *= 1.0f / 100.0f;
-        n.bbox.max *= 1.0f / 100.0f;
-
         n.plane = s.plane.v;
-
-        
     }
 }
 
 
 void BspTree::debugDraw()
 {
+
+    Math::float3 pp = m_World.getEntity<Components::PositionComponent>(m_World.getScriptEngine().getPlayerEntity()).m_WorldMatrix.Translation();
+    Utils::BBox3D bb = {pp - Math::float3(1,1,1), pp + Math::float3(1,1,1)};
+    std::vector<NodeIndex> pn = findLeafOf(bb);
+
+    LogInfo() << "pn: " << pn;
+    LogInfo() << "pp: " << pp.toString();
     return;
-
-    ddPush();
-
+    /*
+    int i=0;
     for(BspNode& n : m_Nodes)
     {
         if(n.isLeaf())
         {
             Aabb b;
             memcpy(&b, &n.bbox, sizeof(b));
+
+            if(i == pn)
+                ddSetColor(0xFF0000FF);
+            else
+                ddSetColor(0xFFFFFFFF);
+
             ddDraw(b);
         }
+
+
+        i++;
     }
 
-    ddPop();
+    ddPop();*/
 }

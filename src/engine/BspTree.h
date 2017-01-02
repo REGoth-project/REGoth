@@ -40,7 +40,7 @@ namespace World
             /**
              * @return Whether this is a leaf
              */
-            bool isLeaf() { return front == INVALID_NODE || back == INVALID_NODE; }
+            bool isLeaf() { return front == INVALID_NODE && back == INVALID_NODE; }
         };
         
         BspTree(WorldInstance& world);
@@ -65,6 +65,7 @@ namespace World
          * @return node this position is in, or INVALID_NODE if none
          */
         NodeIndex findLeafOf(const Math::float3& position);
+        std::vector<NodeIndex> findLeafOf(const Utils::BBox3D& bbox);
 
         /**
          * Debug-rendering
