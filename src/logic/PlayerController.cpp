@@ -328,20 +328,23 @@ void PlayerController::onDebugDraw()
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
         Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
 
-        // Print inventory
-        const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
-
-        uint16_t idx=20;
-        bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
-        for(Daedalus::GameState::ItemHandle i : items)
+        if(!getInventory().getItems().empty())
         {
-            Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
+            // Print inventory
+            const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
 
-            if(idata.count[0] > 1)
-                bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.name.c_str(), idata.count[0]);
-            else
-                bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.name.c_str());
+            uint16_t idx=20;
+            bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
+            for(Daedalus::GameState::ItemHandle i : items)
+            {
+                Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
+                if(idata.count[0] > 1)
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.name.c_str(), idata.count[0]);
+                else
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.name.c_str());
+
+            }
         }
     }
 }
