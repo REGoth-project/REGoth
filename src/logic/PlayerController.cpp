@@ -294,10 +294,10 @@ bool PlayerController::travelPath(float deltaTime)
 
 void PlayerController::onDebugDraw()
 {
-    if (!m_MoveState.currentPath.empty())
+    /*if (!m_MoveState.currentPath.empty())
     {
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
-    }
+    }*/
 
 
     /*Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
