@@ -53,8 +53,8 @@ cmake-build*/
 _work/
 Data/
 
+# CScope, Ctags
 cscope.files
 tags
-update_ctags_cscope.sh
 
 
