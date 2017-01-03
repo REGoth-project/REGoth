@@ -18,7 +18,12 @@ namespace UI
     class TextView;
     class Menu_Status;
     class Menu_Main;
+    class Menu_Load;
+    class Menu_Save;
+    class Menu_Settings;
+    class Menu;
     class DialogBox;
+
     class Hud : public View
     {
     public:
@@ -61,11 +66,6 @@ namespace UI
         void onInputAction(EInputAction action);
 
         /**
-         * @return Access to the status-menu
-         */
-        Menu_Status& getStatusMenu(){ return *m_pStatusMenu; }
-
-        /**
          * @return Games console
          */
         UI::Console& getConsole(){ return m_Console; }
@@ -79,7 +79,25 @@ namespace UI
          * Controls visibility of gameplay-hud
          */
          void setGameplayHudVisible(bool value);
+
+        /**
+         * Appends a menu to the current menu-chain.
+         * @tparam T Type of menu to append. Must have a static 'create' function!
+         */
+        template<typename T>
+        T& pushMenu() { m_MenuChain.push_back(T::create(m_Engine)); addChild((View*)m_MenuChain.back()); return *(T*)m_MenuChain.back(); }
+
+        /**
+         * Pops the last menu from the chain and frees its memory.
+         */
+        void popMenu();
+
     protected:
+
+        /**
+         * Deletes all menus stored in the m_MenusToDelete-list
+         */
+        void cleanMenus();
 
         /**
          * All views qualifying as used while normal gameplay
@@ -102,5 +120,19 @@ namespace UI
          */
         Menu_Status* m_pStatusMenu;
         Menu_Main* m_pMainMenu;
+        Menu_Load* m_pMenuLoad;
+        Menu_Save* m_pMenuSave;
+        Menu_Settings* m_pMenuSettings;
+
+        /**
+         * Chain of opened menus. Only the last one will be rendered and processed
+         */
+        std::list<Menu*> m_MenuChain;
+        std::list<Menu*> m_MenusToDelete; // Menus to be deleted next frame
+
+        /**
+         * All menus registered here
+         */
+        std::vector<Menu*> m_RegisteredMenus;
     };
 }

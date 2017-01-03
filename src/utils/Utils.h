@@ -24,6 +24,78 @@ namespace Utils
     };
 
     /**
+     * Checks on which side of the plane the given point is.
+     * @param point Point to check
+     * @param plane Plane to check against
+     * @return Side the point is one. 1=front, 2=back, 3=split
+     */
+    inline int pointClassifyToPlane(const Math::float3& point, const Math::float4& plane)
+    {
+        return Math::float3(plane.v).dot(point) - plane.w < 0 ? 2 : 1; 
+    }
+
+    /**
+     * Checks on which side of the plane the given BBox is.
+     * @param bbox  BBox to check
+     * @param plane Plane to check against
+     * @return Side the box is one. 1=front, 2=back, 3=split
+     */
+    enum EPlaneSide { PLANE_BEHIND=1, PLANE_INFRONT=2, PLANE_SPANNING=3 };
+    inline EPlaneSide bboxClassifyToPlane(const BBox3D& bbox, const Math::float4& plane)
+    {
+        const Math::float3* const minMax[2] = { &(bbox.min), &(bbox.max) };
+        int	ix = ( plane.x >= 0 ) ?  1 : 0;
+        int	iy = ( plane.y >= 0 ) ?  1 : 0;
+        int	iz = ( plane.z >= 0 ) ?  1 : 0;
+        
+        float decision;
+        decision  = minMax[ix]->x * plane.x;	
+        decision += minMax[iy]->y * plane.y;
+        decision += minMax[iz]->z * plane.z;
+        
+        if( decision < plane.w) {
+            // BBox ist komplett links(out) der Plane => nur einen Sohn pruefen
+            return PLANE_BEHIND;
+        };
+        
+        decision  = minMax[1 - ix]->x * plane.x;
+        decision += minMax[1 - iy]->y * plane.y;
+        decision += minMax[1 - iz]->z * plane.z;
+        if( decision < plane.w) {
+            // BBox wird durch die Plane gesplittet => beide Soehne pruefen
+            return PLANE_SPANNING;
+        };
+        // BBox ist komplett rechts(in) der Plane => nur einen Sohn pruefen
+        return PLANE_INFRONT;
+    }
+
+    /**
+     * Quick check on which sides of a plane the bbox is
+     */
+    inline EPlaneSide bboxClassifyToPlaneSides(const BBox3D& bbox, const Math::float4& plane) 
+    {
+        float dist;
+        Math::float3 corners[2];
+
+        for(int i=0;i<3;i++)
+        {
+            if(plane.v[i] < 0.0f)
+            {
+                corners[0].v[i] = bbox.min.v[i];
+                corners[1].v[i] = bbox.max.v[i];
+            }else{
+                corners[1].v[i] = bbox.min.v[i];
+                corners[0].v[i] = bbox.max.v[i];
+            }
+        }
+
+        dist = Math::float3(plane.v).dot(corners[0]) - plane.w; if(dist < 0.0f) { return PLANE_BEHIND; }
+        dist = Math::float3(plane.v).dot(corners[1]) - plane.w; if(dist < 0.0f) { return PLANE_SPANNING; }
+
+        return PLANE_INFRONT;
+    }
+
+    /**
      * Modulo-operation which works for negative numbers as well
      * @return a mod b
      */

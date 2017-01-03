@@ -11,6 +11,7 @@
 #include <render/RenderSystem.h>
 #include "ImageView.h"
 #include "TextView.h"
+#include "Hud.h"
 
 UI::Menu::Menu(Engine::BaseEngine& e) : View(e), m_pVM(nullptr)
 {
@@ -254,15 +255,15 @@ void UI::Menu::onInputAction(EInputAction action)
     switch(action)
     {
         case IA_Up:
-            m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
             break;
 
         case IA_Down:
-            m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
             break; 
         
         case IA_Accept:
-            performSelectAction(m_SelectableItems[m_SelectedItem]);
+            if(!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
             break;
 
         case IA_Close:
@@ -282,13 +283,8 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
 
     switch(iData->getSelectionEvent(0))
     {
-        case SEL_EVENT_CLOSE:
-            setHidden(true);
-            break;
-
-        case SEL_EVENT_EXECUTE:
-            {
-            }
+        case SEL_ACTION_BACK:
+            m_Engine.getHud().popMenu();
             break;
 
         default:
@@ -299,5 +295,9 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
     std::string customFn = iData->getItemScriptData().onSelAction_S[0];
     if(!customFn.empty())
         onCustomAction(customFn);                    
+}
+UI::Hud& UI::Menu::getHud()
+{
+    return m_Engine.getHud();
 }
 

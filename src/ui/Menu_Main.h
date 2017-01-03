@@ -31,8 +31,6 @@ namespace UI
 
 
         virtual void onCustomAction(const std::string& action) override;
-    public:
-
     protected:
     };
 }

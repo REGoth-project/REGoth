@@ -117,12 +117,15 @@ void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& m
 
     if(!item.text[0].empty())
     {
-         
-        int sx = (int) (absSize.x * config.state.viewWidth + 0.5f);
-        int sy = (int) (absSize.y * config.state.viewHeight + 0.5f);
+        // Alignment must be taken care of for text only, as it would mess up the background-pic otherwise 
+        if((item.flags & Daedalus::GEngineClasses::C_Menu_Item::IT_TXT_CENTER) != 0) 
+        {
+            int sx = (int) (absSize.x * config.state.viewWidth + 0.5f);
+            int sy = (int) (absSize.y * config.state.viewHeight + 0.5f);
 
-        px += sx / 2;
-        py += sy / 2;
+            px += sx / 2;
+            py += sy / 2;
+        }
 
         EAlign align = (item.flags & Daedalus::GEngineClasses::C_Menu_Item::IT_TXT_CENTER) != 0 ? A_Center : A_TopLeft;
         drawText(item.text[0], px, py, align, config, item.fontName);
