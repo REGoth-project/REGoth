@@ -603,19 +603,23 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+		console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+			VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+				m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
 
-            if(args.size() < 2)
-                return "Missing argument. Usage: usemana <mana>";
+			if(args.size() < 2)
+				return "Missing argument. Usage: usemana <mana>";
 
-            int dmg = std::stoi(args[1]);
-            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+			int dmg = std::stoi(args[1]);
+			player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
 
-            return "Used " + std::to_string(dmg) + " mana";
-        });
+			return "Used " + std::to_string(dmg) + " mana";
+		});
+
+		console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
+			exit(0); // TODO: May want to exit properly at some point.
+		});
 
         imguiCreate(nullptr, 0, fontSize);
 
