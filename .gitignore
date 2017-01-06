@@ -52,3 +52,9 @@ cmake-build*/
 # Gothic
 _work/
 Data/
+
+# CScope, Ctags
+cscope.files
+tags
+
+
