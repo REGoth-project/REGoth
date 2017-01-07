@@ -791,13 +791,13 @@ void PlayerController::onUpdateByInput(float deltaTime)
         }
     });
     */
-    if ( m_isDrawWeaponMelee )
+    if (m_isDrawWeaponMelee)
     {
-        if ( !lastDraw )
+        if (!lastDraw)
         {
             lastDraw = true;
 
-            if ( m_EquipmentState.activeWeapon.isValid() )
+            if (m_EquipmentState.activeWeapon.isValid())
                 undrawWeapon();
             else
                 drawWeaponMelee();
@@ -806,51 +806,51 @@ void PlayerController::onUpdateByInput(float deltaTime)
         // Don't overwrite the drawing animation
         return;
     }
-    else if ( !m_isDrawWeaponMelee && lastDraw )
+    else if (!m_isDrawWeaponMelee && lastDraw)
     {
         lastDraw = false;
     }
-      
+
     m_NoAniRootPosHack = false;
 
-    if ( m_EquipmentState.weaponMode == EWeaponMode::WeaponNone )
+    if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
         static std::string lastMovementAni = "";
-        static auto ManageAnimation = [&]( auto groundAniType, auto waterAniType ) {
-            if ( getSurfaceMaterial() == Materials::MaterialGroup::WATER )
+        static auto ManageAnimation = [&](auto groundAniType, auto waterAniType) {
+            if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
             {
-                model->setAnimation( waterAniType );
+                model->setAnimation(waterAniType);
             }
-            else if ( getSurfaceMaterial() == Materials::MaterialGroup::GROUND )
+            else if (getSurfaceMaterial() == Materials::MaterialGroup::GROUND)
             {
-                model->setAnimation( groundAniType );
+                model->setAnimation(groundAniType);
             }
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
             m_NoAniRootPosHack = true;
         };
-        if ( m_isStrafeLeft )
+        if (m_isStrafeLeft)
         {
-            ManageAnimation( ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft );
+            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
-        else if ( m_isStrafeRight )
+        else if (m_isStrafeRight)
         {
-            ManageAnimation( ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight );
+            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
-        else if ( m_isForward )
+        else if (m_isForward)
         {
-            ManageAnimation( ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF );
+            ManageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
         }
-        else if ( m_isBackward )
+        else if (m_isBackward)
         {
-            ManageAnimation( ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB );
+            ManageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
         }
         //		else if(inputGetKeyState(entry::Key::KeyQ))
         //		{
         //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
         //		}
-        else if ( getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni )
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
         {
-            ManageAnimation( ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim );
+            ManageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
         }
     }
@@ -2407,22 +2407,22 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
 
 Materials::MaterialGroup PlayerController::getSurfaceMaterial()
 {
-    Math::float3 to = getEntityTransform().Translation() + Math::float3( 0.0f, -3.0f, 0.0f );
-    Math::float3 from = getEntityTransform().Translation() + Math::float3( 0.0f, 1.0f, 0.0f );
+    Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -3.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
     // LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x  << " " <<  (getEntityTransform().Translation()).y << " " <<  (getEntityTransform().Translation()).z;
     // LogInfo() << "From: " << (from).x  << " " <<  (from).y << " " <<  (from).z;
     // LogInfo() << "To: " << (to).x  << " " <<  (to).y << " " <<  (to).z;
 
-    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace( from, to, Physics::CollisionShape::CT_WorldMesh ); // FIXME This is a hack for now
+    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh); // FIXME This is a hack for now
 
-    if ( hit.hasHit )
+    if (hit.hasHit)
     {
         // LogInfo() << "Hit position: " << (hit.hitPosition).x  << " " <<  (hit.hitPosition).y << " " <<  (hit.hitPosition).z;
         // if ((from - hit.hitPosition).y < 1) return Materials::MaterialGroup::GROUND;
-        Math::float3 v3[ 3 ];
+        Math::float3 v3[3];
         uint8_t matgroup;
-        m_World.getWorldMesh().getTriangle( hit.hitTriangleIndex, v3, matgroup );
-        return static_cast< Materials::MaterialGroup >( matgroup );
+        m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3, matgroup);
+        return static_cast< Materials::MaterialGroup >(matgroup);
     }
     return Materials::MaterialGroup::UNDEFINED;
 }

@@ -29,7 +29,6 @@ StaticMeshAllocator::~StaticMeshAllocator()
     }
 }
 
-#include <bitset>
 Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name)
 {
     // Create mesh instance
