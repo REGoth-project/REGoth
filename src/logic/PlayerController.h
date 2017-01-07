@@ -362,6 +362,11 @@ namespace Logic
         void updateStatusScreen(UI::Menu_Status& statsScreen);
 
         /**
+         * Returns material data on which the NPC is standing
+         */
+        Materials::MaterialGroup getSurfaceMaterial();
+
+        /**
          * @return Item this NPC is currently interacting with
          */
         Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }

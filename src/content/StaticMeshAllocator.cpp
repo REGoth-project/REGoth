@@ -29,7 +29,7 @@ StaticMeshAllocator::~StaticMeshAllocator()
     }
 }
 
-
+#include <bitset>
 Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name)
 {
     // Create mesh instance
@@ -53,7 +53,6 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
     mesh.mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;
     mesh.mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
-
     // Construct BGFX Vertex/Index-buffers
     mesh.mesh.m_VertexBufferHandle = bgfx::createVertexBuffer(
             // Static data can be passed with bgfx::makeRef
