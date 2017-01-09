@@ -72,6 +72,9 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
     m_MoveState.direction = Math::float3(1, 0, 0);
     m_MoveState.position = Math::float3(0, 0, 0);
+    m_MoveState.ground.successful = false;
+    m_MoveState.ground.triangleIndex = 0;
+    m_MoveState.ground.trianglePosition = Math::float3(0, 0, 0);
     m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
     m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
 
@@ -140,6 +143,9 @@ void PlayerController::onUpdate(float deltaTime)
 
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
+
+        // Retrieve data of the ground on which the NPC is standing
+        traceDownNPCGround();
 
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
@@ -299,29 +305,34 @@ void PlayerController::onDebugDraw()
         Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
     }
 
-
-    /*Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 0.0f, 0.0f);
-
-    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-
-    if (hit.hasHit)
-    {
-        ddDrawAxis(hit.hitPosition.x, hit.hitPosition.y, hit.hitPosition.z);
-
-        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
-
-        if(getModelVisual())
-            getModelVisual()->setShadowValue(shadow);
-
-        Math::float3 v3[3];
-        m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3);
-
-        for(int i=0;i<3;i++)
-        {
-            ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
-        }
-    }*/
+    // Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -1.0f, 0.0f);
+    // Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
+    //
+    // Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+    //
+    // if (hit.hasHit)
+    // {
+    //     ddDrawAxis(hit.hitPosition.x, hit.hitPosition.y, hit.hitPosition.z);
+    //
+    //     float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
+    //
+    //     if(getModelVisual())
+    //         getModelVisual()->setShadowValue(shadow);
+    //
+    //     Math::float3 v3[3];
+    //     ZenLoad::zCMaterialData data = m_World.getWorldMesh().GetMatData(hit.hitTriangleIndex);
+    //     uint8_t matgroup;
+    //     m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3, matgroup);
+    //     // if (isPlayerControlled())
+    //     // {
+    //     //    LogInfo() << "matgroup : " << std::bitset<8>(data.matGroup);
+    //     //    LogInfo() << "matname: " << data.matName;
+    //     // }
+    //     for(int i=0;i<3;i++)
+    //     {
+    //         ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
+    //     }
+    // }
 
     if (isPlayerControlled())
     {
@@ -691,11 +702,10 @@ void PlayerController::placeOnGround()
     }
 
     // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
-    Physics::RayTestResult hitwm = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-    if (hitwm.hasHit)
+    if (m_MoveState.ground.successful)
     {
         // Update color
-        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hitwm.hitTriangleIndex, hitwm.hitPosition);
+        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(m_MoveState.ground.triangleIndex, m_MoveState.ground.trianglePosition);
 
         if (getModelVisual())
             getModelVisual()->setShadowValue(shadow);
@@ -800,105 +810,112 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
         // Don't overwrite the drawing animation
         return;
-    } else if (!m_isDrawWeaponMelee && lastDraw)
+    }
+    else if (!m_isDrawWeaponMelee && lastDraw)
     {
         lastDraw = false;
     }
 
     m_NoAniRootPosHack = false;
+
     if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
         static std::string lastMovementAni = "";
+        static auto ManageAnimation = [&](auto groundAniType, auto waterAniType) {
+            if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
+            {
+                model->setAnimation(waterAniType);
+            }
+            else if (getSurfaceMaterial() == Materials::MaterialGroup::GROUND)
+            {
+                model->setAnimation(groundAniType);
+            }
+            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            m_NoAniRootPosHack = true;
+        };
         if (m_isStrafeLeft)
         {
-            model->setAnimation(ModelVisual::EModelAnimType::StrafeLeft);
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
-            m_NoAniRootPosHack = true;
-        } else if (m_isStrafeRight)
-        {
-            model->setAnimation(ModelVisual::EModelAnimType::StrafeRight);
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
-            m_NoAniRootPosHack = true;
-        } else if (m_isForward)
-        {
-            model->setAnimation(ModelVisual::EModelAnimType::Run);
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
-            m_NoAniRootPosHack = true;
-        } else if (m_isBackward)
-        {
-            model->setAnimation(ModelVisual::EModelAnimType::Backpedal);
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
-            m_NoAniRootPosHack = true;
+            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
-//		else if(inputGetKeyState(entry::Key::KeyQ))
-//		{
-//			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
-//		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr()
-                 && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName ==
-                    lastMovementAni)
+        else if (m_isStrafeRight)
         {
-            model->setAnimation(ModelVisual::Idle);
+            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
+        }
+        else if (m_isForward)
+        {
+            ManageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
+        }
+        else if (m_isBackward)
+        {
+            ManageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
+        }
+        //		else if(inputGetKeyState(entry::Key::KeyQ))
+        //		{
+        //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
+        //		}
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
+        {
+            ManageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
         }
     }
-//	else
-//	{
-//        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
-//                {
-//                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
-//                                                        ModelVisual::EModelAnimType::Attack1h_R,
-//                                                        ModelVisual::EModelAnimType::Run1h,
-//                                                        ModelVisual::EModelAnimType::Backpedal1h,
-//                                                        ModelVisual::EModelAnimType::Attack1h,
-//                                                        ModelVisual::EModelAnimType::Idle1h}},
+    //	else
+    //	{
+    //        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
+    //                {
+    //                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
+    //                                                        ModelVisual::EModelAnimType::Attack1h_R,
+    //                                                        ModelVisual::EModelAnimType::Run1h,
+    //                                                        ModelVisual::EModelAnimType::Backpedal1h,
+    //                                                        ModelVisual::EModelAnimType::Attack1h,
+    //                                                        ModelVisual::EModelAnimType::Idle1h}},
 
-//                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
-//                                                        ModelVisual::EModelAnimType::Attack2h_R,
-//                                                        ModelVisual::EModelAnimType::Run2h,
-//                                                        ModelVisual::EModelAnimType::Backpedal2h,
-//                                                        ModelVisual::EModelAnimType::Attack2h,
-//                                                        ModelVisual::EModelAnimType::Idle2h}},
+    //                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
+    //                                                        ModelVisual::EModelAnimType::Attack2h_R,
+    //                                                        ModelVisual::EModelAnimType::Run2h,
+    //                                                        ModelVisual::EModelAnimType::Backpedal2h,
+    //                                                        ModelVisual::EModelAnimType::Attack2h,
+    //                                                        ModelVisual::EModelAnimType::Idle2h}},
 
-//                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
-//                                                        ModelVisual::EModelAnimType::IdleBow,
-//                                                        ModelVisual::EModelAnimType::RunBow,
-//                                                        ModelVisual::EModelAnimType::BackpedalBow,
-//                                                        ModelVisual::EModelAnimType::AttackBow,
-//                                                        ModelVisual::EModelAnimType::IdleBow}},
+    //                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
+    //                                                        ModelVisual::EModelAnimType::IdleBow,
+    //                                                        ModelVisual::EModelAnimType::RunBow,
+    //                                                        ModelVisual::EModelAnimType::BackpedalBow,
+    //                                                        ModelVisual::EModelAnimType::AttackBow,
+    //                                                        ModelVisual::EModelAnimType::IdleBow}},
 
-//                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
-//                                                        ModelVisual::EModelAnimType::IdleCBow,
-//                                                        ModelVisual::EModelAnimType::RunCBow,
-//                                                        ModelVisual::EModelAnimType::BackpedalCBow,
-//                                                        ModelVisual::EModelAnimType::AttackCBow,
-//                                                        ModelVisual::EModelAnimType::IdleCBow}}
-//                };
+    //                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
+    //                                                        ModelVisual::EModelAnimType::IdleCBow,
+    //                                                        ModelVisual::EModelAnimType::RunCBow,
+    //                                                        ModelVisual::EModelAnimType::BackpedalCBow,
+    //                                                        ModelVisual::EModelAnimType::AttackCBow,
+    //                                                        ModelVisual::EModelAnimType::IdleCBow}}
+    //                };
 
-//		if(inputGetKeyState(entry::Key::KeyA))
-//		{
-//			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
-//		}
-//		else if(inputGetKeyState(entry::Key::KeyD))
-//		{
-//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
-//		}
-//		else if(inputGetKeyState(entry::Key::KeyW))
-//		{
-//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
-//		}
-//		else if(inputGetKeyState(entry::Key::KeyS))
-//		{
-//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
-//		}
-//		else if(inputGetKeyState(entry::Key::KeyQ))
-//		{
-//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
-//		}
-//		else {
-//            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
-//		}
-//	}
+    //		if(inputGetKeyState(entry::Key::KeyA))
+    //		{
+    //			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
+    //		}
+    //		else if(inputGetKeyState(entry::Key::KeyD))
+    //		{
+    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
+    //		}
+    //		else if(inputGetKeyState(entry::Key::KeyW))
+    //		{
+    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
+    //		}
+    //		else if(inputGetKeyState(entry::Key::KeyS))
+    //		{
+    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
+    //		}
+    //		else if(inputGetKeyState(entry::Key::KeyQ))
+    //		{
+    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
+    //		}
+    //		else {
+    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
+    //		}
+    //	}
 
 
     float yaw = 0.0f;
@@ -2391,4 +2408,44 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setExperience(stats.exp);
     statsScreen.setExperienceNext(stats.exp_next);
     statsScreen.setLearnPoints(stats.lp);
+}
+
+Materials::MaterialGroup PlayerController::getSurfaceMaterial()
+{
+    if (m_MoveState.ground.successful)
+    {
+        Math::float3 v3[3];
+        uint8_t matgroup;
+        m_World.getWorldMesh().getTriangle(m_MoveState.ground.triangleIndex, v3, matgroup);
+        return static_cast< Materials::MaterialGroup >(matgroup);
+    }
+    else
+    {
+        return Materials::MaterialGroup::UNDEFINED;
+    }
+}
+
+void PlayerController::traceDownNPCGround()
+{
+    Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -3.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 10.0f, 0.0f);
+    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+
+    // LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x  << " " <<  (getEntityTransform().Translation()).y << " " <<  (getEntityTransform().Translation()).z;
+    // LogInfo() << "From: " << (from).x  << " " <<  (from).y << " " <<  (from).z;
+    // LogInfo() << "To: " << (to).x  << " " <<  (to).y << " " <<  (to).z;
+
+    if (!hit.hasHit)
+    {
+        from += Math::float3(0.0f, 10000.0f, 0.0f); // trying from further above
+        hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+    }
+    if (!hit.hasHit)
+    {
+        m_MoveState.ground.successful = false;
+        return;
+    }
+    m_MoveState.ground.successful = true;
+    m_MoveState.ground.triangleIndex = hit.hitTriangleIndex;
+    m_MoveState.ground.trianglePosition = hit.hitPosition;
 }

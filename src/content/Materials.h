@@ -6,6 +6,20 @@
 namespace Materials
 {
     /**
+     * Enums defining material group
+     */
+    // FIXME names below need to be changed most likely
+    enum MaterialGroup
+    {
+       UNDEFINED,
+       PLACEHOLDER1,
+       PLACEHOLDER2,
+       PLACEHOLDER3,
+       GROUND,
+       WATER
+    };
+
+    /**
      * Base material-structure
      * Defines handle-type and other needed properties
      */
