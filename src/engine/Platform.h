@@ -22,7 +22,7 @@ namespace Engine
         static int getWindowHeight(){ return m_WindowHeight; }
 
         static bool getQuit(){ return m_Quit; }
-        static bool setQuit(bool quit){ m_Quit = quit; }
+        static void setQuit(bool quit){ m_Quit = quit; }
 
     protected:
 
