@@ -37,6 +37,11 @@ WorldInstance::WorldInstance()
 	
 }
 
+WorldInstance::~WorldInstance()
+{
+    getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
+}
+
 void WorldInstance::init(Engine::BaseEngine& engine)
 {
 	m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());

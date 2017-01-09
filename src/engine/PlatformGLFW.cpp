@@ -254,6 +254,11 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        if (glfwWindowShouldClose(window))
+        {
+	    // don't exit the loop immediately, give stuff a chance to check for quit
+            setQuit(true);
+        }
 
         /* Poll for and process events */
         glfwPollEvents();
@@ -261,12 +266,16 @@ int32_t PlatformGLFW::run(int argc, char** argv)
         update();
     }
 
-
+        if (getQuit())
+            break;
+    }
 #endif
 
+    return 0;
+}
 
-
-
+int PlatformGLFW::shutdown()
+{
     Utils::destroyFileReaderWriter();
     glfwTerminate();
     return 0; 

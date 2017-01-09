@@ -124,6 +124,8 @@ bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 {
+public:
+
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
     {
         bgfx::TransientVertexBuffer tvb;
@@ -618,7 +620,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 		});
 
 		console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
-			exit(0); // TODO: May want to exit properly at some point.
+            		setQuit(true);
+            		return std::string("Exiting ...");
 		});
 
         imguiCreate(nullptr, 0, fontSize);
@@ -630,20 +633,24 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_scrollArea = 0;
 	}
 
-	virtual int shutdown() BX_OVERRIDE
+    	int shutdown() override
 	{
-		// Cleanup.
+		// remove (destroy) the world so that it shuts down properly
+        	m_pEngine->removeWorld(m_pEngine->getMainWorld());
 
 		delete m_pEngine;
 
 		ddShutdown();
 
-        imguiDestroy();
+		// Clear this explicitly or the atlas is destroyed after main (and bx cleanup / allocator destruction)
+		ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+		atlas->Clear();
 
-		// Shutdown bgfx.
+       		imguiDestroy();
+
 		bgfx::shutdown();
 
-		return 0;
+        	return PLATFORM_CLASS::shutdown();
 	}
 
 	bool update() BX_OVERRIDE
@@ -800,6 +807,26 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 int main(int argc, char** argv)
 {
+    int ret = 0;
+
     ExampleCubes app;
-    return app.run(argc, argv);
+    try
+    {
+        ret = app.run(argc, argv);
+        app.shutdown();
+    }
+    catch (const std::exception &e)
+    {
+        // might be caused by the logger, don't use it
+        std::cerr << "Caught exception in main loop: " << e.what() << std::endl;
+        ret = 1;
+    }
+    catch (...)
+    {
+        // might be caused by the logger, don't use it
+        std::cerr << "Caught unknown exception in main loop" << std::endl;
+        ret = 1;
+    }
+
+    return ret;
 }
