@@ -233,6 +233,11 @@ namespace Logic
         void placeOnGround();
 
         /**
+         * Saves data of the ground on which the NPC is standing
+         */
+        void traceDownNPCGround();
+
+        /**
          * @return The script-side handle to this NPC
          */
         Daedalus::GameState::NpcHandle getScriptHandle()
@@ -488,6 +493,14 @@ namespace Logic
 
             // Where the npc currently is looking at
             Math::float3 direction;
+
+            // Surface data obtained from raytracing the ground below NPC
+            struct
+            {
+                bool successful; // false if for some reason raytrace failed to hit the ground during last run
+                uint32_t triangleIndex;
+                Math::float3 trianglePosition;
+            } ground;
 
         }m_MoveState;
 

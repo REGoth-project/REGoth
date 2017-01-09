@@ -46,7 +46,7 @@ void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgr
         v3[i] = Math::float3(tri.vertices[i].Position.v);
 }
 
-ZenLoad::zCMaterialData WorldMesh::GetMatData(size_t triangleIdx)
+ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx)
 {
     assert(triangleIdx < m_WorldMeshData.triangles.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;

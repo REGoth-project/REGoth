@@ -72,6 +72,9 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
     m_MoveState.direction = Math::float3(1, 0, 0);
     m_MoveState.position = Math::float3(0, 0, 0);
+    m_MoveState.ground.successful = false;
+    m_MoveState.ground.triangleIndex = 0;
+    m_MoveState.ground.trianglePosition = Math::float3(0, 0, 0);
     m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
     m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
 
@@ -140,6 +143,9 @@ void PlayerController::onUpdate(float deltaTime)
 
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
+
+        // Retrieve data of the ground on which the NPC is standing
+        traceDownNPCGround();
 
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
@@ -696,11 +702,10 @@ void PlayerController::placeOnGround()
     }
 
     // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
-    Physics::RayTestResult hitwm = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-    if (hitwm.hasHit)
+    if (m_MoveState.ground.successful)
     {
         // Update color
-        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hitwm.hitTriangleIndex, hitwm.hitPosition);
+        float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(m_MoveState.ground.triangleIndex, m_MoveState.ground.trianglePosition);
 
         if (getModelVisual())
             getModelVisual()->setShadowValue(shadow);
@@ -2407,22 +2412,40 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
 
 Materials::MaterialGroup PlayerController::getSurfaceMaterial()
 {
+    if (m_MoveState.ground.successful)
+    {
+        Math::float3 v3[3];
+        uint8_t matgroup;
+        m_World.getWorldMesh().getTriangle(m_MoveState.ground.triangleIndex, v3, matgroup);
+        return static_cast< Materials::MaterialGroup >(matgroup);
+    }
+    else
+    {
+        return Materials::MaterialGroup::UNDEFINED;
+    }
+}
+
+void PlayerController::traceDownNPCGround()
+{
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -3.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
+    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 10.0f, 0.0f);
+    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
+
     // LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x  << " " <<  (getEntityTransform().Translation()).y << " " <<  (getEntityTransform().Translation()).z;
     // LogInfo() << "From: " << (from).x  << " " <<  (from).y << " " <<  (from).z;
     // LogInfo() << "To: " << (to).x  << " " <<  (to).y << " " <<  (to).z;
 
-    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh); // FIXME This is a hack for now
-
-    if (hit.hasHit)
+    if (!hit.hasHit)
     {
-        // LogInfo() << "Hit position: " << (hit.hitPosition).x  << " " <<  (hit.hitPosition).y << " " <<  (hit.hitPosition).z;
-        // if ((from - hit.hitPosition).y < 1) return Materials::MaterialGroup::GROUND;
-        Math::float3 v3[3];
-        uint8_t matgroup;
-        m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3, matgroup);
-        return static_cast< Materials::MaterialGroup >(matgroup);
+        from += Math::float3(0.0f, 10000.0f, 0.0f); // trying from further above
+        hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
     }
-    return Materials::MaterialGroup::UNDEFINED;
+    if (!hit.hasHit)
+    {
+        m_MoveState.ground.successful = false;
+        return;
+    }
+    m_MoveState.ground.successful = true;
+    m_MoveState.ground.triangleIndex = hit.hitTriangleIndex;
+    m_MoveState.ground.trianglePosition = hit.hitPosition;
 }

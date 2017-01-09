@@ -47,7 +47,7 @@ namespace World
 		/**
 		 * Debugging purposes only
 		 */
-		ZenLoad::zCMaterialData GetMatData(size_t triangleIdx);
+		ZenLoad::zCMaterialData getMatData(size_t triangleIdx);
 
 	protected:
 
