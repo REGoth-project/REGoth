@@ -1876,12 +1876,18 @@ void PlayerController::setupKeyBindings()
     Engine::Input::clearActions();
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
+
         if(triggered)
         {
-            UI::Menu_Status& statsScreen = m_World.getEngine()->getHud().pushMenu<UI::Menu_Status>();
-        
-            // Update the players status menu once
-            updateStatusScreen(statsScreen); 
+            UI::Hud &hud = m_World.getEngine()->getHud();
+            if (!hud.isTopMenu<UI::Menu_Status>())
+            {
+                UI::Menu_Status& statsScreen = hud.pushMenu<UI::Menu_Status>();
+
+                // Update the players status menu once
+                updateStatusScreen(statsScreen);
+            } else
+                hud.popMenu();
         }
     });
 
