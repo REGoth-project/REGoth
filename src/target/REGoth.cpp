@@ -633,24 +633,24 @@ public:
         m_scrollArea = 0;
 	}
 
-    	int shutdown() override
-	{
+    int shutdown() override
+    {
 		// remove (destroy) the world so that it shuts down properly
-        	m_pEngine->removeWorld(m_pEngine->getMainWorld());
+        m_pEngine->removeWorld(m_pEngine->getMainWorld());
 
-		delete m_pEngine;
+        delete m_pEngine;
 
-		ddShutdown();
+        ddShutdown();
 
-		// Clear this explicitly or the atlas is destroyed after main (and bx cleanup / allocator destruction)
-		ImFontAtlas* atlas = ImGui::GetIO().Fonts;
-		atlas->Clear();
+        // Clear this explicitly or the atlas is destroyed after main (and bx cleanup / allocator destruction)
+        ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+        atlas->Clear();
 
-       		imguiDestroy();
+        imguiDestroy();
 
 		bgfx::shutdown();
 
-        	return PLATFORM_CLASS::shutdown();
+        return PLATFORM_CLASS::shutdown();
 	}
 
 	bool update() BX_OVERRIDE
