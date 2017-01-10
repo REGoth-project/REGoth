@@ -275,7 +275,7 @@ bool NpcScriptState::doAIState(float deltaTime)
                     switch(m_CurrentState.prgState)
                     {
                         //case NPC_PRGAISTATE_ANSWER:break;
-                        case NPC_PRGAISTATE_DEAD:break;
+                        //case NPC_PRGAISTATE_DEAD:break;
                         case NPC_PRGAISTATE_UNCONSCIOUS: vob.playerController->checkUnconscious(); break;
                         //case NPC_PRGAISTATE_FADEAWAY:break;
                         //case NPC_PRGAISTATE_FOLLOW:break;
