@@ -363,6 +363,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 		initializeScriptEngineForZenWorld("");
 	}
 
+    // Initialize the sky, so it will get the right values
+    m_Sky.fillSkyStates(); 
+
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
     Logic::PlayerController* cnt = reinterpret_cast<Logic::PlayerController*>(Vob::asVob(*this, e).logic);
@@ -625,6 +628,8 @@ EGameType WorldInstance::getBasicGameType()
 
     if(m.find(lower) != m.end())
         return m[lower];
+
+    LogInfo() << "ZEN unknown, defaulting to Gothic 2 skycolors";
 
     // Default to gothic 2
     return GT_Gothic2;

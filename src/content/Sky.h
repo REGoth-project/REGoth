@@ -83,7 +83,7 @@ namespace Content
          * @param s state to fill with values
          * @param texAlloc Texture allocator to take the data from
          */
-        static void initSkyState(ESkyPresetType type, SkyState& s, Textures::TextureAllocator& texAlloc);
+        static void initSkyState(World::WorldInstance& world, ESkyPresetType type, SkyState& s, Textures::TextureAllocator& texAlloc);
 
         /**
          * Fills the m_SkyStates with their preset values

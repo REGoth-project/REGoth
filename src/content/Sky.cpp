@@ -6,6 +6,7 @@
 #include <utils/Utils.h>
 #include <engine/World.h>
 #include <entry/input.h>
+#include <utils/logger.h>
 #include "Sky.h"
 #include "engine/Input.h"
 #include <iostream>
@@ -132,12 +133,16 @@ void Sky::interpolate(double deltaTime)
     // TODO: Fix up the textures here
 }
 
-void Sky::initSkyState(ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
+void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
 {
-    //Math::float3 skyColor = Math::float3(120,140,180) / 255.0f;
+    Math::float3 skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
 
-    Math::float3 skyColor = Math::float3(114, 93, 82) / 255.0f;
 
+    LogInfo() << "############### " << world.getBasicGameType();
+    if(world.getBasicGameType() == World::GT_Gothic2) 
+        skyColor = Math::float3(120,140,180) / 255.0f; // G2
+    else
+        skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
 
     switch(type)
     {
@@ -310,7 +315,7 @@ void Sky::fillSkyStates()
     // Fill all sky-states, in order
     for(int i=0;i < ESkyPresetType::ESPT_NUM_PRESETS; i++)
     {
-        initSkyState(static_cast<ESkyPresetType>(i), m_SkyStates[i], m_World.getTextureAllocator());
+        initSkyState(m_World, static_cast<ESkyPresetType>(i), m_SkyStates[i], m_World.getTextureAllocator());
     }
 }
 
