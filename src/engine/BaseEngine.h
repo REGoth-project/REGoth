@@ -110,6 +110,28 @@ namespace Engine
 		 * @return Allocator for always present textures
 		 */
 		Textures::TextureAllocator& getEngineTextureAlloc(){ return m_EngineTextureAlloc; }
+
+        /**
+         * Sets the currently active world. Player and camera will be taken from this world.
+         * @param world
+         */
+        void setMainWorld(Handle::WorldHandle world);
+
+        /**
+         * @return data-access to the main world
+         */
+        Handle::WorldHandle getMainWorld()
+        {
+            return m_MainWorld;
+        }
+
+        /**
+         * Saves the given world to a file, as savegame
+         * @param world World to save
+         * @param file File to save to
+         * @return Whether the operation was successful
+         */
+        bool saveWorld(Handle::WorldHandle world, const std::string& file);
 	protected:
 
 		/**
@@ -133,6 +155,11 @@ namespace Engine
 		 * Currently active world instances
 		 */
 		std::list<World::WorldInstance> m_WorldInstances;
+
+        /**
+         * Main world of this engine-instance
+         */
+        Handle::WorldHandle m_MainWorld;
 
 		/**
 		 * Main VDFS-Index

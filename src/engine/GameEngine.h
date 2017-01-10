@@ -41,20 +41,6 @@ namespace Engine
         }
 
         /**
-         * @return data-access to the main world
-         */
-        Handle::WorldHandle getMainWorld()
-        {
-            return m_MainWorld;
-        }
-
-        /**
-         * Sets the currently active world. Player and camera will be taken from this world.
-         * @param world
-         */
-        void setMainWorld(Handle::WorldHandle world);
-
-        /**
          * @return Default set of shaders and constants
          */
         Render::RenderSystem& getDefaultRenderSystem()
@@ -84,10 +70,6 @@ namespace Engine
          */
         Handle::EntityHandle m_MainCamera;
 
-        /**
-         * Main world of this engine-instance
-         */
-        Handle::WorldHandle m_MainWorld;
 
         /**
          * Default rendering system

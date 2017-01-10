@@ -267,6 +267,24 @@ Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const st
     return addWorld(worldFile, savegame); 
 }
 
+void BaseEngine::setMainWorld(Handle::WorldHandle world)
+{
+    m_MainWorld = world;
+}
 
 
+bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
+{
+    json j;
+    world.get().exportWorld(j);
 
+    // Save
+    std::ofstream f(file);
+    if(!f.is_open())
+        return false;
+
+    f << Utils::iso_8859_1_to_utf8(j.dump(4));
+    f.close();
+
+    return true;
+}

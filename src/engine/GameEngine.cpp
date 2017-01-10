@@ -144,6 +144,9 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 
     // Needed for camera-creation
     setMainWorld(world);
+
+    if(world.isValid())
+        m_MainCamera = createMainCameraIn(m_MainWorld);
 }
 
 void GameEngine::onWorldRemoved(Handle::WorldHandle world)
@@ -179,13 +182,6 @@ Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
 	return m_MainCamera;
 }
 
-void GameEngine::setMainWorld(Handle::WorldHandle world)
-{
-    m_MainWorld = world;
-
-    if(world.isValid())
-        m_MainCamera = createMainCameraIn(m_MainWorld);
-}
 
 
 
