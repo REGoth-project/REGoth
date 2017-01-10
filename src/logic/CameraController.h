@@ -10,10 +10,10 @@ namespace Logic
 
         enum class ECameraMode
         {
-            Free,
-            Static,
-            FirstPerson,
-            ThirdPerson,
+            Free = 0,
+            Static = 1,
+            FirstPerson = 2,
+            ThirdPerson = 3,
             Viewer // name is open to change
         };
 
