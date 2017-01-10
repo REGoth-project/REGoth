@@ -2052,12 +2052,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
 
     });
 
-    vm.registerExternalFunction("snd_play", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "snd_play";
-        std::string s0 = vm.popString(); if(verbose) LogInfo() << "s0: " << s0;
-
-    });
-
     vm.registerExternalFunction("snd_play3d", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "snd_play3d";
         std::string s1 = vm.popString(); if(verbose) LogInfo() << "s1: " << s1;
