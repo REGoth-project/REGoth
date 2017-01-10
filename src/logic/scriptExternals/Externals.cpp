@@ -978,6 +978,25 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             npc.playerController->changeAttribute((Daedalus::GEngineClasses::C_Npc::EAttributes)atr, value);
         }
     });
+
+    vm->registerExternalFunction("npc_giveitem", [=](Daedalus::DaedalusVM& vm){
+        if(verbose) LogInfo() << "npc_giveitem";
+
+        uint32_t fromNpcId = vm.popVar(); if(verbose) LogInfo() << "from" << fromNpcId;
+        uint32_t itemInstance = vm.popVar(); if(verbose) LogInfo() << "item" << itemInstance;
+        uint32_t toNpcId = vm.popVar(); if(verbose) LogInfo() << "to" << toNpcId;
+
+        VobTypes::NpcVobInformation fromNpc = getNPCByInstance(fromNpcId);
+        VobTypes::NpcVobInformation toNpc = getNPCByInstance(toNpcId);
+
+        if(!fromNpc.isValid() || !toNpc.isValid())
+            return;
+        if(!fromNpc.playerController->getInventory().removeItem(itemInstance))
+            return;
+
+        toNpc.playerController->getInventory().addItem(itemInstance);
+    });
+
 }
 
 
