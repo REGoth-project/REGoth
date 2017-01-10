@@ -516,6 +516,21 @@ public:
             return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
         });
 
+        console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() != 2)
+                return "Missing argument. Usage: givexp <experience points>";
+
+            int exp = std::stoi(args[1]);
+
+            s1.prepareRunFunction();
+            s1.pushInt(exp);
+            s1.runFunction("B_GiveXP");
+
+            return "Experience points successfully given";
+        });
+
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
