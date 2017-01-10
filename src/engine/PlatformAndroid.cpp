@@ -15,15 +15,15 @@
 const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "world.zen" };
 const int NUMARGS = 5;
 
-const int ACTION_PlayerForward = 1;
-const int ACTION_PlayerBackward = 2;
-const int ACTION_PlayerTurnLeft = 3;
-const int ACTION_PlayerTurnRight = 4;
+const int ACTION_PlayerForward = 265;
+const int ACTION_PlayerBackward = 264;
+const int ACTION_PlayerTurnLeft = 263;
+const int ACTION_PlayerTurnRight = 262;
 const int ACTION_PlayerStrafeLeft = 5;
 const int ACTION_PlayerStrafeRight = 6;
 const int ACTION_DebugMoveSpeed = 7;
 const int ACTION_DebugMoveSpeed2  = 8;
-const int ACTION_PlayerAction = 9;
+const int ACTION_PlayerAction = 257;
 
 namespace bgfx
 {
@@ -105,10 +105,14 @@ void PlatformAndroid::onAppCmd(struct android_app* app, int32_t cmd)
                 //DBG("ANativeWindow width %d, height %d", width, height);
                 windowSizeEvent(width, height);
 
-                std::promise<int32_t> returnValue;
 
 
-                m_Thread = std::thread(&Platform::mainLoop, this, std::move(returnValue), NUMARGS, const_cast<char**>(ARGS));
+                m_Thread = std::thread(
+                        [this](){
+                            std::promise<int32_t> returnValue;
+                            mainLoop(std::move(returnValue), NUMARGS, const_cast<char**>(ARGS));
+                            while(true){update();}
+                            });
                 //m_thread.init(MainThreadEntry::threadFunc, &m_mte);
             }
             break;
