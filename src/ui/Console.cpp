@@ -40,11 +40,11 @@ Console::Console()
 {
     m_Config.height = 10;
     m_IsOpen = false;
-    historyAdd(" ----------- REGoth Console -----------");
+    outputAdd(" ----------- REGoth Console -----------");
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
         for(auto& c : m_Commands)
-            historyAdd(c.first);
+            outputAdd(c.first);
         return "";
     });
 }
@@ -52,7 +52,7 @@ Console::Console()
 void Console::update()
 {
     bgfx::dbgTextPrintf(0, (uint16_t)(GLOBAL_Y + m_Config.height + 1), 0x4f, "> %s", m_TypedLine.c_str());
-    printHistory();
+    printOutput();
 }
 
 void Console::onKeyDown(int glfwKey)
@@ -83,7 +83,7 @@ std::string Console::submitCommand(const std::string& command)
 {
     std::vector<std::string> args = Utils::split(command, ' ');
 
-    historyAdd(" >> " + command);
+    outputAdd(" >> " + command);
 
     if(args.empty())
         return "";
@@ -93,12 +93,12 @@ std::string Console::submitCommand(const std::string& command)
 
         std::string result = m_Commands[args[0]](args);
 
-        historyAdd(result);
+        outputAdd(result);
 
         return result;
     }
 
-    historyAdd(" -- Command not found -- ");
+    outputAdd(" -- Command not found -- ");
 
     return "NOTFOUND";
 }
@@ -114,10 +114,10 @@ void Console::registerAutocompleteFn(const std::string& command, Console::Comman
     m_AutocompleteCallbacks[command] = callback;
 }
 
-void Console::printHistory()
+void Console::printOutput()
 {
     int i=0;
-    for(const std::string& s : m_History)
+    for(const std::string& s : m_Output)
     {
         if(i == m_Config.height)
             break;
@@ -128,9 +128,9 @@ void Console::printHistory()
     }
 }
 
-void Console::historyAdd(const std::string& msg)
+void Console::outputAdd(const std::string& msg)
 {
-    m_History.push_front(msg);
+    m_Output.push_front(msg);
 }
 
 

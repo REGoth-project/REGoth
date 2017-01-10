@@ -60,7 +60,7 @@ namespace UI
          * Adds a message to the history
          * @param msg Message to add
          */
-        void historyAdd(const std::string& msg);
+        void outputAdd(const std::string& msg);
 
         /**
          * @return Whether the console is currently shown
@@ -73,7 +73,7 @@ namespace UI
         /**
          * Draws history over the commandline
          */
-        void printHistory();
+        void printOutput();
 
         struct
         {
