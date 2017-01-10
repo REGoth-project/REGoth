@@ -39,6 +39,7 @@ namespace Keys
 Console::Console()
 {
     m_Config.height = 10;
+    m_HistoryIndex = 0;
     m_IsOpen = false;
     outputAdd(" ----------- REGoth Console -----------");
 
@@ -68,6 +69,26 @@ void Console::onKeyDown(int glfwKey)
        && glfwKey <= Keys::PrintableEnd)
     {
         m_TypedLine += std::tolower((char)glfwKey);
+    }else if(glfwKey == Keys::GLFW_KEY_UP)
+    {
+        const int historySize = m_History.size();
+        if(historySize > m_HistoryIndex + 1)
+        {
+            if (m_HistoryIndex < 0)
+                m_PendingLine = m_TypedLine;
+            ++m_HistoryIndex;
+            m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+        }
+    }else if(glfwKey == Keys::GLFW_KEY_DOWN)
+    {
+        if(m_HistoryIndex >= 0)
+        {
+            --m_HistoryIndex;
+            if (m_HistoryIndex < 0)
+                m_TypedLine = m_PendingLine;
+            else
+                m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+        }
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
@@ -81,6 +102,12 @@ void Console::onKeyDown(int glfwKey)
 
 std::string Console::submitCommand(const std::string& command)
 {
+    if (m_History.empty() || m_History.back() != command) {
+        m_History.push_back(command);
+    }
+    m_HistoryIndex = -1;
+    m_PendingLine.clear();
+
     std::vector<std::string> args = Utils::split(command, ' ');
 
     outputAdd(" >> " + command);

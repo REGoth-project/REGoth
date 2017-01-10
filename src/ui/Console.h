@@ -86,7 +86,17 @@ namespace UI
         /**
          * Last submitted commands
          */
-        std::list<std::string> m_History;
+        std::vector<std::string> m_History;
+
+        /**
+         * Index of the currently selected command in history
+         */
+        int m_HistoryIndex;
+
+        /**
+         * Line, typed before history selection
+         */
+        std::string m_PendingLine;
 
         /**
          * Lines emitted by the commands + history
