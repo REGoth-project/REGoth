@@ -32,6 +32,7 @@
 #include <ui/BarView.h>
 #include <ui/Hud.h>
 #include <ui/Menu.h>
+#include <logic/SavegameManager.h>
 
 using json = nlohmann::json;
 
@@ -259,6 +260,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         m_Width = getWindowWidth();
         m_Height = getWindowHeight();
+        m_NoHUD = false;
+
 
 //		bgfx::init(args.m_type, args.m_pciId);
         bgfx::init();
@@ -324,6 +327,36 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Toggled stats";
         });
 
+        console.registerCommand("hud", [&](const std::vector<std::string>& args) -> std::string {
+            static bool s_Stats = false;
+            s_Stats = !s_Stats;
+
+            m_NoHUD = !m_NoHUD;
+
+            return "Toggled hud";
+        });
+
+        console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
+            static bool s_Stats = false;
+            s_Stats = !s_Stats;
+
+            bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
+            return "Toggled stats";
+        });
+
+        console.registerCommand("camera", [this](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: camera <mode> | (0=Free, 1=Static, 2=FirstPerson, 3=ThirdPerson)";
+
+            int idx = std::stoi(args[1]);
+
+            m_pEngine->getMainCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
+
+            return "Cameramode changed to " + std::to_string(idx);
+        });
+
+            
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
@@ -376,6 +409,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
             if(args.size() < 2)
                 return "Missing argument. Usage: switchlevel <zenfile>";
+
+            return "Command currently broken! Try in a later release";
 
             std::string file = args[1];
             if(!m_pEngine->getVDFSIndex().hasFile(file))
@@ -434,24 +469,26 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             if(args.size() != 2)
                 return "Missing argument. Usage: load <savegame>";
 
-            std::string savegame = "";
+            using namespace Engine;
 
+            int idx = std::stoi(args[1]);
+           
+            if(!SavegameManager::isSavegameAvailable(idx))
+                return "Savegame in slot " + std::to_string(idx) + " no available!";
 
-            std::string file = args[1] + ".json";
-            if (!Utils::fileExists(file))
-                return "File '" + file + "' not found.";
+            // Read general information about the saved game. Most importantly the world the player saved in
+            SavegameManager::SavegameInfo info = SavegameManager::readSavegameInfo(idx);
 
-            savegame = file;
+            std::string worldPath = SavegameManager::buildWorldPath(idx, info.world);
 
+            // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
+            // if it was missing. Also, IF the player saved there, there should be a save for this.
+            if(!Utils::getFileSize(worldPath))
+                return "Target world invalid!"; 
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld("", savegame);
-
-            if(!savegame.empty())
-                return "Successfully loaded savegame: " + savegame;
-            else
-                return "Successfully loaded world: " + args[1];
+            m_pEngine->addWorld("", worldPath);
         });
 
         console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
@@ -459,15 +496,29 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             if(args.size() < 2)
                 return "Missing argument. Usage: save <savegame>";
 
+            int idx = std::stoi(args[1]);
+    
+            if(idx < 1)
+                return "Invalid index. Must be greater than 0!";
+
+            // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
+            // Clean data from old savegame, so we don't load into worlds we haven't been to yet
+            Engine::SavegameManager::clearSavegame(idx);
+
+            // Write information about the current game-state
+            Engine::SavegameManager::SavegameInfo info;
+            info.name = "Testsave";
+            info.world = Utils::stripExtension(m_pEngine->getMainWorld().get().getZenFile());
+            info.timePlayed = 0;
+            Engine::SavegameManager::writeSavegameInfo(idx, info);
+
             json j;
             m_pEngine->getMainWorld().get().exportWorld(j);
 
             // Save
-            std::ofstream f(args[1] + ".json");
-            f << Utils::iso_8859_1_to_utf8(j.dump(4));
-            f.close();
+            Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
 
-            return "World saved to file: " + args[1] + ".json";
+            return "World saved to slot: " + std::to_string(idx); 
         });
 
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
@@ -644,12 +695,18 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 	bool update() BX_OVERRIDE
 	{
-        std::map<int, UI::EInputAction> keyMap = {{GLFW_KEY_UP,     UI::IA_Up},
-                                                  {GLFW_KEY_DOWN,   UI::IA_Down},
-                                                  {GLFW_KEY_LEFT,   UI::IA_Left},
-                                                  {GLFW_KEY_RIGHT,  UI::IA_Right},
-                                                  {GLFW_KEY_ENTER,  UI::IA_Accept},
-                                                  {GLFW_KEY_ESCAPE, UI::IA_Close}};
+        const int KEY_UP = 265;
+        const int KEY_DOWN = 264;
+        const int KEY_LEFT = 263;
+        const int KEY_RIGHT = 262;
+        const int KEY_ENTER = 257;
+        const int KEY_ESCAPE = 256;
+        std::map<int, UI::EInputAction> keyMap = {{KEY_UP,     UI::IA_Up},
+                                                  {KEY_DOWN,   UI::IA_Down},
+                                                  {KEY_LEFT,   UI::IA_Left},
+                                                  {KEY_RIGHT,  UI::IA_Right},
+                                                  {KEY_ENTER,  UI::IA_Accept},
+                                                  {KEY_ESCAPE, UI::IA_Close}};
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
@@ -709,9 +766,12 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
         // Use debug font to print information about this example.
         bgfx::dbgTextClear();
-        bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-        bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
 
+        if(!m_NoHUD)
+        {
+            bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+            bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+        }
 
         // This dummy draw call is here to make sure that view 0 is cleared
         // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
@@ -731,7 +791,8 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         // Set render states.
 
 
-        m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+        if(!m_NoHUD)
+            m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
 
 
 
@@ -788,6 +849,7 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 	float axis;
     int32_t m_scrollArea;
     Utils::StopWatch m_stopWatch;
+    bool m_NoHUD;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);
