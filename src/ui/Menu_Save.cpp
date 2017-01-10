@@ -17,7 +17,7 @@ Menu_Save::~Menu_Save()
 Menu_Save* Menu_Save::create(Engine::BaseEngine& e)
 {
     Menu_Save* s = new Menu_Save(e);
-    s->initializeInstance("MENU_SAVEGAME_LOAD");
+    s->initializeInstance("MENU_SAVEGAME_SAVE");
 
     return s;
 }
