@@ -824,7 +824,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
         static std::string lastMovementAni = "";
-        static auto ManageAnimation = [&](auto groundAniType, auto waterAniType) {
+        auto manageAnimation = [&](auto groundAniType, auto waterAniType) {
             if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
             {
                 model->setAnimation(waterAniType);
@@ -838,19 +838,19 @@ void PlayerController::onUpdateByInput(float deltaTime)
         };
         if (m_isStrafeLeft)
         {
-            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
+            manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
         else if (m_isStrafeRight)
         {
-            ManageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
+            manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
         else if (m_isForward)
         {
-            ManageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
+            manageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
         }
         else if (m_isBackward)
         {
-            ManageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
+            manageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
         }
         //		else if(inputGetKeyState(entry::Key::KeyQ))
         //		{
@@ -858,7 +858,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         //		}
         else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
         {
-            ManageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
+            manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
         }
     }
