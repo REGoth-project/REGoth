@@ -721,7 +721,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (!model)
         return;
 
-    if(m_World.getDialogManager().isDialogActive())
+    if(m_World.getDialogManager().isDialogActive() || m_World.getEngine()->getHud().isMenuActive())
         return;
 
     // Stand up if wounded and forward is pressed
@@ -1862,7 +1862,7 @@ void PlayerController::setupKeyBindings()
     Engine::Input::clearActions();
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
-        if(triggered)
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive())
         {
             UI::Menu_Status& statsScreen = m_World.getEngine()->getHud().pushMenu<UI::Menu_Status>();
         
