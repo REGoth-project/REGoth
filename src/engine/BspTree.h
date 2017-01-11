@@ -51,7 +51,7 @@ namespace World
             /**
              * All triangles inside this bounding-box
              */
-            std::vector<World::WorldMeshIndex> NodeTriangles;
+            std::vector<size_t> nodeTriangles;
 
             /**
              * @return Whether this is a leaf

@@ -26,7 +26,7 @@ NodeIndex BspTree::addEntity(Handle::EntityHandle entity)
     if(nodes.empty())
         return INVALID_NODE;
 
-    // Return one of the leafs  
+    // Return one of the leafs
     return nodes.front();
 }
 
@@ -142,6 +142,27 @@ void BspTree::loadBspTree(const ZenLoad::zCBspTreeData& data)
 
         n.plane = s.plane.v;
     }
+
+    // Go through every leaf and insert the triangles
+    // FIXME: Should really cache this somewhere!
+    LogInfo() << "Gathering BSP-Triangles";
+    size_t i = 0;
+    for(const ZenLoad::WorldTriangle& tri : m_World.getWorldMesh().getTriangles())
+    {
+        for (BspNode& n : m_Nodes)
+        {
+            if(n.isLeaf() && Utils::triangleInBBox(tri.vertices[0].Position.v,
+                                                   tri.vertices[1].Position.v,
+                                                   tri.vertices[2].Position.v,
+                                                   n.bbox))
+            {
+                n.nodeTriangles.push_back(i);
+            }
+        }
+
+        i++;
+    }
+    LogInfo() << "Done gathering BSP-Triangles!";
 }
 
 
