@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 project(REGoth)
 
+set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake")
+include(cotire)
+
 set(CMAKE_CXX_STANDARD 14)
 
 # Vim - You Complete Me
@@ -170,7 +173,6 @@ include_directories(lib/bullet3/src)
 set(BULLET_LIBRARIES BulletSoftBody BulletDynamics BulletCollision LinearMath)
 set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geometry Bullet3OpenCL_clew BulletFileLoader BulletWorldImporter BulletXmlWorldImporter ConvexDecomposition GIMPACTUtils HACD Test_BulletDynamics Test_BulletInverseDynamics Test_Collision)
 
-
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
         "src/components/*.cpp"
@@ -208,7 +210,7 @@ file(GLOB ENGINE_SRC
 add_library(engine STATIC ${ENGINE_SRC} src/content/AudioEngine.cpp src/content/AudioEngine.h)
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
-
+cotire(engine)
 # ------------------ Other ------------------
 
 include_directories(src)

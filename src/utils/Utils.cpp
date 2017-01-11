@@ -16,6 +16,7 @@
 #include <pwd.h>
 #elif _WIN32 
 #include <direct.h>
+#include <Shlobj.h>
 #endif
 
 const std::string USERDATA_FOLDER = ".REGoth";
