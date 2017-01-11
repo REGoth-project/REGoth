@@ -104,7 +104,7 @@ namespace Content
         /**
          * @param t New time to set. Float value in range (0..1), where 0 is 12:00.
          */
-        void setTimeOfDay(float t){ m_MasterTime = t; }
+        void setTimeOfDay(float t);
 
         /**
          * Set time to hours/minutes (24h format)
@@ -167,7 +167,6 @@ namespace Content
          * Interpolated skystate
          */
         SkyState m_MasterState;
-        double m_MasterTime;
 
         /**
          * World this sky belongs to

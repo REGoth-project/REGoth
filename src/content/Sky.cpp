@@ -28,7 +28,6 @@ Sky::Sky(World::WorldInstance& world) :
 {
     m_MasterState.time = 0.0f;
     m_FarPlane = FLT_MAX;
-	m_MasterTime = 0.0f;
     m_skySpeedMultiplier = 1.0f;
 
     fillSkyStates();
@@ -91,8 +90,9 @@ void Sky::interpolate(double deltaTime)
 //    if(inputGetKeyState(entry::Key::KeyO))
 //        deltaTime *= 10.0;
 
-    m_MasterTime += deltaTime;
-    m_MasterState.time = fmod(static_cast<float>(m_MasterTime / (60.0 * 60.0 * 24.0)), 1.0f);
+    m_MasterState.time += deltaTime / (60.0 * 60.0 * 24.0);
+    while (m_MasterState.time >= 1.0)
+        m_MasterState.time -= 1.0;
 
     size_t si0 = 0, si1 = 1;
 
@@ -317,6 +317,11 @@ void Sky::fillSkyStates()
     {
         initSkyState(m_World, static_cast<ESkyPresetType>(i), m_SkyStates[i], m_World.getTextureAllocator());
     }
+}
+
+void Sky::setTimeOfDay(float t)
+{
+    m_MasterState.time = t;
 }
 
 void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor) const
