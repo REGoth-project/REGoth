@@ -45,7 +45,7 @@ Console::Console()
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
         for(auto& c : m_Commands)
-            outputAdd(c.first);
+            outputAdd(c);
         return "";
     });
 }
@@ -115,14 +115,14 @@ std::string Console::submitCommand(const std::string& command)
     if(args.empty())
         return "";
 
-    if(m_Commands.find(args[0]) != m_Commands.end())
+    for (size_t i = 0; i < m_Commands.size(); ++i)
     {
-
-        std::string result = m_Commands[args[0]](args);
-
-        outputAdd(result);
-
-        return result;
+        if (m_Commands.at(i) == args[0])
+        {
+            std::string result = m_CommandCallbacks.at(i)(args);
+            outputAdd(result);
+            return result;
+        }
     }
 
     outputAdd(" -- Command not found -- ");
@@ -133,7 +133,8 @@ std::string Console::submitCommand(const std::string& command)
 void Console::registerCommand(const std::string& command,
                               CommandCallback callback)
 {
-    m_Commands[command] = callback;
+    m_Commands.push_back(command);
+    m_CommandCallbacks.push_back(callback);
 }
 
 void Console::registerAutocompleteFn(const std::string& command, Console::CommandCallback callback)

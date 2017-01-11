@@ -106,7 +106,8 @@ namespace UI
         /**
          * All registered commands
          */
-        std::map<std::string, CommandCallback> m_Commands;
+        std::vector<std::string> m_Commands;
+        std::vector<CommandCallback> m_CommandCallbacks;
 
         /**
          * Callbacks for when the user wants to autocomplete an argument
