@@ -142,6 +142,8 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     if(!m_MenuChain.empty())
     {
         m_MenuChain.back()->onInputAction(action);
+    }else if(!m_pDialogBox->isHidden()){
+        m_pDialogBox->onInputAction(action);
     }
     
     // Close console or last menu, in case it's open
