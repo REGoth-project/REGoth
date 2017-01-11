@@ -829,7 +829,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
             {
                 model->setAnimation(waterAniType);
             }
-            else if (getSurfaceMaterial() == Materials::MaterialGroup::GROUND)
+            else //if (getSurfaceMaterial() == Materials::MaterialGroup::GROUND)
             {
                 model->setAnimation(groundAniType);
             }
