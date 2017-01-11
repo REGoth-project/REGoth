@@ -24,7 +24,8 @@
                          VisualComponent,\
                          AnimationComponent,\
                          PhysicsComponent,\
-                         SpotComponent
+                         SpotComponent,\
+                         LightComponent
 
 namespace Logic
 {
@@ -309,6 +310,28 @@ namespace Components
         static void init(SpotComponent& c)
         {
             c.m_UseEndTime = 0.0f;
+        }
+    };
+
+    struct LightComponent : public Component
+    {
+        enum { MASK = 1 << 12 };
+
+        /**
+         * Color of this light as RGBA
+         */
+        uint32_t m_Color;
+
+        enum ELightType
+        {
+            LT_Point,
+            LT_Spot
+        };
+        // ELightType m_LightType; // TODO
+
+        static void init(LightComponent& c)
+        {
+            c.m_Color = 0xFFFFFFFF;
         }
     };
 
