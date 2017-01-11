@@ -14,7 +14,13 @@ namespace UI
          * @return Instance of the class. Don't forget to delete!
          */
         static Menu_Save* create(Engine::BaseEngine& e);
-       
+
+        /**
+         * Gathers all available savegames and writes their names to the slot-labels
+         */
+        void gatherAvailableSavegames();   
+
+        void onCustomAction(const std::string& action);
     private:
 
         /**

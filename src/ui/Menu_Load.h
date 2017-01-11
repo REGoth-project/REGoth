@@ -15,6 +15,12 @@ namespace UI
          */
         static Menu_Load* create(Engine::BaseEngine& e);
        
+        /**
+         * Gathers all available savegames and writes their names to the slot-labels
+         */
+        void gatherAvailableSavegames();   
+
+        void onCustomAction(const std::string& action);
     private:
     };
 }

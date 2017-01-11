@@ -70,9 +70,18 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         setTranslation(Math::float2((getScriptData().posx / 8192.0f) * fac.x, (getScriptData().posx / 8192.0f) * fac.y));
     }
 
+    
     // Lighten up the selected item
     if(!m_SelectableItems.empty())
     {
+        // Make sure we really do have a selectable item active
+        int cnt = 0;
+        while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size())
+        {
+            m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            cnt++;
+        }
+
         // Savety
         m_SelectedItem = Utils::mod(m_SelectedItem, m_SelectableItems.size());
 
@@ -225,9 +234,9 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
         switch(itemData.type)
         {
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_UNDEF:break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_INPUT:
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_TEXT: m = new MenuItemTypes::MenuItemText(m_Engine, *this, h); break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_SLIDER:break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_INPUT:break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CURSOR:break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CHOICEBOX:break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_BUTTON:break;
@@ -255,11 +264,25 @@ void UI::Menu::onInputAction(EInputAction action)
     switch(action)
     {
         case IA_Up:
-            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) 
+            {
+                // Make sure we really do have a selectable item active
+                int cnt = 0;
+                do{
+                    m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+                    cnt++;
+                }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size());
+            }
             break;
 
         case IA_Down:
-            if(!m_SelectableItems.empty()) m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            if(!m_SelectableItems.empty()) 
+            {
+                // Skip all items which are no longer selectable
+                do{
+                    m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+                }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable());
+            }
             break; 
         
         case IA_Accept:
