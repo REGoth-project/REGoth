@@ -11,6 +11,7 @@
 #include <engine/GameEngine.h>
 #include <ui/PrintScreenMessages.h>
 #include <ZenLib/daedalus/DATFile.h>
+#include <components/EntityActions.h>
 
 using namespace Logic;
 
@@ -259,6 +260,14 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
             // TODO: Take bindings out of playercontroller
             player.playerController->setupKeyBindings();
             setInstanceNPC("hero", VobTypes::getScriptHandle(player));
+        }
+
+        if(m_PlayerEntity.isValid())
+        {
+            // Testing lights... // TODO: Remove
+            Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(m_PlayerEntity);
+            Components::addComponent<Components::LightComponent>(entity);
+            Components::Actions::initComponent<Components::LightComponent>(m_World.getComponentAllocator(), e);
         }
     }
 }
