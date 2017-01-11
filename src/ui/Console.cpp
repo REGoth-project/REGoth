@@ -39,12 +39,13 @@ namespace Keys
 Console::Console()
 {
     m_Config.height = 10;
+    m_HistoryIndex = 0;
     m_IsOpen = false;
-    historyAdd(" ----------- REGoth Console -----------");
+    outputAdd(" ----------- REGoth Console -----------");
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
         for(auto& c : m_Commands)
-            historyAdd(c.first);
+            outputAdd(c.first);
         return "";
     });
 }
@@ -52,7 +53,7 @@ Console::Console()
 void Console::update()
 {
     bgfx::dbgTextPrintf(0, (uint16_t)(GLOBAL_Y + m_Config.height + 1), 0x4f, "> %s", m_TypedLine.c_str());
-    printHistory();
+    printOutput();
 }
 
 void Console::onKeyDown(int glfwKey)
@@ -68,6 +69,26 @@ void Console::onKeyDown(int glfwKey)
        && glfwKey <= Keys::PrintableEnd)
     {
         m_TypedLine += std::tolower((char)glfwKey);
+    }else if(glfwKey == Keys::GLFW_KEY_UP)
+    {
+        const int historySize = m_History.size();
+        if(historySize > m_HistoryIndex + 1)
+        {
+            if (m_HistoryIndex < 0)
+                m_PendingLine = m_TypedLine;
+            ++m_HistoryIndex;
+            m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+        }
+    }else if(glfwKey == Keys::GLFW_KEY_DOWN)
+    {
+        if(m_HistoryIndex >= 0)
+        {
+            --m_HistoryIndex;
+            if (m_HistoryIndex < 0)
+                m_TypedLine = m_PendingLine;
+            else
+                m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+        }
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
@@ -81,9 +102,15 @@ void Console::onKeyDown(int glfwKey)
 
 std::string Console::submitCommand(const std::string& command)
 {
+    if (m_History.empty() || m_History.back() != command) {
+        m_History.push_back(command);
+    }
+    m_HistoryIndex = -1;
+    m_PendingLine.clear();
+
     std::vector<std::string> args = Utils::split(command, ' ');
 
-    historyAdd(" >> " + command);
+    outputAdd(" >> " + command);
 
     if(args.empty())
         return "";
@@ -93,12 +120,12 @@ std::string Console::submitCommand(const std::string& command)
 
         std::string result = m_Commands[args[0]](args);
 
-        historyAdd(result);
+        outputAdd(result);
 
         return result;
     }
 
-    historyAdd(" -- Command not found -- ");
+    outputAdd(" -- Command not found -- ");
 
     return "NOTFOUND";
 }
@@ -114,10 +141,10 @@ void Console::registerAutocompleteFn(const std::string& command, Console::Comman
     m_AutocompleteCallbacks[command] = callback;
 }
 
-void Console::printHistory()
+void Console::printOutput()
 {
     int i=0;
-    for(const std::string& s : m_History)
+    for(const std::string& s : m_Output)
     {
         if(i == m_Config.height)
             break;
@@ -128,9 +155,9 @@ void Console::printHistory()
     }
 }
 
-void Console::historyAdd(const std::string& msg)
+void Console::outputAdd(const std::string& msg)
 {
-    m_History.push_front(msg);
+    m_Output.push_front(msg);
 }
 
 

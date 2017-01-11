@@ -78,14 +78,27 @@ Handle::AudioHandle AudioEngine::loadAudioVDF(const VDFS::FileIndex& idx, const 
     Handle::AudioHandle h = m_Allocator.createObject();
     AudioFile& a = m_Allocator.getElement(h);
 
-    // Decode the ADPCM compressed audio gothic uses
+    const uint8_t *formatPtr = data.data() + 20;
+    const uint16_t audioFormat = *reinterpret_cast<const uint16_t *>(formatPtr);
 
-	// Gothics wav-files have a headersize of 60 bytes, 1 channel, blocksize of 1024
-	size_t numNibbles = (data.size() - 60) * 2;
-	adpcm_decode_data(data.data()+60, outData, numNibbles);
+    LogInfo() << "Audio format: " << audioFormat;
 
-	if (!a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), (outData.size()/2) - 512 , 1,  44100))
-	{      
+    bool loaded = false;
+    if (audioFormat == 0x11) // ADPCM
+    {
+        // Decode the ADPCM compressed audio gothic uses
+
+        // Gothics wav-files have a headersize of 60 bytes, 1 channel, blocksize of 1024
+        size_t numNibbles = (data.size() - 60) * 2;
+        adpcm_decode_data(data.data()+60, outData, numNibbles); // num channels, blocksize 1024
+
+        loaded = a.buffer.loadFromSamples(reinterpret_cast<sf::Int16*>(outData.data()), (outData.size()/2) - 512 , 1,  44100);
+    } else {
+        // Fallback to SFML default load method
+        loaded = a.buffer.loadFromMemory(data.data(), data.size());
+    }
+    if (!loaded)
+    {
         m_Allocator.removeObject(h);
         return Handle::AudioHandle::makeInvalidHandle();
     }

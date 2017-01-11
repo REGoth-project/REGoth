@@ -252,21 +252,29 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     emscripten_set_main_loop([](){ g_Platform->update();}, 0, 1);
 #else
     /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
+    while (true)
     {
+        if (glfwWindowShouldClose(window))
+        {
+            // don't exit the loop immediately, give stuff a chance to check for quit
+            setQuit(true);
+        }
 
         /* Poll for and process events */
         glfwPollEvents();
         //glfwWaitEvents();
         update();
+
+        if (getQuit())
+            break;
     }
-
-
 #endif
 
+    return 0;
+}
 
-
-
+int PlatformGLFW::shutdown()
+{
     Utils::destroyFileReaderWriter();
     glfwTerminate();
     return 0; 

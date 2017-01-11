@@ -1,6 +1,7 @@
 #pragma once
-#include "View.h"
 #include "Console.h"
+#include "Menu.h"
+#include "View.h"
 
 // HACK: Work around windows.h messing this up with its define
 #ifdef DialogBox
@@ -85,18 +86,23 @@ namespace UI
          * @tparam T Type of menu to append. Must have a static 'create' function!
          */
         template<typename T>
-        T& pushMenu() { m_MenuChain.push_back(T::create(m_Engine)); addChild((View*)m_MenuChain.back()); return *(T*)m_MenuChain.back(); }
+        T& pushMenu();
 
         /**
          * Pops the last menu from the chain and frees its memory.
          */
         void popMenu();
-
+        
+        template <typename T>
+        bool isTopMenu()
+        {
+            return dynamic_cast<T*>(m_MenuChain.empty() ? nullptr : m_MenuChain.back()) != nullptr;
+        }
         /**
          * @return Whether a menu is currently active
          */
         bool isMenuActive(){ return !m_MenuChain.empty(); }
-
+        
     protected:
 
         /**
@@ -140,4 +146,18 @@ namespace UI
          */
         std::vector<Menu*> m_RegisteredMenus;
     };
+
+    template <typename T>
+    inline T& Hud::pushMenu()
+    {
+        if (!m_MenuChain.empty() && dynamic_cast<T*>(m_MenuChain.back()) != nullptr)
+        {
+            return *static_cast<T*>(m_MenuChain.back());
+        }
+
+        T *menu = T::create(m_Engine);
+        m_MenuChain.push_back(menu);
+        addChild(m_MenuChain.back());
+        return *menu;
+    }
 }

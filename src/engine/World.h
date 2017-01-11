@@ -100,6 +100,7 @@ namespace World
 		};
 
 		WorldInstance();
+       		~WorldInstance();
 
 		/**
 		 * @brief initialization

@@ -33,15 +33,22 @@ namespace World
 		/**
 		 * Returns the vertices of the given triangle
 		 * @param triangleIdx Triangle to get the vertices from
-		 * @param v3 pointer to array fo 3 Math::float3s
+		 * @param v3 pointer to array of 3 Math::float3s
+		 * @param matgroup bitmap holding material group info for this triangle
 		 */
-		void getTriangle(size_t triangleIdx, Math::float3* v3);
+		void getTriangle(size_t triangleIdx, Math::float3 *v3, uint8_t& matgroup);
 
 		/**
 		 * @return Boundingbox max/min
 		 */
 		const Math::float3& getBBoxMin(){ return m_BBox3d[0]; }
 		const Math::float3& getBBoxMax(){ return m_BBox3d[1]; }
+
+		/**
+		 * Debugging purposes only
+		 */
+		ZenLoad::zCMaterialData getMatData(size_t triangleIdx);
+
 	protected:
 
 		/**

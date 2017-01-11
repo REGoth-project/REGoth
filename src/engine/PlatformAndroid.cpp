@@ -119,6 +119,7 @@ void PlatformAndroid::onAppCmd(struct android_app* app, int32_t cmd)
         case APP_CMD_TERM_WINDOW:
             // The window is being hidden or closed, clean it up.
             //engine_term_display(window);
+            setQuit(true);
             break;
         case APP_CMD_GAINED_FOCUS:
             break;

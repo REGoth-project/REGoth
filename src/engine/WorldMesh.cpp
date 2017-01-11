@@ -36,13 +36,18 @@ float WorldMesh::interpolateTriangleShadowValue(size_t triangleIdx, const Math::
 	return (u * c[0] + v * c[1] + w * c[2]).x; // Lighting is greyscale only
 }
 
-void WorldMesh::getTriangle(size_t triangleIdx, Math::float3 *v3)
+void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgroup)
 {
-	assert(triangleIdx < m_WorldMeshData.triangles.size());
+    assert(triangleIdx < m_WorldMeshData.triangles.size());
+    ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
+    matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
 
-	ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
-
-	for(int i=0;i<3;i++)
-		v3[i] = Math::float3(tri.vertices[i].Position.v);
+    for (int i = 0; i < 3; i++)
+        v3[i] = Math::float3(tri.vertices[i].Position.v);
 }
 
+ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx)
+{
+    assert(triangleIdx < m_WorldMeshData.triangles.size());
+    return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
+}

@@ -36,8 +36,9 @@
 
 using namespace Engine;
 
-int Platform::m_WindowWidth;
-int Platform::m_WindowHeight;
+int Platform::m_WindowWidth = 0;
+int Platform::m_WindowHeight = 0;
+bool Platform::m_Quit = false;
 
 void Platform::windowSizeEvent(int width, int height)
 {

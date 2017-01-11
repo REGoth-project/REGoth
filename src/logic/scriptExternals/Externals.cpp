@@ -740,6 +740,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+    vm->registerExternalFunction("wld_istime", [=](Daedalus::DaedalusVM& vm){
+
+        int32_t min2 = vm.popDataValue();
+        int32_t hour2 = vm.popDataValue();
+        int32_t min1 = vm.popDataValue();
+        int32_t hour1 = vm.popDataValue();
+
+        int32_t hour, min;
+        pWorld->getSky().getTimeOfDay(hour, min);
+
+        if (hour >= hour1 && hour <= hour2 &&
+            min >= min1 && min >= min2)
+        {
+            vm.setReturn(1);
+        } else
+            vm.setReturn(0);
+    });
+
     vm->registerExternalFunction("ai_wait", [=](Daedalus::DaedalusVM& vm){
         float duration = vm.popFloatValue();
         int32_t self = vm.popVar();
@@ -959,6 +977,31 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             npc.playerController->changeAttribute((Daedalus::GEngineClasses::C_Npc::EAttributes)atr, value);
         }
+    });
+
+    vm->registerExternalFunction("npc_giveitem", [=](Daedalus::DaedalusVM& vm){
+        if(verbose) LogInfo() << "npc_giveitem";
+
+        uint32_t fromNpcId = vm.popVar(); if(verbose) LogInfo() << "from" << fromNpcId;
+        uint32_t itemInstance = vm.popVar(); if(verbose) LogInfo() << "item" << itemInstance;
+        uint32_t toNpcId = vm.popVar(); if(verbose) LogInfo() << "to" << toNpcId;
+
+        VobTypes::NpcVobInformation fromNpc = getNPCByInstance(fromNpcId);
+        VobTypes::NpcVobInformation toNpc = getNPCByInstance(toNpcId);
+
+        if(!fromNpc.isValid() || !toNpc.isValid())
+            return;
+        if(!fromNpc.playerController->getInventory().removeItem(itemInstance))
+            return;
+
+        toNpc.playerController->getInventory().addItem(itemInstance);
+    });
+
+    vm->registerExternalFunction("snd_play", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "snd_play";
+        std::string s0 = vm.popString(); if(verbose) LogInfo() << "s0: " << s0;
+
+        pWorld->getAudioEngine().playSound(s0 + ".wav");
     });
 }
 

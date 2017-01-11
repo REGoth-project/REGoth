@@ -125,6 +125,8 @@ bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
 class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 {
+public:
+
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
     {
         bgfx::TransientVertexBuffer tvb;
@@ -565,6 +567,21 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
         });
 
+        console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
+            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            if(args.size() != 2)
+                return "Missing argument. Usage: givexp <experience points>";
+
+            int exp = std::stoi(args[1]);
+
+            s1.prepareRunFunction();
+            s1.pushInt(exp);
+            s1.runFunction("B_GiveXP");
+
+            return "Experience points successfully given";
+        });
+
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
@@ -654,19 +671,24 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+		console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+			VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+				m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
 
-            if(args.size() < 2)
-                return "Missing argument. Usage: usemana <mana>";
+			if(args.size() < 2)
+				return "Missing argument. Usage: usemana <mana>";
 
-            int dmg = std::stoi(args[1]);
-            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+			int dmg = std::stoi(args[1]);
+			player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
 
-            return "Used " + std::to_string(dmg) + " mana";
-        });
+			return "Used " + std::to_string(dmg) + " mana";
+		});
+
+		console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
+            		setQuit(true);
+            		return std::string("Exiting ...");
+		});
 
         imguiCreate(nullptr, 0, fontSize);
 
@@ -677,20 +699,24 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
         m_scrollArea = 0;
 	}
 
-	virtual int shutdown() BX_OVERRIDE
-	{
-		// Cleanup.
+    int shutdown() override
+    {
+		// remove (destroy) the world so that it shuts down properly
+        m_pEngine->removeWorld(m_pEngine->getMainWorld());
 
-		delete m_pEngine;
+        delete m_pEngine;
 
-		ddShutdown();
+        ddShutdown();
+
+        // Clear this explicitly or the atlas is destroyed after main (and bx cleanup / allocator destruction)
+        ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+        atlas->Clear();
 
         imguiDestroy();
 
-		// Shutdown bgfx.
 		bgfx::shutdown();
 
-		return 0;
+        return PLATFORM_CLASS::shutdown();
 	}
 
 	bool update() BX_OVERRIDE
@@ -858,6 +884,26 @@ class ExampleCubes : public /*entry::AppI*/ PLATFORM_CLASS
 
 int main(int argc, char** argv)
 {
+    int ret = 0;
+
     ExampleCubes app;
-    return app.run(argc, argv);
+    try
+    {
+        ret = app.run(argc, argv);
+        app.shutdown();
+    }
+    catch (const std::exception &e)
+    {
+        // might be caused by the logger, don't use it
+        std::cerr << "Caught exception in main loop: " << e.what() << std::endl;
+        ret = 1;
+    }
+    catch (...)
+    {
+        // might be caused by the logger, don't use it
+        std::cerr << "Caught unknown exception in main loop" << std::endl;
+        ret = 1;
+    }
+
+    return ret;
 }

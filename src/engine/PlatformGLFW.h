@@ -9,6 +9,7 @@ namespace Engine
     {
     public:
         int32_t run(int argc, char** argv) override;
+        int shutdown() override;
 
     private:
 
