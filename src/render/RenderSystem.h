@@ -20,6 +20,7 @@ namespace Render
             bgfx::ProgramHandle mainSkinnedMeshProgram;
             bgfx::ProgramHandle fullscreenQuadProgram;
             bgfx::ProgramHandle imageProgram;
+            bgfx::ProgramHandle pointLightProgram;
         }programs;
 
         struct
@@ -31,6 +32,8 @@ namespace Render
             bgfx::UniformHandle fogColor;
             bgfx::UniformHandle fogNearFar;
             bgfx::UniformHandle s_TexColor;
+            bgfx::UniformHandle lightPositionAndRadius;
+            bgfx::UniformHandle lightColor;
         }uniforms;
 
         struct

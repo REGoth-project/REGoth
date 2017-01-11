@@ -29,6 +29,7 @@ void RenderSystem::init()
     m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
     m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
     m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
+    m_Config.programs.pointLightProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_point_light");
 
     m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
     m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
@@ -41,6 +42,8 @@ void RenderSystem::init()
     m_Config.uniforms.skyCLUT = bgfx::createUniform("SKY_CLUT", bgfx::UniformType::Vec4, 256);
     m_Config.uniforms.fogColor = bgfx::createUniform("u_FogColor", bgfx::UniformType::Vec4);
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
+    m_Config.uniforms.lightPositionAndRadius = bgfx::createUniform("u_LightPosition_Radius", bgfx::UniformType::Vec4);
+    m_Config.uniforms.lightColor = bgfx::createUniform("u_LightColor", bgfx::UniformType::Vec4);
 
 #if BX_PLATFORM_EMSCRIPTEN
     int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(),"OES_element_index_uint");
