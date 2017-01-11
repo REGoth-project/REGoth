@@ -94,12 +94,12 @@ namespace Content
          * Returns the current LUT-array. Each entry of this array maps an 8-bit luminance to another color.
          * @return Pointer to the LUT
          */
-        const Math::float4* getLUTPtr(){ return m_LUT; }
+        const Math::float4* getLUTPtr() const { return m_LUT; }
 
         /**
          * @return Time of day.
          */
-        float getTimeOfDay(){ return m_MasterState.time; }
+        float getTimeOfDay() const { return m_MasterState.time; }
 
         /**
          * @param t New time to set. Float value in range (0..1), where 0 is 12:00.
@@ -111,17 +111,17 @@ namespace Content
          * @param hours
          * @param minues
          */
-        void getTimeOfDay(int& hours, int& minutes);
+        void getTimeOfDay(int& hours, int& minutes) const;
 
         /**
          * @return Time of day as string
          */
-        std::string getTimeOfDayFormated();
+        std::string getTimeOfDayFormated() const;
 
         /**
          * @return current interpolated sky-state
          */
-        const SkyState& getMasterState(){ return m_MasterState; }
+        const SkyState& getMasterState() const { return m_MasterState; }
 
         /**
          * Calculates the near- and farplanes for the fog
@@ -129,7 +129,7 @@ namespace Content
          * @param near target for nearplane
          * @param far target for farplane
          */
-        void getFogValues(const Math::float3& cameraWorld, float& nearFog, float& farFog, Math::float3& fogColor);
+        void getFogValues(const Math::float3& cameraWorld, float& nearFog, float& farFog, Math::float3& fogColor) const;
 
         /**
          * Sets the farplane, needed to do the fog-calculation

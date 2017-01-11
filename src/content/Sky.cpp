@@ -319,7 +319,7 @@ void Sky::fillSkyStates()
     }
 }
 
-void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor)
+void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor) const
 {
     // Note: These are some magic values to match what gothic does
     float fogMidrange = m_FarPlane * 0.4f;
@@ -363,14 +363,14 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
 
-void Sky::getTimeOfDay(int& hours, int& minutes)
+void Sky::getTimeOfDay(int& hours, int& minutes) const
 {
     float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
     hours = (int)fh;
     minutes = (int)((fh - hours) * 60.0f);
 }
 
-std::string Sky::getTimeOfDayFormated()
+std::string Sky::getTimeOfDayFormated() const
 {
     int h, m;
     getTimeOfDay(h, m);
