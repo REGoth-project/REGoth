@@ -94,8 +94,6 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
         ZenLoad::zCMesh *worldMesh = parser.getWorldMesh();
 
-        LogInfo() << "Initilizing BSP-Tree...";
-        m_BspTree.loadBspTree(world.bspTree);
 
         LogInfo() << "Postprocessing worldmesh...";
 
@@ -104,6 +102,9 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
         // Init worldmesh-wrapper
         m_WorldMesh.load(packedWorldMesh);
+
+        LogInfo() << "Initializing BSP-Tree...";
+        m_BspTree.loadBspTree(world.bspTree);
 
         // TODO: Put these into a compound-component or something
         std::vector<Handle::EntityHandle> ents;
