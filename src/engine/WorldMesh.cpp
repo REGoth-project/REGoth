@@ -51,3 +51,13 @@ ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
     assert(triangleIdx < m_WorldMeshData.triangles.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
 }
+
+void WorldMesh::getTriangle(size_t triangleIdx, WorldMeshVertex* v3, uint8_t& matgroup) const
+{
+	assert(triangleIdx < m_WorldMeshData.triangles.size());
+	ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
+	matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
+
+	for (int i = 0; i < 3; i++)
+		v3[i] = Meshes::vertexCast<WorldMeshVertex>(tri.vertices[i]));
+}

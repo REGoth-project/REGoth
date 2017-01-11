@@ -37,6 +37,7 @@ namespace World
 		 * @param matgroup bitmap holding material group info for this triangle
 		 */
 		void getTriangle(size_t triangleIdx, Math::float3 *v3, uint8_t& matgroup) const;
+		void getTriangle(size_t triangleIdx, WorldMeshVertex* v3, uint8_t& matgroup) const;
 
 		/**
 		 * @return Boundingbox max/min
