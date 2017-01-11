@@ -12,10 +12,9 @@ namespace Audio
 
     class AudioWorld;
 
-    /** The AudioEngine creates and manages AudioWorlds.
+    /** The AudioEngine represents the target OS sound system.
       *
-      * The engine class matches the OpenAL device level. Each world has it's own AudioWorld which
-      * represents an OpenAL context.
+      * The engine class matches the OpenAL device level.
       *
       */
     class AudioEngine final

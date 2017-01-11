@@ -103,11 +103,6 @@ namespace World
        		~WorldInstance();
 
 		/**
-		 * @brief initialization
-		 */
-		void init(Engine::BaseEngine& engine);
-
-		/**
 		* @param zen file
 		*/
 		void init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());

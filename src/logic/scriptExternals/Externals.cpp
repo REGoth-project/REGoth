@@ -1001,7 +1001,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if(verbose) LogInfo() << "snd_play";
         std::string s0 = vm.popString(); if(verbose) LogInfo() << "s0: " << s0;
 
-        pWorld->getAudioWorld().playSound(s0 + ".wav");
+        pWorld->getAudioWorld().playSound(s0);
+
     });
 }
 

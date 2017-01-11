@@ -18,20 +18,51 @@ class AudioEngine;
 
 }
 
+namespace Engine
+{
+
+class BaseEngine;
+
+}
+
+namespace Daedalus
+{
+
+    class DaedalusVM;
+
+namespace GEngineClasses
+{
+    struct C_SFX;
+}
+
+}
+
+namespace Logic
+{
+
+class ScriptEngine;
+
+}
+
 namespace World
 {
 
+/** The audio world class.
+ *
+ * Each world has it's own AudioWorld which manages an OpenAL context.
+ *
+ */
 class AudioWorld
 {
     friend class AudioEngine;
 
 public:
 
-    AudioWorld(Audio::AudioEngine &engine, const VDFS::FileIndex& vdfidx);
+    AudioWorld(Engine::BaseEngine &engine, Audio::AudioEngine &audio_engine, const VDFS::FileIndex& vdfidx);
 
     virtual ~AudioWorld();
 
-    /* Listener */
+    /* Listener (TODO) */
 
     void setListenerGain(float gain);
 
@@ -44,14 +75,14 @@ public:
     /**
      * @brief Loads an audio-file from the given or stored VDFS-FileIndex
      */
-    Handle::AudioHandle loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name);
+    Handle::SfxHandle loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name);
 
-    Handle::AudioHandle loadAudioVDF(const std::string& name);
+    Handle::SfxHandle loadAudioVDF(const std::string& name);
 
     /**
      * Plays the sound of the given handle/name
      */
-    void playSound(Handle::AudioHandle h);
+    void playSound(Handle::SfxHandle h);
 
     void playSound(const std::string& name);
 
@@ -62,22 +93,36 @@ public:
 
 private:
 
-    ALCcontext *m_Context = NULL;
+    Engine::BaseEngine &m_Engine;
+
+    /**
+     * Pointer to a vdfs-index to work on (can be nullptr)
+     */
+    const VDFS::FileIndex& m_VDFSIndex;
+
+    ALCcontext *m_Context = nullptr;
+
+    Daedalus::DaedalusVM *m_VM = nullptr;
 
     struct Source
     {
         unsigned m_Handle = 0;
     };
 
-    /**
-     * Single audio-file
-     */
-    struct AudioFile : public Handle::HandleTypeDescriptor<Handle::AudioHandle>
+    struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>
     {
+        Daedalus::GEngineClasses::C_SFX sfx;
         unsigned m_Handle = 0;
     };
 
 #ifdef RE_USE_SOUND
+
+    void createSounds();
+
+    Handle::SfxHandle allocateSound(const std::string &name, const Daedalus::GEngineClasses::C_SFX &sfx);
+
+    void createSound(const std::string &name, const Daedalus::GEngineClasses::C_SFX &sfx);
+
     /**
      * Checks if we currently have a stopped sound to use or creates a new one, if not
      * @return sound object to use for a new sound
@@ -87,7 +132,7 @@ private:
     /**
      * Data allocator
      */
-    Memory::StaticReferencedAllocator<AudioFile, Config::MAX_NUM_LEVEL_AUDIO_FILES> m_Allocator;
+    Memory::StaticReferencedAllocator<Sound, Config::MAX_NUM_LEVEL_AUDIO_FILES> m_Allocator;
 
     /**
      * List of currently playing sounds or sounds that have been playing
@@ -96,15 +141,8 @@ private:
 #endif
 
     /**
-     * Pointer to a vdfs-index to work on (can be nullptr)
-     */
-    const VDFS::FileIndex& m_VDFSIndex;
-
-    /**
      * Contains all loaded sounds by name
      */
-    std::map<std::string, Handle::AudioHandle> m_SoundMap;
-private:
-
+    std::map<std::string, Handle::SfxHandle> m_SoundMap;
 };
 }

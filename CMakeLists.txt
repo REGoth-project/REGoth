@@ -207,7 +207,7 @@ file(GLOB ENGINE_SRC
         )
 
 add_library(engine STATIC ${ENGINE_SRC})
-set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
+#set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
 # ------------------ OpenAL ------------------
@@ -220,7 +220,7 @@ set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
 set(LIBTYPE STATIC CACHE STRING "" FORCE)
 
-if (UNIX AND NOT APPLE)
+if (UNIX)
     if (NOT APPLE)
         set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
         set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
