@@ -107,6 +107,13 @@ namespace Content
         void setTimeOfDay(float t){ m_MasterTime = t; }
 
         /**
+         * Set time to hours/minutes (24h format)
+         * @param hours
+         * @param minues
+         */
+        void setTimeOfDay(int hours, int minutes);
+
+        /**
          * Converts time to hours/minutes (24h format)
          * @param hours
          * @param minues

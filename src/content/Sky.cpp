@@ -363,6 +363,18 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
 
+void Sky::setTimeOfDay(int hours, int minutes)
+{
+    if (hours < 12)
+        hours += 12;
+    else
+        hours -= 12;
+
+    const float time = hours / 24.0f + minutes / (24.0f * 60.0f);
+
+    setTimeOfDay(time);
+}
+
 void Sky::getTimeOfDay(int& hours, int& minutes) const
 {
     float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
