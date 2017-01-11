@@ -1781,13 +1781,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
 
     });
 
-    vm.registerExternalFunction("npc_clearinventory", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "npc_clearinventory";
-        uint32_t arr_n0;
-        int32_t n0 = vm.popVar(arr_n0); if(verbose) LogInfo() << "n0: " << n0;
-
-    });
-
     vm.registerExternalFunction("npc_createspell", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_createspell";
         int spellnr = vm.popDataValue(); if(verbose) LogInfo() << "spellnr: " << spellnr;
