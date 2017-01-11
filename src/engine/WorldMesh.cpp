@@ -17,6 +17,12 @@ void WorldMesh::load(const ZenLoad::PackedMesh& in)
 	m_WorldMeshData = in;
 	m_BBox3d[0] = Math::float3(in.bbox[0].v);
 	m_BBox3d[1] = Math::float3(in.bbox[1].v);
+
+	m_WorldMeshTextures.reserve(m_WorldMeshData.subMeshes.size());
+	for(const auto& submesh : m_WorldMeshData.subMeshes)
+	{
+		m_WorldMeshTextures.push_back(m_ParentWorld.getTextureAllocator().loadTextureVDF(submesh.material.texture));
+	}
 }
 
 float WorldMesh::interpolateTriangleShadowValue(size_t triangleIdx, const Math::float3 &worldPosition) const
@@ -46,7 +52,7 @@ void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgr
         v3[i] = Math::float3(tri.vertices[i].Position.v);
 }
 
-ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
+const ZenLoad::zCMaterialData& WorldMesh::getMatData(size_t triangleIdx) const
 {
     assert(triangleIdx < m_WorldMeshData.triangles.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
@@ -60,4 +66,9 @@ void WorldMesh::getTriangle(size_t triangleIdx, WorldMeshVertex* v3, uint8_t& ma
 
 	for (int i = 0; i < 3; i++)
 		v3[i] = Meshes::vertexCast<WorldMeshVertex>(tri.vertices[i]);
+}
+
+Handle::TextureHandle WorldMesh::getSubmeshMatData(size_t submeshIdx) const
+{
+	return m_WorldMeshTextures[submeshIdx];
 }

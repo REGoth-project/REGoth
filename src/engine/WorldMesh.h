@@ -39,6 +39,11 @@ namespace World
 		void getTriangle(size_t triangleIdx, Math::float3 *v3, uint8_t& matgroup) const;
 		void getTriangle(size_t triangleIdx, WorldMeshVertex* v3, uint8_t& matgroup) const;
 
+        /**
+         * @return Iterable list of triangles
+         */
+        const std::vector<ZenLoad::WorldTriangle>& getTriangles() const { return m_WorldMeshData.triangles; };
+
 		/**
 		 * @return Boundingbox max/min
 		 */
@@ -48,14 +53,25 @@ namespace World
 		/**
 		 * Debugging purposes only
 		 */
-		ZenLoad::zCMaterialData getMatData(size_t triangleIdx) const;
+		const ZenLoad::zCMaterialData& getMatData(size_t triangleIdx) const;
 
+        /**
+         * Looks up which material is used by the given submesh
+         * @param submeshIdx Submesh to look at
+         * @return Texture used by the given submesh
+         */
+        Handle::TextureHandle getSubmeshMatData(size_t submeshIdx) const; // FIXME: Should return material later
 	protected:
 
 		/**
 		 * Data of the worldmesh
 		 */
 		ZenLoad::PackedMesh m_WorldMeshData;
+
+        /**
+         * List of materials used by submeshes
+         */
+        std::vector<Handle::TextureHandle> m_WorldMeshTextures;
 
 		/**
 		 * Reference to the parentworld
