@@ -302,6 +302,19 @@ namespace Utils
      */
     bool fileExists(const std::string& file);
 
+
+    /**
+     * Reads the whole contents of a text-file into a buffer 
+     * @param file File to read
+     * @return contents of the given textfile
+     */
+    std::string readFileContents(const std::string& file);
+
+    /**
+     * @return Size of the given file in bytes. 0 is not found or emtpy.
+     */
+    size_t getFileSize(const std::string& file);
+
     /**
      * Removes the last .ext from the string
      * @param fileName Input string with extension as ".ext"
@@ -323,4 +336,14 @@ namespace Utils
 
     //bgfx::TextureHandle loadTexture(const char* _name, uint32_t _flags = BGFX_TEXTURE_NONE, uint8_t _skip = 0, bgfx::TextureInfo* _info = NULL);
 
+    /**
+     * Creates a directory on the given path
+     */
+    bool mkdir(const std::string& dir);
+
+    /**
+     * Grabs the directory where to put userdata like config-files or savegames.
+     * Will be something like %APPDATA% on windows or $HOME on unix-based systems. Everything else will default to the current directory.
+     */
+    std::string getUserDataLocation();
 }

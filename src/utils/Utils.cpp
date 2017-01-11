@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include <fstream>
 #include <tinydir.h>
 #include <utils/logger.h>
 #include <algorithm>
@@ -7,6 +8,17 @@
 #include <bx/crtimpl.h>
 #include <utils/split.h>
 #include <bgfx/bgfx.h>
+
+#ifdef __unix__
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+#elif _WIN32 
+#include <direct.h>
+#endif
+
+const std::string USERDATA_FOLDER = ".REGoth";
 
 static bx::FileReaderI* fileReader = nullptr;
 static bx::FileWriterI* fileWriter = nullptr;
@@ -88,6 +100,22 @@ bool Utils::fileExists(const std::string& file)
     fclose(f);
 
     return true;
+}
+
+
+size_t Utils::getFileSize(const std::string& file)
+{
+    FILE* f = fopen(file.c_str(), "rb");
+
+    if(!f)
+        return 0;
+
+    fseek(f, 0, SEEK_END);
+    size_t s = ftell(f);
+    
+    fclose(f);
+
+    return s;
 }
 
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, const std::string& prePath)
@@ -281,4 +309,46 @@ bool Utils::StopWatch::DelayedByArgMS(int delay)
         return true;
     }
     else return false;
+}
+
+bool Utils::mkdir(const std::string& dir)
+{
+    mode_t nMode = 0733; // UNIX style permissions
+    int nError = 0;
+#if defined(_WIN32)
+    nError = ::_mkdir(dir.c_str()); // can be used on Windows
+#else 
+    nError = ::mkdir(dir.c_str(),nMode); // can be used on non-Windows
+#endif
+	return nError == 0;
+}
+    
+std::string Utils::getUserDataLocation()
+{
+#ifdef _WIN32
+	char buffer[MAX_PATH]; 
+	BOOL result = SHGetSpecialFolderPathA(nullptr 
+										, buffer
+										, CSIDL_LOCAL_APPDATA
+										, false );
+	if(!result) return USERDATA_FOLDER; 
+    return std::string(buffer) + "/" + USERDATA_FOLDER;
+ 
+#elif __unix__
+    struct passwd *pw = getpwuid(getuid());
+
+    const char *homedir = pw->pw_dir;
+    return std::string(homedir) + "/" + USERDATA_FOLDER;
+#else
+    return "./" + USERDATA_FOLDER;
+#endif
+}
+
+std::string Utils::readFileContents(const std::string& file)
+{
+    std::ifstream f(file);
+    std::stringstream ss;
+    ss << f.rdbuf();
+
+    return ss.str();
 }
