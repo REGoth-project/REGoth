@@ -40,6 +40,9 @@ WorldInstance::WorldInstance()
 WorldInstance::~WorldInstance()
 {
     getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
+    delete m_PrintScreenMessageView;
+
+    delete m_AudioWorld;
 }
 
 void WorldInstance::init(Engine::BaseEngine& engine)
@@ -48,7 +51,6 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
-    m_AudioEngine.setVDFSIndex(&engine.getVDFSIndex());
 
     m_pEngine = &engine;
 
@@ -61,6 +63,8 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     // Create UI-Views
     m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
     getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
+
+    m_AudioWorld = new World::AudioWorld(m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 }
 
 void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)

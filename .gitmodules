@@ -22,3 +22,6 @@
 [submodule "lib/adpcm-xq"]
 	path = lib/adpcm-xq
 	url = https://github.com/dbry/adpcm-xq.git
+[submodule "lib/openal-soft"]
+	path = lib/openal-soft
+	url = https://github.com/kcat/openal-soft.git

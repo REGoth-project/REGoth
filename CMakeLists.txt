@@ -16,7 +16,6 @@ if(NOT BUILD_SHARED_LIBS)
     add_definitions(-DSFML_STATIC)
 endif()
 
-
 if(EMSCRIPTEN)
 
     # cmake -DCMAKE_TOOLCHAIN_FILE="/usr/lib/emscripten/cmake/Modules/Platform/Emscripten.cmake" ..
@@ -31,7 +30,6 @@ if(EMSCRIPTEN)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s TOTAL_MEMORY=924288000")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../content@/")
 endif()   
-
 
 if(ANDROID)
     #set(BGFX_DEBUG 0)
@@ -106,6 +104,7 @@ add_definitions(-DBGFX_CONFIG_MAX_COMMAND_BUFFER_SIZE=231072) # FIXME: Flush som
 add_definitions(-DBGFX_CONFIG_MAX_INDEX_BUFFERS=65535)
 add_definitions(-DBGFX_CONFIG_MAX_VERTEX_BUFFERS=65535) # TODO: Don't mess around with memory so much
 
+# Set up GLM
 add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL) # Quaternions
 
@@ -115,16 +114,16 @@ add_definitions(-D__STDC_FORMAT_MACROS)
 
 # Temp
 if(NOT MSVC)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
 
 if(MINGW)
-    SET(COMPILER_PREFIX "i686-mingw32")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
+    set(COMPILER_PREFIX "i686-mingw32")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
 endif()
 
 if(MSVC)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
 	add_definitions(-DNOMINMAX)
 endif()
 
@@ -143,7 +142,8 @@ if(MSVC)
 endif()
 
 # ------------------ Config-Header ------------------
-configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
+
+configure_file(src/rgconfig.h.in ${PROJECT_BINARY_DIR}/src/rgconfig.h)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
 add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
@@ -173,6 +173,7 @@ set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geomet
 
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
+        "src/audio/*.cpp"
         "src/components/*.cpp"
         "src/components/*.h"
         "src/engine/*.cpp"
@@ -205,9 +206,29 @@ file(GLOB ENGINE_SRC
         "src/logic/mobs/*.h"
         )
 
-add_library(engine STATIC ${ENGINE_SRC} src/content/AudioEngine.cpp src/content/AudioEngine.h)
+add_library(engine STATIC ${ENGINE_SRC})
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
+
+# ------------------ OpenAL ------------------
+
+# Set up OpenAL
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+
+set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
+set(LIBTYPE STATIC CACHE STRING "" FORCE)
+
+if (UNIX AND NOT APPLE)
+    if (NOT APPLE)
+        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+    endif()
+    target_link_libraries(engine openal)
+elseif(WIN32)
+    target_link_libraries(engine OpenAL32)
+endif()
 
 # ------------------ Other ------------------
 
@@ -229,7 +250,7 @@ if(NOT ANDROID)
         target_link_libraries(engine glfw sfml-audio)
 
         # We want audio if not on android
-        add_definitions(-DRE_USE_SFML)
+        add_definitions(-DRE_USE_SOUND)
         add_subdirectory(lib/SFML)
         include_directories(lib/SFML/include)
     endif()

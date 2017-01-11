@@ -16,7 +16,7 @@
 #include <content/AnimationAllocator.h>
 #include <content/Sky.h>
 #include <logic/DialogManager.h>
-#include <content/AudioEngine.h>
+#include "audio/AudioWorld.h"
 #include <json.hpp>
 #include "BspTree.h"
 
@@ -236,9 +236,9 @@ namespace World
 		{
 			return m_DialogManager;
 		}
-		Content::AudioEngine& getAudioEngine()
+        World::AudioWorld& getAudioWorld()
 		{
-			return m_AudioEngine;
+            return *m_AudioWorld;
 		}
 
 		/**
@@ -340,10 +340,7 @@ namespace World
 		 */
 		Physics::PhysicsSystem m_PhysicsSystem;
 
-		/**
-		 * Audio-Engine of this world
-		 */
-		Content::AudioEngine m_AudioEngine;
+        World::AudioWorld *m_AudioWorld;
 
 		/**
 		 * Sky of this world

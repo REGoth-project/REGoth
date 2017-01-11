@@ -18,7 +18,7 @@
 #include <bx/uint32_t.h>
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
-#include "config.h"
+#include "rgconfig.h"
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
 #include <ZenLib/utils/logger.h>
