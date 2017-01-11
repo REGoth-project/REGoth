@@ -92,6 +92,11 @@ namespace UI
          */
         void popMenu();
 
+        /**
+         * @return Whether a menu is currently active
+         */
+        bool isMenuActive(){ return !m_MenuChain.empty(); }
+
     protected:
 
         /**
