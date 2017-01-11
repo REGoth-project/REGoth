@@ -28,7 +28,7 @@ namespace World
 		 * @param worldPosition Position to interpolate to (in world-coords)
 		 * @return Interpolated color-value on the given triangle
 		 */
-		float interpolateTriangleShadowValue(size_t triangleIdx, const Math::float3& worldPosition);
+		float interpolateTriangleShadowValue(size_t triangleIdx, const Math::float3& worldPosition) const;
 
 		/**
 		 * Returns the vertices of the given triangle
@@ -36,18 +36,18 @@ namespace World
 		 * @param v3 pointer to array of 3 Math::float3s
 		 * @param matgroup bitmap holding material group info for this triangle
 		 */
-		void getTriangle(size_t triangleIdx, Math::float3 *v3, uint8_t& matgroup);
+		void getTriangle(size_t triangleIdx, Math::float3 *v3, uint8_t& matgroup) const;
 
 		/**
 		 * @return Boundingbox max/min
 		 */
-		const Math::float3& getBBoxMin(){ return m_BBox3d[0]; }
-		const Math::float3& getBBoxMax(){ return m_BBox3d[1]; }
+		const Math::float3& getBBoxMin() const { return m_BBox3d[0]; }
+		const Math::float3& getBBoxMax() const { return m_BBox3d[1]; }
 
 		/**
 		 * Debugging purposes only
 		 */
-		ZenLoad::zCMaterialData getMatData(size_t triangleIdx);
+		ZenLoad::zCMaterialData getMatData(size_t triangleIdx) const;
 
 	protected:
 
