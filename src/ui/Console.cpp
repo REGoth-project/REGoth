@@ -102,9 +102,9 @@ void Console::onKeyDown(int glfwKey)
 
 std::string Console::submitCommand(const std::string& command)
 {
-    if (m_History.empty() || m_History.back() != command) {
+    if((command.find_first_not_of(' ') != std::string::npos) && (m_History.empty() || m_History.back() != command))
         m_History.push_back(command);
-    }
+
     m_HistoryIndex = -1;
     m_PendingLine.clear();
 
