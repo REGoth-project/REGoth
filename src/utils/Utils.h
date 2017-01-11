@@ -24,6 +24,33 @@ namespace Utils
     };
 
     /**
+     * Checks whether a point is inside a bounding-box
+     * @param p Point to check
+     * @param bb BBox to check
+     * @return whether a point is inside a bounding-box
+     */
+    inline bool pointInBBox(const Math::float3& p, const BBox3D& bb)
+    {
+        return p.x > bb.min.x && p.x < bb.max.x
+               && p.y > bb.min.y && p.y < bb.max.y
+               && p.z > bb.min.z && p.z < bb.max.z;
+    }
+
+    /**
+     * Checks whether the given triangle is crossing a bounding-box
+     * @param v0 Triangle-vertex #1
+     * @param v1 Triangle-vertex #2
+     * @param v2 Triangle-vertex #3
+     * @param bb Boundingbox to check against
+     * @return Whether the triangle is crossing the BBox
+     */
+    inline bool triangleInBBox(const Math::float3& v0, const Math::float3& v1, const Math::float3& v2, const BBox3D& bb)
+    {
+        // TODO: This isn't correct for triangles bigger than the BBox, with no vertex inside it!
+        return pointInBBox(v0, bb) && pointInBBox(v1, bb) && pointInBBox(v2, bb);
+    }
+
+    /**
      * Checks on which side of the plane the given point is.
      * @param point Point to check
      * @param plane Plane to check against
