@@ -26,7 +26,21 @@ namespace Render
 	 * @param light Light-Entity inside world
 	 * @param litTriangles [out] List of triangles hit by the light
 	 */
-	void collectLightTriangles(World::WorldInstance& world, Handle::EntityHandle light, std::vector<size_t>& litTriangles);
+	void collectLightTriangles(World::WorldInstance& world,
+                               const Components::PositionComponent& position,
+                               const Components::LightComponent& light,
+                               std::vector<size_t>& litTriangles);
+
+    /**
+     * Draws a single point-light
+     * @param world World to draw the light in
+     * @param position Position/Radius of the light
+     * @param light Light component of the entity
+     */
+    void drawPointLight(World::WorldInstance& world,
+                        const Components::PositionComponent& position,
+                        const Components::LightComponent& light,
+                        const RenderConfig& config);
 
 	/**
 	 * @brief Renders the waynet of the given world

@@ -79,6 +79,7 @@ namespace Render
 		Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
 		Components::AnimationComponent* animations = std::get<Components::AnimationComponent*>(ctuple);
 		Components::PhysicsComponent* physics = std::get<Components::PhysicsComponent*>(ctuple);
+        Components::LightComponent* lights = std::get<Components::LightComponent*>(ctuple);
 
 		// Static mesh instancing
 		struct InstanceData
@@ -304,6 +305,11 @@ namespace Render
 				}
 			}
 
+            if((mask & Components::LightComponent::MASK) != 0)
+            {
+                drawPointLight(world, psc[i], lights[i], config);
+            }
+
 
 
 		}
@@ -441,20 +447,114 @@ void Render::debugDrawPath(const World::Waynet::WaynetInstance& waynet, const st
 	ddPop();
 }
 
-void ::Render::collectLightTriangles(World::WorldInstance& world, Handle::EntityHandle light,
+void ::Render::collectLightTriangles(World::WorldInstance& world,
+                                     const Components::PositionComponent& position,
+                                     const Components::LightComponent& light,
 									 std::vector<size_t>& litTriangles)
 {
 	// Make Bounding Box of the given light and get light radius
-	Components::PositionComponent& p = world.getEntity<Components::PositionComponent>(light);
-	float radius = p.m_WorldMatrix.Forward().length();
+	float radius = position.m_WorldMatrix.Forward().length() * 5.0f; // FIXME: 5.0 is only for testing
 
-	Utils::BBox3D bb = {Math::float3(-radius,-radius,-radius), Math::float3(radius,radius,radius)};
+	Utils::BBox3D bb = {Math::float3(-radius,-radius,-radius) + position.m_WorldMatrix.Translation(),
+                        Math::float3(radius,radius,radius) + position.m_WorldMatrix.Translation()};
 	std::vector<World::NodeIndex> nodes = world.getBspTree().findLeafsOf(bb);
 
     // Collect all triangles of found nodes
     for(World::NodeIndex i : nodes)
     {
-        std::vector<World::WorldMeshIndex> tris = world.getBspTree().getNode(i).NodeTriangles;
+        std::vector<size_t> tris = world.getBspTree().getNode(i).nodeTriangles;
         litTriangles.insert(litTriangles.end(), tris.begin(), tris.end());
+    }
+
+    // Throw out duplicates
+    std::sort( litTriangles.begin(), litTriangles.end() );
+    litTriangles.erase( std::unique( litTriangles.begin(), litTriangles.end() ), litTriangles.end() );
+}
+
+void ::Render::drawPointLight(World::WorldInstance& world,
+                              const Components::PositionComponent& position,
+                              const Components::LightComponent& light,
+                              const RenderConfig& config)
+{
+    // Check which triangles are hit by this light
+    std::vector<size_t> litTriangles;
+    collectLightTriangles(world, position, light, litTriangles);
+
+    LogInfo() << "Lit triangles: " << litTriangles.size();
+
+    if(litTriangles.empty())
+        return; // Nothing to do
+
+    assert((uint32_t)(litTriangles.size() * 3) == litTriangles.size() * 3); // Catch overflows
+
+    // Get light radius
+    float radius = position.m_WorldMatrix.Forward().length();
+    Math::float3 lightPosition = position.m_WorldMatrix.Translation();
+
+    // Transform light position into viewspace
+    lightPosition = config.state.cameraWorld.Invert() * lightPosition;
+
+    const World::WorldMesh& mesh = world.getWorldMesh();
+
+    // Sort by texture
+    std::sort(litTriangles.begin(), litTriangles.end(), [&](size_t a, size_t b){
+        return mesh.getTriangles()[a].submeshIndex < mesh.getTriangles()[b].submeshIndex;
+    });
+
+    // Plug them into a dynamic vertexbuffer
+    if (bgfx::checkAvailTransientVertexBuffer((uint32_t)litTriangles.size() * 3, Meshes::WorldStaticMeshVertex::ms_decl) )
+    {
+        bgfx::TransientVertexBuffer vb;
+        bgfx::allocTransientVertexBuffer(&vb, (uint32_t) litTriangles.size() * 3,
+                                         Meshes::WorldStaticMeshVertex::ms_decl);
+        Meshes::WorldStaticMeshVertex* vertex = (Meshes::WorldStaticMeshVertex*) vb.data;
+
+        // submesh-index, vertex-start, num vertices
+        std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> submeshes;
+        for (size_t tri : litTriangles)
+        {
+            const auto& triData = mesh.getTriangles()[tri];
+
+            if(submeshes.empty())
+                submeshes.emplace_back(triData.submeshIndex, 0, 0);
+
+            // Add new submesh, if the texture changed
+            if (triData.submeshIndex != std::get<0>(submeshes.back()))
+                submeshes.emplace_back(triData.submeshIndex,
+                                       std::get<1>(submeshes.back()) + std::get<2>(submeshes.back()), 0);
+
+            uint8_t mt;
+            // Grab the triangle data
+            mesh.getTriangle(tri, vertex, mt);
+
+            vertex += 3;
+            std::get<2>(submeshes.back()) += 3;
+        }
+
+        // Draw all submeshes
+        for (const std::tuple<uint32_t, uint32_t, uint32_t>& t : submeshes)
+        {
+            LogInfo() << "Submesh #" << std::get<0>(t) << ", Start: " << std::get<1>(t) << ", num: " << std::get<2>(t);
+
+            bgfx::setState(BGFX_STATE_DEFAULT | BGFX_STATE_DEPTH_TEST_EQUAL | BGFX_STATE_BLEND_ADD);
+
+            Math::float4 color;
+            color.fromRGBA8(light.m_Color);
+            Math::float4 prad = {lightPosition.x,
+                                 lightPosition.y,
+                                 lightPosition.z,
+                                 radius};
+
+
+            bgfx::setUniform(config.uniforms.lightPositionAndRadius, prad.v);
+            bgfx::setUniform(config.uniforms.lightColor, color.v);
+            bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
+
+            bgfx::setVertexBuffer(&vb, std::get<1>(t), std::get<2>(t));
+            Textures::Texture& tex = world.getTextureAllocator().getTexture(mesh.getSubmeshMatData(std::get<0>(t)));
+
+            bgfx::setTexture(0, config.uniforms.diffuseTexture, tex.m_TextureHandle);
+            bgfx::submit(0, config.programs.pointLightProgram);
+        }
     }
 }
