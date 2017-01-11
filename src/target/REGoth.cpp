@@ -375,6 +375,17 @@ public:
             return "Set time to " + std::to_string(t);
         });
 
+        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() != 4)
+                return "Invalid arguments. Usage: set time [hh mm]";
+
+            int hh = std::stoi(args[2]);
+            int mm = std::stoi(args[3]);
+            m_pEngine->getMainWorld().get().getSky().getTimeOfDay(hh, mm);
+
+            return "Set time to " + args[2] + ":" + args[3];
+        });
+
         console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
