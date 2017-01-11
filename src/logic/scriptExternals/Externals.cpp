@@ -997,6 +997,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         toNpc.playerController->getInventory().addItem(itemInstance);
     });
 
+    vm->registerExternalFunction("npc_clearinventory", [=](Daedalus::DaedalusVM& vm) {
+        uint32_t npcId = vm.popVar(); if(verbose) LogInfo() << "npc_clearinventory " << npcId;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(npcId);
+
+        if(!npc.isValid())
+            return;
+        npc.playerController->getInventory().clear();
+    });
+
     vm->registerExternalFunction("snd_play", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "snd_play";
         std::string s0 = vm.popString(); if(verbose) LogInfo() << "s0: " << s0;
