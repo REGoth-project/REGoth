@@ -313,11 +313,12 @@ bool Utils::StopWatch::DelayedByArgMS(int delay)
 
 bool Utils::mkdir(const std::string& dir)
 {
-    mode_t nMode = 0733; // UNIX style permissions
-    int nError = 0;
+
 #if defined(_WIN32)
     nError = ::_mkdir(dir.c_str()); // can be used on Windows
-#else 
+#else
+    mode_t nMode = 0733; // UNIX style permissions
+    int nError = 0;
     nError = ::mkdir(dir.c_str(),nMode); // can be used on non-Windows
 #endif
 	return nError == 0;
