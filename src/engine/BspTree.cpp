@@ -19,14 +19,14 @@ NodeIndex BspTree::addEntity(Handle::EntityHandle entity)
     // FIXME: Use actual BBox, but the vobs haven't got them initialized yet
     Utils::BBox3D bbox = { position - Math::float3(1,1,1), position + Math::float3(1,1,1) };
     
-    std::vector<NodeIndex> nodes = findLeafOf(bbox);
+    std::vector<NodeIndex> nodes = findLeafsOf(bbox);
 
     LogInfo() << "Nodes: " << nodes;
 
     if(nodes.empty())
         return INVALID_NODE;
 
-    // Return one of the leafs
+    // Return one of the leafs  
     return nodes.front();
 }
 
@@ -72,7 +72,7 @@ NodeIndex BspTree::findLeafOf(const Math::float3& position)
     return rec(0);
 }
 
-std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
+std::vector<NodeIndex> BspTree::findLeafsOf(const Utils::BBox3D& bbox)
 {
     std::function<std::vector<NodeIndex>(const Utils::BBox3D&, NodeIndex)> rec = [&](const Utils::BBox3D& bbox, NodeIndex n) -> std::vector<NodeIndex> {
 
@@ -150,7 +150,7 @@ void BspTree::debugDraw()
     return;
     Math::float3 pp = m_World.getEntity<Components::PositionComponent>(m_World.getScriptEngine().getPlayerEntity()).m_WorldMatrix.Translation();
     Utils::BBox3D bb = {pp - Math::float3(1,1,1), pp + Math::float3(1,1,1)};
-    std::vector<NodeIndex> pn = findLeafOf(bb);
+    std::vector<NodeIndex> pn = findLeafsOf(bb);
 
     LogInfo() << "pn: " << pn;
     LogInfo() << "pp: " << pp.toString();
@@ -177,4 +177,21 @@ void BspTree::debugDraw()
     }
 
     ddPop();*/
+}
+
+void BspTree::addLightEntity(Handle::EntityHandle entity)
+{
+    // Make Bounding Box of the given light and get light radius
+    Components::PositionComponent& p = m_World.getEntity<Components::PositionComponent>(entity);
+    float radius = p.m_WorldMatrix.Forward().length();
+
+    Utils::BBox3D bb = {Math::float3(-radius,-radius,-radius), Math::float3(radius,radius,radius)};
+
+    // check in which BSP-Nodes this light would end up
+    std::vector<NodeIndex> nodes = findLeafsOf(bb);
+
+    for(NodeIndex i : nodes)
+    {
+        m_Nodes[i].lightEntities.push_back(entity);
+    }
 }

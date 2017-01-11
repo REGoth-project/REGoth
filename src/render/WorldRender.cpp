@@ -440,3 +440,21 @@ void Render::debugDrawPath(const World::Waynet::WaynetInstance& waynet, const st
 
 	ddPop();
 }
+
+void ::Render::collectLightTriangles(World::WorldInstance& world, Handle::EntityHandle light,
+									 std::vector<size_t>& litTriangles)
+{
+	// Make Bounding Box of the given light and get light radius
+	Components::PositionComponent& p = world.getEntity<Components::PositionComponent>(light);
+	float radius = p.m_WorldMatrix.Forward().length();
+
+	Utils::BBox3D bb = {Math::float3(-radius,-radius,-radius), Math::float3(radius,radius,radius)};
+	std::vector<World::NodeIndex> nodes = world.getBspTree().findLeafsOf(bb);
+
+    // Collect all triangles of found nodes
+    for(World::NodeIndex i : nodes)
+    {
+        std::vector<World::WorldMeshIndex> tris = world.getBspTree().getNode(i).NodeTriangles;
+        litTriangles.insert(litTriangles.end(), tris.begin(), tris.end());
+    }
+}

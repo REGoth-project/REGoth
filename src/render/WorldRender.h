@@ -21,6 +21,14 @@ namespace Render
 	void drawWorld(World::WorldInstance& world, const RenderConfig& config, RenderSystem& system);
 
 	/**
+	 * Runs through the BSP-Nodes touching the given light and collects all triangles lit by it
+	 * @param world Currently loaded world
+	 * @param light Light-Entity inside world
+	 * @param litTriangles [out] List of triangles hit by the light
+	 */
+	void collectLightTriangles(World::WorldInstance& world, Handle::EntityHandle light, std::vector<size_t>& litTriangles);
+
+	/**
 	 * @brief Renders the waynet of the given world
 	 */
 	void debugDrawWaynet(const World::Waynet::WaynetInstance& waynet);

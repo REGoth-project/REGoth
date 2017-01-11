@@ -3,6 +3,7 @@
 #include <zenload/zTypes.h>
 #include <vector>
 #include <handle/HandleDef.h>
+#include <engine/WorldTypes.h>
 
 namespace World
 {
@@ -38,6 +39,21 @@ namespace World
             Math::float4 plane;
 
             /**
+             * All entites touching this BSP-node with their bounding-boxes
+             */
+            std::vector<Handle::EntityHandle> entities;
+
+            /**
+             * All lights touching this BSP-node with their bounding-boxes
+             */
+            std::vector<Handle::EntityHandle> lightEntities;
+
+            /**
+             * All triangles inside this bounding-box
+             */
+            std::vector<World::WorldMeshIndex> NodeTriangles;
+
+            /**
              * @return Whether this is a leaf
              */
             bool isLeaf() { return front == INVALID_NODE && back == INVALID_NODE; }
@@ -60,12 +76,26 @@ namespace World
         NodeIndex addEntity(Handle::EntityHandle entity);
 
         /**
+         * Adds a light-entity to the tree. ill look up the position
+         * from its PositionComponent.
+         * @param entity Entity to add. Must have a PositionComponent, should have LightComponent!
+         */
+        void addLightEntity(Handle::EntityHandle entity);
+
+        /**
          * Returns the node-index of the given position
          * @param position Position to check
          * @return node this position is in, or INVALID_NODE if none
          */
         NodeIndex findLeafOf(const Math::float3& position);
-        std::vector<NodeIndex> findLeafOf(const Utils::BBox3D& bbox);
+        std::vector<NodeIndex> findLeafsOf(const Utils::BBox3D& bbox);
+
+        /**
+         * Access to a node, by index
+         * @param i Index of the node to access
+         * @return const reference to the node with the given index
+         */
+        const BspNode& getNode(NodeIndex i) const {assert(i < m_Nodes.size()); return m_Nodes[i]; }
 
         /**
          * Debug-rendering

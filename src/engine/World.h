@@ -228,6 +228,10 @@ namespace World
 		{
 			return m_WorldMesh;
 		}
+		BspTree& getBspTree()
+		{
+			return m_BspTree;
+		}
 		Content::Sky& getSky()
 		{
 			return m_Sky;
