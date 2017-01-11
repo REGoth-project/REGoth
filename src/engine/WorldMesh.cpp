@@ -23,7 +23,7 @@ float WorldMesh::interpolateTriangleShadowValue(size_t triangleIdx, const Math::
 {
 	assert(triangleIdx < m_WorldMeshData.triangles.size());
 
-	ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
+	const ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
 
 	float u,v,w;
 	Math::barycentric(worldPosition, tri.vertices[0].Position.v, tri.vertices[1].Position.v, tri.vertices[2].Position.v, u, v, w);
@@ -39,7 +39,7 @@ float WorldMesh::interpolateTriangleShadowValue(size_t triangleIdx, const Math::
 void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgroup) const
 {
     assert(triangleIdx < m_WorldMeshData.triangles.size());
-    ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
+    const ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
     matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
 
     for (int i = 0; i < 3; i++)
@@ -55,9 +55,9 @@ ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
 void WorldMesh::getTriangle(size_t triangleIdx, WorldMeshVertex* v3, uint8_t& matgroup) const
 {
 	assert(triangleIdx < m_WorldMeshData.triangles.size());
-	ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
+	const ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
 	matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
 
 	for (int i = 0; i < 3; i++)
-		v3[i] = Meshes::vertexCast<WorldMeshVertex>(tri.vertices[i]));
+		v3[i] = Meshes::vertexCast<WorldMeshVertex>(tri.vertices[i]);
 }
