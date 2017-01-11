@@ -28,7 +28,6 @@ Sky::Sky(World::WorldInstance& world) :
 {
     m_MasterState.time = 0.0f;
     m_FarPlane = FLT_MAX;
-	m_MasterTime = 0.0f;
     m_skySpeedMultiplier = 1.0f;
 
     fillSkyStates();
@@ -91,8 +90,8 @@ void Sky::interpolate(double deltaTime)
 //    if(inputGetKeyState(entry::Key::KeyO))
 //        deltaTime *= 10.0;
 
-    m_MasterTime += deltaTime;
-    m_MasterState.time = fmod(static_cast<float>(m_MasterTime / (60.0 * 60.0 * 24.0)), 1.0f);
+    m_MasterState.time += deltaTime / (60.0 * 60.0 * 24.0);
+    m_MasterState.time = fmod(m_MasterState.time, 1.0f);
 
     size_t si0 = 0, si1 = 1;
 
@@ -319,7 +318,12 @@ void Sky::fillSkyStates()
     }
 }
 
-void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor)
+void Sky::setTimeOfDay(float t)
+{
+    m_MasterState.time = t;
+}
+
+void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor) const
 {
     // Note: These are some magic values to match what gothic does
     float fogMidrange = m_FarPlane * 0.4f;
@@ -363,14 +367,26 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
 
-void Sky::getTimeOfDay(int& hours, int& minutes)
+void Sky::setTimeOfDay(int hours, int minutes)
+{
+    if (hours < 12)
+        hours += 12;
+    else
+        hours -= 12;
+
+    const float time = hours / 24.0f + minutes / (24.0f * 60.0f);
+
+    setTimeOfDay(time);
+}
+
+void Sky::getTimeOfDay(int& hours, int& minutes) const
 {
     float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
     hours = (int)fh;
     minutes = (int)((fh - hours) * 60.0f);
 }
 
-std::string Sky::getTimeOfDayFormated()
+std::string Sky::getTimeOfDayFormated() const
 {
     int h, m;
     getTimeOfDay(h, m);
