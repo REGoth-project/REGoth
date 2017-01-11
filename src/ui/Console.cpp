@@ -108,21 +108,39 @@ std::string Console::submitCommand(const std::string& command)
     m_HistoryIndex = -1;
     m_PendingLine.clear();
 
-    std::vector<std::string> args = Utils::split(command, ' ');
-
     outputAdd(" >> " + command);
 
-    if(args.empty())
+    if(command.empty())
         return "";
 
+    size_t bestMatchSize = 0;
+    int bestMatchIndex = -1;
     for (size_t i = 0; i < m_Commands.size(); ++i)
     {
-        if (m_Commands.at(i) == args[0])
-        {
-            std::string result = m_CommandCallbacks.at(i)(args);
-            outputAdd(result);
-            return result;
+        const std::string &candidate = m_Commands.at(i);
+        if (candidate.size() < bestMatchSize) {
+            // We already found a better command candidate
+            continue;
         }
+
+        if (command.size() == candidate.size() || (command.size() > candidate.size() && command.at(candidate.size()) == ' '))
+        {
+            // it makes sense to compare
+            if (candidate == command.substr(0, candidate.size()))
+            {
+                // Match!
+                bestMatchSize = candidate.size();
+                bestMatchIndex = i;
+            }
+        }
+    }
+
+    if (bestMatchIndex >= 0)
+    {
+        const std::vector<std::string> args = Utils::split(command, ' ');
+        const std::string result = m_CommandCallbacks.at(bestMatchIndex)(args);
+        outputAdd(result);
+        return result;
     }
 
     outputAdd(" -- Command not found -- ");
