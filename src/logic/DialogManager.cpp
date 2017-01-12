@@ -329,7 +329,12 @@ void DialogManager::init()
         ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
-        LogWarn() << "Failed to read OU-file!";
+    {
+       //TODO: We probably could use a better error handling mechanism
+       const std::string& errMsg = "Failed to read OU-file!";
+       LogWarn() << errMsg;
+       throw std::runtime_error("Initialization failed: " + errMsg);
+    }
     else
         LogInfo() << "Loading OU-file from: " << ou;
 
