@@ -240,6 +240,7 @@ if(NOT ANDROID)
         add_subdirectory(lib/glfw)
         # We want audio if not on android
         add_definitions(-DRE_USE_SOUND)
+        target_link_libraries(engine glfw)
     endif()
 else()
 
