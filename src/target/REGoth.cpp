@@ -33,6 +33,8 @@
 #include <ui/Hud.h>
 #include <ui/Menu.h>
 #include <logic/SavegameManager.h>
+#include <utils/cli.h>
+#include <utils/zTools.h>
 
 using json = nlohmann::json;
 
@@ -46,6 +48,10 @@ using json = nlohmann::json;
 #error Unknown platform
 #endif
 
+namespace Flags
+{
+    Cli::Flag help("h", "help", 0, "Prints this message");
+}
 
 struct PosColorVertex
 {
@@ -898,6 +904,19 @@ public:
 int main(int argc, char** argv)
 {
     int ret = 0;
+
+    Cli::setCommandlineArgs(argc, argv);
+
+    // Check if the user just wanted to see the list of commands
+    if(Flags::help.isSet())
+    {
+        Cli::printHelp();
+        return 0;
+    }
+
+    // Do some commandline-operations, if wanted
+    if(zTools::tryRunTools())
+        return 0;
 
     ExampleCubes app;
     try

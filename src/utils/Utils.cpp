@@ -353,3 +353,27 @@ std::string Utils::readFileContents(const std::string& file)
 
     return ss.str();
 }
+
+bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::vector<uint8_t>& data)
+{
+    std::string sep = (path.back() == '/' || path.back() == '\\') ? "" : "/";
+    std::string target = path + sep + name;
+
+    FILE* f = fopen(target.c_str(), "wb");
+    if(!f)
+        return false;
+
+    fwrite(data.data(), data.size(), 1, f);
+
+    fclose(f);
+
+    return true;
+}
+
+std::string Utils::stripFilePath(const std::string& file)
+{
+    if(file.find_last_of("\\/") == std::string::npos)
+        return file;
+
+    return file.substr(file.find_last_of("\\/") + 1);
+}
