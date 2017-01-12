@@ -584,8 +584,10 @@ public:
             if(args.size() != 2)
                 return "Missing argument. Usage: givexp <experience points>";
 
-            int exp = std::stoi(args[1]);
+            if (!s1.getVM().getDATFile().hasSymbolName("B_GiveXP"))
+                return "B_GiveXP is undefined!";
 
+            int exp = std::stoi(args[1]);
             s1.prepareRunFunction();
             s1.pushInt(exp);
             s1.runFunction("B_GiveXP");

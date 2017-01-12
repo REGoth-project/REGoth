@@ -75,22 +75,30 @@ namespace World
         if (!m_Context)
             return Handle::SfxHandle::makeInvalidHandle();
 
-        Handle::SfxHandle h = m_SoundMap[name];
+        std::string ucname = name;
+        std::transform(ucname.begin(), ucname.end(), ucname.begin(), ::toupper);
+
+        // m_SoundMap contains all the sounds with C_SFX script definitions
+        Sound *snd = nullptr;
+        Handle::SfxHandle h = m_SoundMap[ucname];
         if (!h.isValid())
         {
             // there are sounds which have no C_SFX defined
             Daedalus::GEngineClasses::C_SFX sfx;
-            sfx.file = idx.hasFile(name) ? name : (name + ".wav");
-            h = allocateSound(name, sfx);
+            sfx.file = idx.hasFile(ucname) ? ucname : (ucname + ".wav");
+            h = allocateSound(ucname, sfx);
+            snd = &m_Allocator.getElement(h);
+            m_SoundMap[ucname] = h;
+        } else
+        {
+            snd = &m_Allocator.getElement(h);
+            if (snd->m_Handle) // already loaded
+                return h;
         }
-
-        Sound& snd = m_Allocator.getElement(h);
-        if (snd.m_Handle) // already loaded
-            return h;
 
         // Load the audio-file from the VDF-archive
         std::vector<uint8_t> data;
-        idx.getFileData(name, data);
+        idx.getFileData(snd->sfx.file, data);
 
         if(data.empty())
             return Handle::SfxHandle::makeInvalidHandle();
@@ -99,7 +107,7 @@ namespace World
         if (!wav.open() || !wav.read())
             return Handle::SfxHandle::makeInvalidHandle();
 
-        alGenBuffers(1, &snd.m_Handle);
+        alGenBuffers(1, &snd->m_Handle);
 
         ALenum error = alGetError();
         if (error != AL_NO_ERROR)
@@ -114,7 +122,7 @@ namespace World
             return Handle::SfxHandle::makeInvalidHandle();
         }
 
-        alBufferData(snd.m_Handle, AL_FORMAT_MONO16, wav.getData(), wav.getDataSize(), wav.getRate());
+        alBufferData(snd->m_Handle, AL_FORMAT_MONO16, wav.getData(), wav.getDataSize(), wav.getRate());
         if (error != AL_NO_ERROR)
         {
             static bool warned = false;
