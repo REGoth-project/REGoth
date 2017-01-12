@@ -82,10 +82,6 @@ int WavReader::decodeADPCM(unsigned max_samples)
             this_block_pcm_samples = sample_count;
         }
 
-        printf("offset: %d\n", m_SourceOffset);
-        printf("block adpcm size: %d\n", this_block_adpcm_samples);
-        printf("block pcm size: %d\n", this_block_pcm_samples);
-
         // Add to out-wav
         size_t ofidx = m_Dest.size();
         m_Dest.resize(m_Dest.size() + this_block_pcm_samples * m_Channels * 2);

@@ -95,12 +95,6 @@ namespace World
         if(data.empty())
             return Handle::SfxHandle::makeInvalidHandle();
 
-        {
-            FILE *fp = fopen(name.c_str(), "wb");
-            fwrite(&data[0], 1, data.size(), fp);
-            fclose(fp);
-        }
-
         WavReader wav(&data[0], data.size());
         if (!wav.open() || !wav.read())
             return Handle::SfxHandle::makeInvalidHandle();
