@@ -321,7 +321,7 @@ void DialogManager::endDialog()
     m_DialogActive = false;
 }
 
-void DialogManager::init()
+bool DialogManager::init()
 {
     std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
@@ -329,7 +329,10 @@ void DialogManager::init()
         ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
     if(ou.empty())
-        LogWarn() << "Failed to read OU-file!";
+    {
+       LogWarn() << "Failed to read OU-file!";
+       return false;
+    }
     else
         LogInfo() << "Loading OU-file from: " << ou;
 
@@ -360,6 +363,7 @@ void DialogManager::init()
 
 
     LogInfo() << "Done initializing DialogManager!";
+    return true;
 }
 
 void DialogManager::displaySubtitle(const std::string& subtitle, const std::string& self)

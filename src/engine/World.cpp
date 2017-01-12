@@ -45,7 +45,7 @@ WorldInstance::~WorldInstance()
     delete m_AudioWorld;
 }
 
-void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
+bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
 {
     m_pEngine = &engine;
     m_ZenFile = zen;
@@ -335,7 +335,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         LogInfo() << "Running startup-scripts";
 
         // Init script-engine
-        initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty());
+        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty()))
+        {
+           LogInfo() << "Failed to initialize script engine for zen world";
+           return false;
+        }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
         // Load values from savegame, if there is one
@@ -360,8 +364,11 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
 		LogInfo() << "ZEN-Files found in the currently loaded Archives: " << zenFiles;
 
-		initializeScriptEngineForZenWorld("");
-	}
+        if (!initializeScriptEngineForZenWorld(""))
+        {
+            return false;
+        }
+    }
 
     // Initialize the sky, so it will get the right values
     m_Sky.fillSkyStates(); 
@@ -393,7 +400,7 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
     LogInfo() << "Done loading world!";
 }
 
-void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
+bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
 {
 	if(!worldName.empty())
 	{
@@ -403,9 +410,14 @@ void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 
     LogInfo() << "Initialize dialog manager";
     // Initialize dialog manager
-    m_DialogManager.init();
+    if (!m_DialogManager.init())
+    {
+       LogWarn() << "Failed to initialize dialog manager";
+       return false;
+    }
 
     LogInfo() << "Script-initialization done!";
+    return true;
 }
 
 Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)
@@ -760,7 +772,6 @@ void WorldInstance::importVobs(const json& j)
         }
     }
 }
-
 
 
 

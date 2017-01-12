@@ -105,7 +105,7 @@ namespace World
 		/**
 		* @param zen file
 		*/
-		void init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());
+		bool init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -295,7 +295,7 @@ namespace World
 		 * Will load the .DAT-Files and setup the VM.
          * @param firstStart Whether this is the initial load. If true, all NPCs will be put in here.
 		 */
-		void initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
+		bool initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
 
         WorldAllocators m_Allocators;
         TransientEntityFeatures m_TransientEntityFeatures;

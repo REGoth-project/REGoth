@@ -313,7 +313,11 @@ public:
 
         // Add startworld
         Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
-
+        if (!w.isValid())
+        {
+           LogError() << "Failed to add world, world handle is invalid!";
+           Platform::setQuit(true);
+        }
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();

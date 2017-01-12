@@ -85,6 +85,7 @@ void Menu_Load::onCustomAction(const std::string& action)
         if(!Utils::getFileSize(worldPath))
         {
             LogWarn() << "Target world-file invalid: " << worldPath;
+            return;
         }
 
         m_Engine.loadWorld(info.world + ".zen", worldPath);

@@ -120,7 +120,11 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const 
         }
     }
 
-    world.init(*this, worldFile, savegameData);
+    if (!world.init(*this, worldFile, savegameData))
+    {
+        LogError() << "Failed to init world file: " << worldFile;
+        return Handle::WorldHandle::makeInvalidHandle();
+    }
 
     if(!m_Args.testVisual.empty())
     {

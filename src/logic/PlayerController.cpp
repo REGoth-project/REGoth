@@ -835,8 +835,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
             }
             else
             {
-                // This happens when NPC enters area that should not be accessible
-                LogError() << "Encountered undefined material type under NPC's feet";
+                //TODO this happens more than it should, there seems to be too much undefined materials, find out why
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
