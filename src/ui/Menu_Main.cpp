@@ -1,5 +1,6 @@
 
 #include <engine/BaseEngine.h>
+#include <engine/Platform.h>
 #include "Menu_Main.h"
 #include <utils/logger.h>
 #include "Hud.h"
@@ -59,6 +60,6 @@ void Menu_Main::onCustomAction(const std::string& action)
         getHud().pushMenu<Menu_Settings>();
     }else if(action == "MENU_LEAVE_GAME")
     {
-        exit(0); // TODO: May want to exit properly at some point.
+        Engine::Platform::setQuit(true);
     }
 }
