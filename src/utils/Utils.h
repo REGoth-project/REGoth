@@ -302,6 +302,14 @@ namespace Utils
      */
     bool fileExists(const std::string& file);
 
+    /**
+     * Writes the given data to a file on disk
+     * @param name Name of the file to write to
+     * @param path Path to put the file at
+     * @param data Data to put into the file
+     * @return Whether the file could be written
+     */
+    bool writeFile(const std::string& name, const std::string& path, const std::vector<uint8_t>& data);
 
     /**
      * Reads the whole contents of a text-file into a buffer 
@@ -321,6 +329,13 @@ namespace Utils
      * @return String without file-extension
      */
     std::string stripExtension(const std::string& fileName);
+
+    /**
+     * Removes everything up until the last / or \\ from a string
+     * @param file String to use
+     * @return File without its path
+     */
+    std::string stripFilePath(const std::string& file);
     
     /**
      * Returns a string with case sensitive path based on case insensitive version

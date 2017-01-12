@@ -14,8 +14,17 @@
 #include <fstream>
 #include <ui/Hud.h>
 #include <ui/zFont.h>
+#include <utils/cli.h>
 
 using namespace Engine;
+
+namespace Flags
+{
+    Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation");
+    Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load");
+    Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives");
+    Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device");
+}
 
 BaseEngine::BaseEngine() : m_RootUIView(*this)
 {
@@ -38,54 +47,19 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     LogInfo() << "Initializing...";
 
-    for(int i=0;i<argc;i++)
-    {
-        LogInfo() << "Arg " << i;
-        LogInfo() << " - " << argv[i];
-    }
-
-
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-    if(m_Args.cmdline.hasArg('g'))
-    {
-        value = m_Args.cmdline.findOption('g');
-
-        if(value)
-        {
-            m_Args.gameBaseDirectory = value;
-            LogInfo() << "Using " << m_Args.gameBaseDirectory << " as game root";
-        }
-    } else
-    {
+    if(Flags::gameDirectory.isSet())
+        m_Args.gameBaseDirectory = Flags::gameDirectory.getArgs()[0];
+    else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
-    }
 
-    if(m_Args.cmdline.hasArg('m'))
-    {
-        value = m_Args.cmdline.findOption('m');
+    if(Flags::modFile.isSet())
+        m_Args.modfile = Flags::modFile.getArgs()[0];
 
-        if(value)
-        {
-            m_Args.modfile = value;
-            LogInfo() << "Using modfile " << m_Args.modfile;
-        }
-    }
-
-    if(m_Args.cmdline.hasArg('w'))
-    {
-        value = m_Args.cmdline.findOption('w');
-
-        if(value)
-        {
-            m_Args.startupZEN = value;
-            LogInfo() << "Loading world " << m_Args.startupZEN << " on startup";
-        }
-    } else
-    {
-        LogInfo() << "No startup-world specified. Using 'addonworld.zen' as default. Use the '-w' flag to specify a ZEN-file!";
-    }
+    if(Flags::world.isSet())
+        m_Args.startupZEN = Flags::world.getArgs()[0];
 
 
     loadArchives();
@@ -102,10 +76,8 @@ void BaseEngine::initEngine(int argc, char** argv)
     }
 
     std::string snd_device;
-    if(m_Args.cmdline.hasArg('s'))
-    {
-        snd_device = m_Args.cmdline.findOption('s');
-    }
+    if(Flags::sndDevice.isSet())
+        snd_device = Flags::sndDevice.getArgs()[0];
 
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 

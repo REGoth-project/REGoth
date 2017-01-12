@@ -11,6 +11,7 @@
 #include "engine/Input.h"
 #include <iostream>
 #include <engine/BaseEngine.h>
+#include <utils/cli.h>
 
 using namespace Content;
 
@@ -22,6 +23,11 @@ const float TIME_KEY_4	= 0.50f;
 const float TIME_KEY_5	= 0.65f;
 const float TIME_KEY_6	= 0.70f;
 const float TIME_KEY_7	= 0.75f;
+
+namespace Flags
+{
+    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: g1, g2");
+}
 
 Sky::Sky(World::WorldInstance& world) :
     m_World(world)
@@ -134,14 +140,26 @@ void Sky::interpolate(double deltaTime)
 
 void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
 {
-    Math::float3 skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
+    Math::float3 skyColor_g1 = Math::float3(114, 93, 82) / 255.0f; // G1
+    Math::float3 skyColor_g2 = Math::float3(120, 140, 180) / 255.0f; // G2
 
+    Math::float3 skyColor = skyColor_g2;
 
-    LogInfo() << "############### " << world.getBasicGameType();
-    if(world.getBasicGameType() == World::GT_Gothic2) 
-        skyColor = Math::float3(120,140,180) / 255.0f; // G2
-    else
-        skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
+    if(!Flags::skyType.isSet())
+    {
+        if (world.getBasicGameType() == World::GT_Gothic2)
+            skyColor = skyColor_g2;
+        else
+            skyColor = skyColor_g1;
+    } else
+    {
+        if(Flags::skyType.getArgs()[0] == "g1")
+            skyColor = skyColor_g1;
+        else if(Flags::skyType.getArgs()[0] == "g2")
+            skyColor = skyColor_g2;
+        else
+            LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getArgs()[0];
+    }
 
     switch(type)
     {
