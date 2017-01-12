@@ -829,9 +829,15 @@ void PlayerController::onUpdateByInput(float deltaTime)
             {
                 model->setAnimation(waterAniType);
             }
-            else if (getSurfaceMaterial() == Materials::MaterialGroup::GROUND)
+            else if (getSurfaceMaterial() != Materials::MaterialGroup::UNDEFINED)
             {
                 model->setAnimation(groundAniType);
+            }
+            else
+            {
+                // This happens when NPC enters area that should not be accessible
+                LogError() << "Encountered undefined material type under NPC's feet";
+                model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
             lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
             m_NoAniRootPosHack = true;

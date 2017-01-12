@@ -375,6 +375,17 @@ public:
             return "Set time to " + std::to_string(t);
         });
 
+        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() != 4)
+                return "Invalid arguments. Usage: set time [hh mm]";
+
+            const int hh = std::stoi(args[2]);
+            const int mm = std::stoi(args[3]);
+            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(hh, mm);
+
+            return "Set time to " + args[2] + ":" + args[3];
+        });
+
         console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -867,12 +878,12 @@ public:
         return true;
 	}
 
-	Engine::GameEngine* m_pEngine;
-	uint32_t m_debug;
-	uint32_t m_reset;
+    Engine::GameEngine* m_pEngine;
+    uint32_t m_debug;
+    uint32_t m_reset;
     int m_Width, m_Height;
-	int64_t m_timeOffset;
-	float axis;
+    int64_t m_timeOffset;
+    float axis;
     int32_t m_scrollArea;
     Utils::StopWatch m_stopWatch;
     bool m_NoHUD;

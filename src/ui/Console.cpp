@@ -45,7 +45,7 @@ Console::Console()
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
         for(auto& c : m_Commands)
-            outputAdd(c.first);
+            outputAdd(c);
         return "";
     });
 }
@@ -102,26 +102,44 @@ void Console::onKeyDown(int glfwKey)
 
 std::string Console::submitCommand(const std::string& command)
 {
-    if (m_History.empty() || m_History.back() != command) {
+    if((command.find_first_not_of(' ') != std::string::npos) && (m_History.empty() || m_History.back() != command))
         m_History.push_back(command);
-    }
+
     m_HistoryIndex = -1;
     m_PendingLine.clear();
 
-    std::vector<std::string> args = Utils::split(command, ' ');
-
     outputAdd(" >> " + command);
 
-    if(args.empty())
+    if(command.empty())
         return "";
 
-    if(m_Commands.find(args[0]) != m_Commands.end())
+    size_t bestMatchSize = 0;
+    int bestMatchIndex = -1;
+    for (size_t i = 0; i < m_Commands.size(); ++i)
     {
+        const std::string &candidate = m_Commands.at(i);
+        if (candidate.size() < bestMatchSize) {
+            // We already found a better command candidate
+            continue;
+        }
 
-        std::string result = m_Commands[args[0]](args);
+        if (command.size() == candidate.size() || (command.size() > candidate.size() && command.at(candidate.size()) == ' '))
+        {
+            // it makes sense to compare
+            if (candidate == command.substr(0, candidate.size()))
+            {
+                // Match!
+                bestMatchSize = candidate.size();
+                bestMatchIndex = i;
+            }
+        }
+    }
 
+    if (bestMatchIndex >= 0)
+    {
+        const std::vector<std::string> args = Utils::split(command, ' ');
+        const std::string result = m_CommandCallbacks.at(bestMatchIndex)(args);
         outputAdd(result);
-
         return result;
     }
 
@@ -133,7 +151,8 @@ std::string Console::submitCommand(const std::string& command)
 void Console::registerCommand(const std::string& command,
                               CommandCallback callback)
 {
-    m_Commands[command] = callback;
+    m_Commands.push_back(command);
+    m_CommandCallbacks.push_back(callback);
 }
 
 void Console::registerAutocompleteFn(const std::string& command, Console::CommandCallback callback)
