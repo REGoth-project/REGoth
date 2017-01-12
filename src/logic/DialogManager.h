@@ -43,7 +43,7 @@ namespace Logic
         /**
          * Called after the world got initialized
          */
-        void init();
+        bool init();
 
         /**
          * Updates the boxes according to the coices taken by the user
