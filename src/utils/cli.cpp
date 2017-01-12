@@ -28,8 +28,10 @@ namespace Global
 Flag::Flag(const std::string& flag, const std::string& verboseFlag, int nparams, const std::string& desc)
         : m_Flag(flag), m_VerboseFlag(verboseFlag), m_nParams(nparams), m_Desc(desc)
 {
-    assert(!flag.empty());
-    assert(!flag.find_first_not_of(' ') != std::string::npos);
+    if(!flag.empty())
+    {
+        assert(!flag.find_first_not_of(' ') != std::string::npos);
+    }
 
     if(!verboseFlag.empty())
     {
@@ -84,9 +86,23 @@ bool Flag::isSet()
 
 void Flag::printUsage()
 {
-    std::cout << std::left << std::setw(25) << "-" + m_Flag + (m_VerboseFlag.empty() ? "" : ", --" + m_VerboseFlag + "");
+    std::string flag = (m_Flag.empty() ? "" : "-" + m_Flag + "");
+    std::string verboseFlag = (m_VerboseFlag.empty() ? "" : "--" + m_VerboseFlag + "");
+    std::string flagInfo;
+
+    if(!flag.empty())
+        flagInfo += flag;
+
+    if(!flagInfo.empty() && !verboseFlag.empty())
+        flagInfo += ", ";
+
+    if(!verboseFlag.empty())
+        flagInfo += verboseFlag;
+
+    std::cout << std::left << std::setw(25) << flagInfo;
+
     std::cout << std::setw(1) << ": ";
-    std::cout << std::left << m_Desc << std::endl;
+    std::cout << std::left << (m_nParams > 1 ? ("[" + std::to_string(m_nParams) + " args] ") : "") << m_Desc << std::endl;
 }
 
 void ::Cli::setCommandlineArgs(int argc, char** argv)
