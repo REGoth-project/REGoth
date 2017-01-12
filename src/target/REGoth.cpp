@@ -34,6 +34,7 @@
 #include <ui/Menu.h>
 #include <logic/SavegameManager.h>
 #include <utils/cli.h>
+#include <utils/zTools.h>
 
 using json = nlohmann::json;
 
@@ -912,6 +913,10 @@ int main(int argc, char** argv)
         Cli::printHelp();
         return 0;
     }
+
+    // Do some commandline-operations, if wanted
+    if(zTools::tryRunTools())
+        return 0;
 
     ExampleCubes app;
     try
