@@ -140,14 +140,26 @@ void Sky::interpolate(double deltaTime)
 
 void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
 {
-    Math::float3 skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
+    Math::float3 skyColor_g1 = Math::float3(114, 93, 82) / 255.0f; // G1
+    Math::float3 skyColor_g2 = Math::float3(120, 140, 180) / 255.0f; // G2
 
+    Math::float3 skyColor = skyColor_g2;
 
-    LogInfo() << "############### " << world.getBasicGameType();
-    if(world.getBasicGameType() == World::GT_Gothic2) 
-        skyColor = Math::float3(120,140,180) / 255.0f; // G2
-    else
-        skyColor = Math::float3(114, 93, 82) / 255.0f; // G1
+    if(!Flags::skyType.isSet())
+    {
+        if (world.getBasicGameType() == World::GT_Gothic2)
+            skyColor = skyColor_g2;
+        else
+            skyColor = skyColor_g1;
+    } else
+    {
+        if(Flags::skyType.getArgs()[0] == "g1")
+            skyColor = skyColor_g1;
+        else if(Flags::skyType.getArgs()[0] == "g2")
+            skyColor = skyColor_g2;
+        else
+            LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getArgs()[0];
+    }
 
     switch(type)
     {
