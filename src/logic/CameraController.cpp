@@ -66,17 +66,17 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         auto &settings = m_CameraSettings.floatingCameraSettings;
         auto &free = m_CameraSettings.freeCameraSettings;
 
-        free.actionMoveForward = Input::RegisterAction(ActionType::FreeMoveForward, [&settings](bool, float intensity)
+        free.actionMoveForward = Input::RegisterAction(ActionType::FreeMoveForward, [&settings, this](bool, float intensity)
         {
-            settings.position += 0.1f * intensity * settings.forward;
+            settings.position += 0.07f * intensity * settings.forward * m_moveSpeedMultiplier;
         });
-        free.actionMoveRight = Input::RegisterAction(ActionType::FreeMoveRight, [&settings](bool, float intensity)
+        free.actionMoveRight = Input::RegisterAction(ActionType::FreeMoveRight, [&settings, this](bool, float intensity)
         {
-            settings.position -= 0.1f * intensity * settings.right;
+            settings.position -= 0.1f * intensity * settings.right * m_moveSpeedMultiplier;
         });
-        free.actionMoveUp = Input::RegisterAction(ActionType::FreeMoveUp, [&settings](bool, float intensity)
+        free.actionMoveUp = Input::RegisterAction(ActionType::FreeMoveUp, [&settings, this](bool, float intensity)
         {
-            settings.position += 0.1f * intensity * settings.up;
+            settings.position += 0.1f * intensity * settings.up * m_moveSpeedMultiplier;
         });
         free.actionLookHorizontal = Input::RegisterAction(ActionType::FreeLookHorizontal, [&settings, this](bool, float intensity)
         {
@@ -232,6 +232,10 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
             m_CameraMode = ECameraMode::ThirdPerson;
             Engine::Input::setMouseLock(false);
         }
+    });
+    
+    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
+        m_moveSpeedMultiplier = triggered ? 5.0f : 1.0f;
     });
 }
 

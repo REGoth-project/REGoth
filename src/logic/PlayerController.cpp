@@ -1882,7 +1882,7 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 
 void PlayerController::setupKeyBindings()
 {
-    Engine::Input::clearActions();
+    // Engine::Input::clearActions();
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
