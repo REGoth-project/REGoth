@@ -878,12 +878,12 @@ public:
         return true;
 	}
 
-	Engine::GameEngine* m_pEngine;
-	uint32_t m_debug;
-	uint32_t m_reset;
+    Engine::GameEngine* m_pEngine;
+    uint32_t m_debug;
+    uint32_t m_reset;
     int m_Width, m_Height;
-	int64_t m_timeOffset;
-	float axis;
+    int64_t m_timeOffset;
+    float axis;
     int32_t m_scrollArea;
     Utils::StopWatch m_stopWatch;
     bool m_NoHUD;
