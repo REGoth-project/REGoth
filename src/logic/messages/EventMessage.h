@@ -558,7 +558,7 @@ namespace Logic
             std::string text;
 
             /**
-             * Name of the .wav to play
+             * Name of the SFX to play
              */
             std::string name;
 

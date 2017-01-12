@@ -1,9 +1,12 @@
-#include <debugdraw/debugdraw.h>
-#include "AnimHandler.h"
-#include "utils/logger.h"
 #include <algorithm>
-#include <zenload/zCModelPrototype.h>
+
+#include <debugdraw/debugdraw.h>
 #include <engine/World.h>
+#include <utils/logger.h>
+#include <vdfs/fileIndex.h>
+#include <zenload/zCModelPrototype.h>
+
+#include "AnimHandler.h"
 
 using namespace Components;
 

@@ -1,3 +1,4 @@
+#include "audio/AudioEngine.h"
 #include "BaseEngine.h"
 #include <vdfs/fileIndex.h>
 #include <zenload/zenParser.h>
@@ -25,6 +26,7 @@ BaseEngine::BaseEngine() : m_RootUIView(*this)
 BaseEngine::~BaseEngine()
 {
     getRootUIView().removeChild(m_pHUD);
+    delete m_AudioEngine;
     delete m_pHUD;
     delete m_pFontCache;
 }
@@ -98,6 +100,14 @@ void BaseEngine::initEngine(int argc, char** argv)
         else
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
+
+    std::string snd_device;
+    if(m_Args.cmdline.hasArg('s'))
+    {
+        snd_device = m_Args.cmdline.findOption('s');
+    }
+
+    m_AudioEngine = new Audio::AudioEngine(snd_device);
 
     // Init HUD
     m_pFontCache = new UI::zFontCache(*this);

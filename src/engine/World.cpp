@@ -40,17 +40,20 @@ WorldInstance::WorldInstance()
 WorldInstance::~WorldInstance()
 {
     getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
+    delete m_PrintScreenMessageView;
+
+    delete m_AudioWorld;
 }
 
-void WorldInstance::init(Engine::BaseEngine& engine)
+void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
 {
-	m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    m_pEngine = &engine;
+    m_ZenFile = zen;
+
+    m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
-    m_AudioEngine.setVDFSIndex(&engine.getVDFSIndex());
-
-    m_pEngine = &engine;
 
     // Create static-collision shape beforehand
     m_StaticWorldObjectCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
@@ -61,14 +64,6 @@ void WorldInstance::init(Engine::BaseEngine& engine)
     // Create UI-Views
     m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
     getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
-}
-
-void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
-{
-    m_ZenFile = zen;
-
-	// Call other overload
-	init(engine);
 
 	// Init daedalus-vm
 	std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
@@ -370,6 +365,8 @@ void WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
     // Initialize the sky, so it will get the right values
     m_Sky.fillSkyStates(); 
+
+    m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 

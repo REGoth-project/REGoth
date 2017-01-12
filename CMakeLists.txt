@@ -10,13 +10,6 @@ set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
-# define SFML_STATIC if the build type is not set to 'shared'
-# This is actually done inside SFMLs CMakeLists.txt, but we need to have it propergate to the headers used by our files
-if(NOT BUILD_SHARED_LIBS)
-    add_definitions(-DSFML_STATIC)
-endif()
-
-
 if(EMSCRIPTEN)
 
     # cmake -DCMAKE_TOOLCHAIN_FILE="/usr/lib/emscripten/cmake/Modules/Platform/Emscripten.cmake" ..
@@ -32,7 +25,6 @@ if(EMSCRIPTEN)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../content@/")
 endif()   
 
-
 if(ANDROID)
     #set(BGFX_DEBUG 0)
 
@@ -45,8 +37,6 @@ if(ANDROID)
 
     # Fix other libraries
     set(BUILD_SQUISH_WITH_SSE2 OFF CACHE STRING "" FORCE) # No SSE2 on android
-    set(SFML_OPENGL_ES OFF CACHE STRING "" FORCE) # No SSE2 on android
-    
     
     # Make Apk.cmake compatible
     set(ARM_TARGET ${ANDROID_ABI})
@@ -106,6 +96,7 @@ add_definitions(-DBGFX_CONFIG_MAX_COMMAND_BUFFER_SIZE=231072) # FIXME: Flush som
 add_definitions(-DBGFX_CONFIG_MAX_INDEX_BUFFERS=65535)
 add_definitions(-DBGFX_CONFIG_MAX_VERTEX_BUFFERS=65535) # TODO: Don't mess around with memory so much
 
+# Set up GLM
 add_definitions(-DGLM_FORCE_PURE) # FIXME: glm crashes using SSE because of some alignment issues
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL) # Quaternions
 
@@ -115,16 +106,16 @@ add_definitions(-D__STDC_FORMAT_MACROS)
 
 # Temp
 if(NOT MSVC)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 endif()
 
 if(MINGW)
-    SET(COMPILER_PREFIX "i686-mingw32")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
+    set(COMPILER_PREFIX "i686-mingw32")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
 endif()
 
 if(MSVC)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
 	add_definitions(-DNOMINMAX)
 endif()
 
@@ -143,7 +134,8 @@ if(MSVC)
 endif()
 
 # ------------------ Config-Header ------------------
-configure_file(src/config.h.in ${PROJECT_BINARY_DIR}/src/config.h)
+
+configure_file(src/rgconfig.h.in ${PROJECT_BINARY_DIR}/src/rgconfig.h)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
 add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
@@ -173,6 +165,7 @@ set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geomet
 
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
+        "src/audio/*.cpp"
         "src/components/*.cpp"
         "src/components/*.h"
         "src/engine/*.cpp"
@@ -205,9 +198,29 @@ file(GLOB ENGINE_SRC
         "src/logic/mobs/*.h"
         )
 
-add_library(engine STATIC ${ENGINE_SRC} src/content/AudioEngine.cpp src/content/AudioEngine.h)
-set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
+add_library(engine STATIC ${ENGINE_SRC})
+#set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
+
+# ------------------ OpenAL ------------------
+
+# Set up OpenAL
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+
+set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
+set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
+set(LIBTYPE STATIC CACHE STRING "" FORCE)
+
+if (UNIX)
+    if (NOT APPLE)
+        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+    endif()
+    target_link_libraries(engine openal)
+elseif(WIN32)
+    target_link_libraries(engine OpenAL32)
+endif()
 
 # ------------------ Other ------------------
 
@@ -225,13 +238,9 @@ if(NOT ANDROID)
 
     if(NOT EMSCRIPTEN)
         add_subdirectory(lib/glfw)
-
-        target_link_libraries(engine glfw sfml-audio)
-
         # We want audio if not on android
-        add_definitions(-DRE_USE_SFML)
-        add_subdirectory(lib/SFML)
-        include_directories(lib/SFML/include)
+        add_definitions(-DRE_USE_SOUND)
+        target_link_libraries(engine glfw)
     endif()
 else()
 

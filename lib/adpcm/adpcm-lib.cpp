@@ -16,7 +16,7 @@
  * configuration is to store 505 samples into a 256 byte block, although other sizes are
  * permitted as long as the number of samples is one greater than a multiple of 8. When
  * multiple channels are present, they are interleaved in the data with an 8-sample
- * interval. 
+ * interval.
  */
 
 /********************************* 4-bit ADPCM encoder ********************************/
@@ -329,7 +329,7 @@ int adpcm_encode_block (void *p, uint8_t *outbuf, size_t *outbufsize, const int1
  *  channels        number of channels in block (must be determined from other context)
  *
  * Returns number of converted composite samples (total samples divided by number of channels)
- */ 
+ */
 
 int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize, int channels)
 {
@@ -344,12 +344,8 @@ int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize,
         *outbuf++ = pcmdata[ch] = (int16_t) (inbuf [0] | (inbuf [1] << 8));
         index[ch] = inbuf [2];
 
-        // REGoth: This happens for the gothic soundfiles...
-        CLIP(index[ch], 0, 88);
-
-
-        //if (index [ch] < 0 || index [ch] > 88 || inbuf [3])     // sanitize the input a little...
-        //    return 0;
+        if (index [ch] < 0 || index [ch] > 88 || inbuf [3])     // sanitize the input a little...
+            return 0;
 
         inbufsize -= 4;
         inbuf += 4;
@@ -370,7 +366,7 @@ int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize,
                 if (*inbuf & 2) delta += (step >> 1);
                 if (*inbuf & 4) delta += step;
                 if (*inbuf & 8) delta = -delta;
-                
+
                 pcmdata[ch] += delta;
                 index[ch] += index_table [*inbuf & 0x7];
                 CLIP(index[ch], 0, 88);
@@ -383,7 +379,7 @@ int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize,
                 if (*inbuf & 0x20) delta += (step >> 1);
                 if (*inbuf & 0x40) delta += step;
                 if (*inbuf & 0x80) delta = -delta;
-                
+
                 pcmdata[ch] += delta;
                 index[ch] += index_table [(*inbuf >> 4) & 0x7];
                 CLIP(index[ch], 0, 88);
@@ -401,4 +397,3 @@ int adpcm_decode_block (int16_t *outbuf, const uint8_t *inbuf, size_t inbufsize,
 
     return samples;
 }
-
