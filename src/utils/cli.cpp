@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include "cli.h"
+#include <iomanip>
 
 using namespace Cli;
 
@@ -30,14 +31,10 @@ Flag::Flag(const std::string& flag, const std::string& verboseFlag, int nparams,
     assert(!flag.empty());
     assert(!flag.find_first_not_of(' ') != std::string::npos);
 
-    std::cout << "Registered flag: -" << flag;
     if(!verboseFlag.empty())
     {
         assert(!flag.find_first_not_of(' ') != std::string::npos);
-
-        std::cout << " (verbose: --" << verboseFlag << ")";
     }
-    std::cout << std::endl;
 
     // Add this flag to the global list
     Global::getFlagList().push_back(this);
@@ -87,7 +84,9 @@ bool Flag::isSet()
 
 void Flag::printUsage()
 {
-    std::cout << "-" + m_Flag << (m_VerboseFlag.empty() ? "" : ", --" + m_VerboseFlag + "") << "\t: " << m_Desc << std::endl;
+    std::cout << std::left << std::setw(25) << "-" + m_Flag + (m_VerboseFlag.empty() ? "" : ", --" + m_VerboseFlag + "");
+    std::cout << std::setw(1) << ": ";
+    std::cout << std::left << m_Desc << std::endl;
 }
 
 void ::Cli::setCommandlineArgs(int argc, char** argv)
@@ -98,4 +97,14 @@ void ::Cli::setCommandlineArgs(int argc, char** argv)
     // Check all flags for correctness
     for(Flag* f : Global::getFlagList())
         f->extractFlag();
+}
+
+void ::Cli::printHelp()
+{
+    std::cout << "Usage:" << std::endl;
+
+    for (Flag* f : Global::getFlagList())
+    {
+        f->printUsage();
+    }
 }

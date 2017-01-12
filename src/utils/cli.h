@@ -63,4 +63,9 @@ namespace Cli
      * @param args Commandline arguments seperated by spaces
      */
     void setCommandlineArgs(int argc, char** argv);
+
+    /**
+     * Prints a list of all available flags and their usage
+     */
+    void printHelp();
 }
