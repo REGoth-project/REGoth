@@ -206,6 +206,7 @@ target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3r
 
 # Set up OpenAL
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
 
 set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -251,6 +252,5 @@ endif()
 add_subdirectory(lib/adpcm)
 
 add_subdirectory(src/target)
-
 
 file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")
