@@ -47,6 +47,10 @@ using json = nlohmann::json;
 #error Unknown platform
 #endif
 
+namespace Flags
+{
+    Cli::Flag help("h", "help", 0, "Prints this message");
+}
 
 struct PosColorVertex
 {
@@ -901,6 +905,13 @@ int main(int argc, char** argv)
     int ret = 0;
 
     Cli::setCommandlineArgs(argc, argv);
+
+    // Check if the user just wanted to see the list of commands
+    if(Flags::help.isSet())
+    {
+        Cli::printHelp();
+        return 0;
+    }
 
     ExampleCubes app;
     try
