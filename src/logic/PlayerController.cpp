@@ -824,7 +824,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
         static std::string lastMovementAni = "";
-        auto manageAnimation = [&](auto groundAniType, auto waterAniType) {
+        auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
             if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
             {
                 model->setAnimation(waterAniType);
