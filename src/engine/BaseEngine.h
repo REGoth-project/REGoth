@@ -12,6 +12,13 @@ namespace UI
 	class zFontCache;
 }
 
+namespace Audio
+{
+
+class AudioEngine;
+
+}
+
 namespace Engine
 {
 	const int MAX_NUM_WORLDS = 4;
@@ -92,8 +99,10 @@ namespace Engine
 		 * @return HUD
 		 */
 		UI::Hud& getHud(){ return *m_pHUD; }
-        UI::zFontCache& getFontCache(){ return *m_pFontCache; }
 
+                UI::zFontCache& getFontCache(){ return *m_pFontCache; }
+
+        Audio::AudioEngine &getAudioEngine() { return *m_AudioEngine; }
 
 		/**
 		 * Sets the path the engine is looking for files
@@ -175,6 +184,8 @@ namespace Engine
          * Arguments
          */
         EngineArgs m_Args;
+
+        Audio::AudioEngine *m_AudioEngine = nullptr;
 
 		/**
 		 * Base UI-View

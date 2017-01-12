@@ -16,7 +16,7 @@
 #include "MobController.h"
 #include <engine/BaseEngine.h>
 #include <stdlib.h>
-#include <content/AudioEngine.h>
+#include <audio/AudioEngine.h>
 #include <engine/Input.h>
 #include "ItemController.h"
 #include <json.hpp>
@@ -1477,7 +1477,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
                 startDialogAnimation();
 
                 // Play sound of this conv-message
-                m_World.getAudioEngine().playSound(message.name);
+                m_World.getAudioWorld().playSound(message.name);
 
                 message.internInProgress = true;
             }
@@ -1492,7 +1492,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             if(done)
             {
                 m_World.getDialogManager().stopDisplaySubtitle();
-                m_World.getAudioEngine().stopSounds();
+                m_World.getAudioWorld().stopSounds();
             }
 
             return done;

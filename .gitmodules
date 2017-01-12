@@ -16,9 +16,9 @@
 [submodule "lib/glfw"]
 	path = lib/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "lib/SFML"]
-	path = lib/SFML
-	url = https://github.com/SFML/SFML.git
 [submodule "lib/adpcm-xq"]
 	path = lib/adpcm-xq
 	url = https://github.com/dbry/adpcm-xq.git
+[submodule "lib/openal-soft"]
+	path = lib/openal-soft
+	url = https://github.com/kcat/openal-soft.git
