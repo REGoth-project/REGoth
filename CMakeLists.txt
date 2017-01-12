@@ -10,12 +10,6 @@ set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
-# define SFML_STATIC if the build type is not set to 'shared'
-# This is actually done inside SFMLs CMakeLists.txt, but we need to have it propergate to the headers used by our files
-if(NOT BUILD_SHARED_LIBS)
-    add_definitions(-DSFML_STATIC)
-endif()
-
 if(EMSCRIPTEN)
 
     # cmake -DCMAKE_TOOLCHAIN_FILE="/usr/lib/emscripten/cmake/Modules/Platform/Emscripten.cmake" ..
@@ -43,8 +37,6 @@ if(ANDROID)
 
     # Fix other libraries
     set(BUILD_SQUISH_WITH_SSE2 OFF CACHE STRING "" FORCE) # No SSE2 on android
-    set(SFML_OPENGL_ES OFF CACHE STRING "" FORCE) # No SSE2 on android
-    
     
     # Make Apk.cmake compatible
     set(ARM_TARGET ${ANDROID_ABI})
@@ -246,13 +238,8 @@ if(NOT ANDROID)
 
     if(NOT EMSCRIPTEN)
         add_subdirectory(lib/glfw)
-
-        target_link_libraries(engine glfw sfml-audio)
-
         # We want audio if not on android
         add_definitions(-DRE_USE_SOUND)
-        add_subdirectory(lib/SFML)
-        include_directories(lib/SFML/include)
     endif()
 else()
 
