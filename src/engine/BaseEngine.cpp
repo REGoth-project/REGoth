@@ -14,6 +14,7 @@
 #include <fstream>
 #include <ui/Hud.h>
 #include <ui/zFont.h>
+#include <utils/cli.h>
 
 using namespace Engine;
 
@@ -37,13 +38,6 @@ void BaseEngine::initEngine(int argc, char** argv)
     const char* value = nullptr;
 
     LogInfo() << "Initializing...";
-
-    for(int i=0;i<argc;i++)
-    {
-        LogInfo() << "Arg " << i;
-        LogInfo() << " - " << argv[i];
-    }
-
 
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";

@@ -33,6 +33,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu.h>
 #include <logic/SavegameManager.h>
+#include <utils/cli.h>
 
 using json = nlohmann::json;
 
@@ -898,6 +899,8 @@ public:
 int main(int argc, char** argv)
 {
     int ret = 0;
+
+    Cli::setCommandlineArgs(argc, argv);
 
     ExampleCubes app;
     try

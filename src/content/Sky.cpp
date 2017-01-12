@@ -11,6 +11,7 @@
 #include "engine/Input.h"
 #include <iostream>
 #include <engine/BaseEngine.h>
+#include <utils/cli.h>
 
 using namespace Content;
 
@@ -22,6 +23,11 @@ const float TIME_KEY_4	= 0.50f;
 const float TIME_KEY_5	= 0.65f;
 const float TIME_KEY_6	= 0.70f;
 const float TIME_KEY_7	= 0.75f;
+
+namespace Flags
+{
+    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: g1, g2");
+}
 
 Sky::Sky(World::WorldInstance& world) :
     m_World(world)
