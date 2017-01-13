@@ -111,7 +111,7 @@ Where `path/to/gothic1or2` points to the root of a Gothic I or II installation a
       
 # Development
 
-If you want to help out and don't know where to start, I suggest reading the [wiki-page](wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
+If you want to help out and don't know where to start, I suggest reading the [wiki-page](../../wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
 
 ### Examples
 **Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`
