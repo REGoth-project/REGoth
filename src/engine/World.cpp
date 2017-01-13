@@ -398,6 +398,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
     m_TestEntity = e;*/
 
     LogInfo() << "Done loading world!";
+    return true;
 }
 
 bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
