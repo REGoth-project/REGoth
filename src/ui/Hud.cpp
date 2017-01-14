@@ -2,6 +2,7 @@
 // Created by desktop on 17.12.16.
 //
 
+#include <utils/logger.h>
 #include "Hud.h"
 #include "BarView.h"
 #include "TextView.h"
@@ -13,7 +14,6 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include "DialogBox.h"
-#include <utils/logger.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 {
@@ -99,7 +99,7 @@ UI::Hud::~Hud()
     delete m_pDialogBox;
 }
 
-void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void UI::Hud::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     // Free old menus
     cleanMenus();

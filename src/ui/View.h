@@ -1,12 +1,17 @@
 #pragma once
-#include <common.h>
 #include <vector>
-#include <render/RenderSystem.h>
-#include <engine/Input.h>
+#include <bgfx/bgfx.h>
+#include <math/mathlib.h>
 
 namespace Engine
 {
     class BaseEngine;
+	struct MouseState;
+}
+
+namespace Render
+{
+	struct RenderConfig;
 }
 
 namespace UI
@@ -72,7 +77,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        virtual void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config);
+        virtual void update(double dt, Engine::MouseState &mstate, Render::RenderConfig &config);
 
         /**
          * Set/get hidden

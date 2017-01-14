@@ -6,6 +6,7 @@
 #include "BarView.h"
 #include <imgui/imgui.h>
 #include "ImageView.h"
+#include <render/RenderSystem.h>
 
 const float INNER_OFFSET_X = (350.0f / 8192.0f);
 const float INNER_OFFSET_Y = (1100.0f / 8192.0f);
@@ -22,7 +23,7 @@ UI::BarView::~BarView()
 
 }
 
-void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void UI::BarView::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

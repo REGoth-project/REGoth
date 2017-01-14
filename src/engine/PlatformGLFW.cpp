@@ -6,6 +6,7 @@
 #include "PlatformGLFW.h"
 #include "utils/Utils.h"
 #include <thread>
+#include <iostream>
 
 
 #if defined(_glfw3_h_)

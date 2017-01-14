@@ -38,7 +38,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::MouseState &mstate, Render::RenderConfig &config) override;
 
         /**
          * @param value Value for health-bar in 0..1 range

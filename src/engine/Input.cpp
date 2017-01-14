@@ -289,7 +289,7 @@ void Input::setMouseLock(bool mouseLock)
     }
 }
 
-void Input::getMouseState(Input::MouseState& ms)
+void Input::getMouseState(MouseState& ms)
 {
     ms.m_mx = (int)((mousePosition.x + 1) * windowHalfWidth);
     ms.m_my = (int)((mousePosition.y + 1) * windowHalfHeight);

@@ -3,6 +3,7 @@
 //
 
 #include "TextView.h"
+#include <render/RenderSystem.h>
 
 UI::TextView::TextView(Engine::BaseEngine& e) :
         View(e),
@@ -16,7 +17,7 @@ UI::TextView::~TextView()
 
 }
 
-void UI::TextView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void UI::TextView::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

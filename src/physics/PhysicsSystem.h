@@ -1,12 +1,19 @@
 #pragma once
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 #include <content/StaticMeshAllocator.h>
 
 namespace World
 {
     class WorldInstance;
 }
+
+class btRigidBody;
+class btDbvtBroadphase;
+class btDefaultCollisionConfiguration;
+class btCollisionDispatcher;
+class btSequentialImpulseConstraintSolver;
+class btDiscreteDynamicsWorld;
+class btSortedOverlappingPairCache;
+class btCollisionShape;
 
 namespace Physics
 {
@@ -15,10 +22,7 @@ namespace Physics
         btRigidBody* rigidBody;
         Handle::CollisionShapeHandle collisionShape;
 
-        static void clean(PhysicsObject& s)
-        {
-            delete s.rigidBody;
-        }
+        static void clean(PhysicsObject& s);
     };
 
     struct CollisionShape : public Handle::HandleTypeDescriptor<Handle::CollisionShapeHandle>
@@ -43,10 +47,7 @@ namespace Physics
         EShapeType shapeType;
         ECollisionType collisionType;
 
-        static void clean(CollisionShape& s)
-        {
-            delete s.collisionShape;
-        }
+        static void clean(CollisionShape& s);
     };
 
 

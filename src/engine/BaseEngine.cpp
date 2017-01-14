@@ -15,6 +15,7 @@
 #include <ui/Hud.h>
 #include <ui/zFont.h>
 #include <utils/cli.h>
+#include "Input.h"
 
 using namespace Engine;
 

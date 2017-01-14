@@ -20,7 +20,7 @@ UI::ImageView::~ImageView()
 
 }
 
-void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void UI::ImageView::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

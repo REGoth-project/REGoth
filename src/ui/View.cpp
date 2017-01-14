@@ -8,6 +8,8 @@
 #include "zFont.h"
 #include <imgui/imgui.h>
 #include <engine/BaseEngine.h>
+#include <render/RenderSystem.h>
+#include <bx/fpumath.h>
 
 using namespace UI;
 
@@ -136,7 +138,7 @@ void View::removeChild(View *pView)
     }
 }
 
-void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void View::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

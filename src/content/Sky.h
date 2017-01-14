@@ -1,7 +1,6 @@
 #pragma once
 
 #include <handle/HandleDef.h>
-#include "Texture.h"
 
 namespace World
 {

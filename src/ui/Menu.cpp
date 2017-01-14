@@ -41,7 +41,7 @@ UI::Menu::~Menu()
 }
 
 
-void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void UI::Menu::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;
@@ -52,7 +52,7 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         // Gothic menus are normalized to 640,480.
         Math::float2 fac = Math::float2(640.0f / config.state.viewWidth, 480.0f / config.state.viewHeight);
 
-        setSize(Math::float2((getScriptData().dimx / 8192.0f) * fac.x, (getScriptData().dimy / 8192.0f) * fac.y));
+		setSize(Math::float2((getScriptData().dimx / 8192.0f) * fac.x, (getScriptData().dimy / 8192.0f) * fac.y));
     }
 
     // Center view, if wanted

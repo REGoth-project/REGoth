@@ -10,10 +10,22 @@
 #include <engine/World.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionShapes/btConvexHullShape.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h>
 
 using namespace Physics;
 
 const int NUM_MAX_SUB_STEPS = 3;
+
+void PhysicsObject::clean(PhysicsObject& s)
+{
+	delete s.rigidBody;
+}
+
+void CollisionShape::clean(CollisionShape& s)
+{
+	delete s.collisionShape;
+}
 
 PhysicsSystem::PhysicsSystem(World::WorldInstance& world, float gravity)
     : m_World(world)

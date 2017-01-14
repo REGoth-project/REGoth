@@ -5,7 +5,7 @@
 #include <bx/platform.h>
 #include <bgfx/bgfxplatform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
-
+#include <iostream>
 
 
 //#include <bx/bx.h>

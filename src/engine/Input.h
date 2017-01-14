@@ -93,6 +93,14 @@ namespace Engine
 		std::function<void(bool /*triggered*/, float /*intensity*/)> function;
 	};
 
+	struct MouseState
+	{
+		int32_t m_mx;
+		int32_t m_my;
+		int32_t m_mz;
+		uint8_t m_buttons[3];
+	};
+
 	class Input
 	{
 	public:
@@ -110,14 +118,6 @@ namespace Engine
 			ScrollX,
 			ScrollY,
 			Count
-		};
-
-		struct MouseState
-		{
-			int32_t m_mx;
-			int32_t m_my;
-			int32_t m_mz;
-			uint8_t m_buttons[3];
 		};
 
 	public:

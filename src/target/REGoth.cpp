@@ -801,7 +801,7 @@ public:
         float time = (float)((now - m_timeOffset) / double(bx::getHPFrequency()));
         const float dt = float(frameTime/freq);
 
-        Engine::Input::MouseState ms; Engine::Input::getMouseState(ms);
+        Engine::MouseState ms; Engine::Input::getMouseState(ms);
         // Prepare rendering of debug-textboxes, etc
         imguiBeginFrame(ms.m_mx
                 ,  ms.m_my

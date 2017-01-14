@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdint>
 #include <memory/StaticReferencedAllocator.h>
 #include <bgfx/bgfx.h>
 #include "Handle.h"

@@ -8,6 +8,7 @@
 #include "zFont.h"
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
+#include <render/RenderSystem.h>
 
 using namespace UI;
 
@@ -49,7 +50,7 @@ MenuItem::~MenuItem()
     delete m_pBackgroundImage;
 }
 
-void MenuItem::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void MenuItem::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_pBackgroundImage) // Background image shouldn't be centered in any way
         m_pBackgroundImage->setAlignment(A_TopLeft);
@@ -91,7 +92,7 @@ MenuItemTypes::MenuItemText::MenuItemText(  Engine::BaseEngine& e, UI::Menu& bas
 
 }
 
-void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void MenuItemTypes::MenuItemText::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
 
 

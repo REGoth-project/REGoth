@@ -27,7 +27,7 @@ DialogBox::~DialogBox()
 
 }
 
-void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
+void DialogBox::update(double dt, Engine::MouseState& mstate, Render::RenderConfig& config)
 {
     if(m_IsHidden)
         return;

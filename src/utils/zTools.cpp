@@ -3,6 +3,7 @@
 #include "zTools.h"
 #include "cli.h"
 #include "Utils.h"
+#include <iostream>
 
 namespace Flags
 {
