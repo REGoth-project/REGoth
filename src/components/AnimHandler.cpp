@@ -45,7 +45,7 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 bool AnimHandler::addAnimation(const std::string &name)
 {
     // Add overlay/lib
-    std::string file = m_ActiveOverlay + "-" + name + ".MAN";
+    std::string file = m_ActiveOverlay + "-" + name;
 
     Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
 
@@ -54,7 +54,7 @@ bool AnimHandler::addAnimation(const std::string &name)
 	{
 		if(m_ActiveOverlay != m_MeshLibName)
 		{
-			file = m_MeshLibName + "-" + name + ".MAN";
+            file = m_MeshLibName + "-" + name;
 			h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
 
 			if(!h.isValid())
@@ -376,8 +376,8 @@ bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &i
 
     for(auto& anim : modelPrototype.getAnimations())
     {
-        LogInfo() << "Loading animation: " << file + "-" + anim.animationName + ".MAN";
-        addAnimation(file + "-" + anim.animationName + ".MAN", idx, 1.0f / 100.0f);
+        LogInfo() << "Loading animation: " << file + "-" + anim.animationName;
+        addAnimation(file + "-" + anim.animationName, idx, 1.0f / 100.0f);
     }*/
 
     return true;
@@ -431,7 +431,7 @@ void AnimHandler::setOverlay(const std::string& mds)
     for(auto& a : m_AnimationsByName)
     {
         std::string name = getAnimation(a.second).animation.getModelAniHeader().aniName;
-        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_ActiveOverlay + "-" + name + ".MAN");
+        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_ActiveOverlay + "-" + name);
 
         // Update with overlay variant
         if(h.isValid())

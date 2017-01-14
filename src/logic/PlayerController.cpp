@@ -904,7 +904,8 @@ void PlayerController::onUpdateByInput(float deltaTime)
                 //TODO this happens more than it should, there seems to be too much undefined materials, find out why
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
+                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
             m_NoAniRootPosHack = true;
         };
         if (m_isStrafeLeft)
