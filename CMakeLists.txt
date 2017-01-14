@@ -215,7 +215,7 @@ set(LIBTYPE STATIC CACHE STRING "" FORCE)
 
 if (UNIX)
     if (NOT APPLE)
-        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+        set(ALSOFT_REQUIRE_ALSA OFF CACHE BOOL "" FORCE)
         set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
     endif()
     target_link_libraries(engine openal)
