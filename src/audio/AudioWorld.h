@@ -54,7 +54,7 @@ namespace World
  */
 class AudioWorld
 {
-    friend class AudioEngine;
+    friend class Audio::AudioEngine;
 
 public:
 
