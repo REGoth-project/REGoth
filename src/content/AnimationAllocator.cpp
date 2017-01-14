@@ -24,9 +24,10 @@ Handle::AnimationHandle Animations::AnimationAllocator::loadAnimationVDF(const V
 
 	//LogInfo() << "New animation: " << name;
 
-    ZenLoad::zCModelAni zani(name, idx, 1.0f / 100.0f);
+    ZenLoad::zCModelAni zani;
+    zani.setScale(1.0f / 100.0f);
 
-	if(!zani.isValid())
+    if(!zani.loadMAN(idx, name + ".MAN"))
 		return Handle::AnimationHandle::makeInvalidHandle();
 
     Handle::AnimationHandle h = m_Allocator.createObject();

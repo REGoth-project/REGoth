@@ -212,25 +212,25 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         anim.getAnimHandler().addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
-    anim.getAnimHandler().addAnimation(libName + "-S_RUNL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_WALKL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUNL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALKL.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUNL");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALKL");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUNL");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALKL");
 
-    anim.getAnimHandler().addAnimation(libName + "-S_RUN.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_WALK.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUN.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_RUN");
+    anim.getAnimHandler().addAnimation(libName + "-S_WALK");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALK");
 
-    anim.getAnimHandler().addAnimation(libName + "-T_JUMPB.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFEL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFER.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-T_JUMPB");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFEL");
+    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFER");
 
     // Fist
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_FISTATTACK");
 
     // 1H
-    anim.getAnimHandler().addAnimation(libName + "-S_1HATTACK.MAN");
+    anim.getAnimHandler().addAnimation(libName + "-S_1HATTACK");
 
     anim.getAnimHandler().playAnimation("S_RUNL");
 }
