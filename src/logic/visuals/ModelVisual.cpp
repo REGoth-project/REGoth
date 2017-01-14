@@ -511,6 +511,7 @@ Handle::EntityHandle ModelVisual::setNodeVisual(const std::string &visual, EMode
 
             // TODO: Switch main mesh here
         case EModelNode::Torso:return setNodeVisual(visual, NPC_NODE_TORSO);break;
+        case EModelNode::None:  /*TODO handle this somehow?  */break;
     }
 
 	return Handle::EntityHandle::makeInvalidHandle();
@@ -662,6 +663,7 @@ void ModelVisual::updateAttachmentVisuals()
 		size_t nodeIdx = findNodeIndex(p.first);
 		if(nodeIdx != static_cast<size_t>(-1))
 		{
+         //TODO update is not used, what's the intention there?
 			bool update = false;
 
 			// Update if there isn't something attached yet

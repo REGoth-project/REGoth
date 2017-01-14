@@ -48,7 +48,6 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     // Un-normalize transforms
     Math::float2 absTranslation = getAbsoluteTranslation();
-    Math::float2 absSize = getAbsoluteSize();
     int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
     int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
 
@@ -78,13 +77,13 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
         drawText("\n" + layouted, px + (sx / 2), py + (sy / 2), A_Center, config);
 
         // Count number of newlines in text
-        int ncnt = 0;
-        for(int i=0;i<layouted.size();i++)
+        unsigned ncnt = 0;
+        for(unsigned i=0;i<layouted.size();i++)
             ncnt += layouted[i] == '\n' ? 1 : 0;
 
         // Put the speaker, followed by ncnt newlines, to align it right above the actual text
         std::string speaker = m_Text.speaker + "\n";
-        for(int i=0;i<ncnt;i++)
+        for(unsigned i=0;i<ncnt;i++)
             speaker.push_back('\n');
 
         drawText(speaker, px + (sx / 2), py + (sy / 2), A_Center, config, DEFAULT_FONT_HI);

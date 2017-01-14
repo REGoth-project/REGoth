@@ -159,6 +159,7 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
         }
 
         tinydir_close(&dir);
+        return content;
     };
 
     // Get the case sensitive version for every part of the path

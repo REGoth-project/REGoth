@@ -230,7 +230,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         uint32_t npc1 = vm.popVar(arr_npc1); if(verbose) LogInfo() << "npc1: " << npc1;
 
         if(!isSymInstanceValid(npc1) || !isSymInstanceValid(npc2))
-            return INT32_MAX;
+            vm.setReturn(INT32_MAX);
 
         VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
         VobTypes::NpcVobInformation vob2 = getNPCByInstance(npc2);
@@ -716,7 +716,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
                     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, e);
                     Daedalus::GEngineClasses::C_Npc& scriptInstance = VobTypes::getScriptObject(vob);
 
-                    if(instance >= 0 && scriptInstance.instanceSymbol != instance) continue;
+                    if(instance >= 0 && scriptInstance.instanceSymbol != static_cast<size_t>(instance)) continue;
                     if(guild >= 0 && scriptInstance.guild != guild) continue;
                     if(aiState >= 0 && vob.playerController->getAIStateMachine().isInState((size_t)aiState)) continue;
 

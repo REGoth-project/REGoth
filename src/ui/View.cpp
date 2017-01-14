@@ -238,9 +238,6 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
 
     // Get position of the text
 
-    Math::float2 absTranslation = getAbsoluteTranslation();
-    Math::float2 absSize = getAbsoluteSize();
-
     int width, height;
     fnt->calcTextMetrics(txt, width, height);
 
@@ -252,7 +249,7 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
     s.setPosition(px, py);
 
     // Fill stream
-    for(int i=0;i<txt.size();i++)
+    for(unsigned i=0;i<txt.size();i++)
         fnt->appendGlyph(s, (unsigned char)txt[i]);
 
     if(UI::zFont::bindGlyphStream(s))

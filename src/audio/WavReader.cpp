@@ -72,13 +72,11 @@ int WavReader::decodeADPCM(unsigned max_samples)
 
     unsigned sample = 0;
     while (sample < sample_count) {
-        int this_block_adpcm_samples = samples_per_block;
+        unsigned this_block_adpcm_samples = samples_per_block;
         int this_block_pcm_samples = samples_per_block;
 
-        unsigned block_size = m_BlockSize;
         if (this_block_adpcm_samples > sample_count) {
             this_block_adpcm_samples = ((sample_count + 6) & ~7) + 1;
-            block_size = (this_block_adpcm_samples - 1) / (m_Channels ^ 3) + (m_Channels * 4);
             this_block_pcm_samples = sample_count;
         }
 

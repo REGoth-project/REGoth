@@ -489,8 +489,6 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
 
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
-    Math::float3 pWorld = getEntityTransform() * p->transform.Translation();
-
     if(p->distance)
     {
         // Just look at the mob
