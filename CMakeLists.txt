@@ -205,13 +205,25 @@ target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3r
 # ------------------ OpenAL ------------------
 
 # Set up OpenAL
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
 
 set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
-set(LIBTYPE STATIC CACHE STRING "" FORCE)
+
+if (UNIX)
+	set(LIBTYPE STATIC CACHE STRING "" FORCE)
+    if (NOT APPLE)
+        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+    endif()
+else()
+	set(LIBTYPE SHARED CACHE STRING "" FORCE)
+endif()
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
+
+
 
 if (UNIX)
     if (NOT APPLE)
