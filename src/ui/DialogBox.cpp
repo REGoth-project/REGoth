@@ -86,13 +86,13 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
         float margin = 0.01f;
         int pMarginx = (int)(absSize.x * margin * config.state.viewWidth + 0.5f);
         int pMarginy = (int)(absSize.x * margin * config.state.viewHeight + 0.5f);
-        for(int i=0;i<m_Choices.size();i++)
+        for(unsigned i=0;i<m_Choices.size();i++)
         {
             drawText(m_Choices[i].text,
                      px + pMarginx, py + fnt->getFontHeight() * i + pMarginy,
                      A_TopLeft,
                      config,
-                     m_CurrentlySelected == i ? DEFAULT_FONT_HI : DEFAULT_FONT); // Highlight, if selected
+                     static_cast<unsigned>(m_CurrentlySelected) == i ? DEFAULT_FONT_HI : DEFAULT_FONT); // Highlight, if selected
         }
     }
 }

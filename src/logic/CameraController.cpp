@@ -374,6 +374,11 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             setEntityTransform(m_ViewMatrix.Invert());
         }
         break;
+        case ECameraMode::Static:
+        {
+           //TODO add handling there?
+        }
+        break;
     }
 }
 

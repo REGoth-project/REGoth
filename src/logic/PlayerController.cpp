@@ -1100,6 +1100,9 @@ void PlayerController::onMessage(EventMessages::EventMessage& message, Handle::E
         case EventMessages::EventMessageType::Magic:
             done = EV_Magic(reinterpret_cast<EventMessages::MagicMessage&>(message), sourceVob);
             break;
+        case EventMessages::EventMessageType::Mob:
+            //TODO handle this somehow?
+            break;
     }
 
     // Flag as deleted if this is done

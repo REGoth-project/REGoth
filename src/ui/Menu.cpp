@@ -75,7 +75,7 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
     if(!m_SelectableItems.empty())
     {
         // Make sure we really do have a selectable item active
-        int cnt = 0;
+        unsigned cnt = 0;
         while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size())
         {
             m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
@@ -267,7 +267,7 @@ void UI::Menu::onInputAction(EInputAction action)
             if(!m_SelectableItems.empty()) 
             {
                 // Make sure we really do have a selectable item active
-                int cnt = 0;
+                unsigned cnt = 0;
                 do{
                     m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
                     cnt++;

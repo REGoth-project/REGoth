@@ -200,6 +200,9 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
+if (CMAKE_COMPILER_IS_GNUCC)
+    set_target_properties(engine PROPERTIES COMPILE_FLAGS "-Wno-reorder -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -fno-strict-aliasing -Wall -Wextra")
+endif()
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
 # ------------------ OpenAL ------------------

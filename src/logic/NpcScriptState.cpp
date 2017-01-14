@@ -279,7 +279,7 @@ bool NpcScriptState::doAIState(float deltaTime)
                         case NPC_PRGAISTATE_UNCONSCIOUS: vob.playerController->checkUnconscious(); break;
                         //case NPC_PRGAISTATE_FADEAWAY:break;
                         //case NPC_PRGAISTATE_FOLLOW:break;
-                        //default:
+                        default: /* TODO handle all missing states  */break;
                         //    LogWarn() << "Invalid PRG state";
                     }
                 }
