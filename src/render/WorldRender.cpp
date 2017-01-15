@@ -246,11 +246,23 @@ namespace Render
 						numIndices += sms[i].m_SubmeshInfo.m_NumIndices;
 						numDrawcalls++;
                         numSubmeshesDrawn++;
-
-						if(sms[i].m_Texture.isValid())
+                        bool bah = false;
+                        const uint64_t state = 0 | BGFX_STATE_CULL_CW | BGFX_STATE_RGB_WRITE | BGFX_STATE_ALPHA_WRITE | BGFX_STATE_DEPTH_TEST_LESS |BGFX_STATE_DEPTH_WRITE | BGFX_STATE_MSAA;
+                        const uint64_t stateNoDepth = 0 | BGFX_STATE_CULL_CW | BGFX_STATE_RGB_WRITE | BGFX_STATE_ALPHA_WRITE | BGFX_STATE_DEPTH_TEST_ALWAYS | BGFX_STATE_MSAA;
+                        if(sms[i].m_Texture.isValid())
 						{
-							Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
-							bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+                     // LogInfo() << "TEXNAME:" << texture.m_TextureName;
+                     Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
+                     if (texture.m_TextureName == "OWODSEA_A0.TGA") 
+                     {
+                         // bgfx::setState(state | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_ONE, BGFX_STATE_BLEND_ONE) | BGFX_STATE_BLEND_INDEPENDENT, 0 | BGFX_STATE_BLEND_FUNC_RT_1(BGFX_STATE_BLEND_ZERO, BGFX_STATE_BLEND_SRC_COLOR));
+                         bgfx::setState(state | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_COLOR, BGFX_STATE_BLEND_SRC_COLOR));
+
+                         bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+                         bah = true;
+                     }
+                     else
+                     bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
 						}
 
 						// Set object-color
@@ -272,7 +284,11 @@ namespace Render
                                                  sms[i].m_SubmeshInfo.m_StartIndex,
                                                  sms[i].m_SubmeshInfo.m_NumIndices);
                         }
+                        if (!bah)
 						bgfx::submit(0, config.programs.mainWorldProgram);
+                        else
+						bgfx::submit(0, config.programs.mainWorldProgram);
+
 					}
 				}
 

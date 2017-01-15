@@ -108,7 +108,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         //
         // Use HMD's width/height since HMD's internal frame buffer size
         // might be much larger than window size.
-        bgfx::setViewRect(0, 0, 0, hmd->width, hmd->height);
+        // bgfx::setViewTransform(2, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
+        // bgfx::setViewRect(2, 0, 0, hmd->width, hmd->height);
     }
     else
     {
@@ -119,6 +120,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         // Set view 0 default viewport.
         bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
 
+        // bgfx::setViewTransform(2, view.mv, proj);
+        // bgfx::setViewRect(2, 0, 0, uint16_t(width), uint16_t(height));
         // Update the frame-config with the cameras world-matrix
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainCamera<Components::PositionComponent>().m_WorldMatrix;
         m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables

@@ -263,7 +263,7 @@ public:
 #if BX_PLATFORM_ANDROID
         m_reset = 0;
 #else
-		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8 | BGFX_RESET_VSYNC;
 #endif
 
         m_Width = getWindowWidth();
@@ -286,6 +286,12 @@ public:
 			, 0
 			);
 
+		bgfx::setViewClear(2
+			, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
+			, 0x7EC0EEff
+			, 1.0f
+			, 0
+			);
 		// Create vertex stream declaration.
 		PosColorVertex::init();
 		Meshes::UVNormColorVertex::init();
