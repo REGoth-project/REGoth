@@ -251,6 +251,104 @@ Handle::CollisionShapeHandle PhysicsSystem::makeBoxCollisionShape(const Math::fl
     return csh;
 }
 
+std::vector<RayTestResult> PhysicsSystem::raytraceAll(const Math::float3& from, const Math::float3& to, CollisionShape::ECollisionType filtertype)
+{
+    struct FilteredAllHitsRayResultCallback : public btCollisionWorld::RayResultCallback
+    {
+        FilteredAllHitsRayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
+        : m_rayFromWorld(rayFromWorld),
+          m_rayToWorld(rayToWorld)
+        {
+        }
+
+        virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+        {
+            const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);
+
+            if (rb->getCollisionShape()->getUserIndex() != -1)
+            {
+                // We don't have the generation of the handle here, but it should be okay!
+                Handle::CollisionShapeHandle csh;
+                csh.index = static_cast< uint32_t >(rb->getCollisionShape()->getUserIndex());
+
+                CollisionShape& s = m_ShapeAlloc->getElementForce(csh);
+
+                // TODO: There is some filtering functionality in bullet. Maybe use that instead?
+                if ((s.collisionType & m_filterType) == 0)
+                    return 0;
+
+                m_hitCollisionType = s.collisionType;
+            }
+
+            if (rb)
+                return addSingleResult_close(rayResult, normalInWorldSpace);
+
+            return 0;
+        }
+        btAlignedObjectArray< const btCollisionObject* > m_collisionObjects;
+
+        btVector3 m_rayFromWorld; //used to calculate hitPointWorld from hitFraction
+        btVector3 m_rayToWorld;
+
+        btAlignedObjectArray< btVector3 > m_hitNormalWorld;
+        btAlignedObjectArray< btVector3 > m_hitPointWorld;
+        btAlignedObjectArray< btScalar > m_hitFractions;
+
+        std::vector<uint32_t> m_hitTriangleIndex;
+        CollisionShape::ECollisionType m_hitCollisionType;
+        CollisionShape::ECollisionType m_filterType;
+        CollisionShapeAllocator* m_ShapeAlloc;
+
+        virtual btScalar addSingleResult_close(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+        {
+            m_collisionObject = rayResult.m_collisionObject;
+            m_collisionObjects.push_back(rayResult.m_collisionObject);
+            btVector3 hitNormalWorld;
+            if (normalInWorldSpace)
+            {
+                hitNormalWorld = rayResult.m_hitNormalLocal;
+            }
+            else
+            {
+                ///need to transform normal into worldspace
+                hitNormalWorld = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
+            }
+            m_hitNormalWorld.push_back(hitNormalWorld);
+            btVector3 hitPointWorld;
+            hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
+            m_hitPointWorld.push_back(hitPointWorld);
+            m_hitFractions.push_back(rayResult.m_hitFraction);
+            m_hitTriangleIndex.push_back(static_cast<uint32_t>(rayResult.m_localShapeInfo->m_triangleIndex));
+
+            return m_closestHitFraction;
+        }
+
+    };
+        FilteredAllHitsRayResultCallback r(btVector3(from.x, from.y, from.z), btVector3(to.x, to.y, to.z));
+        r.m_rayFromWorld = btVector3(from.x, from.y, from.z);
+        r.m_rayToWorld = btVector3(to.x, to.y, to.z);
+        r.m_filterType = filtertype;
+        r.m_ShapeAlloc = &m_CollisionShapeAllocator;
+
+        m_pDynamicsWorld->rayTest(r.m_rayFromWorld, r.m_rayToWorld, r);
+
+
+        unsigned outputsize = r.m_hitFractions.size();
+        
+        std::vector<RayTestResult> resultout;
+        for (unsigned i= 0; i < r.m_hitTriangleIndex.size(); i++)
+        {
+           RayTestResult result;
+           result.hitFlags = r.m_hitCollisionType;
+           result.hitPosition = Math::float3(r.m_hitPointWorld[i].x(),r.m_hitPointWorld[i].y(),r.m_hitPointWorld[i].z());
+           result.hitTriangleIndex = r.m_hitTriangleIndex[i];
+           result.hasHit = r.hasHit();
+           resultout.push_back(result);
+        }
+        return resultout;
+
+}
+
 RayTestResult PhysicsSystem::raytrace(const Math::float3 &from, const Math::float3 &to, CollisionShape::ECollisionType filtertype)
 {
     /*btVector3 btFrom(from.x, from.y, from.z);
@@ -263,38 +361,38 @@ RayTestResult PhysicsSystem::raytrace(const Math::float3 &from, const Math::floa
 
     struct FilteredRayResultCallback : public btCollisionWorld::RayResultCallback
     {
-        FilteredRayResultCallback(){}
-        virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+        FilteredRayResultCallback() {}
+        virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
         {
             const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);
 
-            if(rb->getCollisionShape()->getUserIndex() != -1)
+            if (rb->getCollisionShape()->getUserIndex() != -1)
             {
                 // We don't have the generation of the handle here, but it should be okay!
                 Handle::CollisionShapeHandle csh;
-                csh.index = static_cast<uint32_t>(rb->getCollisionShape()->getUserIndex());
+                csh.index = static_cast< uint32_t >(rb->getCollisionShape()->getUserIndex());
 
                 CollisionShape& s = m_ShapeAlloc->getElementForce(csh);
 
                 // TODO: There is some filtering functionality in bullet. Maybe use that instead?
-                if((s.collisionType & m_filterType) == 0)
+                if ((s.collisionType & m_filterType) == 0)
                     return 0;
 
                 m_hitCollisionType = s.collisionType;
             }
 
-            if(rb)
+            if (rb)
                 return addSingleResult_close(rayResult, normalInWorldSpace);
 
             return 0;
         }
 
-        btVector3	m_rayFromWorld;
-        btVector3	m_rayToWorld;
+        btVector3 m_rayFromWorld;
+        btVector3 m_rayToWorld;
 
-        btVector3	m_hitNormalWorld;
-        btVector3	m_hitPointWorld;
-        uint32_t	m_hitTriangleIndex;
+        btVector3 m_hitNormalWorld;
+        btVector3 m_hitPointWorld;
+        uint32_t m_hitTriangleIndex;
         CollisionShape::ECollisionType m_hitCollisionType;
         CollisionShape::ECollisionType m_filterType;
         CollisionShapeAllocator* m_ShapeAlloc;
@@ -309,18 +407,18 @@ RayTestResult PhysicsSystem::raytrace(const Math::float3 &from, const Math::floa
             if (normalInWorldSpace)
             {
                 m_hitNormalWorld = rayResult.m_hitNormalLocal;
-            } else
+            }
+            else
             {
                 ///need to transform normal into worldspace
-                m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis()*rayResult.m_hitNormalLocal;
+                m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
             }
-            m_hitPointWorld.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);
+            m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
 
-            m_hitTriangleIndex = static_cast<uint32_t>(rayResult.m_localShapeInfo->m_triangleIndex);
+            m_hitTriangleIndex = static_cast< uint32_t >(rayResult.m_localShapeInfo->m_triangleIndex);
 
             return rayResult.m_hitFraction;
         }
-
     };
 
     FilteredRayResultCallback r;
@@ -429,4 +527,3 @@ void PhysicsSystem::postProcessLoad()
 {
     m_pDynamicsWorld->updateAabbs();
 }
-

@@ -2444,11 +2444,32 @@ void PlayerController::traceDownNPCGround()
     Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -3.0f, 0.0f);
     Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 10.0f, 0.0f);
     Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-
+    std::vector<Physics::RayTestResult> hitall = m_World.getPhysicsSystem().raytraceAll(from, to, Physics::CollisionShape::CT_WorldMesh);
     // LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x  << " " <<  (getEntityTransform().Translation()).y << " " <<  (getEntityTransform().Translation()).z;
     // LogInfo() << "From: " << (from).x  << " " <<  (from).y << " " <<  (from).z;
     // LogInfo() << "To: " << (to).x  << " " <<  (to).y << " " <<  (to).z;
 
+    if (isPlayerControlled())
+    {
+        LogInfo() << "SIZE: " << hitall.size();
+        LogInfo() << "START";
+        for (auto a : hitall)
+        {
+            if (a.hasHit)
+            {
+                // LogInfo() << a.hitTriangleIndex;
+                Math::float3 v3[3];
+                uint8_t matgroup;
+                m_World.getWorldMesh().getTriangle(a.hitTriangleIndex, v3, matgroup);
+                for (int i = 0; i < 3; i++)
+                {
+                    ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
+                }
+                LogInfo() << std::bitset< 8 >(matgroup);
+            }
+        }
+        LogInfo() << "END";
+    }
     if (!hit.hasHit)
     {
         from += Math::float3(0.0f, 10000.0f, 0.0f); // trying from further above
