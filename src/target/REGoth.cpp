@@ -51,6 +51,7 @@ using json = nlohmann::json;
 namespace Flags
 {
     Cli::Flag help("h", "help", 0, "Prints this message");
+    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync");
 }
 
 struct PosColorVertex
@@ -263,7 +264,11 @@ public:
 #if BX_PLATFORM_ANDROID
         m_reset = 0;
 #else
-		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+        m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+        if (Flags::vsync.isSet())
+        {
+            m_reset |= BGFX_RESET_VSYNC;
+        }
 #endif
 
         m_Width = getWindowWidth();
