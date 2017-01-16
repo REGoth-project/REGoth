@@ -78,6 +78,11 @@ namespace Logic
          */
         bool isDialogActive() { return m_DialogActive; }
 
+	/**
+         * @return Whether a someone is currently talking
+         */
+        bool isTalking() { return m_Talking; }
+
         /**
          * Removes all choices currently in the dialogbox
          */
@@ -179,5 +184,10 @@ namespace Logic
          * Whether a dialog is currently active
          */
         bool m_DialogActive;
+
+	/**
+         * Whether a subtitlebox is currently shown
+         */
+        bool m_Talking;
     };
 }

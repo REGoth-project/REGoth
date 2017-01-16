@@ -1973,17 +1973,21 @@ void PlayerController::setupKeyBindings()
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
     });
 
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float intensity) {
+        s_action_triggered = false;
+
+        if (triggered)
+            s_action_triggered = true; // Set true for one frame
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
         static bool s_triggered = false;
-
-        s_action_triggered = false;
 
         if (s_triggered && !triggered)
             s_triggered = false;
         else if (!s_triggered && triggered)
         {
             s_triggered = true;
-            s_action_triggered = true; // Set true for one frame
 
             if(m_World.getDialogManager().isDialogActive())
                 return;
