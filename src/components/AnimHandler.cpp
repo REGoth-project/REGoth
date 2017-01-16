@@ -44,11 +44,12 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 
 bool AnimHandler::addAnimation(const std::string &name)
 {
-    // Add overlay/lib
-    std::string file = m_ActiveOverlay + "-" + name;
+    Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_MeshLibName, m_ActiveOverlay, name);
 
-    Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(file);
+    if(!h.isValid())
+        return false;
 
+/*
     // Try again with lib only
 	if(!h.isValid())
 	{
@@ -65,11 +66,39 @@ bool AnimHandler::addAnimation(const std::string &name)
 			return false;
 		}
 	}
+*/
 
     m_Animations.push_back(h);
-    m_AnimationsByName[getAnimation(h).animation.getModelAniHeader().aniName] = h;
+    m_AnimationsByName[getAnimation(h).m_Header.aniName] = h;
 
     return true;
+}
+
+void AnimHandler::setOverlay(const std::string& mds)
+{
+    LogInfo() << "set overlay" << mds;
+
+    if(mds.find_last_of('.') != std::string::npos)
+    {
+        m_ActiveOverlay = mds.substr(0, mds.find_last_of('.'));
+    }else
+    {
+        m_ActiveOverlay = mds;
+    }
+
+    if(mds.empty())
+        m_ActiveOverlay = m_MeshLibName;
+
+    // Try to switch loaded animations
+    for(auto& a : m_AnimationsByName)
+    {
+        std::string name = getAnimation(a.second).m_Header.aniName;
+        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_MeshLibName, m_ActiveOverlay, name);
+
+        // Update with overlay variant
+        if(h.isValid())
+            a.second = h;
+    }
 }
 
 /**
@@ -105,7 +134,7 @@ void AnimHandler::playAnimation(const std::string &animName)
     auto it = m_AnimationsByName.find(animName);
     if (it == m_AnimationsByName.end())
     {
-        //LogError() << "Failed to find animation: " << animName;
+        LogError() << "Failed to find animation: " << animName;
         m_ActiveAnimation.invalidate();
     }
     else
@@ -129,7 +158,7 @@ void AnimHandler::playAnimation(const std::string &animName)
 
 void AnimHandler::setAnimation(const std::string &animName)
 {
-    if (getActiveAnimationPtr() && getActiveAnimationPtr()->getModelAniHeader().aniName == animName)
+    if (getActiveAnimationPtr() && getActiveAnimationPtr()->m_Header.aniName == animName)
         return;
 
     playAnimation(animName);
@@ -146,14 +175,14 @@ void AnimHandler::updateAnimations(double deltaTime)
         return;
 
     // Increase current timeline-position
-    float framesPerSecond = getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier;
-    float numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
+    float framesPerSecond = getActiveAnimationPtr()->m_Header.fpsRate * m_SpeedMultiplier;
+    float numFrames = getActiveAnimationPtr()->m_Header.numFrames;
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
     if (m_AnimationFrame >= numFrames)
     {
         // If there is a next animation, play this now
-        std::string next = getActiveAnimationPtr()->getModelAniHeader().nextAniName;
+        std::string next = getActiveAnimationPtr()->m_Header.nextAniName;
         if(!next.empty())
         {
             //if(next != "S_RUN" && next != "S_RUNL")
@@ -189,16 +218,15 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t frameNext = (frameNum + 1) % Math::trunc(numFrames); // FIXME: What happens on non-looped animation on the last frame?
     float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
 
-
-    for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
+    for (size_t i = 0; i < getActiveAnimationPtr()->m_NodeIndexList.size(); i++)
     {
         size_t frameNum = static_cast<size_t>(m_AnimationFrame);
-        size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
-        uint32_t nodeIdx = getActiveAnimationPtr()->getNodeIndexList()[i];
+        size_t numAnimationNodes = getActiveAnimationPtr()->m_NodeIndexList.size();
+        uint32_t nodeIdx = getActiveAnimationPtr()->m_NodeIndexList[i];
 
         // Extract sample at the current frame/node
-        auto &sample = getActiveAnimationPtr()->getAniSamples()[frameNum * numAnimationNodes + i];
-        auto &sampleNext = getActiveAnimationPtr()->getAniSamples()[frameNext * numAnimationNodes + i];
+        auto &sample = getActiveAnimationPtr()->m_Samples[frameNum * numAnimationNodes + i];
+        auto &sampleNext = getActiveAnimationPtr()->m_Samples[frameNext * numAnimationNodes + i];
 
         // Interpolate between frames
         Math::float4 interpRotation = Math::float4::slerp(Math::float4(sample.rotation.v),
@@ -211,6 +239,7 @@ void AnimHandler::updateAnimations(double deltaTime)
 
         if(nodeIdx == 0 && frameNext > frameNum ) // Last frame resets the animation back, we don't want any hickups here
             m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
+
 
         // Build transformation matrix from the sample-information
         // Note: Precomputing this is hard because of interpolation
@@ -245,10 +274,10 @@ void AnimHandler::updateAnimations(double deltaTime)
     if (!getActiveAnimationPtr()->getAniSamples().empty() && lastFrame != frameNum && frameNum != 0)
     {
         // Get sample of root node (Node 0) from the current and the last frame
-        auto &sampleCurrent = getActiveAnimationPtr()->getAniSamples()[frameNum *
-                getActiveAnimationPtr()->getNodeIndexList().size()];
-        auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
-                getActiveAnimationPtr()->getNodeIndexList().size()];
+        auto &sampleCurrent = getActiveAnimationPtr()->m_Samples[frameNum *
+                getActiveAnimationPtr()->m_NodeIndexList.size()];
+        auto &sampleLast = getActiveAnimationPtr()->m_Samples[lastFrame *
+                getActiveAnimationPtr()->m_NodeIndexList.size()];
 
         // Scale velocity to seconds
         m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v));
@@ -265,13 +294,13 @@ Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
     if(!getActiveAnimationPtr())
         return Math::float3(0,0,0);
 
-    size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
+    size_t numAnimationNodes = getActiveAnimationPtr()->m_NodeIndexList.size();
 
     if(frame == (size_t)-1)
-        frame = getActiveAnimationPtr()->getModelAniHeader().numFrames - 1;
+        frame = getActiveAnimationPtr()->m_Header.numFrames - 1;
 
     // Root node is always node 0
-    return Math::float3(getActiveAnimationPtr()->getAniSamples()[numAnimationNodes * frame].position.v);
+    return Math::float3(getActiveAnimationPtr()->m_Samples[numAnimationNodes * frame].position.v);
 }
 
 
@@ -281,10 +310,10 @@ Math::float3 AnimHandler::getRootNodeVelocityAvg()
         return Math::float3(0,0,0);
 
     // Get length of the animation in seconds
-    float length = getActiveAnimationPtr()->getModelAniHeader().numFrames
-                   / (getActiveAnimationPtr()->getModelAniHeader().fpsRate * m_SpeedMultiplier);
+    float length = getActiveAnimationPtr()->m_Header.numFrames
+                   / (getActiveAnimationPtr()->m_Header.fpsRate * m_SpeedMultiplier);
 
-    size_t numFrames = getActiveAnimationPtr()->getModelAniHeader().numFrames;
+    size_t numFrames = getActiveAnimationPtr()->m_Header.numFrames;
     Math::float3 start = getRootNodePositionAt(0);
     Math::float3 end = getRootNodePositionAt(numFrames - 1);
 
@@ -341,12 +370,12 @@ void AnimHandler::updateSkeletalMeshInfo(Math::Matrix *target, size_t numMatrice
     //}
 }
 
-ZenLoad::zCModelAni *AnimHandler::getActiveAnimationPtr()
+Animations::Animation *AnimHandler::getActiveAnimationPtr()
 {
     if (!m_ActiveAnimation.isValid())
         return nullptr;
 
-    return &getAnimation(m_ActiveAnimation).animation;
+    return &getAnimation(m_ActiveAnimation);
 }
 
 bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &idx)
@@ -412,31 +441,6 @@ void AnimHandler::setBindPose(bool force)
 Animations::Animation &AnimHandler::getAnimation(Handle::AnimationHandle h)
 {
     return m_pWorld->getAnimationAllocator().getAnimation(h);
-}
-
-void AnimHandler::setOverlay(const std::string& mds)
-{
-    if(mds.find_last_of('.') != std::string::npos)
-    {
-        m_ActiveOverlay = mds.substr(0, mds.find_last_of('.'));
-    }else
-    {
-        m_ActiveOverlay = mds;
-    }
-
-    if(mds.empty())
-        m_ActiveOverlay = m_MeshLibName;
-
-    // Try to switch loaded animations
-    for(auto& a : m_AnimationsByName)
-    {
-        std::string name = getAnimation(a.second).animation.getModelAniHeader().aniName;
-        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_ActiveOverlay + "-" + name);
-
-        // Update with overlay variant
-        if(h.isValid())
-            a.second = h;
-    }
 }
 
 Math::float3 AnimHandler::getRootNodePosition()
