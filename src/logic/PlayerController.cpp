@@ -843,7 +843,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         };
         if (m_isStrafeLeft)
         {
-            manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
+            manageAnimation(ModelVisual::EModelAnimType::StrafeLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
         else if (m_isStrafeRight)
         {
