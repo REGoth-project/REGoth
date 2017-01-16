@@ -7,6 +7,7 @@
 #include <memory/Config.h>
 #include <handle/Handle.h>
 #include "zenload/zCModelAni.h"
+#include "zenload/zCModelScript.h"
 #include "zenload/zCModelMeshLib.h"
 
 namespace VDFS
@@ -16,7 +17,6 @@ namespace VDFS
 
 namespace ZenLoad
 {
-    class zCModelAni;
     class zCModelMeshLib;
 }
 
@@ -24,7 +24,10 @@ namespace Animations
 {
     struct Animation : public Handle::HandleTypeDescriptor<Handle::AnimationHandle>
     {
-        ZenLoad::zCModelAni animation;
+
+        ZenLoad::zCModelAniHeader               m_Header;
+        std::vector<ZenLoad::zCModelAniSample>  m_Samples;
+        std::vector<uint32_t>                   m_NodeIndexList;
     };
 
     class AnimationAllocator
@@ -42,8 +45,9 @@ namespace Animations
         /**
          * @brief Loads an animation from the given or stored VDFS-FileIndex
          */
-        Handle::AnimationHandle loadAnimationVDF(const VDFS::FileIndex& idx, const std::string& name);
-        Handle::AnimationHandle loadAnimationVDF(const std::string& name);
+        Handle::AnimationHandle loadAnimationVDF(const VDFS::FileIndex& idx, const std::string& lib, const std::string& overlay, const std::string& name);
+
+        Handle::AnimationHandle loadAnimationVDF(const std::string& lib, const std::string& overlay, const std::string &name);
 
         /**
 		 * @brief Returns the animation of the given handle
@@ -65,5 +69,7 @@ namespace Animations
          * Pointer to a vdfs-index to work on (can be nullptr)
          */
         const VDFS::FileIndex* m_pVDFSIndex;
+
+        bool loadMAN(Animation &anim, const VDFS::FileIndex &idx, const std::string &name);
     };
 }

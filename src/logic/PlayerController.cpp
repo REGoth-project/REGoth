@@ -921,7 +921,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
             if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
-                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName;
             m_NoAniRootPosHack = true;
         };
         if (m_isStrafeLeft)
@@ -952,7 +952,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         //		{
         //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
         //		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName == lastMovementAni)
         {
             manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
@@ -1521,7 +1521,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
         case ConversationMessage::ST_PlayAni:
         {
-            ZenLoad::zCModelAni* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+            Animations::Animation* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
 
             if (message.status == ConversationMessage::Status::INIT)
             {
@@ -1537,7 +1537,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
             // Go as long as this animation is playing
             bool done = !active
-                        || active->getModelAniHeader().aniName != message.animation;
+                        || active->m_Header.aniName != message.animation;
 
             if(done && isPlayerControlled())
                 LogInfo() << "PLAYER: Done with animation: " << message.animation;
@@ -1795,7 +1795,7 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
     if(startAniTransition
        && getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
     {
-        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName;
 
         // State animation?
         if(playingAni.substr(0, 2) == "S_")

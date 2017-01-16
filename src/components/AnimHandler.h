@@ -103,7 +103,7 @@ namespace Components
 		/**
 		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
 		 */
-		ZenLoad::zCModelAni* getActiveAnimationPtr();
+        Animations::Animation* getActiveAnimationPtr();
 
 		/**
 		 * @return Number of nodes in this skeleton
