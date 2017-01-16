@@ -20,6 +20,7 @@
 #include <json.hpp>
 #include <logic/PfxManager.h>
 #include "BspTree.h"
+#include <content/AnimationLibrary.h>
 
 using json = nlohmann::json;
 
@@ -52,7 +53,8 @@ namespace World
         Textures::TextureAllocator m_LevelTextureAllocator;
 		Meshes::StaticMeshAllocator m_LevelStaticMeshAllocator;
 		Meshes::SkeletalMeshAllocator m_LevelSkeletalMeshAllocator;
-		Animations::AnimationAllocator m_AnimationAllocator;
+        Animations::AnimationAllocator m_AnimationAllocator;
+        Animations::AnimationDataAllocator m_AnimationDataAllocator;
 
 		// TODO: Refractor this one into StaticMeshAllocator
 		WorldMeshAllocator m_WorldMeshAllocator;
@@ -186,10 +188,14 @@ namespace World
 		{
 			return m_Allocators.m_LevelSkeletalMeshAllocator;
 		}
-		Animations::AnimationAllocator& getAnimationAllocator()
-		{
-			return m_Allocators.m_AnimationAllocator;
-		}
+        Animations::AnimationAllocator& getAnimationAllocator()
+        {
+            return m_Allocators.m_AnimationAllocator;
+        }
+        Animations::AnimationDataAllocator& getAnimationDataAllocator()
+        {
+            return m_Allocators.m_AnimationDataAllocator;
+        }
 
 		// TODO: Depricated, remove
 		WorldAllocators::MaterialAllocator& getMaterialAllocator()
@@ -233,15 +239,22 @@ namespace World
 			return m_DialogManager;
 		}
         World::AudioWorld& getAudioWorld()
-		{
+        {
             return *m_AudioWorld;
 		}
-		Logic::PfxManager& getPfxManager()
-		{
-			return m_PfxManager;
-		}
 
-		/**
+        Logic::PfxManager& getPfxManager()
+        {
+            return m_PfxManager;
+        }
+
+        Animations::AnimationLibrary& getAnimationLibrary()
+        {
+            return m_AnimationLibrary;
+        }
+
+
+        /**
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
@@ -340,7 +353,9 @@ namespace World
 		 */
 		Physics::PhysicsSystem m_PhysicsSystem;
 
-        World::AudioWorld *m_AudioWorld;
+        World::AudioWorld* m_AudioWorld;
+
+        Animations::AnimationLibrary m_AnimationLibrary;
 
 		/**
 		 * Sky of this world
