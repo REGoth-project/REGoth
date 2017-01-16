@@ -14,14 +14,15 @@
 #include <stdlib.h>
 #include <iterator>
 
-#include <engine/GameEngine.h>
-#include <debugdraw/debugdraw.h>
-#include <components/Vob.h>
 #include <components/VobClasses.h>
+#include <components/Vob.h>
+#include <content/AnimationLibrary.h>
+#include <debugdraw/debugdraw.h>
+#include <engine/GameEngine.h>
 #include <entry/input.h>
+#include <ui/Hud.h>
 #include <ui/PrintScreenMessages.h>
 #include <ZenLib/zenload/zTypes.h>
-#include <ui/Hud.h>
 
 using namespace World;
 
@@ -29,6 +30,7 @@ WorldInstance::WorldInstance()
 	: m_WorldMesh(*this),
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
+      m_AnimationLibrary(*this),
       m_Sky(*this),
       m_DialogManager(*this),
       m_PrintScreenMessageView(nullptr),

@@ -17,6 +17,7 @@ namespace Animations
 
 namespace Components
 {
+    // TOOD: in gothic Model Scripts control everything related, rename
 	class AnimHandler
 	{
 	public:
@@ -49,6 +50,11 @@ namespace Components
 		 * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
 		 */
 		void playAnimation(const std::string& animName);
+
+        /**
+         * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
+         */
+        void playAnimation(Handle::AnimationHandle anim);
 
 		/**
 		 * @brief Sets the currently playing animation without restarting it, if it is currently running. Loops.
