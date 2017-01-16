@@ -31,6 +31,7 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ScriptDialogMananger = nullptr;
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
+    m_Talking = false;
 }
 
 DialogManager::~DialogManager()
@@ -370,11 +371,13 @@ void DialogManager::displaySubtitle(const std::string& subtitle, const std::stri
 {
     m_ActiveSubtitleBox->setHidden(false);
     m_ActiveSubtitleBox->setText(self, subtitle);
+    m_Talking = true;
 }
 
 void DialogManager::stopDisplaySubtitle()
 {
     m_ActiveSubtitleBox->setHidden(true);
+    m_Talking = false;
 }
 
 void DialogManager::clearChoices()
