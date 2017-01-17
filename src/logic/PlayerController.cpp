@@ -1888,7 +1888,7 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
-        if(triggered)
+        if(triggered && !m_World.getDialogManager().isDialogActive())
         {
             UI::Hud &hud = m_World.getEngine()->getHud();
             if (!hud.isTopMenu<UI::Menu_Status>())

@@ -774,7 +774,7 @@ public:
             {
                 if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
                 {
-                    if (m_stopWatch.DelayedByArgMS(150))
+                    if (m_stopWatch.DelayedByArgMS(150) && keyMap.find(i) != keyMap.end())
                     {
                         m_pEngine->getHud().onInputAction(keyMap[i]);
                     }
