@@ -41,9 +41,15 @@ namespace Animations
         Handle::AnimationDataHandle             m_Data;
         uint32_t                                m_Layer = 0;
         Handle::AnimationHandle                 m_Next;
+        // required to look up the handle, next can't be resolved until all animations are loaded
+        // FIXME: could be removed when building an index of animations
+        std::string                             m_NextName;
         float                                   m_BlendIn = 0;
         float                                   m_BlendOut = 0;
         Handle::AnimationHandle                 m_Alias;
+        // required to look up the handle, alias can't be resolved until all animations are loaded
+        // FIXME: could be removed when building an index of animations
+        std::string                             m_AliasName;
         uint32_t                                m_Flags = 0;
         float                                   m_FpsRate = 0.0f;
         unsigned                                m_FrameCount = 0;

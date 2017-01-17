@@ -44,8 +44,7 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 
 bool AnimHandler::addAnimation(const std::string &name)
 {
-    Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_MeshLibName, m_ActiveOverlay, name);
-
+    Handle::AnimationHandle h = m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, name);
     if(!h.isValid())
         return false;
 
@@ -93,7 +92,7 @@ void AnimHandler::setOverlay(const std::string& mds)
     for(auto& a : m_AnimationsByName)
     {
         std::string name = getAnimation(a.second).m_Name;
-        Handle::AnimationHandle h = m_pWorld->getAnimationAllocator().loadAnimationVDF(m_MeshLibName, m_ActiveOverlay, name);
+        Handle::AnimationHandle h = m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, name);
 
         // Update with overlay variant
         if(h.isValid())
@@ -127,7 +126,7 @@ void AnimHandler::playAnimation(const std::string &animName)
             return;
     }
 
-    playAnimation(m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay));
+    playAnimation(m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, animName));
 }
 
 void AnimHandler::playAnimation(Handle::AnimationHandle anim)
