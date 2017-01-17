@@ -123,6 +123,7 @@ namespace Math
 			float v[4];
 
             glm::vec4 _glmt_vector;
+			glm::quat _glmt_quat;
         };
 
 		/**
@@ -202,6 +203,13 @@ namespace Math
 				+ ", " + std::to_string(w) + "]";
 
 			return out;
+		}
+
+		static t_float4 slerp(const t_float4& a, const t_float4& b, float t)
+		{
+			t_float4 r;
+			r._glmt_quat = glm::slerp(a._glmt_quat, b._glmt_quat, t);
+			return r;
 		}
 
 		friend std::ostream& operator<< (std::ostream &out, t_float4 &v);
