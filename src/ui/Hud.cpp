@@ -142,7 +142,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     if(m_Engine.getMainWorld().get().getDialogManager().isTalking()) return;
 
     // Notify last menu in chain
-    if(!m_MenuChain.empty())
+    if(!m_MenuChain.empty() && action != IA_Close)
     {
         m_MenuChain.back()->onInputAction(action);
         return;
