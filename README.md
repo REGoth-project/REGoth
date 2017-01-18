@@ -7,6 +7,8 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 
 ### Videos showing the current state
 
+* Release-Commentary to V0.2:
+   * https://www.youtube.com/watch?v=jB3pzxd6vIk
 * Release-Commentary to V0.1.1:
    * https://www.youtube.com/watch?v=heg49o78Ii4
 * Dialogs, Audio, NPC script-states:
