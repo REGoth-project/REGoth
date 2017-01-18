@@ -16,6 +16,46 @@ namespace Math
     {
       return exp < 1 ? result : ipow(base * base, exp / 2, (exp % 2) ? result * base : result);
     }
+    
+    /**
+     * Truncate a floating-point number (Remove everything after the decimal-point))
+     * @param f Float to truncate
+     * @return f, but only the integer part
+     */
+    inline int trunc(float f)
+    {
+        return static_cast<int>(f);
+    }
+    
+    /**
+     * Rounds a number to the nearest decimal
+     * @param f number to round
+     * @return f, but rounded to the integer value of f
+     */
+    inline int iround(float f)
+    {
+        return static_cast<int>(f + 0.5f);
+    }
+    
+    /**
+     * Lower next integer value of f
+     * @param f Number to process
+     * @return Lower next integer value of f
+     */
+    inline int ifloor(float f)
+    {
+        return round(floor(f));
+    }
+    
+    /**
+     * Upper next integer value of f
+     * @param f Number to process
+     * @return Upper next integer value of f
+     */
+    inline int iceil(float f)
+    {
+        return round(ceil(f));
+    }
 
     /**
      * @brief Converson of degrees to radians
