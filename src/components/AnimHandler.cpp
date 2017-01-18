@@ -186,7 +186,7 @@ void AnimHandler::updateAnimations(double deltaTime)
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
     // frameNum contains the current frame, find out what the next frame will be and how far we're in there already
-    size_t frameNext = (frameNum + 1) % (int)(numFrames); // FIXME: What happens on non-looped animation on the last frame?
+    size_t frameNext = (frameNum + 1) % Math::trunc(numFrames); // FIXME: What happens on non-looped animation on the last frame?
     float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
 
 
