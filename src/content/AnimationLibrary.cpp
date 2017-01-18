@@ -1,5 +1,9 @@
 #include <algorithm>
+#include <engine/BaseEngine.h>
+#include <engine/World.h>
 #include <vdfs/fileIndex.h>
+#include <utils/logger.h>
+#include <zenload/modelAnimationParser.h>
 #include <zenload/modelScriptParser.h>
 #include <zenload/zenParser.h>
 
@@ -12,27 +16,30 @@ using namespace ZenLoad;
 namespace Animations
 {
 
-AnimationLibrary::AnimationLibrary(const FileIndex &index)
-    : m_Index(index)
+AnimationLibrary::AnimationLibrary(World::WorldInstance &world)
+    : m_World(world)
 {
-
 }
 
-Handle::AnimationHandle Animations::AnimationLibrary::getAnimation(const std::string &mesh_lib, const std::string &overlay, const std::string &name)
+Animation &AnimationLibrary::getAnimation(Handle::AnimationHandle h)
 {
-    std::string qname = mesh_lib + '_' + overlay + '_' + name;
+    return m_World.getAnimationAllocator().getAnimation(h);
+}
 
-    auto it = m_AnimationsByName.find(qname);
-    if (it != m_AnimationsByName.end())
-        return it->second;
+Handle::AnimationHandle AnimationLibrary::getAnimation(const std::string &qname)
+{
+    return m_World.getAnimationAllocator().getAnimation(qname);
+}
 
-    qname = mesh_lib + '-' + name;
+Handle::AnimationHandle AnimationLibrary::getAnimation(const std::string &mesh_lib, const std::string &overlay, const std::string &name)
+{
+    std::string qname = makeQualifiedName(mesh_lib, overlay, name);
+    return getAnimation(qname);
+}
 
-    it = m_AnimationsByName.find(qname);
-    if (it != m_AnimationsByName.end())
-        return it->second;
-
-    return Handle::AnimationHandle();
+AnimationData &AnimationLibrary::getAnimationData(Handle::AnimationDataHandle h)
+{
+    return m_World.getAnimationDataAllocator().getAnimationData(h);
 }
 
 bool AnimationLibrary::loadAnimations()
@@ -40,25 +47,25 @@ bool AnimationLibrary::loadAnimations()
     // both .MDS and .MSB, where .MDS has precedence
     std::vector<std::string> msb_loaded;
 
-    std::string ext_mds = ".mds";
-    std::string ext_msb = ".msb";
+    std::string ext_mds = ".MDS";
+    std::string ext_msb = ".MSB";
 
-    for (const FileInfo &fi : m_Index.getKnownFiles())
+    for (const FileInfo &fi : m_World.getEngine()->getVDFSIndex().getKnownFiles())
     {
         std::string fn = fi.fileName;
         std::transform(fn.begin(), fn.end(), fn.begin(), ::toupper);
 
         std::string n = fn.substr(0, fn.length() - 4);
 
-        if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.begin()))
+        if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.rbegin()))
         {
             if (!loadMDS(fn))
                 return false;
         } else
-        if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.begin()))
+        if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
         {
             if (!loadMSB(fn))
-                return false;
+                return false;                
         } else
             continue;
 
@@ -68,15 +75,84 @@ bool AnimationLibrary::loadAnimations()
     return true;
 }
 
+std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, const std::string &overlay, const std::string &name)
+{
+    std::string umesh_lib = mesh_lib, uoverlay = overlay, uname = name;
+    std::transform(umesh_lib.begin(), umesh_lib.end(), umesh_lib.begin(), ::toupper);
+    std::transform(uoverlay.begin(), uoverlay.end(), uoverlay.begin(), ::toupper);
+    std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
+
+
+    std::string qname;
+    if (uoverlay.find(umesh_lib) != 0)
+    {
+        qname = umesh_lib + '_' + uoverlay + '-' + uname;
+    } else
+        qname = umesh_lib + '-' + uname;
+
+    //LogInfo() << "qname '" << qname << "' '" << umesh_lib << "' '" << uoverlay << "' '" << uname << "'";
+
+    return qname;
+}
+
 bool AnimationLibrary::loadMDS(const std::string &file_name)
 {
     return true;
 }
 
+Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string &name)
+{
+    std::string file_name = name + ".MAN";
+    std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper);
+
+    Handle::AnimationDataHandle h = m_World.getAnimationDataAllocator().getAnimationData(name);
+    if (h.isValid())
+        return h;
+
+    const VDFS::FileIndex& idx = m_World.getEngine()->getVDFSIndex();
+    if (!idx.hasFile(file_name))
+    {
+        LogError() << "MAN file " << file_name << " does not exist";
+        return Handle::AnimationDataHandle::makeInvalidHandle();
+    }
+
+    h = m_World.getAnimationDataAllocator().allocate(name);
+    AnimationData &data = m_World.getAnimationDataAllocator().getAnimationData(h);
+
+    ZenParser zen(file_name, idx);
+    ModelAnimationParser p(zen);
+    p.setScale(1.0f / 100.0f);
+
+    ModelAnimationParser::EChunkType type;
+    while ((type = p.parse()) != ModelAnimationParser::CHUNK_EOF)
+    {
+        switch (type)
+        {
+        case ModelAnimationParser::CHUNK_HEADER:
+            data.m_Header = p.getHeader();
+            break;
+        case ModelAnimationParser::CHUNK_RAWDATA:
+            data.m_NodeIndexList = p.getNodeIndex();
+            data.m_Samples = p.getSamples();
+            break;
+        case ModelAnimationParser::CHUNK_ERROR:
+            return Handle::AnimationDataHandle::makeInvalidHandle();
+        }
+    }
+
+    return h;
+}
+
 bool AnimationLibrary::loadMSB(const std::string &file_name)
 {
-    ZenParser zen(file_name, m_Index);
-    ModelScriptBinParser(zen);
+    LogInfo() << "load MSB " << file_name;
+
+    ZenParser zen(file_name, m_World.getEngine()->getVDFSIndex());
+
+    ssize_t name_end = file_name.rfind('.');
+    std::string name = file_name.substr(0, name_end);
+
+    Animation *anim = nullptr;
 
     ModelScriptBinParser p(zen);
     ModelScriptBinParser::EChunkType type;
@@ -84,6 +160,31 @@ bool AnimationLibrary::loadMSB(const std::string &file_name)
     {
         switch (type)
         {
+        case ModelScriptBinParser::CHUNK_ANI:
+            {
+                std::string qname = name + '-' + p.ani().m_Name;
+                auto h = m_World.getAnimationAllocator().allocate(qname);
+                anim = &m_World.getAnimationAllocator().getAnimation(h);
+                anim->m_Name = p.ani().m_Name;
+                anim->m_Layer = p.ani().m_Layer;
+                anim->m_NextName = p.ani().m_Next;
+                anim->m_BlendIn = p.ani().m_BlendIn;
+                anim->m_BlendOut = p.ani().m_BlendOut;
+                anim->m_Flags = p.ani().m_Flags;
+                anim->m_FirstFrame = p.ani().m_FirstFrame;
+                anim->m_LastFrame = p.ani().m_FirstFrame;
+
+                anim->m_Data = loadMAN(qname);
+                if (!anim->m_Data.isValid())
+                    return false;
+
+                auto &data = m_World.getAnimationDataAllocator().getAnimationData(anim->m_Data);
+                anim->m_FpsRate = data.m_Header.fpsRate;
+                anim->m_FrameCount = data.m_Header.numFrames;
+
+                LogInfo() << "created animation '" << qname << "' id " << h.index;
+            }
+            break;
         case ModelScriptBinParser::CHUNK_ERROR:
             return false;
         }

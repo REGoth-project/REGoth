@@ -905,7 +905,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
             if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
-                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName;
+                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
             m_NoAniRootPosHack = true;
         };
         if (m_isStrafeLeft)
@@ -936,7 +936,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         //		{
         //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
         //		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName == lastMovementAni)
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name == lastMovementAni)
         {
             manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
@@ -1515,8 +1515,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             }
 
             // Go as long as this animation is playing
-            bool done = !active
-                        || active->m_Header.aniName != message.animation;
+            bool done = !active || active->m_Name != message.animation;
 
             if(done && isPlayerControlled())
                 LogInfo() << "PLAYER: Done with animation: " << message.animation;
@@ -1746,7 +1745,7 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
     if(startAniTransition
        && getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
     {
-        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName;
+        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
 
         // State animation?
         if(playingAni.substr(0, 2) == "S_")

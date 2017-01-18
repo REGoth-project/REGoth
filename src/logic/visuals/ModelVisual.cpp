@@ -748,5 +748,5 @@ void ModelVisual::applyOverlay(const std::string& mds)
 bool ModelVisual::isAnimPlaying(const std::string& name)
 {
     return getAnimationHandler().getActiveAnimationPtr()
-            && getAnimationHandler().getActiveAnimationPtr()->m_Header.aniName == name;
+            && getAnimationHandler().getActiveAnimationPtr()->m_Name == name;
 }

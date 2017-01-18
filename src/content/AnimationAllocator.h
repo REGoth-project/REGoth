@@ -32,8 +32,6 @@ namespace Animations
     {
     public:
 
-        AnimationAllocator(World::WorldInstance *world);
-
         Handle::AnimationHandle allocate(const std::string &name);
 
         Handle::AnimationHandle getAnimation(const std::string &name) const;
@@ -65,46 +63,30 @@ namespace Animations
     {
     public:
 
-        AnimationDataAllocator(World::WorldInstance *world, const VDFS::FileIndex* vdfidx = nullptr);
-        virtual ~AnimationDataAllocator();
+        Handle::AnimationDataHandle allocate(const std::string &name);
 
-        /**
-        * @brief Sets the VDFS-Index to use
-        */
-        void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }
-
-        /**
-         * @brief Loads an animation from the given or stored VDFS-FileIndex
-         */
-        Handle::AnimationDataHandle loadAnimationVDF(const VDFS::FileIndex& idx, const std::string& name);
-
-        Handle::AnimationDataHandle loadAnimationVDF(const std::string &name);
-
-        /**
-		 * @brief Returns the animation of the given handle
-		 */
         AnimationData& getAnimationData(Handle::AnimationDataHandle h) { return m_Allocator.getElement(h); }
+
+        Handle::AnimationDataHandle getAnimationData(const std::string &name);
 
     protected:
 
-        World::WorldInstance *m_World = nullptr;
+        std::map<std::string, Handle::AnimationDataHandle> m_AnimationDataByName;
 
-        /**
-         * @brief Textures by their set names. Note: If names are doubled, only the last loaded texture
-         *		  can be found here
-         */
-        std::map<std::string, Handle::AnimationDataHandle> m_AnimationsByName;
-
-        /**
-		 * Data allocator
-		 */
         Memory::StaticReferencedAllocator<AnimationData, Config::MAX_NUM_LEVEL_ANIMATION_DATAS> m_Allocator;
-
-        /**
-         * Pointer to a vdfs-index to work on (can be nullptr)
-         */
-        const VDFS::FileIndex* m_pVDFSIndex;
-
-        bool loadMAN(AnimationData &data, const VDFS::FileIndex &idx, const std::string &name);
     };
+
+    inline Handle::AnimationDataHandle AnimationDataAllocator::allocate(const std::string &name)
+    {
+        auto h = m_Allocator.createObject();
+        m_AnimationDataByName[name] = h;
+        return h;
+    }
+
+    inline Handle::AnimationDataHandle AnimationDataAllocator::getAnimationData(const std::string &name)
+    {
+        auto it = m_AnimationDataByName.find(name);
+        return (it != m_AnimationDataByName.end()) ? it->second : Handle::AnimationDataHandle();
+    }
+
 }
