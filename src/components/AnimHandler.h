@@ -174,7 +174,7 @@ namespace Components
 		 * @brief Animations by their name
 		 */
 		std::vector<Handle::AnimationHandle> m_Animations;
-		std::unordered_map<std::string, Handle::AnimationHandle> m_AnimationsByName;
+        std::unordered_map<std::string, Handle::AnimationHandle> m_AnimationsByName;
 
 		/**
 		 * @brief Meshlib this operates on

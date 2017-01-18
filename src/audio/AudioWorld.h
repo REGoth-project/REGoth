@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 
+#include <daedalus/DaedalusStdlib.h>
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 #include <vdfs/fileIndex.h>

@@ -1,28 +1,28 @@
-#include <iostream>
-
-#include "World.h"
+#include <cstdlib>
 #include <bitset>
-#include <zenload/zenParser.h>
-#include <zenload/zCMesh.h>
-#include "BaseEngine.h"
-#include "GameEngine.h"
-#include <content/ContentLoad.cpp>
-#include <utils/logger.h>
-#include <components/EntityActions.h>
-#include <logic/PlayerController.h>
-#include <logic/MobController.h>
-#include <stdlib.h>
+#include <iostream>
 #include <iterator>
 
+#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
+#include <engine/World.h>
+#include <components/EntityActions.h>
 #include <components/VobClasses.h>
 #include <components/Vob.h>
 #include <content/AnimationLibrary.h>
+#include <content/ContentLoad.cpp>
 #include <debugdraw/debugdraw.h>
 #include <engine/GameEngine.h>
 #include <entry/input.h>
+#include <handle/HandleDef.h>
+#include <logic/MobController.h>
+#include <logic/PlayerController.h>
 #include <ui/Hud.h>
 #include <ui/PrintScreenMessages.h>
+#include <utils/logger.h>
 #include <ZenLib/zenload/zTypes.h>
+#include <zenload/zCMesh.h>
+#include <zenload/zenParser.h>
 
 using namespace World;
 
@@ -58,7 +58,9 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
     m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
-    m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
+
+    if (!m_AnimationLibrary.loadAnimations())
+        LogError() << "failed to load animations!";
 
     // Create static-collision shape beforehand
     m_StaticWorldObjectCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
@@ -825,6 +827,7 @@ void WorldInstance::importVobs(const json& j)
         }
     }
 }
+
 
 
 
