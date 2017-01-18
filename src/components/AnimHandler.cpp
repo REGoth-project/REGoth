@@ -181,7 +181,7 @@ void AnimHandler::updateAnimations(double deltaTime)
 
     // Check if this changed something on our animation
     //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
-    //    return; // Nothing to do here // TODO: There is, if interpolation was implemented!
+    //    return; // Nothing to do here // TODO: Do this distance-based!
 
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
@@ -192,7 +192,6 @@ void AnimHandler::updateAnimations(double deltaTime)
 
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
-        // TODO: Lerp between this and the next frame
         size_t frameNum = static_cast<size_t>(m_AnimationFrame);
         size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
         uint32_t nodeIdx = getActiveAnimationPtr()->getNodeIndexList()[i];
@@ -248,7 +247,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
-        // Scale velocity to seconds // FIXME: Shouldn't be modified by deltaTime, I think!
+        // Scale velocity to seconds
         m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v));
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
         m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
