@@ -7,6 +7,13 @@
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 
+namespace ZenLoad
+{
+
+class ModelScriptParser;
+
+}
+
 namespace Animations
 {
 
@@ -36,7 +43,7 @@ private:
 
     bool loadMDS(const std::string &file_name);
 
-    bool loadMSB(const std::string &file_name);
+    bool loadModelScript(const std::string &file_name, ZenLoad::ModelScriptParser &mds);
 
     Handle::AnimationDataHandle loadMAN(const std::string &name);
 

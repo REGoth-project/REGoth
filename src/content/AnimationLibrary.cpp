@@ -45,7 +45,7 @@ AnimationData &AnimationLibrary::getAnimationData(Handle::AnimationDataHandle h)
 bool AnimationLibrary::loadAnimations()
 {
     // both .MDS and .MSB, where .MDS has precedence
-    std::vector<std::string> msb_loaded;
+    std::map<std::string, bool> msb_loaded; // true = is MDS
 
     std::string ext_mds = ".MDS";
     std::string ext_msb = ".MSB";
@@ -59,44 +59,35 @@ bool AnimationLibrary::loadAnimations()
 
         if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.rbegin()))
         {
-            if (!loadMDS(fn))
+            // MDS always overwrites
+            ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
+            ModelScriptTextParser p(zen);
+            if (!loadModelScript(fn, p))
                 return false;
+
+            msb_loaded[n] = true;
+
         } else
         if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
         {
-            if (!loadMSB(fn))
-                return false;                
+            auto it = msb_loaded.find(n);
+            if (it == msb_loaded.end() || it->second != true)
+            {
+                // an MDS was loaded before
+                continue;
+            }
+
+            ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
+            ModelScriptBinParser p(zen);
+            if (!loadModelScript(fn, p))
+                return false;
+
+            msb_loaded[n] = false;
         } else
             continue;
 
-        msb_loaded.push_back(n);
     }
 
-    return true;
-}
-
-std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, const std::string &overlay, const std::string &name)
-{
-    std::string umesh_lib = mesh_lib, uoverlay = overlay, uname = name;
-    std::transform(umesh_lib.begin(), umesh_lib.end(), umesh_lib.begin(), ::toupper);
-    std::transform(uoverlay.begin(), uoverlay.end(), uoverlay.begin(), ::toupper);
-    std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
-
-
-    std::string qname;
-    if (uoverlay.find(umesh_lib) != 0)
-    {
-        qname = umesh_lib + '_' + uoverlay + '-' + uname;
-    } else
-        qname = umesh_lib + '-' + uname;
-
-    //LogInfo() << "qname '" << qname << "' '" << umesh_lib << "' '" << uoverlay << "' '" << uname << "'";
-
-    return qname;
-}
-
-bool AnimationLibrary::loadMDS(const std::string &file_name)
-{
     return true;
 }
 
@@ -143,24 +134,21 @@ Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string &name)
     return h;
 }
 
-bool AnimationLibrary::loadMSB(const std::string &file_name)
+bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScriptParser &p)
 {
-    LogInfo() << "load MSB " << file_name;
-
-    ZenParser zen(file_name, m_World.getEngine()->getVDFSIndex());
+    LogInfo() << "load model script " << file_name;
 
     ssize_t name_end = file_name.rfind('.');
     std::string name = file_name.substr(0, name_end);
 
     Animation *anim = nullptr;
 
-    ModelScriptBinParser p(zen);
-    ModelScriptBinParser::EChunkType type;
-    while ((type = p.parse()) != ModelScriptBinParser::CHUNK_EOF)
+    ModelScriptParser::EChunkType type;
+    while ((type = p.parse()) != ModelScriptParser::CHUNK_EOF)
     {
         switch (type)
         {
-        case ModelScriptBinParser::CHUNK_ANI:
+        case ModelScriptParser::CHUNK_ANI:
             {
                 std::string qname = name + '-' + p.ani().m_Name;
                 auto h = m_World.getAnimationAllocator().allocate(qname);
@@ -185,12 +173,32 @@ bool AnimationLibrary::loadMSB(const std::string &file_name)
                 LogInfo() << "created animation '" << qname << "' id " << h.index;
             }
             break;
-        case ModelScriptBinParser::CHUNK_ERROR:
+        case ModelScriptParser::CHUNK_ERROR:
             return false;
         }
     }
 
     return true;
+}
+
+std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, const std::string &overlay, const std::string &name)
+{
+    std::string umesh_lib = mesh_lib, uoverlay = overlay, uname = name;
+    std::transform(umesh_lib.begin(), umesh_lib.end(), umesh_lib.begin(), ::toupper);
+    std::transform(uoverlay.begin(), uoverlay.end(), uoverlay.begin(), ::toupper);
+    std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
+
+
+    std::string qname;
+    if (uoverlay.find(umesh_lib) != 0)
+    {
+        qname = umesh_lib + '_' + uoverlay + '-' + uname;
+    } else
+        qname = umesh_lib + '-' + uname;
+
+    //LogInfo() << "qname '" << qname << "' '" << umesh_lib << "' '" << uoverlay << "' '" << uname << "'";
+
+    return qname;
 }
 
 } // namespace Animations
