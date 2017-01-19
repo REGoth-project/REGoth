@@ -322,6 +322,7 @@ public:
         {
            LogError() << "Failed to add world, world handle is invalid!";
            Platform::setQuit(true);
+           return;
         }
 		m_timeOffset = bx::getHPCounter();
 
@@ -719,6 +720,7 @@ public:
 		});
 
         imguiCreate(nullptr, 0, fontSize);
+        m_ImgUiCreated = true;
 
         /*UI::Menu* m = new UI::Menu(*m_pEngine);
         m_pEngine->getRootUIView().addChild(m);
@@ -740,7 +742,8 @@ public:
         ImFontAtlas* atlas = ImGui::GetIO().Fonts;
         atlas->Clear();
 
-        imguiDestroy();
+        if (m_ImgUiCreated)
+            imguiDestroy();
 
 		bgfx::shutdown();
 
@@ -904,6 +907,8 @@ public:
     int32_t m_scrollArea;
     Utils::StopWatch m_stopWatch;
     bool m_NoHUD;
+    // prevents imgui from crashing if we failed on startup and didn't init it
+    bool m_ImgUiCreated = false;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);

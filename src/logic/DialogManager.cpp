@@ -38,9 +38,12 @@ DialogManager::~DialogManager()
 {
     delete m_ScriptDialogMananger;
 
-    endDialog();
+    if (m_World.getEngine())
+    {
+        endDialog();
+        m_World.getEngine()->getRootUIView().removeChild(m_ActiveSubtitleBox);
+    }
 
-    m_World.getEngine()->getRootUIView().removeChild(m_ActiveSubtitleBox);
     delete m_ActiveSubtitleBox;
     m_ActiveSubtitleBox = nullptr;
 }
