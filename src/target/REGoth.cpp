@@ -51,7 +51,7 @@ using json = nlohmann::json;
 namespace Flags
 {
     Cli::Flag help("h", "help", 0, "Prints this message");
-    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync");
+    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
 }
 
 struct PosColorVertex

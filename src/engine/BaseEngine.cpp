@@ -50,16 +50,16 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-    if(!Flags::gameDirectory.getArgs().empty())
-        m_Args.gameBaseDirectory = Flags::gameDirectory.getArgs()[0];
+    if(Flags::gameDirectory.isSet())
+        m_Args.gameBaseDirectory = Flags::gameDirectory.getArgs(0);
     else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
 
     if(Flags::modFile.isSet())
-        m_Args.modfile = Flags::modFile.getArgs()[0];
+        m_Args.modfile = Flags::modFile.getArgs(0);
 
     if(Flags::world.isSet())
-        m_Args.startupZEN = Flags::world.getArgs()[0];
+        m_Args.startupZEN = Flags::world.getArgs(0);
 
 
     loadArchives();
@@ -77,7 +77,7 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     std::string snd_device;
     if(Flags::sndDevice.isSet())
-        snd_device = Flags::sndDevice.getArgs()[0];
+        snd_device = Flags::sndDevice.getArgs(0);
 
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 

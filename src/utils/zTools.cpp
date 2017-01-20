@@ -13,8 +13,8 @@ namespace Flags
 
 void unpackVdf()
 {
-    std::string vdf = Flags::unpackVdf.getArgs()[0];
-    std::string target = Flags::unpackVdf.getArgs()[1];
+    std::string vdf = Flags::unpackVdf.getArgs(0);
+    std::string target = Flags::unpackVdf.getArgs(1);
 
     std::string vdfname = Utils::stripFilePath(Utils::stripExtension(vdf));
     target = target + "/" + vdfname;
