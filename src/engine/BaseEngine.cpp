@@ -20,10 +20,10 @@ using namespace Engine;
 
 namespace Flags
 {
-    Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation");
-    Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load");
-    Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives");
-    Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device");
+    Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
+    Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
+    Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
+    Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
 BaseEngine::BaseEngine() : m_RootUIView(*this)
@@ -50,7 +50,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-    if(Flags::gameDirectory.isSet())
+    if(!Flags::gameDirectory.getArgs().empty())
         m_Args.gameBaseDirectory = Flags::gameDirectory.getArgs()[0];
     else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";

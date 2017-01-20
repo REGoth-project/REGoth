@@ -26,7 +26,7 @@ const float TIME_KEY_7	= 0.75f;
 
 namespace Flags
 {
-    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: g1, g2");
+    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: auto, g1, g2", {"auto"}, "Game");
 }
 
 Sky::Sky(World::WorldInstance& world) :
@@ -145,7 +145,7 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
 
     Math::float3 skyColor = skyColor_g2;
 
-    if(!Flags::skyType.isSet())
+    if(Flags::skyType.getArgs().empty() || Flags::skyType.getArgs()[0] == "auto")
     {
         if (world.getBasicGameType() == World::GT_Gothic2)
             skyColor = skyColor_g2;
