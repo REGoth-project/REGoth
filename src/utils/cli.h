@@ -23,13 +23,13 @@ namespace Cli
          * @param verboseFlag Verbose version of the short-flag given beforehand, with eg. "./app --do-foo",
          *             this would have to be "do-foo".
          * @param nparams number of parameters of the flag
-         * @param defaultValue default values of this flag
+         * @param defaultValue default values of this flag. For booleans (nparams==0), a "0" or "1" is used.
          * @param Config section this would end up. Note that a flag only gets put into the config if this is *not*
          *        an empty string!
          */
         Flag(const std::string& flag,
              const std::string& verboseFlag = "",
-             int nparams = 0,
+             unsigned nparams = 0,
              const std::string& desc = "",
              const std::vector<std::string>& defaultValues = std::vector<std::string>(),
              std::string configSection = "");
@@ -51,9 +51,10 @@ namespace Cli
         std::vector<std::string> extractFlag();
 
         /**
-         * @return Arguments specified on the commandline of this flag
+         * @param Index of the argument to get
+         * @return Arguments specified on the commandline of this flag. Empty string if invalid index.
          */
-        std::vector<std::string> getArgs(){ return m_ParsedArgs; }
+        const std::string& getArgs(size_t i);
 
         /**
          * Reads this flag from the config file. Will update m_ParsedArgs accordingly
@@ -79,7 +80,7 @@ namespace Cli
         std::string m_Desc;
         std::vector<std::string> m_DefaultValues;
         std::string m_ConfigSection;
-        int m_nParams;
+        unsigned m_nParams;
 
         /**
          * Location this flag is in the argv-array. If this is not 0, the flag is set!

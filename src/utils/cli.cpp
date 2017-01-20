@@ -32,7 +32,7 @@ namespace Global
 
 Flag::Flag(const std::string& flag,
            const std::string& verboseFlag,
-           int nparams,
+           unsigned nparams,
            const std::string& desc,
            const std::vector<std::string>& defaultValues,
            std::string configSection)
@@ -68,7 +68,7 @@ std::vector<std::string> Flag::extractFlag()
             m_SetLocation = (int)i;
 
             // Found it! Now check if the argumentcount is right
-            int k = 0;
+            unsigned k = 0;
             std::vector<std::string> args;
             for(size_t j = i + 1; j<Global::commandline.size(); j++, k++)
             {
@@ -97,7 +97,17 @@ std::vector<std::string> Flag::extractFlag()
 
 bool Flag::isSet()
 {
-    return m_SetLocation != 0;
+    if(m_nParams == 0 && m_SetLocation == 0 && !m_ParsedArgs.empty())
+    {
+        // There could be args read from config for this boolean.
+        // Booleans use "hidden" parsed-args to store their value in the config file
+        if(m_ParsedArgs[0] == "1")
+            return true;
+        else if(m_ParsedArgs[0] == "0")
+            return false;
+    }
+
+    return m_SetLocation != 0 || (m_nParams != 0 && m_ParsedArgs.size() == m_nParams);
 }
 
 void Flag::printUsage()
@@ -142,7 +152,13 @@ void Flag::readFromConfig(const json& contents)
     if(!jf.is_array())
     {
         m_ParsedArgs.clear();
-        m_ParsedArgs.push_back(contents[m_ConfigSection][flag]);
+        if(jf.is_boolean())
+        {
+            m_ParsedArgs.push_back(contents[m_ConfigSection][flag] ? "1" : "0"); // Doesn't matter where exactly this ends up in the commandline, this has to be non-0 to count as "set"
+        }else
+        {
+            m_ParsedArgs.push_back(contents[m_ConfigSection][flag]);
+        }
     } else
     {
         m_ParsedArgs = contents[m_ConfigSection][flag].get<std::vector<std::string>>();
@@ -159,7 +175,6 @@ void Flag::writeToConfig(json& conf)
 
     if(conf.find(m_ConfigSection) == conf.end())
         conf[m_ConfigSection] = json::object();
-
 
     if(m_nParams == 0)
         conf[m_ConfigSection][flag] = isSet();
@@ -201,6 +216,14 @@ std::string Flag::documentConfigText(const std::string& configText)
         r += l + "\n";
 
     return r;
+}
+
+const std::string& Flag::getArgs(size_t i)
+{
+    if(i >= m_ParsedArgs.size())
+        return "";
+
+    return m_ParsedArgs[i];
 }
 
 void ::Cli::setCommandlineArgs(int argc, char** argv)
