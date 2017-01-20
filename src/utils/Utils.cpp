@@ -394,3 +394,21 @@ std::string Utils::stripFilePath(const std::string& file)
 
     return file.substr(file.find_last_of("\\/") + 1);
 }
+
+std::string Utils::stripJsonComments(const std::string& json, const std::string& commentStart)
+{
+    // Split into lines
+    std::vector<std::string> lines = Utils::split(json, '\n');
+
+    std::string r;
+    for(std::string& l : lines)
+    {
+        // Find a // and cut it off there
+        l = l.substr(0, l.find(commentStart));
+
+        r += l + "\n";
+    }
+
+    return r;
+}
+

@@ -24,6 +24,14 @@ namespace Utils
     };
 
     /**
+     * Strips all text starting with commentStart from the given text
+     * @param json Json-text to modify
+     * @param commentStart String which starts a comment
+     * @return json-string without said comments
+     */
+    std::string stripJsonComments(const std::string& json, const std::string& commentStart = "#");
+
+    /**
      * Checks on which side of the plane the given point is.
      * @param point Point to check
      * @param plane Plane to check against
