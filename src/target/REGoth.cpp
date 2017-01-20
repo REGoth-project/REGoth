@@ -914,6 +914,10 @@ int main(int argc, char** argv)
 {
     int ret = 0;
 
+    // Load config values for flags
+    Cli::loadConfigFile();
+
+    // Overwrite flags set from config using the commandline
     Cli::setCommandlineArgs(argc, argv);
 
     // Check if the user just wanted to see the list of commands
@@ -945,6 +949,9 @@ int main(int argc, char** argv)
         std::cerr << "Caught unknown exception in main loop" << std::endl;
         ret = 1;
     }
+
+    // Write current config-values
+    Cli::writeConfigFile();
 
     return ret;
 }
