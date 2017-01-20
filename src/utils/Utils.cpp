@@ -371,6 +371,22 @@ bool ::Utils::writeFile(const std::string& name, const std::string& path, const 
     return true;
 }
 
+bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::string& text)
+{
+    std::string sep = (path.back() == '/' || path.back() == '\\') ? "" : "/";
+    std::string target = path + sep + name;
+
+    std::ofstream s(target);
+
+    if(!s.good())
+        return false;
+
+    s << text;
+
+    return true;
+}
+
+
 std::string Utils::stripFilePath(const std::string& file)
 {
     if(file.find_last_of("\\/") == std::string::npos)
