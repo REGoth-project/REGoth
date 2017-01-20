@@ -1,6 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 /**
  * Simple interface to commandline flags and options
@@ -20,8 +23,16 @@ namespace Cli
          * @param verboseFlag Verbose version of the short-flag given beforehand, with eg. "./app --do-foo",
          *             this would have to be "do-foo".
          * @param nparams number of parameters of the flag
+         * @param defaultValue default values of this flag
+         * @param Config section this would end up. Note that a flag only gets put into the config if this is *not*
+         *        an empty string!
          */
-        Flag(const std::string& flag, const std::string& verboseFlag = "", int nparams = 0, const std::string& desc = "");
+        Flag(const std::string& flag,
+             const std::string& verboseFlag = "",
+             int nparams = 0,
+             const std::string& desc = "",
+             const std::vector<std::string>& defaultValues = std::vector<std::string>(),
+             std::string configSection = "");
 
         /**
          * @return Whether this flag was given on the commandline
@@ -43,11 +54,31 @@ namespace Cli
          * @return Arguments specified on the commandline of this flag
          */
         std::vector<std::string> getArgs(){ return m_ParsedArgs; }
+
+        /**
+         * Reads this flag from the config file. Will update m_ParsedArgs accordingly
+         * @param contents Actual contents of the config file
+         */
+        void readFromConfig(const json& contents);
+
+        /**
+         * Writes this flag to it's section in the config-file
+         * @param conf root node of the configs json data
+         */
+        void writeToConfig(json& conf);
+
+        /**
+         * Tries to put the desc-string into a done json-document, above this variable
+         * @param configText Dumped json-text
+         */
+        std::string documentConfigText(const std::string& configText);
     private:
 
         std::string m_Flag;
         std::string m_VerboseFlag;
         std::string m_Desc;
+        std::vector<std::string> m_DefaultValues;
+        std::string m_ConfigSection;
         int m_nParams;
 
         /**
@@ -68,4 +99,14 @@ namespace Cli
      * Prints a list of all available flags and their usage
      */
     void printHelp();
+
+    /**
+     * Loads the config-file and updates all flags accordingly
+     */
+    void loadConfigFile();
+
+    /**
+     * Writes flags currently set to config file
+     */
+    void writeConfigFile();
 }
