@@ -621,7 +621,7 @@ public:
             if(args.size() == 1)
             {
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
-                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
+                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 3.0f);
 
                 if(nearNPCs.empty())
                     return "No NPCs in range!";
