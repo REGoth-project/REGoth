@@ -23,6 +23,8 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 
+#define DEBUG_PLAYER (isPlayerControlled() && false)
+
 using json = nlohmann::json;
 using namespace Logic;
 
@@ -632,8 +634,10 @@ ModelVisual* PlayerController::getModelVisual()
 
 void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
-// if (isPlayerControlled())
-//             LogInfo() << getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+    if (DEBUG_PLAYER)
+    {
+       LogInfo() << getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+    }
     Math::Matrix m = getEntityTransform();
 
     float feet = getModelVisual()->getModelRoot().y;
@@ -2508,8 +2512,13 @@ void PlayerController::traceDownNPCGround()
     {
         return;
     }
-    // if (isPlayerControlled())
-    //     LogInfo() << "START";
+    std::sort(begin(hitall), end(hitall), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
+          return a.hitPosition.y >= b.hitPosition.y;
+          });
+    if (DEBUG_PLAYER)
+    {
+       LogInfo() << "traceDownNPCGround ITERATION BEGIN";
+    }
     Physics::RayTestResult result = hitall[0];
     bool waterMatFound = false;
     float closestGroundSurfacePos = std::numeric_limits< float >::max();
@@ -2537,26 +2546,26 @@ void PlayerController::traceDownNPCGround()
                 }
             }
         }
-        // if (isPlayerControlled())
-        //     LogInfo() << getMaterial(a.hitTriangleIndex) << ", Triangle hit position: " << a.hitPosition.x << ", " << a.hitPosition.y << ", " << a.hitPosition.z;
     }
     if (waterMatFound)
     {
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
-        // if (isPlayerControlled())
-        //     LogInfo() << "Water depth: " << m_MoveState.ground.waterDepth;
+        if (DEBUG_PLAYER)
+        {
+           LogInfo() << "Water depth: " << m_MoveState.ground.waterDepth;
+        }
     }
     else
     {
         m_MoveState.ground.waterDepth = 0.0f;
     }
-    // if (isPlayerControlled())
-    // {
-    //     LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x << " " << (getEntityTransform().Translation()).y << " " << (getEntityTransform().Translation()).z;
-    //     LogInfo() << "From: " << (from).x << " " << (from).y << " " << (from).z;
-    //     LogInfo() << "To: " << (to).x << " " << (to).y << " " << (to).z;
-    //     LogInfo() << "STOP";
-    // }
+    if (DEBUG_PLAYER)
+    {
+        LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x << " " << (getEntityTransform().Translation()).y << " " << (getEntityTransform().Translation()).z;
+        LogInfo() << "From: " << (from).x << " " << (from).y << " " << (from).z;
+        LogInfo() << "To: " << (to).x << " " << (to).y << " " << (to).z;
+        LogInfo() << "traceDownNPCGround ITERATION END";
+    }
 
     m_MoveState.ground.successful = true;
     m_MoveState.ground.triangleIndex = result.hitTriangleIndex;

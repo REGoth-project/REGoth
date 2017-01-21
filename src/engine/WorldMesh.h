@@ -45,10 +45,14 @@ namespace World
 		const Math::float3& getBBoxMax(){ return m_BBox3d[1]; }
 
 		/**
-		 * Debugging purposes only
+		 * @return Material data of given triangle index
 		 */
-		ZenLoad::zCMaterialData getMatData(size_t triangleIdx);
+		ZenLoad::zCMaterialData getMatData(size_t triangleIdx) const;
 
+		/**
+		 * Invalidates submesh index for given triangle index
+		 */
+		void invalidateSubmesh(size_t triangleIdx);
 	protected:
 
 		/**
