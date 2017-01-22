@@ -111,6 +111,9 @@ void Input::bindMouseAxis(MouseAxis mouseAxis, ActionType actionType, bool isCon
 
 void Input::keyEvent(int key, int scancode, int action, int mods)
 {
+	if(key < 0 || key > Input::NUM_KEYS)
+		return;
+
     if(KEY_ACTION_PRESS == action)
     {
         keyState[key] = true;
