@@ -26,7 +26,7 @@ const float TIME_KEY_7	= 0.75f;
 
 namespace Flags
 {
-    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: g1, g2");
+    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: auto, g1, g2", {"auto"}, "Game");
 }
 
 Sky::Sky(World::WorldInstance& world) :
@@ -145,20 +145,24 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
 
     Math::float3 skyColor = skyColor_g2;
 
-    if(!Flags::skyType.isSet())
+    if(Flags::skyType.isSet())
     {
-        if (world.getBasicGameType() == World::GT_Gothic2)
-            skyColor = skyColor_g2;
-        else
-            skyColor = skyColor_g1;
-    } else
-    {
-        if(Flags::skyType.getArgs()[0] == "g1")
-            skyColor = skyColor_g1;
-        else if(Flags::skyType.getArgs()[0] == "g2")
-            skyColor = skyColor_g2;
-        else
-            LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getArgs()[0];
+        if (Flags::skyType.getParam(0).empty()
+            || Flags::skyType.getParam(0) == "auto")
+        {
+            if (world.getBasicGameType() == World::GT_Gothic2)
+                skyColor = skyColor_g2;
+            else
+                skyColor = skyColor_g1;
+        } else
+        {
+            if (Flags::skyType.getParam(0) == "g1")
+                skyColor = skyColor_g1;
+            else if (Flags::skyType.getParam(0) == "g2")
+                skyColor = skyColor_g2;
+            else
+                LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getParam(0);
+        }
     }
 
     switch(type)

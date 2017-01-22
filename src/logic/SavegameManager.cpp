@@ -11,8 +11,12 @@ using namespace Engine;
 void ensureSavegameFolders(int idx)
 {
     std::string userdata = Utils::getUserDataLocation();
-    Utils::mkdir(userdata);
-    Utils::mkdir(SavegameManager::buildSavegamePath(idx));
+
+	if(!Utils::mkdir(userdata))
+		LogError() << "Failed to create userdata-directory at: " << userdata;
+
+    if(Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
+		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
 
 std::string SavegameManager::buildSavegamePath(int idx)

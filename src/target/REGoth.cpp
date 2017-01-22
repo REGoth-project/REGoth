@@ -51,7 +51,7 @@ using json = nlohmann::json;
 namespace Flags
 {
     Cli::Flag help("h", "help", 0, "Prints this message");
-    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync");
+    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
 }
 
 struct PosColorVertex
@@ -919,6 +919,10 @@ int main(int argc, char** argv)
 {
     int ret = 0;
 
+    // Load config values for flags
+    Cli::loadConfigFile();
+
+    // Overwrite flags set from config using the commandline
     Cli::setCommandlineArgs(argc, argv);
 
     // Check if the user just wanted to see the list of commands
@@ -950,6 +954,9 @@ int main(int argc, char** argv)
         std::cerr << "Caught unknown exception in main loop" << std::endl;
         ret = 1;
     }
+
+    // Write current config-values
+    Cli::writeConfigFile();
 
     return ret;
 }
