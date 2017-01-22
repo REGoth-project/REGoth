@@ -147,8 +147,8 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
 
     if(Flags::skyType.isSet())
     {
-        if (Flags::skyType.getArgs(0).empty()
-            || Flags::skyType.getArgs(0) == "auto")
+        if (Flags::skyType.getParam(0).empty()
+            || Flags::skyType.getParam(0) == "auto")
         {
             if (world.getBasicGameType() == World::GT_Gothic2)
                 skyColor = skyColor_g2;
@@ -156,12 +156,12 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
                 skyColor = skyColor_g1;
         } else
         {
-            if (Flags::skyType.getArgs(0) == "g1")
+            if (Flags::skyType.getParam(0) == "g1")
                 skyColor = skyColor_g1;
-            else if (Flags::skyType.getArgs(0) == "g2")
+            else if (Flags::skyType.getParam(0) == "g2")
                 skyColor = skyColor_g2;
             else
-                LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getArgs(0);
+                LogWarn() << "Invalid sky-type supplied on commandline: " << Flags::skyType.getParam(0);
         }
     }
 

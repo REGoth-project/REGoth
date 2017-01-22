@@ -54,7 +54,7 @@ namespace Cli
          * @param Index of the argument to get
          * @return Arguments specified on the commandline of this flag. Empty string if invalid index.
          */
-        const std::string& getArgs(size_t i);
+        const std::string& getParam(unsigned i);
 
         /**
          * Reads this flag from the config file. Will update m_ParsedArgs accordingly
