@@ -59,19 +59,20 @@ bool AnimationLibrary::loadAnimations()
 
         if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.rbegin()))
         {
-            // MDS always overwrites
             ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
             ModelScriptTextParser p(zen);
+            p.setStrict(false); // TODO: should be configurable
             if (!loadModelScript(fn, p))
-                return false;
+                ; //return false;
 
+            // MDS always overwrites
             msb_loaded[n] = true;
 
         } else
         if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
         {
             auto it = msb_loaded.find(n);
-            if (it == msb_loaded.end() || it->second != true)
+            if (it != msb_loaded.end() && it->second == true)
             {
                 // an MDS was loaded before
                 continue;
@@ -80,7 +81,7 @@ bool AnimationLibrary::loadAnimations()
             ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
             ModelScriptBinParser p(zen);
             if (!loadModelScript(fn, p))
-                return false;
+                ; //return false;
 
             msb_loaded[n] = false;
         } else
@@ -187,7 +188,6 @@ std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, con
     std::transform(umesh_lib.begin(), umesh_lib.end(), umesh_lib.begin(), ::toupper);
     std::transform(uoverlay.begin(), uoverlay.end(), uoverlay.begin(), ::toupper);
     std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
-
 
     std::string qname;
     if (uoverlay.find(umesh_lib) != 0)
