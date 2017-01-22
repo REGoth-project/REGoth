@@ -19,7 +19,7 @@
 #include <Shlobj.h>
 #endif
 
-const std::string USERDATA_FOLDER = ".REGoth";
+const std::string USERDATA_FOLDER = "REGoth";
 
 static bx::FileReaderI* fileReader = nullptr;
 static bx::FileWriterI* fileWriter = nullptr;
@@ -340,9 +340,9 @@ std::string Utils::getUserDataLocation()
     struct passwd *pw = getpwuid(getuid());
 
     const char *homedir = pw->pw_dir;
-    return std::string(homedir) + "/" + USERDATA_FOLDER;
+    return std::string(homedir) + "/." + USERDATA_FOLDER;
 #else
-    return "./" + USERDATA_FOLDER;
+    return "./." + USERDATA_FOLDER;
 #endif
 }
 
