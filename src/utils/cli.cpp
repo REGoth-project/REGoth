@@ -285,7 +285,8 @@ void ::Cli::writeConfigFile()
 
     // Write that one to disk now. Ensure the userdata-folder exists first, though
     std::string userdata = Utils::getUserDataLocation();
-    Utils::mkdir(userdata);
+	if(!Utils::mkdir(userdata))
+		LogError() << "Failed to create userdata-directory at: " << userdata;
 
     // Now create the file
     if(!Utils::writeFile("config.json", userdata, dumped))
