@@ -94,6 +94,8 @@ Where `path/to/gothic1or2` points to the root of a Gothic I or II installation a
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
 
+Additionally, for a list of possible commands, run `REGoth --help`.
+
 # Controls
 
  * Movement: WASD/QE or arrow-keys (Space or Shift to run faster)
