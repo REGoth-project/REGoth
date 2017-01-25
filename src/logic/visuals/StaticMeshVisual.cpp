@@ -134,10 +134,6 @@ void StaticMeshVisual::updateCollision()
 
     // Simplify mesh
     Handle::CollisionShapeHandle hullh = m_World.getPhysicsSystem().makeCollisionShapeFromMesh(mdata, Physics::CollisionShape::CT_Object, m_Name);
-    for (auto triangleIdx : mdata.mesh.m_Indices)
-    {
-        m_World.getWorldMesh().invalidateSubmesh(triangleIdx);
-    }
     if(!hullh.isValid())
         return;
 

@@ -726,6 +726,7 @@ void PlayerController::placeOnGround()
             highestHitSurface = result;
         }
         auto material = getMaterial(result.hitTriangleIndex);
+        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = Materials::UNDEFINED; // we don't want underlying worldmesh material in this case
         if (material == Materials::WATER)
         {
             waterHitSurface = result; // Doesn't matter if there are more water hits atm
@@ -2490,6 +2491,7 @@ Materials::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
 {
     Math::float3 v3[3];
     uint8_t matgroup;
+    // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
     m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
     return static_cast< Materials::MaterialGroup >(matgroup);
 }
