@@ -277,7 +277,7 @@ std::vector<RayTestResult> PhysicsSystem::raytraceAll(const Math::float3& from, 
                 if ((s.collisionType & m_filterType) == 0)
                     return 0;
 
-                m_hitCollisionType = s.collisionType;
+                m_hitCollisionTypes.push_back(s.collisionType);
             }
 
             if (rb)
@@ -295,7 +295,7 @@ std::vector<RayTestResult> PhysicsSystem::raytraceAll(const Math::float3& from, 
         btAlignedObjectArray< btScalar > m_hitFractions;
 
         std::vector<uint32_t> m_hitTriangleIndex;
-        CollisionShape::ECollisionType m_hitCollisionType;
+        std::vector<CollisionShape::ECollisionType> m_hitCollisionTypes;
         CollisionShape::ECollisionType m_filterType;
         CollisionShapeAllocator* m_ShapeAlloc;
 
@@ -339,7 +339,7 @@ std::vector<RayTestResult> PhysicsSystem::raytraceAll(const Math::float3& from, 
         for (unsigned i= 0; i < r.m_hitTriangleIndex.size(); i++)
         {
            RayTestResult result;
-           result.hitFlags = r.m_hitCollisionType;
+           result.hitFlags = r.m_hitCollisionTypes[i];
            result.hitPosition = Math::float3(r.m_hitPointWorld[i].x(),r.m_hitPointWorld[i].y(),r.m_hitPointWorld[i].z());
            result.hitTriangleIndex = r.m_hitTriangleIndex[i];
            result.hasHit = r.hasHit();

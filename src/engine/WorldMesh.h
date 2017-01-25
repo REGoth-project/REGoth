@@ -48,11 +48,6 @@ namespace World
 		 * @return Material data of given triangle index
 		 */
 		ZenLoad::zCMaterialData getMatData(size_t triangleIdx) const;
-
-		/**
-		 * Invalidates submesh index for given triangle index
-		 */
-		void invalidateSubmesh(size_t triangleIdx);
 	protected:
 
 		/**
