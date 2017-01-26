@@ -30,6 +30,8 @@ Logic::PfxVisual::~PfxVisual()
 
 bool Logic::PfxVisual::load(const std::string& visual)
 {
+    VisualController::load(visual);
+
     LogInfo() << "Loading PFX: " << visual;
 
     // Strip .PFX ending
