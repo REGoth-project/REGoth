@@ -289,7 +289,7 @@ bool ModelVisual::load(const std::string& visual)
     return true;
 }
 
-void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, size_t teethTextureIdx)
+void ModelVisual::setHeadMesh(const std::string& head, int headTextureIdx, int teethTextureIdx)
 {
     std::string v = head;
 
