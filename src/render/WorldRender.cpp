@@ -4,6 +4,7 @@
 #include "bgfx_utils.h"
 #include "common.h"
 #include "RenderSystem.h"
+#include "ViewList.h"
 #include <engine/Waynet.h>
 #include <debugdraw/debugdraw.h>
 #include <utils/logger.h>
@@ -46,13 +47,16 @@ namespace Render
         // Set sky-color
         bgfx::setViewClear(0
                 , BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH
-                , fogColorRGBA.toRGBA8()
+                , fogColorRGBA.toABGR8()
                 , 1.0f
                 , 0
         );
 
         // Don't complain about setting uniforms twice when not actually drawing anything
-        bgfx::touch(0);
+        bgfx::touch(RenderViewList::DEFAULT);
+        bgfx::touch(RenderViewList::ALPHA_1);
+        bgfx::touch(RenderViewList::ALPHA_2);
+
     }
 	/**
 	 * @brief Draws the main renderpass of the given world
@@ -78,7 +82,8 @@ namespace Render
 		Components::BBoxComponent* bboxes = std::get<Components::BBoxComponent*>(ctuple);
 		Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
 		Components::AnimationComponent* animations = std::get<Components::AnimationComponent*>(ctuple);
-		Components::PhysicsComponent* physics = std::get<Components::PhysicsComponent*>(ctuple);
+        Components::PhysicsComponent* physics = std::get<Components::PhysicsComponent*>(ctuple);
+        Components::PfxComponent* pfxs = std::get<Components::PfxComponent*>(ctuple);
 
 		// Static mesh instancing
 		struct InstanceData
@@ -303,6 +308,33 @@ namespace Render
 					logics[i].m_pLogicController->onDebugDraw();
 				}
 			}
+
+            // Draw pfx
+            if((mask & Components::PfxComponent::MASK) != 0)
+            {
+				if(bgfx::isValid(pfxs[i].m_Particles))
+				{
+					// Set object-color
+					Math::float4 color(1, 1, 1, 1);
+					bgfx::setUniform(config.uniforms.objectColor, color.v);
+
+					Textures::Texture& tx = world.getTextureAllocator().getTexture(pfxs[i].m_Texture);
+					bgfx::setState(pfxs[i].m_bgfxRenderState);
+					bgfx::setTexture(0, config.uniforms.diffuseTexture, tx.m_TextureHandle);
+					bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
+					bgfx::setVertexBuffer(pfxs[i].m_Particles);
+
+                    uint8_t view;
+
+                    // Make sure to draw additive blended particles last. (Fire over smoke)
+                    if((pfxs[i].m_bgfxRenderState & BGFX_STATE_BLEND_ADD) == BGFX_STATE_BLEND_ADD)
+                        view = RenderViewList::ALPHA_2;
+                    else
+                        view = RenderViewList::ALPHA_1;
+
+					bgfx::submit(view, config.programs.particle_textured);
+				}
+            }
 
 
 
