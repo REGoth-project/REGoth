@@ -65,11 +65,7 @@ void Console::onKeyDown(int glfwKey)
     if(glfwKey == Keys::GLFW_KEY_F10)
         setOpen(!isOpen());
 
-    if(glfwKey >= Keys::PrintableBegin
-       && glfwKey <= Keys::PrintableEnd)
-    {
-        m_TypedLine += std::tolower((char)glfwKey);
-    }else if(glfwKey == Keys::GLFW_KEY_UP)
+    if(glfwKey == Keys::GLFW_KEY_UP)
     {
         const int historySize = m_History.size();
         if(historySize > m_HistoryIndex + 1)
@@ -98,6 +94,11 @@ void Console::onKeyDown(int glfwKey)
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
     }
+}
+
+void Console::onTextInput(const std::string& text)
+{
+    m_TypedLine += text;
 }
 
 std::string Console::submitCommand(const std::string& command)
@@ -178,5 +179,7 @@ void Console::outputAdd(const std::string& msg)
 {
     m_Output.push_front(msg);
 }
+
+
 
 
