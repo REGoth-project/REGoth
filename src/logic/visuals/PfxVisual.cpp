@@ -68,14 +68,14 @@ bool Logic::PfxVisual::load(const std::string& visual)
     //state_add |= BGFX_STATE_BLEND_EQUATION(BGFX_STATE_BLEND_EQUATION_ADD);
 
     uint64_t state_add = BGFX_STATE_BLEND_ADD;
-
+    uint64_t state_default = BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE &~ BGFX_STATE_ALPHA_WRITE;
 
     switch(m_Emitter.visAlphaFunc)
     {
-        case PfxManager::EBM_None: getPfxComponent().m_bgfxRenderState = BGFX_STATE_DEFAULT; break;
-        case PfxManager::EBM_Blend: getPfxComponent().m_bgfxRenderState = (BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE) | BGFX_STATE_BLEND_ALPHA; break;
-        case PfxManager::EBM_Add: getPfxComponent().m_bgfxRenderState = (BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE) | BGFX_STATE_BLEND_ADD; break;
-        case PfxManager::EBM_Mul: getPfxComponent().m_bgfxRenderState = (BGFX_STATE_DEFAULT & ~BGFX_STATE_DEPTH_WRITE) | BGFX_STATE_BLEND_MULTIPLY; break;
+        case PfxManager::EBM_None: getPfxComponent().m_bgfxRenderState = state_default; break;
+        case PfxManager::EBM_Blend: getPfxComponent().m_bgfxRenderState = (state_default & ~BGFX_STATE_DEPTH_WRITE) | BGFX_STATE_BLEND_ALPHA; break;
+        case PfxManager::EBM_Add: getPfxComponent().m_bgfxRenderState = (state_default & ~BGFX_STATE_DEPTH_WRITE) | state_add; break;
+        case PfxManager::EBM_Mul: getPfxComponent().m_bgfxRenderState = (state_default & ~BGFX_STATE_DEPTH_WRITE) | BGFX_STATE_BLEND_MULTIPLY; break;
     }
 
     return true;
@@ -264,7 +264,7 @@ void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, flo
     p.alpha += p.alphaVel * deltaTime;
 
     // Compute actual color for this frame
-    float alpha = std::max(0.0f, std::min(1.0f, p.alpha));
+    float alpha = std::max(0.0f, std::min(1.0f, p.alpha)) * 0.5f; // FIXME: Hack! * 0.5f is just here because particles would be too bright for some strange reason...
     Math::float3 color = Math::float3(std::max(0.0f, std::min(1.0f, p.color.x)),
                                       std::max(0.0f, std::min(1.0f, p.color.y)),
                                       std::max(0.0f, std::min(1.0f, p.color.z)));
