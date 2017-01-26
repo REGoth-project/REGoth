@@ -18,6 +18,7 @@
 #include <logic/DialogManager.h>
 #include "audio/AudioWorld.h"
 #include <json.hpp>
+#include <logic/PfxManager.h>
 #include "BspTree.h"
 
 using json = nlohmann::json;
@@ -235,6 +236,10 @@ namespace World
 		{
             return *m_AudioWorld;
 		}
+		Logic::PfxManager& getPfxManager()
+		{
+			return m_PfxManager;
+		}
 
 		/**
 		 * This worlds print-screen manager
@@ -384,5 +389,10 @@ namespace World
 		 * Information about the state of the world
 		 */
 		WorldInfo m_WorldInfo;
+
+		/**
+		 * Pfx-cache
+		 */
+		Logic::PfxManager m_PfxManager;
     };
 }
