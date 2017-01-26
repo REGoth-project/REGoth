@@ -32,7 +32,8 @@ WorldInstance::WorldInstance()
       m_Sky(*this),
       m_DialogManager(*this),
       m_PrintScreenMessageView(nullptr),
-      m_BspTree(*this)
+      m_BspTree(*this),
+      m_PfxManager(*this)
 {
 	
 }
@@ -399,6 +400,15 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
     m_TestEntity = e;*/
 
+    if(!getEngine()->getEngineArgs().testVisual.empty())
+    {
+        LogInfo() << "Testing visual: " << getEngine()->getEngineArgs().testVisual;
+        Handle::EntityHandle e = Vob::constructVob(*this);
+        Vob::VobInformation vob = Vob::asVob(*this, e);
+
+        Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
+    }
+
     LogInfo() << "Done loading world!";
     return true;
 }
@@ -472,6 +482,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     Components::LogicComponent* logics = std::get<Components::LogicComponent*>(ctuple);
     Components::AnimationComponent* anims = std::get<Components::AnimationComponent*>(ctuple);
     Components::PositionComponent* positions = std::get<Components::PositionComponent*>(ctuple);
+    Components::VisualComponent* visuals = std::get<Components::VisualComponent*>(ctuple);
 
     //#pragma omp parallel for
     for (size_t i = 0; i<num; i++)
@@ -490,6 +501,14 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
             if(logics[i].m_pLogicController)
             {
                 logics[i].m_pLogicController->onUpdate(deltaTime);
+            }
+        }
+
+        if(Components::hasComponent<Components::VisualComponent>(ents[i]))
+        {
+            if(visuals[i].m_pVisualController)
+            {
+                visuals[i].m_pVisualController->onUpdate(deltaTime);
             }
         }
 
