@@ -188,7 +188,14 @@ void Logic::PfxVisual::spawnParticle()
     {
         case PfxManager::ES_POINT:break; // Nothing, just offset
         case PfxManager::ES_LINE:break;
-        case PfxManager::ES_BOX:break;
+        case PfxManager::ES_BOX:
+        {
+            // This will result in double the size of the actual box, but this is how it was implemented by PB.
+            offset = Math::float3(Utils::frandF2() * m_Emitter.shpDim.x,
+                                  Utils::frandF2() * m_Emitter.shpDim.y,
+                                  Utils::frandF2() * m_Emitter.shpDim.z);
+        }
+            break;
         case PfxManager::ES_CIRCLE:
         {
             // TODO: Walk-placement
