@@ -23,6 +23,8 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 
+#define DEBUG_PLAYER (isPlayerControlled() && false)
+
 using json = nlohmann::json;
 using namespace Logic;
 
@@ -74,6 +76,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_MoveState.position = Math::float3(0, 0, 0);
     m_MoveState.ground.successful = false;
     m_MoveState.ground.triangleIndex = 0;
+    m_MoveState.ground.waterDepth = 0;
     m_MoveState.ground.trianglePosition = Math::float3(0, 0, 0);
     m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
     m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
@@ -90,6 +93,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_isTurnRight = false;
     m_isStrafeLeft = false;
     m_isStrafeRight = false;
+    m_isSwimming = false;
 
     m_LastAniRootPosUpdatedAniHash = 0;
     m_NoAniRootPosHack = false;
@@ -628,83 +632,128 @@ ModelVisual* PlayerController::getModelVisual()
     return reinterpret_cast<ModelVisual*>(vob.visual);
 }
 
+void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
+{
+    if (DEBUG_PLAYER)
+    {
+       LogInfo() << getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+    }
+    Math::Matrix m = getEntityTransform();
+
+    float feet = getModelVisual()->getModelRoot().y;
+
+    // FIXME: Actually read the flying-flag of the MDS
+    if (feet == 0.0f)
+    {
+        feet = 0.8f;
+    }
+
+    m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
+    m.Translation(m_MoveState.position);
+    setEntityTransform(m);
+    setDirection(m_MoveState.direction);
+}
+
 void PlayerController::placeOnGround()
 {
-    if(!m_NPCProperties.enablePhysics)
+    if (!m_NPCProperties.enablePhysics)
         return;
 
     // Check for states
     /*switch(getBodyState())
     {
-        case BS_STAND:break;
-        case BS_WALK:break;
-        case BS_SNEAK:break;
-        case BS_RUN:break;
-        case BS_SPRINT:break;
-        case BS_SWIM:break;
-        case BS_CRAWL:break;
-        case BS_DIVE:break;
-        case BS_JUMP:break;
-        case BS_CLIMB:break;
-        case BS_FALL:break;
-        case BS_SIT:break;
-        case BS_LIE:break;
-        case BS_INVENTORY:break;
-        case BS_ITEMINTERACT:break;
-        case BS_MOBINTERACT:break;
-        case BS_MOBINTERACT_INTERRUPT:break;
-        case BS_TAKEITEM:break;
-        case BS_DROPITEM:break;
-        case BS_THROWITEM:break;
-        case BS_PICKPOCKET:break;
-        case BS_STUMBLE:break;
-        case BS_UNCONSCIOUS:return; // Animation takes care of that. Would fall through the ground for some reason otherwise.
-        case BS_DEAD:break;
-        case BS_AIMNEAR:break;
-        case BS_AIMFAR:break;
-        case BS_HIT:break;
-        case BS_PARADE:break;
-        case BS_CASTING:break;
-        case BS_PETRIFIED:break;
-        case BS_CONTROLLING:break;
-        case BS_MAX:break;
+        case bs_stand:break;
+        case bs_walk:break;
+        case bs_sneak:break;
+        case bs_run:break;
+        case bs_sprint:break;
+        case bs_swim:break;
+        case bs_crawl:break;
+        case bs_dive:break;
+        case bs_jump:break;
+        case bs_climb:break;
+        case bs_fall:break;
+        case bs_sit:break;
+        case bs_lie:break;
+        case bs_inventory:break;
+        case bs_iteminteract:break;
+        case bs_mobinteract:break;
+        case bs_mobinteract_interrupt:break;
+        case bs_takeitem:break;
+        case bs_dropitem:break;
+        case bs_throwitem:break;
+        case bs_pickpocket:break;
+        case bs_stumble:break;
+        case bs_unconscious:return; // animation takes care of that. would fall through the ground for some reason otherwise.
+        case bs_dead:break;
+        case bs_aimnear:break;
+        case bs_aimfar:break;
+        case bs_hit:break;
+        case bs_parade:break;
+        case bs_casting:break;
+        case bs_petrified:break;
+        case bs_controlling:break;
+        case bs_max:break;
     }*/
 
     // Fix position
-    Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -100.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
+    Math::float3 entityPosition = getEntityTransform().Translation();
+    Math::float3 to = entityPosition + Math::float3(0.0f, -100.0f, 0.0f);
+    Math::float3 from = entityPosition + Math::float3(0.0f, 30.0f, 0.0f);
+    
+    std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
+    if (hitall.empty())
+        return;
+    std::sort(begin(hitall), end(hitall), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
+        return a.hitPosition.y >= b.hitPosition.y;
+    });
 
-    if(to == from)
-        return; // FIXME: This happens if an NPC falls out of the world
-
-    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
-
-    if(!hit.hasHit)
+    bool fellThrough = true;
+    bool underWater = false;
+    bool aboveGround = false;
+    bool shallowWater = false;
+    Physics::RayTestResult highestHitSurface = hitall[0];
+    Physics::RayTestResult waterHitSurface = hitall[0];
+    Physics::RayTestResult closestHitGroundSurface = hitall[0];
+    float highestHitY = std::numeric_limits< float >::min();
+    float closestResult = std::numeric_limits< float >::max();
+    for (const auto& result : hitall)
     {
-        // Try again, but from further above
-        from += Math::float3(0.0f, 10000.0f, 0.0f);
-        hit = m_World.getPhysicsSystem().raytrace(from, to); 
-    }
-
-    if (hit.hasHit)
-    {
-        Math::Matrix m = getEntityTransform();
-
-        float feet = getModelVisual()->getModelRoot().y;
-
-        // FIXME: Actually read the flying-flag of the MDS
-        if (feet == 0.0f)
+        fellThrough = fellThrough && (result.hitPosition.y > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
+        if (highestHitY < result.hitPosition.y)
         {
-            feet = 0.8f;
+            highestHitY = result.hitPosition.y;
+            highestHitSurface = result;
         }
-
-        m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
-        m.Translation(m_MoveState.position);
-        setEntityTransform(m);
-        setDirection(m_MoveState.direction);
+        auto material = getMaterial(result.hitTriangleIndex);
+        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = Materials::UNDEFINED; // we don't want underlying worldmesh material in this case
+        if (material == Materials::WATER)
+        {
+            waterHitSurface = result; // Doesn't matter if there are more water hits atm
+        }
+        float newDistance = 0.0f;
+        if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != Materials::WATER)
+        {
+            closestHitGroundSurface = result;
+            closestResult = newDistance;
+        }
     }
-
-    // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
+    shallowWater = closestHitGroundSurface.hitPosition.y < waterHitSurface.hitPosition.y && waterHitSurface.hitPosition.y <= highestHitSurface.hitPosition.y;
+    auto manageState = [&]() {
+        if (fellThrough)
+        {
+            placeOnSurface(highestHitSurface);
+            return;
+        }
+        if ((m_isSwimming = shallowWater && m_MoveState.ground.waterDepth > 1))
+        {
+            placeOnSurface(waterHitSurface);
+            return;
+        }
+        placeOnSurface(closestHitGroundSurface);
+    };
+    manageState();
+    //     // FIXME: Get rid of the second cast here or at least only do it on the worldmesh!
     if (m_MoveState.ground.successful)
     {
         // Update color
@@ -827,7 +876,14 @@ void PlayerController::onUpdateByInput(float deltaTime)
         auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
             if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
             {
-                model->setAnimation(waterAniType);
+                if (m_isSwimming)
+                {
+                    model->setAnimation(waterAniType);
+                }
+                else
+                {
+                    model->setAnimation(groundAniType);
+                }
             }
             else if (getSurfaceMaterial() != Materials::MaterialGroup::UNDEFINED)
             {
@@ -2431,14 +2487,20 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
+Materials::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
+{
+    Math::float3 v3[3];
+    uint8_t matgroup;
+    // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
+    m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
+    return static_cast< Materials::MaterialGroup >(matgroup);
+}
+
 Materials::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
     {
-        Math::float3 v3[3];
-        uint8_t matgroup;
-        m_World.getWorldMesh().getTriangle(m_MoveState.ground.triangleIndex, v3, matgroup);
-        return static_cast< Materials::MaterialGroup >(matgroup);
+        return getMaterial(m_MoveState.ground.triangleIndex);
     }
     else
     {
@@ -2448,25 +2510,73 @@ Materials::MaterialGroup PlayerController::getSurfaceMaterial()
 
 void PlayerController::traceDownNPCGround()
 {
-    Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -3.0f, 0.0f);
-    Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 10.0f, 0.0f);
-    Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-
-    // LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x  << " " <<  (getEntityTransform().Translation()).y << " " <<  (getEntityTransform().Translation()).z;
-    // LogInfo() << "From: " << (from).x  << " " <<  (from).y << " " <<  (from).z;
-    // LogInfo() << "To: " << (to).x  << " " <<  (to).y << " " <<  (to).z;
-
-    if (!hit.hasHit)
+    m_MoveState.ground.successful = false; // initial condition defaulted to false
+    Math::float3 to = getEntityTransform().Translation();
+    Math::float3 from = to;
+    Math::float3 entityPos = to;
+    to.y = -1000.0f;
+    from.y = 10000.0f;
+    std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to, Physics::CollisionShape::CT_WorldMesh);
+    if (hitall.empty())
     {
-        from += Math::float3(0.0f, 10000.0f, 0.0f); // trying from further above
-        hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-    }
-    if (!hit.hasHit)
-    {
-        m_MoveState.ground.successful = false;
         return;
     }
+    std::sort(begin(hitall), end(hitall), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
+          return a.hitPosition.y >= b.hitPosition.y;
+          });
+    if (DEBUG_PLAYER)
+    {
+       LogInfo() << "traceDownNPCGround ITERATION BEGIN";
+    }
+    Physics::RayTestResult result = hitall[0];
+    bool waterMatFound = false;
+    float closestGroundSurfacePos = std::numeric_limits< float >::max();
+    float underWaterGroundPos = std::numeric_limits< float >::min();
+    float waterSurfacePos = 0;
+    for (const auto& a : hitall)
+    {
+        if (!a.hasHit)
+            continue;
+        if ((m_MoveState.ground.successful = m_MoveState.ground.successful || a.hasHit))
+        {
+            if (Materials::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
+            {
+                result = a;
+                waterSurfacePos = a.hitPosition.y;
+                waterMatFound = true; // found water material
+            }
+            else
+            {
+                auto diff = std::abs(entityPos.y - a.hitPosition.y);
+                if (closestGroundSurfacePos > diff)
+                {
+                    closestGroundSurfacePos = diff;
+                    underWaterGroundPos = a.hitPosition.y;
+                }
+            }
+        }
+    }
+    if (waterMatFound)
+    {
+        m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
+        if (DEBUG_PLAYER)
+        {
+           LogInfo() << "Water depth: " << m_MoveState.ground.waterDepth;
+        }
+    }
+    else
+    {
+        m_MoveState.ground.waterDepth = 0.0f;
+    }
+    if (DEBUG_PLAYER)
+    {
+        LogInfo() << "Initial position: " << (getEntityTransform().Translation()).x << " " << (getEntityTransform().Translation()).y << " " << (getEntityTransform().Translation()).z;
+        LogInfo() << "From: " << (from).x << " " << (from).y << " " << (from).z;
+        LogInfo() << "To: " << (to).x << " " << (to).y << " " << (to).z;
+        LogInfo() << "traceDownNPCGround ITERATION END";
+    }
+
     m_MoveState.ground.successful = true;
-    m_MoveState.ground.triangleIndex = hit.hitTriangleIndex;
-    m_MoveState.ground.trianglePosition = hit.hitPosition;
+    m_MoveState.ground.triangleIndex = result.hitTriangleIndex;
+    m_MoveState.ground.trianglePosition = result.hitPosition;
 }

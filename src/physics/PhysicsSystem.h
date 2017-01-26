@@ -178,6 +178,13 @@ namespace Physics
          * @return Distance between source and destination. "to" if not hit
          */
         RayTestResult raytrace(const Math::float3& from, const Math::float3& to, CollisionShape::ECollisionType filtertype = CollisionShape::CT_Any);
+        /**
+         * Does a simple multi-raytrace
+         * @param from Source
+         * @param to Destination
+         * @return Vector of all RayTestResults assosiated with colissionshapes hit by the ray
+         */
+        std::vector<RayTestResult> raytraceAll(const Math::float3& from, const Math::float3& to, CollisionShape::ECollisionType filtertype = CollisionShape::CT_Any);
 
         /**
          * @return Physics-object of the given handle
