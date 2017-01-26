@@ -23,6 +23,7 @@ namespace Flags
     Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
     Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
+    Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
@@ -75,6 +76,9 @@ void BaseEngine::initEngine(int argc, char** argv)
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
 
+    if(Flags::emptyWorld.isSet())
+        m_Args.startupZEN = "";
+
     std::string snd_device;
     if(Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
@@ -124,15 +128,6 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const 
     {
         LogError() << "Failed to init world file: " << worldFile;
         return Handle::WorldHandle::makeInvalidHandle();
-    }
-
-    if(!m_Args.testVisual.empty())
-    {
-        LogInfo() << "Testing visual: " << m_Args.testVisual;
-        Handle::EntityHandle e = Vob::constructVob(world);
-        Vob::VobInformation vob = Vob::asVob(world, e);
-
-        Vob::setVisual(vob, m_Args.testVisual);
     }
 
 	m_Worlds.push_back(world.getMyHandle());
