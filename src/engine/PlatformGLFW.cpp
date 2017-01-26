@@ -128,6 +128,7 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     // Initialize bgfx
     glfwSetWindow(window);
 
+    glfwSetCharCallback(window, GLFWCharEvent);
     glfwSetKeyCallback(window, GLFWkeyEvent);
     glfwSetMouseButtonCallback(window, GLFWmouseButtonEvent);
     glfwSetCursorPosCallback(window, GLFWmouseMoveEvent);
@@ -307,4 +308,15 @@ void PlatformGLFW::GLFWwindowSizeEvent(GLFWwindow *window, int width, int height
     m_WindowHeight = height;
     m_WindowWidth = width;
 }
+
+std::string PlatformGLFW::getActualKeyName(int key)
+{
+    return std::string(glfwGetKeyName(key, 0));
+}
+
+void PlatformGLFW::GLFWCharEvent(GLFWwindow* window, unsigned int codepoint)
+{
+    PlatformGLFW::frameTextInput += codepoint;
+}
+
 #endif

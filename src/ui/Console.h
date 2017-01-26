@@ -32,6 +32,12 @@ namespace UI
         void onKeyDown(int glfwKey);
 
         /**
+         * To be called when there was text input since the last frame
+         * @param text Characters input since the last frame
+         */
+        void onTextInput(const std::string& text);
+
+        /**
          * Adds a command to the console
          * @param Command Command to be added.
          * @param Callback Function to be executed if the given command was typed.
