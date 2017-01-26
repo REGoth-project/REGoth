@@ -2,7 +2,12 @@
 
 using namespace Engine;
 
-
+namespace Keys
+{
+    // All keys mapped to ascii-characters
+    const int PrintableBegin = 32;
+    const int PrintableEnd = 93; // Inclusive
+}
 
 ActionBinding::ActionBinding(ActionType actionType, bool isContinuous, bool isInverted)
     : actionType(actionType)
@@ -62,6 +67,7 @@ bool Input::isMouseLocked = false;
 std::function<void(bool /* lock */)> Input::mouseLockCallback;
 float Input::windowHalfHeight;
 float Input::windowHalfWidth;
+std::string Input::frameTextInput;
 
 Action* Input::RegisterAction(ActionType actionType, std::function<void (bool, float)> function)
 {
@@ -309,5 +315,23 @@ void Input::clearTriggered()
     {
         keyTriggered[i] = false;
     }
+}
+
+std::string Input::getActualKeyName(int key)
+{
+    if(key >= Keys::PrintableBegin
+       && key <= Keys::PrintableEnd)
+    {
+        return std::string(1, (char)key);
+    }
+
+    return "";
+}
+
+std::string Input::getFrameTextInput()
+{
+    std::string r = frameTextInput;
+    frameTextInput.clear();
+    return r;
 }
 

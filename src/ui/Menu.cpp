@@ -324,3 +324,8 @@ UI::Hud& UI::Menu::getHud()
     return m_Engine.getHud();
 }
 
+void UI::Menu::onTextInput(const std::string& text)
+{
+
+}
+

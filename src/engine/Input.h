@@ -129,6 +129,23 @@ namespace Engine
 		static Math::float2 getMouseCoordinates();
 		static void getMouseState(MouseState& ms);
 
+        /**
+         * Returns and clears the text input from the current frame
+         * @return Text-Input since the last frame
+         */
+        static std::string getFrameTextInput();
+
+		/**
+		 * Looks up the actual key to the given scancode. Libraries like GLFW work with mapping everything to a US-Layout,
+		 * which means that pressing the key that is on the location of the US Y key, for example, will always result in the
+		 * scancode of Y to be returned.
+		 * That is a problem on QWERTZ or AZERTY keyboards. This function returns a sequence of chars
+		 * which contain the name of the actual pressed key.
+		 * @param scancode Scancode from input-library (GLFW)
+		 * @return Actual name of the pressed key
+		 */
+		virtual std::string getActualKeyName(int key);
+
 	protected:
 		static void bindKey(int key, ActionType actionType, bool isContinuous, bool isInverted = false);
 		static void bindMouseButton(int mouseButton, ActionType actionType, bool isContinuous, bool isInverted = false);
@@ -147,6 +164,7 @@ namespace Engine
 
 		static void clearTriggered();
 
+        static std::string frameTextInput;
 	private:
 		static std::multimap<ActionBinding, int /* key */> actionBindingToKeyMap;
 		static std::map<ActionBinding, int /*mouseButton*/> actionBindingToMouseButtonMap;

@@ -136,6 +136,15 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
     m_pClock->setText(timeStr);
 }
 
+void UI::Hud::onTextInput(const std::string& text)
+{
+    if(m_Console.isOpen())
+        m_Console.onTextInput(text);
+    else if(!m_MenuChain.empty())
+        m_MenuChain.back()->onTextInput(text);
+
+}
+
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
     // Don't you know it's rude to open a menu while talking to somebody?
@@ -186,3 +195,5 @@ void UI::Hud::cleanMenus()
     
     m_MenusToDelete.clear();
 }
+
+
