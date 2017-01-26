@@ -24,7 +24,8 @@
                          VisualComponent,\
                          AnimationComponent,\
                          PhysicsComponent,\
-                         SpotComponent
+                         SpotComponent,\
+                         PfxComponent
 
 namespace Logic
 {
@@ -309,6 +310,21 @@ namespace Components
         static void init(SpotComponent& c)
         {
             c.m_UseEndTime = 0.0f;
+        }
+    };
+
+    struct PfxComponent : public Component
+    {
+        enum { MASK = 1 << 12 };
+
+        bgfx::DynamicVertexBufferHandle m_Particles;
+        Handle::TextureHandle m_Texture;
+        uint64_t m_bgfxRenderState;
+
+        static void init(PfxComponent& c)
+        {
+            c.m_bgfxRenderState = BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ADD;
+            c.m_Particles.idx = BGFX_INVALID_HANDLE;
         }
     };
 
