@@ -39,7 +39,9 @@ WorldInstance::WorldInstance()
 
 WorldInstance::~WorldInstance()
 {
-    getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
+    if (m_PrintScreenMessageView && getEngine())
+        getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
+
     delete m_PrintScreenMessageView;
 
     delete m_AudioWorld;

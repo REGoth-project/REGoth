@@ -31,15 +31,19 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ScriptDialogMananger = nullptr;
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
+    m_Talking = false;
 }
 
 DialogManager::~DialogManager()
 {
     delete m_ScriptDialogMananger;
 
-    endDialog();
+    if (m_World.getEngine())
+    {
+        endDialog();
+        m_World.getEngine()->getRootUIView().removeChild(m_ActiveSubtitleBox);
+    }
 
-    m_World.getEngine()->getRootUIView().removeChild(m_ActiveSubtitleBox);
     delete m_ActiveSubtitleBox;
     m_ActiveSubtitleBox = nullptr;
 }
@@ -370,11 +374,13 @@ void DialogManager::displaySubtitle(const std::string& subtitle, const std::stri
 {
     m_ActiveSubtitleBox->setHidden(false);
     m_ActiveSubtitleBox->setText(self, subtitle);
+    m_Talking = true;
 }
 
 void DialogManager::stopDisplaySubtitle()
 {
     m_ActiveSubtitleBox->setHidden(true);
+    m_Talking = false;
 }
 
 void DialogManager::clearChoices()

@@ -16,6 +16,46 @@ namespace Math
     {
       return exp < 1 ? result : ipow(base * base, exp / 2, (exp % 2) ? result * base : result);
     }
+    
+    /**
+     * Truncate a floating-point number (Remove everything after the decimal-point))
+     * @param f Float to truncate
+     * @return f, but only the integer part
+     */
+    inline int trunc(float f)
+    {
+        return static_cast<int>(f);
+    }
+    
+    /**
+     * Rounds a number to the nearest decimal
+     * @param f number to round
+     * @return f, but rounded to the integer value of f
+     */
+    inline int iround(float f)
+    {
+        return static_cast<int>(f + 0.5f);
+    }
+    
+    /**
+     * Lower next integer value of f
+     * @param f Number to process
+     * @return Lower next integer value of f
+     */
+    inline int ifloor(float f)
+    {
+        return round(floor(f));
+    }
+    
+    /**
+     * Upper next integer value of f
+     * @param f Number to process
+     * @return Upper next integer value of f
+     */
+    inline int iceil(float f)
+    {
+        return round(ceil(f));
+    }
 
     /**
      * @brief Converson of degrees to radians
@@ -123,6 +163,7 @@ namespace Math
 			float v[4];
 
             glm::vec4 _glmt_vector;
+			glm::quat _glmt_quat;
         };
 
 		/**
@@ -202,6 +243,13 @@ namespace Math
 				+ ", " + std::to_string(w) + "]";
 
 			return out;
+		}
+
+		static t_float4 slerp(const t_float4& a, const t_float4& b, float t)
+		{
+			t_float4 r;
+			r._glmt_quat = glm::slerp(a._glmt_quat, b._glmt_quat, t);
+			return r;
 		}
 
 		friend std::ostream& operator<< (std::ostream &out, t_float4 &v);

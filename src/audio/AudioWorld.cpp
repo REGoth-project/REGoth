@@ -225,7 +225,7 @@ namespace World
     AudioWorld::Source AudioWorld::getFreeSource()
     {
         if (!m_Context)
-            return { 0 };
+            return AudioWorld::Source();
 
         alcMakeContextCurrent(m_Context);
 
@@ -251,7 +251,7 @@ namespace World
                 LogWarn() << "Could not allocate AL source!";
                 warned = true;
             }
-            return { 0 };
+            return AudioWorld::Source();
         }
 
         alSourcef(source, AL_PITCH, 1);
@@ -265,15 +265,17 @@ namespace World
         alSourcei(source, AL_LOOPING, AL_FALSE);
 
         // Nothing to re-use available, make a new entry
-        m_Sources.push_back({ source });
+        m_Sources.emplace_back();
+		m_Sources.back().m_Handle = source;
+
         return m_Sources.back();
     }
 
     Handle::SfxHandle AudioWorld::allocateSound(const std::string &name, const Daedalus::GEngineClasses::C_SFX &sfx)
     {
-        LogInfo() << "alloc sound " << name << " file " << sfx.file << " vol: " << sfx.vol
+        /*LogInfo() << "alloc sound " << name << " file " << sfx.file << " vol: " << sfx.vol
                   << " loop: " << sfx.loop << " loop start: " << sfx.loopStartOffset << " loop end: " << sfx.loopEndOffset;
-
+*/
         Handle::SfxHandle h = m_Allocator.createObject();
         Sound& snd = m_Allocator.getElement(h);
         snd.sfx = sfx;

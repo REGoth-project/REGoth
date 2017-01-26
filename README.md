@@ -1,4 +1,4 @@
-# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/REGoth-project/REGoth.svg?branch=master)](https://travis-ci.org/REGoth-project/REGoth) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/REGoth/Lobby)
+# REGoth [![Build status](https://ci.appveyor.com/api/projects/status/50yputp2qe764sg2/branch/master?svg=true)](https://ci.appveyor.com/project/degenerated1123/regoth) [![Build Status](https://travis-ci.org/REGoth-project/REGoth.svg?branch=master)](https://travis-ci.org/REGoth-project/REGoth) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/REGoth/Lobby)
 OpenSource-Reimplementation of the zEngine, used by the game "Gothic" and "Gothic II".
 
 Don't forget to check out the [REGoth-Wiki](../../wiki) for more information about the project!
@@ -7,6 +7,8 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 
 ### Videos showing the current state
 
+* Release-Commentary to V0.2:
+   * https://www.youtube.com/watch?v=jB3pzxd6vIk
 * Release-Commentary to V0.1.1:
    * https://www.youtube.com/watch?v=heg49o78Ii4
 * Dialogs, Audio, NPC script-states:
@@ -92,6 +94,8 @@ Where `path/to/gothic1or2` points to the root of a Gothic I or II installation a
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
 
+Additionally, for a list of possible commands, run `REGoth --help`.
+
 # Controls
 
  * Movement: WASD/QE or arrow-keys (Space or Shift to run faster)
@@ -111,7 +115,7 @@ Where `path/to/gothic1or2` points to the root of a Gothic I or II installation a
       
 # Development
 
-If you want to help out and don't know where to start, I suggest reading the [wiki-page](wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
+If you want to help out and don't know where to start, I suggest reading the [wiki-page](../../wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
 
 ### Examples
 **Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`

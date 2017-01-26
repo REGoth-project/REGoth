@@ -138,12 +138,18 @@ void UI::Hud::setTimeOfDay(const std::string& timeStr)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
+    // Don't you know it's rude to open a menu while talking to somebody?
+    if(m_Engine.getMainWorld().get().getDialogManager().isTalking()) return;
+
     // Notify last menu in chain
-    if(!m_MenuChain.empty())
+    if(!m_MenuChain.empty() && action != IA_Close)
     {
         m_MenuChain.back()->onInputAction(action);
+        return;
     }else if(!m_pDialogBox->isHidden()){
-        m_pDialogBox->onInputAction(action);
+        if(action != IA_Close) // IA_Close would automatically quit the dialog
+            m_pDialogBox->onInputAction(action);
+        return;
     }
     
     // Close console or last menu, in case it's open

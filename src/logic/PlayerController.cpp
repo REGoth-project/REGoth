@@ -899,7 +899,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         };
         if (m_isStrafeLeft)
         {
-            manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnLeft);
+            manageAnimation(ModelVisual::EModelAnimType::StrafeLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
         else if (m_isStrafeRight)
         {
@@ -1155,6 +1155,9 @@ void PlayerController::onMessage(EventMessages::EventMessage& message, Handle::E
             break;
         case EventMessages::EventMessageType::Magic:
             done = EV_Magic(reinterpret_cast<EventMessages::MagicMessage&>(message), sourceVob);
+            break;
+        case EventMessages::EventMessageType::Mob:
+            //TODO handle this somehow?
             break;
     }
 
@@ -1941,7 +1944,7 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
-        if(triggered)
+        if(triggered && !m_World.getDialogManager().isDialogActive())
         {
             UI::Hud &hud = m_World.getEngine()->getHud();
             if (!hud.isTopMenu<UI::Menu_Status>())
@@ -2026,17 +2029,21 @@ void PlayerController::setupKeyBindings()
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
     });
 
+    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float intensity) {
+        s_action_triggered = false;
+
+        if (triggered)
+            s_action_triggered = true; // Set true for one frame
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
         static bool s_triggered = false;
-
-        s_action_triggered = false;
 
         if (s_triggered && !triggered)
             s_triggered = false;
         else if (!s_triggered && triggered)
         {
             s_triggered = true;
-            s_action_triggered = true; // Set true for one frame
 
             if(m_World.getDialogManager().isDialogActive())
                 return;

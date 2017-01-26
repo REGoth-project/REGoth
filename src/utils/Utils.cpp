@@ -19,7 +19,7 @@
 #include <Shlobj.h>
 #endif
 
-const std::string USERDATA_FOLDER = ".REGoth";
+const std::string USERDATA_FOLDER = "REGoth";
 
 static bx::FileReaderI* fileReader = nullptr;
 static bx::FileWriterI* fileWriter = nullptr;
@@ -159,6 +159,7 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
         }
 
         tinydir_close(&dir);
+        return content;
     };
 
     // Get the case sensitive version for every part of the path
@@ -321,7 +322,7 @@ bool Utils::mkdir(const std::string& dir)
     mode_t nMode = 0733; // UNIX style permissions
     nError = ::mkdir(dir.c_str(),nMode); // can be used on non-Windows
 #endif
-	return nError == 0;
+	return nError == 0 || (nError == -1 && errno == EEXIST);
 }
     
 std::string Utils::getUserDataLocation()
@@ -339,9 +340,9 @@ std::string Utils::getUserDataLocation()
     struct passwd *pw = getpwuid(getuid());
 
     const char *homedir = pw->pw_dir;
-    return std::string(homedir) + "/" + USERDATA_FOLDER;
+    return std::string(homedir) + "/." + USERDATA_FOLDER;
 #else
-    return "./" + USERDATA_FOLDER;
+    return "./." + USERDATA_FOLDER;
 #endif
 }
 
@@ -370,6 +371,22 @@ bool ::Utils::writeFile(const std::string& name, const std::string& path, const 
     return true;
 }
 
+bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::string& text)
+{
+    std::string sep = (path.back() == '/' || path.back() == '\\') ? "" : "/";
+    std::string target = path + sep + name;
+
+    std::ofstream s(target);
+
+    if(!s.good())
+        return false;
+
+    s << text;
+
+    return true;
+}
+
+
 std::string Utils::stripFilePath(const std::string& file)
 {
     if(file.find_last_of("\\/") == std::string::npos)
@@ -377,3 +394,21 @@ std::string Utils::stripFilePath(const std::string& file)
 
     return file.substr(file.find_last_of("\\/") + 1);
 }
+
+std::string Utils::stripJsonComments(const std::string& json, const std::string& commentStart)
+{
+    // Split into lines
+    std::vector<std::string> lines = Utils::split(json, '\n');
+
+    std::string r;
+    for(std::string& l : lines)
+    {
+        // Find a // and cut it off there
+        l = l.substr(0, l.find(commentStart));
+
+        r += l + "\n";
+    }
+
+    return r;
+}
+

@@ -262,11 +262,11 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 
         /* Poll for and process events */
         glfwPollEvents();
-        //glfwWaitEvents();
-        update();
 
         if (getQuit())
             break;
+
+        update();
     }
 #endif
 

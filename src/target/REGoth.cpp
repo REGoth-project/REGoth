@@ -51,6 +51,7 @@ using json = nlohmann::json;
 namespace Flags
 {
     Cli::Flag help("h", "help", 0, "Prints this message");
+    Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
 }
 
 struct PosColorVertex
@@ -263,7 +264,11 @@ public:
 #if BX_PLATFORM_ANDROID
         m_reset = 0;
 #else
-		m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+        m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
+        if (Flags::vsync.isSet())
+        {
+            m_reset |= BGFX_RESET_VSYNC;
+        }
 #endif
 
         m_Width = getWindowWidth();
@@ -317,6 +322,7 @@ public:
         {
            LogError() << "Failed to add world, world handle is invalid!";
            Platform::setQuit(true);
+           return;
         }
 		m_timeOffset = bx::getHPCounter();
 
@@ -615,7 +621,7 @@ public:
             if(args.size() == 1)
             {
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
-                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 2.0f);
+                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 3.0f);
 
                 if(nearNPCs.empty())
                     return "No NPCs in range!";
@@ -714,6 +720,7 @@ public:
 		});
 
         imguiCreate(nullptr, 0, fontSize);
+        m_ImgUiCreated = true;
 
         /*UI::Menu* m = new UI::Menu(*m_pEngine);
         m_pEngine->getRootUIView().addChild(m);
@@ -735,7 +742,8 @@ public:
         ImFontAtlas* atlas = ImGui::GetIO().Fonts;
         atlas->Clear();
 
-        imguiDestroy();
+        if (m_ImgUiCreated)
+            imguiDestroy();
 
 		bgfx::shutdown();
 
@@ -769,7 +777,7 @@ public:
             {
                 if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
                 {
-                    if (m_stopWatch.DelayedByArgMS(150))
+                    if (m_stopWatch.DelayedByArgMS(150) && keyMap.find(i) != keyMap.end())
                     {
                         m_pEngine->getHud().onInputAction(keyMap[i]);
                     }
@@ -899,6 +907,8 @@ public:
     int32_t m_scrollArea;
     Utils::StopWatch m_stopWatch;
     bool m_NoHUD;
+    // prevents imgui from crashing if we failed on startup and didn't init it
+    bool m_ImgUiCreated = false;
 };
 
 //ENTRY_IMPLEMENT_MAIN(ExampleCubes);
@@ -909,6 +919,10 @@ int main(int argc, char** argv)
 {
     int ret = 0;
 
+    // Load config values for flags
+    Cli::loadConfigFile();
+
+    // Overwrite flags set from config using the commandline
     Cli::setCommandlineArgs(argc, argv);
 
     // Check if the user just wanted to see the list of commands
@@ -940,6 +954,9 @@ int main(int argc, char** argv)
         std::cerr << "Caught unknown exception in main loop" << std::endl;
         ret = 1;
     }
+
+    // Write current config-values
+    Cli::writeConfigFile();
 
     return ret;
 }

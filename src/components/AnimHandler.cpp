@@ -180,25 +180,39 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t frameNum = static_cast<size_t>(m_AnimationFrame);
 
     // Check if this changed something on our animation
-    if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
-        return; // Nothing to do here // TODO: There is, if interpolation was implemented!
+    //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
+    //    return; // Nothing to do here // TODO: Do this distance-based!
 
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
+    // frameNum contains the current frame, find out what the next frame will be and how far we're in there already
+    size_t frameNext = (frameNum + 1) % Math::trunc(numFrames); // FIXME: What happens on non-looped animation on the last frame?
+    float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
+
+
     for (size_t i = 0; i < getActiveAnimationPtr()->getNodeIndexList().size(); i++)
     {
-        // TODO: Lerp between this and the next frame
         size_t frameNum = static_cast<size_t>(m_AnimationFrame);
         size_t numAnimationNodes = getActiveAnimationPtr()->getNodeIndexList().size();
         uint32_t nodeIdx = getActiveAnimationPtr()->getNodeIndexList()[i];
 
         // Extract sample at the current frame/node
         auto &sample = getActiveAnimationPtr()->getAniSamples()[frameNum * numAnimationNodes + i];
+        auto &sampleNext = getActiveAnimationPtr()->getAniSamples()[frameNext * numAnimationNodes + i];
+
+        // Interpolate between frames
+        Math::float4 interpRotation = Math::float4::slerp(Math::float4(sample.rotation.v),
+                                                          Math::float4(sampleNext.rotation.v),
+                                                          frameFract);
+
+        Math::float3 interpPosition = Math::float3::lerp(Math::float3(sample.position.v),
+                                                         Math::float3(sampleNext.position.v),
+                                                         frameFract);
 
         // Build transformation matrix from the sample-information
         // Note: Precomputing this is hard because of interpolation
-        Math::Matrix trans = Math::Matrix::CreateFromQuaternion(Math::float4(sample.rotation.v));
-        trans.Translation(Math::float3(sample.position.v));
+        Math::Matrix trans = Math::Matrix::CreateFromQuaternion(interpRotation);
+        trans.Translation(interpPosition);
 
         m_NodeTransforms[nodeIdx] = trans;
     }
@@ -233,7 +247,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         auto &sampleLast = getActiveAnimationPtr()->getAniSamples()[lastFrame *
                 getActiveAnimationPtr()->getNodeIndexList().size()];
 
-        // Scale velocity to seconds // FIXME: Shouldn't be modified by deltaTime, I think!
+        // Scale velocity to seconds
         m_AnimRootVelocity = (Math::float3(sampleCurrent.position.v) - Math::float3(sampleLast.position.v));
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
         m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;

@@ -21,6 +21,9 @@ addons:
             - libxrandr-dev
             - libglew-dev
             - libsndfile1-dev
+            - libasound2-dev 
+            - alsa-utils 
+            - alsa-oss
 
 git:
   submodules: false

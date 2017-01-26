@@ -200,18 +200,33 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
+if (CMAKE_COMPILER_IS_GNUCC)
+    set_target_properties(engine PROPERTIES COMPILE_FLAGS "-Wno-reorder -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -fno-strict-aliasing -Wall -Wextra")
+endif()
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
 # ------------------ OpenAL ------------------
 
 # Set up OpenAL
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
 
 set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
-set(LIBTYPE STATIC CACHE STRING "" FORCE)
+
+if (UNIX)
+	set(LIBTYPE STATIC CACHE STRING "" FORCE)
+    if (NOT APPLE)
+        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+    endif()
+else()
+	set(LIBTYPE SHARED CACHE STRING "" FORCE)
+endif()
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
+
+
 
 if (UNIX)
     if (NOT APPLE)

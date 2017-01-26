@@ -44,7 +44,7 @@ void Menu_Save::gatherAvailableSavegames()
 
     // There are 15 labels in the original menus
     // Slot 0 is for the current game, so skip it
-    for(int i=1;i<names.size();i++)
+    for(unsigned i=1;i<names.size();i++)
     {
         std::string sym = "MENUITEM_SAVE_SLOT" + std::to_string(i);
         assert(m_pVM->getDATFile().hasSymbolName(sym));

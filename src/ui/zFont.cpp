@@ -87,8 +87,9 @@ UI::zFont::~zFont()
 
 bool UI::zFont::getGlyphOf(unsigned char c, UI::zFont::Glyph& g) const
 {
-    if(c > ZenLoad::zCFont::FONT_NUM_MAX_LETTERS)
-        return false;
+    // FIXME Below always evaluates to false, what's the intention there?
+    // if(c > ZenLoad::zCFont::FONT_NUM_MAX_LETTERS)
+    //     return false;
 
     g.width = m_Font.glyphWidth[c];
     g.uvTopLeft = Math::float2(m_Font.fontUV1[c].v);
@@ -151,7 +152,7 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
     int yPos = 0;
     int xMax = 0;
     int yMax = 0;
-    for(int i=0;i<txt.size();i++)
+    for(unsigned i=0;i<txt.size();i++)
     {
         if(txt[i] == '\n')
         {
@@ -178,7 +179,7 @@ std::string UI::zFont::layoutText(const std::string& text, int maxWidth) const
     std::string lt;
     int w = 0;
     int lastSpace = 0;
-    for(int i=0;i<text.size();i++)
+    for(unsigned i=0;i<text.size();i++)
     {
         Glyph g;
         getGlyphOf((unsigned char)text[i], g);
