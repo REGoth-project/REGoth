@@ -26,9 +26,14 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::init()
 {
+    LogInfo() << "mainWorldProgram";
     m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
+    LogInfo() << "mainWorldInstancedProgram";
     m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
+    LogInfo() << "mainSkinnedMeshProgram";
     m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
+    LogInfo() << "particle_textured";
+    m_Config.programs.particle_textured = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
 
     m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
     m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
