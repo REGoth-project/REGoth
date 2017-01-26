@@ -101,7 +101,7 @@ namespace VobTypes
      * @param headTextureIdx Index of the texture to use for the head
      * @param teethTextureIdx Index of the texture to use for the teeth
      */
-    void NPC_SetHeadMesh(NpcVobInformation& vob, const std::string& visual, size_t headTextureIdx=0, size_t teethTextureIdx=0);
+    void NPC_SetHeadMesh(NpcVobInformation& vob, const std::string& visual, int headTextureIdx=0, int teethTextureIdx=0);
 
     /**
      * Sets the visual on the given NPCs model, without changing the body-state, like the headmesh
