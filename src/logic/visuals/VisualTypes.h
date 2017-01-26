@@ -6,6 +6,7 @@ namespace Logic
     {
         Base,
         Model,
-        StaticMesh
+        StaticMesh,
+        Pfx
     };
 }
