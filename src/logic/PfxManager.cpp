@@ -39,6 +39,8 @@ bool Logic::PfxManager::loadParticleFXDAT()
     Daedalus::registerDaedalusStdLib(*m_pVM);
     Daedalus::registerGothicEngineClasses(*m_pVM);
 
+    m_DefaultEmitter = {0};
+
     return m_pVM != nullptr;
 }
 
@@ -53,7 +55,7 @@ bool Logic::PfxManager::hasPFX(const std::string& name)
 const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::string& name)
 {
     if(!loadParticleFXDAT())
-        return Logic::PfxManager::Emitter();
+        return m_DefaultEmitter;
 
     size_t symIdx = m_pVM->getDATFile().getSymbolIndexByName(name);
 

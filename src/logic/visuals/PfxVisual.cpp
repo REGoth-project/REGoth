@@ -101,12 +101,12 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     m_shpScaleKey += deltaTime * m_Emitter.shpScaleFPS;
 
     // Loop ppsScaleKeys if wanted
-    if(Math::ifloor(m_ppsScaleKey) >= m_Emitter.ppsScaleKeys.size() && !m_Emitter.ppsIsLooping)
+    if(Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()) && !m_Emitter.ppsIsLooping)
         m_ppsScaleKey = static_cast<float>(m_Emitter.ppsScaleKeys.size()) + 0.5f; // Keep on high value
     else
         m_ppsScaleKey = 0.0f;
 
-    if(Math::ifloor(m_shpScaleKey) >= m_Emitter.shpScaleKeys.size() && !m_Emitter.shpScaleIsLooping)
+    if(Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()) && !m_Emitter.shpScaleIsLooping)
         m_shpScaleKey = static_cast<float>(m_Emitter.shpScaleKeys.size()) + 0.5f; // Keep on high value
     else
         m_shpScaleKey = 0.0f;
@@ -139,7 +139,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
         {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
-            p = pfx.m_Particles.back();
+            pfx.m_Particles[i] = pfx.m_Particles.back();
             pfx.m_Particles.pop_back();
 
             // Do one step back, since we have a new particle in this slot now

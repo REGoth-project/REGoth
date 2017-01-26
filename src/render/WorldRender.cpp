@@ -468,9 +468,6 @@ void ::Render::drawPfx(World::WorldInstance& world, Components::PfxComponent& pf
 
 	quadVertices.resize(pfx.m_Particles.size() * 6);
 
-	Meshes::WorldStaticMeshVertex test[6];
-	memset(test, 0, sizeof(test));
-
 	ddPush();
 	for(size_t i=0;i<pfx.m_Particles.size();i++)
 	{

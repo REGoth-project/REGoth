@@ -202,6 +202,11 @@ namespace Logic
          * Pfx already gotten from script
          */
         std::map<size_t, Emitter> m_PfxCache;
+
+        /**
+         * Default emitter to return if an invalid one was requested
+         */
+        Emitter m_DefaultEmitter;
     };
 }
 
