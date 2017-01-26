@@ -10,6 +10,7 @@
 #include <components/EntityActions.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
+#include <logic/visuals/PfxVisual.h>
 
 Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
 {
@@ -134,6 +135,15 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
              || visual.find(".ASC") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::ModelVisual(*vob.world, vob.entity);
+        if(ld->load(visual))
+        {
+            (*ppVisual) = ld;
+        }
+        else
+            delete ld;
+    }else if(visual.find(".PFX") != std::string::npos)
+    {
+        Logic::VisualController* ld = new Logic::PfxVisual(*vob.world, vob.entity);
         if(ld->load(visual))
         {
             (*ppVisual) = ld;
