@@ -50,7 +50,7 @@ bool Logic::PfxVisual::load(const std::string& visual)
     assert(!m_Emitter.ppsScaleKeys.empty());
 
     // Init particle-systems dynamic vertex-buffer
-    getPfxComponent().m_Particles = bgfx::createDynamicVertexBuffer(6,
+    getPfxComponent().m_ParticleVB = bgfx::createDynamicVertexBuffer(6,
                                                                     Meshes::WorldStaticMeshVertex::ms_decl, // FIXME: May want to use a smaller one
                                                                     BGFX_BUFFER_ALLOW_RESIZE);
 
@@ -88,6 +88,8 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
 
 void Logic::PfxVisual::onUpdate(float deltaTime)
 {
+    Components::PfxComponent& pfx = getPfxComponent();
+
     Controller::onUpdate(deltaTime);
 
     // Spawn new particles. Need to accumulate deltaTime so the floor doesn't keep us from spawning any particles
@@ -126,95 +128,32 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     }
 
     // Update particle values
-    for(Particle& p : m_Particles)
+    for(Components::PfxComponent::Particle& p : pfx.m_Particles)
         updateParticle(p, deltaTime);
 
-    for(int i=0;i<static_cast<int>(m_Particles.size());i++)
+    for(int i=0;i<static_cast<int>(pfx.m_Particles.size());i++)
     {
-        Particle& p = m_Particles[i];
+        Components::PfxComponent::Particle& p = pfx.m_Particles[i];
 
         if(p.lifetime < 0)
         {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
-            p = m_Particles.back();
-            m_Particles.pop_back();
+            p = pfx.m_Particles.back();
+            pfx.m_Particles.pop_back();
 
             // Do one step back, since we have a new particle in this slot now
             i--;
         }
     }
-
-    static float s_dt = 0; s_dt += deltaTime;
-
-    // TODO: Richtung zur kamera rausfinden!
-    Math::float3 center = getEntityTransform().Translation();
-    Math::float3 right = Math::float3(0.5f,0,0); // 0.5 because they get extended into both directions. We want size 1 in total.
-    Math::float3 up = Math::float3(0,0.5f,0);
-
-    m_QuadVertices.resize(m_Particles.size() * 6);
-
-    Meshes::WorldStaticMeshVertex test[6];
-    memset(test, 0, sizeof(test));
-
-    ddPush();
-    for(size_t i=0;i<m_Particles.size();i++)
-    {
-        float alpha = std::max(0.0f, std::min(1.0f, m_Particles[i].alpha));
-        Math::float3 color = Math::float3(std::max(0.0f, std::min(1.0f, m_Particles[i].color.x)),
-                                          std::max(0.0f, std::min(1.0f, m_Particles[i].color.y)),
-                                          std::max(0.0f, std::min(1.0f, m_Particles[i].color.z)));
-
-
-        // Compute new alpha-value
-        Math::float4 particleColor = m_Emitter.visAlphaFunc != PfxManager::EBM_Add
-                                     ? Math::float4(color.x,
-                                                    color.y,
-                                                    color.z,
-                                                    alpha)
-                                     : Math::float4(color.x * alpha,
-                                                    color.y * alpha,
-                                                    color.z * alpha,
-                                                    alpha); // Need to modulate color on ADD-mode
-
-        uint32_t particleColorU8 = particleColor.toRGBA8();
-
-
-        ddDrawAxis(m_Particles[i].position.x, m_Particles[i].position.y, m_Particles[i].position.z);
-
-        Utils::billboardQuad(m_QuadVertices[6 * i + 0].Position,
-                             m_QuadVertices[6 * i + 1].Position,
-                             m_QuadVertices[6 * i + 2].Position,
-                             m_QuadVertices[6 * i + 3].Position,
-                             m_QuadVertices[6 * i + 4].Position,
-                             m_QuadVertices[6 * i + 5].Position,
-                             center + m_Particles[i].position,
-                             right * m_Particles[i].size.x,
-                             up * m_Particles[i].size.y);
-
-        m_QuadVertices[6 * i + 0].TexCoord = Math::float2(0, 1);
-        m_QuadVertices[6 * i + 1].TexCoord = Math::float2(1, 1);
-        m_QuadVertices[6 * i + 2].TexCoord = Math::float2(0, 0);
-
-        m_QuadVertices[6 * i + 3].TexCoord = Math::float2(0, 0);
-        m_QuadVertices[6 * i + 4].TexCoord = Math::float2(1, 1);
-        m_QuadVertices[6 * i + 5].TexCoord = Math::float2(1, 0);
-
-        for (int j = 0; j < 6; j++)
-        {
-            m_QuadVertices[6 * i + j].Color = particleColorU8;
-        }
-    }
-    ddPop();
-
-    if(!m_Particles.empty())
-    bgfx::updateDynamicVertexBuffer(getPfxComponent().m_Particles, 0, bgfx::copy(m_QuadVertices.data(), sizeof(Meshes::WorldStaticMeshVertex) * m_QuadVertices.size()));
 }
 
 void Logic::PfxVisual::spawnParticle()
 {
-    m_Particles.emplace_back();
-    Particle& p = m_Particles.back();
+    Components::PfxComponent& pfx = getPfxComponent();
+    pfx.m_Particles.emplace_back();
+
+    Components::PfxComponent::Particle& p = pfx.m_Particles.back();
 
     // Perform shape scale modulation
     float shpKeyFrac = fmod(m_ppsScaleKey, 1.0f); // For interpolation
@@ -284,7 +223,7 @@ void Logic::PfxVisual::spawnParticle()
         case PfxManager::ES_MESH:break;
     }
 
-    p.position += offset * shpModTotal;
+    p.position += getEntityTransform().Translation() + offset * shpModTotal;
 
     // Lifetime with variance
     p.lifetime = m_Emitter.lspPartAvg + Utils::frandF2() * m_Emitter.lspPartVar;
@@ -309,8 +248,10 @@ void Logic::PfxVisual::spawnParticle()
         p.colorVel = Math::float3(0,0,0);
 }
 
-void Logic::PfxVisual::updateParticle(Logic::PfxVisual::Particle& p, float deltaTime)
+void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, float deltaTime)
 {
+    Components::PfxComponent& pfx = getPfxComponent();
+
     // Check for out-of-time first
     p.lifetime -= deltaTime;
 
@@ -321,4 +262,24 @@ void Logic::PfxVisual::updateParticle(Logic::PfxVisual::Particle& p, float delta
     p.color += p.colorVel * deltaTime;
     p.size += p.sizeVel * deltaTime;
     p.alpha += p.alphaVel * deltaTime;
+
+    // Compute actual color for this frame
+    float alpha = std::max(0.0f, std::min(1.0f, p.alpha));
+    Math::float3 color = Math::float3(std::max(0.0f, std::min(1.0f, p.color.x)),
+                                      std::max(0.0f, std::min(1.0f, p.color.y)),
+                                      std::max(0.0f, std::min(1.0f, p.color.z)));
+
+
+    // Compute new alpha-value
+    Math::float4 particleColor = m_Emitter.visAlphaFunc != PfxManager::EBM_Add
+                                 ? Math::float4(color.x,
+                                                color.y,
+                                                color.z,
+                                                alpha)
+                                 : Math::float4(color.x * alpha,
+                                                color.y * alpha,
+                                                color.z * alpha,
+                                                alpha); // Need to modulate color on ADD-mode
+
+    p.particleColorU8 = particleColor.toRGBA8();
 }

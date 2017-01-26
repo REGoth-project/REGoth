@@ -34,23 +34,6 @@ namespace Logic
     private:
 
         /**
-         * Single particle
-         */
-        struct Particle
-        {
-            Math::float3 position;
-            Math::float3 velocity;
-            float lifetime;
-            float texAniFrame;
-            float alphaVel;
-            float alpha;
-            Math::float2 size;
-            Math::float2 sizeVel;
-            Math::float3 color;
-            Math::float3 colorVel;
-        };
-
-        /**
          * Spawns a single particle after the rules of the emitter
          */
         void spawnParticle();
@@ -58,18 +41,12 @@ namespace Logic
         /**
          * Updates a single particle
          */
-        void updateParticle(Particle& p, float deltaTime);
+        void updateParticle(Components::PfxComponent::Particle& p, float deltaTime);
 
         /**
          * @return Reference to the underlaying PFX component
          */
         Components::PfxComponent& getPfxComponent();
-
-        /**
-         * Particle cache
-         */
-        std::vector<Particle> m_Particles;
-        std::vector<Meshes::WorldStaticMeshVertex> m_QuadVertices; // m_Particles.size() * 6
 
         /**
          * Emitter to use

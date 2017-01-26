@@ -312,28 +312,7 @@ namespace Render
             // Draw pfx
             if((mask & Components::PfxComponent::MASK) != 0)
             {
-				if(bgfx::isValid(pfxs[i].m_Particles))
-				{
-					// Set object-color
-					Math::float4 color(1, 1, 1, 1);
-					bgfx::setUniform(config.uniforms.objectColor, color.v);
-
-					Textures::Texture& tx = world.getTextureAllocator().getTexture(pfxs[i].m_Texture);
-					bgfx::setState(pfxs[i].m_bgfxRenderState);
-					bgfx::setTexture(0, config.uniforms.diffuseTexture, tx.m_TextureHandle);
-					bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
-					bgfx::setVertexBuffer(pfxs[i].m_Particles);
-
-                    uint8_t view;
-
-                    // Make sure to draw additive blended particles last. (Fire over smoke)
-                    if((pfxs[i].m_bgfxRenderState & BGFX_STATE_BLEND_ADD) == BGFX_STATE_BLEND_ADD)
-                        view = RenderViewList::ALPHA_2;
-                    else
-                        view = RenderViewList::ALPHA_1;
-
-					bgfx::submit(view, config.programs.particle_textured);
-				}
+				drawPfx(world, pfxs[i], config);
             }
 
 
@@ -471,4 +450,85 @@ void Render::debugDrawPath(const World::Waynet::WaynetInstance& waynet, const st
 
 
 	ddPop();
+}
+
+void ::Render::drawPfx(World::WorldInstance& world, Components::PfxComponent& pfx, const Render::RenderConfig& config)
+{
+	// TODO: Could optimize this into a global vertexbuffer
+
+	if(!bgfx::isValid(pfx.m_ParticleVB))
+		return;
+
+	// Cache
+	static std::vector<Meshes::WorldStaticMeshVertex> quadVertices;
+
+
+	Math::float3 right = config.state.cameraWorld.Rotate(Math::float3(1,0,0)).normalize() * -0.5f; // 0.5 because they get extended into both directions. We want size 1 in total.
+	Math::float3 up = config.state.cameraWorld.Rotate(Math::float3(0,1,0)).normalize() * 0.5f;
+
+	quadVertices.resize(pfx.m_Particles.size() * 6);
+
+	Meshes::WorldStaticMeshVertex test[6];
+	memset(test, 0, sizeof(test));
+
+	ddPush();
+	for(size_t i=0;i<pfx.m_Particles.size();i++)
+	{
+		Components::PfxComponent::Particle& p = pfx.m_Particles[i];
+
+
+		//ddDrawAxis(pfx.m_Particles[i].position.x, pfx.m_Particles[i].position.y, pfx.m_Particles[i].position.z);
+
+		Utils::billboardQuad(quadVertices[6 * i + 0].Position,
+							 quadVertices[6 * i + 1].Position,
+							 quadVertices[6 * i + 2].Position,
+							 quadVertices[6 * i + 3].Position,
+							 quadVertices[6 * i + 4].Position,
+							 quadVertices[6 * i + 5].Position,
+							 p.position,
+							 right * p.size.x,
+							 up * p.size.y);
+
+		quadVertices[6 * i + 0].TexCoord = Math::float2(0, 1);
+		quadVertices[6 * i + 1].TexCoord = Math::float2(1, 1);
+		quadVertices[6 * i + 2].TexCoord = Math::float2(0, 0);
+
+		quadVertices[6 * i + 3].TexCoord = Math::float2(0, 0);
+		quadVertices[6 * i + 4].TexCoord = Math::float2(1, 1);
+		quadVertices[6 * i + 5].TexCoord = Math::float2(1, 0);
+
+		for (int j = 0; j < 6; j++)
+		{
+			quadVertices[6 * i + j].Color = p.particleColorU8;
+		}
+	}
+	ddPop();
+
+	if(!pfx.m_Particles.empty())
+		bgfx::updateDynamicVertexBuffer(pfx.m_ParticleVB, 0, bgfx::copy(quadVertices.data(), sizeof(Meshes::WorldStaticMeshVertex) * quadVertices.size()));
+
+
+	// Do the actual rendering
+	// TODO: Support animated textures
+
+	// Set object-color
+	Math::float4 color(1, 1, 1, 1);
+	bgfx::setUniform(config.uniforms.objectColor, color.v);
+
+	Textures::Texture& tx = world.getTextureAllocator().getTexture(pfx.m_Texture);
+	bgfx::setState(pfx.m_bgfxRenderState);
+	bgfx::setTexture(0, config.uniforms.diffuseTexture, tx.m_TextureHandle);
+	bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
+	bgfx::setVertexBuffer(pfx.m_ParticleVB);
+
+	uint8_t view;
+
+	// Make sure to draw additive blended particles last. (Fire over smoke)
+	if((pfx.m_bgfxRenderState & BGFX_STATE_BLEND_ADD) == BGFX_STATE_BLEND_ADD)
+		view = RenderViewList::ALPHA_2;
+	else
+		view = RenderViewList::ALPHA_1;
+
+	bgfx::submit(view, config.programs.particle_textured);
+
 }

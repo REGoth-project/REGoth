@@ -317,14 +317,34 @@ namespace Components
     {
         enum { MASK = 1 << 12 };
 
-        bgfx::DynamicVertexBufferHandle m_Particles;
+        /**
+         * Single particle
+         */
+        struct Particle
+        {
+            Math::float3 position;
+            Math::float3 velocity;
+            float lifetime;
+            float texAniFrame;
+            float alphaVel;
+            float alpha;
+            Math::float2 size;
+            Math::float2 sizeVel;
+            Math::float3 color;
+            Math::float3 colorVel;
+            uint32_t particleColorU8; // Actual color for this frame
+        };
+
+        bgfx::DynamicVertexBufferHandle m_ParticleVB;
         Handle::TextureHandle m_Texture;
         uint64_t m_bgfxRenderState;
+
+        std::vector<Particle> m_Particles;
 
         static void init(PfxComponent& c)
         {
             c.m_bgfxRenderState = BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ADD;
-            c.m_Particles.idx = BGFX_INVALID_HANDLE;
+            c.m_ParticleVB.idx = BGFX_INVALID_HANDLE;
         }
     };
 
