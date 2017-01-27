@@ -142,6 +142,10 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         return;
     }
 
+    if(target == self)
+        return; // FIXME: Vatras right here
+
+
     if(target.isValid())
         LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
