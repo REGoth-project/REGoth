@@ -576,31 +576,45 @@ void ModelVisual::updateBodyMesh()
     // Fix body-texture and skin-color
     if(!m_PartEntities.mainSkelMeshEntities.empty())
     {
-        Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[0];
-
-        Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
-        if(Components::hasComponent<Components::StaticMeshComponent>(ent))
+        for(size_t i=0;i<m_PartEntities.mainSkelMeshEntities.size();i++)
         {
-            Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(bodyMain);
+            Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[i];
 
-            if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
+            Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
+            if (Components::hasComponent<Components::StaticMeshComponent>(ent))
             {
-                // Get texture parts
-                std::vector<std::string> bodyTxParts = Utils::split(m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName, "0123456789");
+                Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(bodyMain);
 
-                if (bodyTxParts.size() == 3) // [HUM_HEAD_...V, _C, .TGA]
+                //if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
                 {
-                    std::string newBodyTx = bodyTxParts[0]
-                                            + std::to_string(m_BodyState.bodyTextureIdx)
-                                            + bodyTxParts[1]
-                                            + std::to_string(m_BodyState.bodySkinColorIdx)
-                                            + bodyTxParts[2];
 
-                    sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newBodyTx);
+                    // Get texture parts
+                    std::string tx = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
+
+                    size_t cpos = tx.find("_C0");
+                    size_t vpos = tx.find("_V0");
+
+                    std::string cleanName = tx;
+
+                    // Only modify if that is the core body texture
+                    if(cpos != std::string::npos)
+                    {
+                        cleanName = cleanName.substr(0, vpos);
+
+                        if (vpos != std::string::npos)
+                            cleanName += "_V" + std::to_string(m_BodyState.bodyTextureIdx);
+
+                        cleanName += "_C" + std::to_string(m_BodyState.bodySkinColorIdx);
+
+                        cleanName += ".TGA";
+                    }
+
+                    sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(cleanName);
+
                 }
+
+
             }
-
-
         }
     }
 }
@@ -631,7 +645,7 @@ void ModelVisual::updateHeadMesh()
         Meshes::WorldStaticMesh& mesh = m_World.getStaticMeshAllocator().getMesh(visual->getMesh());
         visual->setInstancingEnabled(false); // Disable instancing because of the texture changes
 
-        if(m_BodyState.headTextureIdx > 0 || m_BodyState.bodySkinColorIdx > 0)
+        //if(m_BodyState.headTextureIdx != -1 || m_BodyState.bodySkinColorIdx != 1)
         {
             // Get head-texture parts
             std::vector<std::string> headTxParts = Utils::split(visual->getDiffuseTexture(0), "0123456789");

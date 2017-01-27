@@ -255,13 +255,11 @@ void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::st
 
     if(bodyTexIdx != -1)
         state.bodyTextureIdx = static_cast<int>(bodyTexIdx);
-    else
-        state.bodyTextureIdx = 0; // Need to reset these to 0, otherwise the skin-texture would stay in some cases
+    //else
+    //    state.bodyTextureIdx = 0; // Need to reset these to 0, otherwise the skin-texture would stay in some cases
 
-    if(skinColorIdx != -1)
+    if(skinColorIdx != -1) // Leave skin color as it is when only equipping an armor
         state.bodySkinColorIdx = static_cast<int>(skinColorIdx);
-    else
-        state.bodySkinColorIdx = 0;
 
     model->setBodyState(state);
 
