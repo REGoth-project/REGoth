@@ -78,12 +78,12 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         unsigned cnt = 0;
         while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size())
         {
-            m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+            m_SelectedItem = Utils::mod(m_SelectedItem + 1, static_cast<int>(m_SelectableItems.size()));
             cnt++;
         }
 
         // Savety
-        m_SelectedItem = Utils::mod(m_SelectedItem, m_SelectableItems.size());
+        m_SelectedItem = Utils::mod(m_SelectedItem, static_cast<int>(m_SelectableItems.size()));
 
         // Disable highlight on all of them
         for(Daedalus::GameState::MenuItemHandle h : m_SelectableItems)
@@ -269,7 +269,7 @@ void UI::Menu::onInputAction(EInputAction action)
                 // Make sure we really do have a selectable item active
                 unsigned cnt = 0;
                 do{
-                    m_SelectedItem = Utils::mod(m_SelectedItem - 1, m_SelectableItems.size()); 
+                    m_SelectedItem = Utils::mod(m_SelectedItem - 1, static_cast<int>(m_SelectableItems.size()));
                     cnt++;
                 }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size());
             }
@@ -280,7 +280,7 @@ void UI::Menu::onInputAction(EInputAction action)
             {
                 // Skip all items which are no longer selectable
                 do{
-                    m_SelectedItem = Utils::mod(m_SelectedItem + 1, m_SelectableItems.size()); 
+                    m_SelectedItem = Utils::mod(m_SelectedItem + 1, static_cast<int>(m_SelectableItems.size()));
                 }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable());
             }
             break; 
