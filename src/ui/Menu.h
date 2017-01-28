@@ -115,7 +115,7 @@ namespace UI
         /**
          * Currently selected item (Index into m_SelectableItems)
          */
-        size_t m_SelectedItem;
+        int m_SelectedItem;
 
         /**
          * This menus background

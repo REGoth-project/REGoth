@@ -19,8 +19,13 @@ MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::M
 
     setTranslation(Math::float2(item.posx / 8192.0f, item.posy / 8192.0f));
 
-    if(item.dimx != -1 && item.dimy != -1) // -1 = Default size
-        setSize(Math::float2(item.dimx / 8192.0f, item.dimy / 8192.0f));
+    size_t dimx = 8192;
+    size_t dimy = 750;
+
+    if(item.dimx != -1) dimx = item.dimx;
+    if(item.dimy != -1) dimy = item.dimy;
+
+    setSize(Math::float2(dimx / 8192.0f, dimy / 8192.0f));
 
     if((item.flags & Daedalus::GEngineClasses::C_Menu_Item::IT_TXT_CENTER) != 0)
     {
