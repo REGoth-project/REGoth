@@ -37,6 +37,7 @@ MobController::MobController(World::WorldInstance& world, Handle::EntityHandle e
     m_NumNpcsMax = 0;
     m_NumNpcsCurrent = 0;
     m_MobCore = nullptr;
+    m_lockCamera = true;
 
     m_World.getScriptEngine().registerMob(m_Entity);
 }
@@ -323,6 +324,9 @@ void MobController::startInteraction(Handle::EntityHandle npc)
     // Move NPC to it's position
     setIdealPosition(npc);
 
+    LogInfo() << "unlock camera";
+    m_lockCamera = false;
+
     // Play starting animation
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
@@ -341,6 +345,9 @@ void MobController::startInteraction(Handle::EntityHandle npc)
     // This is save, because mobs generally won't be deleted from the map.
     // If not, this will just do nothing
     sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
+
+	LogInfo() << "lock camera";
+    	m_lockCamera = true;
 
         // Re-get everything to make sure it is still there
         /*VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
