@@ -85,7 +85,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::PlayerController; }
+        virtual EControllerType getControllerType() override { return EControllerType::PlayerController; }
 
         /**
          * Sets the daily routine for this.
@@ -103,7 +103,7 @@ namespace Logic
         /**
          * Called when the models visual changed
          */
-        virtual void onVisualChanged();
+        virtual void onVisualChanged() override;
 
         /**
          * Handle NPC specific messages
@@ -398,7 +398,7 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport(){ return true; }
+        virtual bool shouldExport() override { return true; }
 
         /**
          * Does the logic for importing an NPC/PC
@@ -584,5 +584,11 @@ namespace Logic
         // Turns of modifying the root postion from the animation
         bool m_NoAniRootPosHack;
         size_t m_LastAniRootPosUpdatedAniHash;
+
+        /**
+         * Contstants 
+         */
+        static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
+        static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
     };
 }
