@@ -745,7 +745,7 @@ void PlayerController::placeOnGround()
             placeOnSurface(highestHitSurface);
             return;
         }
-        if ((m_isSwimming = shallowWater && m_MoveState.ground.waterDepth > 1))
+        if ((m_isSwimming = shallowWater && m_MoveState.ground.waterDepth > m_swimThreshold))
         {
             placeOnSurface(waterHitSurface);
             return;
@@ -907,7 +907,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         }
         else if (m_isForward)
         {
-            manageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
+            manageAnimation(m_MoveState.ground.waterDepth > m_wadeThreshold ? ModelVisual::EModelAnimType::Wade : ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
         }
         else if (m_isBackward)
         {
@@ -2556,7 +2556,8 @@ void PlayerController::traceDownNPCGround()
             }
         }
     }
-    if (waterMatFound)
+    float feetPos = entityPos.y - 0.8f;
+    if (waterMatFound && feetPos < waterSurfacePos)
     {
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
         if (DEBUG_PLAYER)
@@ -2575,7 +2576,6 @@ void PlayerController::traceDownNPCGround()
         LogInfo() << "To: " << (to).x << " " << (to).y << " " << (to).z;
         LogInfo() << "traceDownNPCGround ITERATION END";
     }
-
     m_MoveState.ground.successful = true;
     m_MoveState.ground.triangleIndex = result.hitTriangleIndex;
     m_MoveState.ground.trianglePosition = result.hitPosition;
