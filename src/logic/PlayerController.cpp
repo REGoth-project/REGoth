@@ -905,6 +905,14 @@ void PlayerController::onUpdateByInput(float deltaTime)
         {
             manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
+        else if (m_isTurnLeft && !m_isForward)
+        {
+            manageAnimation(ModelVisual::EModelAnimType::TurnLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
+        }
+        else if (m_isTurnRight && !m_isForward)
+        {
+            manageAnimation(ModelVisual::EModelAnimType::TurnRight, ModelVisual::EModelAnimType::SwimTurnRight);
+        }
         else if (m_isForward)
         {
             manageAnimation(ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);

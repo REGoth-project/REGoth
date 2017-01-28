@@ -33,6 +33,8 @@ namespace Logic
 			StrafeLeft,
 			StrafeRight,
 			Jump,
+			TurnLeft,
+			TurnRight,
 
 			// 1h
 			Walk1h,
