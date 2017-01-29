@@ -397,6 +397,12 @@ public:
 
             const int hh = std::stoi(args[2]);
             const int mm = std::stoi(args[3]);
+
+            if (hh < 0 || hh > 23)
+                return "Invalid argument. Hours must be in range from 00 to 23";
+            if (mm < 0 || mm > 59)
+                return "Invalid argument. Minutes must be in range from 00 to 59";
+
             m_pEngine->getMainWorld().get().getSky().setTimeOfDay(hh, mm);
 
             return "Set time to " + args[2] + ":" + args[3];
