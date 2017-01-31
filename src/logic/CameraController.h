@@ -175,5 +175,10 @@ namespace Logic
          * Debug
          */
         float m_moveSpeedMultiplier;
+
+	/**
+         * Direction to use during locked camera while using mobs
+         */
+	Math::float3 m_savedPdir;
     };
 }

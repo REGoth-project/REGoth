@@ -213,6 +213,11 @@ namespace Logic
          */
         const std::string& getMainSchemeName(){ return m_MainSchemeName; }
 
+	/**
+         * @return If camera position should be locked by CameraController
+         */
+	bool isCameraLocked(){ return m_lockCamera; }
+
         /**
          * @return Classes which want to get exported on save should return true here
          */
@@ -283,5 +288,8 @@ namespace Logic
 
         // Main sceme name
         std::string m_MainSchemeName;
+
+	// lock camera position during usage
+	bool m_lockCamera;
     };
 }

@@ -43,32 +43,30 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
 Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle e)
 {
     VobInformation info;
-    Components::ComponentAllocator& alloc = world.getComponentAllocator();
-    Components::EntityComponent entity = alloc.getElement<Components::EntityComponent>(e);
-
+    info.logic = nullptr;
+    info.visual = nullptr;
+    info.object = nullptr;
+    info.position = nullptr;
     info.entity = e;
     info.world = &world;
 
+    if(!e.isValid())
+        return info;
+
+    Components::ComponentAllocator& alloc = world.getComponentAllocator();
+    Components::EntityComponent& entity = alloc.getElement<Components::EntityComponent>(e);
+
     if(Components::hasComponent<Components::LogicComponent>(entity))
         info.logic = alloc.getElement<Components::LogicComponent>(e).m_pLogicController;
-    else
-        info.logic = nullptr;
 
     if(Components::hasComponent<Components::VisualComponent>(entity))
         info.visual = alloc.getElement<Components::VisualComponent>(e).m_pVisualController;
-    else
-        info.visual = nullptr;
 
     if(Components::hasComponent<Components::ObjectComponent>(entity))
         info.object = &alloc.getElement<Components::ObjectComponent>(e);
-    else
-        info.object = nullptr;
 
     if(Components::hasComponent<Components::PositionComponent>(entity))
         info.position = &alloc.getElement<Components::PositionComponent>(e);
-    else
-        info.position = nullptr;
-
 
 
     return info;

@@ -41,6 +41,8 @@ const char* ANIMATION_NAMES[] = {
 	"T_RUNSTRAFEL", // StrafeLeft,
 	"T_RUNSTRAFER", // StrafeRight,
 	"S_JUMP", // Jump
+	"T_RUNTURNL", // Turn Left
+	"T_RUNTURNR", // Turn Right
 	
 	// 1h
 	"S_1HWALKL", // Walk1h,
