@@ -114,10 +114,15 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     {
         float proj[16];
         bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
-        bgfx::setViewTransform(0, view.mv, proj);
 
-        // Set view 0 default viewport.
-        bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
+        // Set for every view
+        for(uint8_t i=0;i<255;i++)
+        {
+            bgfx::setViewTransform(i, view.mv, proj);
+
+            // Set view default viewport.
+            bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
+        }
 
         // Update the frame-config with the cameras world-matrix
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainCamera<Components::PositionComponent>().m_WorldMatrix;

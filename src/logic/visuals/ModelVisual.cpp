@@ -704,7 +704,7 @@ void ModelVisual::setShadowValue(float shadow)
             vis.m_pVisualController->setShadowValue(shadow);
 
         if(Components::hasComponent<Components::StaticMeshComponent>(ent))
-            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toABGR8();
     }
 }
 
