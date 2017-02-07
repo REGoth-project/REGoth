@@ -21,8 +21,14 @@ using namespace Engine;
 namespace Flags
 {
     Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
+    Cli::Flag g1Directory("", "g1-path", 1, "Game data to use when the -g1 flag is specified on the commandline", {"."}, "Data");
+    Cli::Flag g2Directory("", "g2-path", 1, "Game data to use when the -g2 flag is specified on the commandline", {"."}, "Data");
+    Cli::Flag startG1("g1", "start-g1", 0, "Uses the path stored in the 'g1-path' config setting as game data path");
+    Cli::Flag startG2("g2", "start-g2", 0, "Uses the path stored in the 'g2-path' config setting as game data path");
+
     Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
+    Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
@@ -50,7 +56,12 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-    if(Flags::gameDirectory.isSet())
+
+    if(Flags::startG1.isSet())
+        m_Args.gameBaseDirectory = Flags::g1Directory.getParam(0);
+    else if(Flags::startG2.isSet())
+        m_Args.gameBaseDirectory = Flags::g2Directory.getParam(0);
+    else if(Flags::gameDirectory.isSet())
         m_Args.gameBaseDirectory = Flags::gameDirectory.getParam(0);
     else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
@@ -74,6 +85,9 @@ void BaseEngine::initEngine(int argc, char** argv)
         else
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
+
+    if(Flags::emptyWorld.isSet())
+        m_Args.startupZEN = "";
 
     std::string snd_device;
     if(Flags::sndDevice.isSet())
@@ -124,15 +138,6 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const 
     {
         LogError() << "Failed to init world file: " << worldFile;
         return Handle::WorldHandle::makeInvalidHandle();
-    }
-
-    if(!m_Args.testVisual.empty())
-    {
-        LogInfo() << "Testing visual: " << m_Args.testVisual;
-        Handle::EntityHandle e = Vob::constructVob(world);
-        Vob::VobInformation vob = Vob::asVob(world, e);
-
-        Vob::setVisual(vob, m_Args.testVisual);
     }
 
 	m_Worlds.push_back(world.getMyHandle());

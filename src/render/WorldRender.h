@@ -29,4 +29,12 @@ namespace Render
 	 * @brief Renders the path passed on the given waynet
 	 */
 	void debugDrawPath(const World::Waynet::WaynetInstance& waynet, const std::vector<size_t>& path);
+
+	/**
+	 * Updates the rendering related fields of a ParticleEffect-Component and renders it
+	 * @param World the component resides in
+	 * @param pfx Pfx-component to draw
+	 * @param config Current renderingconfig
+	 */
+	void drawPfx(World::WorldInstance& world, Components::PfxComponent& pfx, const RenderConfig& config);
 }

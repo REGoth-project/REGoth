@@ -19,7 +19,7 @@ namespace Physics
             ddSetTransform(nullptr);
 
             Math::float4 f(color.x(), color.y(), color.z(), 1.0f);
-            ddSetColor(f.toRGBA8());
+            ddSetColor(f.toABGR8());
 
             ddMoveTo(from.x(), from.y() + 0.1f, from.z());
             ddLineTo(to.x(), to.y() + 0.1f, to.z());

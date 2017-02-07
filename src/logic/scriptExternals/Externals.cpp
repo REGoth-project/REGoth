@@ -131,8 +131,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("Mdl_SetVisualBody", [=](Daedalus::DaedalusVM& vm){
 
         int32_t armorInstance = vm.popDataValue();
-        size_t teethTexNr = static_cast<size_t>(vm.popDataValue());
-        size_t headTexNr = static_cast<size_t>(vm.popDataValue());
+        int teethTexNr = static_cast<int>(vm.popDataValue());
+        int headTexNr = static_cast<int>(vm.popDataValue());
         std::string head = vm.popString();
         int32_t bodyTexColor = vm.popDataValue();
         int32_t bodyTexNr = vm.popDataValue();

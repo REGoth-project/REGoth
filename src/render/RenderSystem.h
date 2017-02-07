@@ -20,6 +20,7 @@ namespace Render
             bgfx::ProgramHandle mainSkinnedMeshProgram;
             bgfx::ProgramHandle fullscreenQuadProgram;
             bgfx::ProgramHandle imageProgram;
+            bgfx::ProgramHandle particle_textured;
         }programs;
 
         struct

@@ -3,6 +3,7 @@
 #include <vector>
 #include <render/RenderSystem.h>
 #include <engine/Input.h>
+#include <render/ViewList.h>
 
 namespace Engine
 {
@@ -22,7 +23,7 @@ namespace UI
     };
 
     // BGFX-View to be used for rendering views
-    const int BGFX_VIEW = 254;
+    const int BGFX_VIEW = RenderViewList::UI;
 
     // Default font to use when drawing text
     const char* const DEFAULT_FONT = "FONT_OLD_10_WHITE.FNT";

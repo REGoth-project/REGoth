@@ -234,8 +234,8 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
-void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, size_t headTextureIdx,
-                                 size_t teethTextureIdx)
+void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int headTextureIdx,
+                                 int teethTextureIdx)
 {
     Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
 
@@ -254,10 +254,14 @@ void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::st
         state.bodyVisual += ".MDM";
 
     if(bodyTexIdx != -1)
-        state.bodyTextureIdx = static_cast<size_t>(bodyTexIdx);
+        state.bodyTextureIdx = static_cast<int>(bodyTexIdx);
+    else
+        state.bodyTextureIdx = 0; // Need to reset these to 0, otherwise the skin-texture would stay in some cases
 
     if(skinColorIdx != -1)
-        state.bodySkinColorIdx = static_cast<size_t>(skinColorIdx);
+        state.bodySkinColorIdx = static_cast<int>(skinColorIdx);
+    else
+        state.bodySkinColorIdx = 0;
 
     model->setBodyState(state);
 

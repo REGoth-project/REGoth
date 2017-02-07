@@ -291,7 +291,7 @@ bool ModelVisual::load(const std::string& visual)
     return true;
 }
 
-void ModelVisual::setHeadMesh(const std::string& head, size_t headTextureIdx, size_t teethTextureIdx)
+void ModelVisual::setHeadMesh(const std::string& head, int headTextureIdx, int teethTextureIdx)
 {
     std::string v = head;
 
@@ -703,7 +703,7 @@ void ModelVisual::setShadowValue(float shadow)
             vis.m_pVisualController->setShadowValue(shadow);
 
         if(Components::hasComponent<Components::StaticMeshComponent>(ent))
-            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+            msh.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toABGR8();
     }
 }
 

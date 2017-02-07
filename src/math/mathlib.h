@@ -226,10 +226,10 @@ namespace Math
 		*/
 		uint32_t toRGBA8() const
 		{
-			unsigned char b[] = { static_cast<unsigned char>(w * 255.0f),
-								  static_cast<unsigned char>(z * 255.0f),
+			unsigned char b[] = { static_cast<unsigned char>(x * 255.0f),
 								  static_cast<unsigned char>(y * 255.0f),
-								  static_cast<unsigned char>(x * 255.0f)};
+								  static_cast<unsigned char>(z * 255.0f),
+								  static_cast<unsigned char>(w * 255.0f)};
 
 			return *reinterpret_cast<uint32_t*>(b);
 		}
@@ -448,7 +448,7 @@ namespace Math
 
         Matrix Invert() const {return glm::inverse(_glmMatrix); }
 
-		Math::float3 Rotate(const Math::float3& v)
+		Math::float3 Rotate(const Math::float3& v) const
 		{
 			Math::float3 tmp = (*this) * v;
 			tmp -= Translation();

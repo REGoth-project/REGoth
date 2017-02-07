@@ -165,7 +165,7 @@ void StaticMeshVisual::setShadowValue(float shadow)
     {
         Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(e);
 
-        sm.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toRGBA8();
+        sm.m_Color = Math::float4(shadow, shadow, shadow, 1.0f).toABGR8();
     }
 }
 

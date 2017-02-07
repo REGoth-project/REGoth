@@ -111,6 +111,7 @@ namespace Components
         {
             void destroyLogicComponent(LogicComponent& c);
             void destroyVisualComponent(VisualComponent& c);
+            void destroyPfxComponent(PfxComponent& c);
         }
 
         namespace Animation
@@ -174,6 +175,12 @@ namespace Components
         inline void destroyComponent<AnimationComponent>(AnimationComponent& c)
         {
             Animation::destroyAnimationComponent(c);
+        }
+
+        template<>
+        inline void destroyComponent<PfxComponent>(PfxComponent& c)
+        {
+            Logic::destroyPfxComponent(c);
         }
 
         template<typename F>
