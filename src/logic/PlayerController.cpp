@@ -780,8 +780,11 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (!model)
         return;
 
-    if(m_World.getDialogManager().isDialogActive() || m_World.getEngine()->getHud().isMenuActive())
+    if(m_World.getDialogManager().isDialogActive())
         return;
+
+    if(m_World.getEngine()->getHud().isMenuActive())
+	resetKeyStates();
 
     // Stand up if wounded and forward is pressed
     if(getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
@@ -1036,16 +1039,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     //setEntityTransform(newTransform);
 
     placeOnGround();
-
-    // Reset key-states
-    m_isStrafeLeft = false;
-    m_isStrafeRight = false;
-    m_isForward = false;
-    m_isBackward = false;
-    m_isTurnLeft = false;
-    m_isTurnRight = false;
-    m_MoveSpeed1 = false;
-    m_MoveSpeed2 = false;
+    resetKeyStates();
 }
 
 void PlayerController::attackFront()
@@ -2587,4 +2581,16 @@ void PlayerController::traceDownNPCGround()
     m_MoveState.ground.successful = true;
     m_MoveState.ground.triangleIndex = result.hitTriangleIndex;
     m_MoveState.ground.trianglePosition = result.hitPosition;
+}
+
+void PlayerController::resetKeyStates()
+{
+    m_isStrafeLeft = false;
+    m_isStrafeRight = false;
+    m_isForward = false;
+    m_isBackward = false;
+    m_isTurnLeft = false;
+    m_isTurnRight = false;
+    m_MoveSpeed1 = false;
+    m_MoveSpeed2 = false;
 }
