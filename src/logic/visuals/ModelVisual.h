@@ -108,7 +108,7 @@ namespace Logic
          SwimTurnRight,
          SwimToDive,
          SwimToHang, // No idea what that is, can't remember it from the original game
-
+         Wade,
          // Transitions
 			// TODO: Transitions, Running attacks, weapon walking, sneaking, backwards walking, attack while running, magic, other
 

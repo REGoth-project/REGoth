@@ -116,6 +116,7 @@ const char* ANIMATION_NAMES[] = {
    "T_SWIMTURNR",
    "T_SWIM_2_DIVE",
    "T_SWIM_2_HANG",
+   "S_WALKWL",  // Wade,
 };
 
 ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity)
