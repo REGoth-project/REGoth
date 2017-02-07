@@ -9,6 +9,7 @@
 #include <components/VobClasses.h>
 #include "engine/Input.h"
 #include "PlayerController.h"
+#include "MobController.h"
 
 const float CAMERA_SMOOTHING = 4.0f;
 
@@ -277,16 +278,27 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             {
                 Math::Matrix ptrans = Vob::getTransform(player);
 
-                Math::float3 pdir = -1.0f * ptrans.Forward();
+                Math::float3 pdir;
 
-                // Don't force rotation to match player if currently using a mob
-                if(!player.playerController->getUsedMob().isValid())
+                // If player is currently using a mob check if camera should be locked
+                // If so, use last known position and finish rotating to it
+                VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, player.playerController->getUsedMob());
+                if(!mob.isValid())
                 {
-                    m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection
+                    pdir = -1.0f * ptrans.Forward();
+                }
+                else if(!mob.mobController->isCameraLocked())
+                {
+                    pdir = -1.0f * ptrans.Forward();
+                    m_savedPdir = pdir;
+                }
+                else
+                    pdir = m_savedPdir;
+
+                m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection
                             = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
                                                  pdir,
                                                  CAMERA_SMOOTHING * deltaTime);
-                }
 
                 pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
 

@@ -764,6 +764,8 @@ public:
                                                   {KEY_RIGHT,  UI::IA_Right},
                                                   {KEY_ENTER,  UI::IA_Accept},
                                                   {KEY_ESCAPE, UI::IA_Close}};
+
+        std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
@@ -784,6 +786,9 @@ public:
                 }
             }
         }
+
+        // Pass text input from this frame
+        m_pEngine->getHud().onTextInput(frameInputText);
 
         if(!m_pEngine->getHud().getConsole().isOpen())
             Engine::Input::fireBindings();

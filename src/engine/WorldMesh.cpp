@@ -40,14 +40,18 @@ void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgr
 {
     assert(triangleIdx < m_WorldMeshData.triangles.size());
     ZenLoad::WorldTriangle& tri = m_WorldMeshData.triangles[triangleIdx];
-    matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
+    if (static_cast<size_t>(tri.submeshIndex) < m_WorldMeshData.subMeshes.size() && tri.submeshIndex >= 0)
+        matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
+    else
+        matgroup = Materials::MaterialGroup::UNDEFINED;
 
     for (int i = 0; i < 3; i++)
         v3[i] = Math::float3(tri.vertices[i].Position.v);
 }
 
-ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx)
+ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
 {
     assert(triangleIdx < m_WorldMeshData.triangles.size());
+    assert(m_WorldMeshData.triangles[triangleIdx].submeshIndex < m_WorldMeshData.subMeshes.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
 }

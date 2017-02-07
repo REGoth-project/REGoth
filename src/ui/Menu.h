@@ -60,6 +60,11 @@ namespace UI
          */
         virtual void onInputAction(EInputAction action);
 
+        /**
+         * To be called when there was text input since the last frame
+         * @param text Characters input since the last frame
+         */
+        void onTextInput(const std::string& text);
 
         /**
          * @return Underlaying HUD
@@ -110,7 +115,7 @@ namespace UI
         /**
          * Currently selected item (Index into m_SelectableItems)
          */
-        size_t m_SelectedItem;
+        int m_SelectedItem;
 
         /**
          * This menus background

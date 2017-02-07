@@ -231,6 +231,10 @@ namespace Logic
          * Places the playercontroller on the ground again. TODO: TESTING-ONLY!
          */
         void placeOnGround();
+        /**
+         * Places the playercontroller on the surface hit by provided rayresult. TODO: TESTING-ONLY!
+         */
+        void placeOnSurface(const Physics::RayTestResult& result);
 
         /**
          * Saves data of the ground on which the NPC is standing
@@ -372,6 +376,10 @@ namespace Logic
         Materials::MaterialGroup getSurfaceMaterial();
 
         /**
+         * Returns material data of give triangle index 
+         */
+        Materials::MaterialGroup getMaterial(uint32_t triangleIdx);
+        /**
          * @return Item this NPC is currently interacting with
          */
         Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
@@ -500,6 +508,7 @@ namespace Logic
                 bool successful; // false if for some reason raytrace failed to hit the ground during last run
                 uint32_t triangleIndex;
                 Math::float3 trianglePosition;
+                float waterDepth;
             } ground;
 
         }m_MoveState;
@@ -568,7 +577,10 @@ namespace Logic
         bool m_isTurnRight;
         bool m_isStrafeLeft;
         bool m_isStrafeRight;
+        bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
+
+	void resetKeyStates();
 
         // FIXME: Hack for as long as animation-flags are not implemented
         // Turns of modifying the root postion from the animation
