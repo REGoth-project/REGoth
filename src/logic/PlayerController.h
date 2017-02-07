@@ -580,6 +580,8 @@ namespace Logic
         bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
 
+	void resetKeyStates();
+
         // FIXME: Hack for as long as animation-flags are not implemented
         // Turns of modifying the root postion from the animation
         bool m_NoAniRootPosHack;
