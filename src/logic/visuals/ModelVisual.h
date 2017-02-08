@@ -127,10 +127,10 @@ namespace Logic
 
             std::string headVisual;
             std::string bodyVisual;
-            size_t headTextureIdx;
-            size_t teethTextureIdx;
-            size_t bodySkinColorIdx;
-            size_t bodyTextureIdx;
+            int headTextureIdx;
+            int teethTextureIdx;
+            int bodySkinColorIdx;
+            int bodyTextureIdx;
         };
 
         /**
@@ -158,7 +158,7 @@ namespace Logic
          * Note: Will do an implicit setBodyState!
          * @param head File of the mesh to use as head
          */
-        void setHeadMesh(const std::string& head, size_t headTextureIdx=0, size_t teethTextureIdx=0);
+        void setHeadMesh(const std::string& head, int headTextureIdx=0, int teethTextureIdx=0);
 
         /**
          * Attaches a visual to the given node
