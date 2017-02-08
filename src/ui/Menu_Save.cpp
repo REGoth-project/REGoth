@@ -59,58 +59,71 @@ void Menu_Save::gatherAvailableSavegames()
 void Menu_Save::onCustomAction(const std::string& action)
 {
     if(action.find("MENUITEM_SAVE_SLOT") != std::string::npos)
+    { 
+	std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
+	int idx = std::stoi(numStr);
+	assert(idx > 0 && idx < 16);
+
+	if (!m_isWaitingForSaveName)
+	{
+	    m_isWaitingForSaveName = true;
+	    m_SaveName = "";
+	    m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(idx);
+            getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
+	}
+	else
+	{
+	    m_isWaitingForSaveName = false;
+
+	    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
+	    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
+	    Engine::SavegameManager::clearSavegame(idx);
+
+	    // Write information about the current game-state
+	    Engine::SavegameManager::SavegameInfo info;
+	    info.name = m_SaveName;
+	    info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
+	    info.timePlayed = 0;
+	    Engine::SavegameManager::writeSavegameInfo(idx, info);
+
+	    json j; m_Engine.getMainWorld().get().exportWorld(j);
+
+	    // Save
+	    Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
+
+	    // Update list of savegames, for testing
+	    gatherAvailableSavegames();
+	}
+    }
+}
+
+void Menu_Save::onInputAction(EInputAction action)
+{
+    if (!m_isWaitingForSaveName)
+	Menu::onInputAction(action);
+    else
     {
-        // Some random titles from http://www.ruggenberg.nl/titels.html
-        std::vector<std::string> randomTitles = {
-            "Fallen Something", 
-            "The Luscious Darkness", 
-            "The Fire's Dragon",
-            "The Edge of the Sorcerer",
-            "Guardian in the Servant",
-            "Smooth Bride",
-            "The Red Prince",
-            "Mists of End",
-            "The Gate's Night",
-            "The Rose of the Beginning",
-            "Luck in the Memory",
-            "What Dreams",
-            "The Seventh Mists",
-            "History of Voyage",
-            "The Return's Sorcerer",
-            "Doors in the Bridge",
-            "Shadowy World",
-            "Time of Truth",
-            "The Planet's Petals",
-            "The Stone of the Angel",
-            "Flight in the Stream",
-            "Forgotten Child",
-            "Deep Storm"};
+	switch (action)
+	{
+	    case IA_Accept:
+		if(!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
+		break;
 
-        // Find the corresponding number
-        std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
-        int idx = std::stoi(numStr);
+	    case IA_Backspace:
+		if (m_SaveName.size() > 0)
+		    m_SaveName.pop_back();
 
-        // Lock to number of savegames
-        assert(idx > 0 && idx < 16);
+	    default:
+		break;
+	}
+    }
+}
 
-        // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-        // Clean data from old savegame, so we don't load into worlds we haven't been to yet
-        Engine::SavegameManager::clearSavegame(idx);
-
-        // Write information about the current game-state
-        Engine::SavegameManager::SavegameInfo info;
-        info.name = randomTitles[rand() % randomTitles.size()];
-        info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
-        info.timePlayed = 0;
-        Engine::SavegameManager::writeSavegameInfo(idx, info);
-
-        json j;
-        m_Engine.getMainWorld().get().exportWorld(j);
-
-        // Save
-        Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
-
-        // Update list of savegames, for testing
-        gatherAvailableSavegames();
+void Menu_Save::onTextInput(const std::string& text)
+{
+    if (m_isWaitingForSaveName && m_SaveName.size() <= 32) // Arbitrary length
+    {
+	m_SaveName += text;
+	getItemScriptData(m_MenuItemSaveSlot).text[0] = m_SaveName + "_";
     }
 }
