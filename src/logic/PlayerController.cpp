@@ -1949,13 +1949,14 @@ void PlayerController::setupKeyBindings()
         if(triggered && !m_World.getDialogManager().isDialogActive())
         {
             UI::Hud &hud = m_World.getEngine()->getHud();
-            if (!hud.isTopMenu<UI::Menu_Status>())
+            if (!hud.isMenuActive())
             {
                 UI::Menu_Status& statsScreen = hud.pushMenu<UI::Menu_Status>();
 
                 // Update the players status menu once
                 updateStatusScreen(statsScreen);
-            } else
+            } 
+	    else if (hud.isTopMenu<UI::Menu_Status>()) 
                 hud.popMenu();
         }
     });
