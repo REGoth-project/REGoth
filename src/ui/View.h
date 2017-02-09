@@ -19,7 +19,8 @@ namespace UI
         IA_Left,
         IA_Right,
         IA_Close,
-        IA_Accept
+        IA_Accept,
+	IA_Backspace
     };
 
     // BGFX-View to be used for rendering views

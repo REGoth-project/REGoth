@@ -758,12 +758,14 @@ public:
         const int KEY_RIGHT = 262;
         const int KEY_ENTER = 257;
         const int KEY_ESCAPE = 256;
+	const int KEY_BACKSPACE = 259;
         std::map<int, UI::EInputAction> keyMap = {{KEY_UP,     UI::IA_Up},
                                                   {KEY_DOWN,   UI::IA_Down},
                                                   {KEY_LEFT,   UI::IA_Left},
                                                   {KEY_RIGHT,  UI::IA_Right},
                                                   {KEY_ENTER,  UI::IA_Accept},
-                                                  {KEY_ESCAPE, UI::IA_Close}};
+                                                  {KEY_ESCAPE, UI::IA_Close},
+						  {KEY_BACKSPACE, UI::IA_Backspace}};
 
         std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
