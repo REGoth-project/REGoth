@@ -174,27 +174,6 @@ void EventManager::processMessageQueue()
 
 EventMessages::EventMessage* EventManager::findLastConvMessageWith(Handle::EntityHandle other)
 {
-/*
-    EventMessages::EventMessage* lastNonOverlay = nullptr;
-
-    for(EventMessages::EventMessage* ev : m_EventQueue)
-    {
-        if(!ev->isOverlay)
-        {
-            lastNonOverlay = ev;
-        }
-
-        if(ev->messageType == EventMessages::EventMessageType::Conversation)
-        {
-            auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
-            if(conv->target == other){
-                return lastNonOverlay;
-            }
-        }
-    }
-
-    return nullptr;
-*/
     auto begin = m_EventQueue.rbegin();
     auto end = m_EventQueue.rend();
     auto lastConvMessage = std::find_if(begin, end, [&](EventMessages::EventMessage* ev){
@@ -210,46 +189,11 @@ EventMessages::EventMessage* EventManager::findLastConvMessageWith(Handle::Entit
     } else {
         return *lastConvMessage;
     }
-
-    /*
-    for(auto it = m_EventQueue.rbegin(); it < m_EventQueue.rend(); ++it)
-    {
-        EventMessages::EventMessage* ev = *it;
-        if(!ev->isOverlay && ev->messageType == EventMessages::EventMessageType::Conversation)
-        {
-            auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
-            if(conv->target == other)
-                return ev;
-        }
-    }
-    return nullptr;*/
 }
 
 bool EventManager::hasConvMessageWith(Handle::EntityHandle other){
     return findLastConvMessageWith(other) != nullptr;
 }
-/*
-void EventManager::triggerWaitEvent(EventMessages::EventMessage::MessageIdentifier identifier, EventMessages::ConversationMessage* waitMessage)
-{
-    // Trigger all messages we have with that identifier
-    for(EventMessages::EventMessage* ev : m_EventQueue)
-    {
-        if(ev->messageType == EventMessages::EventMessageType::Conversation
-                && ev->subType == EventMessages::ConversationMessage::ST_WaitTillEnd)
-        {
-            EventMessages::ConversationMessage* conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
-
-            if(!conv->deleted && conv->waitIdentifier == identifier)
-            {
-                // Mark as done
-                conv->deleted = true;
-                const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv->waitIdentifier);
-                LogInfo() << "WAIT CALLBACK message completed: ptr = " << conv << ", text = " << waiting_for->text;
-                break;
-            }
-        }
-    }
-}*/
 
 void EventManager::waitForMessage(EventMessages::EventMessage* other)
 {
@@ -263,12 +207,12 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
         // case: wait message not there anymore, i.e. player/NPC got killed while conversation
-        if (std::find(this->m_EventQueue.begin(), this->m_EventQueue.end(), waitMessage) == queue.end()){
+        if (std::find(this->m_EventQueue.begin(), this->m_EventQueue.end(), waitMessage) == this->m_EventQueue.end()){
             return;
         }
         // case: wait not queued, message handled instantly
-        if (waitMessage != nullptr)
-            return
+        if (waitMessage == nullptr)
+            return;
 
         // Mark as done
         waitMessage->deleted = true;
