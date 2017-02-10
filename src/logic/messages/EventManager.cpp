@@ -262,16 +262,19 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     EventMessages::ConversationMessage* waitMessage = onMessage(wait);
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
-
-        // Let the other NPC know we are done: set the delete attribute of the wait-message
-        // Mark as done
-
-        if (waitMessage != nullptr){
-            waitMessage->deleted = true;
-
-            const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(waitMessage->waitIdentifier);
-            LogInfo() << "WAIT CALLBACK message completed: ptr = " << waitMessage << ", text = " << waiting_for->text;
+        // case: wait message not there anymore, i.e. player/NPC got killed while conversation
+        if (std::find(this->m_EventQueue.begin(), this->m_EventQueue.end(), waitMessage) == queue.end()){
+            return;
         }
+        // case: wait not queued, message handled instantly
+        if (waitMessage != nullptr)
+            return
+
+        // Mark as done
+        waitMessage->deleted = true;
+
+        const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(waitMessage->waitIdentifier);
+        LogInfo() << "WAIT CALLBACK message completed: ptr = " << waitMessage << ", text = " << waiting_for->text;
         //triggerWaitEvent(inst, waitMessage);
     }));
 
