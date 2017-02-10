@@ -166,12 +166,14 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             conv.target = targetnpc.entity;
 
             // Check if the target is currently talking to us
-            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
+            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().findLastConvMessageWith(
                     selfnpc.entity);
 
             // Wait for the other npc to complete first
-            if (otherconv)
+            if (otherconv){
                 selfnpc.playerController->getEM().waitForMessage(otherconv);
+                LogInfo() << ".. will wait for " << reinterpret_cast<EventMessages::ConversationMessage*>(otherconv)->text;
+            }
         }
     }
 
@@ -192,8 +194,8 @@ void DialogManager::update(double dt)
 
             if(pv.isValid() && tv.isValid())
             {
-                dialogBoxVisible = !pv.playerController->getEM().getTalkingWithMessage(pv.entity)
-                                   && !tv.playerController->getEM().getTalkingWithMessage(pv.entity);
+                dialogBoxVisible = !pv.playerController->getEM().hasConvMessageWith(pv.entity)
+                                   && !tv.playerController->getEM().hasConvMessageWith(pv.entity);
             }
         }
 

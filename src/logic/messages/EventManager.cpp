@@ -20,16 +20,6 @@ EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hos
 
 EventManager::~EventManager()
 {
-    // Remove all waiting callbacks we currently have out there
-    for(EventMessages::EventMessage* ev : m_WaitingFor)
-    {
-        for(auto it=ev->onMessageDone.begin(); it != ev->onMessageDone.end(); it++)
-        {
-            if((*it).first == m_HostVob)
-                it = ev->onMessageDone.erase(it);
-        }
-    }
-
     // Free memory of all staging messages
     for(EventMessages::EventMessage* ev : m_EventQueue)
     {
@@ -62,6 +52,30 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
 
         // Queue this
         m_EventQueue.push_back(message);
+        bool print_queue = false;
+        if (print_queue){
+            std::vector<std::string> queue_strings;
+            for(EventMessages::EventMessage* ev : m_EventQueue)
+            {
+                if (ev->messageType == EventMessages::EventMessageType::Conversation)
+                {
+                    EventMessages::ConversationMessage& conv_message = reinterpret_cast<EventMessages::ConversationMessage&>(*ev);
+                    std::string debug_out;
+                    if (conv_message.subType == EventMessages::ConversationMessage::ST_WaitTillEnd){
+                        auto waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message.waitIdentifier);
+                        queue_strings.push_back("ST_WaitTillEnd, ident = " + waiting_for->text);
+                    } else if (conv_message.subType == EventMessages::ConversationMessage::ST_Output){
+                        queue_strings.push_back(conv_message.text);
+                   }
+                }
+            }
+            if (queue_strings.size() != 0){
+                LogInfo() << "----------------------Queue-Start----------------------";
+                for (auto& item : queue_strings)
+                   LogInfo() << item;
+                LogInfo() << "----------------------Queue-End------------------------";
+            }
+        }
     }
 }
 
@@ -105,6 +119,43 @@ void EventManager::processMessageQueue()
     if(m_EventQueue.empty())
         return;
 
+    bool print_queue = false;
+    if (print_queue){
+        bool dialog_ready_to_play = false;
+        for(EventMessages::EventMessage* ev : m_EventQueue)
+        {
+            if (ev->messageType == EventMessages::EventMessageType::Conversation)
+            {
+                EventMessages::ConversationMessage* conv_message = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+                if (!conv_message->internInProgress && conv_message->text != std::string(""))
+                {
+                    dialog_ready_to_play = true;
+                    break;
+                }
+            }
+            if(!ev->isOverlay)
+                break;
+        }
+        if (dialog_ready_to_play){
+            LogInfo() << "----------------------Queue-Start----------------------";
+            for(EventMessages::EventMessage* ev : m_EventQueue)
+            {
+                if (ev->messageType == EventMessages::EventMessageType::Conversation)
+                {
+                    EventMessages::ConversationMessage* conv_message = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+                    if (!conv_message->internInProgress && conv_message->text != std::string(""))
+                    {
+                        LogInfo() << "Queue item: " << std::boolalpha << "block = " << !ev->isOverlay << ", text = " << conv_message->text;
+                    } else if (conv_message->subType == EventMessages::ConversationMessage::ST_WaitTillEnd){
+                        auto waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message->waitIdentifier);
+                        LogInfo() << "Queue item: " << std::boolalpha << "block = " << !ev->isOverlay << ", waiting for: " << conv_message << ", ident = " << waiting_for->text;
+                    }
+                }
+            }
+            LogInfo() << "----------------------Queue-End----------------------";
+        }
+    }
+
     // Process messages as far as we can
     for(EventMessages::EventMessage* ev : m_EventQueue)
     {
@@ -121,8 +172,9 @@ void EventManager::processMessageQueue()
     }
 }
 
-EventMessages::EventMessage* EventManager::getTalkingWithMessage(Handle::EntityHandle other)
+EventMessages::EventMessage* EventManager::findLastConvMessageWith(Handle::EntityHandle other)
 {
+/*
     EventMessages::EventMessage* lastNonOverlay = nullptr;
 
     for(EventMessages::EventMessage* ev : m_EventQueue)
@@ -135,15 +187,49 @@ EventMessages::EventMessage* EventManager::getTalkingWithMessage(Handle::EntityH
         if(ev->messageType == EventMessages::EventMessageType::Conversation)
         {
             auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
-            if(conv->target == other)
+            if(conv->target == other){
                 return lastNonOverlay;
+            }
         }
     }
 
     return nullptr;
+*/
+    auto begin = m_EventQueue.rbegin();
+    auto end = m_EventQueue.rend();
+    auto lastConvMessage = std::find_if(begin, end, [&](EventMessages::EventMessage* ev){
+        if(!ev->isOverlay && ev->messageType == EventMessages::EventMessageType::Conversation)
+        {
+            auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+            return conv->target == other;
+        }
+        return false;
+    });
+    if (lastConvMessage == end){
+        return nullptr;
+    } else {
+        return *lastConvMessage;
+    }
+
+    /*
+    for(auto it = m_EventQueue.rbegin(); it < m_EventQueue.rend(); ++it)
+    {
+        EventMessages::EventMessage* ev = *it;
+        if(!ev->isOverlay && ev->messageType == EventMessages::EventMessageType::Conversation)
+        {
+            auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+            if(conv->target == other)
+                return ev;
+        }
+    }
+    return nullptr;*/
 }
 
-void EventManager::triggerWaitEvent(EventMessages::EventMessage::MessageIdentifier identifier)
+bool EventManager::hasConvMessageWith(Handle::EntityHandle other){
+    return findLastConvMessageWith(other) != nullptr;
+}
+/*
+void EventManager::triggerWaitEvent(EventMessages::EventMessage::MessageIdentifier identifier, EventMessages::ConversationMessage* waitMessage)
 {
     // Trigger all messages we have with that identifier
     for(EventMessages::EventMessage* ev : m_EventQueue)
@@ -153,19 +239,17 @@ void EventManager::triggerWaitEvent(EventMessages::EventMessage::MessageIdentifi
         {
             EventMessages::ConversationMessage* conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
 
-            if(conv->waitIdentifier == identifier)
+            if(!conv->deleted && conv->waitIdentifier == identifier)
             {
                 // Mark as done
                 conv->deleted = true;
+                const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv->waitIdentifier);
+                LogInfo() << "WAIT CALLBACK message completed: ptr = " << conv << ", text = " << waiting_for->text;
+                break;
             }
         }
     }
-
-    // Remove waiting-handle
-    // FIXME: This is some really ugly code, but I just want to remove the list-entry
-    const EventMessages::EventMessage* msg = reinterpret_cast<const EventMessages::EventMessage*>(identifier);
-    m_WaitingFor.remove(const_cast<EventMessages::EventMessage*>(msg));
-}
+}*/
 
 void EventManager::waitForMessage(EventMessages::EventMessage* other)
 {
@@ -175,12 +259,20 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     wait.waitIdentifier = other;
 
     // Let the EM wait for this talking-action to complete
-    onMessage(wait);
+    EventMessages::ConversationMessage* waitMessage = onMessage(wait);
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
 
-        // Let the other NPC know we are done
-        triggerWaitEvent(inst);
+        // Let the other NPC know we are done: set the delete attribute of the wait-message
+        // Mark as done
+
+        if (waitMessage != nullptr){
+            waitMessage->deleted = true;
+
+            const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(waitMessage->waitIdentifier);
+            LogInfo() << "WAIT CALLBACK message completed: ptr = " << waitMessage << ", text = " << waiting_for->text;
+        }
+        //triggerWaitEvent(inst, waitMessage);
     }));
 
 }

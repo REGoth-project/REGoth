@@ -18,7 +18,7 @@ namespace Logic
         ~EventManager();
 
         template<typename T>
-        void onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
+        T* onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
         {
             // Copy over the data from the given message so only we handle the memory allocations
             T* msgcopy = new T;
@@ -28,8 +28,11 @@ namespace Logic
             handleMessage(msgcopy, sourceVob);
 
             // Check if this was already executed. If so, we can delete it already. If not, it was added to the queue.
-            if(msgcopy->deleted)
+            if(msgcopy->deleted){
                 delete msgcopy;
+                return nullptr;
+            }
+            return msgcopy;
         }
 
         /**
@@ -44,16 +47,18 @@ namespace Logic
         bool isEmpty();
 
         /**
-         * Searches the messages for one that is a conversation message and has the NPC with the entity "other" as target
+         * Searches the messages for the last one that is a conversation message and has the NPC with the entity "other" as target
          * @param other NPC-Entity to search for
-         * @return Pointer to the first non-overlay message before the conv-message, if found. If not, nullptr. DO NOT STORE THIS!
+         * @return Pointer to the last non-overlay conv-message, if found. If not, nullptr. DO NOT STORE THIS!
          */
-        EventMessages::EventMessage* getTalkingWithMessage(Handle::EntityHandle other);
+        EventMessages::EventMessage* findLastConvMessageWith(Handle::EntityHandle other);
 
         /**
-         * Triggers an event for the given identifier
+         * Searches the messages if any conversation message exists, that has the NPC with the entity "other" as target
+         * @param other NPC-Entity to search for
+         * @return whether message was found
          */
-        void triggerWaitEvent(EventMessages::EventMessage::MessageIdentifier identifier);
+        bool hasConvMessageWith(Handle::EntityHandle other);
 
         /**
          * Blocks the event-queue until the given event was processed. Can be from another NPC!
@@ -103,6 +108,6 @@ namespace Logic
         /**
          * List of message we are currently waiting for. Used to clean up should this object get destroyed
          */
-        std::list<EventMessages::EventMessage*> m_WaitingFor;
+        //std::list<EventMessages::EventMessage*> m_WaitingFor;
     };
 }
