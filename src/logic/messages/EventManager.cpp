@@ -202,24 +202,22 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     wait.subType = EventMessages::ConversationMessage::ST_WaitTillEnd;
     wait.waitIdentifier = other;
 
-    // Let the EM wait for this talking-action to complete
+    // Let the EM wait for this talking-action to complete, return value cannot be nullptr, since waits must be queued
     EventMessages::ConversationMessage* waitMessage = onMessage(wait);
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
-        // case: wait message not there anymore, i.e. player/NPC got killed while conversation
+        // possible FIXME: handle case where EventManager was deleted.
+
+        // case: wait message not there anymore, i.e. player/NPC got killed while conversation?
         if (std::find(this->m_EventQueue.begin(), this->m_EventQueue.end(), waitMessage) == this->m_EventQueue.end()){
             return;
         }
-        // case: wait not queued, message handled instantly
-        if (waitMessage == nullptr)
-            return;
 
         // Mark as done
         waitMessage->deleted = true;
 
         const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(waitMessage->waitIdentifier);
         LogInfo() << "WAIT CALLBACK message completed: ptr = " << waitMessage << ", text = " << waiting_for->text;
-        //triggerWaitEvent(inst, waitMessage);
     }));
 
 }
