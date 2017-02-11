@@ -142,10 +142,6 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         return;
     }
 
-    if(target == self)
-        return; // FIXME: Vatras right here
-
-
     if(target.isValid())
         LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
@@ -351,6 +347,9 @@ bool DialogManager::init()
     // Register externals
     auto onAIOutput = [&](Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg)
     {
+        if(target == self)
+            return; // FIXME: Vatras right here
+
         LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
         DialogManager::onAIOutput(self, target, msg);
     };
