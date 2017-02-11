@@ -1,3 +1,4 @@
+ 
 #pragma once
 
 #include <daedalus/DaedalusGameState.h>
@@ -6,6 +7,7 @@
 #include "Inventory.h"
 #include "LogicDef.h"
 #include "NpcScriptState.h"
+#include "PlayerInput.h"
 
 namespace UI
 {
@@ -122,6 +124,21 @@ namespace Logic
          */
         void onUpdateByInput(float deltaTime);
 
+        // TODO: Temporary, remove!
+        PlayerInput temp_GetInputInfo();
+
+        /**
+         * Whether this (player controlled) character should currently react to input
+         * given by the user. This returns false if a dialog is active, for example.
+         * @return Whether input should be processed
+         */
+        bool shouldReactToInput();
+
+        /**
+         * Updates the controller with this players current input values
+         */
+        void onUpdateByInput(float deltaTime, const PlayerInput& input);
+
         /**
          * Update routine for the NPC currently controlled by the player
          * @param deltaTime Time since last frame
@@ -161,10 +178,17 @@ namespace Logic
         void teleportToPosition(const Math::float3& pos);
 
         /**
+         * Sets the position without any other major disruptions
+         * @param pos New position
+         */
+        void setPositionAndDirection(const Math::float3& pos, const Math::float3& dir);
+
+        /**
          * Sets the direction the NPC should be facing to (snaps, doesn't interpolate nor plays animations)
          * @param direction Direction to face
          */
         void setDirection(const Math::float3& direction);
+        const Math::float3& getDirection(){ return m_MoveState.direction; }
 
         /**
          * @return The inventory of this player
@@ -584,5 +608,7 @@ namespace Logic
         // Turns of modifying the root postion from the animation
         bool m_NoAniRootPosHack;
         size_t m_LastAniRootPosUpdatedAniHash;
+
+        std::string m_LastMovementAni; // TODO: Remove
     };
 }
