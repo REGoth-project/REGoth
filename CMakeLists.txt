@@ -227,15 +227,16 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
 include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
 
 
-
-if (UNIX)
-    if (NOT APPLE)
-        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-    endif()
-    target_link_libraries(engine openal)
-elseif(WIN32)
-    target_link_libraries(engine OpenAL32)
+if(NOT EMSCRIPTEN)
+	if (UNIX)
+	    if (NOT APPLE)
+		set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+		set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+	    endif()
+	    target_link_libraries(engine openal)
+	elseif(WIN32)
+	    target_link_libraries(engine OpenAL32)
+	endif()
 endif()
 
 # ------------------ Other ------------------
