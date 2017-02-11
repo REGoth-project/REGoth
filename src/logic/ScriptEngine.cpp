@@ -14,6 +14,13 @@
 
 using namespace Logic;
 
+namespace Net
+{
+    // Whether we are running the server
+    extern bool isServer;
+    extern bool isNet;
+}
+
 // Set to 1 to generate valid timing data for script-calls
 #define PROFILE_SCRIPT_CALLS 0
 
@@ -216,9 +223,13 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
 
     LogInfo() << "Setting camera mode to third-person";
 
-    Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
-    //e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
-    e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+    if(dynamic_cast<Engine::GameEngine*>(m_World.getEngine()) != nullptr)
+    {
+        Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
+        //
+        //e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
+        e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+    }
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)
@@ -244,7 +255,7 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
             pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
 
         // If this is the hero, link it
-        if(vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
+        if(!m_PlayerEntity.isValid() && vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
         {
             // Player should already be in the world and script-instances should be initialized.
             Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
