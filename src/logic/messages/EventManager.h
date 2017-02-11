@@ -18,7 +18,7 @@ namespace Logic
         ~EventManager();
 
         template<typename T>
-        T* onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
+        void onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
         {
             // Copy over the data from the given message so only we handle the memory allocations
             T* msgcopy = new T;
@@ -30,9 +30,7 @@ namespace Logic
             // Check if this was already executed. If so, we can delete it already. If not, it was added to the queue.
             if(msgcopy->deleted){
                 delete msgcopy;
-                return nullptr;
             }
-            return msgcopy;
         }
 
         /**
@@ -106,8 +104,21 @@ namespace Logic
         World::WorldInstance& m_World;
 
         /**
-         * List of message we are currently waiting for. Used to clean up should this object get destroyed
+         * Creates a new ticket ID to identify the message when removing it on callback
+         * @return new ticket ID
          */
-        //std::list<EventMessages::EventMessage*> m_WaitingFor;
+        unsigned int drawTicket(){
+            return ticketCounter++;
+        }
+
+        /**
+         * ticket Counter for this EventManager instance
+         */
+        unsigned int ticketCounter;
+
+        /**
+         * finds the first ConversationMessage with the given ticket ID (if any) and marks it as deleted
+         */
+        void removeWaitingMessage(unsigned int ticket);
     };
 }

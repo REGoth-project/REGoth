@@ -13,7 +13,8 @@ using namespace Logic;
 
 EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob) :
     m_World(world),
-    m_HostVob(hostVob)
+    m_HostVob(hostVob),
+    ticketCounter(1)
 {
 
 }
@@ -59,7 +60,7 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
             {
                 if (ev->messageType == EventMessages::EventMessageType::Conversation)
                 {
-                    EventMessages::ConversationMessage& conv_message = reinterpret_cast<EventMessages::ConversationMessage&>(*ev);
+                    EventMessages::ConversationMessage& conv_message = dynamic_cast<EventMessages::ConversationMessage&>(*ev);
                     std::string debug_out;
                     if (conv_message.subType == EventMessages::ConversationMessage::ST_WaitTillEnd){
                         auto waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message.waitIdentifier);
@@ -126,7 +127,7 @@ void EventManager::processMessageQueue()
         {
             if (ev->messageType == EventMessages::EventMessageType::Conversation)
             {
-                EventMessages::ConversationMessage* conv_message = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+                EventMessages::ConversationMessage* conv_message = dynamic_cast<EventMessages::ConversationMessage*>(ev);
                 if (!conv_message->internInProgress && conv_message->text != std::string(""))
                 {
                     dialog_ready_to_play = true;
@@ -142,7 +143,7 @@ void EventManager::processMessageQueue()
             {
                 if (ev->messageType == EventMessages::EventMessageType::Conversation)
                 {
-                    EventMessages::ConversationMessage* conv_message = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+                    EventMessages::ConversationMessage* conv_message = dynamic_cast<EventMessages::ConversationMessage*>(ev);
                     if (!conv_message->internInProgress && conv_message->text != std::string(""))
                     {
                         LogInfo() << "Queue item: " << std::boolalpha << "block = " << !ev->isOverlay << ", text = " << conv_message->text;
@@ -179,7 +180,7 @@ EventMessages::EventMessage* EventManager::findLastConvMessageWith(Handle::Entit
     auto lastConvMessage = std::find_if(begin, end, [&](EventMessages::EventMessage* ev){
         if(!ev->isOverlay && ev->messageType == EventMessages::EventMessageType::Conversation)
         {
-            auto conv = reinterpret_cast<EventMessages::ConversationMessage*>(ev);
+            auto conv = dynamic_cast<EventMessages::ConversationMessage*>(ev);
             return conv->target == other;
         }
         return false;
@@ -201,25 +202,31 @@ void EventManager::waitForMessage(EventMessages::EventMessage* other)
     EventMessages::ConversationMessage wait;
     wait.subType = EventMessages::ConversationMessage::ST_WaitTillEnd;
     wait.waitIdentifier = other;
+    unsigned int ticket = drawTicket();
+    wait.waitTicket = ticket;
 
-    // Let the EM wait for this talking-action to complete, return value cannot be nullptr, since waits must be queued
-    EventMessages::ConversationMessage* waitMessage = onMessage(wait);
+    // Let the EM wait for this talking-action to complete
+    onMessage(wait);
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
         // possible FIXME: handle case where EventManager was deleted.
-
-        // case: wait message not there anymore, i.e. player/NPC got killed while conversation?
-        if (std::find(this->m_EventQueue.begin(), this->m_EventQueue.end(), waitMessage) == this->m_EventQueue.end()){
-            return;
-        }
-
-        // Mark as done
-        waitMessage->deleted = true;
-
-        const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(waitMessage->waitIdentifier);
-        LogInfo() << "WAIT CALLBACK message completed: ptr = " << waitMessage << ", text = " << waiting_for->text;
+        removeWaitingMessage(ticket);
     }));
+}
 
+void EventManager::removeWaitingMessage(unsigned int ticket){
+    for (EventMessages::EventMessage* message : m_EventQueue){
+        if (message->messageType == EventMessages::EventMessageType::Conversation){
+            auto conv_message = dynamic_cast<EventMessages::ConversationMessage*>(message);
+            if (conv_message->waitTicket == ticket){
+                // Mark as done
+                conv_message->deleted = true;
+                const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message->waitIdentifier);
+                LogInfo() << "WAIT CALLBACK message completed: ptr = " << conv_message << ", text = " << waiting_for->text;
+                break;
+            }
+        }
+    }
 }
 
 void EventManager::clear()
