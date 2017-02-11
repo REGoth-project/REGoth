@@ -44,12 +44,12 @@ const std::list<Daedalus::GameState::ItemHandle>& Inventory::getItems()
 
 bool Inventory::removeItem(const std::string& symName, unsigned int count)
 {
-    return removeItem(getItem(symName));
+    return removeItem(getItem(symName), count);
 }
 
 bool Inventory::removeItem(size_t symIndex, unsigned int count)
 {
-    return removeItem(getItem(symIndex));
+    return removeItem(getItem(symIndex), count);
 }
 
 bool Inventory::removeItem(Daedalus::GameState::ItemHandle item, unsigned int count)
