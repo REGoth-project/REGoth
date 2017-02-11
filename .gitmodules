@@ -22,3 +22,6 @@
 [submodule "lib/openal-soft"]
 	path = lib/openal-soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "lib/SFNUL"]
+	path = lib/SFNUL
+	url = git@github.com:binary1248/SFNUL.git
