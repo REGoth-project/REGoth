@@ -142,10 +142,6 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         return;
     }
 
-    if(target == self)
-        return; // FIXME: Vatras right here
-
-
     if(target.isValid())
         LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
@@ -166,12 +162,13 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             conv.target = targetnpc.entity;
 
             // Check if the target is currently talking to us
-            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().getTalkingWithMessage(
+            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().findLastConvMessageWith(
                     selfnpc.entity);
 
             // Wait for the other npc to complete first
-            if (otherconv)
+            if (otherconv){
                 selfnpc.playerController->getEM().waitForMessage(otherconv);
+            }
         }
     }
 
@@ -192,8 +189,8 @@ void DialogManager::update(double dt)
 
             if(pv.isValid() && tv.isValid())
             {
-                dialogBoxVisible = !pv.playerController->getEM().getTalkingWithMessage(pv.entity)
-                                   && !tv.playerController->getEM().getTalkingWithMessage(pv.entity);
+                dialogBoxVisible = !pv.playerController->getEM().hasConvMessageWith(pv.entity)
+                                   && !tv.playerController->getEM().hasConvMessageWith(pv.entity);
             }
         }
 
@@ -350,6 +347,9 @@ bool DialogManager::init()
     // Register externals
     auto onAIOutput = [&](Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg)
     {
+        if(target == self)
+            return; // FIXME: Vatras right here
+
         LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
         DialogManager::onAIOutput(self, target, msg);
     };

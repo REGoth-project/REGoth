@@ -531,6 +531,8 @@ namespace Logic
             {
                 messageType = EventMessageType::Conversation;
                 internInProgress = false;
+                waitIdentifier = nullptr;
+                waitTicket = 0;
             }
 
             /**
@@ -583,9 +585,14 @@ namespace Logic
             std::string animation;
 
             /**
-             * Something to identify whatever we are waiting for at ST_WaitTillEnd
+             * Pointer to the message we are waiting for
              */
             MessageIdentifier waitIdentifier;
+
+            /**
+             * Something to identify whatever we are waiting for at ST_WaitTillEnd
+             */
+            unsigned int waitTicket;
 
             /**
              * Whether this is currently in progress. Set by the PlayerController.
