@@ -108,13 +108,13 @@ namespace Logic
          * @return new ticket ID
          */
         unsigned int drawTicket(){
-            return ticketCounter++;
+            return m_ticketCounter++;
         }
 
         /**
          * ticket Counter for this EventManager instance
          */
-        unsigned int ticketCounter;
+        unsigned int m_ticketCounter;
 
         /**
          * finds the first ConversationMessage with the given ticket ID (if any) and marks it as deleted

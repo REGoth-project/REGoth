@@ -14,7 +14,7 @@ using namespace Logic;
 EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob) :
     m_World(world),
     m_HostVob(hostVob),
-    ticketCounter(1)
+    m_ticketCounter(1)
 {
 
 }
