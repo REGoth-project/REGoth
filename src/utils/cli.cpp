@@ -218,7 +218,7 @@ std::string Flag::documentConfigText(const std::string& configText)
     return r;
 }
 
-const std::string& Flag::getParam(unsigned i)
+std::string Flag::getParam(unsigned i)
 {
     if(i >= m_ParsedArgs.size())
         return "";
