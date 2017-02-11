@@ -267,6 +267,11 @@ else()
 endif()
 
 if(REGOTH_NETPLAY)
+    if(MSVC)
+        # Fixes C2694 on visual studio
+        add_definitions(-DASIO_ERROR_CATEGORY_NOEXCEPT noexcept(true))
+    endif()
+
     include_directories(lib/SFNUL/include)
     add_subdirectory(lib/SFNUL)
     target_link_libraries(engine sfnul)
