@@ -18,7 +18,6 @@
 #include <bx/uint32_t.h>
 #include <zenload/ztex2dds.h>
 #include <render/RenderSystem.h>
-#include "rgconfig.h"
 #include <imgui/imgui.h>
 #include <ui/DialogBox.h>
 #include <ZenLib/utils/logger.h>
@@ -36,6 +35,8 @@
 #include <utils/cli.h>
 #include <utils/zTools.h>
 
+#include <engine/NetEngine.h>
+
 using json = nlohmann::json;
 
 #if BX_PLATFORM_ANDROID
@@ -52,6 +53,7 @@ namespace Flags
 {
     Cli::Flag help("h", "help", 0, "Prints this message");
     Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
+    extern Cli::Flag mpmode;
 }
 
 struct PosColorVertex
@@ -243,7 +245,7 @@ public:
         bgfx::frame();
 
         bgfx::setState(BGFX_STATE_DEFAULT);
-        const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+        const Render::RenderConfig& cfg = static_cast<Engine::GameEngine*>(m_pEngine)->getDefaultRenderSystem().getConfig();
         bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
         renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
 #endif
@@ -275,6 +277,8 @@ public:
         m_Height = getWindowHeight();
         m_NoHUD = false;
 
+        if(Flags::mpmode.getParam(0) == "server")
+            m_NoHUD = true;
 
 //		bgfx::init(args.m_type, args.m_pciId);
         bgfx::init();
@@ -304,8 +308,11 @@ public:
 
         PosColorTexCoord0Vertex::init();
 
-		m_pEngine = new Engine::GameEngine;
 
+        if(Flags::mpmode.isSet())
+            m_pEngine = new Engine::NetEngine;
+        else 
+            m_pEngine = new Engine::GameEngine;
 #if BX_PLATFORM_ANDROID
         // Content is somewhere else on android
         m_pEngine->setContentBasePath("/sdcard/REGoth/");
@@ -337,6 +344,13 @@ public:
 #endif
 
         auto& console = m_pEngine->getHud().getConsole();
+        console.registerCommand("spawnhero", [&](const std::vector<std::string>& args) -> std::string {
+            
+                Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_pEngine->getMainWorld().get(), "PC_HERO", "WP_INTRO_FALL3"); 
+
+            return "Spawned PC_HERO";
+        });
+
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
@@ -369,7 +383,7 @@ public:
 
             int idx = std::stoi(args[1]);
 
-            m_pEngine->getMainCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
+            static_cast<Engine::GameEngine*>(m_pEngine)->getMainCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
 
             return "Cameramode changed to " + std::to_string(idx);
         });
@@ -854,7 +868,7 @@ public:
 
 
         if(!m_NoHUD)
-            m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+            static_cast<Engine::GameEngine*>(m_pEngine)->getRootUIView().update(dt, ms, static_cast<Engine::GameEngine*>(m_pEngine)->getDefaultRenderSystem().getConfig());
 
 
 
@@ -903,7 +917,7 @@ public:
         return true;
 	}
 
-    Engine::GameEngine* m_pEngine;
+    Engine::BaseEngine* m_pEngine;
     uint32_t m_debug;
     uint32_t m_reset;
     int m_Width, m_Height;
