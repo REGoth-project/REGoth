@@ -53,30 +53,6 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
 
         // Queue this
         m_EventQueue.push_back(message);
-        bool print_queue = false;
-        if (print_queue){
-            std::vector<std::string> queue_strings;
-            for(EventMessages::EventMessage* ev : m_EventQueue)
-            {
-                if (ev->messageType == EventMessages::EventMessageType::Conversation)
-                {
-                    EventMessages::ConversationMessage& conv_message = dynamic_cast<EventMessages::ConversationMessage&>(*ev);
-                    std::string debug_out;
-                    if (conv_message.subType == EventMessages::ConversationMessage::ST_WaitTillEnd){
-                        auto waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message.waitIdentifier);
-                        queue_strings.push_back("ST_WaitTillEnd, ident = " + waiting_for->text);
-                    } else if (conv_message.subType == EventMessages::ConversationMessage::ST_Output){
-                        queue_strings.push_back(conv_message.text);
-                   }
-                }
-            }
-            if (queue_strings.size() != 0){
-                LogInfo() << "----------------------Queue-Start----------------------";
-                for (auto& item : queue_strings)
-                   LogInfo() << item;
-                LogInfo() << "----------------------Queue-End------------------------";
-            }
-        }
     }
 }
 
@@ -119,43 +95,6 @@ void EventManager::processMessageQueue()
 
     if(m_EventQueue.empty())
         return;
-
-    bool print_queue = false;
-    if (print_queue){
-        bool dialog_ready_to_play = false;
-        for(EventMessages::EventMessage* ev : m_EventQueue)
-        {
-            if (ev->messageType == EventMessages::EventMessageType::Conversation)
-            {
-                EventMessages::ConversationMessage* conv_message = dynamic_cast<EventMessages::ConversationMessage*>(ev);
-                if (!conv_message->internInProgress && conv_message->text != std::string(""))
-                {
-                    dialog_ready_to_play = true;
-                    break;
-                }
-            }
-            if(!ev->isOverlay)
-                break;
-        }
-        if (dialog_ready_to_play){
-            LogInfo() << "----------------------Queue-Start----------------------";
-            for(EventMessages::EventMessage* ev : m_EventQueue)
-            {
-                if (ev->messageType == EventMessages::EventMessageType::Conversation)
-                {
-                    EventMessages::ConversationMessage* conv_message = dynamic_cast<EventMessages::ConversationMessage*>(ev);
-                    if (!conv_message->internInProgress && conv_message->text != std::string(""))
-                    {
-                        LogInfo() << "Queue item: " << std::boolalpha << "block = " << !ev->isOverlay << ", text = " << conv_message->text;
-                    } else if (conv_message->subType == EventMessages::ConversationMessage::ST_WaitTillEnd){
-                        auto waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message->waitIdentifier);
-                        LogInfo() << "Queue item: " << std::boolalpha << "block = " << !ev->isOverlay << ", waiting for: " << conv_message << ", ident = " << waiting_for->text;
-                    }
-                }
-            }
-            LogInfo() << "----------------------Queue-End----------------------";
-        }
-    }
 
     // Process messages as far as we can
     for(EventMessages::EventMessage* ev : m_EventQueue)
@@ -221,8 +160,6 @@ void EventManager::removeWaitingMessage(unsigned int ticket){
             if (conv_message->waitTicket == ticket){
                 // Mark as done
                 conv_message->deleted = true;
-                const EventMessages::ConversationMessage* waiting_for = reinterpret_cast<const EventMessages::ConversationMessage*>(conv_message->waitIdentifier);
-                LogInfo() << "WAIT CALLBACK message completed: ptr = " << conv_message << ", text = " << waiting_for->text;
                 break;
             }
         }

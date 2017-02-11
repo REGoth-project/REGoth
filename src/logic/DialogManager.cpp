@@ -172,7 +172,6 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             // Wait for the other npc to complete first
             if (otherconv){
                 selfnpc.playerController->getEM().waitForMessage(otherconv);
-                LogInfo() << ".. will wait for " << reinterpret_cast<EventMessages::ConversationMessage*>(otherconv)->text;
             }
         }
     }
