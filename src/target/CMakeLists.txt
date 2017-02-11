@@ -13,3 +13,8 @@ else()
     add_executable(REGoth "REGoth.cpp")
     target_link_libraries(REGoth engine)
 endif()
+
+if(REGOTH_NETPLAY)
+    add_executable(REGoth-server "REGoth-server.cpp")
+    target_link_libraries(REGoth-server engine)
+endif()
