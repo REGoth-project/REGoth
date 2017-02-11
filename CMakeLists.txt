@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 # Vim - You Complete Me
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 
+set(REGOTH_NETPLAY ON)
 set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
@@ -196,6 +197,7 @@ file(GLOB ENGINE_SRC
         "src/logic/messages/*.h"
         "src/logic/mobs/*.cpp"
         "src/logic/mobs/*.h"
+        "src/net/*.cpp"
         )
 
 add_library(engine STATIC ${ENGINE_SRC})
@@ -262,6 +264,12 @@ else()
 
 	# TODO: Audio
     target_link_libraries(engine android_glue)
+endif()
+
+if(REGOTH_NETPLAY)
+    include_directories(lib/SFNUL/include)
+    add_subdirectory(lib/SFNUL)
+    target_link_libraries(engine sfnul)
 endif()
 
 add_subdirectory(lib/adpcm)
