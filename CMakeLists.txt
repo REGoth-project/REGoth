@@ -223,11 +223,10 @@ else()
 	set(LIBTYPE SHARED CACHE STRING "" FORCE)
 endif()
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
-
-
 if(NOT EMSCRIPTEN)
+	add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
+
 	if (UNIX)
 	    if (NOT APPLE)
 		set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
