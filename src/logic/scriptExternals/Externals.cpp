@@ -927,6 +927,15 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         pWorld->getDialogManager().clearChoices();
     });
 
+    vm->registerExternalFunction("ai_stopprocessinfos", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+            (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+
+        // Notify DialogManager
+        pWorld->getDialogManager().stopProcessInfos(hself);
+    });
+
 	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
 		std::string spawnpoint = vm.popString();
 		uint32_t npcinstance = vm.popDataValue();
