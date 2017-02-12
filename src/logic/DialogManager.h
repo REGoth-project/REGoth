@@ -115,6 +115,13 @@ namespace Logic
          */
         void updateChoices();
 
+        /**
+         * Called by the script when the interaction will end
+         * and the DialogManager should be closed after the last Dialog
+         * @param self NPC who the player is talking to
+         */
+        void stopProcessInfos(Daedalus::GameState::NpcHandle self);
+
         // TODO: Probably move this into script-engine
         Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }
 
@@ -135,13 +142,6 @@ namespace Logic
          * @param infos List of choices the player has to select
          */
         void onAIProcessInfos(Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos);
-
-        /**
-         * Called by the script when the interaction will end
-         * and the DialogManager should be closed after the last Dialog
-         * @param self NPC who the player is talking to
-         */
-        void onAIStopProcessInfos(Daedalus::GameState::NpcHandle self);
 
         /**
          * Called when an NPC is about to say something
