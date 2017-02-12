@@ -374,7 +374,7 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-            
+
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
@@ -501,7 +501,7 @@ public:
             using namespace Engine;
 
             int idx = std::stoi(args[1]);
-           
+
             if(!SavegameManager::isSavegameAvailable(idx))
                 return "Savegame in slot " + std::to_string(idx) + " no available!";
 
@@ -513,7 +513,7 @@ public:
             // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
             // if it was missing. Also, IF the player saved there, there should be a save for this.
             if(!Utils::getFileSize(worldPath))
-                return "Target world invalid!"; 
+                return "Target world invalid!";
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
@@ -526,7 +526,7 @@ public:
                 return "Missing argument. Usage: save <savegame>";
 
             int idx = std::stoi(args[1]);
-    
+
             if(idx < 1)
                 return "Invalid index. Must be greater than 0!";
 
@@ -547,41 +547,38 @@ public:
             // Save
             Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
 
-            return "World saved to slot: " + std::to_string(idx); 
+            return "World saved to slot: " + std::to_string(idx);
         });
 
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
-            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& worldInstance = m_pEngine->getMainWorld().get();
 
             if(args.size() == 1)
-                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
             else
             {
-                std::string n = args[1];
-                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-
-                for(Handle::EntityHandle e : s.getWorldNPCs())
+                std::stringstream joinedArgs;
+                for (auto it = args.begin() + 1; it != args.end(); ++it)
                 {
-                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
-                    if(test.isValid())
-                    {
-                        std::string nt = test.playerController->getScriptInstance().name[0];
-                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
-                        if(n == nt)
-                        {
-                            npc = test;
-                            break;
-                        }
-                    }
+                    joinedArgs << *it;
+                }
+
+                std::string requested = joinedArgs.str();
+                auto matches = scriptEngine.findWorldNPCsNameLike(requested);
+                for (auto& candidate : matches)
+                {
+                    npc = VobTypes::asNpcVob(worldInstance, candidate);
+                    break;
                 }
 
                 if(!npc.isValid())
-                    return "Invalid NPC";
+                    return "Could not find NPC " + requested;
             }
 
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
 
             Logic::EventMessages::StateMessage sm;
             sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
@@ -645,7 +642,7 @@ public:
                 player.playerController->setDirection((-1) * npcDirection);
                 return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
             }
-            return "Could not find npc " + requested;
+            return "Could not find NPC " + requested;
         });
 
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {

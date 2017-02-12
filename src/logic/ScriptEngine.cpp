@@ -364,6 +364,9 @@ std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string n
     for(const Handle::EntityHandle& npc : getWorldNPCs())
     {
         VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(m_World, npc);
+        if (!npcVobInfo.isValid())
+            continue;
+
         Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
         std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
         std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
