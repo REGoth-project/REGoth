@@ -648,13 +648,12 @@ public:
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
-            auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
-
-
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+            auto& s = worldInstance.getScriptEngine();
 
             if(args.size() == 1)
             {
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, s.getPlayerEntity());
                 std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 3.0f);
 
                 if(nearNPCs.empty())
@@ -665,35 +664,25 @@ public:
                 {
                     if(e != s.getPlayerEntity())
                     {
-                        npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+                        npc = VobTypes::asNpcVob(worldInstance, e);
                         break;
                     }
                 }
             }
             else
             {
-                // Fix spaces in names happening
-                std::string name;
-                for(int i=1;i<args.size();i++)
-                    name += args[i] + " ";
-                name.pop_back();
-
-                std::string n = name;
-                std::transform(n.begin(), n.end(), n.begin(), ::tolower);
-
-                for(Handle::EntityHandle e : s.getWorldNPCs())
+                std::stringstream joinedArgs;
+                for (auto it = args.begin() + 1; it != args.end(); ++it)
                 {
-                    VobTypes::NpcVobInformation test = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
-                    if(test.isValid())
-                    {
-                        std::string nt = test.playerController->getScriptInstance().name[0];
-                        std::transform(nt.begin(), nt.end(), nt.begin(), ::tolower);
-                        if(n == nt)
-                        {
-                            npc = test;
-                            break;
-                        }
-                    }
+                    joinedArgs << *it;
+                }
+
+                std::string requested = joinedArgs.str();
+                auto matches = s.findWorldNPCsNameLike(requested);
+                for (auto& candidate : matches)
+                {
+                    npc = VobTypes::asNpcVob(worldInstance, candidate);
+                    break;
                 }
             }
 
