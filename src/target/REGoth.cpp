@@ -374,7 +374,7 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-            
+
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
@@ -501,7 +501,7 @@ public:
             using namespace Engine;
 
             int idx = std::stoi(args[1]);
-           
+
             if(!SavegameManager::isSavegameAvailable(idx))
                 return "Savegame in slot " + std::to_string(idx) + " no available!";
 
@@ -513,7 +513,7 @@ public:
             // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
             // if it was missing. Also, IF the player saved there, there should be a save for this.
             if(!Utils::getFileSize(worldPath))
-                return "Target world invalid!"; 
+                return "Target world invalid!";
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
@@ -526,7 +526,7 @@ public:
                 return "Missing argument. Usage: save <savegame>";
 
             int idx = std::stoi(args[1]);
-    
+
             if(idx < 1)
                 return "Invalid index. Must be greater than 0!";
 
@@ -547,7 +547,7 @@ public:
             // Save
             Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
 
-            return "World saved to slot: " + std::to_string(idx); 
+            return "World saved to slot: " + std::to_string(idx);
         });
 
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
@@ -609,6 +609,51 @@ public:
             s1.runFunction("B_GiveXP");
 
             return "Experience points successfully given";
+        });
+
+        console.registerCommand("tpnpc", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 2)
+                return "Missing argument(s). Usage: tpnpc <npc name>";
+
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+            auto& scriptEngine = worldInstance.getScriptEngine();
+            // TODO: search also datfile name
+            // TODO: refactor into function findNpcByName
+            //const auto& dat = scriptEngine.getVM().getDATFile().getSymTable().symbolsByName;
+            std::stringstream joinedArgs;
+            for (auto it = args.begin() + 1; it != args.end(); ++it)
+            {
+                joinedArgs << *it;
+            }
+            std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
+
+            std::string requested = joinedArgs.str();
+            std::string requestedLower = requested;
+            std::transform(requestedLower.begin(), requestedLower.end(), requestedLower.begin(), ::tolower);
+            requestedLower.erase(std::remove_if(requestedLower.begin(), requestedLower.end(), isNotAlNum), requestedLower.end());
+
+            for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
+            {
+                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
+                std::string npcName = npcVobInfo.playerController->getScriptInstance().name[0];
+                std::string npcNameLower = npcName;
+                std::transform(npcNameLower.begin(), npcNameLower.end(), npcNameLower.begin(), ::tolower);
+                npcNameLower.erase(std::remove_if(npcNameLower.begin(), npcNameLower.end(), isNotAlNum), npcNameLower.end());
+                if (npcNameLower.find(requestedLower) != std::string::npos)
+                {
+                    Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
+                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
+                    Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
+                    float respectfulDistance = 1;
+                    // player keeps a distance of respectfulDistance to the NPC
+                    Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
+                    player.playerController->teleportToPosition(newPos);
+                    // player looks towards NPC
+                    player.playerController->setDirection((-1) * npcDirection);
+                    return "teleported to npc " + npcName;
+                }
+            }
+            return "could not find npc " + requested;
         });
 
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
