@@ -611,9 +611,9 @@ public:
             return "Experience points successfully given";
         });
 
-        console.registerCommand("tpnpc", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("tp", [this](const std::vector<std::string>& args) -> std::string {
             if(args.size() < 2)
-                return "Missing argument(s). Usage: tpnpc <npc name>";
+                return "Missing argument(s). Usage: tp <npc name>";
 
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
@@ -624,41 +624,28 @@ public:
             {
                 joinedArgs << *it;
             }
-            std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
 
             std::string requested = joinedArgs.str();
-            std::string requestedLower = requested;
-            std::transform(requestedLower.begin(), requestedLower.end(), requestedLower.begin(), ::tolower);
-            requestedLower.erase(std::remove_if(requestedLower.begin(), requestedLower.end(), isNotAlNum), requestedLower.end());
-
-            for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
+            auto matches = scriptEngine.findWorldNPCsNameLike(requested);
+            for (auto& npc : matches)
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
                 Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
                 std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
                 std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
 
-                for (auto npcName : {npcDisplayName, npcDatFileName})
-                {
-                    std::string npcNameLower = npcName;
-                    std::transform(npcNameLower.begin(), npcNameLower.end(), npcNameLower.begin(), ::tolower);
-                    npcNameLower.erase(std::remove_if(npcNameLower.begin(), npcNameLower.end(), isNotAlNum), npcNameLower.end());
-                    if (npcNameLower.find(requestedLower) != std::string::npos)
-                    {
-                        Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
-                        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-                        Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
-                        // player keeps a respectful distance of 1 to the NPC
-                        float respectfulDistance = 1;
-                        Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                        player.playerController->teleportToPosition(newPos);
-                        // player looks towards NPC
-                        player.playerController->setDirection((-1) * npcDirection);
-                        return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
-                    }
-                }
+                Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
+                Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
+                // player keeps a respectful distance of 1 to the NPC
+                float respectfulDistance = 1;
+                Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
+                player.playerController->teleportToPosition(newPos);
+                // player looks towards NPC
+                player.playerController->setDirection((-1) * npcDirection);
+                return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
             }
-            return "could not find npc " + requested;
+            return "Could not find npc " + requested;
         });
 
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
