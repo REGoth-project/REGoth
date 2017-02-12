@@ -121,6 +121,10 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     }*/
 }
 
+void DialogManager::onAIStopProcessInfos(Daedalus::GameState::NpcHandle self){
+    //LogInfo() << "The script has scheduled the end-event for the Dialog with " << getGameState().getNpc(self).name[0];
+}
+
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
@@ -358,12 +362,17 @@ bool DialogManager::init()
         DialogManager::onAIOutput(self, target, msg);
     };
 
+    auto onAIStopProcessInfos = [&](Daedalus::GameState::NpcHandle self)
+    {
+        DialogManager::onAIStopProcessInfos(self);
+    };
+
     auto onAIProcessInfos = [&](Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos)
     {
         DialogManager::onAIProcessInfos(self, infos);
     };
 
-    m_ScriptDialogMananger->registerExternals(onAIOutput, onAIProcessInfos);
+    m_ScriptDialogMananger->registerExternals(onAIOutput, onAIStopProcessInfos, onAIProcessInfos);
 
     LogInfo() << "Adding dialog-UI to root view";
     // Add subtitle box (Hidden if there is nothing to display)

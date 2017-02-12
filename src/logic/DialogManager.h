@@ -137,6 +137,13 @@ namespace Logic
         void onAIProcessInfos(Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos);
 
         /**
+         * Called by the script when the interaction will end
+         * and the DialogManager should be closed after the last Dialog
+         * @param self NPC who the player is talking to
+         */
+        void onAIStopProcessInfos(Daedalus::GameState::NpcHandle self);
+
+        /**
          * Called when an NPC is about to say something
          * @param self NPC talking
          * @param target NPC talking to
