@@ -703,7 +703,7 @@ void PlayerController::placeOnGround()
     Math::float3 entityPosition = getEntityTransform().Translation();
     Math::float3 to = entityPosition + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = entityPosition + Math::float3(0.0f, 30.0f, 0.0f);
-    
+
     std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
     if (hitall.empty())
         return;
@@ -1958,8 +1958,8 @@ void PlayerController::setupKeyBindings()
 
                 // Update the players status menu once
                 updateStatusScreen(statsScreen);
-            } 
-	    else if (hud.isTopMenu<UI::Menu_Status>()) 
+            }
+	    else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
     });
