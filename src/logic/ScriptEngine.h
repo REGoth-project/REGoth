@@ -129,8 +129,8 @@ namespace Logic
         const std::set<Handle::EntityHandle>& getWorldNPCs(){ return m_WorldNPCs; }
 
         /**
-         * Searches the current world for NPCs whose display-name or DATFile-name contain the given string
-         * comparison is case insensitive and strips off all non-alphanumeric characters first
+         * Searches the current world for NPCs whose display-name or DATFile-name contain the given string.
+         * Comparison is case insensitive and strips off all non-alphanumeric characters first
          * @param namePart full or partial name to be looked for
          * @return List of all NPCs whose names are similar to namePart
          */

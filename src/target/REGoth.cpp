@@ -374,7 +374,7 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-
+            
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
@@ -501,7 +501,7 @@ public:
             using namespace Engine;
 
             int idx = std::stoi(args[1]);
-
+           
             if(!SavegameManager::isSavegameAvailable(idx))
                 return "Savegame in slot " + std::to_string(idx) + " no available!";
 
@@ -513,7 +513,7 @@ public:
             // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
             // if it was missing. Also, IF the player saved there, there should be a save for this.
             if(!Utils::getFileSize(worldPath))
-                return "Target world invalid!";
+                return "Target world invalid!"; 
 
             clearActions();
             m_pEngine->removeWorld(m_pEngine->getMainWorld());
@@ -526,7 +526,7 @@ public:
                 return "Missing argument. Usage: save <savegame>";
 
             int idx = std::stoi(args[1]);
-
+    
             if(idx < 1)
                 return "Invalid index. Must be greater than 0!";
 
@@ -547,7 +547,7 @@ public:
             // Save
             Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
 
-            return "World saved to slot: " + std::to_string(idx);
+            return "World saved to slot: " + std::to_string(idx); 
         });
 
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {

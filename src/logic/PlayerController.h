@@ -384,7 +384,7 @@ namespace Logic
         Materials::MaterialGroup getSurfaceMaterial();
 
         /**
-         * Returns material data of give triangle index
+         * Returns material data of give triangle index 
          */
         Materials::MaterialGroup getMaterial(uint32_t triangleIdx);
         /**
@@ -596,7 +596,7 @@ namespace Logic
         size_t m_LastAniRootPosUpdatedAniHash;
 
         /**
-         * Contstants
+         * Contstants 
          */
         static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
         static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
