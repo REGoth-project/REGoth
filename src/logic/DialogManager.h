@@ -78,7 +78,7 @@ namespace Logic
          */
         bool isDialogActive() { return m_DialogActive; }
 
-	/**
+        /**
          * @return Whether a someone is currently talking
          */
         bool isTalking() { return m_Talking; }
@@ -94,6 +94,11 @@ namespace Logic
          * @return Index of the choice
          */
         size_t addChoice(ChoiceEntry& entry);
+
+        /**
+         * Sets whether the DialogManager is in in the SubDialog state
+         */
+        void setSubDialogActive(bool flag);
 
         /**
          * Sorts registered choices depending on their sort index
@@ -185,9 +190,16 @@ namespace Logic
          */
         bool m_DialogActive;
 
-	/**
+        /**
          * Whether a subtitlebox is currently shown
          */
         bool m_Talking;
+
+        /**
+         * Whether a hero is inside a multiple choice test.
+         * When true the queue will not be cleared and normal dialog options will not be added
+         * This state is automatically left when the choice queue is empty
+         */
+         bool m_SubDialogActive;
     };
 }

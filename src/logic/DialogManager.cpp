@@ -32,6 +32,7 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
     m_Talking = false;
+    m_SubDialogActive = false;
 }
 
 DialogManager::~DialogManager()
@@ -64,7 +65,6 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
 
     LogInfo() << "Started talking with: " << getGameState().getNpc(m_Interaction.target).name[0];
-    LogInfo() << "Options: ";
 
     clearChoices();
 
@@ -266,7 +266,11 @@ bool DialogManager::performChoice(size_t choice)
 
     size_t fnSym = m_Interaction.choices[choice].functionSym;
 
-    clearChoices();
+    m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
+    if (!m_SubDialogActive)
+    {
+        clearChoices();
+    }
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
@@ -309,7 +313,7 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
     msg.subType = EventMessages::StateMessage::EV_StartState;
     msg.functionSymbol = m_World.getScriptEngine().getSymbolIndexByName("ZS_TALK");
 
-    // Set other/victum // TODO: Refractor
+    // Set other/victim // TODO: Refactor
     msg.other = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("OTHER").instanceDataHandle);
     msg.victim = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("VICTIM").instanceDataHandle);
 
@@ -396,14 +400,20 @@ void DialogManager::clearChoices()
 
 size_t DialogManager::addChoice(ChoiceEntry& entry)
 {
-    m_Interaction.choices.push_back(entry);
-
-    if(m_Interaction.choices.back().nr == -2)
-        m_Interaction.choices.back().nr = static_cast<int>(m_Interaction.choices.size()) - 1;
+    if(entry.nr == 123456)
+    {
+        entry.nr = m_Interaction.choices.front().nr - 1;
+    }
+    m_Interaction.choices.insert(m_Interaction.choices.begin(), entry);
 
     flushChoices();
 
 	return 0;
+}
+
+void DialogManager::setSubDialogActive(bool flag)
+{
+    m_SubDialogActive = flag;
 }
 
 void DialogManager::sortChoices()
