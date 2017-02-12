@@ -617,9 +617,8 @@ public:
 
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
-            // TODO: search also datfile name
-            // TODO: refactor into function findNpcByName
-            //const auto& dat = scriptEngine.getVM().getDATFile().getSymTable().symbolsByName;
+            auto& datFile = scriptEngine.getVM().getDATFile();
+
             std::stringstream joinedArgs;
             for (auto it = args.begin() + 1; it != args.end(); ++it)
             {
@@ -635,22 +634,28 @@ public:
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
-                std::string npcName = npcVobInfo.playerController->getScriptInstance().name[0];
-                std::string npcNameLower = npcName;
-                std::transform(npcNameLower.begin(), npcNameLower.end(), npcNameLower.begin(), ::tolower);
-                npcNameLower.erase(std::remove_if(npcNameLower.begin(), npcNameLower.end(), isNotAlNum), npcNameLower.end());
-                if (npcNameLower.find(requestedLower) != std::string::npos)
+                Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
+                std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
+                std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+
+                for (auto npcName : {npcDisplayName, npcDatFileName})
                 {
-                    Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
-                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-                    Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
-                    float respectfulDistance = 1;
-                    // player keeps a distance of respectfulDistance to the NPC
-                    Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                    player.playerController->teleportToPosition(newPos);
-                    // player looks towards NPC
-                    player.playerController->setDirection((-1) * npcDirection);
-                    return "teleported to npc " + npcName;
+                    std::string npcNameLower = npcName;
+                    std::transform(npcNameLower.begin(), npcNameLower.end(), npcNameLower.begin(), ::tolower);
+                    npcNameLower.erase(std::remove_if(npcNameLower.begin(), npcNameLower.end(), isNotAlNum), npcNameLower.end());
+                    if (npcNameLower.find(requestedLower) != std::string::npos)
+                    {
+                        Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
+                        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
+                        Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
+                        // player keeps a respectful distance of 1 to the NPC
+                        float respectfulDistance = 1;
+                        Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
+                        player.playerController->teleportToPosition(newPos);
+                        // player looks towards NPC
+                        player.playerController->setDirection((-1) * npcDirection);
+                        return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
+                    }
                 }
             }
             return "could not find npc " + requested;
