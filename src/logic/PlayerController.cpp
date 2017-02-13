@@ -942,14 +942,14 @@ void PlayerController::onUpdateByInput(float deltaTime, const PlayerInput& input
         {
             manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
-        else if (input.isTurnLeft && !input.isForward)
+        /*else if (input.isTurnLeft && !input.isForward) // FIXME: Reimplement!
         {
             manageAnimation(ModelVisual::EModelAnimType::TurnLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
         else if (input.isTurnRight && !input.isForward)
         {
             manageAnimation(ModelVisual::EModelAnimType::TurnRight, ModelVisual::EModelAnimType::SwimTurnRight);
-        }
+        }*/
         else if (input.isForward)
         {
             manageAnimation(m_MoveState.ground.waterDepth > m_wadeThreshold ? ModelVisual::EModelAnimType::Wade : ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
