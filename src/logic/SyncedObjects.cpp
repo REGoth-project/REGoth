@@ -5,6 +5,7 @@
 #include <debugdraw/debugdraw.h>
 
 const Net::PlayerState::object_type_id_type Net::PlayerState::type_id = 1001;
+const Net::Chatlog::object_type_id_type Net::Chatlog::type_id = 1002;
 
 /**
  * Max allowed distance difference of server and client state for the players position (in meters)

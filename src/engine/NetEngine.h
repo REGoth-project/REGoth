@@ -20,6 +20,11 @@ namespace Engine
 		 */
 		virtual void initEngine(int argc, char** argv);
 
+		/**
+		 * @return Clients/Servers state. nullptr if not in MP-mode
+		 */
+		Net::ClientState* getClientState(){ return m_Client; }
+		Net::ServerState* getServerState(){ return m_Server; }
     protected:
         
 		/**
