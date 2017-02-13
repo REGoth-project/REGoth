@@ -34,6 +34,7 @@
 #include <logic/SavegameManager.h>
 #include <utils/cli.h>
 #include <utils/zTools.h>
+#include <logic/ClientState.h>
 
 #include <engine/NetEngine.h>
 
@@ -344,11 +345,38 @@ public:
 #endif
 
         auto& console = m_pEngine->getHud().getConsole();
+
+
+
         console.registerCommand("spawnhero", [&](const std::vector<std::string>& args) -> std::string {
-            
-                Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_pEngine->getMainWorld().get(), "PC_HERO", "WP_INTRO_FALL3"); 
+
+            Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_pEngine->getMainWorld().get(), "PC_HERO", "WP_INTRO_FALL3");
 
             return "Spawned PC_HERO";
+        });
+
+        console.registerCommand("spawn", [&](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 2)
+                return "Missing argument. Usage: spawn <instance>";
+
+            Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_pEngine->getMainWorld().get(), args[1], "WP_INTRO_FALL3");
+
+            VobTypes::NpcVobInformation spawned = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), e);
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(spawned.isValid() && player.isValid())
+            {
+                Math::float3 npos = player.playerController->getEntityTransform().Translation();
+                npos += player.playerController->getDirection() * 1.5f;
+                VobTypes::NPC_Teleport(m_pEngine->getMainWorld().get(),
+                                       spawned,
+                                       npos,
+                                       -1.0f * player.playerController->getDirection());
+            }
+
+            return "Spawned " + args[1];
         });
 
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
@@ -685,7 +713,7 @@ public:
             sm.functionSymbol = Logic::NPC_PRGAISTATE_DEAD;
             sm.isPrgState = true;
 
-            npc.playerController->die(s.getPlayerEntity());
+            VobTypes::NPC_Kill(m_pEngine->getMainWorld().get(), npc, s.getPlayerEntity());
 
             return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
         });
