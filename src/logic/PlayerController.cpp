@@ -858,13 +858,7 @@ void PlayerController::onUpdateByInput(float deltaTime, const PlayerInput& input
     if(!shouldReactToInput())
         return;
 
-    if(m_World.getEngine()->getHud().isMenuActive())
-        resetKeyStates();
-
     ModelVisual* model = getModelVisual();
-
-    if(m_World.getEngine()->getHud().isMenuActive())
-	resetKeyStates();
 
     // Stand up if wounded and forward is pressed
     if(getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)

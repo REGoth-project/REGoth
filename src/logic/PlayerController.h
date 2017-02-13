@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <daedalus/DaedalusGameState.h>
