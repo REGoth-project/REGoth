@@ -10,6 +10,7 @@ namespace Net
 {
     // Used as extern, so other code can check this
     bool isServer = false;
+    bool isClient = false;
     bool isNet = false;
 }
 
@@ -79,12 +80,13 @@ void NetEngine::onWorldCreated(Handle::WorldHandle world)
     if(Flags::mpmode.getParam(0) == "server")
     {
         Net::isServer = true;
-        m_Server = new Net::ServerState(world.get());
+        m_Server = new Net::ServerState(*this, world.get());
         m_Server->startListening(atoi(Flags::port.getParam(0).c_str()));
 
     }else 
     {
-        m_Client = new Net::ClientState(world.get());
+        Net::isClient = true;
+        m_Client = new Net::ClientState(*this, world.get());
         m_Client->connect(Flags::ip.getParam(0), atoi(Flags::port.getParam(0).c_str()));
     }
 }
