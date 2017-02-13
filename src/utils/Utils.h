@@ -330,6 +330,55 @@ namespace Utils
     };
 
     /**
+     * Will execute a function every 'delay' seconds
+     */
+    class TimedAction
+    {
+    public:
+        /**
+         * @param delay After how many seconds the action should occur
+         * @param fn function to execute after delay
+         */
+        TimedAction(float delay, std::function<void(void)> fn, bool enabled = true)
+        {
+            m_Delay = delay;
+            m_TimeLeft = m_Delay;
+            m_Enabled = enabled;
+            m_Function = fn;
+        }
+
+        /**
+         * Will update the time left until the function is going to be executed.
+         * Will also execute the function if it's time has come.
+         * @param deltatime Time since last frame
+         */
+        void update(float deltatime)
+        {
+            if(!m_Enabled)
+                return;
+
+            m_TimeLeft -= deltatime;
+
+            if(m_TimeLeft < 0.0f)
+            {
+                m_Function();
+                m_TimeLeft = m_Delay;
+            }
+        }
+
+        /**
+         * @param enabled Whether this should do something
+         */
+        void setEnabled(bool enabled){ m_Enabled = enabled; }
+
+    private:
+        std::function<void(void)> m_Function;
+        float m_Delay;
+        float m_TimeLeft;
+        bool m_Enabled;
+    };
+
+    /**
      * Iterates through the given directory and calls fn for each file
      * @param directory path to directory to interate through
      * @param fn function to call for each file. Arguments: full path, filename, ext
