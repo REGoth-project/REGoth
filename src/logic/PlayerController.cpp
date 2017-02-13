@@ -1588,7 +1588,8 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
         case EventMessages::ConversationMessage::ST_ProcessInfos:
             break;
         case EventMessages::ConversationMessage::ST_StopProcessInfos:
-            break;
+            m_World.getDialogManager().conversationHasEnded();
+            return true;
         case EventMessages::ConversationMessage::ST_OutputSVM_Overlay:
             break;
         case EventMessages::ConversationMessage::ST_SndPlay:

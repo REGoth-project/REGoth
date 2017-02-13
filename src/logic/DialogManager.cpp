@@ -121,8 +121,18 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     }*/
 }
 
-void DialogManager::stopProcessInfos(Daedalus::GameState::NpcHandle self){
-    //LogInfo() << "The script has scheduled the end-event for the Dialog with " << getGameState().getNpc(self).name[0];
+void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
+    // Push the actual conversation-message
+    EventMessages::ConversationMessage endDialogMessage;
+    endDialogMessage.subType = EventMessages::ConversationMessage::ST_StopProcessInfos;
+    // select on which EventManager the DialogEnd event will be scheduled
+    // currently NPCs perform animations while DialogManager is active, which delays the event
+    bool playerGetsEndEvent = true;
+    auto handleForQueuing = playerGetsEndEvent ? m_Interaction.player : target;
+    VobTypes::NpcVobInformation queueVob = VobTypes::getVobFromScriptHandle(m_World, handleForQueuing);
+
+    if (queueVob.isValid())
+        queueVob.playerController->getEM().onMessage(endDialogMessage);
 }
 
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
@@ -206,35 +216,15 @@ void DialogManager::update(double dt)
             if (db.getChoiceTaken() != -1)
             {
                 // Perform the choice and check if that was an END-choice
-                if (!performChoice(static_cast<size_t>(db.getChoiceTaken())))
-                {
-                    // END was chosen, don't continue the dialog
-                    endDialog();
-
-                    // Clear the dialog partners EMs
-                    // FIXME: I dont think the original game does this (start the routine), but NPCs won't change their state after talking
-                    //        sometimes (baar parvez for example)
-                    VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World,
-                                                                                             m_Interaction.player);
-                    VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World,
-                                                                                             m_Interaction.target);
-
-                    // Start routine
-                    EventMessages::StateMessage msg;
-                    msg.subType = EventMessages::StateMessage::EV_StartState;
-                    msg.functionSymbol = 0;
-
-                    if (playerVob.isValid())
-                        playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
-
-                    if (targetVob.isValid())
-                        targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
-                } else
+                if (performChoice(static_cast<size_t>(db.getChoiceTaken())))
                 {
                     // There is more! Start talking again.
                     flushChoices();
                     //endDialog();
                     //startDialog(m_Interaction.target);
+                } else
+                {
+                    // former call to conversationHasEnded(). Now handled by event.
                 }
             }
         }
@@ -334,6 +324,31 @@ void DialogManager::endDialog()
     m_DialogActive = false;
 }
 
+void DialogManager::conversationHasEnded()
+{
+    // END was chosen, don't continue the dialog
+    endDialog();
+
+    // Clear the dialog partners EMs
+    // FIXME: I dont think the original game does this (start the routine), but NPCs won't change their state after talking
+    //        sometimes (baar parvez for example)
+    VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World,
+                                                                             m_Interaction.player);
+    VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World,
+                                                                             m_Interaction.target);
+
+    // Start routine
+    EventMessages::StateMessage msg;
+    msg.subType = EventMessages::StateMessage::EV_StartState;
+    msg.functionSymbol = 0;
+
+    if (playerVob.isValid())
+        playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+    if (targetVob.isValid())
+        targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
+}
+
 bool DialogManager::init()
 {
     std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
@@ -402,17 +417,19 @@ void DialogManager::clearChoices()
     flushChoices();
 }
 
-size_t DialogManager::addChoice(ChoiceEntry& entry)
+void DialogManager::addChoice(ChoiceEntry& entry)
 {
-    if(entry.nr == 123456)
-    {
-        entry.nr = m_Interaction.choices.front().nr - 1;
-    }
-    m_Interaction.choices.insert(m_Interaction.choices.begin(), entry);
-
+    m_Interaction.choices.push_back(entry);
     flushChoices();
+}
 
-	return 0;
+void DialogManager::addChoiceFront(ChoiceEntry& entry){
+    int32_t new_nr = entry.nr;
+    for (ChoiceEntry& e : m_Interaction.choices){
+        new_nr = std::min(new_nr, e.nr);
+    }
+    entry.nr = new_nr - 1;
+    addChoice(entry);
 }
 
 void DialogManager::setSubDialogActive(bool flag)
@@ -422,7 +439,8 @@ void DialogManager::setSubDialogActive(bool flag)
 
 void DialogManager::sortChoices()
 {
-    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
+    // stable_sort keeps choices added by info_addchoice (nr=0) in the current order.
+    std::stable_sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
         return a.nr < b.nr;
     });
 }
