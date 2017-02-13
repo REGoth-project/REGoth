@@ -22,15 +22,21 @@ void ItemController::pickUp(Handle::EntityHandle npc)
 
 	if(npcvob.isValid())
 	{
-		// Unregister item from world first
-		m_World.getScriptEngine().unregisterItem(m_Entity);
-
 		npcvob.playerController->getInventory().addItem(m_ScriptState.scriptInstance);
-
-		// Remove this vob from the world
-		m_World.removeEntity(m_Entity);
 	}
+
+	remove();
 }
+
+void ItemController::remove()
+{
+	// Unregister item from world first
+	m_World.getScriptEngine().unregisterItem(m_Entity);
+
+	// Remove this vob from the world
+	m_World.removeEntity(m_Entity);
+}
+
 
 void ItemController::importObject(const json& j)
 {
@@ -44,3 +50,4 @@ void ItemController::exportPart(json& j)
 	j["type"] = "ItemController";
     j["instanceSymbol"] = m_ScriptState.scriptInstance;
 }
+

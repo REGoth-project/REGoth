@@ -27,6 +27,16 @@ namespace Logic
 		void pickUp(Handle::EntityHandle npc);
 
 		/**
+		 * Removes this item from the world
+		 */
+		void remove();
+
+		/**
+		 * @return Instance of this object
+		 */
+		unsigned getScriptInstance(){ return (unsigned)m_ScriptState.scriptInstance; }
+
+		/**
 		 * @return Classes which want to get exported on save should return true here
 		 */
 		virtual bool shouldExport(){ return true; }
