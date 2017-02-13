@@ -17,6 +17,7 @@
 #elif _WIN32 
 #include <direct.h>
 #include <Shlobj.h>
+#include <Lmcons.h>
 #endif
 
 const std::string USERDATA_FOLDER = "REGoth";
@@ -410,5 +411,31 @@ std::string Utils::stripJsonComments(const std::string& json, const std::string&
     }
 
     return r;
+}
+
+std::string Utils::getUserName()
+{
+#ifdef _WIN32
+    char name[UNLEN + 1]; // No unicode because I'm lazy
+    DWORD size = UNLEN + 1;
+
+    if(GetUserNameA(name, &size))
+    {
+        return std::string(name);
+    }
+
+    return "";
+#elif __unix__
+    uid_t uid = geteuid();
+    struct passwd *pw = getpwuid(uid);
+    if (pw)
+    {
+        return std::string(pw->pw_name);
+    }
+
+    return "";
+#else
+    return "unknown" + std::to_string(rand());
+#endif
 }
 

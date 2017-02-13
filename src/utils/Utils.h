@@ -24,6 +24,11 @@ namespace Utils
     };
 
     /**
+     * @return Name of the currently logged in user
+     */
+    std::string getUserName();
+
+    /**
      * Strips all text starting with commentStart from the given text
      * @param json Json-text to modify
      * @param commentStart String which starts a comment
