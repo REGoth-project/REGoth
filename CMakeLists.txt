@@ -267,6 +267,8 @@ else()
 endif()
 
 if(REGOTH_NETPLAY)
+    add_definitions(-DREGOTH_MP=1)
+
     if(MSVC)
         # Fixes C2694 on visual studio
         add_definitions("-DASIO_ERROR_CATEGORY_NOEXCEPT=noexcept(true)")
