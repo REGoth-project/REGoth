@@ -83,6 +83,23 @@ namespace VobTypes
     Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName = "");
 
     /**
+     * Teleports the given NPC to the given location
+     * @param world World the NPC is in
+     * @param vob NPC to teleport
+     * @param newPosition New position
+     * @param newDirection New direction
+     */
+    void NPC_Teleport(World::WorldInstance& world, NpcVobInformation& vob, const Math::float3& newPosition, const Math::float3& newDirection);
+
+    /**
+     * Kills the given NPC
+     * @param world World the NPC is in
+     * @param vob NPC to be killed
+     * @param attackingNPC The NPC who killed it
+     */
+    void NPC_Kill(World::WorldInstance& world, NpcVobInformation& vob, Handle::EntityHandle attackingNPC);
+
+    /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.
      */
     void unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);

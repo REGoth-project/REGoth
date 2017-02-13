@@ -11,6 +11,15 @@
 #include <utils/logger.h>
 #include "EntityActions.h"
 #include <engine/BaseEngine.h>
+#include <engine/NetEngine.h>
+#include <logic/ServerState.h>
+#include <logic/ClientState.h>
+
+namespace Net
+{
+    extern bool isServer;
+    extern bool isClient;
+}
 
 Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -285,17 +294,27 @@ Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, size_t
     // Use script-engine to insert the NPC
     Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceSymbol, wpName);
 
+#if REGOTH_MP
+    if(Net::isServer)
+    {
+        // Broadcast the creation of the NPC
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            sfn::Message msg = net->getServerState()->onNPCInserted(ZMemory::toBigHandle(npc), (unsigned)instanceSymbol, wpName);
+            net->getServerState()->broadcast(Net::ScriptStream, msg);
+        }
+    }
+#endif
+
     // Get engine-side entity of the created npc
     return getEntityFromScriptInstance(world, npc);
 }
 
 Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string &instanceName, const std::string &wpName)
 {
-    // Use script-engine to insert the NPC
-    Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceName, wpName);
-
-    // Get engine-side entity of the created npc
-    return getEntityFromScriptInstance(world, npc);
+    return Wld_InsertNpc(world, world.getScriptEngine().getVM().getDATFile().getSymbolIndexByName(instanceName), wpName);
 }
 
 Daedalus::GameState::ItemHandle VobTypes::NPC_DrawMeleeWeapon(VobTypes::NpcVobInformation& npc)
@@ -326,6 +345,63 @@ Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std
 Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, size_t item)
 {
     return VobTypes::initItemFromScript(world, item);
+}
+
+void
+::VobTypes::NPC_Teleport(World::WorldInstance& world, VobTypes::NpcVobInformation& vob, const Math::float3& newPosition,
+                         const Math::float3& newDirection)
+{
+    vob.playerController->teleportToPosition(newPosition);
+    vob.playerController->setDirection(newDirection);
+
+#if REGOTH_MP
+    if(Net::isServer)
+    {
+        // Broadcast the teleportation of the NPC
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            sfn::Message msg = net->getServerState()->onNPCTeleport(ZMemory::toBigHandle(getScriptHandle(vob)), newPosition, newDirection);
+            net->getServerState()->broadcast(Net::ScriptStream, msg);
+        }
+    }
+#endif
+}
+
+void ::VobTypes::NPC_Kill(World::WorldInstance& world, VobTypes::NpcVobInformation& vob, Handle::EntityHandle attackingNPC)
+{
+#if REGOTH_MP
+    if(Net::isServer)
+    {
+        // Broadcast that we killed the NPC
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            VobTypes::NpcVobInformation killer = asNpcVob(world, attackingNPC);
+            sfn::Message msg = net->getServerState()->onNPCKilled(ZMemory::toBigHandle(getScriptHandle(vob)),
+                                                                  ZMemory::toBigHandle(getScriptHandle(killer)));
+
+            net->getServerState()->broadcast(Net::ScriptStream, msg);
+        }
+
+        // Actually let the NPC die on the server
+        vob.playerController->die(attackingNPC);
+    }else if(Net::isClient && attackingNPC == world.getScriptEngine().getPlayerEntity())
+    {
+        // Notify the server that we killed the NPC
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            net->getClientState()->onNPCKilled(ZMemory::toBigHandle(getScriptHandle(vob)));
+        }
+    }
+
+#else
+    vob.playerController->die(attackingNPC);
+#endif
 }
 
 
