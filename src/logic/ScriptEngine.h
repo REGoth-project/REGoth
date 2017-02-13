@@ -24,7 +24,6 @@ namespace Logic
     {
     public:
         ScriptEngine(World::WorldInstance& world);
-        ScriptEngine(World::WorldInstance& world, ScriptEngine&& other);
         virtual ~ScriptEngine();
 
         /**
@@ -114,6 +113,7 @@ namespace Logic
          * @return The entity of the NPC the player is currently playing as
          */
         Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
+        void setPlayerEntity(Handle::EntityHandle e){ m_PlayerEntity = e; }
 
         /**
          * Returns a list of all npcs found inside the given sphere
