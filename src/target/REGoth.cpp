@@ -608,16 +608,16 @@ public:
             return "Experience points successfully given";
         });
 
-        console.registerCommand("tp", [this](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 2)
-                return "Missing argument(s). Usage: tp <npc name>";
+        console.registerCommand("goto npc", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 3)
+                return "Missing argument(s). Usage: goto npc <name>";
 
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
             std::stringstream joinedArgs;
-            for (auto it = args.begin() + 1; it != args.end(); ++it)
+            for (auto it = args.begin() + 2; it != args.end(); ++it)
             {
                 joinedArgs << *it;
             }
