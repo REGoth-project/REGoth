@@ -5,9 +5,10 @@
 #pragma once
 
 
-class NetExternals {
+namespace NetExternals
+{
 
-};
+}
 
 
 
