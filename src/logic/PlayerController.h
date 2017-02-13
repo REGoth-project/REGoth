@@ -167,6 +167,14 @@ namespace Logic
         void setDirection(const Math::float3& direction);
 
         /**
+         * @return The direction the player is facing
+         */
+        Math::float3 getDirection()
+        {
+            return m_MoveState.direction;
+        }
+
+        /**
          * @return The inventory of this player
          */
         Inventory& getInventory()

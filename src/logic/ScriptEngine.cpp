@@ -346,6 +346,43 @@ std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 
     return outSet;
 }
 
+std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string namePart)
+{
+    std::set<Handle::EntityHandle> outSet;
+    auto& datFile = getVM().getDATFile();
+
+    auto strippedAndLowered = [](const std::string& in){
+        std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
+        std::string out = in;
+        std::transform(out.begin(), out.end(), out.begin(), ::tolower);
+        out.erase(std::remove_if(out.begin(), out.end(), isNotAlNum), out.end());
+        return out;
+    };
+
+    std::string requestedLower = strippedAndLowered(namePart);
+
+    for(const Handle::EntityHandle& npc : getWorldNPCs())
+    {
+        VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(m_World, npc);
+        if (!npcVobInfo.isValid())
+            continue;
+
+        Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
+        std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
+        std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+
+        for (const auto& npcName : {npcDisplayName, npcDatFileName})
+        {
+            std::string npcNameLower = strippedAndLowered(npcName);
+            if (npcNameLower.find(requestedLower) != std::string::npos)
+            {
+                outSet.insert(npc);
+            }
+        }
+    }
+    return outSet;
+}
+
 void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& entry)
 {
     m_World.getPrintScreenManager().printMessage("Topic: " + topic);
