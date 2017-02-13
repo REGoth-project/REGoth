@@ -62,6 +62,11 @@ namespace Logic
         void endDialog();
 
         /**
+         * The conversation has reached its end.
+         */
+        void conversationHasEnded();
+
+        /**
          * Displays a subtitle text
          * @param subtitle Text to display
          * @param self Name of the person saying that line
@@ -90,10 +95,16 @@ namespace Logic
 
         /**
          * Adds a single choice to the box
-         * @param entry Choice entry. Note: nr of -1 means: Sort ascending
-         * @return Index of the choice
+         * @param entry Choice entry.
          */
-        size_t addChoice(ChoiceEntry& entry);
+        void addChoice(ChoiceEntry& entry);
+
+        /**
+         * Adds a single choice to the box.
+         * The entry will get a new nr to be guaranteed to be on top.
+         * @param entry Choice entry.
+         */
+        void addChoiceFront(ChoiceEntry& entry);
 
         /**
          * Sets whether the DialogManager is in in the SubDialog state
@@ -117,10 +128,10 @@ namespace Logic
 
         /**
          * Called by the script when the interaction will end
-         * and the DialogManager should be closed after the last Dialog
+         * and the DialogManager should be closed after the last ConversationMessage (if any)
          * @param self NPC who the player is talking to
          */
-        void stopProcessInfos(Daedalus::GameState::NpcHandle self);
+        void queueDialogEndEvent(Daedalus::GameState::NpcHandle target);
 
         // TODO: Probably move this into script-engine
         Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }

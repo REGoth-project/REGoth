@@ -904,12 +904,13 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Logic::DialogManager::ChoiceEntry choice;
         choice.info = hinfo;
         choice.text = text;
-        choice.nr = 123456; // This means: push before first element TODO: create special addchoice function
+        // all choices added by this function will have the same number
+        choice.nr = 0;
         choice.functionSym = func;
 
         // calling the script function info_addchoice always opens the SubDialog for special multiple choices
         pWorld->getDialogManager().setSubDialogActive(true);
-        pWorld->getDialogManager().addChoice(choice);
+        pWorld->getDialogManager().addChoiceFront(choice);
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
@@ -921,12 +922,13 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("ai_stopprocessinfos", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
         uint32_t self = vm.popVar();
         Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
             (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
 
         // Notify DialogManager
-        pWorld->getDialogManager().stopProcessInfos(hself);
+        pWorld->getDialogManager().queueDialogEndEvent(hself);
     });
 
 	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
