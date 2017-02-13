@@ -23,6 +23,11 @@
 #include <ZenLib/zenload/zTypes.h>
 #include <ui/Hud.h>
 
+namespace Net
+{
+    extern bool isClient;
+}
+
 using namespace World;
 
 WorldInstance::WorldInstance()
@@ -33,6 +38,7 @@ WorldInstance::WorldInstance()
       m_DialogManager(*this),
       m_PrintScreenMessageView(nullptr),
       m_BspTree(*this),
+      m_pEngine(nullptr),
       m_PfxManager(*this)
 {
 	
@@ -415,7 +421,8 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
 bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
 {
-	if(!worldName.empty())
+    // Don't use any scripting when running as client or in an empty world
+	if(!Net::isClient && !worldName.empty())
 	{
 		LogInfo() << "Initializing scripts for world: " << worldName;
 		m_ScriptEngine.initForWorld(worldName, firstStart);
