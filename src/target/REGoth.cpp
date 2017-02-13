@@ -397,6 +397,12 @@ public:
 
             const int hh = std::stoi(args[2]);
             const int mm = std::stoi(args[3]);
+
+            if(hh < 0 || hh > 23)
+                return "Invalid argument. Hours must be in range from 00 to 23";
+            if(mm < 0 || mm > 59)
+                return "Invalid argument. Minutes must be in range from 00 to 59";
+
             m_pEngine->getMainWorld().get().getSky().setTimeOfDay(hh, mm);
 
             return "Set time to " + args[2] + ":" + args[3];
@@ -415,6 +421,25 @@ public:
             f.close();
 
             return "Hero successfully exported to: hero.json";
+        });
+
+        console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() != 3)
+                return "Invalid argument. Usage: goto waypoint [waypoint]";
+
+            const std::string &waypointArgument = args[2];
+            const World::Waynet::WaynetInstance& waynet = m_pEngine->getMainWorld().get().getWaynet();
+            Logic::ScriptEngine &scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
+            const auto waypointIndex = World::Waynet::getWaypointIndex(waynet, waypointArgument);
+            if(waypointIndex == World::Waynet::INVALID_WAYPOINT)
+                return "Error: Waypoint" + waypointArgument + "not found";
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
+            if(!player.isValid())
+                return "Error: There is no valid player in the world";
+            player.playerController->teleportToWaypoint(waypointIndex);
+
+            return "Player moved to waypoint " + waypointArgument;
         });
 
         console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
