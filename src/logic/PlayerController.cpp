@@ -1556,6 +1556,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             {
                 m_World.getDialogManager().stopDisplaySubtitle();
                 m_World.getAudioWorld().stopSounds();
+                getModelVisual()->stopAnimations();
             }
 
             return done;
@@ -1960,7 +1961,7 @@ void PlayerController::setupKeyBindings()
                 // Update the players status menu once
                 updateStatusScreen(statsScreen);
             }
-	    else if (hud.isTopMenu<UI::Menu_Status>())
+            else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
     });

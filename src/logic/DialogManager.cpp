@@ -438,8 +438,7 @@ void DialogManager::setSubDialogActive(bool flag)
 
 void DialogManager::sortChoices()
 {
-    // stable_sort keeps choices added by info_addchoice (nr=0) in the current order.
-    std::stable_sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
+    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
         return a.nr < b.nr;
     });
 }
