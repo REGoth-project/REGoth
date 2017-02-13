@@ -52,49 +52,6 @@ namespace Utils
      * @param up Up direction and length
      */
     inline void billboardQuad(Math::float3& target0,
-                              Math::float3& target1,
-                              Math::float3& target2,
-                              Math::float3& target3,
-                              Math::float3& target4,
-                              Math::float3& target5,
-                              const Math::float3& center,
-                              const Math::float3& right,
-                              const Math::float3& up)
-    {
-        target0 = center + up - right; // Top/left
-        target1 = center + up + right; // Top/Right
-        target2 = center - up - right; // Bottom/Left
-
-        target3 = center - up - right; // Bottom/left
-        target4 = center + up + right; // Top/Right
-        target5 = center - up + right; // Bottom/Right
-    }
-
-
-    /**
-     * @return Random number in range of -1...1
-     */
-    inline float frandF2()
-    {
-        return (rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-    }
-
-    /**
-     * @return Random number in range of -1...1
-     */
-    inline float frand()
-    {
-        return (rand() / (float)RAND_MAX);
-    }
-
-    /**
-     * Generates a billboard
-     * @param target Target data
-     * @param center Center position of the quad
-     * @param right Right direction and length
-     * @param up Up direction and length
-     */
-    inline void billboardQuad(Math::float3& target0,
                        Math::float3& target1,
                        Math::float3& target2,
                        Math::float3& target3,
