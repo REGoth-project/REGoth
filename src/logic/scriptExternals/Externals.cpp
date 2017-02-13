@@ -926,7 +926,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 			return;
 		}
 
-		vm.getGameState().insertNPC(npcinstance, spawnpoint);
+        VobTypes::Wld_InsertNpc(*pWorld, npcinstance, spawnpoint);
 	});
 
     vm->registerExternalFunction("wld_insertitem", [=](Daedalus::DaedalusVM& vm){
