@@ -89,6 +89,11 @@ namespace Logic
         bool isTalking() { return m_Talking; }
 
         /**
+         * @return The NPC the hero is talking to
+         */
+        Daedalus::GameState::NpcHandle getTarget() {return m_Interaction.target; }
+
+        /**
          * Removes all choices currently in the dialogbox
          */
         void clearChoices();
@@ -216,7 +221,7 @@ namespace Logic
         /**
          * Whether a hero is inside a multiple choice test.
          * When true the queue will not be cleared and normal dialog options will not be added
-         * This state is automatically left when the choice queue is empty
+         * This state is left when the script calls the script function Info_ClearChoices
          */
          bool m_SubDialogActive;
     };

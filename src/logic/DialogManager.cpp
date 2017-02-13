@@ -346,7 +346,6 @@ void DialogManager::conversationHasEnded()
 
     if (targetVob.isValid())
         targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
-    LogInfo() << "conversationHasEnded";
 }
 
 bool DialogManager::init()
