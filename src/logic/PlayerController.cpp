@@ -128,7 +128,7 @@ void PlayerController::onUpdate(float deltaTime)
         // Do waypoint-actions
         if (travelPath(deltaTime))
         {
-            // Path done, stop animation
+            // Pat//h done, stop animation
             //if (model)
             //    model->setAnimation(ModelVisual::Idle);
 
@@ -215,6 +215,16 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
 
     // Start with idle-animation
     getModelVisual()->setAnimation(ModelVisual::Idle);
+}
+
+void PlayerController::setPositionAndDirection(const Math::float3& pos, const Math::float3& dir)
+{
+    m_MoveState.position = pos;
+
+    // This also update the entity transform from m_MoveState.position
+    setDirection(dir);
+
+    placeOnGround();
 }
 
 void PlayerController::gotoWaypoint(size_t wp)
@@ -772,16 +782,83 @@ void PlayerController::onVisualChanged()
     getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
 }
 
-void PlayerController::onUpdateByInput(float deltaTime)
+bool PlayerController::shouldReactToInput()
 {
-
     ModelVisual* model = getModelVisual();
 
     if (!model)
+        return false;
+
+    if(m_World.getDialogManager().isDialogActive() || m_World.getEngine()->getHud().isMenuActive())
+        return false;
+
+    return true;
+}
+
+
+PlayerInput PlayerController::temp_GetInputInfo()
+{
+    PlayerInput i;
+
+    i.direction = Math::float2(0,0);
+
+    if(m_isForward)
+        i.direction += Math::float2(0,1);
+
+    if(m_isBackward)
+        i.direction += Math::float2(0,-1);
+
+    if(m_isStrafeLeft)
+        i.direction += Math::float2(-1,0);
+
+    if(m_isStrafeRight)
+        i.direction += Math::float2(1,0);
+
+    i.direction = i.direction.normalize();
+    i.isForward = m_isForward;
+    i.isBackward = m_isBackward;
+    i.isLeft = m_isStrafeLeft;
+    i.isRight = m_isStrafeRight;
+
+    i.debugSpeedMod = 1.0f;
+    i.debugSpeedMod *= m_MoveSpeed1 ? 4.0f : 1.0f;
+    i.debugSpeedMod *= m_MoveSpeed2 ? 10.0f : 1.0f;
+
+    i.turnAngle = 0.0f;
+    i.turnAngle += m_isTurnLeft ? 1.0f : 0.0f;
+    i.turnAngle += m_isTurnRight ? -1.0f : 0.0f;
+
+    return i;
+}
+
+void PlayerController::onUpdateByInput(float deltaTime)
+{
+    if(!shouldReactToInput())
         return;
 
-    if(m_World.getDialogManager().isDialogActive())
+    onUpdateByInput(deltaTime, temp_GetInputInfo());
+
+    // Reset key-states
+    m_isStrafeLeft = false;
+    m_isStrafeRight = false;
+    m_isForward = false;
+    m_isBackward = false;
+    m_isTurnLeft = false;
+    m_isTurnRight = false;
+    m_MoveSpeed1 = false;
+    m_MoveSpeed2 = false;
+}
+
+void PlayerController::onUpdateByInput(float deltaTime, const PlayerInput& input)
+{
+
+    if(!shouldReactToInput())
         return;
+
+    if(m_World.getEngine()->getHud().isMenuActive())
+        resetKeyStates();
+
+    ModelVisual* model = getModelVisual();
 
     if(m_World.getEngine()->getHud().isMenuActive())
 	resetKeyStates();
@@ -805,52 +882,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     // FIXME: Temporary test-code
     static bool lastDraw = false;
-
-    /*
-#define SINGLE_ACTION_KEY(key, fn) { \
-    static bool last = false; \
-    if(inputGetKeyState(key) && !last)\
-        last = true; \
-    else if(!inputGetKeyState(key) && last){\
-        last = false;\
-        fn();\
-    } }
-
-    SINGLE_ACTION_KEY(entry::Key::KeyK, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            VobTypes::NPC_DrawMeleeWeapon(npc);
-
-            npc.playerController->setDailyRoutine({}); // FIXME: Idle-animation from routine finish overwriting other animations!
-        }
-    });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyJ, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            VobTypes::NPC_UndrawWeapon(npc);
-        }
-    });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyH, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            npc.playerController->attackFront();
-        }
-    });
-    */
     if (m_isDrawWeaponMelee)
     {
         if (!lastDraw)
@@ -875,7 +906,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
     {
-        static std::string lastMovementAni = "";
         auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
             if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
             {
@@ -897,30 +927,31 @@ void PlayerController::onUpdateByInput(float deltaTime)
                 //TODO this happens more than it should, there seems to be too much undefined materials, find out why
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            if(model->getAnimationHandler().getActiveAnimationPtr())
+                m_LastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
             m_NoAniRootPosHack = true;
         };
-        if (m_isStrafeLeft)
+        if (input.isLeft)
         {
             manageAnimation(ModelVisual::EModelAnimType::StrafeLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
-        else if (m_isStrafeRight)
+        else if (input.isRight)
         {
             manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
-        else if (m_isTurnLeft && !m_isForward)
+        else if (input.isTurnLeft && !input.isForward)
         {
             manageAnimation(ModelVisual::EModelAnimType::TurnLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
         }
-        else if (m_isTurnRight && !m_isForward)
+        else if (input.isTurnRight && !input.isForward)
         {
             manageAnimation(ModelVisual::EModelAnimType::TurnRight, ModelVisual::EModelAnimType::SwimTurnRight);
         }
-        else if (m_isForward)
+        else if (input.isForward)
         {
             manageAnimation(m_MoveState.ground.waterDepth > m_wadeThreshold ? ModelVisual::EModelAnimType::Wade : ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
         }
-        else if (m_isBackward)
+        else if (input.isBackward)
         {
             manageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
         }
@@ -928,7 +959,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         //		{
         //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
         //		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == m_LastMovementAni)
         {
             manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
@@ -998,14 +1029,9 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if(!m_AIState.usedMob.isValid())
     {
-        if (m_isTurnLeft)
+        if(input.turnAngle != 0.0f)
         {
-            yaw += turnSpeed * deltaTime;
-            m_NoAniRootPosHack = true;
-        } else if (m_isTurnRight)
-        {
-            yaw -= turnSpeed * deltaTime;
-            m_NoAniRootPosHack = true;
+            yaw += turnSpeed * deltaTime * input.turnAngle;
         }
     }
 
@@ -1015,12 +1041,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
 
     // TODO: HACK, take this out!
-    float moveMod = 1.0f;
-    if (m_MoveSpeed1)
-        moveMod *= 4.0f;
-
-    if (m_MoveSpeed2)
-        moveMod *= 16.0f;
+    float moveMod = input.debugSpeedMod;
 
     getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
@@ -1955,8 +1976,8 @@ void PlayerController::setupKeyBindings()
 
                 // Update the players status menu once
                 updateStatusScreen(statsScreen);
-            } 
-	    else if (hud.isTopMenu<UI::Menu_Status>()) 
+            }
+	    else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
     });

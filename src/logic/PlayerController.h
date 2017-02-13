@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <daedalus/DaedalusGameState.h>
@@ -6,6 +7,7 @@
 #include "Inventory.h"
 #include "LogicDef.h"
 #include "NpcScriptState.h"
+#include "PlayerInput.h"
 
 namespace UI
 {
@@ -122,6 +124,21 @@ namespace Logic
          */
         void onUpdateByInput(float deltaTime);
 
+        // TODO: Temporary, remove!
+        PlayerInput temp_GetInputInfo();
+
+        /**
+         * Whether this (player controlled) character should currently react to input
+         * given by the user. This returns false if a dialog is active, for example.
+         * @return Whether input should be processed
+         */
+        bool shouldReactToInput();
+
+        /**
+         * Updates the controller with this players current input values
+         */
+        void onUpdateByInput(float deltaTime, const PlayerInput& input);
+
         /**
          * Update routine for the NPC currently controlled by the player
          * @param deltaTime Time since last frame
@@ -161,18 +178,17 @@ namespace Logic
         void teleportToPosition(const Math::float3& pos);
 
         /**
+         * Sets the position without any other major disruptions
+         * @param pos New position
+         */
+        void setPositionAndDirection(const Math::float3& pos, const Math::float3& dir);
+
+        /**
          * Sets the direction the NPC should be facing to (snaps, doesn't interpolate nor plays animations)
          * @param direction Direction to face
          */
         void setDirection(const Math::float3& direction);
-
-        /**
-         * @return The direction the player is facing
-         */
-        Math::float3 getDirection()
-        {
-            return m_MoveState.direction;
-        }
+        const Math::float3& getDirection(){ return m_MoveState.direction; }
 
         /**
          * @return The inventory of this player
@@ -596,9 +612,11 @@ namespace Logic
         size_t m_LastAniRootPosUpdatedAniHash;
 
         /**
-         * Contstants 
+         * Contstants
          */
         static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
         static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
+
+        std::string m_LastMovementAni; // TODO: Remove
     };
 }
