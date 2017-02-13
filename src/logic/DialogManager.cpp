@@ -126,8 +126,7 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
     EventMessages::ConversationMessage endDialogMessage;
     endDialogMessage.subType = EventMessages::ConversationMessage::ST_StopProcessInfos;
     // select on which EventManager the DialogEnd event will be scheduled
-    // currently NPCs perform animations while DialogManager is active, which delays the event
-    bool playerGetsEndEvent = true;
+    bool playerGetsEndEvent = false;
     auto handleForQueuing = playerGetsEndEvent ? m_Interaction.player : target;
     VobTypes::NpcVobInformation queueVob = VobTypes::getVobFromScriptHandle(m_World, handleForQueuing);
 
@@ -347,6 +346,7 @@ void DialogManager::conversationHasEnded()
 
     if (targetVob.isValid())
         targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
+    LogInfo() << "conversationHasEnded";
 }
 
 bool DialogManager::init()
