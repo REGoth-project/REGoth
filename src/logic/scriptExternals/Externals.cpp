@@ -790,7 +790,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             // Don't schedule random animations when the npc is the target of the dialog manager
             Daedalus::GameState::NpcHandle npcHandle = npc.playerController->getScriptHandle();
-            if (pWorld->getDialogManager().isDialogActive() && pWorld->getDialogManager().getTarget() == npcHandle){
+            auto& dialogManager = pWorld->getDialogManager();
+            if (dialogManager.isDialogActive() && dialogManager.getTarget() == npcHandle){
                 //LogInfo() << "Animation got canceled (DialogActive): npc = " << npc.playerController->getScriptInstance().name[0] << ", ani = " << ani;
             } else {
                 npc.playerController->getEM().onMessage(sm);
