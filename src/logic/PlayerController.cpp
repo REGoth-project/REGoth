@@ -1541,22 +1541,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
                 message.internInProgress = true;
             }
-
-
-            bool done = s_action_triggered;
-            /*SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
-                done = true;
-                m_World.getDialogManager().stopDisplaySubtitle();
-            });*/
-
-            if(done)
-            {
-                m_World.getDialogManager().stopDisplaySubtitle();
-                m_World.getAudioWorld().stopSounds();
-                getModelVisual()->stopAnimations();
-            }
-
-            return done;
+            return s_action_triggered;
         }
             break;
 
