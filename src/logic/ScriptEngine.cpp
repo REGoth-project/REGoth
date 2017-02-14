@@ -255,7 +255,7 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
             pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
 
         // If this is the hero, link it
-        if(!m_PlayerEntity.isValid() && vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
+        if(!Net::isNet && !m_PlayerEntity.isValid() && vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
         {
             // Player should already be in the world and script-instances should be initialized.
             Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
