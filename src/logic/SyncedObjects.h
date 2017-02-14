@@ -20,6 +20,12 @@ namespace sfn
     sfn::Message& operator<<( sfn::Message& message, const Math::float2& input);
     sfn::Message& operator>>( sfn::Message& message, Math::float2& output);
 
+    sfn::Message& operator<<( sfn::Message& message, const Math::Matrix& input);
+    sfn::Message& operator>>( sfn::Message& message, Math::Matrix& output);
+
+    sfn::Message& operator<<( sfn::Message& message, const Handle::EntityHandle& input);
+    sfn::Message& operator>>( sfn::Message& message, Handle::EntityHandle& output);
+
     template<typename T, int N>
     sfn::Message& operator<<(sfn::Message& message, const T (&input)[N])
     {
@@ -56,6 +62,11 @@ namespace World
 
 namespace Net
 {
+    enum EntityType
+    {
+        ET_Item,
+    };
+
     // Our IDs for the different streams.
     enum StreamID : sfn::LinkBase::stream_id_type {
         Default = 0, // You shouldn't touch this unless you don't use the default stream anyway.
@@ -88,11 +99,15 @@ namespace Net
         SP_NPC_Teleport = 7,        // Packet, Instance-Handle, New-Position, New-Direction
         SP_NPC_Killed = 8,          // Packet, Serverhandle(Killed), Serverhandle(Killer)
         SP_WorldTimeSync = 9,       // Packet, time(float)
+        SP_Item_Created = 10,       // Packet, (Server)Entity-handle, instance-idx, transform
+        SP_Item_Removed = 11,         // Packet, (Server)Entity-handle
+        SP_NPC_AddInventory = 12,   // Packet, Serverhandle, Instance, Count
     };
 
     enum PlayerActionPacket : uint16_t
     {
         PA_NPC_Killed = 0,          // Packet, Serverhandle(Killed), Serverhandle(Killer)
+        PA_Item_Taken = 1,          // Packet, Serverentity(Item)
     };
 
     // Max number of chat messages sent to the clients

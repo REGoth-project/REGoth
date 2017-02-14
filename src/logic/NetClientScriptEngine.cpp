@@ -11,6 +11,7 @@
 #include <logic/ClientState.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include <logic/ItemController.h>
 
 const bool VERBOSE_LOGGING = false;
 
@@ -149,6 +150,42 @@ void Net::NetClientScriptEngine::readStreams()
                 m_World.getSky().setTimeOfDay(time);
             }
             break;
+
+            case SP_Item_Created:
+            {
+                Handle::EntityHandle serverhandle;
+                uint32_t sym;
+                Math::Matrix transform;
+
+                msg >> serverhandle;
+                msg >> sym;
+                msg >> transform;
+
+                onItemInserted(serverhandle, sym, transform);
+            }
+            break;
+
+            case SP_Item_Removed:
+            {
+                Handle::EntityHandle serverhandle;
+                msg >> serverhandle;
+
+                onItemTaken(serverhandle);
+            }
+            break;
+
+            case SP_NPC_AddInventory:
+            {
+                ZMemory::BigHandle serverhandle;
+                uint32_t sym;
+                int32_t count;
+
+                msg >> serverhandle;
+                msg >> sym;
+                msg >> count;
+
+                onNPCAddInventory(serverhandle, sym, count);
+            }break;
             default:
                 LogWarn() << "Net: Unknown script-packet: " << p;
         }
@@ -246,6 +283,41 @@ Net::NetClientScriptEngine::registerLocalHandle(Daedalus::EInstanceClass instanc
     instMap[serverHandle] = localHandle;
     instMapLocal[localHandle] = serverHandle;
 }
+
+Handle::EntityHandle Net::NetClientScriptEngine::getLocalEntity(Net::EntityType type, Handle::EntityHandle localHandle)
+{
+    const auto& instMap = m_EntityMap[type];
+
+    const auto it = instMap.find(localHandle);
+
+    if(it == instMap.end())
+        return Handle::EntityHandle::makeInvalidHandle(); // Not found, return invalid handle
+
+    return it->second;
+}
+
+Handle::EntityHandle Net::NetClientScriptEngine::getServerEntity(Net::EntityType type, Handle::EntityHandle serverhandle)
+{
+    const auto& instMap = m_EntityMapLocal[type];
+
+    const auto it = instMap.find(serverhandle);
+
+    if(it == instMap.end())
+        return Handle::EntityHandle::makeInvalidHandle(); // Not found, return invalid handle
+
+    return it->second;
+}
+
+void Net::NetClientScriptEngine::registerLocalHandle(Net::EntityType type, Handle::EntityHandle serverHandle,
+                                                     Handle::EntityHandle localHandle)
+{
+    auto& instMap = m_EntityMap[type];
+    auto& instMapLocal = m_EntityMapLocal[type];
+
+    instMap[serverHandle] = localHandle;
+    instMapLocal[localHandle] = serverHandle;
+}
+
 
 void Net::NetClientScriptEngine::onSymbolChanged(unsigned sym, Daedalus::EParOp op, const Daedalus::PARSymbol& newSym)
 {
@@ -398,6 +470,20 @@ void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
                     onNPCKilled(killed, killer);
                 }
                     break;
+
+                case SP_Item_Created:
+                {
+                    Handle::EntityHandle serverhandle;
+                    uint32_t sym;
+                    Math::Matrix transform;
+
+                    msg >> serverhandle;
+                    msg >> sym;
+                    msg >> transform;
+
+                    onItemInserted(serverhandle, sym, transform);
+                }
+                    break;
                 default:
                     ; // Not interesting
             }
@@ -456,6 +542,69 @@ void Net::NetClientScriptEngine::onNPCKilled(ZMemory::BigHandle killed, ZMemory:
 
 
 }
+
+void Net::NetClientScriptEngine::onItemInserted(Handle::EntityHandle serverhandle, unsigned sym, const Math::Matrix& transform)
+{
+    LogInfo() << "Net: Server inserted item of instance " << sym << " at " << transform.Translation().toString();
+
+    Handle::EntityHandle e = VobTypes::createItem(m_World, sym);
+    VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, e);
+
+    Vob::setTransform(item, transform);
+
+    // Link to servers entity
+    registerLocalHandle(EntityType::ET_Item, serverhandle, e);
+}
+
+void Net::NetClientScriptEngine::removeLocalEntity(Net::EntityType type, Handle::EntityHandle localHandle)
+{
+    auto& instMap = m_EntityMap[type];
+    auto& instMapLocal = m_EntityMapLocal[type];
+
+    Handle::EntityHandle serverHandle = getServerEntity(type, localHandle);
+
+    instMap.erase(serverHandle);
+    instMapLocal.erase(localHandle);
+}
+
+void Net::NetClientScriptEngine::onItemTaken(Handle::EntityHandle serverhandle)
+{
+    Handle::EntityHandle local = getLocalEntity(EntityType::ET_Item, serverhandle);
+
+
+    if(local.isValid())
+    {
+        VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, local);
+
+        if(item.isValid())
+        {
+            item.itemController->remove();
+
+            LogInfo() << "Net: Server removed item (Entity: " << serverhandle.index << ")";
+        }
+    }
+}
+
+void Net::NetClientScriptEngine::onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count)
+{
+    using namespace Daedalus::GameState;
+
+    ZMemory::BigHandle hlocalNPC = getLocalHandle(Daedalus::IC_Npc, serverhandle);
+
+    if(!hlocalNPC.isValid())
+        return;
+
+    VobTypes::NpcVobInformation localNPC = VobTypes::getVobFromScriptHandle(m_World,ZMemory::handleCast<NpcHandle>(hlocalNPC));
+
+    if(!localNPC.isValid())
+        return;
+
+    if(count > 0)
+        localNPC.playerController->getInventory().addItem(sym, (unsigned)count);
+    else if(count < 0)
+        localNPC.playerController->getInventory().removeItem(sym, (unsigned)(-count));
+}
+
 
 
 

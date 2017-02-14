@@ -250,7 +250,7 @@ void Net::ClientState::update(float deltatime)
     for(Net::PlayerState& p : m_Players)
     {
         // Need to create a new player-entity for newly joined players
-        if(!p.getPlayerEntity().isValid() && &p != m_ThisPlayer)
+        /*if(!p.getPlayerEntity().isValid() && &p != m_ThisPlayer)
         {
             // Create new hero-instance
             Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", "WP_INTRO_FALL3");
@@ -262,7 +262,7 @@ void Net::ClientState::update(float deltatime)
             p.setPlayerEntity(e);
 
             LogInfo() << "Net: Created hero instance " << e.index << " for player '" << p.getName() << "'";
-        }
+        }*/
 
 
         bgfx::dbgTextPrintf(0, 5+i, 0x0f, " %s", p.getName().c_str());
@@ -340,20 +340,23 @@ bool Net::ClientState::isConnected()
 
 void Net::ClientState::setupPlayer()
 {
-    // Create player-instance on client
-    // Note: Players NPC has to be the first one in the world so it gets set as player-entity!
-    Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", "WP_INTRO_FALL3");
-    LogInfo() << "Net: Inserted Player Character (Entity " << e.index << ")";
+    if(!m_World.getScriptEngine().getWorldNPCs().empty())
+        LogWarn() << "Net: World is not empty from NPCs before first server-sync!";
+
+    // Wait for world-data to come in
+    m_ScriptEngine.readWorldSyncStream(true);
 
     // Get the script-handle of the created NPC
-    VobTypes::NpcVobInformation clientNPC = VobTypes::asNpcVob(m_World, e);
-    Daedalus::GameState::NpcHandle hclientNPC = VobTypes::getScriptHandle(clientNPC);
+    VobTypes::NpcVobInformation clientNPC = VobTypes::getVobFromScriptHandle(m_World,
+                                                                             ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_AssignedNPC));
 
-    // Set name
-    VobTypes::getScriptObject(clientNPC).name[0] = m_Name;
+    if(!clientNPC.isValid())
+    {
+        LogError() << "Net: Client version of the players Character wasn't found!";
+        exit(0);
+    }
 
-    // And link it to the servers instance
-    m_ScriptEngine.registerLocalHandle(Daedalus::IC_Npc, m_AssignedNPC, hclientNPC);
+    clientNPC.playerController->setupKeyBindings();
 
     // Find "this-player" and assign NPC-instance to it
     for (Net::PlayerState& p : m_Players)
@@ -361,7 +364,7 @@ void Net::ClientState::setupPlayer()
         if (p.getPlayerID() == m_PlayerID)
         {
             m_ThisPlayer = &p;
-            m_ThisPlayer->setPlayerEntity(e);
+            m_ThisPlayer->setPlayerEntity(clientNPC.entity);
             break;
         }
     }
@@ -372,8 +375,10 @@ void Net::ClientState::setupPlayer()
         exit(0);
     }
 
-    // Wait for world-data to come in
-    m_ScriptEngine.readWorldSyncStream(true);
+    m_World.getScriptEngine().setPlayerEntity(clientNPC.entity);
+
+    // Need to have a valid value here or the scripts won't shut up
+    m_World.getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(clientNPC));
 }
 
 void Net::ClientState::onNPCKilled(ZMemory::BigHandle killed)
@@ -392,4 +397,30 @@ void Net::ClientState::onNPCKilled(ZMemory::BigHandle killed)
     msg << serverHandle;
 
     m_Link->Send(PlayerActionsStream, msg);
+}
+
+void Net::ClientState::onItemTaken(Handle::EntityHandle item)
+{
+    sfn::Message msg;
+
+    Handle::EntityHandle serverHandle = m_ScriptEngine.getServerEntity(EntityType::ET_Item, item);
+
+    if(!serverHandle.isValid())
+    {
+        LogWarn() << "Net: Taken item is unknown by server / client not in sync!";
+        return;
+    }
+
+    msg << PlayerActionPacket::PA_Item_Taken;
+    msg << serverHandle;
+
+    m_Link->Send(PlayerActionsStream, msg);
+}
+
+void Net::ClientState::onWorldLoaded()
+{
+    LogInfo() << "Net: Setting up player";
+    setupPlayer();
+
+    m_Engine.getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
 }

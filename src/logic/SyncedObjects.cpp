@@ -76,6 +76,39 @@ namespace sfn
 
         return message;
     }
+
+    sfn::Message& operator<<( sfn::Message& message, const Math::Matrix& input)
+    {
+        message << input.mv;
+
+        return message;
+    }
+
+    sfn::Message& operator>>( sfn::Message& message, Math::Matrix& output)
+    {
+        message >> output.mv;
+
+        return message;
+    }
+
+    sfn::Message& operator<<( sfn::Message& message, const Handle::EntityHandle& input)
+    {
+        message << (uint32_t)input.index;
+        message << (uint32_t)input.generation;
+        return message;
+    }
+
+    sfn::Message& operator>>( sfn::Message& message, Handle::EntityHandle& output)
+    {
+        uint32_t index, generation;
+        message >> index;
+        message >> generation;
+
+        output.index = index;
+        output.generation = generation;
+
+        return message;
+    }
 }
 
 

@@ -32,6 +32,11 @@ namespace Net
         bool connect(const std::string& ip, uint16_t port);
 
         /**
+         * Called when the world was loaded for this client
+         */
+        void onWorldLoaded();
+
+        /**
          * Called every frame
          * @param deltaTime Time since last frame
          */
@@ -54,6 +59,12 @@ namespace Net
          * @param attackingNPC the killing NPC
          */
         void onNPCKilled(ZMemory::BigHandle killed);
+
+        /**
+         * Sends a message for when the given Item is to be taken.
+         * @param item Item that is to be taken
+         */
+        void onItemTaken(Handle::EntityHandle item);
     protected:
 
         /**

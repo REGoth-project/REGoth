@@ -8,6 +8,7 @@
 #include <SFNUL/include/SFNUL/Message.hpp>
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
+#include <logic/SyncedObjects.h>
 
 namespace World
 {
@@ -71,7 +72,31 @@ namespace Net
             registerLocalHandle(instanceClass, serverHandle, ZMemory::toBigHandle(localHandle));
         }
 
+        /**
+         * Looks up the local version of the given script handle
+         * @param instanceClass Class to look up
+         * @param serverHandle Handle on the server we want to know the local version of
+         * @return Local handle. Invalid if couldn't be found.
+         */
+        Handle::EntityHandle getLocalEntity(EntityType type, Handle::EntityHandle serverHandle);
+        Handle::EntityHandle getServerEntity(EntityType type, Handle::EntityHandle localHandle);
 
+        /**
+         * Registers the local version of a server-object here
+         * @param instanceClass Class of the object
+         * @param serverHandle Handle on the server
+         * @param localHandle Local handle of this client
+         */
+        void registerLocalHandle(EntityType type,
+                                 Handle::EntityHandle serverHandle,
+                                 Handle::EntityHandle localHandle);
+
+        /**
+         * Removes the tracking of a local handle to it's server counterpart
+         * @param type Type of the handle
+         * @param localHandle local handle to remove tracking of
+         */
+        void removeLocalEntity(EntityType type, Handle::EntityHandle localHandle);
 
     protected:
 
@@ -146,6 +171,28 @@ namespace Net
         void onNPCTeleport(ZMemory::BigHandle serverhandle, const Math::float3& newPosition, const Math::float3& newDirection);
 
         /**
+         * Callback for when an Item was inserted into the world
+         * @param sym Symbol-index of the inserted item
+         * @param transform Transform of the item
+         */
+        void onItemInserted(Handle::EntityHandle serverhandle, unsigned sym, const Math::Matrix& transform);
+
+        /**
+         * Callback for when an Item was taken by some player (removes it from the world)
+         * @param serverhandle Serverhandle of the taken item
+         */
+        void onItemTaken(Handle::EntityHandle serverhandle);
+
+        /**
+         * Callback for when the server wants to add something to the inventory of a player
+         * Note: Count can be negative to remove items
+         * @param serverhandle NPC to give/take the items
+         * @param sym Instance of the item to give/take
+         * @param count Number of items to give/take (can be negative)
+         */
+        void onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count);
+
+        /**
          * Mappings for the handles on the server
          * Class -> (Server handle -> Local handle)
          */
@@ -156,6 +203,18 @@ namespace Net
          * Class -> (Local handle -> Server handle)
          */
         std::map<Daedalus::EInstanceClass, std::map<ZMemory::BigHandle, ZMemory::BigHandle>> m_InstanceMapLocal;
+
+        /**
+         * Mappings for the handles on the server
+         * Class -> (Server handle -> Local handle)
+         */
+        std::map<EntityType, std::map<Handle::EntityHandle, Handle::EntityHandle>> m_EntityMap;
+
+        /**
+         * Mappings for the handles on the server
+         * Class -> (Local handle -> Server handle)
+         */
+        std::map<EntityType, std::map<Handle::EntityHandle, Handle::EntityHandle>> m_EntityMapLocal;
 
         /**
          * Engine and world this is running on

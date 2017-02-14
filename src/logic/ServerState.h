@@ -67,6 +67,30 @@ namespace Net
          * @return message
          */
         static sfn::Message onNPCKilled(ZMemory::BigHandle killed, ZMemory::BigHandle attackingNPC);
+
+        /**
+         * Creates a message for when an Item was inserted
+         * @param World entity of the item
+         * @param sym Instance of the item
+         * @return message
+         */
+        static sfn::Message onItemInserted(Handle::EntityHandle e, unsigned sym, const Math::Matrix& transform);
+
+        /**
+         * Creates a message for when an Item was removed from the world
+         * @param World entity of the item
+         * @return message
+         */
+        static sfn::Message onItemRemoved(Handle::EntityHandle e);
+
+        /**
+         * Callback for when the server wants to add something to the inventory of a player
+         * Note: Count can be negative to remove items
+         * @param serverhandle NPC to give/take the items
+         * @param sym Instance of the item to give/take
+         * @param count Number of items to give/take (can be negative)
+         */
+        static sfn::Message onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count);
     protected:
 
         /**

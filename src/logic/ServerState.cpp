@@ -3,6 +3,7 @@
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
 #include <engine/NetEngine.h>
+#include <logic/ItemController.h>
 
 const float SKYSTATE_SYNC_DELAY = 1.0f; // Seconds
 
@@ -263,6 +264,24 @@ void Net::ServerState::checkPlayerActionStream(Net::ServerState::Client& client)
                 }
             }
                 break;
+
+            case PA_Item_Taken:
+            {
+                Handle::EntityHandle e;
+                message >> e;
+
+                if(e.isValid() && m_World.isEntityValid(e))
+                {
+                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, client.player->getPlayerEntity());
+
+                    if(player.isValid())
+                    {
+                        // Broadcast to clients and modify server-world
+                        VobTypes::NPC_PickupItem(m_World, player, e);
+                    }
+                }
+            }
+            break;
             default:
                 LogWarn() << "Net: PlayerActionPacket invalid: " << p;
         }
@@ -304,6 +323,18 @@ void Net::ServerState::syncWorldInitial(Client& client)
             client.link->Send(WorldSyncStream, msg);
         }
     }
+
+    // Sync all items currently in the world
+    for(Handle::EntityHandle e : m_World.getScriptEngine().getWorldItems())
+    {
+        VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, e);
+
+        sfn::Message msg = onItemInserted(e,
+                                          item.itemController->getScriptInstance(),
+                                          item.itemController->getEntityTransform());
+
+        client.link->Send(WorldSyncStream, msg);
+    }
 }
 
 sfn::Message Net::ServerState::onNPCInserted(ZMemory::BigHandle handle, unsigned sym, const std::string& wpname)
@@ -339,6 +370,18 @@ sfn::Message Net::ServerState::onNPCKilled(ZMemory::BigHandle killed, ZMemory::B
     return std::move( msg );
 }
 
+sfn::Message Net::ServerState::onItemInserted(Handle::EntityHandle e, unsigned int sym, const Math::Matrix& transform)
+{
+    sfn::Message msg;
+
+    msg << ScriptPacket::SP_Item_Created;
+    msg << e;
+    msg << (uint32_t)sym;
+    msg << transform;
+
+    return std::move( msg );
+}
+
 void Net::ServerState::syncTime()
 {
     sfn::Message msg;
@@ -347,3 +390,25 @@ void Net::ServerState::syncTime()
 
     broadcast(StreamID::ScriptStream, msg);
 }
+
+sfn::Message Net::ServerState::onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count)
+{
+    sfn::Message msg;
+    msg << ScriptPacket::SP_NPC_AddInventory;
+    msg << serverhandle;
+    msg << (uint32_t)sym;
+    msg << (int32_t)count;
+
+    return std::move( msg );
+}
+
+sfn::Message Net::ServerState::onItemRemoved(Handle::EntityHandle e)
+{
+    sfn::Message msg;
+    msg << ScriptPacket::SP_Item_Removed;
+    msg << e;
+
+    return std::move( msg );
+}
+
+
