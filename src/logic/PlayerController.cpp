@@ -28,9 +28,6 @@
 using json = nlohmann::json;
 using namespace Logic;
 
-// TODO: HACK, remove!
-static bool s_action_triggered = false;
-
 /**
  * Standard node-names
  */
@@ -1528,11 +1525,12 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
         case EventMessages::ConversationMessage::ST_Output:
         {
-            m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
-
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (!message.internInProgress)
             {
+                m_World.getDialogManager().setTalker(m_Entity);
+                m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
 
@@ -1544,7 +1542,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
                 message.internInProgress = true;
             }
-            return s_action_triggered;
+            return false;
         }
             break;
 
@@ -2020,13 +2018,6 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float intensity) {
-        s_action_triggered = false;
-
-        if (triggered)
-            s_action_triggered = true; // Set true for one frame
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {

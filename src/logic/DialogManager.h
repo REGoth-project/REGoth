@@ -1,5 +1,6 @@
 #pragma once
 
+#include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
 #include <json.hpp>
@@ -15,6 +16,15 @@ namespace UI
     class PrintScreenMessages;
     class SubtitleBox;
 }
+/*
+namespace Memory
+{
+    template<int N1, int N2, int dif> struct GenericHandle;
+}
+namespace Handle{
+    //typedef Memory::GenericHandle<24, 8, 5> EntityHandle;
+}*/
+
 
 namespace Logic
 {
@@ -70,6 +80,7 @@ namespace Logic
          * Displays a subtitle text
          * @param subtitle Text to display
          * @param self Name of the person saying that line
+         * @param speaker the EntityHandle of the speaker
          */
         void displaySubtitle(const std::string& subtitle, const std::string& self);
 
@@ -79,9 +90,9 @@ namespace Logic
         void stopDisplaySubtitle();
 
         /**
-         * Cancel current Talk
+         * Cancels current Talk
          */
-        void nextMessage();
+        void cancelTalk();
 
         /**
          * @return Whether a dialog is currently active
@@ -92,6 +103,11 @@ namespace Logic
          * @return Whether a someone is currently talking
          */
         bool isTalking() { return m_Talking; }
+
+        /**
+         * sets the talker to identify him later when talking has ended or was canceled
+         */
+        void setTalker(Handle::EntityHandle talker);
 
         /**
          * @return The NPC the hero is talking to
@@ -148,6 +164,7 @@ namespace Logic
 
         void exportDialogManager(json& h);
         void importDialogManager(const json& j);
+
     protected:
 
         /**
@@ -229,5 +246,10 @@ namespace Logic
          * This state is left when the script calls the script function Info_ClearChoices
          */
         bool m_SubDialogActive;
+
+        /**
+         * current talker, used to cancel talk, when IA_Close occurs or talk ended
+         */
+        Handle::EntityHandle m_Talker;
     };
 }

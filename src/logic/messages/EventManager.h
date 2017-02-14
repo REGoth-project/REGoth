@@ -65,6 +65,11 @@ namespace Logic
         void waitForMessage(EventMessages::EventMessage* other);
 
         /**
+         * Cancels the current talking line of the npc
+         */
+        void cancelTalk();
+
+        /**
          * Removes all pending messages
          */
         void clear();
