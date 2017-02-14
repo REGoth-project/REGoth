@@ -54,6 +54,20 @@ namespace Memory
         }
 
         /**
+         * @return Whether handle h is still active and valid
+         */
+        bool isHandleValid(const Handle& h)
+        {
+            bool invalid = false;
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc){
+                if(!alloc.isHandleValid(h))
+                    invalid = true;
+            });
+
+            return !invalid;
+        }
+
+        /**
          * @return the actual element to the handle h
          */
         template<typename T>

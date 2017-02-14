@@ -800,6 +800,11 @@ void WorldInstance::importVobs(const json& j)
     }
 }
 
+bool WorldInstance::isEntityValid(Handle::EntityHandle e)
+{
+    return m_Allocators.m_ComponentAllocator.isHandleValid(e);
+}
+
 Handle::EntityHandle WorldInstance::createCamera() {
     // Add player-camera
     m_Camera = addEntity(Components::PositionComponent::MASK);
