@@ -23,6 +23,13 @@
 #include <ZenLib/zenload/zTypes.h>
 #include <ui/Hud.h>
 
+#if REGOTH_MP
+#include <logic/NetScriptEngine.h>
+#include <engine/NetEngine.h>
+#include <logic/ClientState.h>
+#include <logic/ServerState.h>
+#endif
+
 namespace Net
 {
     extern bool isClient;
@@ -198,6 +205,11 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 				Handle::EntityHandle e;
 				if(v.objectClass == "oCItem:zCVob")
 				{
+                    if(Net::isClient)
+                    {
+                        continue; // Items come from the server
+                    }
+
 					// Get item instance
 					if(getScriptEngine().hasSymbol(v.oCItem.instanceName))
 					{
@@ -210,6 +222,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 					else{
 						LogWarn() << "Invalid item instance: " << v.oCItem.instanceName;
 					}
+
 				}else if(v.objectClass.find("oCMobInter:oCMOB") != std::string::npos)
                 {
                     e = VobTypes::createMob(*this);
@@ -414,6 +427,13 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
         Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
     }
+
+#if REGOTH_MP
+    Engine::NetEngine* netEngine = dynamic_cast<Engine::NetEngine*>(m_pEngine);
+
+    if(Net::isClient)
+        netEngine->getClientState()->onWorldLoaded();
+#endif
 
     LogInfo() << "Done loading world!";
     return true;
