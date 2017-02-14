@@ -148,8 +148,6 @@ void UI::Hud::onTextInput(const std::string& text)
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
     auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
-    // Don't you know it's rude to open a menu while talking to somebody?
-    if(dialogManager.isTalking()) return;
 
     // Notify last menu in chain
     if(!m_MenuChain.empty() && action != IA_Close)
@@ -158,17 +156,11 @@ void UI::Hud::onInputAction(UI::EInputAction action)
         return;
     }else if(dialogManager.isDialogActive())
     {
-        if(!m_pDialogBox->isHidden()){
-            if (action != IA_Close){
-                m_pDialogBox->onInputAction(action);
-            }
+        if(!m_pDialogBox->isHidden() && action != IA_Close){
+            m_pDialogBox->onInputAction(action);
         }
-        // TODO remove the placer controller HACK (s_action_triggered) and handle Talk cancel here
-        else if (false /* ActiveSubtitleBox is not Hidden*/) {
-            // TODO
-            // find running conversation message
-            // end the message
-            // make sure stop audio, close subtitle, stop animation is called
+        else if (dialogManager.isTalking() && action == IA_Close) {
+            dialogManager.cancelTalk();
         }
         return;
     }

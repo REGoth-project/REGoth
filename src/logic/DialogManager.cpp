@@ -138,7 +138,7 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    m_ActiveSubtitleBox->setText(getGameState().getNpc(self).name[0], msg.text);
+    //m_ActiveSubtitleBox->setText(getGameState().getNpc(self).name[0], msg.text);
 
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
@@ -416,8 +416,17 @@ void DialogManager::stopDisplaySubtitle()
     m_Talking = false;
 }
 
-void DialogManager::nextMessage()
+void DialogManager::cancelTalk()
 {
+    if (m_Talker.isValid()){
+        auto talker = VobTypes::asNpcVob(m_World, m_Talker);
+        talker.playerController->getEM().cancelTalk();
+        m_Talker.invalidate();
+    }
+}
+
+void DialogManager::setTalker(Handle::EntityHandle talker){
+    m_Talker = talker;
 }
 
 void DialogManager::clearChoices()
