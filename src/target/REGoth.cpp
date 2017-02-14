@@ -379,6 +379,27 @@ public:
             return "Spawned " + args[1];
         });
 
+        console.registerCommand("spawn item", [&](const std::vector<std::string>& args) -> std::string {
+
+            if(args.size() < 3)
+                return "Missing argument. Usage: spawn item <instance>";
+
+            Handle::EntityHandle e = VobTypes::createItem(m_pEngine->getMainWorld().get(), args[2]);
+
+            VobTypes::ItemVobInformation spawned = VobTypes::asItemVob(m_pEngine->getMainWorld().get(), e);
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            if(spawned.isValid() && player.isValid())
+            {
+                Math::float3 npos = player.playerController->getEntityTransform().Translation();
+                npos += player.playerController->getDirection() * 1.5f;
+                Vob::setPosition(spawned, npos);
+            }
+
+            return "Spawned " + args[2];
+        });
+
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
