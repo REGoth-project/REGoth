@@ -13,6 +13,7 @@
 #include <ui/SubtitleBox.h>
 #include <ui/PrintScreenMessages.h>
 #include <ui/Hud.h>
+#include <logic/visuals/ModelVisual.h>
 
 /**
  * File containing the dialouges
@@ -185,6 +186,12 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         }
     }
 
+    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [=](Handle::EntityHandle hostHandle, EventMessages::EventMessage* inst) {
+        stopDisplaySubtitle();
+        m_World.getAudioWorld().stopSounds();
+        auto hostVob = VobTypes::asNpcVob(m_World, hostHandle);
+        hostVob.playerController->getModelVisual()->stopAnimations();
+    }));
     // Push the actual conversation-message
     selfnpc.playerController->getEM().onMessage(conv);
 }
@@ -407,6 +414,10 @@ void DialogManager::stopDisplaySubtitle()
 {
     m_ActiveSubtitleBox->setHidden(true);
     m_Talking = false;
+}
+
+void DialogManager::nextMessage()
+{
 }
 
 void DialogManager::clearChoices()

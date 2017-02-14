@@ -79,6 +79,11 @@ namespace Logic
         void stopDisplaySubtitle();
 
         /**
+         * Cancel current Talk
+         */
+        void nextMessage();
+
+        /**
          * @return Whether a dialog is currently active
          */
         bool isDialogActive() { return m_DialogActive; }
@@ -223,6 +228,6 @@ namespace Logic
          * When true the queue will not be cleared and normal dialog options will not be added
          * This state is left when the script calls the script function Info_ClearChoices
          */
-         bool m_SubDialogActive;
+        bool m_SubDialogActive;
     };
 }

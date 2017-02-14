@@ -147,26 +147,38 @@ void UI::Hud::onTextInput(const std::string& text)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
+    auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
     // Don't you know it's rude to open a menu while talking to somebody?
-    if(m_Engine.getMainWorld().get().getDialogManager().isTalking()) return;
+    if(dialogManager.isTalking()) return;
 
     // Notify last menu in chain
     if(!m_MenuChain.empty() && action != IA_Close)
     {
         m_MenuChain.back()->onInputAction(action);
         return;
-    }else if(!m_pDialogBox->isHidden()){
-        if(action != IA_Close) // IA_Close would automatically quit the dialog
-            m_pDialogBox->onInputAction(action);
+    }else if(dialogManager.isDialogActive())
+    {
+        if(!m_pDialogBox->isHidden()){
+            if (action != IA_Close){
+                m_pDialogBox->onInputAction(action);
+            }
+        }
+        // TODO remove the placer controller HACK (s_action_triggered) and handle Talk cancel here
+        else if (false /* ActiveSubtitleBox is not Hidden*/) {
+            // TODO
+            // find running conversation message
+            // end the message
+            // make sure stop audio, close subtitle, stop animation is called
+        }
         return;
     }
-    
+
     // Close console or last menu, in case it's open
     if(action == IA_Close)
     {
         if(m_Console.isOpen())
             m_Console.setOpen(false);
-        else if(!m_MenuChain.empty()) 
+        else if(!m_MenuChain.empty())
             popMenu();
         else // Nothing is open right now. Show main-menu
             pushMenu<UI::Menu_Main>();
@@ -192,7 +204,7 @@ void UI::Hud::cleanMenus()
 {
     for(Menu* m : m_MenusToDelete)
         delete m;
-    
+
     m_MenusToDelete.clear();
 }
 
