@@ -802,6 +802,11 @@ void WorldInstance::importVobs(const json& j)
     }
 }
 
+bool WorldInstance::isEntityValid(Handle::EntityHandle e)
+{
+    return m_Allocators.m_ComponentAllocator.isHandleValid(e);
+}
+
 
 
 

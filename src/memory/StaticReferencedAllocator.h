@@ -144,6 +144,15 @@ namespace Memory
         }
 
         /**
+         * @return Whether handle h is still active and valid
+         */
+        bool isHandleValid(const typename T::HandleType& h)
+        {
+            return h.index < NUM
+                   && m_InternalHandles[h.index].m_Handle.generation == h.generation;
+        }
+
+        /**
          * @return the actual element to the handle h (Does not check generation)
          */
         T& getElementForce(const typename T::HandleType& h)

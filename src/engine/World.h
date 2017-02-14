@@ -114,6 +114,13 @@ namespace World
         Components::ComponentAllocator::Handle addEntity(Components::ComponentMask components = 0);
 
 		/**
+		 * Checks whether the passed entity handle points to a valid location
+		 * @param e Handle to check
+		 * @return Whether that entity exists
+		 */
+		bool isEntityValid(Handle::EntityHandle e);
+
+		/**
 		 * Removes the entitiy with the given handle
 		 */
 		void removeEntity(Handle::EntityHandle h);
