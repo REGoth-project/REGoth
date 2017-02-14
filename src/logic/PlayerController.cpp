@@ -2141,9 +2141,11 @@ void PlayerController::setupKeyBindings()
             if(nearest == 1 && nearestItem.isValid())
             {
                 // Pick it up
-                VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
-                item.itemController->pickUp(m_Entity);
+                //VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
+                //item.itemController->pickUp(m_Entity);
 
+                VobTypes::NpcVobInformation thisnpc = VobTypes::asNpcVob(m_World, m_Entity);
+                VobTypes::NPC_PickupItem(m_World, thisnpc, nearestItem);
                 return;
             }
 
