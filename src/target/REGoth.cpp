@@ -725,9 +725,8 @@ public:
                 // player keeps a respectful distance of 1 to the NPC
                 float respectfulDistance = 1;
                 Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                player.playerController->teleportToPosition(newPos);
-                // player looks towards NPC
-                player.playerController->setDirection((-1) * npcDirection);
+
+                VobTypes::NPC_Teleport(worldInstance, player, newPos, (-1) * npcDirection);
                 return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
             }
             return "Could not find NPC " + requested;
