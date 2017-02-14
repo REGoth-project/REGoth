@@ -100,6 +100,14 @@ namespace VobTypes
     void NPC_Kill(World::WorldInstance& world, NpcVobInformation& vob, Handle::EntityHandle attackingNPC);
 
     /**
+     * Picks up the given item
+     * @param world World the NPC is in
+     * @param vob NPC that should pick up the item
+     * @param item Item-entity to be picked up
+     */
+    void NPC_PickupItem(World::WorldInstance& world, NpcVobInformation& vob, Handle::EntityHandle item);
+
+    /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.
      */
     void unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);

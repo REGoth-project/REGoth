@@ -406,6 +406,50 @@ void ::VobTypes::NPC_Kill(World::WorldInstance& world, VobTypes::NpcVobInformati
 #endif
 }
 
+void
+::VobTypes::NPC_PickupItem(World::WorldInstance& world, VobTypes::NpcVobInformation& vob, Handle::EntityHandle item)
+{
+    ItemVobInformation ivob = asItemVob(world, item);
+
+    if(!ivob.isValid())
+        return;
+
+#if REGOTH_MP
+    // If server, notfiy clients before we take out the item
+    if(Net::isServer)
+    {
+        // Broadcast to all players
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            // Remove the item from the world
+            sfn::Message msg = net->getServerState()->onItemRemoved(item);
+            net->getServerState()->broadcast(Net::ScriptStream, msg);
+
+            // Modify inventories (Maybe even do a full sync or none at all)
+            msg = net->getServerState()->onNPCAddInventory(ZMemory::toBigHandle(getScriptHandle(vob)),
+                                                           ivob.itemController->getScriptInstance(), 1);
+            net->getServerState()->broadcast(Net::ScriptStream, msg);
+        }
+
+        ivob.itemController->pickUp(vob.entity);
+    }else if(Net::isClient)
+    {
+        // Tell the server we want to pickup this item
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(world.getEngine());
+
+        if(net)
+        {
+            net->getClientState()->onItemTaken(item);
+        }
+    }
+
+#else
+    ivob.itemController->pickUp(vob.entity);
+#endif
+}
+
 
 
 
