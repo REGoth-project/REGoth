@@ -11,6 +11,7 @@
 #include <bgfx/bgfx.h>
 #include <vector>
 #include <stdlib.h>
+#include <memory>
 
 namespace Utils
 {
@@ -82,7 +83,7 @@ namespace Utils
      */
     inline int pointClassifyToPlane(const Math::float3& point, const Math::float4& plane)
     {
-        return Math::float3(plane.v).dot(point) - plane.w < 0 ? 2 : 1; 
+        return Math::float3(plane.v).dot(point) - plane.w < 0 ? 2 : 1;
     }
 
     /**
@@ -98,17 +99,17 @@ namespace Utils
         int	ix = ( plane.x >= 0 ) ?  1 : 0;
         int	iy = ( plane.y >= 0 ) ?  1 : 0;
         int	iz = ( plane.z >= 0 ) ?  1 : 0;
-        
+
         float decision;
-        decision  = minMax[ix]->x * plane.x;	
+        decision  = minMax[ix]->x * plane.x;
         decision += minMax[iy]->y * plane.y;
         decision += minMax[iz]->z * plane.z;
-        
+
         if( decision < plane.w) {
             // BBox ist komplett links(out) der Plane => nur einen Sohn pruefen
             return PLANE_BEHIND;
         };
-        
+
         decision  = minMax[1 - ix]->x * plane.x;
         decision += minMax[1 - iy]->y * plane.y;
         decision += minMax[1 - iz]->z * plane.z;
@@ -123,7 +124,7 @@ namespace Utils
     /**
      * Quick check on which sides of a plane the bbox is
      */
-    inline EPlaneSide bboxClassifyToPlaneSides(const BBox3D& bbox, const Math::float4& plane) 
+    inline EPlaneSide bboxClassifyToPlaneSides(const BBox3D& bbox, const Math::float4& plane)
     {
         float dist;
         Math::float3 corners[2];
@@ -364,7 +365,7 @@ namespace Utils
     bool writeFile(const std::string& name, const std::string& path, const std::string& text);
 
     /**
-     * Reads the whole contents of a text-file into a buffer 
+     * Reads the whole contents of a text-file into a buffer
      * @param file File to read
      * @return contents of the given textfile
      */
@@ -388,7 +389,7 @@ namespace Utils
      * @return File without its path
      */
     std::string stripFilePath(const std::string& file);
-    
+
     /**
      * Returns a string with case sensitive path based on case insensitive version
      * @param string file relative path
@@ -413,4 +414,31 @@ namespace Utils
      * Will be something like %APPDATA% on windows or $HOME on unix-based systems. Everything else will default to the current directory.
      */
     std::string getUserDataLocation();
+
+    /**
+     * Used to generate new unique Tickets.
+     * Tickets may be compared or copied/assigned.
+     * Tickets with different template arguments cannot be compared.
+     */
+    template <class T>
+    class Ticket
+    {
+    public:
+        Ticket() :
+            m_ID(new char)
+        {
+        }
+
+        bool operator==(const Ticket<T>& other)
+        {
+            return this->m_ID == other.m_ID;
+        }
+
+        bool operator!=(const Ticket<T>& other)
+        {
+            return !(*this == other);
+        }
+    protected:
+        std::shared_ptr<void> m_ID;
+    };
 }

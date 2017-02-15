@@ -8,6 +8,7 @@
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 #include <vdfs/fileIndex.h>
+#include <utils/Utils.h>
 
 typedef struct ALCcontext_struct ALCcontext;
 
@@ -55,6 +56,7 @@ namespace World
 class AudioWorld
 {
     friend class Audio::AudioEngine;
+    using AudioWorldCallBack = std::function<void(World::WorldInstance& world)>;
 
 public:
 
@@ -82,14 +84,25 @@ public:
     /**
      * Plays the sound of the given handle/name
      */
-    void playSound(Handle::SfxHandle h);
+    Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, AudioWorldCallBack callBack = nullptr);
 
-    void playSound(const std::string& name);
+    Utils::Ticket<AudioWorld> playSound(const std::string& name, AudioWorldCallBack callBack = nullptr);
 
     /**
      * Stops all playing sounds
      */
     void stopSounds();
+
+    /**
+     * Stops Sound with given Ticket
+     * @param ticket to identify the sound
+     */
+    void stopSound(Utils::Ticket<AudioWorld> ticket);
+
+    /**
+     * detects whether a handle finished playing
+     */
+    void detectSoundsFinished();
 
 private:
 
@@ -106,7 +119,13 @@ private:
 
     struct Source
     {
+        Source() :
+            callBacks(new std::vector<AudioWorldCallBack>)
+        {
+        }
         unsigned m_Handle = 0;
+        Utils::Ticket<AudioWorld> soundTicket;
+        std::shared_ptr<std::vector<AudioWorldCallBack>> callBacks;
     };
 
     struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>

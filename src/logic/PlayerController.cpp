@@ -1528,7 +1528,6 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (!message.internInProgress)
             {
-                m_World.getDialogManager().setTalker(m_Entity);
                 m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
 
                 // Don't let the routine overwrite our animations
@@ -1536,11 +1535,15 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
                 // Play the random dialog gesture
                 startDialogAnimation();
-
-                // Play sound of this conv-message
-                m_World.getAudioWorld().playSound(message.name);
-
+                auto talker = this->m_Entity;
+                std::function<void(World::WorldInstance&)> callBack = [talker](World::WorldInstance& world){
+                    world.getDialogManager().onTalkSoundStopped(talker);
+                };
                 message.internInProgress = true;
+                // Play sound of this conv-message
+                auto soundTicket = m_World.getAudioWorld().playSound(message.name, callBack);
+                m_World.getDialogManager().setSoundTicket(soundTicket);
+
             }
             return false;
         }
