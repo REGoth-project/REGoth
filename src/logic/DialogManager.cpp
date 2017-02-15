@@ -418,15 +418,14 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    if (m_Talker.isValid()){
-        auto talker = VobTypes::asNpcVob(m_World, m_Talker);
-        talker.playerController->getEM().cancelTalk();
-        m_Talker.invalidate();
-    }
+    m_World.getAudioWorld().stopSound(m_SoundTicket);
+    // rest will be done by the AudioManager call back, which calls onTalkSoundStopped
 }
 
-void DialogManager::setTalker(Handle::EntityHandle talker){
-    m_Talker = talker;
+void DialogManager::onTalkSoundStopped(Handle::EntityHandle talker)
+{
+    auto talkerVobInfo = VobTypes::asNpcVob(m_World, talker);
+    talkerVobInfo.playerController->getEM().cancelTalk();
 }
 
 void DialogManager::clearChoices()

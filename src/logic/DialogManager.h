@@ -4,6 +4,8 @@
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
 #include <json.hpp>
+#include <audio/AudioWorld.h>
+
 using json = nlohmann::json;
 
 namespace World
@@ -16,15 +18,6 @@ namespace UI
     class PrintScreenMessages;
     class SubtitleBox;
 }
-/*
-namespace Memory
-{
-    template<int N1, int N2, int dif> struct GenericHandle;
-}
-namespace Handle{
-    //typedef Memory::GenericHandle<24, 8, 5> EntityHandle;
-}*/
-
 
 namespace Logic
 {
@@ -90,9 +83,20 @@ namespace Logic
         void stopDisplaySubtitle();
 
         /**
+         * set sound ticket to be able to identify sound for stopping
+         * ticket safe to use identificator
+         */
+        void setSoundTicket(Utils::Ticket<World::AudioWorld> ticket) { m_SoundTicket = ticket; }
+
+        /**
          * Cancels current Talk
          */
         void cancelTalk();
+
+        /**
+         * Called as callback from the AudioWorld
+         */
+        void onTalkSoundStopped(Handle::EntityHandle talker);
 
         /**
          * @return Whether a dialog is currently active
@@ -103,11 +107,6 @@ namespace Logic
          * @return Whether a someone is currently talking
          */
         bool isTalking() { return m_Talking; }
-
-        /**
-         * sets the talker to identify him later when talking has ended or was canceled
-         */
-        void setTalker(Handle::EntityHandle talker);
 
         /**
          * @return The NPC the hero is talking to
@@ -248,8 +247,8 @@ namespace Logic
         bool m_SubDialogActive;
 
         /**
-         * current talker, used to cancel talk, when IA_Close occurs or talk ended
+         * Can be used to cancel the current Dialog Sound, when IA_Close occurs
          */
-        Handle::EntityHandle m_Talker;
+        Utils::Ticket<World::AudioWorld> m_SoundTicket;
     };
 }

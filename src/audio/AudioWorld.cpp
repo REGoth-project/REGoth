@@ -147,12 +147,16 @@ namespace World
         return loadAudioVDF(m_VDFSIndex, name);
     }
 
-    void AudioWorld::playSound(Handle::SfxHandle h)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, AudioWorldCallBack callBack)
     {
     #ifdef RE_USE_SOUND
 
         if (!m_Context)
-            return;
+        {
+            if (callBack != nullptr)
+                callBack(m_Engine.getMainWorld().get());
+            return Utils::Ticket<AudioWorld>();
+        }
 
         alcMakeContextCurrent(m_Context);
 
@@ -183,7 +187,9 @@ namespace World
                 LogWarn() << "Could not attach buffer to source: " << AudioEngine::getErrorString(error);
                 warned = true;
             }
-            return;
+            if (callBack != nullptr)
+                callBack(m_Engine.getMainWorld().get());
+            return Utils::Ticket<AudioWorld>();
         }
 
         alSourcePlay(s.m_Handle);
@@ -196,12 +202,21 @@ namespace World
                 LogWarn() << "Could not start source!" << AudioEngine::getErrorString(error);
                 warned = true;
             }
-            return;
+            if (callBack != nullptr)
+                callBack(m_Engine.getMainWorld().get());
+            return Utils::Ticket<AudioWorld>();
         }
+        if (callBack != nullptr)
+        {
+            s.callBacks->push_back(callBack);
+        }
+        return s.soundTicket;
+    #else
+        return Ticket<AudioWorld>();
     #endif
     }
 
-    void AudioWorld::playSound(const std::string& name)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name, AudioWorldCallBack callBack)
     {
         auto it = m_SoundMap.find(name);
         if(it == m_SoundMap.end())
@@ -211,13 +226,17 @@ namespace World
 
             // Check if loading was successfull, if so, play it
             if(!h.isValid())
-                return;
+            {
+                if (callBack != nullptr)
+                    callBack(m_Engine.getMainWorld().get());
+                return Utils::Ticket<AudioWorld>();
+            }
 
-            playSound(h);
+            return playSound(h, callBack);
         }else
         {
             // No need to load it again, just play it
-            playSound((*it).second);
+            return playSound((*it).second, callBack);
         }
     }
 
@@ -230,12 +249,14 @@ namespace World
         alcMakeContextCurrent(m_Context);
 
         // Check if we could re-use one
-        for (const Source& s : m_Sources)
+        for (Source& s : m_Sources)
         {
             ALint state;
             alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
 
-            if (state != AL_PLAYING && state != AL_PAUSED)
+            if (state != AL_PLAYING && state != AL_PAUSED && s.callBacks->empty())
+                // reusing old source, give new ticket to it
+                s.soundTicket = Utils::Ticket<AudioWorld>();
                 return s;
         }
 
@@ -333,5 +354,46 @@ namespace World
         for (Source& s : m_Sources)
             alSourceStop(s.m_Handle);
     #endif
+    }
+    void AudioWorld::stopSound(Utils::Ticket<AudioWorld> ticket)
+    {
+        if (!m_Context)
+            return;
+
+        alcMakeContextCurrent(m_Context);
+
+        for (Source& s : m_Sources)
+        {
+            if (s.soundTicket == ticket)
+            {
+                alSourceStop(s.m_Handle);
+                return;
+            }
+        }
+    }
+
+    void AudioWorld::detectSoundsFinished()
+    {
+        if (!m_Context)
+            return;
+
+        alcMakeContextCurrent(m_Context);
+
+        for (Source& s : m_Sources) {
+            if (s.callBacks->empty())
+                continue;
+
+            ALint state;
+            //alGetIntegeriv(s.m_Handle, AL_SOURCE_STATE, &state);
+            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
+            if (state == AL_STOPPED)
+            {
+                for (auto& callBack : *s.callBacks)
+                {
+                    callBack(m_Engine.getMainWorld().get());
+                }
+                s.callBacks->clear();
+            }
+        }
     }
 }
