@@ -255,10 +255,11 @@ namespace World
             alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
 
             if (state != AL_PLAYING && state != AL_PAUSED && s.callBacks->empty())
+            {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
-                LogInfo() << "===============CACHED===============";
                 return s;
+            }
         }
 
         ALuint source;
@@ -289,7 +290,6 @@ namespace World
         // Nothing to re-use available, make a new entry
         m_Sources.emplace_back();
 		m_Sources.back().m_Handle = source;
-        LogInfo() << "++++++++++++++++NEW+++++++++++++++++";
         return m_Sources.back();
     }
 
