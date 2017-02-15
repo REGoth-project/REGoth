@@ -257,6 +257,7 @@ namespace World
             if (state != AL_PLAYING && state != AL_PAUSED && s.callBacks->empty())
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
+                LogInfo() << "===============CACHED===============";
                 return s;
         }
 
@@ -288,7 +289,7 @@ namespace World
         // Nothing to re-use available, make a new entry
         m_Sources.emplace_back();
 		m_Sources.back().m_Handle = source;
-
+        LogInfo() << "++++++++++++++++NEW+++++++++++++++++";
         return m_Sources.back();
     }
 
@@ -357,6 +358,7 @@ namespace World
     }
     void AudioWorld::stopSound(Utils::Ticket<AudioWorld> ticket)
     {
+    #ifdef RE_USE_SOUND
         if (!m_Context)
             return;
 
@@ -370,10 +372,12 @@ namespace World
                 return;
             }
         }
+    #endif
     }
 
     void AudioWorld::detectSoundsFinished()
     {
+    #ifdef RE_USE_SOUND
         if (!m_Context)
             return;
 
@@ -384,7 +388,6 @@ namespace World
                 continue;
 
             ALint state;
-            //alGetIntegeriv(s.m_Handle, AL_SOURCE_STATE, &state);
             alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
             if (state == AL_STOPPED)
             {
@@ -395,5 +398,6 @@ namespace World
                 s.callBacks->clear();
             }
         }
+    #endif
     }
 }
