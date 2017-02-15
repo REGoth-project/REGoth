@@ -170,7 +170,7 @@ void EventManager::cancelTalk(){
     for (EventMessages::EventMessage* message : m_EventQueue){
         if (message->messageType == EventMessages::EventMessageType::Conversation){
             auto conv_message = dynamic_cast<EventMessages::ConversationMessage*>(message);
-            if (conv_message->subType = EventMessages::ConversationMessage::ST_Output && conv_message->internInProgress){
+            if (conv_message->subType == EventMessages::ConversationMessage::ST_Output && conv_message->internInProgress){
                 // Mark as done
                 conv_message->deleted = true;
                 return;
