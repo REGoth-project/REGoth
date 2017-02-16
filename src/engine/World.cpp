@@ -105,13 +105,17 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
         for(auto& sm : packedWorldMesh.subMeshes)
         {
+            size_t k=0;
             for(auto& lm : sm.triangleLightmapIndices)
             {
                 if (lm != -1)
                 {
-                    for(auto& idx : sm.indices)
-                        packedWorldMesh.vertices[idx].Color = 0xFFAAAAAA;
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 0]].Color = 0xFFAAAAAA;
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 1]].Color = 0xFFAAAAAA;
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 2]].Color = 0xFFAAAAAA;
                 }
+
+                k++;
             }
         }
 
