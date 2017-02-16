@@ -559,7 +559,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("infomanager_hasfinished", [=](Daedalus::DaedalusVM& vm){
-       vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
+        vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
     });
 
     vm->registerExternalFunction("npc_getnearestwp", [=](Daedalus::DaedalusVM& vm){
@@ -789,6 +789,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.animation = ani;
 
             // Don't schedule random animations when the npc is the target of the dialog manager
+            // Should not be necessary since npc should be in ZS_TALK state. Remove when state issue is resolved
             Daedalus::GameState::NpcHandle npcHandle = npc.playerController->getScriptHandle();
             auto& dialogManager = pWorld->getDialogManager();
             if (dialogManager.isDialogActive() && dialogManager.getTarget() == npcHandle){
@@ -918,6 +919,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         // calling the script function info_addchoice always opens the SubDialog for special multiple choices
         pWorld->getDialogManager().setSubDialogActive(true);
         pWorld->getDialogManager().addChoiceFront(choice);
+        pWorld->getDialogManager().flushChoices();
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
