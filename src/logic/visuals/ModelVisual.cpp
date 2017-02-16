@@ -299,8 +299,18 @@ void ModelVisual::setHeadMesh(const std::string& head, int headTextureIdx, int t
 	if(v.empty())
 		return;
 
-    if(v.find(".") == std::string::npos)
+    if(v.find(".MMB") == std::string::npos
+       && v.find(".MMS") == std::string::npos
+       && v.find(".ASC") == std::string::npos)
+    {
+        // Valentino has an extra "." at the end of the filename:
+        // B_SetNpcVisual 		(self, MALE, "Hum_Head_Bald.", Face_N_Normal03, BodyTex_N, ITAR_VLK_H);
+
+        // Remove all "."
+        v.erase(std::remove(v.begin(), v.end(), '.'), v.end());
+
         v += ".MMB";
+    }
 
     m_BodyState.headVisual = v;
     m_BodyState.headTextureIdx = headTextureIdx;
