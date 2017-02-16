@@ -84,13 +84,27 @@ namespace Net
         static sfn::Message onItemRemoved(Handle::EntityHandle e);
 
         /**
-         * Callback for when the server wants to add something to the inventory of a player
+         * Creates a message for when the server wants to add something to the inventory of a player
          * Note: Count can be negative to remove items
          * @param serverhandle NPC to give/take the items
          * @param sym Instance of the item to give/take
          * @param count Number of items to give/take (can be negative)
          */
         static sfn::Message onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count);
+
+        /**
+         * Creates a message for when the server wants an NPC to play an animation
+         * @param serverhandle Handle of the NPC on the server
+         * @param animName Name of the animation to play
+         */
+        static sfn::Message onNPCPlayAnim(ZMemory::BigHandle serverhandle, const std::string& animName);
+
+        /**
+         * Creates a message for when the server wants an NPC to be interrupted
+         * @param serverhandle Handle of that npc on the server
+         */
+        static sfn::Message onNPCInterrupt(ZMemory::BigHandle serverhandle);
+
     protected:
 
         /**

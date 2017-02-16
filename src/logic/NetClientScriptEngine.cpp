@@ -29,6 +29,8 @@ Net::NetClientScriptEngine::~NetClientScriptEngine()
 
 void Net::NetClientScriptEngine::readStreams()
 {
+    using namespace Daedalus::GameState;
+
     sfn::Message msg;
     while(getClientState().m_Link->Receive(StreamID::ScriptStream, msg))
     {
@@ -112,7 +114,7 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> serverhandle;
                 msg >> startpoint;
 
-                onNPCCreated(sym, serverhandle, startpoint);
+                onNPCCreated(sym, ZMemory::handleCast<NpcHandle>(serverhandle), startpoint);
             }
                 break;
 
@@ -126,7 +128,7 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> newPosition;
                 msg >> newDirection;
 
-                onNPCTeleport(serverhandle, newPosition, newDirection);
+                onNPCTeleport(ZMemory::handleCast<NpcHandle>(serverhandle), newPosition, newDirection);
             }
                 break;
 
@@ -138,7 +140,7 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> killed;
                 msg >> killer;
 
-                onNPCKilled(killed, killer);
+                onNPCKilled(ZMemory::handleCast<NpcHandle>(killed), ZMemory::handleCast<NpcHandle>(killer));
             }
                 break;
 
@@ -184,8 +186,32 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> sym;
                 msg >> count;
 
-                onNPCAddInventory(serverhandle, sym, count);
-            }break;
+                onNPCAddInventory(ZMemory::handleCast<ItemHandle>(serverhandle), sym, count);
+            }
+            break;
+
+            case SP_NPC_PlayAnim:
+            {
+                ZMemory::BigHandle serverhandle;
+                std::string animName;
+
+                msg >> serverhandle;
+                msg >> animName;
+
+                onNPCPlayAnim(ZMemory::handleCast<ItemHandle>(serverhandle), animName);
+            }
+            break;
+
+            case SP_NPC_Interrupt:
+            {
+                ZMemory::BigHandle serverhandle;
+
+                msg >> serverhandle;
+
+                onNPCInterrupt(ZMemory::handleCast<ItemHandle>(serverhandle));
+            }
+            break;
+
             default:
                 LogWarn() << "Net: Unknown script-packet: " << p;
         }
@@ -395,7 +421,7 @@ Handle::EntityHandle Net::NetClientScriptEngine::insertNPC(unsigned sym, const s
     return VobTypes::Wld_InsertNpc(m_World, sym, waypoint);
 }
 
-void Net::NetClientScriptEngine::onNPCCreated(uint32_t sym, ZMemory::BigHandle serverhandle, std::string startpoint)
+void Net::NetClientScriptEngine::onNPCCreated(uint32_t sym, Daedalus::GameState::NpcHandle serverhandle, std::string startpoint)
 {
     using namespace Daedalus::GameState;
 
@@ -407,18 +433,20 @@ void Net::NetClientScriptEngine::onNPCCreated(uint32_t sym, ZMemory::BigHandle s
     NpcHandle localhandle = VobTypes::getScriptHandle(npc);
 
     // Map the new instance to the servers
-    registerLocalHandle(Daedalus::IC_Npc, serverhandle, localhandle);
+    registerLocalHandle(Daedalus::IC_Npc, ZMemory::toBigHandle(serverhandle), localhandle);
 }
 
 void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
 {
+    using namespace Daedalus::GameState;
+
     sfn::Message msg;
 
     if(wait)
     {
         LogInfo() << "Net: Waiting for world-sync";
         while (!getClientState().m_Link->Receive(WorldSyncStream, msg))
-        {}; // TODO: Wait a few ms here
+        { getClientState().m_Synchronizer.Update(); }; // TODO: Wait a few ms here
     }
 
     // Process futher messages
@@ -441,7 +469,7 @@ void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
                     msg >> serverhandle;
                     msg >> startpoint;
 
-                    onNPCCreated(sym, serverhandle, startpoint);
+                    onNPCCreated(sym, ZMemory::handleCast<NpcHandle>(serverhandle), startpoint);
                 }
                     break;
 
@@ -455,7 +483,7 @@ void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
                     msg >> newPosition;
                     msg >> newDirection;
 
-                    onNPCTeleport(serverhandle, newPosition, newDirection);
+                    onNPCTeleport(ZMemory::handleCast<NpcHandle>(serverhandle), newPosition, newDirection);
                 }
                     break;
 
@@ -467,7 +495,8 @@ void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
                     msg >> killed;
                     msg >> killer;
 
-                    onNPCKilled(killed, killer);
+                    onNPCKilled(ZMemory::handleCast<NpcHandle>(killed),
+                                ZMemory::handleCast<NpcHandle>(killer));
                 }
                     break;
 
@@ -492,43 +521,31 @@ void Net::NetClientScriptEngine::readWorldSyncStream(bool wait)
 
 }
 
-void Net::NetClientScriptEngine::onNPCTeleport(ZMemory::BigHandle serverhandle, const Math::float3& newPosition,
+void Net::NetClientScriptEngine::onNPCTeleport(Daedalus::GameState::NpcHandle serverhandle, const Math::float3& newPosition,
                                                const Math::float3& newDirection)
 {
-    ZMemory::BigHandle h = getLocalHandle(Daedalus::IC_Npc, serverhandle);
+    VobTypes::NpcVobInformation localNPC = getLocalNPC(serverhandle);
 
-    if(!h.isValid())
+    if(!localNPC.isValid())
         return;
 
-    VobTypes::NpcVobInformation npc = VobTypes::getVobFromScriptHandle(m_World, ZMemory::handleCast<Daedalus::GameState::NpcHandle>(h));
-
-    if(!npc.isValid())
-        return;
-
-    npc.playerController->setPositionAndDirection(newPosition, newDirection);
+    localNPC.playerController->setPositionAndDirection(newPosition, newDirection);
 }
 
-void Net::NetClientScriptEngine::onNPCKilled(ZMemory::BigHandle killed, ZMemory::BigHandle killer)
+void Net::NetClientScriptEngine::onNPCKilled(Daedalus::GameState::NpcHandle killed, Daedalus::GameState::NpcHandle killer)
 {
     using namespace Daedalus::GameState;
 
-    ZMemory::BigHandle localKilled = getLocalHandle(Daedalus::IC_Npc, killed);
-    ZMemory::BigHandle localKiller = getLocalHandle(Daedalus::IC_Npc, killer);
-
-    if(!localKilled.isValid())
-        return;
-
-    VobTypes::NpcVobInformation killedNPC = VobTypes::getVobFromScriptHandle(m_World,ZMemory::handleCast<NpcHandle>(localKilled));
+    VobTypes::NpcVobInformation killedNPC = getLocalNPC(killed);
+    VobTypes::NpcVobInformation killerNPC = getLocalNPC(killer);
 
     if(!killedNPC.isValid())
         return;
 
-    if(localKiller.isValid())
+    if(killerNPC.isValid())
     {
         // Killer is known
-        VobTypes::NpcVobInformation killerNPC = VobTypes::getVobFromScriptHandle(m_World,
-                                                                                 ZMemory::handleCast<NpcHandle>(
-                                                                                         localKiller));
+
 
         LogInfo() << "Net: Killed by " << VobTypes::getScriptObject(killerNPC).name[0] << ": " << VobTypes::getScriptObject(killedNPC).name[0];
         killedNPC.playerController->die(killerNPC.entity);
@@ -567,6 +584,21 @@ void Net::NetClientScriptEngine::removeLocalEntity(Net::EntityType type, Handle:
     instMapLocal.erase(localHandle);
 }
 
+VobTypes::NpcVobInformation Net::NetClientScriptEngine::getLocalNPC(Daedalus::GameState::NpcHandle serverhandle)
+{
+    using namespace Daedalus::GameState;
+
+    ZMemory::BigHandle hlocalNPC = getLocalHandle(Daedalus::IC_Npc, ZMemory::toBigHandle(serverhandle));
+
+    if(!hlocalNPC.isValid())
+        return VobTypes::NpcVobInformation();
+
+    VobTypes::NpcVobInformation localNPC = VobTypes::getVobFromScriptHandle(m_World,ZMemory::handleCast<NpcHandle>(hlocalNPC));
+
+    return localNPC;
+}
+
+
 void Net::NetClientScriptEngine::onItemTaken(Handle::EntityHandle serverhandle)
 {
     Handle::EntityHandle local = getLocalEntity(EntityType::ET_Item, serverhandle);
@@ -585,16 +617,11 @@ void Net::NetClientScriptEngine::onItemTaken(Handle::EntityHandle serverhandle)
     }
 }
 
-void Net::NetClientScriptEngine::onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count)
+void Net::NetClientScriptEngine::onNPCAddInventory(Daedalus::GameState::NpcHandle serverhandle, unsigned sym, int count)
 {
     using namespace Daedalus::GameState;
 
-    ZMemory::BigHandle hlocalNPC = getLocalHandle(Daedalus::IC_Npc, serverhandle);
-
-    if(!hlocalNPC.isValid())
-        return;
-
-    VobTypes::NpcVobInformation localNPC = VobTypes::getVobFromScriptHandle(m_World,ZMemory::handleCast<NpcHandle>(hlocalNPC));
+    VobTypes::NpcVobInformation localNPC = getLocalNPC(serverhandle);
 
     if(!localNPC.isValid())
         return;
@@ -604,6 +631,33 @@ void Net::NetClientScriptEngine::onNPCAddInventory(ZMemory::BigHandle serverhand
     else if(count < 0)
         localNPC.playerController->getInventory().removeItem(sym, (unsigned)(-count));
 }
+
+void Net::NetClientScriptEngine::onNPCPlayAnim(Daedalus::GameState::NpcHandle serverhandle, const std::string& animName)
+{
+    using namespace Daedalus::GameState;
+
+    VobTypes::NpcVobInformation localNPC = getLocalNPC(serverhandle);
+
+    if(!localNPC.isValid())
+        return;
+
+    // Play the actual animation
+    localNPC.playerController->getEM().onMessage(Logic::EventMessages::ConversationMessage::playAnimation(animName));
+}
+
+void Net::NetClientScriptEngine::onNPCInterrupt(Daedalus::GameState::NpcHandle serverhandle)
+{
+    using namespace Daedalus::GameState;
+
+    VobTypes::NpcVobInformation localNPC = getLocalNPC(serverhandle);
+
+    if(!localNPC.isValid())
+        return;
+
+    // Play the actual animation
+    localNPC.playerController->interrupt();
+}
+
 
 
 

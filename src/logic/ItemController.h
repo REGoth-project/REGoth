@@ -37,6 +37,11 @@ namespace Logic
 		unsigned getScriptInstance(){ return (unsigned)m_ScriptState.scriptInstance; }
 
 		/**
+		 * @return Display-name of this item. Note: Currently returns instance-name! TODO: Actually return display name
+		 */
+		std::string getName();
+
+		/**
 		 * @return Classes which want to get exported on save should return true here
 		 */
 		virtual bool shouldExport(){ return true; }

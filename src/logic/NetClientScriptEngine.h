@@ -9,6 +9,8 @@
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
 #include <logic/SyncedObjects.h>
+#include <components/VobClasses.h>
+#include <daedalus/DaedalusGameState.h>
 
 namespace World
 {
@@ -52,7 +54,12 @@ namespace Net
          * @return Local handle. Invalid if couldn't be found.
          */
         ZMemory::BigHandle getLocalHandle(Daedalus::EInstanceClass instanceClass, ZMemory::BigHandle serverHandle);
+        Daedalus::GameState::NpcHandle getLocalHandleNPC(Daedalus::GameState::NpcHandle serverHandle)
+        { return ZMemory::handleCast<Daedalus::GameState::NpcHandle>(getLocalHandle(Daedalus::IC_Npc, ZMemory::toBigHandle(serverHandle))); }
+
         ZMemory::BigHandle getServerHandle(Daedalus::EInstanceClass instanceClass, ZMemory::BigHandle localHandle);
+        Daedalus::GameState::NpcHandle getServerHandleNPC(Daedalus::GameState::NpcHandle localHandle)
+        { return ZMemory::handleCast<Daedalus::GameState::NpcHandle>(getServerHandle(Daedalus::IC_Npc, ZMemory::toBigHandle(localHandle))); }
 
         /**
          * Registers the local version of a server-object here
@@ -98,6 +105,12 @@ namespace Net
          */
         void removeLocalEntity(EntityType type, Handle::EntityHandle localHandle);
 
+        /**
+         * Finds the NPC-Vob to a given server-script handle
+         * @param h Handle on the server
+         * @return Clients version of the instance on the server. Can be invalid of not found!
+         */
+        VobTypes::NpcVobInformation getLocalNPC(Daedalus::GameState::NpcHandle serverhandle);
     protected:
 
         /**
@@ -153,14 +166,14 @@ namespace Net
          * @param serverhandle Handle on the server
          * @param startpoint Waypoint to insert it onto
          */
-        void onNPCCreated(uint32_t sym, ZMemory::BigHandle serverhandle, std::string startpoint);
+        void onNPCCreated(uint32_t sym, Daedalus::GameState::NpcHandle serverhandle, std::string startpoint);
 
         /**
          * Callback for when an NPC got killed on the server
          * @param killed (Serverhandle) killed npc
          * @param killer (Serverhandle) killer
          */
-        void onNPCKilled(ZMemory::BigHandle killed, ZMemory::BigHandle killer);
+        void onNPCKilled(Daedalus::GameState::NpcHandle killed, Daedalus::GameState::NpcHandle killer);
 
         /**
          * Callback for when an NPC should be teleported by the server
@@ -168,7 +181,7 @@ namespace Net
          * @param newPosition New postion of the NPC
          * @param newDirection New direction of the NPC
          */
-        void onNPCTeleport(ZMemory::BigHandle serverhandle, const Math::float3& newPosition, const Math::float3& newDirection);
+        void onNPCTeleport(Daedalus::GameState::NpcHandle serverhandle, const Math::float3& newPosition, const Math::float3& newDirection);
 
         /**
          * Callback for when an Item was inserted into the world
@@ -190,7 +203,20 @@ namespace Net
          * @param sym Instance of the item to give/take
          * @param count Number of items to give/take (can be negative)
          */
-        void onNPCAddInventory(ZMemory::BigHandle serverhandle, unsigned sym, int count);
+        void onNPCAddInventory(Daedalus::GameState::NpcHandle  serverhandle, unsigned sym, int count);
+
+        /**
+         * Callback for when the server wants an NPC to play an animation
+         * @param serverhandle Handle of the NPC on the server
+         * @param animName Name of the animation to play
+         */
+        void onNPCPlayAnim(Daedalus::GameState::NpcHandle  serverhandle, const std::string& animName);
+
+        /**
+         * Callback for when the server wants an NPC to be interrupted
+         * @param serverhandle Handle of that npc on the server
+         */
+        void onNPCInterrupt(Daedalus::GameState::NpcHandle  serverhandle);
 
         /**
          * Mappings for the handles on the server

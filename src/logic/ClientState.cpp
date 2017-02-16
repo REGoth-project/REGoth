@@ -222,6 +222,9 @@ bool Net::ClientState::connect(const std::string& ip, uint16_t port)
 
 void Net::ClientState::update(float deltatime)
 {
+    using namespace Daedalus::GameState;
+
+
     if(m_IsConnected)
     {
         // If we are already connected and the Link dies, gracefully
@@ -250,19 +253,22 @@ void Net::ClientState::update(float deltatime)
     for(Net::PlayerState& p : m_Players)
     {
         // Need to create a new player-entity for newly joined players
-        /*if(!p.getPlayerEntity().isValid() && &p != m_ThisPlayer)
+        if(!p.getPlayerEntity().isValid() && &p != m_ThisPlayer)
         {
             // Create new hero-instance
-            Handle::EntityHandle e = VobTypes::Wld_InsertNpc(m_World, "PC_HERO", "WP_INTRO_FALL3");
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, e);
+            VobTypes::NpcVobInformation npc = VobTypes::getVobFromScriptHandle(m_World,
+                                                                      m_ScriptEngine.getLocalHandleNPC(ZMemory::handleCast<NpcHandle>(p.getServerHandle())));
 
-            // Set name
-            VobTypes::getScriptObject(npc).name[0] = p.getName();
+            if(npc.isValid())
+            {
+                // Set name
+                VobTypes::getScriptObject(npc).name[0] = p.getName();
 
-            p.setPlayerEntity(e);
+                p.setPlayerEntity(npc.entity);
 
-            LogInfo() << "Net: Created hero instance " << e.index << " for player '" << p.getName() << "'";
-        }*/
+                LogInfo() << "Net: Found other players hero instance " << npc.entity.isValid() << " for player '" << p.getName() << "'";
+            }
+        }
 
 
         bgfx::dbgTextPrintf(0, 5+i, 0x0f, " %s", p.getName().c_str());
@@ -340,23 +346,28 @@ bool Net::ClientState::isConnected()
 
 void Net::ClientState::setupPlayer()
 {
+    using namespace Daedalus::GameState;
+
     if(!m_World.getScriptEngine().getWorldNPCs().empty())
         LogWarn() << "Net: World is not empty from NPCs before first server-sync!";
 
     // Wait for world-data to come in
     m_ScriptEngine.readWorldSyncStream(true);
 
-    // Get the script-handle of the created NPC
-    VobTypes::NpcVobInformation clientNPC = VobTypes::getVobFromScriptHandle(m_World,
-                                                                             ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_AssignedNPC));
+    // Make sure the players NPC is in the world
+    VobTypes::NpcVobInformation localNPC;
 
-    if(!clientNPC.isValid())
-    {
-        LogError() << "Net: Client version of the players Character wasn't found!";
-        exit(0);
-    }
+    LogInfo() << "Net: Waiting for player-instance to be created...";
+    do{
+        m_Synchronizer.Update();
+        localNPC = m_ScriptEngine.getLocalNPC(ZMemory::handleCast<NpcHandle>(m_AssignedNPC));
 
-    clientNPC.playerController->setupKeyBindings();
+    }while(!localNPC.isValid());
+
+    // Need the local handle in here now
+    m_AssignedNPC = ZMemory::toBigHandle(VobTypes::getScriptHandle(localNPC));
+
+    localNPC.playerController->setupKeyBindings();
 
     // Find "this-player" and assign NPC-instance to it
     for (Net::PlayerState& p : m_Players)
@@ -364,7 +375,7 @@ void Net::ClientState::setupPlayer()
         if (p.getPlayerID() == m_PlayerID)
         {
             m_ThisPlayer = &p;
-            m_ThisPlayer->setPlayerEntity(clientNPC.entity);
+            m_ThisPlayer->setPlayerEntity(localNPC.entity);
             break;
         }
     }
@@ -375,10 +386,10 @@ void Net::ClientState::setupPlayer()
         exit(0);
     }
 
-    m_World.getScriptEngine().setPlayerEntity(clientNPC.entity);
+    m_World.getScriptEngine().setPlayerEntity(localNPC.entity);
 
     // Need to have a valid value here or the scripts won't shut up
-    m_World.getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(clientNPC));
+    m_World.getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(localNPC));
 }
 
 void Net::ClientState::onNPCKilled(ZMemory::BigHandle killed)
@@ -423,4 +434,23 @@ void Net::ClientState::onWorldLoaded()
     setupPlayer();
 
     m_Engine.getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+}
+
+void Net::ClientState::onNPCPlayAnim(const std::string& animName)
+{
+    sfn::Message msg;
+
+    msg << PlayerActionPacket::PA_Play_Animation;
+    msg << animName;
+
+    m_Link->Send(PlayerActionsStream, msg);
+}
+
+void Net::ClientState::onNPCInterrupt()
+{
+    sfn::Message msg;
+
+    msg << PlayerActionPacket::PA_Interrupt;
+
+    m_Link->Send(PlayerActionsStream, msg);
 }

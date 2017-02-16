@@ -450,6 +450,76 @@ void
 #endif
 }
 
+void ::VobTypes::NPC_PlayAnim(VobTypes::NpcVobInformation& vob, const std::string& anim)
+{
+#if REGOTH_MP
+    // If server, broadcast this to all other players
+    if(Net::isServer)
+    {
+        // Broadcast to all players
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(vob.world->getEngine());
+
+        if (net)
+        {
+            sfn::Message msg = Net::ServerState::onNPCPlayAnim(ZMemory::toBigHandle(VobTypes::getScriptHandle(vob)), anim);
+            net->getServerState()->broadcast(Net::StreamID::ScriptStream, msg);
+        }
+
+        vob.playerController->getEM().onMessage(Logic::EventMessages::ConversationMessage::playAnimation(anim));
+    }else if(Net::isClient)
+    {
+        if(vob.world->getScriptEngine().getPlayerEntity() == vob.entity)
+        {
+            // Ask the server for the animation
+            Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(vob.world->getEngine());
+
+            if (net)
+                net->getClientState()->onNPCPlayAnim(anim);
+        }else
+        {
+            // Doesn't make sense to send this for any other NPC
+        }
+    }
+#else
+    vob.playerController->getEM().onMessage(Logic::EventMessages::ConversationMessage::playAnimation(anim));
+#endif
+}
+
+void ::VobTypes::NPC_Interrupt(VobTypes::NpcVobInformation& vob)
+{
+#if REGOTH_MP
+    // If server, broadcast this to all other players
+    if(Net::isServer)
+    {
+        // Broadcast to all players
+        Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(vob.world->getEngine());
+
+        if (net)
+        {
+            sfn::Message msg = Net::ServerState::onNPCInterrupt(ZMemory::toBigHandle(VobTypes::getScriptHandle(vob)));
+            net->getServerState()->broadcast(Net::StreamID::ScriptStream, msg);
+        }
+
+        vob.playerController->interrupt();
+    }else if(Net::isClient)
+    {
+        if(vob.world->getScriptEngine().getPlayerEntity() == vob.entity)
+        {
+            // Ask the server for the animation
+            Engine::NetEngine* net = dynamic_cast<Engine::NetEngine*>(vob.world->getEngine());
+
+            if (net)
+                net->getClientState()->onNPCInterrupt();
+        }else
+        {
+            // Doesn't make sense to send this for any other NPC
+        }
+    }
+#else
+    vob.playerController->interrupt();
+#endif
+}
+
 
 
 

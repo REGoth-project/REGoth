@@ -346,7 +346,18 @@ public:
 
         auto& console = m_pEngine->getHud().getConsole();
 
+        console.registerCommand("playanim", [&](const std::vector<std::string>& args) -> std::string {
 
+            if (args.size() < 2)
+                return "Missing argument. Usage: playanim <name>";
+
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+
+            VobTypes::NPC_PlayAnim(player, args[1]);
+
+            return "Playing animation " + args[1];
+        });
 
         console.registerCommand("spawnhero", [&](const std::vector<std::string>& args) -> std::string {
 
@@ -791,7 +802,7 @@ public:
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
 
-            player.playerController->interrupt();
+            VobTypes::NPC_Interrupt(player);
 
             return "Interrupted player, cleared EM";
         });

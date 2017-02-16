@@ -83,6 +83,25 @@ namespace VobTypes
     Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName = "");
 
     /**
+     * Schedules a PlayAnim-Message into the NPCs event-manager
+     * Net:
+     *  On server: Broadcast this to all clients an play the animation
+     *  On client: Request animation from server, don't play the animation yet (Done after server-replied)
+     * @param vob NPC to play the anim at
+     * @param anim Name of the animation to play
+     */
+    void NPC_PlayAnim(NpcVobInformation& vob, const std::string& anim);
+
+    /**
+     * Clears the given NPCs Event-Manager
+     * Net:
+     *  On server: Broadcasts this to all clients
+     *  On client: Asks the server for an interrupt, doesn't actually do the interrupt
+     * @param vob NPC to clear on
+     */
+    void NPC_Interrupt(NpcVobInformation& vob);
+
+    /**
      * Teleports the given NPC to the given location
      * @param world World the NPC is in
      * @param vob NPC to teleport

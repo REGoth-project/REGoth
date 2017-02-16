@@ -55,8 +55,7 @@ namespace Net
 
         /**
          * Sends message for when an NPC was killed by this client
-         * @param killed The killed NPC
-         * @param attackingNPC the killing NPC
+         * @param killed The killed NPC (local handle)
          */
         void onNPCKilled(ZMemory::BigHandle killed);
 
@@ -65,6 +64,18 @@ namespace Net
          * @param item Item that is to be taken
          */
         void onItemTaken(Handle::EntityHandle item);
+
+        /**
+         * Sends a message for this client wants the server to play a specific animation for this player
+         * @param animName Name of the animation to play
+         */
+        void onNPCPlayAnim(const std::string& animName);
+
+        /**
+         * Sends a message for when this player wants to be interrupted. (Potentially dangerous to mess up the state of this client)
+         * @param serverhandle Handle of that npc on the server
+         */
+        void onNPCInterrupt();
     protected:
 
         /**
@@ -121,6 +132,7 @@ namespace Net
 
         /**
          * NPC-Handle on the server this client should control
+         * Note: This is the serverside-version before setupPlayer() is called!
          */
         ZMemory::BigHandle m_AssignedNPC;
 

@@ -127,7 +127,9 @@ void Net::ServerState::update(float deltatime)
                     VobTypes::NpcVobInformation clientNPC = VobTypes::asNpcVob(m_World, m_Players.back().getPlayerEntity());
                     Daedalus::GameState::NpcHandle hclientNPC = VobTypes::getScriptHandle(clientNPC);
 
-                    sfn::Message reply;
+                    m_Players.back().getServerHandle() = ZMemory::toBigHandle(hclientNPC);
+
+                            sfn::Message reply;
                     reply << LoginPacket::LP_AskPlayerID;
                     reply << m_Players.back().getPlayerID();
                     reply << ZMemory::toBigHandle(hclientNPC);
@@ -273,12 +275,42 @@ void Net::ServerState::checkPlayerActionStream(Net::ServerState::Client& client)
                 if(e.isValid() && m_World.isEntityValid(e))
                 {
                     VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, client.player->getPlayerEntity());
+                    VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, e);
 
-                    if(player.isValid())
+                    if(player.isValid() && item.isValid())
                     {
+                        LogInfo() << "Net: Player " << client.player->getName() << " has taken item " << item.itemController->getName();
+
                         // Broadcast to clients and modify server-world
                         VobTypes::NPC_PickupItem(m_World, player, e);
                     }
+                }
+            }
+            break;
+
+            case PA_Play_Animation:
+            {
+                std::string anim;
+                message >> anim;
+
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, client.player->getPlayerEntity());
+
+                if(player.isValid())
+                {
+                    LogInfo() << "Net: Player " << client.player->getName() << " requested to play anim: " << anim;
+                    VobTypes::NPC_PlayAnim(player, anim);
+                }
+            }
+            break;
+
+            case PA_Interrupt:
+            {
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, client.player->getPlayerEntity());
+
+                if(player.isValid())
+                {
+                    LogInfo() << "Net: Player " << client.player->getName() << " requested interrupt";
+                    VobTypes::NPC_Interrupt(player);
                 }
             }
             break;
@@ -409,6 +441,25 @@ sfn::Message Net::ServerState::onItemRemoved(Handle::EntityHandle e)
     msg << e;
 
     return std::move( msg );
+}
+
+sfn::Message Net::ServerState::onNPCPlayAnim(ZMemory::BigHandle serverhandle, const std::string& animName)
+{
+    sfn::Message msg;
+    msg << ScriptPacket::SP_NPC_PlayAnim;
+    msg << serverhandle;
+    msg << animName;
+
+    return msg;
+}
+
+sfn::Message Net::ServerState::onNPCInterrupt(ZMemory::BigHandle serverhandle)
+{
+    sfn::Message msg;
+    msg << ScriptPacket::SP_NPC_Interrupt;
+    msg << serverhandle;
+
+    return msg;
 }
 
 

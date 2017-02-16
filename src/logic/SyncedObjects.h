@@ -100,14 +100,18 @@ namespace Net
         SP_NPC_Killed = 8,          // Packet, Serverhandle(Killed), Serverhandle(Killer)
         SP_WorldTimeSync = 9,       // Packet, time(float)
         SP_Item_Created = 10,       // Packet, (Server)Entity-handle, instance-idx, transform
-        SP_Item_Removed = 11,         // Packet, (Server)Entity-handle
+        SP_Item_Removed = 11,       // Packet, (Server)Entity-handle
         SP_NPC_AddInventory = 12,   // Packet, Serverhandle, Instance, Count
+        SP_NPC_PlayAnim = 13,       // Packet, Serverhandle, Anim-Name
+        SP_NPC_Interrupt = 14,       // Packet, Serverhandle
     };
 
     enum PlayerActionPacket : uint16_t
     {
         PA_NPC_Killed = 0,          // Packet, Serverhandle(Killed), Serverhandle(Killer)
         PA_Item_Taken = 1,          // Packet, Serverentity(Item)
+        PA_Play_Animation = 2,      // Packet, Animation-name
+        PA_Interrupt = 3,           // Packet
     };
 
     // Max number of chat messages sent to the clients
@@ -185,7 +189,8 @@ namespace Net
                 m_Name{this},
                 m_PlayerID{this, 0},
                 m_Position{this, Math::float3(0,0,0) },
-                m_Direction{this, Math::float3(0,0,0) }
+                m_Direction{this, Math::float3(0,0,0) },
+                m_ServerHandle{this}
         {
         }
          
@@ -196,6 +201,7 @@ namespace Net
             m_PlayerEntity{other.m_PlayerEntity},
             m_Position{this, other.m_Position},
             m_Direction{this, other.m_Position},
+            m_ServerHandle{this, other.m_ServerHandle},
             sfn::SyncedObject()
         {
         }
@@ -207,7 +213,8 @@ namespace Net
             m_PlayerID{this, other.m_PlayerID},
             m_PlayerEntity{other.m_PlayerEntity},
             m_Position{this, other.m_Position},
-            m_Direction{this, other.m_Position}
+            m_Direction{this, other.m_Position},
+            m_ServerHandle{this, other.m_ServerHandle}
         {
         }
 
@@ -219,6 +226,7 @@ namespace Net
             m_PlayerEntity = other.m_PlayerEntity;
             m_Position = other.m_Position;
             m_Direction = other.m_Direction;
+            m_ServerHandle = other.m_ServerHandle;
 
             return *this;
         }
@@ -232,6 +240,7 @@ namespace Net
             m_PlayerEntity = other.m_PlayerEntity;
             m_Position = other.m_Position;
             m_Direction = other.m_Direction;
+            m_ServerHandle = other.m_ServerHandle;
 
             return *this;
         }
@@ -275,6 +284,7 @@ namespace Net
         Math::float3& getPosition(){ return m_Position; };
         Math::float3& getDirection(){ return m_Direction; };
         std::string& getName(){ return m_Name; }
+        ZMemory::BigHandle& getServerHandle(){ return m_ServerHandle; }
 
         /**
          * Called on the worlds frame-update loop
@@ -292,6 +302,8 @@ namespace Net
          */
         sfn::SyncedType<Math::float3, sfn::SynchronizationType::Stream> m_Position;
         sfn::SyncedType<Math::float3, sfn::SynchronizationType::Stream> m_Direction;
+
+        sfn::SyncedType<ZMemory::BigHandle> m_ServerHandle;
 
         /**
          * Name of this player

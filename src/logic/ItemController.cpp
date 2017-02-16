@@ -51,3 +51,9 @@ void ItemController::exportPart(json& j)
     j["instanceSymbol"] = m_ScriptState.scriptInstance;
 }
 
+std::string ItemController::getName()
+{
+    auto& sym = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(getScriptInstance());
+	return sym.name;
+}
+
