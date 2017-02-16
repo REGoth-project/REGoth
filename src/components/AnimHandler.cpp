@@ -209,7 +209,7 @@ void AnimHandler::updateAnimations(double deltaTime)
                                                          Math::float3(sampleNext.position.v),
                                                          frameFract);
 
-        if(nodeIdx == 0)
+        if(nodeIdx == 0 && frameNext > frameNum ) // Last frame resets the animation back, we don't want any hickups here
             m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
 
         // Build transformation matrix from the sample-information
