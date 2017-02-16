@@ -1014,6 +1014,23 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         pWorld->getAudioWorld().playSound(s0);
 
     });
+
+    vm->registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "mob_hasitems";
+        uint32_t iteminstance = (uint32_t)vm.popDataValue();
+        std::string mobname = vm.popString();
+
+        Handle::EntityHandle mob = VobTypes::MOB_GetByName(*pWorld, mobname);
+        VobTypes::MobVobInformation mvob = VobTypes::asMobVob(*pWorld, mob);
+        if(mvob.isValid())
+        {
+            int cnt = VobTypes::MOB_GetItemCount(mvob, vm.getDATFile().getSymbolByIndex(iteminstance).name);
+            vm.setReturn(cnt);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
 }
 
 

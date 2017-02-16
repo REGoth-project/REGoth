@@ -125,6 +125,22 @@ namespace VobTypes
     Daedalus::GameState::ItemHandle NPC_DrawMeleeWeapon(NpcVobInformation& npc);
 
     /**
+     * Returns how many of the given items are inside the given mob-container
+     * @param mob Mob to check on
+     * @param instance Instance of items to look after
+     * @return Count of items of the given instance in the given mob-container
+     */
+    int MOB_GetItemCount(MobVobInformation mob, const std::string& instance);
+
+    /**
+     * Tries to find the mob with the given name
+     * @param world World the mob should be in
+     * @param name Name of the mob
+     * @return Entity of the mob with the given name (invalid if not found)
+     */
+    Handle::EntityHandle MOB_GetByName(World::WorldInstance& world, const std::string& name);
+
+    /**
      * Puts back any weapon a NPC has in its hand
      * @param npc NPC to perform the action on
      */

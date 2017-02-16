@@ -88,3 +88,14 @@ void Container::importCore(const json& j)
         }
     }
 }
+
+unsigned int Container::getNumItemsOf(const std::string& instance) const
+{
+    for (const Item& item : m_Contents)
+    {
+        if(item.instance == instance)
+            return item.count;
+    }
+
+    return 0;
+}

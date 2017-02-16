@@ -11,6 +11,7 @@
 #include <utils/logger.h>
 #include "EntityActions.h"
 #include <engine/BaseEngine.h>
+#include <logic/mobs/Container.h>
 
 Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -328,6 +329,29 @@ Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, const std
 Handle::EntityHandle VobTypes::createItem(World::WorldInstance& world, size_t item)
 {
     return VobTypes::initItemFromScript(world, item);
+}
+
+int ::VobTypes::MOB_GetItemCount(VobTypes::MobVobInformation mob, const std::string& instance)
+{
+    Logic::MobCores::Container* core = dynamic_cast<Logic::MobCores::Container*>(mob.mobController->getCore());
+
+    if(core)
+        return (int)core->getNumItemsOf(instance);
+
+    return 0;
+}
+
+Handle::EntityHandle VobTypes::MOB_GetByName(World::WorldInstance& world, const std::string& name)
+{
+    for(Handle::EntityHandle e : world.getScriptEngine().getWorldMobs())
+    {
+        MobVobInformation mob = VobTypes::asMobVob(world, e);
+
+        if(mob.isValid() && mob.mobController->getFocusName() == name)
+            return e;
+    }
+
+    return Handle::EntityHandle::makeInvalidHandle();
 }
 
 
