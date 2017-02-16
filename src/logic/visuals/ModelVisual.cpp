@@ -599,28 +599,31 @@ void ModelVisual::updateBodyMesh()
                 //if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
                 {
 
-                    // Get texture parts
-                    std::string tx = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
-
-                    size_t cpos = tx.find("_C0");
-                    size_t vpos = tx.find("_V0");
-
-                    std::string cleanName = tx;
-
-                    // Only modify if that is the core body texture
-                    if(cpos != std::string::npos)
+                    if(sm.m_Texture.isValid())
                     {
-                        cleanName = cleanName.substr(0, vpos);
+                        // Get texture parts
+                        std::string tx = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
 
-                        if (vpos != std::string::npos)
-                            cleanName += "_V" + std::to_string(m_BodyState.bodyTextureIdx);
+                        size_t cpos = tx.find("_C0");
+                        size_t vpos = tx.find("_V0");
 
-                        cleanName += "_C" + std::to_string(m_BodyState.bodySkinColorIdx);
+                        std::string cleanName = tx;
 
-                        cleanName += ".TGA";
+                        // Only modify if that is the core body texture
+                        if (cpos != std::string::npos)
+                        {
+                            cleanName = cleanName.substr(0, vpos);
+
+                            if (vpos != std::string::npos)
+                                cleanName += "_V" + std::to_string(m_BodyState.bodyTextureIdx);
+
+                            cleanName += "_C" + std::to_string(m_BodyState.bodySkinColorIdx);
+
+                            cleanName += ".TGA";
+                        }
+
+                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(cleanName);
                     }
-
-                    sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(cleanName);
 
                 }
 
