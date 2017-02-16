@@ -60,14 +60,9 @@ namespace Logic
         void startDialog(Daedalus::GameState::NpcHandle target);
 
         /**
-         * End dialog. Removes the dialogbox.
+         * exit the dialog
          */
         void endDialog();
-
-        /**
-         * The conversation has reached its end.
-         */
-        void conversationHasEnded();
 
         /**
          * Displays a subtitle text
@@ -164,6 +159,12 @@ namespace Logic
         void exportDialogManager(json& h);
         void importDialogManager(const json& j);
 
+        /**
+         * Performs a choice selected by the user
+         * @param choice Choice index to perform (m_Interaction.infos)
+         */
+        void performChoice(size_t choice);
+
     protected:
 
         /**
@@ -187,13 +188,6 @@ namespace Logic
          * @param msg Message to say
          */
         void onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg);
-
-        /**
-         * Performs a choice selected by the user
-         * @param choice Choice index to perform (m_Interaction.infos)
-         * @return Whether to continue the dialog (if false, END was selected)
-         */
-        bool performChoice(size_t choice);
 
         /**
          * Currently active subtitle box

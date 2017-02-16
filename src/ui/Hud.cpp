@@ -156,7 +156,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
         return;
     }else if(dialogManager.isDialogActive())
     {
-        if(!m_pDialogBox->isHidden() && action != IA_Close){
+        if(!m_pDialogBox->isHidden()){
             m_pDialogBox->onInputAction(action);
         }
         else if (dialogManager.isTalking() && action == IA_Close) {
