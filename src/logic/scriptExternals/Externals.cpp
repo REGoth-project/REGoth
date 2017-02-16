@@ -1031,6 +1031,22 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             vm.setReturn(0);
         }
     });
+
+    vm->registerExternalFunction("npc_isinstate", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "npc_isinstate";
+        uint32_t state = (uint32_t)vm.popVar();
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(!npc.isValid())
+            return;
+
+        int v = npc.playerController->getAIStateMachine().isInState(state) ? 1 : 0;
+
+        vm.setReturn(v);
+    });
+
 }
 
 
