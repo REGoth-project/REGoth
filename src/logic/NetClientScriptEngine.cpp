@@ -186,7 +186,7 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> sym;
                 msg >> count;
 
-                onNPCAddInventory(ZMemory::handleCast<ItemHandle>(serverhandle), sym, count);
+                onNPCAddInventory(ZMemory::handleCast<NpcHandle>(serverhandle), sym, count);
             }
             break;
 
@@ -198,7 +198,7 @@ void Net::NetClientScriptEngine::readStreams()
                 msg >> serverhandle;
                 msg >> animName;
 
-                onNPCPlayAnim(ZMemory::handleCast<ItemHandle>(serverhandle), animName);
+                onNPCPlayAnim(ZMemory::handleCast<NpcHandle>(serverhandle), animName);
             }
             break;
 
@@ -208,7 +208,21 @@ void Net::NetClientScriptEngine::readStreams()
 
                 msg >> serverhandle;
 
-                onNPCInterrupt(ZMemory::handleCast<ItemHandle>(serverhandle));
+                onNPCInterrupt(ZMemory::handleCast<NpcHandle>(serverhandle));
+            }
+            break;
+
+            case SP_NPC_AIOutput:
+            {
+                ZMemory::BigHandle source, target;
+                std::string ouName, text;
+
+                msg >> source;
+                msg >> target;
+                msg >> ouName;
+                msg >> text;
+
+                onNPCAIOutput(ZMemory::handleCast<NpcHandle>(source), ZMemory::handleCast<NpcHandle>(target), ouName, text);
             }
             break;
 
@@ -656,6 +670,27 @@ void Net::NetClientScriptEngine::onNPCInterrupt(Daedalus::GameState::NpcHandle s
 
     // Play the actual animation
     localNPC.playerController->interrupt();
+}
+
+void Net::NetClientScriptEngine::onNPCAIOutput(Daedalus::GameState::NpcHandle source, Daedalus::GameState::NpcHandle target,
+                                                       const std::string& ouName, const std::string& text)
+{
+    VobTypes::NpcVobInformation localSource = getLocalNPC(source);
+    VobTypes::NpcVobInformation localTarget = getLocalNPC(source);
+
+    // Need at least the source. But the NPC could be talking to himself.
+    if(!localSource.isValid())
+        return;
+
+    if(localTarget.isValid())
+    {
+        LogInfo() << "Net: Dialog " << localSource.playerController->getDisplayName()
+                  << " -> "         << localTarget.playerController->getDisplayName()
+                  << ": "           << text << "(" << ouName << ")";
+    }else
+    {
+        LogInfo() << "Net: Dialog " << localSource.playerController->getDisplayName() << ": " << text << "(" << ouName << ")";
+    }
 }
 
 

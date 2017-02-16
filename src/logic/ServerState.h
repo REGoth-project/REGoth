@@ -105,6 +105,15 @@ namespace Net
          */
         static sfn::Message onNPCInterrupt(ZMemory::BigHandle serverhandle);
 
+        /**
+         * Creates a message for when an NPC should say something to an other
+         * @param source NPC that should be talking
+         * @param target NPC that should receive the message
+         * @param ouName Name of the OU-Instance
+         * @param text Text that should be said
+         * @return message
+         */
+        static sfn::Message onNPCAIOutput(ZMemory::BigHandle source, ZMemory::BigHandle target, const std::string& ouName, const std::string& text);
     protected:
 
         /**

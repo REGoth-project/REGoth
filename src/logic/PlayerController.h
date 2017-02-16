@@ -316,6 +316,11 @@ namespace Logic
         std::string getGuildName();
 
         /**
+         * @return Actual name of the NPC
+         */
+        std::string getDisplayName();
+
+        /**
          * Sets the body-state of this character
          * @param state State to set
          */

@@ -76,6 +76,14 @@ namespace Net
          * @param serverhandle Handle of that npc on the server
          */
         void onNPCInterrupt();
+
+        /**
+         * Sends a message for when this player wants to say something to another
+         * @param ouName Name of the OU-File to be played (Can be empty if thats a custom message)
+         * @param text Text to be displayed as subtitle
+         * @param target Target NPC (Can be invalid)
+         */
+        void onAIOutput(const std::string& ouName, const std::string& text, Daedalus::GameState::NpcHandle target = Daedalus::GameState::NpcHandle());
     protected:
 
         /**

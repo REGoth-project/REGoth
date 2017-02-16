@@ -59,6 +59,22 @@ void Net::ClientState::registerConsoleCommands()
         return "";
     });
 
+    console.registerCommand("net-output", [&](const std::vector<std::string>& args) -> std::string {
+
+        if(args.size() < 2)
+            return "Missing argument. Usage: net-output <msg>";
+
+        std::string s;
+
+        // un-split
+        for(size_t i=1;i<args.size();i++)
+            s += args[i] + " ";
+
+        onAIOutput("", s);
+
+        return "";
+    });
+
     console.registerCommand("ckill", [&](const std::vector<std::string>& args) -> std::string {
 
         if(args.size() < 2)
@@ -451,6 +467,17 @@ void Net::ClientState::onNPCInterrupt()
     sfn::Message msg;
 
     msg << PlayerActionPacket::PA_Interrupt;
+
+    m_Link->Send(PlayerActionsStream, msg);
+}
+
+void Net::ClientState::onAIOutput(const std::string& ouName, const std::string& text, Daedalus::GameState::NpcHandle target)
+{
+    sfn::Message msg;
+    msg << PlayerActionPacket::PA_AI_Output;
+    msg << ZMemory::toBigHandle(m_ScriptEngine.getServerHandleNPC(target));
+    msg << ouName;
+    msg << text;
 
     m_Link->Send(PlayerActionsStream, msg);
 }

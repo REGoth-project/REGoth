@@ -219,6 +219,15 @@ namespace Net
         void onNPCInterrupt(Daedalus::GameState::NpcHandle  serverhandle);
 
         /**
+         * Callback for when an NPC should say something to an other
+         * @param source NPC that should be talking
+         * @param target NPC that should receive the message
+         * @param ouName Name of the OU-Instance
+         * @param text Text that should be said
+         */
+        void onNPCAIOutput(Daedalus::GameState::NpcHandle source, Daedalus::GameState::NpcHandle target, const std::string& ouName, const std::string& text);
+
+        /**
          * Mappings for the handles on the server
          * Class -> (Server handle -> Local handle)
          */

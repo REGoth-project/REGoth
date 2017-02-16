@@ -103,7 +103,9 @@ namespace Net
         SP_Item_Removed = 11,       // Packet, (Server)Entity-handle
         SP_NPC_AddInventory = 12,   // Packet, Serverhandle, Instance, Count
         SP_NPC_PlayAnim = 13,       // Packet, Serverhandle, Anim-Name
-        SP_NPC_Interrupt = 14,       // Packet, Serverhandle
+        SP_NPC_Interrupt = 14,      // Packet, Serverhandle
+        SP_NPC_StartDialog = 15,    // Packet, Serverhandle(dialogue-partner), [Info-Instances]
+        SP_NPC_AIOutput = 16,       // Packet, Serverhandle(source), Serverhandle(target), OU-Name, Text
     };
 
     enum PlayerActionPacket : uint16_t
@@ -112,6 +114,7 @@ namespace Net
         PA_Item_Taken = 1,          // Packet, Serverentity(Item)
         PA_Play_Animation = 2,      // Packet, Animation-name
         PA_Interrupt = 3,           // Packet
+        PA_AI_Output = 4,           // Packet, Serverhandle(target)(Can be invalid), OU-Name, Text
     };
 
     // Max number of chat messages sent to the clients

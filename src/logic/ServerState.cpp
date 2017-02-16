@@ -236,6 +236,8 @@ void Net::ServerState::checkChatStream(Client& client)
 
 void Net::ServerState::checkPlayerActionStream(Net::ServerState::Client& client)
 {
+    using namespace Daedalus::GameState;
+
     sfn::Message message;
     while(client.link->Receive(Net::StreamID::PlayerActionsStream, message))
     {
@@ -314,6 +316,44 @@ void Net::ServerState::checkPlayerActionStream(Net::ServerState::Client& client)
                 }
             }
             break;
+
+            case PA_AI_Output:
+            {
+                ZMemory::BigHandle target;
+                std::string ouName, text;
+                message >> target;
+                message >> ouName;
+                message >> text;
+
+                if(target.isValid())
+                {
+                    // Make sure this npc exists
+                    // FIXME: Should switch to EntityHandles completely so we don't have to loop!
+                    auto& npcs = m_World.getScriptEngine().getWorldNPCs();
+                    for(Handle::EntityHandle e : npcs)
+                    {
+                        VobTypes::NpcVobInformation targetNPC = VobTypes::asNpcVob(m_World, e);
+                        if(VobTypes::getScriptHandle(targetNPC) == ZMemory::handleCast<NpcHandle>(target))
+                        {
+                            LogInfo() << "Net: Requested dialogue " << client.player->getName()
+                                      << " -> " << targetNPC.playerController->getDisplayName()
+                                      << ": " << text << "(" << ouName << ")";
+
+                            break;
+                        }
+                    }
+                }else
+                {
+                    LogInfo() << "Net: Requested dialogue " << client.player->getName() << ": " << text << "(" << ouName << ")";
+
+
+                    // Talk to self
+                    broadcast(StreamID::ScriptStream,
+                              onNPCAIOutput(client.player->getServerHandle(), ZMemory::BigHandle(), ouName, text));
+                }
+            }
+            break;
+
             default:
                 LogWarn() << "Net: PlayerActionPacket invalid: " << p;
         }
@@ -458,6 +498,21 @@ sfn::Message Net::ServerState::onNPCInterrupt(ZMemory::BigHandle serverhandle)
     sfn::Message msg;
     msg << ScriptPacket::SP_NPC_Interrupt;
     msg << serverhandle;
+
+    return msg;
+}
+
+sfn::Message
+Net::ServerState::onNPCAIOutput(ZMemory::BigHandle source, ZMemory::BigHandle target, const std::string& ouName,
+                                const std::string& text)
+{
+    sfn::Message msg;
+
+    msg << ScriptPacket::SP_NPC_AIOutput;
+    msg << source;
+    msg << target;
+    msg << ouName;
+    msg << text;
 
     return msg;
 }

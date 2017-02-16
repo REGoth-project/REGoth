@@ -2615,3 +2615,8 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
+
+std::string PlayerController::getDisplayName()
+{
+    return getScriptInstance().name[0];
+}
