@@ -209,6 +209,9 @@ void AnimHandler::updateAnimations(double deltaTime)
                                                          Math::float3(sampleNext.position.v),
                                                          frameFract);
 
+        if(nodeIdx == 0)
+            m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
+
         // Build transformation matrix from the sample-information
         // Note: Precomputing this is hard because of interpolation
         Math::Matrix trans = Math::Matrix::CreateFromQuaternion(interpRotation);
@@ -238,7 +241,7 @@ void AnimHandler::updateAnimations(double deltaTime)
     m_AnimationStateHash++;
 
     // Get velocity of the current animation
-    // FIXME: Need better handling of animation end
+    /*// FIXME: Need better handling of animation end
     if (!getActiveAnimationPtr()->getAniSamples().empty() && lastFrame != frameNum && frameNum != 0)
     {
         // Get sample of root node (Node 0) from the current and the last frame
@@ -252,7 +255,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
         m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
 
-    }
+    }*/
 
 
 }
