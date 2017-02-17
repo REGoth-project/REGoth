@@ -240,7 +240,11 @@ namespace World
             ALint state;
             alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
 
+<<<<<<< HEAD
             if (state != AL_PLAYING && state != AL_PAUSED)
+=======
+            if (state != AL_PLAYING && state != AL_PAUSED && s.callBacks->empty())
+>>>>>>> 01cdaee731e842a9cf801e02dc236b70d4447a58
             {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
