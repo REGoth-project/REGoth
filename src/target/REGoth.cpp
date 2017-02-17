@@ -256,15 +256,41 @@ void REGoth::initConsole()
 
             LogInfo() << ss.str();
             return ss.str();
-            });
+        });
+
+    console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
+        if(args.size() < 2)
+            return "Missing argument. Usage: kf <idx>";
+
+        m_pEngine->getMainCameraController()->storeKeyframe(atoi(args[1].c_str()));
+        return "Saved keyframe";
+    });
+
+    console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
+        if(args.size() < 2)
+            return "Missing argument. Usage: kf <idx>";
+
+        m_pEngine->getMainCameraController()->clearKeyframes();
+        return "Cleared keyframe";
+    });
+
+    console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
+
+        if(args.size() < 2)
+            return "Missing argument. Usage: pkf <duration>";
+
+        m_pEngine->getMainCameraController()->playKeyframes(atof(args[1].c_str()));
+        return "Playing keyed animation";
+    });
+
 
     console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
-            static bool s_Stats = false;
-            s_Stats = !s_Stats;
+        static bool s_Stats = false;
+        s_Stats = !s_Stats;
 
-            bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
-            return "Toggled stats";
-            });
+        bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
+        return "Toggled stats";
+        });
 
     console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;

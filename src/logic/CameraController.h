@@ -14,6 +14,7 @@ namespace Logic
             Static = 1,
             FirstPerson = 2,
             ThirdPerson = 3,
+            KeyedAnimation,
             Viewer // name is open to change
         };
 
@@ -134,13 +135,37 @@ namespace Logic
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
+
+        /**
+         * Stores a keyframe with the current camera postion/rotation
+         * @param idx Index of the keyframe to store
+         */
+        void storeKeyframe(unsigned idx);
+
+        /**
+         * Clears all stored keyframes
+         */
+        void clearKeyframes();
+
+        /**
+         * Plays all stored keyframes
+         */
+        void playKeyframes(float duration = 1.0f);
     protected:
+
+        /**
+         * Moves the camera according to the stored keyframes
+         * @return (Position, lookat)
+         */
+        std::pair<Math::float3, Math::float3> updateKeyframedPlay(float dt);
 
         /**
          * Transforms the given yaw/pitch into the corresponding direction vectors
          * @return pair of (forward, right)
          */
         std::pair<Math::float3, Math::float3> getDirectionVectors(float yaw, float pitch);
+
+
 
         /**
          * Whether this controller should read player input
@@ -175,6 +200,23 @@ namespace Logic
          * Debug
          */
         float m_moveSpeedMultiplier;
+
+        struct Keyframe
+        {
+            Math::float3 position;
+            Math::float3 lookat;
+        };
+
+        /**
+         * List of keyframes currently set
+         */
+        std::vector<Keyframe> m_Keyframes;
+
+        /**
+         * Currently active keyframe (fraction). -1 = no keyframe active
+         */
+        float m_KeyframeActive;
+        float m_KeyframeDuration;
 
 	/**
          * Direction to use during locked camera while using mobs
