@@ -533,9 +533,6 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Update dialogs
     m_DialogManager.update(deltaTime);
 
-    // check for sounds that finished playing
-    m_AudioWorld->detectSoundsFinished();
-
     // Tell script engine the frame ended
     m_ScriptEngine.onFrameEnd();
 

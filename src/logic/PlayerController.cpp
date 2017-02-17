@@ -1533,16 +1533,27 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
                 // Play the random dialog gesture
                 startDialogAnimation();
                 auto talker = this->m_Entity;
-                std::function<void(World::WorldInstance&)> callBack = [talker](World::WorldInstance& world){
-                    world.getDialogManager().onTalkSoundStopped(talker);
-                };
                 message.internInProgress = true;
                 // Play sound of this conv-message
-                auto soundTicket = m_World.getAudioWorld().playSound(message.name, callBack);
-                m_World.getDialogManager().setSoundTicket(soundTicket);
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name);
+                m_World.getDialogManager().setCurrentMessage(&message);
 
+            } else
+            {
+            #ifdef RE_USE_SOUND
+                // toggle this bool to switch auto skip when sound ended
+                const bool autoPlay = true;
+                if (autoPlay)
+                {
+                    return m_World.getAudioWorld().soundHasStopped(message.soundTicket);
+                } else
+                {
+                    return false;
+                }
+            #else
+                return false;
+            #endif
             }
-            return false;
         }
             break;
 
@@ -1572,7 +1583,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
         case EventMessages::ConversationMessage::ST_ProcessInfos:
             break;
         case EventMessages::ConversationMessage::ST_StopProcessInfos:
-            m_World.getDialogManager().conversationHasEnded();
+            m_World.getDialogManager().endDialog();
             return true;
         case EventMessages::ConversationMessage::ST_OutputSVM_Overlay:
             break;

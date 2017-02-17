@@ -34,6 +34,8 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_DialogActive = false;
     m_Talking = false;
     m_SubDialogActive = false;
+    m_CurrentDialogMessage = nullptr;
+    m_ProcessInfos = false;
 }
 
 DialogManager::~DialogManager()
@@ -64,6 +66,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     // i.e. monsters have no infos
     if(infos.empty())
     {
+        m_ProcessInfos = false;
         return;
     }
 
@@ -120,20 +123,19 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
     // Do the important choice right now
     // TODO: Let the NPC begin talking in that case
-/*
+
     for(int choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
     {
         if (m_Interaction.choices[choiceNr].text == "<important>")
         {
-            // FIXME: Mud causes infinite recursion
             performChoice(choiceNr);
             break;
         }
     }
-    */
 }
 
 void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
+    m_ProcessInfos = false;
     // Push the actual conversation-message
     EventMessages::ConversationMessage endDialogMessage;
     endDialogMessage.subType = EventMessages::ConversationMessage::ST_StopProcessInfos;
@@ -196,11 +198,12 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             }
         }
     }
-
-    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [=](Handle::EntityHandle hostHandle, EventMessages::EventMessage* inst) {
-        stopDisplaySubtitle();
-        //m_World.getAudioWorld().stopSound(m_SoundTicket);
-        auto hostVob = VobTypes::asNpcVob(m_World, hostHandle);
+    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [this](Handle::EntityHandle hostHandle, EventMessages::EventMessage* inst) {
+        // TODO: Rework "this" capture by reworking the callback interface (add world as argument passed)
+        auto& world = this->m_World;
+        world.getDialogManager().stopDisplaySubtitle();
+        world.getAudioWorld().stopSound(dynamic_cast<EventMessages::ConversationMessage*>(inst)->soundTicket);
+        auto hostVob = VobTypes::asNpcVob(world, hostHandle);
         hostVob.playerController->getModelVisual()->stopAnimations();
     }));
     // Push the actual conversation-message
@@ -273,7 +276,7 @@ void DialogManager::performChoice(size_t choice)
     // choices right away. This is important because scripts may overwrite these again!
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
 
-    if(m_Interaction.choices.empty())
+    if(m_Interaction.choices.empty() && m_ProcessInfos)
     {
         // We chose "back" or haven't gotten to a sub-dialog
         updateChoices();
@@ -286,6 +289,8 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 {
     if(m_DialogActive)
         return;
+
+    m_ProcessInfos = true;
 
     Handle::EntityHandle playerEntity = m_World.getScriptEngine().getPlayerEntity();
     VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, playerEntity);
@@ -313,7 +318,7 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
     m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk").address);*/
 }
 
-void DialogManager::conversationHasEnded()
+void DialogManager::endDialog()
 {
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
@@ -401,14 +406,7 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    m_World.getAudioWorld().stopSound(m_SoundTicket);
-    // rest will be done by the AudioManager callback, which calls onTalkSoundStopped
-}
-
-void DialogManager::onTalkSoundStopped(Handle::EntityHandle talker)
-{
-    auto talkerVobInfo = VobTypes::asNpcVob(m_World, talker);
-    talkerVobInfo.playerController->getEM().cancelTalk();
+    m_CurrentDialogMessage->deleted = true;
 }
 
 void DialogManager::clearChoices()

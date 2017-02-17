@@ -1,10 +1,9 @@
 #pragma once
 
-#include <handle/HandleDef.h>
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
 #include <json.hpp>
-#include <audio/AudioWorld.h>
+#include <logic/messages/EventMessage.h>
 
 using json = nlohmann::json;
 
@@ -78,20 +77,9 @@ namespace Logic
         void stopDisplaySubtitle();
 
         /**
-         * set sound ticket to be able to identify sound for stopping
-         * ticket safe to use identificator
-         */
-        void setSoundTicket(Utils::Ticket<World::AudioWorld> ticket) { m_SoundTicket = ticket; }
-
-        /**
          * Cancels current Talk
          */
         void cancelTalk();
-
-        /**
-         * Called as callback from the AudioWorld
-         */
-        void onTalkSoundStopped(Handle::EntityHandle talker);
 
         /**
          * @return Whether a dialog is currently active
@@ -130,6 +118,11 @@ namespace Logic
          * Sets whether the DialogManager is in in the SubDialog state
          */
         void setSubDialogActive(bool flag);
+
+        /**
+         * Sets the current Dialog Message. To be able to cancel it
+         */
+        void setCurrentMessage(EventMessages::ConversationMessage* message) { m_CurrentDialogMessage = message; }
 
         /**
          * Sorts registered choices depending on their sort index
@@ -224,9 +217,14 @@ namespace Logic
         Daedalus::GameState::DaedalusDialogManager* m_ScriptDialogMananger;
 
         /**
-         * Whether a dialog is currently active
+         * Whether someone is talking or the DialogOptionBox is visible
          */
         bool m_DialogActive;
+
+        /**
+         * Whether the conditions of all choices will be reevaluated
+         */
+        bool m_ProcessInfos;
 
         /**
          * Whether a subtitlebox is currently shown
@@ -241,8 +239,8 @@ namespace Logic
         bool m_SubDialogActive;
 
         /**
-         * Can be used to cancel the current Dialog Sound, when IA_Close occurs
+         * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
          */
-        Utils::Ticket<World::AudioWorld> m_SoundTicket;
+        EventMessages::ConversationMessage* m_CurrentDialogMessage;
     };
 }
