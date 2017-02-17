@@ -124,7 +124,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     // Do the important choice right now
     // TODO: Let the NPC begin talking in that case
 
-    for(int choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
+    for(std::size_t choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
     {
         if (m_Interaction.choices[choiceNr].text == "<important>")
         {
