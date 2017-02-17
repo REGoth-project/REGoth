@@ -219,6 +219,11 @@ namespace Logic
 	bool isCameraLocked(){ return m_lockCamera; }
 
         /**
+         * @return Access to the internal core. Handle with care.
+         */
+        MobCore* getCore(){ return m_MobCore; }
+
+        /**
          * @return Classes which want to get exported on save should return true here
          */
         virtual bool shouldExport(){ return true; }

@@ -36,6 +36,9 @@ Sky::Sky(World::WorldInstance& world) :
     m_FarPlane = FLT_MAX;
     m_skySpeedMultiplier = 1.0f;
 
+    // Both games start at 8:00 in the morning
+    setTimeOfDay(8,00);
+
     fillSkyStates();
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugSkySpeed, [this](bool, float intensity)

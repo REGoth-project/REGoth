@@ -164,13 +164,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         vm.setReturn(0);
     });
 
-    vm.registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "mob_hasitems";
-        int iteminstance = vm.popDataValue(); if(verbose) LogInfo() << "iteminstance: " << iteminstance;
-        std::string mobname = vm.popString(); if(verbose) LogInfo() << "mobname: " << mobname;
-        vm.setReturn(0);
-    });
-
     vm.registerExternalFunction("npc_arewestronger", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_arewestronger";
         uint32_t arr_other;

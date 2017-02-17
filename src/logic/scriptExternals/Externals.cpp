@@ -1048,6 +1048,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     });
 
+
     vm->registerExternalFunction("npc_setrefusetalk", [=](Daedalus::DaedalusVM& vm){
         // the self argument is the NPC, the player is talking with
         int32_t timeSec = vm.popVar();
@@ -1065,6 +1066,38 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
         int32_t isRefusingTalk = npc.playerController->isRefusingTalk();
         vm.setReturn(isRefusingTalk);
+    });
+
+    vm->registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "mob_hasitems";
+        uint32_t iteminstance = (uint32_t)vm.popDataValue();
+        std::string mobname = vm.popString();
+
+        Handle::EntityHandle mob = VobTypes::MOB_GetByName(*pWorld, mobname);
+        VobTypes::MobVobInformation mvob = VobTypes::asMobVob(*pWorld, mob);
+        if(mvob.isValid())
+        {
+            int cnt = VobTypes::MOB_GetItemCount(mvob, vm.getDATFile().getSymbolByIndex(iteminstance).name);
+            vm.setReturn(cnt);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
+    vm->registerExternalFunction("npc_isinstate", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "npc_isinstate";
+        uint32_t state = (uint32_t)vm.popVar();
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(!npc.isValid())
+            return;
+
+        int v = npc.playerController->getAIStateMachine().isInState(state) ? 1 : 0;
+
+        vm.setReturn(v);
     });
 }
 

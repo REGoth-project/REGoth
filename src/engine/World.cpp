@@ -103,6 +103,22 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         // Init worldmesh-wrapper
         m_WorldMesh.load(packedWorldMesh);
 
+        for(auto& sm : packedWorldMesh.subMeshes)
+        {
+            size_t k=0;
+            for(auto& lm : sm.triangleLightmapIndices)
+            {
+                if (lm != -1)
+                {
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 0]].Color = 0xFFAAAAAA;
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 1]].Color = 0xFFAAAAAA;
+                    packedWorldMesh.vertices[sm.indices[k * 3 + 2]].Color = 0xFFAAAAAA;
+                }
+
+                k++;
+            }
+        }
+
         // TODO: Put these into a compound-component or something
         std::vector<Handle::EntityHandle> ents;
         Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh, "WORLDMESH.3DS");

@@ -512,9 +512,13 @@ void ::Render::drawPfx(World::WorldInstance& world, Components::PfxComponent& pf
 	Math::float4 color(1, 1, 1, 1);
 	bgfx::setUniform(config.uniforms.objectColor, color.v);
 
-	Textures::Texture& tx = world.getTextureAllocator().getTexture(pfx.m_Texture);
+    if(pfx.m_Texture.isValid())
+    {
+        Textures::Texture& tx = world.getTextureAllocator().getTexture(pfx.m_Texture);
+        bgfx::setTexture(0, config.uniforms.diffuseTexture, tx.m_TextureHandle);
+    }
+
 	bgfx::setState(pfx.m_bgfxRenderState);
-	bgfx::setTexture(0, config.uniforms.diffuseTexture, tx.m_TextureHandle);
 	bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
 	bgfx::setVertexBuffer(pfx.m_ParticleVB);
 
