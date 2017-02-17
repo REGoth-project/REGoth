@@ -13,6 +13,7 @@
 #include <ui/SubtitleBox.h>
 #include <ui/PrintScreenMessages.h>
 #include <ui/Hud.h>
+#include <logic/visuals/ModelVisual.h>
 
 /**
  * File containing the dialouges
@@ -32,6 +33,9 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
     m_Talking = false;
+    m_SubDialogActive = false;
+    m_CurrentDialogMessage = nullptr;
+    m_ProcessInfos = false;
 }
 
 DialogManager::~DialogManager()
@@ -40,7 +44,6 @@ DialogManager::~DialogManager()
 
     if (m_World.getEngine())
     {
-        endDialog();
         m_World.getEngine()->getRootUIView().removeChild(m_ActiveSubtitleBox);
     }
 
@@ -51,6 +54,15 @@ DialogManager::~DialogManager()
 void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
                                      std::vector<Daedalus::GameState::InfoHandle> infos)
 {
+    //LogInfo() << "onAIProcessInfos";
+
+    // i.e. monsters have no infos
+    if(infos.empty())
+    {
+        m_ProcessInfos = false;
+        return;
+    }
+
     // Set information about the current interaction
     m_Interaction.target = self;
     m_Interaction.infos = infos;
@@ -59,12 +71,11 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     m_Interaction.player = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(
             getVM().getDATFile().getSymbolByName("other").instanceDataHandle);
 
-    if(infos.empty())
-        return;
-
+    m_DialogActive = true;
+    m_World.getEngine()->getHud().getDialogBox().setHidden(false);
+    m_World.getEngine()->getHud().setGameplayHudVisible(false);
 
     LogInfo() << "Started talking with: " << getGameState().getNpc(m_Interaction.target).name[0];
-    LogInfo() << "Options: ";
 
     clearChoices();
 
@@ -95,7 +106,9 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
         if(valid)
         {
             if(info.description.empty() && info.important)
+            {
                 info.description = "<important>";
+            }
 
             ChoiceEntry entry;
             entry.nr = info.nr;
@@ -110,31 +123,36 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     flushChoices();
 
     // Do the important choice right now
-    // TODO: Let the NPC begin talking in that case
-   /* if(importantChoice != static_cast<size_t>(-1))
+
+    for(std::size_t choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
     {
-        if(!performChoice(importantChoice))
+        if (m_Interaction.choices[choiceNr].text == "<important>")
         {
-            // END was chosen, don't continue the dialog
-            endDialog();
+            performChoice(choiceNr);
+            break;
         }
-    }*/
+    }
+}
+
+void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
+    m_ProcessInfos = false;
+    // Push the actual conversation-message
+    EventMessages::ConversationMessage endDialogMessage;
+    endDialogMessage.subType = EventMessages::ConversationMessage::ST_StopProcessInfos;
+    // select on which EventManager the exit-DialogManager-event will be scheduled
+    bool playerGetsEndEvent = false;
+    auto handleForQueuing = playerGetsEndEvent ? m_Interaction.player : target;
+    VobTypes::NpcVobInformation queueVob = VobTypes::getVobFromScriptHandle(m_World, handleForQueuing);
+
+    if (queueVob.isValid())
+        queueVob.playerController->getEM().onMessage(endDialogMessage);
 }
 
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    m_ActiveSubtitleBox->setText(getGameState().getNpc(self).name[0], msg.text);
-
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
-
-
-    /*if(!targetnpc.playerController)
-    {
-        LogWarn() << "AI_Output: Target not found/invalid!";
-        return;
-    }*/
 
     if(!selfnpc.playerController)
     {
@@ -171,7 +189,14 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             }
         }
     }
-
+    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [this](Handle::EntityHandle hostHandle, EventMessages::EventMessage* inst) {
+        // TODO: Rework "this" capture by reworking the callback interface (add world as argument passed)
+        auto& world = this->m_World;
+        world.getDialogManager().stopDisplaySubtitle();
+        world.getAudioWorld().stopSound(dynamic_cast<EventMessages::ConversationMessage*>(inst)->soundTicket);
+        auto hostVob = VobTypes::asNpcVob(world, hostHandle);
+        hostVob.playerController->getModelVisual()->stopAnimations();
+    }));
     // Push the actual conversation-message
     selfnpc.playerController->getEM().onMessage(conv);
 }
@@ -179,6 +204,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
 
 void DialogManager::update(double dt)
 {
+    // TODO: Refactor add talk-chain-finished event to handle visibility of DialogBox
     if(m_DialogActive)
     {
         bool dialogBoxVisible = false;
@@ -189,54 +215,13 @@ void DialogManager::update(double dt)
 
             if(pv.isValid() && tv.isValid())
             {
-                dialogBoxVisible = !pv.playerController->getEM().hasConvMessageWith(pv.entity)
-                                   && !tv.playerController->getEM().hasConvMessageWith(pv.entity);
+                dialogBoxVisible = !(pv.playerController->getEM().hasConvMessageWith(tv.entity)
+                                   || tv.playerController->getEM().hasConvMessageWith(pv.entity));
             }
         }
 
-        UI::DialogBox& db = m_World.getEngine()->getHud().getDialogBox();
-        db.setHidden(!dialogBoxVisible);
-
-        if(dialogBoxVisible)
-        {
-            if (db.getChoiceTaken() != -1)
-            {
-                // Perform the choice and check if that was an END-choice
-                if (!performChoice(static_cast<size_t>(db.getChoiceTaken())))
-                {
-                    // END was chosen, don't continue the dialog
-                    endDialog();
-
-                    // Clear the dialog partners EMs
-                    // FIXME: I dont think the original game does this (start the routine), but NPCs won't change their state after talking
-                    //        sometimes (baar parvez for example)
-                    VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World,
-                                                                                             m_Interaction.player);
-                    VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World,
-                                                                                             m_Interaction.target);
-
-                    // Start routine
-                    EventMessages::StateMessage msg;
-                    msg.subType = EventMessages::StateMessage::EV_StartState;
-                    msg.functionSymbol = 0;
-
-                    if (playerVob.isValid())
-                        playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
-
-                    if (targetVob.isValid())
-                        targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
-                } else
-                {
-                    // There is more! Start talking again.
-                    flushChoices();
-                    //endDialog();
-                    //startDialog(m_Interaction.target);
-                }
-            }
-        }
-    }else
-    {
-        m_World.getEngine()->getHud().setGameplayHudVisible(true); // FIXME: Disable talking to monsters. The dialog end doesn't trigger and this stays hidden
+        UI::DialogBox& dialogOptionBox = m_World.getEngine()->getHud().getDialogBox();
+        dialogOptionBox.setHidden(!dialogBoxVisible);
     }
 }
 
@@ -250,12 +235,12 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
     return m_World.getScriptEngine().getGameState();
 }
 
-bool DialogManager::performChoice(size_t choice)
+void DialogManager::performChoice(size_t choice)
 {
     assert(choice < m_Interaction.choices.size());
 
     // Hide the options box
-    endDialog();
+    m_World.getEngine()->getHud().getDialogBox().setHidden(true);
 
     // Get actual selected info-object
     Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.choices[choice].info);
@@ -266,7 +251,13 @@ bool DialogManager::performChoice(size_t choice)
 
     size_t fnSym = m_Interaction.choices[choice].functionSym;
 
-    clearChoices();
+    if (m_SubDialogActive)
+    {
+        m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
+    } else
+    {
+        clearChoices();
+    }
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
@@ -276,20 +267,21 @@ bool DialogManager::performChoice(size_t choice)
     // choices right away. This is important because scripts may overwrite these again!
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
 
-    if(m_Interaction.choices.empty())
+    if(m_Interaction.choices.empty() && m_ProcessInfos)
     {
         // We chose "back" or haven't gotten to a sub-dialog
         updateChoices();
     }
-
-    return info.nr != 999;
-
+    // TODO Don't flush yet, wait for dialog talking chain end
+    flushChoices();
 }
 
 void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 {
-    if(m_DialogActive || !m_ActiveSubtitleBox->isHidden()) // FIXME: HACK, there has to be a better way to see if the conversation ended!
+    if(m_DialogActive)
         return;
+
+    m_ProcessInfos = true;
 
     Handle::EntityHandle playerEntity = m_World.getScriptEngine().getPlayerEntity();
     VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, playerEntity);
@@ -303,13 +295,11 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 
     targetVob.playerController->standUp();
 
-    m_World.getEngine()->getHud().setGameplayHudVisible(false);
-
     EventMessages::StateMessage msg;
     msg.subType = EventMessages::StateMessage::EV_StartState;
     msg.functionSymbol = m_World.getScriptEngine().getSymbolIndexByName("ZS_TALK");
 
-    // Set other/victum // TODO: Refractor
+    // Set other/victim // TODO: Refactor
     msg.other = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("OTHER").instanceDataHandle);
     msg.victim = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("VICTIM").instanceDataHandle);
 
@@ -324,6 +314,25 @@ void DialogManager::endDialog()
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
     m_DialogActive = false;
+
+    // Clear the dialog partners EMs
+    // FIXME: I dont think the original game does this (start the routine), but NPCs won't change their state after talking
+    //        sometimes (baar parvez for example)
+    VobTypes::NpcVobInformation playerVob = VobTypes::getVobFromScriptHandle(m_World,
+                                                                             m_Interaction.player);
+    VobTypes::NpcVobInformation targetVob = VobTypes::getVobFromScriptHandle(m_World,
+                                                                             m_Interaction.target);
+
+    // Start routine
+    EventMessages::StateMessage msg;
+    msg.subType = EventMessages::StateMessage::EV_StartState;
+    msg.functionSymbol = 0;
+
+    if (playerVob.isValid())
+        playerVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+    if (targetVob.isValid())
+        targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
 }
 
 bool DialogManager::init()
@@ -369,7 +378,6 @@ bool DialogManager::init()
 
     m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_World.getEngine());
 
-
     LogInfo() << "Done initializing DialogManager!";
     return true;
 }
@@ -387,23 +395,38 @@ void DialogManager::stopDisplaySubtitle()
     m_Talking = false;
 }
 
+void DialogManager::cancelTalk()
+{
+    // TODO rework ALL messages into shared pointers?
+    if (m_CurrentDialogMessage)
+    {
+        m_CurrentDialogMessage->deleted = true;
+        m_CurrentDialogMessage = nullptr;
+    }
+}
+
 void DialogManager::clearChoices()
 {
     m_Interaction.choices.clear();
-
-    flushChoices();
 }
 
-size_t DialogManager::addChoice(ChoiceEntry& entry)
+void DialogManager::addChoice(ChoiceEntry& entry)
 {
     m_Interaction.choices.push_back(entry);
+}
 
-    if(m_Interaction.choices.back().nr == -2)
-        m_Interaction.choices.back().nr = static_cast<int>(m_Interaction.choices.size()) - 1;
+void DialogManager::addChoiceFront(ChoiceEntry& entry){
+    int32_t new_nr = entry.nr;
+    for (ChoiceEntry& e : m_Interaction.choices){
+        new_nr = std::min(new_nr, e.nr);
+    }
+    entry.nr = new_nr - 1;
+    addChoice(entry);
+}
 
-    flushChoices();
-
-	return 0;
+void DialogManager::setSubDialogActive(bool flag)
+{
+    m_SubDialogActive = flag;
 }
 
 void DialogManager::sortChoices()
@@ -423,10 +446,6 @@ void DialogManager::flushChoices()
     m_World.getEngine()->getHud().getDialogBox().clearChoices();
     for(ChoiceEntry& e : m_Interaction.choices)
         m_World.getEngine()->getHud().getDialogBox().addChoice(e);
-
-    m_World.getEngine()->getHud().getDialogBox().setHidden(false);
-    m_World.getEngine()->getHud().setGameplayHudVisible(false);
-    m_DialogActive = true;
 }
 
 void DialogManager::updateChoices()

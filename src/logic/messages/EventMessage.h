@@ -5,6 +5,7 @@
 #include <list>
 #include <ZenLib/daedalus/DaedalusGameState.h>
 #include "../LogicDef.h"
+#include <audio/AudioWorld.h>
 
 namespace Logic
 {
@@ -598,6 +599,11 @@ namespace Logic
              * Whether this is currently in progress. Set by the PlayerController.
              */
             bool internInProgress;
+
+            /**
+             * Ticket. Can be used to ask AudioWorld if sound is playing.
+             */
+            Utils::Ticket<World::AudioWorld> soundTicket;
         };
 
         struct MagicMessage : public NpcMessage

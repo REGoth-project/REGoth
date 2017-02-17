@@ -147,26 +147,30 @@ void UI::Hud::onTextInput(const std::string& text)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-    // Don't you know it's rude to open a menu while talking to somebody?
-    if(m_Engine.getMainWorld().get().getDialogManager().isTalking()) return;
+    auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
 
     // Notify last menu in chain
     if(!m_MenuChain.empty() && action != IA_Close)
     {
         m_MenuChain.back()->onInputAction(action);
         return;
-    }else if(!m_pDialogBox->isHidden()){
-        if(action != IA_Close) // IA_Close would automatically quit the dialog
+    }else if(dialogManager.isDialogActive())
+    {
+        if(!m_pDialogBox->isHidden()){
             m_pDialogBox->onInputAction(action);
+        }
+        else if (dialogManager.isTalking() && action == IA_Close) {
+            dialogManager.cancelTalk();
+        }
         return;
     }
-    
+
     // Close console or last menu, in case it's open
     if(action == IA_Close)
     {
         if(m_Console.isOpen())
             m_Console.setOpen(false);
-        else if(!m_MenuChain.empty()) 
+        else if(!m_MenuChain.empty())
             popMenu();
         else // Nothing is open right now. Show main-menu
             pushMenu<UI::Menu_Main>();
@@ -192,7 +196,7 @@ void UI::Hud::cleanMenus()
 {
     for(Menu* m : m_MenusToDelete)
         delete m;
-    
+
     m_MenusToDelete.clear();
 }
 

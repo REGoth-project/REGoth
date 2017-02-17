@@ -33,11 +33,6 @@ namespace UI
         size_t addChoice(Logic::DialogManager::ChoiceEntry& entry);
 
         /**
-         * @return Choice the user clicked the last time. -1 if none.
-         */
-        int getChoiceTaken(){ return m_ChoiceTaken; }
-
-        /**
          * @return List of choices registered
          */
         const std::vector<Logic::DialogManager::ChoiceEntry>& getChoices(){ return m_Choices; }
@@ -66,9 +61,8 @@ namespace UI
         std::vector<Logic::DialogManager::ChoiceEntry> m_Choices;
 
         /**
-         * Choice the user clicked the last time. -1 if none.
+         * current selection index. -1 if none.
          */
-        int m_ChoiceTaken;
         int m_CurrentlySelected;
 
         /**

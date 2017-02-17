@@ -3,6 +3,8 @@
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusDialogManager.h>
 #include <json.hpp>
+#include <logic/messages/EventMessage.h>
+
 using json = nlohmann::json;
 
 namespace World
@@ -57,7 +59,7 @@ namespace Logic
         void startDialog(Daedalus::GameState::NpcHandle target);
 
         /**
-         * End dialog. Removes the dialogbox.
+         * exit the dialog
          */
         void endDialog();
 
@@ -65,6 +67,7 @@ namespace Logic
          * Displays a subtitle text
          * @param subtitle Text to display
          * @param self Name of the person saying that line
+         * @param speaker the EntityHandle of the speaker
          */
         void displaySubtitle(const std::string& subtitle, const std::string& self);
 
@@ -74,14 +77,24 @@ namespace Logic
         void stopDisplaySubtitle();
 
         /**
+         * Cancels current Talk
+         */
+        void cancelTalk();
+
+        /**
          * @return Whether a dialog is currently active
          */
         bool isDialogActive() { return m_DialogActive; }
 
-	/**
+        /**
          * @return Whether a someone is currently talking
          */
         bool isTalking() { return m_Talking; }
+
+        /**
+         * @return The NPC the hero is talking to
+         */
+        Daedalus::GameState::NpcHandle getTarget() {return m_Interaction.target; }
 
         /**
          * Removes all choices currently in the dialogbox
@@ -90,10 +103,26 @@ namespace Logic
 
         /**
          * Adds a single choice to the box
-         * @param entry Choice entry. Note: nr of -1 means: Sort ascending
-         * @return Index of the choice
+         * @param entry Choice entry.
          */
-        size_t addChoice(ChoiceEntry& entry);
+        void addChoice(ChoiceEntry& entry);
+
+        /**
+         * Adds a single choice to the box.
+         * The entry will get a new nr to be guaranteed to be on top.
+         * @param entry Choice entry.
+         */
+        void addChoiceFront(ChoiceEntry& entry);
+
+        /**
+         * Sets whether the DialogManager is in in the SubDialog state
+         */
+        void setSubDialogActive(bool flag);
+
+        /**
+         * Sets the current Dialog Message. To be able to cancel it
+         */
+        void setCurrentMessage(EventMessages::ConversationMessage* message) { m_CurrentDialogMessage = message; }
 
         /**
          * Sorts registered choices depending on their sort index
@@ -110,11 +139,25 @@ namespace Logic
          */
         void updateChoices();
 
+        /**
+         * Called by the script when the interaction will end
+         * and the DialogManager should be closed after the last ConversationMessage (if any)
+         * @param self NPC who the player is talking to
+         */
+        void queueDialogEndEvent(Daedalus::GameState::NpcHandle target);
+
         // TODO: Probably move this into script-engine
         Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }
 
         void exportDialogManager(json& h);
         void importDialogManager(const json& j);
+
+        /**
+         * Performs a choice selected by the user
+         * @param choice Choice index to perform (m_Interaction.infos)
+         */
+        void performChoice(size_t choice);
+
     protected:
 
         /**
@@ -138,13 +181,6 @@ namespace Logic
          * @param msg Message to say
          */
         void onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg);
-
-        /**
-         * Performs a choice selected by the user
-         * @param choice Choice index to perform (m_Interaction.infos)
-         * @return Whether to continue the dialog (if false, END was selected)
-         */
-        bool performChoice(size_t choice);
 
         /**
          * Currently active subtitle box
@@ -181,13 +217,30 @@ namespace Logic
         Daedalus::GameState::DaedalusDialogManager* m_ScriptDialogMananger;
 
         /**
-         * Whether a dialog is currently active
+         * Whether someone is talking or the DialogOptionBox is visible
          */
         bool m_DialogActive;
 
-	/**
+        /**
+         * Whether the conditions of all choices will be reevaluated
+         */
+        bool m_ProcessInfos;
+
+        /**
          * Whether a subtitlebox is currently shown
          */
         bool m_Talking;
+
+        /**
+         * Whether a hero is inside a multiple choice test.
+         * When true the queue will not be cleared and normal dialog options will not be added
+         * This state is left when the script calls the script function Info_ClearChoices
+         */
+        bool m_SubDialogActive;
+
+        /**
+         * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
+         */
+        EventMessages::ConversationMessage* m_CurrentDialogMessage;
     };
 }

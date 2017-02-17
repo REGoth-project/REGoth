@@ -8,6 +8,7 @@
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 #include <vdfs/fileIndex.h>
+#include <utils/Utils.h>
 
 typedef struct ALCcontext_struct ALCcontext;
 
@@ -82,14 +83,25 @@ public:
     /**
      * Plays the sound of the given handle/name
      */
-    void playSound(Handle::SfxHandle h);
+    Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h);
 
-    void playSound(const std::string& name);
+    Utils::Ticket<AudioWorld> playSound(const std::string& name);
 
     /**
      * Stops all playing sounds
      */
     void stopSounds();
+
+    /**
+     * Stops Sound with given Ticket
+     * @param ticket to identify the sound
+     */
+    void stopSound(Utils::Ticket<AudioWorld> ticket);
+
+    /**
+     * returns whether the source of the associated ticket is playing
+     */
+    bool soundIsPlaying(Utils::Ticket<AudioWorld> ticket);
 
 private:
 
@@ -107,6 +119,7 @@ private:
     struct Source
     {
         unsigned m_Handle = 0;
+        Utils::Ticket<AudioWorld> soundTicket;
     };
 
     struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>

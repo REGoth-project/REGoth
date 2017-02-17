@@ -28,9 +28,6 @@
 using json = nlohmann::json;
 using namespace Logic;
 
-// TODO: HACK, remove!
-static bool s_action_triggered = false;
-
 /**
  * Standard node-names
  */
@@ -86,6 +83,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
     m_EquipmentState.activeWeapon.invalidate();
 
+    m_RefuseTalkTime = 0;
+
     m_isDrawWeaponMelee = false;
     m_isForward = false;
     m_isBackward = false;
@@ -103,6 +102,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
 void PlayerController::onUpdate(float deltaTime)
 {
+    m_RefuseTalkTime -= deltaTime;
     // This vob should react to messages
     getEM().processMessageQueue();
 
@@ -706,7 +706,7 @@ void PlayerController::placeOnGround()
     Math::float3 entityPosition = getEntityTransform().Translation();
     Math::float3 to = entityPosition + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = entityPosition + Math::float3(0.0f, 30.0f, 0.0f);
-    
+
     std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
     if (hitall.empty())
         return;
@@ -1531,37 +1531,38 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
         case EventMessages::ConversationMessage::ST_Output:
         {
-            m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
-
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (!message.internInProgress)
             {
+                m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
 
                 // Play the random dialog gesture
                 startDialogAnimation();
-
-                // Play sound of this conv-message
-                m_World.getAudioWorld().playSound(message.name);
-
                 message.internInProgress = true;
-            }
+                // Play sound of this conv-message
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name);
+                m_World.getDialogManager().setCurrentMessage(&message);
+                //m_World.getDialogManager().setCurrentTalker(this->m_Entity);
 
-
-            bool done = s_action_triggered;
-            /*SINGLE_ACTION_KEY(entry::Key::KeyR, [&](){
-                done = true;
-                m_World.getDialogManager().stopDisplaySubtitle();
-            });*/
-
-            if(done)
+            } else
             {
-                m_World.getDialogManager().stopDisplaySubtitle();
-                m_World.getAudioWorld().stopSounds();
+            #ifdef RE_USE_SOUND
+                // toggle this bool to switch auto skip when sound ended
+                const bool autoPlay = true;
+                if (autoPlay)
+                {
+                    return !m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                } else
+                {
+                    return false;
+                }
+            #else
+                return false;
+            #endif
             }
-
-            return done;
         }
             break;
 
@@ -1591,7 +1592,8 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
         case EventMessages::ConversationMessage::ST_ProcessInfos:
             break;
         case EventMessages::ConversationMessage::ST_StopProcessInfos:
-            break;
+            m_World.getDialogManager().endDialog();
+            return true;
         case EventMessages::ConversationMessage::ST_OutputSVM_Overlay:
             break;
         case EventMessages::ConversationMessage::ST_SndPlay:
@@ -1961,8 +1963,8 @@ void PlayerController::setupKeyBindings()
 
                 // Update the players status menu once
                 updateStatusScreen(statsScreen);
-            } 
-	    else if (hud.isTopMenu<UI::Menu_Status>()) 
+            }
+            else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
     });
@@ -2036,13 +2038,6 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::UI_Close, [this](bool triggered, float intensity) {
-        s_action_triggered = false;
-
-        if (triggered)
-            s_action_triggered = true; // Set true for one frame
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {

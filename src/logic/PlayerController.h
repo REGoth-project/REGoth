@@ -354,6 +354,17 @@ namespace Logic
         bool isNpcReady();
 
         /**
+         * @return True, if m_RefuseTalkTime has not reached 0 yet
+         */
+        bool isRefusingTalk() { return m_RefuseTalkTime > 0; }
+
+        /**
+         * set timer for certain dialog options to be disabled
+         * @param time in seconds
+         */
+        void setRefuseTalkTime(float time) { m_RefuseTalkTime = time; }
+
+        /**
          * @return The ai-state machine of this NPC
          */
         NpcScriptState& getAIStateMachine(){ return m_AIStateMachine; }
@@ -384,7 +395,7 @@ namespace Logic
         Materials::MaterialGroup getSurfaceMaterial();
 
         /**
-         * Returns material data of give triangle index 
+         * Returns material data of give triangle index
          */
         Materials::MaterialGroup getMaterial(uint32_t triangleIdx);
         /**
@@ -575,6 +586,12 @@ namespace Logic
          */
         NpcScriptState m_AIStateMachine;
 
+
+        /**
+         * refuse talk countdown
+         */
+        float m_RefuseTalkTime;
+
         /**
          * Key states
          */
@@ -596,7 +613,7 @@ namespace Logic
         size_t m_LastAniRootPosUpdatedAniHash;
 
         /**
-         * Contstants 
+         * Contstants
          */
         static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
         static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece

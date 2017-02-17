@@ -53,7 +53,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
         VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
 
-		
+
 		if(userData)
 		{
 			World::WorldInstance& world = engine->getWorldInstance(userData->world);
@@ -70,7 +70,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 			return vob;
 		}
 
-        
+
     };
 
     auto getItemByInstance = [vm, engine](size_t instance)
@@ -249,7 +249,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 		{
 			vm.setReturn(INT32_MAX);
 		}
-	
+
 	});
 
     vm->registerExternalFunction("npc_getdisttowp", [=](Daedalus::DaedalusVM& vm){
@@ -283,7 +283,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 		else {
 			vm.setReturn(INT32_MAX);
 		}
-        
+
     });
 
     vm->registerExternalFunction("npc_getdisttoitem", [=](Daedalus::DaedalusVM& vm){
@@ -566,7 +566,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("infomanager_hasfinished", [=](Daedalus::DaedalusVM& vm){
-       vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
+        vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
     });
 
     vm->registerExternalFunction("npc_getnearestwp", [=](Daedalus::DaedalusVM& vm){
@@ -627,8 +627,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 	});
 
 	vm->registerExternalFunction("npc_removeinvitem", [=](Daedalus::DaedalusVM& vm){
-		uint32_t iteminstance = vm.popDataValue(); 
-		uint32_t owner = vm.popVar(); 
+		uint32_t iteminstance = vm.popDataValue();
+		uint32_t owner = vm.popVar();
 
 		VobTypes::NpcVobInformation npc = getNPCByInstance(owner);
 
@@ -797,7 +797,15 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.subType = EventMessages::ConversationMessage::ST_PlayAni;
             sm.animation = ani;
 
-            npc.playerController->getEM().onMessage(sm);
+            // Don't schedule random animations when the npc is the target of the dialog manager
+            // Should not be necessary since npc should be in ZS_TALK state. Remove when state issue is resolved
+            Daedalus::GameState::NpcHandle npcHandle = npc.playerController->getScriptHandle();
+            auto& dialogManager = pWorld->getDialogManager();
+            if (dialogManager.isDialogActive() && dialogManager.getTarget() == npcHandle){
+                //LogInfo() << "Animation got canceled (DialogActive): npc = " << npc.playerController->getScriptInstance().name[0] << ", ani = " << ani;
+            } else {
+                npc.playerController->getEM().onMessage(sm);
+            }
         }
 
         vm.setReturn(0);
@@ -913,20 +921,36 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Logic::DialogManager::ChoiceEntry choice;
         choice.info = hinfo;
         choice.text = text;
-        choice.nr = -2; // This means: Ascending order
+        // number will be assigned by addChoiceFront
+        choice.nr = 0;
         choice.functionSym = func;
 
-        pWorld->getDialogManager().addChoice(choice);
+        // calling the script function info_addchoice always opens the SubDialog for special multiple choices
+        pWorld->getDialogManager().setSubDialogActive(true);
+        pWorld->getDialogManager().addChoiceFront(choice);
+        pWorld->getDialogManager().flushChoices();
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
         uint32_t info = vm.popVar();
 
+        // after info_clearchoices is called the SubDialog is never active
+        pWorld->getDialogManager().setSubDialogActive(false);
         pWorld->getDialogManager().clearChoices();
     });
 
+    vm->registerExternalFunction("ai_stopprocessinfos", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
+        uint32_t self = vm.popVar();
+        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+            (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+
+        // Notify DialogManager
+        pWorld->getDialogManager().queueDialogEndEvent(hself);
+    });
+
 	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
-		std::string spawnpoint = vm.popString(); 
+		std::string spawnpoint = vm.popString();
 		uint32_t npcinstance = vm.popDataValue();
 
 		if(spawnpoint != "" && !World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint))
@@ -1024,6 +1048,26 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     });
 
+
+    vm->registerExternalFunction("npc_setrefusetalk", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
+        int32_t timeSec = vm.popVar();
+        uint32_t self = vm.popVar();
+        // TODO: doesn't work yet on Mud. Is his variable "const int NerveSec = 30;" is not set by the vm maybe?
+        // LogInfo() << "Set refusing talk time: " << timeSec;
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        npc.playerController->setRefuseTalkTime(timeSec);
+    });
+
+    vm->registerExternalFunction("npc_refusetalk", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        int32_t isRefusingTalk = npc.playerController->isRefusingTalk();
+        vm.setReturn(isRefusingTalk);
+    });
+
     vm->registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "mob_hasitems";
         uint32_t iteminstance = (uint32_t)vm.popDataValue();
@@ -1055,7 +1099,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         vm.setReturn(v);
     });
-
 }
 
 

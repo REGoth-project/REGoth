@@ -35,7 +35,7 @@ WorldInstance::WorldInstance()
       m_BspTree(*this),
       m_PfxManager(*this)
 {
-	
+
 }
 
 WorldInstance::~WorldInstance()
@@ -131,7 +131,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 */
 
         Meshes::WorldStaticMesh &worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
-            
+
         for(size_t i=0;i<packedWorldMesh.subMeshes.size();i++)
         {
             Handle::MeshHandle h = getStaticMeshAllocator().loadFromPackedSubmesh(packedWorldMesh, i, "");
@@ -329,7 +329,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         }
 
 
-        
+
         LogInfo() << "Done!";
 
         // Make sure static collision is initialized before adding the NPCs
@@ -390,7 +390,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
     }
 
     // Initialize the sky, so it will get the right values
-    m_Sky.fillSkyStates(); 
+    m_Sky.fillSkyStates();
 
     m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
