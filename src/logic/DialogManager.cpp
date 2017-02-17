@@ -55,13 +55,6 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
                                      std::vector<Daedalus::GameState::InfoHandle> infos)
 {
     //LogInfo() << "onAIProcessInfos";
-    // Set information about the current interaction
-    m_Interaction.target = self;
-    m_Interaction.infos = infos;
-
-    // Get interaction partner ("other")
-    m_Interaction.player = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(
-            getVM().getDATFile().getSymbolByName("other").instanceDataHandle);
 
     // i.e. monsters have no infos
     if(infos.empty())
@@ -69,6 +62,14 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
         m_ProcessInfos = false;
         return;
     }
+
+    // Set information about the current interaction
+    m_Interaction.target = self;
+    m_Interaction.infos = infos;
+
+    // Get interaction partner ("other")
+    m_Interaction.player = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(
+            getVM().getDATFile().getSymbolByName("other").instanceDataHandle);
 
     m_DialogActive = true;
     m_World.getEngine()->getHud().getDialogBox().setHidden(false);
@@ -122,7 +123,6 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     flushChoices();
 
     // Do the important choice right now
-    // TODO: Let the NPC begin talking in that case
 
     for(std::size_t choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
     {
@@ -151,17 +151,8 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    //m_ActiveSubtitleBox->setText(getGameState().getNpc(self).name[0], msg.text);
-
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
-
-
-    /*if(!targetnpc.playerController)
-    {
-        LogWarn() << "AI_Output: Target not found/invalid!";
-        return;
-    }*/
 
     if(!selfnpc.playerController)
     {
@@ -224,8 +215,8 @@ void DialogManager::update(double dt)
 
             if(pv.isValid() && tv.isValid())
             {
-                dialogBoxVisible = !pv.playerController->getEM().hasConvMessageWith(pv.entity)
-                                   && !tv.playerController->getEM().hasConvMessageWith(pv.entity);
+                dialogBoxVisible = !(pv.playerController->getEM().hasConvMessageWith(tv.entity)
+                                   || tv.playerController->getEM().hasConvMessageWith(pv.entity));
             }
         }
 

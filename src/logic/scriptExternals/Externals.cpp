@@ -919,7 +919,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Logic::DialogManager::ChoiceEntry choice;
         choice.info = hinfo;
         choice.text = text;
-        // all choices added by this function will have the same number
+        // number will be assigned by addChoiceFront
         choice.nr = 0;
         choice.functionSym = func;
 
