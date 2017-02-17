@@ -15,6 +15,12 @@ namespace Logic
             Container(World::WorldInstance& world, const Handle::EntityHandle& entity);
             virtual ~Container();
 
+            struct Item
+            {
+                std::string instance;
+                unsigned int count;
+            };
+
             /**
              * Creates the contents of this container from the string found inside the zen-file
              * @param contentString String containing the items in format "item:num, ..."
@@ -42,13 +48,21 @@ namespace Logic
              */
             virtual void exportCore(json& j);
             virtual void importCore(const json& j);
+
+            /**
+             * Checks how many of the given items we got in here
+             * @param instance Item to check for
+             * @return Number of items of the given instance
+             */
+            unsigned int getNumItemsOf(const std::string& instance) const;
+
+            /**
+             * @return
+             */
+            const std::vector<Item>& getContents(){ return m_Contents; }
         private:
 
-            struct Item
-            {
-                std::string instance;
-                unsigned int count;
-            };
+
 
             /**
              * Items stored inside this container
