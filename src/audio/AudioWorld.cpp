@@ -362,11 +362,11 @@ namespace World
     #endif
     }
 
-    bool AudioWorld::soundHasStopped(Utils::Ticket<AudioWorld> ticket)
+    bool AudioWorld::soundIsPlaying(Utils::Ticket<AudioWorld> ticket)
     {
     #ifdef RE_USE_SOUND
         if (!m_Context)
-            return true;
+            return false;
 
         alcMakeContextCurrent(m_Context);
 
@@ -376,12 +376,12 @@ namespace World
             {
                 ALint state;
                 alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-                return state != AL_PLAYING && state != AL_PAUSED;
+                return state == AL_PLAYING || state == AL_PAUSED;
             }
         }
-        return true;
+        return false;
     #else
-        return true;
+        return false;
     #endif
     }
 }
