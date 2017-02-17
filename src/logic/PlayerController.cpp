@@ -1535,11 +1535,11 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
 
                 // Play the random dialog gesture
                 startDialogAnimation();
-                auto talker = this->m_Entity;
                 message.internInProgress = true;
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
                 m_World.getDialogManager().setCurrentMessage(&message);
+                //m_World.getDialogManager().setCurrentTalker(this->m_Entity);
 
             } else
             {
@@ -1548,7 +1548,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
                 const bool autoPlay = true;
                 if (autoPlay)
                 {
-                    return m_World.getAudioWorld().soundHasStopped(message.soundTicket);
+                    return !m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
                 } else
                 {
                     return false;
