@@ -439,6 +439,6 @@ namespace Utils
             return !(*this == other);
         }
     protected:
-        std::shared_ptr<void> m_ID;
+        std::shared_ptr<char> m_ID;
     };
 }
