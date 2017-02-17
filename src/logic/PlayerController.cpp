@@ -83,6 +83,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
     m_EquipmentState.activeWeapon.invalidate();
 
+    m_RefuseTalkTime = 0;
+
     m_isDrawWeaponMelee = false;
     m_isForward = false;
     m_isBackward = false;
@@ -100,6 +102,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
 void PlayerController::onUpdate(float deltaTime)
 {
+    m_RefuseTalkTime -= deltaTime;
     // This vob should react to messages
     getEM().processMessageQueue();
 

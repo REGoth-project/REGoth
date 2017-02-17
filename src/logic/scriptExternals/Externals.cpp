@@ -1028,6 +1028,25 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         pWorld->getAudioWorld().playSound(s0);
 
     });
+
+    vm->registerExternalFunction("npc_setrefusetalk", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
+        int32_t timeSec = vm.popVar();
+        uint32_t self = vm.popVar();
+        // TODO: doesn't work yet on Mud. Is his variable "const int NerveSec = 30;" is not set by the vm maybe?
+        // LogInfo() << "Set refusing talk time: " << timeSec;
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        npc.playerController->setRefuseTalkTime(timeSec);
+    });
+
+    vm->registerExternalFunction("npc_refusetalk", [=](Daedalus::DaedalusVM& vm){
+        // the self argument is the NPC, the player is talking with
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        int32_t isRefusingTalk = npc.playerController->isRefusingTalk();
+        vm.setReturn(isRefusingTalk);
+    });
 }
 
 
