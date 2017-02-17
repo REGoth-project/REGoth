@@ -669,6 +669,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             sm.subType = EventMessages::StateMessage::EV_StartState;
             sm.wpname = wpname;
             sm.functionSymbol = fnSym;
+            sm.other = pWorld->getScriptEngine().getNPCFromSymbol("other");
+            sm.victim = pWorld->getScriptEngine().getNPCFromSymbol("victim");
 
             npc.playerController->getEM().onMessage(sm);
         }

@@ -128,6 +128,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
             mesh.mesh.m_SubmeshStarts.push_back({ static_cast<WorldStaticMeshIndex>(idxStart),
                                              static_cast<WorldStaticMeshIndex>(m.indices.size()) });
             idxStart += m.indices.size();
+
         }
     }
     // Construct BGFX Vertex/Index-buffers

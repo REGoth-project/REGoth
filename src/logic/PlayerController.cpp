@@ -232,6 +232,9 @@ void PlayerController::gotoWaypoint(size_t wp)
         m_AIState.closestWaypoint = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
                                                                          getEntityTransform().Translation());
 
+    if(m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
+        m_AIState.closestWaypoint = wp; // Something bad happened...
+
     m_AIState.targetWaypoint = wp;
 
     // Route is most likely outdated, make a new one
