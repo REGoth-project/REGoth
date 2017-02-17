@@ -122,12 +122,15 @@ void PlayerController::onUpdate(float deltaTime)
         setDailyRoutine({});
         gotoWaypoint(targetWP);
     }
+    m_NoAniRootPosHack = m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
 
     if (!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
         // Do waypoint-actions
         if (travelPath(deltaTime))
         {
+            m_NoAniRootPosHack = true;
+
             // Path done, stop animation
             //if (model)
             //    model->setAnimation(ModelVisual::Idle);

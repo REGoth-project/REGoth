@@ -259,6 +259,13 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         VobTypes::NpcVobInformation vob = getNPCByInstance(self);
 
+        // Script could call this using an invalid instance
+        if(!vob.isValid())
+        {
+            vm.setReturn(INT32_MAX);
+            return;
+        }
+
         // Calculate distance
         Math::Matrix selfTransform = Vob::getTransform(vob);
         World::WorldInstance& world = Vob::getWorld(vob);
