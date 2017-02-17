@@ -147,16 +147,12 @@ namespace World
         return loadAudioVDF(m_VDFSIndex, name);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, AudioWorldCallBack callBack)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h)
     {
     #ifdef RE_USE_SOUND
 
         if (!m_Context)
-        {
-            if (callBack != nullptr)
-                callBack(m_Engine.getMainWorld().get());
             return Utils::Ticket<AudioWorld>();
-        }
 
         alcMakeContextCurrent(m_Context);
 
@@ -187,8 +183,6 @@ namespace World
                 LogWarn() << "Could not attach buffer to source: " << AudioEngine::getErrorString(error);
                 warned = true;
             }
-            if (callBack != nullptr)
-                callBack(m_Engine.getMainWorld().get());
             return Utils::Ticket<AudioWorld>();
         }
 
@@ -202,13 +196,7 @@ namespace World
                 LogWarn() << "Could not start source!" << AudioEngine::getErrorString(error);
                 warned = true;
             }
-            if (callBack != nullptr)
-                callBack(m_Engine.getMainWorld().get());
             return Utils::Ticket<AudioWorld>();
-        }
-        if (callBack != nullptr)
-        {
-            s.callBacks->push_back(callBack);
         }
         return s.soundTicket;
     #else
@@ -216,7 +204,7 @@ namespace World
     #endif
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name, AudioWorldCallBack callBack)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name)
     {
         auto it = m_SoundMap.find(name);
         if(it == m_SoundMap.end())
@@ -227,16 +215,14 @@ namespace World
             // Check if loading was successfull, if so, play it
             if(!h.isValid())
             {
-                if (callBack != nullptr)
-                    callBack(m_Engine.getMainWorld().get());
                 return Utils::Ticket<AudioWorld>();
             }
 
-            return playSound(h, callBack);
+            return playSound(h);
         }else
         {
             // No need to load it again, just play it
-            return playSound((*it).second, callBack);
+            return playSound((*it).second);
         }
     }
 
@@ -254,7 +240,7 @@ namespace World
             ALint state;
             alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
 
-            if (state != AL_PLAYING && state != AL_PAUSED && s.callBacks->empty())
+            if (state != AL_PLAYING && state != AL_PAUSED)
             {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
@@ -356,6 +342,7 @@ namespace World
             alSourceStop(s.m_Handle);
     #endif
     }
+
     void AudioWorld::stopSound(Utils::Ticket<AudioWorld> ticket)
     {
     #ifdef RE_USE_SOUND
@@ -375,29 +362,26 @@ namespace World
     #endif
     }
 
-    void AudioWorld::detectSoundsFinished()
+    bool AudioWorld::soundHasStopped(Utils::Ticket<AudioWorld> ticket)
     {
     #ifdef RE_USE_SOUND
         if (!m_Context)
-            return;
+            return true;
 
         alcMakeContextCurrent(m_Context);
 
-        for (Source& s : m_Sources) {
-            if (s.callBacks->empty())
-                continue;
-
-            ALint state;
-            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-            if (state == AL_STOPPED)
+        for (Source& s : m_Sources)
+        {
+            if (s.soundTicket == ticket)
             {
-                for (auto& callBack : *s.callBacks)
-                {
-                    callBack(m_Engine.getMainWorld().get());
-                }
-                s.callBacks->clear();
+                ALint state;
+                alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
+                return state != AL_PLAYING && state != AL_PAUSED;
             }
         }
+        return true;
+    #else
+        return true;
     #endif
     }
 }

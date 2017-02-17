@@ -56,7 +56,6 @@ namespace World
 class AudioWorld
 {
     friend class Audio::AudioEngine;
-    using AudioWorldCallBack = std::function<void(World::WorldInstance& world)>;
 
 public:
 
@@ -84,9 +83,9 @@ public:
     /**
      * Plays the sound of the given handle/name
      */
-    Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, AudioWorldCallBack callBack = nullptr);
+    Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h);
 
-    Utils::Ticket<AudioWorld> playSound(const std::string& name, AudioWorldCallBack callBack = nullptr);
+    Utils::Ticket<AudioWorld> playSound(const std::string& name);
 
     /**
      * Stops all playing sounds
@@ -100,9 +99,9 @@ public:
     void stopSound(Utils::Ticket<AudioWorld> ticket);
 
     /**
-     * detects whether a handle finished playing
+     * returns whether the source of the associated ticket is playing
      */
-    void detectSoundsFinished();
+    bool soundIsPlaying(Utils::Ticket<AudioWorld> ticket);
 
 private:
 
@@ -119,13 +118,8 @@ private:
 
     struct Source
     {
-        Source() :
-            callBacks(new std::vector<AudioWorldCallBack>)
-        {
-        }
         unsigned m_Handle = 0;
         Utils::Ticket<AudioWorld> soundTicket;
-        std::shared_ptr<std::vector<AudioWorldCallBack>> callBacks;
     };
 
     struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>
