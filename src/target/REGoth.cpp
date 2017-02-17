@@ -256,43 +256,43 @@ void REGoth::initConsole()
            << "Largest SkeletalMesh: " << nameLargestSkel << " (" << sizeLargestSkel / 1024 << " kb)" << std::endl
            << "Largest StaticMesh:   " << nameLargestStatic << " (" << sizeLargestStatic / 1024 << " kb)" << std::endl;
 
-        LogInfo() << ss.str();
-        return ss.str();
+            LogInfo() << ss.str();
+            return ss.str();
+            });
+
+    console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
+        if(args.size() < 2)
+            return "Missing argument. Usage: kf <idx>";
+
+        m_pEngine->getMainCameraController()->storeKeyframe(atoi(args[1].c_str()));
+        return "Saved keyframe";
     });
 
-        console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 2)
-                return "Missing argument. Usage: kf <idx>";
+    console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
+        if(args.size() < 2)
+            return "Missing argument. Usage: kf <idx>";
 
-            m_pEngine->getMainWorld().get().getCameraController()->storeKeyframe(atoi(args[1].c_str()));
-            return "Saved keyframe";
-        });
+        m_pEngine->getMainCameraController()->clearKeyframes();
+        return "Cleared keyframe";
+    });
 
-        console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 2)
-                return "Missing argument. Usage: kf <idx>";
+    console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
 
-            m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
-            return "Cleared keyframe";
-        });
+        if(args.size() < 2)
+            return "Missing argument. Usage: pkf <duration>";
 
-        console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
-
-            if(args.size() < 2)
-                return "Missing argument. Usage: pkf <duration>";
-
-            m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
-            return "Playing keyed animation";
-        });
+        m_pEngine->getMainCameraController()->playKeyframes(atof(args[1].c_str()));
+        return "Playing keyed animation";
+    });
 
 
-        console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
-            static bool s_Stats = false;
-            s_Stats = !s_Stats;
+    console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
+        static bool s_Stats = false;
+        s_Stats = !s_Stats;
 
         bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
         return "Toggled stats";
-    });
+        });
 
         console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
 

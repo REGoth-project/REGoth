@@ -38,10 +38,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
 
     m_KeyframeDuration = 1.0f;
-}
 
-void Logic::CameraController::setupKeybinds()
-{
     // FirstPerson action
     {
         using namespace Engine;
@@ -418,13 +415,13 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
 void Logic::CameraController::storeKeyframe(unsigned idx)
 {
     Keyframe f;
-    f.position = m_ViewMatrix.Invert().Translation(); 
+    f.position = m_ViewMatrix.Invert().Translation();
     f.lookat = -1.0f * m_ViewMatrix.Invert().Forward();
 
     if(idx >= m_Keyframes.size())
-        m_Keyframes.resize(idx + 1, f);
+        m_Keyframes.resize(idx, f);
 
-    m_Keyframes[idx] = f;
+    m_Keyframes.push_back(f);
 }
 
 void Logic::CameraController::clearKeyframes()
