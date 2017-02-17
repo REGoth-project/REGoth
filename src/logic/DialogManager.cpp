@@ -406,7 +406,12 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    m_CurrentDialogMessage->deleted = true;
+    // TODO rework ALL messages into shared pointers?
+    if (m_CurrentDialogMessage)
+    {
+        m_CurrentDialogMessage->deleted = true;
+        m_CurrentDialogMessage = nullptr;
+    }
 }
 
 void DialogManager::clearChoices()
