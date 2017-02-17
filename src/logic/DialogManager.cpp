@@ -128,7 +128,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     {
         if (m_Interaction.choices[choiceNr].text == "<important>")
         {
-            performChoice(choiceNr);
+            performChoice(choiceNr, false);
             break;
         }
     }
@@ -161,7 +161,11 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     }
 
     if(target.isValid())
-        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
+    {
+        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0];
+        LogInfo() << " to " << getGameState().getNpc(target).name[0];
+
+    }
     else
         return;
         //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
@@ -235,7 +239,7 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
     return m_World.getScriptEngine().getGameState();
 }
 
-void DialogManager::performChoice(size_t choice)
+void DialogManager::performChoice(size_t choice, bool evaluateConditions)
 {
     assert(choice < m_Interaction.choices.size());
 
@@ -251,13 +255,7 @@ void DialogManager::performChoice(size_t choice)
 
     size_t fnSym = m_Interaction.choices[choice].functionSym;
 
-    if (m_SubDialogActive)
-    {
-        m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
-    } else
-    {
-        clearChoices();
-    }
+    m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
@@ -267,9 +265,10 @@ void DialogManager::performChoice(size_t choice)
     // choices right away. This is important because scripts may overwrite these again!
     m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
 
-    if(m_Interaction.choices.empty() && m_ProcessInfos)
+    if(evaluateConditions && m_Interaction.choices.empty() && m_ProcessInfos)
     {
         // We chose "back" or haven't gotten to a sub-dialog
+        clearChoices();
         updateChoices();
     }
     // TODO Don't flush yet, wait for dialog talking chain end

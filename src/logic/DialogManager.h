@@ -156,7 +156,7 @@ namespace Logic
          * Performs a choice selected by the user
          * @param choice Choice index to perform (m_Interaction.infos)
          */
-        void performChoice(size_t choice);
+        void performChoice(size_t choice, bool evaluateConditions = true);
 
     protected:
 
