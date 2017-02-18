@@ -12,8 +12,15 @@
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
 #include <utils/logger.h>
+#include <components/Vob.h>
+#include <utils/cli.h>
 
 using namespace Engine;
+
+namespace Flags
+{
+    Cli::Flag drawDistance("rdist", "render-distance", 1, "Renderdistance multiplicator", {"1"}, {"Rendering"});
+}
 
 const float DRAW_DISTANCE = 100.0f;
 
@@ -72,11 +79,15 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         }
         else
         {
+            // Get draw-distance from config
+            float drawDistanceMod = atof(Flags::drawDistance.getParam(0).c_str());
+            float drawDistanceTotal = DRAW_DISTANCE * drawDistanceMod;
+
             getGameClock().update(dt);
             for (auto& s : getSession().getWorldInstances())
             {
                 // Update main-world after every other world, since the camera is in there
-                s->onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE, s->getCameraComp<Components::PositionComponent>().m_WorldMatrix);
+                s->onFrameUpdate(dt, drawDistanceTotal * drawDistanceTotal, s->getCameraComp<Components::PositionComponent>().m_WorldMatrix);
             }
 
             // Finally, update main camera
@@ -109,10 +120,14 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
     }
 
+    // Get draw-distance from config
+    float drawDistanceMod = atof(Flags::drawDistance.getParam(0).c_str());
+    float drawDistanceTotal = DRAW_DISTANCE * drawDistanceMod;
+
     // Update the frame-config with the cameras world-matrix
     if (getMainWorld().isValid())
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
-    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE;  // TODO: Config for these kind of variables
+    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = drawDistanceTotal * drawDistanceTotal;
     m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
     m_DefaultRenderSystem.getConfig().state.viewWidth = width;
     m_DefaultRenderSystem.getConfig().state.viewHeight = height;
