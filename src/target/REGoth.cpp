@@ -819,19 +819,27 @@ public:
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
-                if (keyMap.find(i) != keyMap.end())
+                m_stopWatch.start();
+
+                if(m_pEngine->getHud().getConsole().isOpen())
+                    m_pEngine->getHud().getConsole().onKeyDown(i);
+                else if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
-                    m_stopWatch.start();
                 }
             }
             else if (getKeysState()[i]) // If key is being held and stopwatch reached time limit, fire actions
             {
                 if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
                 {
-                    if (m_stopWatch.DelayedByArgMS(150) && keyMap.find(i) != keyMap.end())
+                    if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        m_pEngine->getHud().onInputAction(keyMap[i]);
+                        if(m_pEngine->getHud().getConsole().isOpen())
+                            m_pEngine->getHud().getConsole().onKeyDown(i);
+                        else if (keyMap.find(i) != keyMap.end())
+                        {
+                            m_pEngine->getHud().onInputAction(keyMap[i]);
+                        }
                     }
                 }
             }
@@ -933,14 +941,6 @@ public:
 
         if(m_pEngine->getHud().getConsole().isOpen())
         {
-            for (int i = 0; i < NUM_KEYS; i++)
-            {
-                if (getKeysTriggered()[i])
-                {
-                    m_pEngine->getHud().getConsole().onKeyDown(i);
-                }
-            }
-
             m_pEngine->getHud().getConsole().update();
 
             Engine::Input::clearTriggered();
