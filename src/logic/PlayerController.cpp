@@ -103,10 +103,11 @@ PlayerController::PlayerController(World::WorldInstance& world,
 void PlayerController::onUpdate(float deltaTime)
 {
     m_RefuseTalkTime -= deltaTime;
-    // This vob should react to messages
-    getEM().processMessageQueue();
 
     m_AIStateMachine.doAIState(deltaTime);
+
+    // This vob should react to messages
+    getEM().processMessageQueue();
 
     ModelVisual* model = getModelVisual();
 
