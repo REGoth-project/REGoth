@@ -80,15 +80,20 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     clearChoices();
 
     // Acquire all information we should be able to see right now
-    for(size_t i=0;i<infos.size();i++)
+    for(const auto& infoHandle : infos)
     {
-        Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infos[i]);
-
+        Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
+        bool isImportant = static_cast<bool>(info.important);
+        if (isImportant && (importantKnown.find(infoHandle) != importantKnown.end()))
+        {
+            // Specific fix for Kyle: don't show important again if it was already chosen in the current dialog
+            continue;
+        }
         // If not permanent, don't show this twice
         if(!info.permanent)
         {
             if(m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(m_Interaction.player).instanceSymbol,
-                                                    getGameState().getInfo(infos[i]).instanceSymbol))
+                                                    getGameState().getInfo(infoHandle).instanceSymbol))
             {
                 // Already seen that, skip
                 continue;
@@ -105,7 +110,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
         if(valid)
         {
-            if(info.description.empty() && info.important)
+            if(isImportant && info.description.empty())
             {
                 info.description = "<important>";
             }
@@ -114,7 +119,8 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
             entry.nr = info.nr;
             entry.functionSym = info.information;
             entry.text = info.description;
-            entry.info = infos[i];
+            entry.info = infoHandle;
+            entry.important = isImportant;
 
             addChoice(entry);
         }
@@ -126,8 +132,10 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
     for(std::size_t choiceNr = 0; choiceNr < m_Interaction.choices.size(); ++choiceNr)
     {
-        if (m_Interaction.choices[choiceNr].text == "<important>")
+        if (m_Interaction.choices[choiceNr].important)
         {
+            auto infoHandle = m_Interaction.choices[choiceNr].info;
+            importantKnown.insert(infoHandle);
             performChoice(choiceNr);
             break;
         }
@@ -311,6 +319,7 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 
 void DialogManager::endDialog()
 {
+    importantKnown.clear();
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
     m_DialogActive = false;

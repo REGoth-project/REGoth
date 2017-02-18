@@ -924,6 +924,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         // number will be assigned by addChoiceFront
         choice.nr = 0;
         choice.functionSym = func;
+        choice.important = false;
 
         // calling the script function info_addchoice always opens the SubDialog for special multiple choices
         pWorld->getDialogManager().setSubDialogActive(true);

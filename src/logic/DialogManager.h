@@ -40,6 +40,9 @@ namespace Logic
 
             // Sort index
             int32_t nr;
+
+            // Indicates whether choice should be auto played
+            bool important;
         };
 
         /**
@@ -242,5 +245,10 @@ namespace Logic
          * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
          */
         EventMessages::ConversationMessage* m_CurrentDialogMessage;
+
+        /**
+         * Remember all already chosen important infos, for the current Dialog
+         */
+        std::set<Daedalus::GameState::InfoHandle> importantKnown;
     };
 }
