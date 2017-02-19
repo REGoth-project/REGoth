@@ -660,6 +660,13 @@ public:
             return "Could not find NPC " + requested;
         };
 
+        console.registerCommand("nextday", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
+            auto currentDay = m_pEngine->getMainWorld().get().getSky().getDay();
+            auto nextDay = currentDay + 1;
+            m_pEngine->getMainWorld().get().getSky().setDay(nextDay);
+            return "Changing day from " + std::to_string(currentDay) + " to " + std::to_string(nextDay);
+        });
+
         console.registerCommand("tp", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
                 return "Missing argument(s). Usage: tp <name>";
