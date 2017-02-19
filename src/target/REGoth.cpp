@@ -633,21 +633,11 @@ public:
             return "Experience points successfully given";
         });
 
-        console.registerCommand("goto npc", [this](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 3)
-                return "Missing argument(s). Usage: goto npc <name>";
-
+        std::function<std::string(std::string)> tpToNameLike = [this](std::string requested) -> std::string {
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            std::stringstream joinedArgs;
-            for (auto it = args.begin() + 2; it != args.end(); ++it)
-            {
-                joinedArgs << *it;
-            }
-
-            std::string requested = joinedArgs.str();
             auto matches = scriptEngine.findWorldNPCsNameLike(requested);
             for (auto& npc : matches)
             {
@@ -668,6 +658,30 @@ public:
                 return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
             }
             return "Could not find NPC " + requested;
+        };
+
+        console.registerCommand("tp", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument(s). Usage: tp <name>";
+
+            std::stringstream joinedArgs;
+            for (auto it = args.begin() + 1; it != args.end(); ++it)
+            {
+                joinedArgs << *it;
+            }
+            return tpToNameLike(joinedArgs.str());
+        });
+
+        console.registerCommand("goto npc", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 3)
+                return "Missing argument(s). Usage: goto npc <name>";
+
+            std::stringstream joinedArgs;
+            for (auto it = args.begin() + 2; it != args.end(); ++it)
+            {
+                joinedArgs << *it;
+            }
+            return tpToNameLike(joinedArgs.str());
         });
 
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
