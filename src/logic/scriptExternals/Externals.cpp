@@ -1098,6 +1098,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         vm.setReturn(v);
     });
+
+    vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "wld_getday";
+        vm.setReturn(pWorld->getSky().getDay());
+    });
 }
 
 
