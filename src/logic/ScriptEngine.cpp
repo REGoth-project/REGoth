@@ -281,14 +281,14 @@ void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item,
 
     // Equip
     // TODO: Implement this properly
+    
+    Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+    if(!e.isValid())
+	return; // FIXME: Happens on windows, wtf?
+
     if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
     {
         //LogInfo() << "Equiping armor... " << itemData.visual_change;
-		Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
-
-		if(!e.isValid())
-			return; // FIXME: Happens on windows, wtf?
-
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
         std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
@@ -297,17 +297,11 @@ void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item,
         VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
-    /*if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0)
+    if((itemData.mainflag & (Daedalus::GEngineClasses::C_Item::ITM_CAT_NF | Daedalus::GEngineClasses::C_Item::ITM_CAT_FF)) != 0)
     {
-        Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
-
-        if(!e.isValid())
-            return; // FIXME: Happens on windows, wtf?
-
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
         VobTypes::NPC_EquipWeapon(vob, item);
-
-    }*/
+    }
 }
 
 void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
