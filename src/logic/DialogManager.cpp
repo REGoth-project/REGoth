@@ -83,7 +83,9 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     for(const auto& infoHandle : infos)
     {
         Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
-        bool isImportant = static_cast<bool>(info.important);
+	// tmp work around: info.description.empty() is necessary,
+	// because C_INFO misses default initialization of important in ctr
+        bool isImportant = static_cast<bool>(info.important) && info.description.empty();
         if (isImportant && (importantKnown.find(infoHandle) != importantKnown.end()))
         {
             // Specific fix for Kyle: don't show important again if it was already chosen in the current dialog
@@ -110,7 +112,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
         if(valid)
         {
-            if(isImportant && info.description.empty())
+            if(isImportant)
             {
                 info.description = "<important>";
             }
