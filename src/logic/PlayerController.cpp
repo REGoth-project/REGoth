@@ -27,6 +27,7 @@
 
 using json = nlohmann::json;
 using namespace Logic;
+using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
 
 /**
  * Standard node-names
@@ -1124,45 +1125,45 @@ void PlayerController::attackRight()
         getModelVisual()->playAnimation(type);
 }
 
-void PlayerController::onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+void PlayerController::onMessage(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
     Controller::onMessage(message, sourceVob);
 
     bool done = false;
-    switch (message.messageType)
+    switch (message->messageType)
     {
         case EventMessages::EventMessageType::Event:
             done = EV_Event(message, sourceVob);
             break;
         case EventMessages::EventMessageType::Npc:
-            done = EV_Npc(reinterpret_cast<EventMessages::NpcMessage&>(message), sourceVob);
+            done = EV_Npc(std::dynamic_pointer_cast<EventMessages::NpcMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Damage:
-            done = EV_Damage(reinterpret_cast<EventMessages::DamageMessage&>(message), sourceVob);
+            done = EV_Damage(std::dynamic_pointer_cast<EventMessages::DamageMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Weapon:
-            done = EV_Weapon(reinterpret_cast<EventMessages::WeaponMessage&>(message), sourceVob);
+            done = EV_Weapon(std::dynamic_pointer_cast<EventMessages::WeaponMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Movement:
-            done = EV_Movement(reinterpret_cast<EventMessages::MovementMessage&>(message), sourceVob);
+            done = EV_Movement(std::dynamic_pointer_cast<EventMessages::MovementMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Attack:
-            done = EV_Attack(reinterpret_cast<EventMessages::AttackMessage&>(message), sourceVob);
+            done = EV_Attack(std::dynamic_pointer_cast<EventMessages::AttackMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::UseItem:
-            done = EV_UseItem(reinterpret_cast<EventMessages::UseItemMessage&>(message), sourceVob);
+            done = EV_UseItem(std::dynamic_pointer_cast<EventMessages::UseItemMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::State:
-            done = EV_State(reinterpret_cast<EventMessages::StateMessage&>(message), sourceVob);
+            done = EV_State(std::dynamic_pointer_cast<EventMessages::StateMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Manipulate:
-            done = EV_Manipulate(reinterpret_cast<EventMessages::ManipulateMessage&>(message), sourceVob);
+            done = EV_Manipulate(std::dynamic_pointer_cast<EventMessages::ManipulateMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Conversation:
-            done = EV_Conversation(reinterpret_cast<EventMessages::ConversationMessage&>(message), sourceVob);
+            done = EV_Conversation(std::dynamic_pointer_cast<EventMessages::ConversationMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Magic:
-            done = EV_Magic(reinterpret_cast<EventMessages::MagicMessage&>(message), sourceVob);
+            done = EV_Magic(std::dynamic_pointer_cast<EventMessages::MagicMessage>(message), sourceVob);
             break;
         case EventMessages::EventMessageType::Mob:
             //TODO handle this somehow?
@@ -1170,32 +1171,33 @@ void PlayerController::onMessage(EventMessages::EventMessage& message, Handle::E
     }
 
     // Flag as deleted if this is done
-    message.deleted = done;
+    message->deleted = done;
 }
 
-bool PlayerController::EV_Event(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Event(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
-bool PlayerController::EV_Npc(EventMessages::NpcMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Npc(std::shared_ptr<EventMessages::NpcMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
-bool PlayerController::EV_Damage(EventMessages::DamageMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Damage(std::shared_ptr<EventMessages::DamageMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
-bool PlayerController::EV_Weapon(EventMessages::WeaponMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Weapon(std::shared_ptr<EventMessages::WeaponMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
 bool
-PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::EntityHandle sourceVob)
+PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sharedMessage, Handle::EntityHandle sourceVob)
 {
+    auto& message = *sharedMessage;
     switch (static_cast<EventMessages::MovementMessage::MovementSubType>(message.subType))
     {
         case EventMessages::MovementMessage::ST_RobustTrace:
@@ -1365,18 +1367,19 @@ PlayerController::EV_Movement(EventMessages::MovementMessage& message, Handle::E
     return false;
 }
 
-bool PlayerController::EV_Attack(EventMessages::AttackMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Attack(std::shared_ptr<EventMessages::AttackMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
-bool PlayerController::EV_UseItem(EventMessages::UseItemMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_UseItem(std::shared_ptr<EventMessages::UseItemMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }
 
-bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sharedMessage, Handle::EntityHandle sourceVob)
 {
+    auto& message = *sharedMessage;
     switch (message.subType)
     {
         case EventMessages::StateMessage::EV_StartState:
@@ -1426,8 +1429,9 @@ bool PlayerController::EV_State(EventMessages::StateMessage& message, Handle::En
 }
 
 bool
-PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handle::EntityHandle sourceVob)
+PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMessage> sharedMessage, Handle::EntityHandle sourceVob)
 {
+    auto& message = *sharedMessage;
     switch (static_cast<EventMessages::ManipulateMessage::ManipulateSubType>(message.subType))
     {
         case EventMessages::ManipulateMessage::ST_TakeVob:break;
@@ -1487,9 +1491,10 @@ PlayerController::EV_Manipulate(EventMessages::ManipulateMessage& message, Handl
     return false;
 }
 
-bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& message,
+bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::ConversationMessage> sharedMessage,
                                        Handle::EntityHandle sourceVob)
 {
+    auto& message = *sharedMessage;
     switch (static_cast<EventMessages::ConversationMessage::ConversationSubType>(message.subType))
     {
 
@@ -1544,7 +1549,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
                 message.internInProgress = true;
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
-                m_World.getDialogManager().setCurrentMessage(&message);
+                m_World.getDialogManager().setCurrentMessage(sharedMessage);
                 //m_World.getDialogManager().setCurrentTalker(this->m_Entity);
 
             } else
@@ -1613,7 +1618,7 @@ bool PlayerController::EV_Conversation(EventMessages::ConversationMessage& messa
     return false;
 }
 
-bool PlayerController::EV_Magic(EventMessages::MagicMessage& message, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Magic(std::shared_ptr<EventMessages::MagicMessage> message, Handle::EntityHandle sourceVob)
 {
     return false;
 }

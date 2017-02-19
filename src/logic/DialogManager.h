@@ -125,7 +125,7 @@ namespace Logic
         /**
          * Sets the current Dialog Message. To be able to cancel it
          */
-        void setCurrentMessage(EventMessages::ConversationMessage* message) { m_CurrentDialogMessage = message; }
+        void setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message) { m_CurrentDialogMessage = message; }
 
         /**
          * Sorts registered choices depending on their sort index
@@ -244,7 +244,7 @@ namespace Logic
         /**
          * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
          */
-        EventMessages::ConversationMessage* m_CurrentDialogMessage;
+        std::shared_ptr<EventMessages::ConversationMessage> m_CurrentDialogMessage;
 
         /**
          * Remember all already chosen important infos, for the current Dialog

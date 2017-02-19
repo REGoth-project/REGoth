@@ -268,12 +268,12 @@ void MobController::initFromJSONDescriptor(const json& j)
     // since it is derived from the visual-name
 }
 
-void MobController::onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+void MobController::onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob)
 {
     Controller::onMessage(message, sourceVob);
-    assert(message.messageType == EventMessages::EventMessageType::Mob);
+    assert(message->messageType == EventMessages::EventMessageType::Mob);
 
-    EventMessages::MobMessage& msg = (EventMessages::MobMessage&)message;
+    EventMessages::MobMessage& msg = *std::dynamic_pointer_cast<EventMessages::MobMessage>(message);
     switch((EventMessages::MobMessage::MobSubType)msg.subType)
     {
         case EventMessages::MobMessage::ST_STARTINTERACTION: startInteraction(msg.npc); break;
@@ -344,7 +344,7 @@ void MobController::startInteraction(Handle::EntityHandle npc)
 
     // This is save, because mobs generally won't be deleted from the map.
     // If not, this will just do nothing
-    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>){
 
 	LogInfo() << "lock camera";
     	m_lockCamera = true;
@@ -387,7 +387,7 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 
     // This is save, because vobs generally won't be deleted from the map.
     // If not, this will just do nothing
-    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage*){
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>){
 
         // Re-get everything to make sure it is still there
         VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);

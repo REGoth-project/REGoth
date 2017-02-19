@@ -32,7 +32,7 @@ namespace Logic
          */
         struct EventMessage
         {
-            typedef const void* MessageIdentifier;
+            using SharedEMessage = std::shared_ptr<EventMessage>;
 
             EventMessage()
             {
@@ -100,7 +100,7 @@ namespace Logic
              * @param hostVob Vob which the callback is set from
              * @param callback Callback function
              */
-            void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, EventMessage*)> callback)
+            void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, SharedEMessage)> callback)
             {
                 onMessageDone.push_back(std::make_pair(hostVob, callback));
             }
@@ -108,7 +108,7 @@ namespace Logic
             /**
              * External callbacks to trigger if this message gets processed. Must also store the waiting entity.
              */
-            std::list<std::pair<Handle::EntityHandle, std::function<void(Handle::EntityHandle, EventMessage*)>>> onMessageDone;
+            std::list<std::pair<Handle::EntityHandle, std::function<void(Handle::EntityHandle, SharedEMessage)>>> onMessageDone;
         };
 
         struct NpcMessage : public EventMessage
@@ -533,7 +533,6 @@ namespace Logic
                 messageType = EventMessageType::Conversation;
                 internInProgress = false;
                 waitIdentifier = nullptr;
-                waitTicket = 0;
             }
 
             /**
@@ -586,14 +585,9 @@ namespace Logic
             std::string animation;
 
             /**
-             * Pointer to the message we are waiting for
+             * SharedPointer to the message we are waiting for. Currently not used. Useful for debug purpose
              */
-            MessageIdentifier waitIdentifier;
-
-            /**
-             * Something to identify whatever we are waiting for at ST_WaitTillEnd
-             */
-            unsigned int waitTicket;
+            SharedEMessage waitIdentifier;
 
             /**
              * Whether this is currently in progress. Set by the PlayerController.

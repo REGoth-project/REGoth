@@ -196,7 +196,7 @@ namespace Logic
          */
         void setIdealPosition(Handle::EntityHandle npc);
 
-        void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob) override;
+        void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob) override;
 
         /**
          * Called when the models visual changed

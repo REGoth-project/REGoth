@@ -55,7 +55,7 @@ namespace Logic
         /**
          * Called when this vob recieved a message
          */
-        virtual void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle()){}
+        virtual void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle()){}
 
         /**
          * Sets the transform of the underlaying entity
