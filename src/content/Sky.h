@@ -52,6 +52,7 @@ namespace Content
         {
             // Time when this state becomes active
             float			time;
+            int             day;
 
             // Color values
             Math::float3	baseColor;
@@ -97,6 +98,16 @@ namespace Content
         const Math::float4* getLUTPtr() const { return m_LUT; }
 
         /**
+         * @return Day.
+         */
+        int getDay() const { return m_MasterState.day; }
+
+        /**
+         * @param sets the current day
+         */
+        void setDay(int newDay) { m_MasterState.day = newDay; }
+
+        /**
          * @return Time of day.
          */
         float getTimeOfDay() const { return m_MasterState.time; }
@@ -109,21 +120,21 @@ namespace Content
         /**
          * Set time to hours/minutes (24h format)
          * @param hours
-         * @param minues
+         * @param minutes
          */
         void setTimeOfDay(int hours, int minutes);
 
         /**
          * Converts time to hours/minutes (24h format)
          * @param hours
-         * @param minues
+         * @param minutes
          */
         void getTimeOfDay(int& hours, int& minutes) const;
 
         /**
          * @return Time of day as string
          */
-        std::string getTimeOfDayFormated() const;
+        std::string getDateTimeFormatted() const;
 
         /**
          * @return current interpolated sky-state

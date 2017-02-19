@@ -58,7 +58,7 @@ namespace UI
         /**
          * @param timeStr Current time of day to be shown on the hud
          */
-        void setTimeOfDay(const std::string& timeStr);
+        void setDateTimeDisplay(const std::string &timeStr);
 
         /**
          * To be called when one of the given actions were triggered

@@ -553,7 +553,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setTimeOfDay(m_Sky.getTimeOfDayFormated());
+    m_pEngine->getHud().setDateTimeDisplay(m_Sky.getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }

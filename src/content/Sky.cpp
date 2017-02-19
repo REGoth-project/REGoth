@@ -38,6 +38,8 @@ Sky::Sky(World::WorldInstance& world) :
 
     // Both games start at 8:00 in the morning
     setTimeOfDay(8,00);
+    // Start with day one
+    m_MasterState.day = 1;
 
     fillSkyStates();
 
@@ -99,8 +101,17 @@ void Sky::interpolate(double deltaTime)
 //    if(inputGetKeyState(entry::Key::KeyO))
 //        deltaTime *= 10.0;
 
-    m_MasterState.time += deltaTime / (60.0 * 60.0 * 24.0);
-    m_MasterState.time = fmod(m_MasterState.time, 1.0f);
+    // update time
+    float& oldTime = m_MasterState.time;
+    float newTime = oldTime + static_cast<float>(deltaTime) / (60 * 60 * 24);
+    m_MasterState.time = newTime;
+
+    // check for change of day
+    constexpr float midNight = 0.5;
+    if (oldTime < midNight && newTime >= midNight)
+    {
+        m_MasterState.day++;
+    }
 
     size_t si0 = 0, si1 = 1;
 
@@ -411,10 +422,11 @@ void Sky::getTimeOfDay(int& hours, int& minutes) const
     minutes = (int)((fh - hours) * 60.0f);
 }
 
-std::string Sky::getTimeOfDayFormated() const
+std::string Sky::getDateTimeFormatted() const
 {
     int h, m;
     getTimeOfDay(h, m);
-
-    return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
+    std::string clockString = std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
+    std::string dayString = "Day " + std::to_string(m_MasterState.day);
+    return dayString + ", " + clockString;
 }
