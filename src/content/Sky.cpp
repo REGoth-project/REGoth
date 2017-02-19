@@ -102,8 +102,8 @@ void Sky::interpolate(double deltaTime)
 //        deltaTime *= 10.0;
 
     // update time
-    float& oldTime = m_MasterState.time;
-    float newTime = oldTime + static_cast<float>(deltaTime) / (60 * 60 * 24);
+    float oldTime = m_MasterState.time;
+    float newTime = std::fmod(oldTime + static_cast<float>(deltaTime) / (60 * 60 * 24), 1.0f);
     m_MasterState.time = newTime;
 
     // check for change of day
