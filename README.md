@@ -6,7 +6,8 @@ Don't forget to check out the [REGoth-Wiki](../../wiki) for more information abo
 A list showing the current state of the engine, can be found [here](../../wiki/state).
 
 ### Videos showing the current state
-
+* Release-Commentary to V0.3:
+   * https://www.youtube.com/watch?v=EjEpN3I8Ovc
 * Release-Commentary to V0.2:
    * https://www.youtube.com/watch?v=jB3pzxd6vIk
 * Release-Commentary to V0.1.1:
@@ -20,7 +21,7 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 
 # Download (Latest stable version)
 
-Windows binaries can be found here: https://github.com/degenerated1123/REGoth/releases/tag/0.1.1
+**Version 0.3**: https://github.com/REGoth-project/REGoth/releases/tag/0.3
 
 Automated nightly builds: https://github.com/degenerated1123/REGoth/releases
 
