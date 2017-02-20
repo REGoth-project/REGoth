@@ -381,7 +381,7 @@ public:
 
         console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the world time
-            if(args.size() < 2)
+            if(args.size() < 3)
                 return "Missing argument. Usage: set day <day>";
 
             int day = std::stoi(args[2]);
@@ -410,18 +410,18 @@ public:
 
         console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the time of day
-            if(args.size() < 2)
-                return "Missing argument. Usage: set timespeed <factor:default=1>";
+            if(args.size() < 3)
+                return "Missing argument. Usage: set clockspeed <factor>";
 
             float factor = std::stof(args[2]);
-            m_pEngine->getMainWorld().get().getWorldInfo().setGameTimeSpeedFactor(factor);
+            m_pEngine->getMainWorld().get().getWorldInfo().setClockSpeedFactor(factor);
 
             return "Set clockspeed to " + std::to_string(factor);
         });
 
         console.registerCommand("set gamespeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the game time
-            if(args.size() < 2)
+            if(args.size() < 3)
                 return "Missing argument. Usage: set gamespeed <factor:default=1>";
 
             float factor = std::stof(args[2]);
@@ -681,14 +681,6 @@ public:
             }
             return "Could not find NPC " + requested;
         };
-
-        console.registerCommand("nextday", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
-            auto& wInfo = m_pEngine->getMainWorld().get().getWorldInfo();
-            auto currentDay = wInfo.getDay();
-            auto nextDay = currentDay + 1;
-            wInfo.setDay(nextDay);
-            return "Changing day from " + std::to_string(currentDay) + " to " + std::to_string(nextDay);
-        });
 
         console.registerCommand("tp", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)

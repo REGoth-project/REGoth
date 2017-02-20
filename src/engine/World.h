@@ -93,6 +93,9 @@ namespace World
                 // start at day 1, 8:00 o'clock
                 day = 1;
                 setTimeOfDay(8, 0);
+
+                // for test purpose make the clock run 7 times faster than usual gameplay
+                setClockSpeedFactor(7);
             }
 
             // Last deltatime-value we have gotten here
@@ -107,10 +110,10 @@ namespace World
             int day;
 
             // Defines how much faster the ingame clock runs compared to the real time clock
-            float gameTimeRealTimeRatio = 100;
+            float gameTimeRealTimeRatio = 14.5;
 
             // define an extra speedup for the ingame clock for test purposes
-            float gameTimeSpeedFactor = 1.0;
+            float clockSpeedFactor = 1.0;
 
             /**
              * @return current day
@@ -187,8 +190,8 @@ namespace World
             /**
              * sets the extra speed factor for test purposes
              */
-            void setGameTimeSpeedFactor(float factor){
-                gameTimeSpeedFactor = factor;
+            void setClockSpeedFactor(float factor){
+                clockSpeedFactor = factor;
             }
 
             /**
@@ -196,7 +199,7 @@ namespace World
              */
             float totalSpeedUp() const
             {
-                return gameTimeRealTimeRatio * gameTimeSpeedFactor;
+                return gameTimeRealTimeRatio * clockSpeedFactor;
             }
 
             /**
