@@ -161,8 +161,7 @@ void BaseEngine::removeWorld(Handle::WorldHandle world)
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-	onFrameUpdate(dt, width, height);
-
+	onFrameUpdate(dt * getGameEngineSpeedFactor(), width, height);
 }
 
 void BaseEngine::loadArchives()

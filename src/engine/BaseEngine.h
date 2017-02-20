@@ -141,6 +141,25 @@ namespace Engine
          * @return Whether the operation was successful
          */
         bool saveWorld(Handle::WorldHandle world, const std::string& file);
+
+		/**
+         * sets the speed factor for EVERYTHING the game for updating world instances
+         * i.e. world (ergo animations), in game clock (ergo sky) even the camera
+         * only for fun / debug purpose (default = 1.0)
+         * @param factor
+         */
+		void setGameEngineSpeedFactor(float factor)
+		{
+			m_GameEngineSpeedFactor = factor;
+		}
+
+		/**
+         * @return m_GameEngineSpeedFactor
+         */
+		float getGameEngineSpeedFactor() const
+		{
+			return m_GameEngineSpeedFactor;
+		}
 	protected:
 
 		/**
@@ -203,5 +222,10 @@ namespace Engine
 		 * Folder where the content is
 		 */
 		std::string m_ContentBasePath;
+
+		/**
+         * Global speed factor. affects all instances (world (ergo animations), ingame clock (ergo sky))
+         */
+		float m_GameEngineSpeedFactor;
 	};
 }

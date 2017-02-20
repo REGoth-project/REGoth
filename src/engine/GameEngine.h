@@ -47,17 +47,6 @@ namespace Engine
         {
             return m_DefaultRenderSystem;
         }
-
-        /**
-         * sets the speed factor for EVERYTHING the game for updating world instances
-         * i.e. world (ergo animations), in game clock (ergo sky) even the camera
-         * only for fun / debug purpose (default = 1.0)
-         * @param factor
-         */
-        void setGameEngineSpeedFactor(float factor)
-        {
-            m_GameEngineSpeedFactor = factor;
-        }
     protected:
 
         /**
@@ -91,10 +80,5 @@ namespace Engine
          * Debug only
          */
         bool m_disableLogic;
-
-        /**
-         * Global speed factor. affects all instances (world (ergo animations), ingame clock (ergo sky))
-         */
-         float m_GameEngineSpeedFactor;
     };
 }

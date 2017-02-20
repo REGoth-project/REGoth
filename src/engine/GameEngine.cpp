@@ -73,7 +73,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
 //    }
 
-    dt *= m_GameEngineSpeedFactor;
+    dt *= getGameEngineSpeedFactor();
     if(m_disableLogic)
     {
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
