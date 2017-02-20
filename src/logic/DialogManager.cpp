@@ -82,11 +82,8 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     // Acquire all information we should be able to see right now
     for(const auto& infoHandle : infos)
     {
-        Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
-	// tmp work around: info.description.empty() is necessary,
-	// because C_INFO misses default initialization of important in ctr
-        bool isImportant = static_cast<bool>(info.important) && info.description.empty();
-        if (isImportant && (importantKnown.find(infoHandle) != importantKnown.end()))
+        const Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
+        if (info.important && (importantKnown.find(infoHandle) != importantKnown.end()))
         {
             // Specific fix for Kyle: don't show important again if it was already chosen in the current dialog
             continue;
@@ -112,17 +109,17 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
         if(valid)
         {
-            if(isImportant)
-            {
-                info.description = "<important>";
-            }
-
             ChoiceEntry entry;
             entry.nr = info.nr;
             entry.functionSym = info.information;
             entry.text = info.description;
             entry.info = infoHandle;
-            entry.important = isImportant;
+            entry.important = static_cast<bool>(info.important);
+
+            if(info.important)
+            {
+                entry.text = "<important>";
+            }
 
             addChoice(entry);
         }
