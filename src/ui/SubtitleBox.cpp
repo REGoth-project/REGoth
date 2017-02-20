@@ -48,11 +48,13 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     // Un-normalize transforms
     Math::float2 absTranslation = getAbsoluteTranslation();
-    int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
-    int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
 
-    int sx = (int) (0.50f * config.state.viewWidth + 0.5f);
+    int px = Math::iround(absTranslation.x * config.state.viewWidth);
+    int py = Math::iround((absTranslation.y + 0.02f) * config.state.viewHeight);
+
+    int sx = Math::iround(0.5f * config.state.viewWidth);
     int sy = 13 * 6; // 6 lines of dialog
+    int wrapAroundWidth = Math::iround(0.95f * sx);
 
     // Draw background image
     {
@@ -67,7 +69,6 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     }
     // Draw text
     {
-        const int wrapAroundWidth = 485;
         // split so that each line is not longer than wrapAroundWidth pixel
         std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
         lines.insert(lines.begin(), m_Text.speaker);
