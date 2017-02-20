@@ -65,28 +65,23 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
                     config.uniforms.diffuseTexture);
 
     }
-
-
     // Draw text
     {
-        // Insert linebreaks if the text is too long to fit
-        std::string layouted = fnt->layoutText(m_Text.text, (int)(sx * 0.95f));
+        const int wrapAroundWidth = 485;
+        // split so that each line is not longer than wrapAroundWidth pixel
+        std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
+        lines.insert(lines.begin(), m_Text.speaker);
+        const char * speakerFont = DEFAULT_FONT_HI;
+        const char * dialogTextFont = DEFAULT_FONT;
 
-        // Draw dialog text
-        // First newline is for the speaker, later
-        drawText("\n" + layouted, px + (sx / 2), py + (sy / 2), A_Center, config);
-
-        // Count number of newlines in text
-        unsigned ncnt = 0;
-        for(unsigned i=0;i<layouted.size();i++)
-            ncnt += layouted[i] == '\n' ? 1 : 0;
-
-        // Put the speaker, followed by ncnt newlines, to align it right above the actual text
-        std::string speaker = m_Text.speaker + "\n";
-        for(unsigned i=0;i<ncnt;i++)
-            speaker.push_back('\n');
-
-        drawText(speaker, px + (sx / 2), py + (sy / 2), A_Center, config, DEFAULT_FONT_HI);
+        for (unsigned i = 0; i < lines.size(); ++i)
+        {
+            const char* font = i == 0 ? speakerFont : dialogTextFont;
+            unsigned before = i;
+            unsigned long after = lines.size() - i - 1;
+            std::string line = std::string(before, '\n') + lines[i] + std::string(after, '\n');
+            drawText(line, px + (sx / 2), py + (sy / 2), A_Center, config, font);
+        }
     }
 }
 

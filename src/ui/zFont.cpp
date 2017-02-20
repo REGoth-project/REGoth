@@ -174,32 +174,46 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
     height = yMax + m_Font.fontHeight; // Dont forget the last line (yMax is only the top-line)
 }
 
-std::string UI::zFont::layoutText(const std::string& text, int maxWidth) const
+std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxWidth) const
 {
-    std::string lt;
+    std::vector<std::size_t> newLinePositions;
     int w = 0;
-    int lastSpace = 0;
+    unsigned int lastSpace = 0;
+    bool spaceFound = false;
     for(unsigned i=0;i<text.size();i++)
     {
         Glyph g;
         getGlyphOf((unsigned char)text[i], g);
 
         if(text[i] == ' ')
-            lastSpace = i;
-
-        lt.push_back(text[i]);
-        w += g.width;
-
-        if(w > maxWidth)
         {
-            w = 0;
-            lt[lastSpace] = '\n';
+            spaceFound = true;
+            lastSpace = i;
         }
 
-
+        w += g.width;
+        if(w > maxWidth && spaceFound)
+        {
+            spaceFound = false;
+            w = 0;
+            // go back to character after newline
+            i = lastSpace + 1;
+            newLinePositions.push_back(lastSpace);
+        }
     }
-
-    return lt;
+    std::vector<std::string> lines;
+    auto last_end = text.begin();
+    for (auto nlPos : newLinePositions)
+    {
+        lines.emplace_back(last_end, text.begin() + nlPos);
+        // + 1 because of omitting the space to split at
+        last_end = text.begin() + nlPos + 1;
+    }
+    if (last_end != text.end())
+    {
+        lines.emplace_back(last_end, text.end());
+    }
+    return lines;
 }
 
 UI::zFontCache::zFontCache(Engine::BaseEngine& e) : m_Engine(e)

@@ -65,12 +65,12 @@ namespace UI
         int getFontHeight() const { return m_Font.fontHeight; };
 
         /**
-         * Tries to fit the given text into the specified width. Inserts linebreaks to do so
+         * Returns lines where each is no wider than maxWidth
          * @param text Text to fit
          * @param maxWidth Max width of the text before a linebreak
-         * @return Layouted text
+         * @return vector of lines
          */
-        std::string layoutText(const std::string& text, int maxWidth) const;
+        std::vector<std::string> layoutText(const std::string& text, int maxWidth) const;
 
         /**
          * Calculates the width and height of the given piece of text
