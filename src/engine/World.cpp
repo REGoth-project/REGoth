@@ -481,8 +481,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
     m_WorldInfo.time += deltaTime;
-    double deltaGameTime = deltaTime * m_WorldInfo.totalSpeedUp();
-    m_WorldInfo.gameTime += deltaGameTime;
+    m_WorldInfo.update(deltaTime);
 
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
@@ -491,7 +490,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_PhysicsSystem.update(deltaTime);
 
     // Update sky
-    m_Sky.interpolate(m_WorldInfo.gameTime);
+    m_Sky.interpolate();
 
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;

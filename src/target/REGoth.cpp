@@ -379,27 +379,15 @@ public:
             return "Hello World!";
         });
 
-        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the world time
             if(args.size() < 2)
-                return "Missing argument. Usage: set time <days elapsed since Day 0, 0:00>";
+                return "Missing argument. Usage: set day <day>";
 
-            float timeInDays = std::stof(args[2]);
-            float timeInSeconds = timeInDays * 60 * 60 * 24;
-            m_pEngine->getMainWorld().get().getWorldInfo().setGameTime(timeInSeconds);
+            int day = std::stoi(args[2]);
+            m_pEngine->getMainWorld().get().getWorldInfo().setDay(day);
 
-            return "Set game time to " + m_pEngine->getMainWorld().get().getWorldInfo().getDateTimeFormatted();
-        });
-
-        console.registerCommand("set timespeed", [this](const std::vector<std::string>& args) -> std::string {
-            // adds an additional speed factor for the game time
-            if(args.size() < 2)
-                return "Missing argument. Usage: set timespeed <factor>";
-
-            float factor = std::stof(args[2]);
-            m_pEngine->getMainWorld().get().getWorldInfo().setGameTimeSpeedFactor(factor);
-
-            return "Set timespeed time to " + std::to_string(factor);
+            return "Set day to " + std::to_string(m_pEngine->getMainWorld().get().getWorldInfo().getDay());
         });
 
         console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
@@ -417,7 +405,29 @@ public:
 
             m_pEngine->getMainWorld().get().getWorldInfo().setTimeOfDay(hh, mm);
 
-            return "Set clock to " + args[2] + ":" + args[3];
+            return "Set clock to " + m_pEngine->getMainWorld().get().getWorldInfo().getTimeOfDayFormatted();
+        });
+
+        console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
+            // adds an additional speed factor for the time of day
+            if(args.size() < 2)
+                return "Missing argument. Usage: set timespeed <factor:default=1>";
+
+            float factor = std::stof(args[2]);
+            m_pEngine->getMainWorld().get().getWorldInfo().setGameTimeSpeedFactor(factor);
+
+            return "Set clockspeed to " + std::to_string(factor);
+        });
+
+        console.registerCommand("set gamespeed", [this](const std::vector<std::string>& args) -> std::string {
+            // adds an additional speed factor for the game time
+            if(args.size() < 2)
+                return "Missing argument. Usage: set gamespeed <factor:default=1>";
+
+            float factor = std::stof(args[2]);
+            m_pEngine->setGameEngineSpeedFactor(factor);
+
+            return "Set gamespeed to " + std::to_string(factor);
         });
 
         console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {

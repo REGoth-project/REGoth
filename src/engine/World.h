@@ -91,7 +91,9 @@ namespace World
 			{
 				lastFrameDeltaTime = 0.0;
                 time = 0.0;
-                gameTime = 0.0;
+                // start at day 1, 8:00 o'clock
+                day = 1;
+                setTimeOfDay(8, 0);
 			}
 
 			// Last deltatime-value we have gotten here
@@ -100,9 +102,13 @@ namespace World
 			// real time in seconds, which the game is running in the current session
 			double time;
 
-            // Time elapsed in the game since "start new gothic game" in seconds
+            // Time elapsed in the game since last 00:00 in days (interval [0,1[)
             // TODO export/import this value in json for savegames
-            double gameTime;
+            float timeOfDay;
+
+            // Number of full days elapsed in the game since "start new gothic game"
+            // TODO export/import this value in json for savegames
+            int day;
 
             // Defines how much faster the gothic clock runs compared to the real time clock
             float gameTimeRealTimeRatio = 100;
@@ -111,20 +117,33 @@ namespace World
             float gameTimeSpeedFactor = 1.0;
 
             /**
-             * @return returns current day. starts with 0
+             * @return current day
              */
             int getDay() const
             {
-                return static_cast<int>(gameTime / (60 * 60 * 24));
+                return day;
             }
 
             /**
-            * sets the game time to match the given day, while keeping the time of the day
             * @param newDay day to be set to
             */
             void setDay(int newDay) {
-                double diff = newDay - getDay();
-                setGameTime(gameTime + diff * 24 * 60 * 60);
+                day = newDay;
+            }
+
+            /**
+             * updates the game time with the given real time
+             */
+             void update(float deltaRealTimeSeconds)
+            {
+                timeOfDay += totalSpeedUp() * deltaRealTimeSeconds / (60 * 60 * 24);
+                if (timeOfDay >= 1.0f)
+                {
+                    float overFlowTimeOfDay = timeOfDay;
+                    timeOfDay = std::fmod(timeOfDay, 1.0f);
+                    // handles also case where the ingame clock is updated by huge dt (> 1 day)
+                    day += std::lround(overFlowTimeOfDay - timeOfDay);
+                }
             }
 
             /**
@@ -134,9 +153,15 @@ namespace World
              */
             void getTimeOfDay(int& hours, int& minutes) const
             {
-                double dayTime = gameTime / (60 * 60 * 24) - getDay();
-                hours = static_cast<int>(dayTime * 24);
-                minutes = static_cast<int>((dayTime * 24 - hours) * 60);
+                dayTimeTohm(timeOfDay, hours, minutes);
+            }
+
+            /**
+             * @return time elapsed in days since last midnight (0:00)
+             */
+            float getTimeOfDay() const
+            {
+                return timeOfDay;
             }
 
             /**
@@ -144,11 +169,7 @@ namespace World
              */
             std::string getDateTimeFormatted() const
             {
-                int h, m;
-                getTimeOfDay(h, m);
-                std::string clockString = std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
-                std::string dayString = "Day " + std::to_string(getDay());
-                return dayString + ", " + clockString;
+                return "Day " + std::to_string(day) + ", " + getTimeOfDayFormatted();
             }
 
             /**
@@ -159,36 +180,60 @@ namespace World
              */
             void setTimeOfDay(int hours, int minutes, bool onlyForward=false)
             {
-                double daysInSeconds = getDay() * 60 * 60 * 24;
-                double dayTimeInSeconds = (minutes + hours * 60) * 60;
-                double newTime = daysInSeconds + dayTimeInSeconds;
-                if (onlyForward && newTime < gameTime)
+                float newTimeOfDay = hmToDayTime(hours, minutes);
+                if (onlyForward && newTimeOfDay < timeOfDay)
                 {
-                    newTime += 24 * 60 * 60;
+                    day++;
                 }
-                setGameTime(newTime);
+                timeOfDay = newTimeOfDay;
             }
 
             /**
              * sets the extra speed factor for test purposes
              */
-            void setGameTimeSpeedFactor(double factor){
+            void setGameTimeSpeedFactor(float factor){
                 gameTimeSpeedFactor = factor;
             }
 
             /**
              * gets the total ingame time to real time ratio
              */
-            double totalSpeedUp()
+            float totalSpeedUp() const
             {
                 return gameTimeRealTimeRatio * gameTimeSpeedFactor;
             }
+
             /**
-             * @param totalSeconds
+             * @return time of day as string in hh:mm format
              */
-            void setGameTime(double totalSeconds)
+             std::string getTimeOfDayFormatted() const
             {
-                gameTime = totalSeconds;
+                int h, m;
+                getTimeOfDay(h, m);
+                return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
+            }
+
+            /**
+             * helper function for conversion
+             * @param hours
+             * @param minutes
+             * @return converts timespan in hours/minutes to days (float)
+             */
+            static float hmToDayTime(int hours, int minutes)
+            {
+                return (hours + minutes / 60.0f) / 24.0f;
+            }
+
+            /**
+             * helper function for conversion
+             * @param hours
+             * @param minutes
+             * @return converts timeOfDay in days (float) to hours/minutes
+             */
+            static void dayTimeTohm(float timeOfDay, int& hours, int& minutes)
+            {
+                hours = static_cast<int>(timeOfDay * 24);
+                minutes = static_cast<int>((timeOfDay * 24 - hours) * 60);
             }
 		};
 

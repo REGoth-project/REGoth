@@ -78,13 +78,13 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
     }
 }
 
-void Sky::interpolate(double gameTimeSeconds)
+void Sky::interpolate()
 {
     // time since 12:00 in days
-    double skyTime = std::fmod(gameTimeSeconds / (60 * 60 * 24) + 0.5, 1.0);
+    float skyTime = std::fmod(m_World.getWorldInfo().getTimeOfDay() + 0.5f, 1.0f);
 
     if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('d'))
-        m_MasterState.time = static_cast<float>(skyTime);
+        m_MasterState.time = skyTime;
 
     // init with values for case: time >= TIME_KEY_7 (= 0.75f)
     size_t si0 = ESPT_NUM_PRESETS - 1, si1 = 0;

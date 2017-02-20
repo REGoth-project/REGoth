@@ -74,9 +74,8 @@ namespace Content
 
         /**
          * Updates the sky and the colors
-         * @param gameTime in seconds
          */
-        void interpolate(double gameTime);
+        void interpolate();
 
         /**
          * Initializes the given skystate to the given type
