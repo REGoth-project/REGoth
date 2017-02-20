@@ -379,33 +379,45 @@ public:
             return "Hello World!";
         });
 
-
-        console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
-
+        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+            // modifies the world time
             if(args.size() < 2)
-                return "Missing argument. Usage: timeset <time (0..1)>";
+                return "Missing argument. Usage: set time <days elapsed since Day 0, 0:00>";
 
-            float t = std::stof(args[1]);
-            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(t);
+            float timeInDays = std::stof(args[2]);
+            float timeInSeconds = timeInDays * 60 * 60 * 24;
+            m_pEngine->getMainWorld().get().getWorldInfo().setGameTime(timeInSeconds);
 
-            return "Set time to " + std::to_string(t);
+            return "Set game time to " + m_pEngine->getMainWorld().get().getWorldInfo().getDateTimeFormatted();
         });
 
-        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set timespeed", [this](const std::vector<std::string>& args) -> std::string {
+            // adds an additional speed factor for the game time
+            if(args.size() < 2)
+                return "Missing argument. Usage: set timespeed <factor>";
+
+            float factor = std::stof(args[2]);
+            m_pEngine->getMainWorld().get().getWorldInfo().setGameTimeSpeedFactor(factor);
+
+            return "Set timespeed time to " + std::to_string(factor);
+        });
+
+        console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
+            // modifies the world time
             if(args.size() != 4)
-                return "Invalid arguments. Usage: set time [hh mm]";
+                return "Invalid arguments. Usage: set clock [hh mm]";
 
             const int hh = std::stoi(args[2]);
             const int mm = std::stoi(args[3]);
 
             if(hh < 0 || hh > 23)
-                return "Invalid argument. Hours must be in range from 00 to 23";
+                return "Invalid argument. Hours must be in range from 0 to 23";
             if(mm < 0 || mm > 59)
-                return "Invalid argument. Minutes must be in range from 00 to 59";
+                return "Invalid argument. Minutes must be in range from 0 to 59";
 
-            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(hh, mm);
+            m_pEngine->getMainWorld().get().getWorldInfo().setTimeOfDay(hh, mm);
 
-            return "Set time to " + args[2] + ":" + args[3];
+            return "Set clock to " + args[2] + ":" + args[3];
         });
 
         console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
@@ -661,9 +673,10 @@ public:
         };
 
         console.registerCommand("nextday", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
-            auto currentDay = m_pEngine->getMainWorld().get().getSky().getDay();
+            auto& wInfo = m_pEngine->getMainWorld().get().getWorldInfo();
+            auto currentDay = wInfo.getDay();
             auto nextDay = currentDay + 1;
-            m_pEngine->getMainWorld().get().getSky().setDay(nextDay);
+            wInfo.setDay(nextDay);
             return "Changing day from " + std::to_string(currentDay) + " to " + std::to_string(nextDay);
         });
 

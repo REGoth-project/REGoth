@@ -32,21 +32,10 @@ namespace Flags
 Sky::Sky(World::WorldInstance& world) :
     m_World(world)
 {
-    m_MasterState.time = 0.0f;
+    m_MasterState.time = 0.5f;
     m_FarPlane = FLT_MAX;
-    m_skySpeedMultiplier = 1.0f;
-
-    // Both games start at 8:00 in the morning
-    setTimeOfDay(8,00);
-    // Start with day one
-    m_MasterState.day = 1;
 
     fillSkyStates();
-
-    Engine::Input::RegisterAction(Engine::ActionType::DebugSkySpeed, [this](bool, float intensity)
-    {
-        m_skySpeedMultiplier = 1.0 + 99.0 * intensity;
-    });
 }
 
 Sky::~Sky()
@@ -89,31 +78,16 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
     }
 }
 
-void Sky::interpolate(double deltaTime)
+void Sky::interpolate(double gameTimeSeconds)
 {
-    deltaTime *= 100.0f;
+    // time since 12:00 in days
+    double skyTime = std::fmod(gameTimeSeconds / (60 * 60 * 24) + 0.5, 1.0);
 
-    deltaTime *= m_skySpeedMultiplier;
+    if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('d'))
+        m_MasterState.time = static_cast<float>(skyTime);
 
-    if(m_World.getEngine()->getEngineArgs().cmdline.hasArg('d'))
-	deltaTime = 0.0;
-
-//    if(inputGetKeyState(entry::Key::KeyO))
-//        deltaTime *= 10.0;
-
-    // update time
-    float oldTime = m_MasterState.time;
-    float newTime = std::fmod(oldTime + static_cast<float>(deltaTime) / (60 * 60 * 24), 1.0f);
-    m_MasterState.time = newTime;
-
-    // check for change of day
-    constexpr float midNight = 0.5;
-    if (oldTime < midNight && newTime >= midNight)
-    {
-        m_MasterState.day++;
-    }
-
-    size_t si0 = 0, si1 = 1;
+    // init with values for case: time >= TIME_KEY_7 (= 0.75f)
+    size_t si0 = ESPT_NUM_PRESETS - 1, si1 = 0;
 
     // Find the two states we're interpolating
     for(size_t i=0; i<ESkyPresetType::ESPT_NUM_PRESETS; i++)
@@ -130,11 +104,20 @@ void Sky::interpolate(double deltaTime)
     SkyState& s0 = m_SkyStates[si0];
     SkyState& s1 = m_SkyStates[si1];
 
-    // Not sure?
+    // Handle case time >= TIME_KEY_7 (= 0.75f)
     float timeS1 = s1.time < s0.time ? s1.time + 1.0f : s1.time;
 
     // Scale up time difference to [0,1]
     float t = (m_MasterState.time - s0.time) / (timeS1 - s0.time);
+
+    /*
+    static size_t last_si0 = si0;
+    if (last_si0 != si0)
+    {
+        last_si0 = si0;
+        LogInfo() << "state = " << si0 << ", clock = " << m_World.getWorldInfo().getDateTimeFormatted();
+    }
+     */
 
     // Interpolate values
     m_MasterState.baseColor = s0.baseColor + t * (s1.baseColor - s0.baseColor);
@@ -354,11 +337,6 @@ void Sky::fillSkyStates()
     }
 }
 
-void Sky::setTimeOfDay(float t)
-{
-    m_MasterState.time = t;
-}
-
 void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _far, Math::float3& fogColor) const
 {
     // Note: These are some magic values to match what gothic does
@@ -401,32 +379,4 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
 
     // Calculate actual fog color
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
-}
-
-void Sky::setTimeOfDay(int hours, int minutes)
-{
-    if (hours < 12)
-        hours += 12;
-    else
-        hours -= 12;
-
-    const float time = hours / 24.0f + minutes / (24.0f * 60.0f);
-
-    setTimeOfDay(time);
-}
-
-void Sky::getTimeOfDay(int& hours, int& minutes) const
-{
-    float fh = fmod(24.0f * getTimeOfDay() + 12.0f, 24);
-    hours = (int)fh;
-    minutes = (int)((fh - hours) * 60.0f);
-}
-
-std::string Sky::getDateTimeFormatted() const
-{
-    int h, m;
-    getTimeOfDay(h, m);
-    std::string clockString = std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
-    std::string dayString = "Day " + std::to_string(m_MasterState.day);
-    return dayString + ", " + clockString;
 }

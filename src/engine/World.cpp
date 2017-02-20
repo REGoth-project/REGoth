@@ -35,7 +35,8 @@ WorldInstance::WorldInstance()
       m_BspTree(*this),
       m_PfxManager(*this)
 {
-
+    // Both games start at 8:00 in the morning
+    m_WorldInfo.setTimeOfDay(8, 00);
 }
 
 WorldInstance::~WorldInstance()
@@ -480,6 +481,8 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
     m_WorldInfo.time += deltaTime;
+    double deltaGameTime = deltaTime * m_WorldInfo.totalSpeedUp();
+    m_WorldInfo.gameTime += deltaGameTime;
 
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
@@ -488,7 +491,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_PhysicsSystem.update(deltaTime);
 
     // Update sky
-    m_Sky.interpolate(deltaTime);
+    m_Sky.interpolate(m_WorldInfo.gameTime);
 
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;
@@ -553,7 +556,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setDateTimeDisplay(m_Sky.getDateTimeFormatted());
+    m_pEngine->getHud().setDateTimeDisplay(m_WorldInfo.getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }

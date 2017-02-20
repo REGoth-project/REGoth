@@ -51,8 +51,8 @@ namespace Content
         struct SkyState
         {
             // Time when this state becomes active
+            // time in days since last 12:00
             float			time;
-            int             day;
 
             // Color values
             Math::float3	baseColor;
@@ -74,9 +74,9 @@ namespace Content
 
         /**
          * Updates the sky and the colors
-         * @param deltaTime Time since last frame
+         * @param gameTime in seconds
          */
-        void interpolate(double deltaTime);
+        void interpolate(double gameTime);
 
         /**
          * Initializes the given skystate to the given type
@@ -96,45 +96,6 @@ namespace Content
          * @return Pointer to the LUT
          */
         const Math::float4* getLUTPtr() const { return m_LUT; }
-
-        /**
-         * @return Day.
-         */
-        int getDay() const { return m_MasterState.day; }
-
-        /**
-         * @param sets the current day
-         */
-        void setDay(int newDay) { m_MasterState.day = newDay; }
-
-        /**
-         * @return Time of day.
-         */
-        float getTimeOfDay() const { return m_MasterState.time; }
-
-        /**
-         * @param t New time to set. Float value in range (0..1), where 0 is 12:00.
-         */
-        void setTimeOfDay(float t);
-
-        /**
-         * Set time to hours/minutes (24h format)
-         * @param hours
-         * @param minutes
-         */
-        void setTimeOfDay(int hours, int minutes);
-
-        /**
-         * Converts time to hours/minutes (24h format)
-         * @param hours
-         * @param minutes
-         */
-        void getTimeOfDay(int& hours, int& minutes) const;
-
-        /**
-         * @return Time of day as string
-         */
-        std::string getDateTimeFormatted() const;
 
         /**
          * @return current interpolated sky-state
@@ -183,11 +144,6 @@ namespace Content
          * World this sky belongs to
          */
         World::WorldInstance& m_World;
-
-        /**
-         * Debug only
-         */
-        float m_skySpeedMultiplier;
 
         /**
          * Global Farplane

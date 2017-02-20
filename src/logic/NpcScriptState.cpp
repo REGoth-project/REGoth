@@ -175,7 +175,7 @@ bool NpcScriptState::doAIState(float deltaTime)
     if(m_Routine.hasRoutine && isInRoutine())
     {
         int h, m;
-        m_World.getSky().getTimeOfDay(h, m);
+        m_World.getWorldInfo().getTimeOfDay(h, m);
 
         if(!m_Routine.routine[m_Routine.routineActiveIdx].timeInRange(h, m))
         {

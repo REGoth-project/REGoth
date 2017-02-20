@@ -90,14 +90,106 @@ namespace World
 			WorldInfo()
 			{
 				lastFrameDeltaTime = 0.0;
-				time = 0.0;
+                time = 0.0;
+                gameTime = 0.0;
 			}
 
 			// Last deltatime-value we have gotten here
 			double lastFrameDeltaTime;
 
-			// Total running time
+			// real time in seconds, which the game is running in the current session
 			double time;
+
+            // Time elapsed in the game since "start new gothic game" in seconds
+            // TODO export/import this value in json for savegames
+            double gameTime;
+
+            // Defines how much faster the gothic clock runs compared to the real time clock
+            float gameTimeRealTimeRatio = 100;
+
+            // define an extra speedup for test purposes
+            float gameTimeSpeedFactor = 1.0;
+
+            /**
+             * @return returns current day. starts with 0
+             */
+            int getDay() const
+            {
+                return static_cast<int>(gameTime / (60 * 60 * 24));
+            }
+
+            /**
+            * sets the game time to match the given day, while keeping the time of the day
+            * @param newDay day to be set to
+            */
+            void setDay(int newDay) {
+                double diff = newDay - getDay();
+                setGameTime(gameTime + diff * 24 * 60 * 60);
+            }
+
+            /**
+             * Converts time to hours/minutes (24h format)
+             * @param hours
+             * @param minutes
+             */
+            void getTimeOfDay(int& hours, int& minutes) const
+            {
+                double dayTime = gameTime / (60 * 60 * 24) - getDay();
+                hours = static_cast<int>(dayTime * 24);
+                minutes = static_cast<int>((dayTime * 24 - hours) * 60);
+            }
+
+            /**
+             * @return Day + time of day as string
+             */
+            std::string getDateTimeFormatted() const
+            {
+                int h, m;
+                getTimeOfDay(h, m);
+                std::string clockString = std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
+                std::string dayString = "Day " + std::to_string(getDay());
+                return dayString + ", " + clockString;
+            }
+
+            /**
+             * Set time to hours/minutes (24h format)
+             * @param hours
+             * @param minutes
+             * @param onlyForward indicates whether the day should be incremented as well if given clock time is in past
+             */
+            void setTimeOfDay(int hours, int minutes, bool onlyForward=false)
+            {
+                double daysInSeconds = getDay() * 60 * 60 * 24;
+                double dayTimeInSeconds = (minutes + hours * 60) * 60;
+                double newTime = daysInSeconds + dayTimeInSeconds;
+                if (onlyForward && newTime < gameTime)
+                {
+                    newTime += 24 * 60 * 60;
+                }
+                setGameTime(newTime);
+            }
+
+            /**
+             * sets the extra speed factor for test purposes
+             */
+            void setGameTimeSpeedFactor(double factor){
+                gameTimeSpeedFactor = factor;
+            }
+
+            /**
+             * gets the total ingame time to real time ratio
+             */
+            double totalSpeedUp()
+            {
+                return gameTimeRealTimeRatio * gameTimeSpeedFactor;
+            }
+            /**
+             * @param totalSeconds
+             */
+            void setGameTime(double totalSeconds)
+            {
+                gameTime = totalSeconds;
+            }
 		};
 
 		WorldInstance();

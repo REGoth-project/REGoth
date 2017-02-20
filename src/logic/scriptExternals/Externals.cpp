@@ -757,7 +757,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         int32_t hour1 = vm.popDataValue();
 
         int32_t hour, min;
-        pWorld->getSky().getTimeOfDay(hour, min);
+        pWorld->getWorldInfo().getTimeOfDay(hour, min);
 
         if (hour >= hour1 && hour <= hour2 &&
             min >= min1 && min >= min2)
@@ -1101,7 +1101,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "wld_getday";
-        vm.setReturn(pWorld->getSky().getDay());
+        vm.setReturn(pWorld->getWorldInfo().getDay());
     });
 }
 
