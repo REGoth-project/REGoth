@@ -750,7 +750,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("wld_istime", [=](Daedalus::DaedalusVM& vm){
-
         int32_t min2 = vm.popDataValue();
         int32_t hour2 = vm.popDataValue();
         int32_t min1 = vm.popDataValue();
@@ -759,6 +758,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         int32_t hour, min;
         pWorld->getWorldInfo().getTimeOfDay(hour, min);
 
+        // TODO this isn't right. multiple errors...
         if (hour >= hour1 && hour <= hour2 &&
             min >= min1 && min >= min2)
         {

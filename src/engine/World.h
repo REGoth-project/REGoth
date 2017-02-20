@@ -82,25 +82,21 @@ namespace World
     {
     public:
 
-		/**
-          * Information about the state of the world
-          */
-		struct WorldInfo
-		{
-			WorldInfo()
-			{
-				lastFrameDeltaTime = 0.0;
-                time = 0.0;
+        /**
+         * Information about the state of the world
+         */
+        struct WorldInfo
+        {
+            WorldInfo()
+            {
+                lastFrameDeltaTime = 0.0;
                 // start at day 1, 8:00 o'clock
                 day = 1;
                 setTimeOfDay(8, 0);
-			}
+            }
 
-			// Last deltatime-value we have gotten here
-			double lastFrameDeltaTime;
-
-			// real time in seconds, which the game is running in the current session
-			double time;
+            // Last deltatime-value we have gotten here
+            double lastFrameDeltaTime;
 
             // Time elapsed in the game since last 00:00 in days (interval [0,1[)
             // TODO export/import this value in json for savegames
@@ -110,10 +106,10 @@ namespace World
             // TODO export/import this value in json for savegames
             int day;
 
-            // Defines how much faster the gothic clock runs compared to the real time clock
+            // Defines how much faster the ingame clock runs compared to the real time clock
             float gameTimeRealTimeRatio = 100;
 
-            // define an extra speedup for test purposes
+            // define an extra speedup for the ingame clock for test purposes
             float gameTimeSpeedFactor = 1.0;
 
             /**
@@ -201,6 +197,13 @@ namespace World
             float totalSpeedUp() const
             {
                 return gameTimeRealTimeRatio * gameTimeSpeedFactor;
+            }
+
+            /**
+             * @return time in days since "new game" started
+             */
+            float getTime(){
+                return day + timeOfDay;
             }
 
             /**

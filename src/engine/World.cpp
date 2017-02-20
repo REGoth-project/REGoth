@@ -480,7 +480,6 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 {
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
-    m_WorldInfo.time += deltaTime;
     m_WorldInfo.update(deltaTime);
 
     // Tell script engine the frame started
@@ -628,7 +627,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
             Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < m_WorldInfo.time)
+            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < m_WorldInfo.getTime())
                && (!inst.isValid() || sp.m_UsingEntity != inst))
             {
 
