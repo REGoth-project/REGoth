@@ -755,16 +755,27 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         int32_t min1 = vm.popDataValue();
         int32_t hour1 = vm.popDataValue();
 
+        // script sometimes uses negative values
+        hour1 = (hour1 + 24) % 24;
+        hour2 = (hour2 + 24) % 24;
+
         int32_t hour, min;
         pWorld->getWorldInfo().getTimeOfDay(hour, min);
-
-        // TODO this isn't right. multiple errors...
-        if (hour >= hour1 && hour <= hour2 &&
-            min >= min1 && min >= min2)
+        float timeOfDay = pWorld->getWorldInfo().getTimeOfDay();
+        float timeOfDay1 = pWorld->getWorldInfo().hmToDayTime(hour1, min1);
+        float timeOfDay2 = pWorld->getWorldInfo().hmToDayTime(hour2, min2);
+        bool inside;
+        if (timeOfDay1 < timeOfDay2)
         {
-            vm.setReturn(1);
+            // check if it is in interval
+            inside = (timeOfDay1 <= timeOfDay) && (timeOfDay <= timeOfDay2);
         } else
-            vm.setReturn(0);
+        {
+            // case interval contains midnight
+            // check if it is not in complementary interval
+            inside = ! ((timeOfDay2 <= timeOfDay) && (timeOfDay <= timeOfDay1));
+        }
+        vm.setReturn(inside);
     });
 
     vm->registerExternalFunction("ai_wait", [=](Daedalus::DaedalusVM& vm){
