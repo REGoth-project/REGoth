@@ -266,7 +266,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         //LogInfo() << "Samples " << lastFrame << " -> " << frameNum  << " = " << m_AnimRootVelocity.toString();
         m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
 
-    }
+    }*/
 
 
 }
