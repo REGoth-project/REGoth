@@ -441,4 +441,20 @@ namespace Utils
     protected:
         std::shared_ptr<char> m_ID;
     };
+
+    /**
+     * removes all non alphanumeric characters and lowers the case
+     * @param in old string
+     * @return new string
+     */
+    std::string strippedAndLowered(const std::string& in);
+
+    /**
+     * checks whether searchSpace contains part. ignores case, removes non alpha numeric characters first
+     * @param searchSpace string to be searched in
+     * @param part string to be found
+     * @return
+     */
+    bool containsLike(const std::string& searchSpace, const std::string& part);
+
 }

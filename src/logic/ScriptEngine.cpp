@@ -351,16 +351,6 @@ std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string n
     std::set<Handle::EntityHandle> outSet;
     auto& datFile = getVM().getDATFile();
 
-    auto strippedAndLowered = [](const std::string& in){
-        std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
-        std::string out = in;
-        std::transform(out.begin(), out.end(), out.begin(), ::tolower);
-        out.erase(std::remove_if(out.begin(), out.end(), isNotAlNum), out.end());
-        return out;
-    };
-
-    std::string requestedLower = strippedAndLowered(namePart);
-
     for(const Handle::EntityHandle& npc : getWorldNPCs())
     {
         VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(m_World, npc);
@@ -373,8 +363,7 @@ std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string n
 
         for (const auto& npcName : {npcDisplayName, npcDatFileName})
         {
-            std::string npcNameLower = strippedAndLowered(npcName);
-            if (npcNameLower.find(requestedLower) != std::string::npos)
+            if (Utils::containsLike(npcName, namePart))
             {
                 outSet.insert(npc);
             }
