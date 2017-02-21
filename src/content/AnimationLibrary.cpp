@@ -152,6 +152,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
         case ModelScriptParser::CHUNK_ANI:
             {
                 std::string qname = name + '-' + p.ani().m_Name;
+
                 auto h = m_World.getAnimationAllocator().allocate(qname);
                 anim = &m_World.getAnimationAllocator().getAnimation(h);
                 anim->m_Name = p.ani().m_Name;

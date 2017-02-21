@@ -44,6 +44,9 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 
 bool AnimHandler::addAnimation(const std::string &name)
 {
+    if(!m_MeshLib.isValid())
+        return false;
+
     Handle::AnimationHandle h = m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, name);
     if(!h.isValid())
         return false;
