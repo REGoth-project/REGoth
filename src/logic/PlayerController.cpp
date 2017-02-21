@@ -125,7 +125,7 @@ void PlayerController::onUpdate(float deltaTime)
         setDailyRoutine({});
         gotoWaypoint(targetWP);
     }
-    m_NoAniRootPosHack = m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
+    m_NoAniRootPosHack = !m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
 
     if (!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
@@ -160,8 +160,7 @@ void PlayerController::onUpdate(float deltaTime)
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
 
-        if(!m_NoAniRootPosHack
-           && m_LastAniRootPosUpdatedAniHash != getModelVisual()->getAnimationHandler().getAnimationStateHash())
+        if(!m_NoAniRootPosHack)
         {
             // Apply model root-velcoity
             Math::float3 position = getEntityTransform().Translation();
@@ -735,6 +734,7 @@ void PlayerController::placeOnGround()
     bool underWater = false;
     bool aboveGround = false;
     bool shallowWater = false;
+    float fallthroughEpsilon = 0.25f; // Give a little room for animations, etc
     Physics::RayTestResult highestHitSurface = hitall[0];
     Physics::RayTestResult waterHitSurface = hitall[0];
     Physics::RayTestResult closestHitGroundSurface = hitall[0];
@@ -742,7 +742,7 @@ void PlayerController::placeOnGround()
     float closestResult = std::numeric_limits< float >::max();
     for (const auto& result : hitall)
     {
-        fellThrough = fellThrough && (result.hitPosition.y > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
+        fellThrough = fellThrough && (result.hitPosition.y - fallthroughEpsilon > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
         if (highestHitY < result.hitPosition.y)
         {
             highestHitY = result.hitPosition.y;
@@ -2612,7 +2612,16 @@ void PlayerController::traceDownNPCGround()
             }
         }
     }
-    float feetPos = entityPos.y - 0.8f;
+
+    float feet = getModelVisual()->getModelRoot().y;
+
+    // FIXME: Actually read the flying-flag of the MDS
+    if (feet == 0.0f)
+    {
+        feet = 0.9762f; // FIXME: Boundingbox of the animation or something should be used instead
+    }
+
+    float feetPos = entityPos.y - feet;
     if (waterMatFound && feetPos < waterSurfacePos)
     {
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
