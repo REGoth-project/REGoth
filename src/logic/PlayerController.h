@@ -110,7 +110,7 @@ namespace Logic
          * @param message Message to handle
          * @param sourceVob Instigator vob. Can be invalid.
          */
-        virtual void onMessage(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob) override;
+        virtual void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob) override;
 
         /**
          * Called on game-tick
@@ -445,17 +445,17 @@ namespace Logic
         /**
          * Events
          */
-        bool EV_Event(Logic::EventMessages::EventMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Npc(Logic::EventMessages::NpcMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Damage(Logic::EventMessages::DamageMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Weapon(Logic::EventMessages::WeaponMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Movement(Logic::EventMessages::MovementMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Attack(Logic::EventMessages::AttackMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_UseItem(Logic::EventMessages::UseItemMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_State(Logic::EventMessages::StateMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Manipulate(Logic::EventMessages::ManipulateMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Conversation(Logic::EventMessages::ConversationMessage& message, Handle::EntityHandle sourceVob);
-        bool EV_Magic(Logic::EventMessages::MagicMessage& message, Handle::EntityHandle sourceVob);
+        bool EV_Event(std::shared_ptr<Logic::EventMessages::EventMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Npc(std::shared_ptr<Logic::EventMessages::NpcMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Damage(std::shared_ptr<Logic::EventMessages::DamageMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Weapon(std::shared_ptr<Logic::EventMessages::WeaponMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Movement(std::shared_ptr<Logic::EventMessages::MovementMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Attack(std::shared_ptr<Logic::EventMessages::AttackMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_UseItem(std::shared_ptr<Logic::EventMessages::UseItemMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_State(std::shared_ptr<Logic::EventMessages::StateMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Manipulate(std::shared_ptr<Logic::EventMessages::ManipulateMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Conversation(std::shared_ptr<Logic::EventMessages::ConversationMessage> message, Handle::EntityHandle sourceVob);
+        bool EV_Magic(std::shared_ptr<Logic::EventMessages::MagicMessage> message, Handle::EntityHandle sourceVob);
 
         /**
          * Moves the NPC to the next waypoint of the current path

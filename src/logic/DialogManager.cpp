@@ -8,7 +8,6 @@
 #include <ui/DialogBox.h>
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
-#include <logic/messages/EventManager.h>
 #include <logic/PlayerController.h>
 #include <ui/SubtitleBox.h>
 #include <ui/PrintScreenMessages.h>
@@ -85,7 +84,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
         const Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
         if (info.important && (importantKnown.find(infoHandle) != importantKnown.end()))
         {
-            // Specific fix for Kyle: don't show important again if it was already chosen in the current dialog
+            // Specific fix for Kyle: don't show important again if it was already shown in the current dialog
             continue;
         }
         // If not permanent, don't show this twice
@@ -187,7 +186,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             conv.target = targetnpc.entity;
 
             // Check if the target is currently talking to us
-            EventMessages::EventMessage* otherconv = targetnpc.playerController->getEM().findLastConvMessageWith(
+            std::shared_ptr<EventMessages::EventMessage> otherconv = targetnpc.playerController->getEM().findLastConvMessageWith(
                     selfnpc.entity);
 
             // Wait for the other npc to complete first
@@ -196,11 +195,12 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
             }
         }
     }
-    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [this](Handle::EntityHandle hostHandle, EventMessages::EventMessage* inst) {
+    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [this](Handle::EntityHandle hostHandle, std::shared_ptr<EventMessages::EventMessage> inst) {
         // TODO: Rework "this" capture by reworking the callback interface (add world as argument passed)
         auto& world = this->m_World;
         world.getDialogManager().stopDisplaySubtitle();
-        world.getAudioWorld().stopSound(dynamic_cast<EventMessages::ConversationMessage*>(inst)->soundTicket);
+	auto convMessage = std::dynamic_pointer_cast<EventMessages::ConversationMessage>(inst);
+        world.getAudioWorld().stopSound(convMessage->soundTicket);
         auto hostVob = VobTypes::asNpcVob(world, hostHandle);
         hostVob.playerController->getModelVisual()->stopAnimations();
     }));
@@ -405,7 +405,6 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    // TODO rework ALL messages into shared pointers?
     if (m_CurrentDialogMessage)
     {
         m_CurrentDialogMessage->deleted = true;

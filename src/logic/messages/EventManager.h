@@ -2,6 +2,7 @@
 
 #include <handle/HandleDef.h>
 #include <list>
+#include <memory>
 #include "EventMessage.h"
 
 namespace World
@@ -13,24 +14,19 @@ namespace Logic
 {
     class EventManager
     {
+        using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
     public:
         EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob);
-        ~EventManager();
 
         template<typename T>
-        void onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
+        std::shared_ptr<T> onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
         {
-            // Copy over the data from the given message so only we handle the memory allocations
-            T* msgcopy = new T;
-            *msgcopy = msg;
+            // Copy over the data from the given message
+            std::shared_ptr<T> copyDerived = std::make_shared<T>(msg);
 
             // Handle the message and potentially add it to the queue
-            handleMessage(msgcopy, sourceVob);
-
-            // Check if this was already executed. If so, we can delete it already. If not, it was added to the queue.
-            if(msgcopy->deleted){
-                delete msgcopy;
-            }
+            handleMessage(copyDerived, sourceVob);
+            return copyDerived;
         }
 
         /**
@@ -47,9 +43,9 @@ namespace Logic
         /**
          * Searches the messages for the last one that is a conversation message and has the NPC with the entity "other" as target
          * @param other NPC-Entity to search for
-         * @return Pointer to the last non-overlay conv-message, if found. If not, nullptr. DO NOT STORE THIS!
+         * @return Pointer to the last non-overlay conv-message, if found. If not, nullptr.
          */
-        EventMessages::EventMessage* findLastConvMessageWith(Handle::EntityHandle other);
+        SharedEMessage findLastConvMessageWith(Handle::EntityHandle other);
 
         /**
          * Searches the messages if any conversation message exists, that has the NPC with the entity "other" as target
@@ -62,12 +58,7 @@ namespace Logic
          * Blocks the event-queue until the given event was processed. Can be from another NPC!
          * @param other Message to wait for
          */
-        void waitForMessage(EventMessages::EventMessage* other);
-
-        /**
-         * Cancels the current talking line of the npc
-         */
-        void cancelTalk();
+        void waitForMessage(SharedEMessage other);
 
         /**
          * Removes all pending messages
@@ -86,17 +77,17 @@ namespace Logic
          * whether it should wait in the queue. Immediate messages will be flagged as to-delete after execution
          * @param message Message to handle
          */
-        void handleMessage(EventMessages::EventMessage* message, Handle::EntityHandle sourceVob);
+        void handleMessage(SharedEMessage message, Handle::EntityHandle sourceVob);
 
         /**
          * Sends the given message to the host-vob
          */
-        void sendMessageToHost(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle());
+        void sendMessageToHost(SharedEMessage message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle());
 
         /**
          * Events registered and managed here.
          */
-        std::vector<EventMessages::EventMessage*> m_EventQueue;
+        std::vector<SharedEMessage> m_EventQueue;
 
         /**
          * Vob this belongs to
@@ -107,23 +98,5 @@ namespace Logic
          * World this is in
          */
         World::WorldInstance& m_World;
-
-        /**
-         * Creates a new ticket ID to identify the message when removing it on callback
-         * @return new ticket ID
-         */
-        unsigned int drawTicket(){
-            return m_ticketCounter++;
-        }
-
-        /**
-         * ticket Counter for this EventManager instance
-         */
-        unsigned int m_ticketCounter;
-
-        /**
-         * finds the first ConversationMessage with the given ticket ID (if any) and marks it as deleted
-         */
-        void removeWaitingMessage(unsigned int ticket);
     };
 }

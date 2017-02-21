@@ -10,32 +10,22 @@
 
 using json = nlohmann::json;
 using namespace Logic;
+using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
 
 EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob) :
     m_World(world),
-    m_HostVob(hostVob),
-    m_ticketCounter(1)
+    m_HostVob(hostVob)
 {
 
 }
 
-EventManager::~EventManager()
-{
-    // Free memory of all staging messages
-    for(EventMessages::EventMessage* ev : m_EventQueue)
-    {
-        delete ev;
-    }
-    m_EventQueue.clear();
-}
-
-void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Handle::EntityHandle sourceVob)
+void EventManager::handleMessage(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
     // Check if we shall execute this right away
     if(!message->isJob && (message->isHighPriority || m_EventQueue.empty()))
     {
         // Pass the message to the host
-        sendMessageToHost(*message);
+        sendMessageToHost(message);
 
         // Flag as done
         message->deleted = true;
@@ -56,7 +46,7 @@ void EventManager::handleMessage(Logic::EventMessages::EventMessage* message, Ha
     }
 }
 
-void EventManager::sendMessageToHost(EventMessages::EventMessage& message, Handle::EntityHandle sourceVob)
+void EventManager::sendMessageToHost(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
     Vob::VobInformation vob = Vob::asVob(m_World, m_HostVob);
 
@@ -84,7 +74,6 @@ void EventManager::processMessageQueue()
     {
         if((*it)->deleted)
         {
-            delete (*it);
             it = m_EventQueue.erase(it);
 		}
 		else
@@ -97,9 +86,9 @@ void EventManager::processMessageQueue()
         return;
 
     // Process messages as far as we can
-    for(EventMessages::EventMessage* ev : m_EventQueue)
+    for(SharedEMessage ev : m_EventQueue)
     {
-        sendMessageToHost(*ev);
+        sendMessageToHost(ev);
 
         // FIXME: This event manager could have been deleted as a reaction to the message! Take care of that!
 
@@ -112,22 +101,22 @@ void EventManager::processMessageQueue()
     }
 }
 
-EventMessages::EventMessage* EventManager::findLastConvMessageWith(Handle::EntityHandle other)
+SharedEMessage EventManager::findLastConvMessageWith(Handle::EntityHandle other)
 {
     auto begin = m_EventQueue.rbegin();
     auto end = m_EventQueue.rend();
-    auto lastConvMessage = std::find_if(begin, end, [&](EventMessages::EventMessage* ev){
+    auto lastConvMessageIterator = std::find_if(begin, end, [&](SharedEMessage ev){
         if(!ev->isOverlay && ev->messageType == EventMessages::EventMessageType::Conversation)
         {
-            auto conv = dynamic_cast<EventMessages::ConversationMessage*>(ev);
+            auto conv = std::dynamic_pointer_cast<EventMessages::ConversationMessage>(ev);
             return conv->target == other;
         }
         return false;
     });
-    if (lastConvMessage == end){
+    if (lastConvMessageIterator == end){
         return nullptr;
     } else {
-        return *lastConvMessage;
+        return *lastConvMessageIterator;
     }
 }
 
@@ -135,53 +124,24 @@ bool EventManager::hasConvMessageWith(Handle::EntityHandle other){
     return findLastConvMessageWith(other) != nullptr;
 }
 
-void EventManager::waitForMessage(EventMessages::EventMessage* other)
+void EventManager::waitForMessage(SharedEMessage other)
 {
     // Push a wait-message first
     EventMessages::ConversationMessage wait;
     wait.subType = EventMessages::ConversationMessage::ST_WaitTillEnd;
     wait.waitIdentifier = other;
-    unsigned int ticket = drawTicket();
-    wait.waitTicket = ticket;
 
     // Let the EM wait for this talking-action to complete
-    onMessage(wait);
+    SharedEMessage queuedWait = onMessage(wait);
 
-    other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, EventMessages::EventMessage* inst) {
-        // possible FIXME: handle case where EventManager was deleted.
-        removeWaitingMessage(ticket);
+    other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, SharedEMessage hostMessage) {
+        queuedWait->deleted = true;
     }));
-}
-
-void EventManager::removeWaitingMessage(unsigned int ticket){
-    for (EventMessages::EventMessage* message : m_EventQueue){
-        if (message->messageType == EventMessages::EventMessageType::Conversation){
-            auto conv_message = dynamic_cast<EventMessages::ConversationMessage*>(message);
-            if (conv_message->waitTicket == ticket){
-                // Mark as done
-                conv_message->deleted = true;
-                break;
-            }
-        }
-    }
-}
-
-void EventManager::cancelTalk(){
-    for (EventMessages::EventMessage* message : m_EventQueue){
-        if (message->messageType == EventMessages::EventMessageType::Conversation){
-            auto conv_message = dynamic_cast<EventMessages::ConversationMessage*>(message);
-            if (conv_message->subType == EventMessages::ConversationMessage::ST_Output && conv_message->internInProgress){
-                // Mark as done
-                conv_message->deleted = true;
-                return;
-            }
-        }
-    }
 }
 
 void EventManager::clear()
 {
-    for(EventMessages::EventMessage* ev : m_EventQueue)
+    for(SharedEMessage ev : m_EventQueue)
     {
         ev->deleted = true;
     }
@@ -189,7 +149,7 @@ void EventManager::clear()
 
 bool EventManager::isEmpty()
 {
-    for(EventMessages::EventMessage* ev : m_EventQueue)
+    for(SharedEMessage ev : m_EventQueue)
     {
         if(!ev->deleted)
             return false;
