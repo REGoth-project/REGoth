@@ -103,10 +103,11 @@ PlayerController::PlayerController(World::WorldInstance& world,
 void PlayerController::onUpdate(float deltaTime)
 {
     m_RefuseTalkTime -= deltaTime;
-    // This vob should react to messages
-    getEM().processMessageQueue();
 
     m_AIStateMachine.doAIState(deltaTime);
+
+    // This vob should react to messages
+    getEM().processMessageQueue();
 
     ModelVisual* model = getModelVisual();
 
@@ -651,7 +652,7 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
     // FIXME: Actually read the flying-flag of the MDS
     if (feet == 0.0f)
     {
-        feet = 0.8f;
+        feet = 0.9762f; // FIXME: Boundingbox of the animation or something should be used instead
     }
 
     m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
