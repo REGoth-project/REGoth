@@ -62,6 +62,7 @@ void Container::onEndStateChange(Handle::EntityHandle npc, int from, int to)
         {
             n.playerController->giveItem(item.instance, item.count);
         }
+        m_Contents.clear();
     }
 
 }
