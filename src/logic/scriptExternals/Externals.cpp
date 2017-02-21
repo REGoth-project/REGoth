@@ -750,21 +750,32 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("wld_istime", [=](Daedalus::DaedalusVM& vm){
-
         int32_t min2 = vm.popDataValue();
         int32_t hour2 = vm.popDataValue();
         int32_t min1 = vm.popDataValue();
         int32_t hour1 = vm.popDataValue();
 
-        int32_t hour, min;
-        pWorld->getSky().getTimeOfDay(hour, min);
+        // script sometimes uses negative values
+        hour1 = (hour1 + 24) % 24;
+        hour2 = (hour2 + 24) % 24;
 
-        if (hour >= hour1 && hour <= hour2 &&
-            min >= min1 && min >= min2)
+        int32_t hour, min;
+        pWorld->getWorldInfo().getTimeOfDay(hour, min);
+        float timeOfDay = pWorld->getWorldInfo().getTimeOfDay();
+        float timeOfDay1 = pWorld->getWorldInfo().hmToDayTime(hour1, min1);
+        float timeOfDay2 = pWorld->getWorldInfo().hmToDayTime(hour2, min2);
+        bool inside;
+        if (timeOfDay1 < timeOfDay2)
         {
-            vm.setReturn(1);
+            // check if it is in interval
+            inside = (timeOfDay1 <= timeOfDay) && (timeOfDay <= timeOfDay2);
         } else
-            vm.setReturn(0);
+        {
+            // case interval contains midnight
+            // check if it is not in complementary interval
+            inside = ! ((timeOfDay2 <= timeOfDay) && (timeOfDay <= timeOfDay1));
+        }
+        vm.setReturn(inside);
     });
 
     vm->registerExternalFunction("ai_wait", [=](Daedalus::DaedalusVM& vm){
@@ -1097,6 +1108,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         int v = npc.playerController->getAIStateMachine().isInState(state) ? 1 : 0;
 
         vm.setReturn(v);
+    });
+
+    vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "wld_getday";
+        vm.setReturn(pWorld->getWorldInfo().getDay());
     });
 }
 

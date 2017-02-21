@@ -379,33 +379,55 @@ public:
             return "Hello World!";
         });
 
+        console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
+            // modifies the world time
+            if(args.size() < 3)
+                return "Missing argument. Usage: set day <day>";
 
-        console.registerCommand("timeset", [this](const std::vector<std::string>& args) -> std::string {
+            int day = std::stoi(args[2]);
+            m_pEngine->getMainWorld().get().getWorldInfo().setDay(day);
 
-            if(args.size() < 2)
-                return "Missing argument. Usage: timeset <time (0..1)>";
-
-            float t = std::stof(args[1]);
-            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(t);
-
-            return "Set time to " + std::to_string(t);
+            return "Set day to " + std::to_string(m_pEngine->getMainWorld().get().getWorldInfo().getDay());
         });
 
-        console.registerCommand("set time", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
+            // modifies the world time
             if(args.size() != 4)
-                return "Invalid arguments. Usage: set time [hh mm]";
+                return "Invalid arguments. Usage: set clock [hh mm]";
 
             const int hh = std::stoi(args[2]);
             const int mm = std::stoi(args[3]);
 
             if(hh < 0 || hh > 23)
-                return "Invalid argument. Hours must be in range from 00 to 23";
+                return "Invalid argument. Hours must be in range from 0 to 23";
             if(mm < 0 || mm > 59)
-                return "Invalid argument. Minutes must be in range from 00 to 59";
+                return "Invalid argument. Minutes must be in range from 0 to 59";
 
-            m_pEngine->getMainWorld().get().getSky().setTimeOfDay(hh, mm);
+            m_pEngine->getMainWorld().get().getWorldInfo().setTimeOfDay(hh, mm);
 
-            return "Set time to " + args[2] + ":" + args[3];
+            return "Set clock to " + m_pEngine->getMainWorld().get().getWorldInfo().getTimeOfDayFormatted();
+        });
+
+        console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
+            // adds an additional speed factor for the time of day
+            if(args.size() < 3)
+                return "Missing argument. Usage: set clockspeed <factor>";
+
+            float factor = std::stof(args[2]);
+            m_pEngine->getMainWorld().get().getWorldInfo().setClockSpeedFactor(factor);
+
+            return "Set clockspeed to " + std::to_string(factor);
+        });
+
+        console.registerCommand("set gamespeed", [this](const std::vector<std::string>& args) -> std::string {
+            // adds an additional speed factor for the game time
+            if(args.size() < 3)
+                return "Missing argument. Usage: set gamespeed <factor:default=1>";
+
+            float factor = std::stof(args[2]);
+            m_pEngine->setGameEngineSpeedFactor(factor);
+
+            return "Set gamespeed to " + std::to_string(factor);
         });
 
         console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
@@ -633,21 +655,11 @@ public:
             return "Experience points successfully given";
         });
 
-        console.registerCommand("goto npc", [this](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 3)
-                return "Missing argument(s). Usage: goto npc <name>";
-
+        std::function<std::string(std::string)> tpToNameLike = [this](std::string requested) -> std::string {
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            std::stringstream joinedArgs;
-            for (auto it = args.begin() + 2; it != args.end(); ++it)
-            {
-                joinedArgs << *it;
-            }
-
-            std::string requested = joinedArgs.str();
             auto matches = scriptEngine.findWorldNPCsNameLike(requested);
             for (auto& npc : matches)
             {
@@ -668,6 +680,30 @@ public:
                 return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
             }
             return "Could not find NPC " + requested;
+        };
+
+        console.registerCommand("tp", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument(s). Usage: tp <name>";
+
+            std::stringstream joinedArgs;
+            for (auto it = args.begin() + 1; it != args.end(); ++it)
+            {
+                joinedArgs << *it;
+            }
+            return tpToNameLike(joinedArgs.str());
+        });
+
+        console.registerCommand("goto npc", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 3)
+                return "Missing argument(s). Usage: goto npc <name>";
+
+            std::stringstream joinedArgs;
+            for (auto it = args.begin() + 2; it != args.end(); ++it)
+            {
+                joinedArgs << *it;
+            }
+            return tpToNameLike(joinedArgs.str());
         });
 
         console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {

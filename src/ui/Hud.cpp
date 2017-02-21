@@ -131,7 +131,7 @@ void UI::Hud::setEnemyHealth(float value)
     m_pEnemyHealthBar->setValue(value);
 }
 
-void UI::Hud::setTimeOfDay(const std::string& timeStr)
+void UI::Hud::setDateTimeDisplay(const std::string &timeStr)
 {
     m_pClock->setText(timeStr);
 }

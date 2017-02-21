@@ -20,6 +20,7 @@ const float DRAW_DISTANCE = 100.0f;
 GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 {
     m_disableLogic = false;
+    m_GameEngineSpeedFactor = 1.0;
 }
 
 GameEngine::~GameEngine()
