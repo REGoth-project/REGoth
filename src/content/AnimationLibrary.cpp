@@ -163,6 +163,8 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 anim->m_Flags = p.ani().m_Flags;
                 anim->m_FirstFrame = p.ani().m_FirstFrame;
                 anim->m_LastFrame = p.ani().m_FirstFrame;
+                anim->m_Dir = p.ani().m_Dir;
+                anim->m_Next = m_World.getAnimationAllocator().getAnimation(name + "-" + p.ani().m_Next);
 
                 anim->m_Data = loadMAN(qname);
                 if (!anim->m_Data.isValid())
