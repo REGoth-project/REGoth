@@ -193,7 +193,7 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_VisualAttachments.empty())
     {
         // Need to get the bind-pose out
-        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh
+        if(zLib.getNodes().empty() && !getAnimationHandler().getActiveAnimationPtr()) // No nodes here mean, that this is only a mesh
             getAnimationHandler().setBindPose(true);
 
         for (size_t i = 0; i < zLib.getAttachments().size(); i++)
