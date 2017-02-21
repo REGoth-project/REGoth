@@ -19,6 +19,7 @@ AnimHandler::AnimHandler()
     m_LastProcessedFrame = static_cast<size_t>(-1);
     m_AnimationStateHash = 0;
     m_pWorld = nullptr;
+    m_AnimationFrame = 0.0f;
 }
 
 /**
@@ -123,7 +124,13 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
 
     // find and apply given animation name
     m_ActiveAnimation = anim;
-    m_AnimationFrame = 0.0f;
+
+    Animations::Animation *animPtr = getActiveAnimationPtr();
+    if(!animPtr || !animPtr->m_Data.isValid())
+        return;
+
+    // If reversed, we need to start at the last frame
+    m_AnimationFrame = 0;//static_cast<float>(animPtr->m_FirstFrame);
     m_LoopActiveAnimation = false;
     m_LastProcessedFrame = (size_t)-1;
 
@@ -158,6 +165,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         return;
 
     // Increase current timeline-position
+    bool reversed = anim->m_Dir != EModelScriptAniDir::MSB_FORWARD;
     float framesPerSecond = anim->m_FpsRate * m_SpeedMultiplier;
     float numFrames = anim->m_FrameCount;
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
@@ -166,18 +174,20 @@ void AnimHandler::updateAnimations(double deltaTime)
     {
         // If there is a next animation, play this now
         Handle::AnimationHandle next = anim->m_Next;
+
         if(next.isValid())
         {
-            //if(next != "S_RUN" && next != "S_RUNL")
-            //    LogInfo() << "Setting next Ani: " << next;
+            if(anim->m_NextName != "S_RUN" && anim->m_NextName  != "S_RUNL")
+                LogInfo() << "Setting next Ani: " << anim->m_NextName;
 
-            bool oldLoop = m_LoopActiveAnimation;
             playAnimation(next);
-
-            // Make sure we loop that one if we wanted to loop the starting animation
-            m_LoopActiveAnimation = oldLoop;
-
             return;
+        }else
+        {
+            // Try to play it by name
+            playAnimation(anim->m_NextName);
+            return;
+
         }
 
         if(m_LoopActiveAnimation)
@@ -189,22 +199,29 @@ void AnimHandler::updateAnimations(double deltaTime)
         }
     }
 
-    size_t frameNum = static_cast<size_t>(m_AnimationFrame);
-
     // Check if this changed something on our animation
     //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
     //    return; // Nothing to do here // TODO: Do this distance-based!
 
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
+    // Figure out frame number
+    size_t frameNum = reversed ? static_cast<size_t>(numFrames - m_AnimationFrame) - 1
+                               : static_cast<size_t>(m_AnimationFrame);
+
     // frameNum contains the current frame, find out what the next frame will be and how far we're in there already
-    size_t frameNext = (frameNum + 1) % Math::trunc(numFrames); // FIXME: What happens on non-looped animation on the last frame?
+
+    // FIXME: What happens on non-looped animation on the last frame?
+    size_t frameNext = reversed ? (frameNum - 1) % Math::trunc(numFrames)
+                                : (frameNum + 1) % Math::trunc(numFrames);
+
+
     float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
 
     const Animations::AnimationData &anim_data = m_pWorld->getAnimationLibrary().getAnimationData(anim->m_Data);
     for (size_t i = 0; i < anim_data.m_NodeIndexList.size(); i++)
     {
-        size_t frameNum = static_cast<size_t>(m_AnimationFrame);
+
         size_t numAnimationNodes = anim_data.m_NodeIndexList.size();
         uint32_t nodeIdx = anim_data.m_NodeIndexList[i];
 
@@ -221,7 +238,7 @@ void AnimHandler::updateAnimations(double deltaTime)
                                                          Math::float3(sampleNext.position.v),
                                                          frameFract);
 
-        if(nodeIdx == 0 && frameNext > frameNum ) // Last frame resets the animation back, we don't want any hickups here
+        if(nodeIdx == 0 && (reversed ? frameNext < frameNum : frameNext > frameNum) ) // Last frame resets the animation back, we don't want any hickups here
             m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
 
 
