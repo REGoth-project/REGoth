@@ -35,8 +35,6 @@ WorldInstance::WorldInstance()
       m_BspTree(*this),
       m_PfxManager(*this)
 {
-    // Both games start at 8:00 in the morning
-    m_WorldInfo.setTimeOfDay(8, 00);
 }
 
 WorldInstance::~WorldInstance()
@@ -480,7 +478,6 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 {
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
-    m_WorldInfo.update(deltaTime);
 
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
@@ -554,7 +551,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setDateTimeDisplay(m_WorldInfo.getDateTimeFormatted());
+    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }
@@ -627,7 +624,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
             Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < m_WorldInfo.getTime())
+            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime())
                && (!inst.isValid() || sp.m_UsingEntity != inst))
             {
 

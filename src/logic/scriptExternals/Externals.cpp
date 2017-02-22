@@ -759,11 +759,12 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         hour1 = (hour1 + 24) % 24;
         hour2 = (hour2 + 24) % 24;
 
+        auto& clock = pWorld->getEngine()->getGameClock();
         int32_t hour, min;
-        pWorld->getWorldInfo().getTimeOfDay(hour, min);
-        float timeOfDay = pWorld->getWorldInfo().getTimeOfDay();
-        float timeOfDay1 = pWorld->getWorldInfo().hmToDayTime(hour1, min1);
-        float timeOfDay2 = pWorld->getWorldInfo().hmToDayTime(hour2, min2);
+        clock.getTimeOfDay(hour, min);
+        float timeOfDay = clock.getTimeOfDay();
+        float timeOfDay1 = clock.hmToDayTime(hour1, min1);
+        float timeOfDay2 = clock.hmToDayTime(hour2, min2);
         bool inside;
         if (timeOfDay1 < timeOfDay2)
         {
@@ -1112,7 +1113,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "wld_getday";
-        vm.setReturn(pWorld->getWorldInfo().getDay());
+        vm.setReturn(pWorld->getEngine()->getGameClock().getDay());
     });
 }
 

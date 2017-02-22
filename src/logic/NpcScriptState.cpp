@@ -4,6 +4,7 @@
 #include <components/VobClasses.h>
 #include "PlayerController.h"
 #include <logic/visuals/ModelVisual.h>
+#include <engine/BaseEngine.h>
 
 using namespace Logic;
 
@@ -175,7 +176,7 @@ bool NpcScriptState::doAIState(float deltaTime)
     if(m_Routine.hasRoutine && isInRoutine())
     {
         int h, m;
-        m_World.getWorldInfo().getTimeOfDay(h, m);
+        m_World.getEngine()->getGameClock().getTimeOfDay(h, m);
 
         if(!m_Routine.routine[m_Routine.routineActiveIdx].timeInRange(h, m))
         {

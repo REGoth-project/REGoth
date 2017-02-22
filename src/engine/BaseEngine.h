@@ -4,6 +4,7 @@
 #include <vdfs/fileIndex.h>
 #include <ui/View.h>
 #include <bx/commandline.h>
+#include "GameClock.h"
 
 namespace UI
 {
@@ -83,6 +84,12 @@ namespace Engine
 		 * @return Data of the world-instance
 		 */
 		World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
+
+        /**
+         *
+         * @return gameclock
+         */
+        GameClock& getGameClock() { return m_GameClock; }
 
         /**
          * @return Arguments passed to the engine
@@ -198,6 +205,11 @@ namespace Engine
 		 * Registered worlds
 		 */
 		std::vector<Handle::WorldHandle> m_Worlds;
+
+		/**
+		 * ingame clock
+		 */
+        GameClock m_GameClock;
 
         /**
          * Arguments

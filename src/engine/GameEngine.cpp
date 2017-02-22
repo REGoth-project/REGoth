@@ -78,6 +78,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
     } else
     {
+        getGameClock().update(dt);
         for (auto& s : m_WorldInstances)
         {
             // Update main-world after every other world, since the camera is in there

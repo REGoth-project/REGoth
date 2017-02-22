@@ -81,10 +81,8 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
 void Sky::interpolate()
 {
     // time since 12:00 in days
-    float skyTime = std::fmod(m_World.getWorldInfo().getTimeOfDay() + 0.5f, 1.0f);
-
-    if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('d'))
-        m_MasterState.time = skyTime;
+    float skyTime = std::fmod(m_World.getEngine()->getGameClock().getTimeOfDay() + 0.5f, 1.0f);
+    m_MasterState.time = skyTime;
 
     // init with values for case: time >= TIME_KEY_7 (= 0.75f)
     size_t si0 = ESPT_NUM_PRESETS - 1, si1 = 0;
