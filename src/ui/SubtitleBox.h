@@ -5,6 +5,12 @@
 
 namespace UI
 {
+    enum SubtitleAlign
+    {
+        center,
+        left
+    };
+
     class SubtitleBox : public View
     {
     public:

@@ -71,17 +71,32 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     {
         // split so that each line is not longer than wrapAroundWidth pixel
         std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
-        lines.insert(lines.begin(), m_Text.speaker);
         const char * speakerFont = DEFAULT_FONT_HI;
         const char * dialogTextFont = DEFAULT_FONT;
-
-        for (unsigned i = 0; i < lines.size(); ++i)
+        // TODO read alignment from config
+        SubtitleAlign alignment = center;
+        switch (alignment)
         {
-            const char* font = i == 0 ? speakerFont : dialogTextFont;
-            unsigned before = i;
-            unsigned long after = lines.size() - i - 1;
-            std::string line = std::string(before, '\n') + lines[i] + std::string(after, '\n');
-            drawText(line, px + (sx / 2), py + (sy / 2), A_Center, config, font);
+            case center:
+                lines.insert(lines.begin(), m_Text.speaker);
+                for (unsigned i = 0; i < lines.size(); ++i)
+                {
+                    const char* font = i == 0 ? speakerFont : dialogTextFont;
+                    unsigned before = i;
+                    unsigned long after = lines.size() - i - 1;
+                    std::string line = std::string(before, '\n') + lines[i] + std::string(after, '\n');
+                    drawText(line, px + (sx / 2), py + (sy / 2), A_Center, config, font);
+                }
+                break;
+            case left:
+                std::stringstream ss;
+                for (const auto& line : lines)
+                {
+                    ss << '\n' << line;
+                }
+                drawText(m_Text.speaker + std::string(lines.size(), '\n'), px + (sx / 2), py + (sy / 2), A_Center, config, speakerFont);
+                drawText(ss.str(), px + (sx / 2), py + (sy / 2), A_Center, config, dialogTextFont);
+                break;
         }
     }
 }
