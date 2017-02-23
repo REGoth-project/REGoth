@@ -79,6 +79,7 @@ bool SavegameManager::writeSavegameInfo(int idx, const SavegameInfo& info)
     ensureSavegameFolders(idx);
 
     json j;
+    j["version"] = info.LATEST_KNOWN_VERSION;
     j["name"] = info.name;
     j["world"] = info.world;
     j["timePlayed"] = info.timePlayed;
@@ -112,7 +113,14 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
     std::string infoContents = Utils::readFileContents(info);
     json j = json::parse(infoContents); 
 
+    unsigned int version = 0;
+    // check can be removed if backwards compability with save games without version number is not needed anymore
+    if (j.find("version") != j.end())
+    {
+        version = j["version"];
+    }
     SavegameInfo o;
+    o.version = version;
     o.name = j["name"];
     o.world = j["world"];
     o.timePlayed = j["timePlayed"];

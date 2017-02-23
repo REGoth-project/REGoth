@@ -81,6 +81,7 @@ void Menu_Save::onCustomAction(const std::string& action)
 
 	    // Write information about the current game-state
 	    Engine::SavegameManager::SavegameInfo info;
+		info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
 	    info.name = m_SaveName;
 	    info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
 	    info.timePlayed = m_Engine.getGameClock().getTotalSeconds();

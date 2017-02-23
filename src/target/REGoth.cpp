@@ -585,6 +585,7 @@ public:
 
             // Write information about the current game-state
             Engine::SavegameManager::SavegameInfo info;
+            info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
             info.name = "Testsave";
             info.world = Utils::stripExtension(m_pEngine->getMainWorld().get().getZenFile());
             info.timePlayed = m_pEngine->getGameClock().getTotalSeconds();
