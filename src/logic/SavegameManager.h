@@ -41,9 +41,10 @@ namespace Engine
 
         struct SavegameInfo
         {
+            std::size_t version;
             std::string name; // Name to be displayed in the menus
             std::string world; // World the player is currently in. (Name only, no ".zen" or other extensions)
-            size_t timePlayed; // Time played in seconds
+            std::size_t timePlayed; // Time played in seconds
         };
 
         /**

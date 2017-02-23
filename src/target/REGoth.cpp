@@ -587,7 +587,7 @@ public:
             Engine::SavegameManager::SavegameInfo info;
             info.name = "Testsave";
             info.world = Utils::stripExtension(m_pEngine->getMainWorld().get().getZenFile());
-            info.timePlayed = 0;
+            info.timePlayed = m_pEngine->getGameClock().getTotalSeconds();
             Engine::SavegameManager::writeSavegameInfo(idx, info);
 
             json j;

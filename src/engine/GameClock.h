@@ -53,6 +53,18 @@ namespace Engine
         void setTimeOfDay(int hours, int minutes, bool onlyForward=false);
 
         /**
+         * sets the total time directly
+         * @param t time in seconds
+         */
+        void setTotalSeconds(std::size_t t);
+
+        /**
+         * gets the total time
+         * @return time in seconds
+         */
+        std::size_t getTotalSeconds();
+
+        /**
          * sets the extra speed factor for test purposes
          */
         void setClockSpeedFactor(float factor);
@@ -87,6 +99,8 @@ namespace Engine
          * @return converts timeOfDay in days (float) to hours/minutes
          */
         static void dayTimeTohm(float timeOfDay, int& hours, int& minutes);
+
+        static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
     private:
         // Last deltatime-value we have gotten here

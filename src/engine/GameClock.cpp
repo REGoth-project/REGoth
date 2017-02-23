@@ -25,7 +25,7 @@ void GameClock::setDay(int newDay) {
 
 void GameClock::update(float deltaRealTimeSeconds)
 {
-    timeOfDay += totalSpeedUp() * deltaRealTimeSeconds / (60 * 60 * 24);
+    timeOfDay += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
     if (timeOfDay >= 1.0f)
     {
         float overFlowTimeOfDay = timeOfDay;
@@ -58,6 +58,18 @@ void GameClock::setTimeOfDay(int hours, int minutes, bool onlyForward)
         day++;
     }
     timeOfDay = newTimeOfDay;
+}
+
+void GameClock::setTotalSeconds(std::size_t s)
+{
+    float inDays = s / static_cast<float>(SECONDS_IN_A_DAY);
+    day = static_cast<int>(inDays);
+    timeOfDay = inDays - day;
+}
+
+std::size_t GameClock::getTotalSeconds()
+{
+    return static_cast<std::size_t>((day + timeOfDay) * SECONDS_IN_A_DAY);
 }
 
 void GameClock::setClockSpeedFactor(float factor){

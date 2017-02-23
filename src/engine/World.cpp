@@ -478,6 +478,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 {
     // Set frametime in worldinfo
     m_WorldInfo.lastFrameDeltaTime = deltaTime;
+    m_pEngine->getGameClock().update(deltaTime);
 
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();

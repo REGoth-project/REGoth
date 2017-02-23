@@ -89,6 +89,7 @@ void Menu_Load::onCustomAction(const std::string& action)
         }
 
         m_Engine.loadWorld(info.world + ".zen", worldPath);
+        m_Engine.getGameClock().setTotalSeconds(info.timePlayed);
 
         // Close menu after loading the world
         getHud().popMenu();

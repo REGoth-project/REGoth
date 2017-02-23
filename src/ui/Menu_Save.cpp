@@ -83,7 +83,7 @@ void Menu_Save::onCustomAction(const std::string& action)
 	    Engine::SavegameManager::SavegameInfo info;
 	    info.name = m_SaveName;
 	    info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
-	    info.timePlayed = 0;
+	    info.timePlayed = m_Engine.getGameClock().getTotalSeconds();
 	    Engine::SavegameManager::writeSavegameInfo(idx, info);
 
 	    json j; m_Engine.getMainWorld().get().exportWorld(j);
