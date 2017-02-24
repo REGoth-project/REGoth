@@ -74,10 +74,10 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
         const char * speakerFont = DEFAULT_FONT_HI;
         const char * dialogTextFont = DEFAULT_FONT;
         // TODO read alignment from config
-        SubtitleAlign alignment = center;
+        SubtitleAlignments::Alignment alignment = SubtitleAlignments::center;
         switch (alignment)
         {
-            case center:
+            case SubtitleAlignments::center:
                 lines.insert(lines.begin(), m_Text.speaker);
                 for (unsigned i = 0; i < lines.size(); ++i)
                 {
@@ -88,7 +88,7 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
                     drawText(line, px + (sx / 2), py + (sy / 2), A_Center, config, font);
                 }
                 break;
-            case left:
+            case SubtitleAlignments::left:
                 std::stringstream ss;
                 for (const auto& line : lines)
                 {
