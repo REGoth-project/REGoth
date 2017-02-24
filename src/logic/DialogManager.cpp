@@ -87,15 +87,12 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
             // Specific fix for Kyle: don't show important again if it was already shown in the current dialog
             continue;
         }
-        // If not permanent, don't show this twice
-        if(!info.permanent)
+        bool npcKnowsInfo = m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(m_Interaction.player).instanceSymbol,
+                                                                    getGameState().getInfo(infoHandle).instanceSymbol);
+        // no need check for permanent. npc never knows permanent info
+        if(npcKnowsInfo)
         {
-            if(m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(m_Interaction.player).instanceSymbol,
-                                                    getGameState().getInfo(infoHandle).instanceSymbol))
-            {
-                // Already seen that, skip
-                continue;
-            }
+            continue;
         }
 
         // Test if we should be able to see this info
@@ -272,7 +269,13 @@ void DialogManager::performChoice(size_t choice)
 
     // We now know this information. Do this before actually triggering the dialog, since then we can update the
     // choices right away. This is important because scripts may overwrite these again!
-    m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
+    if (!info.permanent)
+    {
+        // Never set NpcInfoKnown if the info is permanent.
+        // This also makes npc_knowsinfo return false for permanent infos (requested by the docu (externals.d))
+        // Actually affects mordrag (escort to new camp only available after "You have a problem")
+        m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
+    }
 
     if(m_Interaction.choices.empty() && m_ProcessInfos)
     {
