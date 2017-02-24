@@ -33,7 +33,8 @@ WorldInstance::WorldInstance()
       m_DialogManager(*this),
       m_PrintScreenMessageView(nullptr),
       m_BspTree(*this),
-      m_PfxManager(*this)
+      m_PfxManager(*this),
+      m_AudioWorld(nullptr)
 {
     // Both games start at 8:00 in the morning
     m_WorldInfo.setTimeOfDay(8, 00);
@@ -352,13 +353,19 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 			Waynet::addWaypoint(m_Waynet, startWP);
 		}
 
+        LogInfo() << "Creating AudioWorld";
+        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
+        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+
         LogInfo() << "Running startup-scripts";
 
         // Init script-engine
         if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty()))
         {
-           LogInfo() << "Failed to initialize script engine for zen world";
-           return false;
+            LogInfo() << "Failed to initialize script engine for zen world";
+            delete m_AudioWorld;
+            m_AudioWorld = nullptr;
+            return false;
         }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
@@ -392,8 +399,6 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
 
     // Initialize the sky, so it will get the right values
     m_Sky.fillSkyStates();
-
-    m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
