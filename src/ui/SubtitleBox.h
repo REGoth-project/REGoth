@@ -11,6 +11,12 @@ namespace UI
         SubtitleBox(Engine::BaseEngine& e);
         ~SubtitleBox();
 
+        enum class TextAlignment
+        {
+            center,
+            left
+        };
+
         /**
          * Updates/draws the UI-Views
          * @param dt time since last frame
