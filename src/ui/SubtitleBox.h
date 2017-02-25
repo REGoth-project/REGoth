@@ -5,20 +5,17 @@
 
 namespace UI
 {
-    namespace SubtitleAlignments
-    {
-        enum Alignment
-        {
-            center,
-            left
-        };
-    }
-
     class SubtitleBox : public View
     {
     public:
         SubtitleBox(Engine::BaseEngine& e);
         ~SubtitleBox();
+
+        enum class TextAlignment
+        {
+            center,
+            left
+        };
 
         /**
          * Updates/draws the UI-Views
