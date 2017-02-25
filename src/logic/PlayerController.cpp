@@ -380,7 +380,7 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
 
     EModelNode node = EModelNode::None;
 
-    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) != Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE)
+    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
         return; // Can't equip
 
     // TODO: Don't forget if an item is already unequipped before executing stat changing script-code!
@@ -457,7 +457,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
     ModelVisual* model = getModelVisual();
 
-    if((itemData.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) != Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE)
+    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
         return; // Can't equip
 
     EModelNode node = EModelNode::None;

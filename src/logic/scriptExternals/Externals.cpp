@@ -1114,6 +1114,20 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if(verbose) LogInfo() << "wld_getday";
         vm.setReturn(pWorld->getWorldInfo().getDay());
     });
+
+    vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "npc_hasequippedmeleeweapon";
+	int32_t self = vm.popVar();
+
+	VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+	if (!npc.isValid()) {
+	    vm.setReturn(0);
+	    return;
+	}
+
+        vm.setReturn(npc.playerController->hasEquippedMeleeWeapon());
+    });
 }
 
 
