@@ -1551,23 +1551,34 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
                 m_World.getDialogManager().setCurrentMessage(sharedMessage);
-                //m_World.getDialogManager().setCurrentTalker(this->m_Entity);
-
             } else
             {
+                bool done;
             #ifdef RE_USE_SOUND
+                if (message.canceled)
+                {
+                    m_World.getAudioWorld().stopSound(message.soundTicket);
+                }
                 // toggle this bool to switch auto skip when sound ended
                 const bool autoPlay = true;
                 if (autoPlay)
                 {
-                    return !m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    done = !isPlaying;
                 } else
                 {
-                    return false;
+                    done = message.canceled;
                 }
             #else
-                return false;
+                // when sound is disabled, message must be skipped manually
+                done = message.canceled;
             #endif
+                if (done)
+                {
+                    m_World.getDialogManager().stopDisplaySubtitle();
+                    getModelVisual()->stopAnimations();
+                }
+                return done;
             }
         }
             break;
@@ -1578,7 +1589,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
         case EventMessages::ConversationMessage::ST_Cutscene:
             break;
         case EventMessages::ConversationMessage::ST_WaitTillEnd:
-            break;
+            return message.canceled;
         case EventMessages::ConversationMessage::ST_Ask:
             break;
         case EventMessages::ConversationMessage::ST_WaitForQuestion:

@@ -132,10 +132,10 @@ void EventManager::waitForMessage(SharedEMessage other)
     wait.waitIdentifier = other;
 
     // Let the EM wait for this talking-action to complete
-    SharedEMessage queuedWait = onMessage(wait);
+    std::shared_ptr<EventMessages::ConversationMessage> queuedWait = onMessage(wait);
 
     other->onMessageDone.push_back(std::make_pair(m_HostVob, [=](Handle::EntityHandle hostVob, SharedEMessage hostMessage) {
-        queuedWait->deleted = true;
+        queuedWait->canceled = true;
     }));
 }
 
