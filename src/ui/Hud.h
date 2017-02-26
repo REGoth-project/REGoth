@@ -99,6 +99,11 @@ namespace UI
          * Pops the last menu from the chain and frees its memory.
          */
         void popMenu();
+
+        /**
+         * Pops all menus from the chain and frees its memory.
+         */
+        void popAllMenus();
         
         template <typename T>
         bool isTopMenu()

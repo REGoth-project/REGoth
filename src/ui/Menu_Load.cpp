@@ -92,9 +92,6 @@ void Menu_Load::onCustomAction(const std::string& action)
         m_Engine.getGameClock().setTotalSeconds(info.timePlayed);
 
         // Close menu_load & menu_main after loading the world
-        while (getHud().isMenuActive())
-        {
-            getHud().popMenu();
-        }
+        getHud().popAllMenus();
     }
 }

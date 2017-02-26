@@ -89,8 +89,7 @@ UI::Hud::~Hud()
     removeChild(m_pClock);
     removeChild(m_pDialogBox);
 
-    while(!m_MenuChain.empty())
-        popMenu();
+    popAllMenus();
 
     delete m_pManaBar;
     delete m_pHealthBar;
@@ -214,6 +213,11 @@ void UI::Hud::cleanMenus()
         delete m;
 
     m_MenusToDelete.clear();
+}
+
+void UI::Hud::popAllMenus() {
+    while(!m_MenuChain.empty())
+        popMenu();
 }
 
 
