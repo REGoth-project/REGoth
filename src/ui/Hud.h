@@ -2,6 +2,7 @@
 #include "Console.h"
 #include "Menu.h"
 #include "View.h"
+#include <engine/BaseEngine.h>
 
 // HACK: Work around windows.h messing this up with its define
 #ifdef DialogBox
@@ -161,6 +162,10 @@ namespace UI
             return *static_cast<T*>(m_MenuChain.back());
         }
 
+        if (m_MenuChain.empty())
+        {
+            m_Engine.setPaused(true);
+        }
         T *menu = T::create(m_Engine);
         m_MenuChain.push_back(menu);
         addChild(m_MenuChain.back());

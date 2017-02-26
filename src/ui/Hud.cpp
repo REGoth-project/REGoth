@@ -197,11 +197,15 @@ void UI::Hud::setGameplayHudVisible(bool value)
 
 void UI::Hud::popMenu()
 {
-    // Move to other list to delete in the next frame. This makes it possible for menus to close themselfes.
+    // Move to other list to delete in the next frame. This makes it possible for menus to close themselves.
     m_MenusToDelete.push_back(m_MenuChain.back());
 
     removeChild(m_MenuChain.back());
     m_MenuChain.pop_back();
+    if (m_MenuChain.empty())
+    {
+        m_Engine.setPaused(false);
+    }
 }
 
 void UI::Hud::cleanMenus()

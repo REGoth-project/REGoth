@@ -70,15 +70,9 @@ namespace Engine
          */
         Handle::EntityHandle m_MainCamera;
 
-
         /**
          * Default rendering system
          */
         Render::RenderSystem m_DefaultRenderSystem;
-
-        /**
-         * Debug only
-         */
-        bool m_disableLogic;
     };
 }

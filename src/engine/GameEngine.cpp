@@ -56,15 +56,7 @@ void GameEngine::initEngine(int argc, char** argv)
     Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
     {
         if(triggered > 0.0f && !m_MainWorld.get().getEngine()->getHud().isMenuActive()){
-            m_disableLogic = !m_disableLogic;
-            if (m_disableLogic)
-            {
-                m_MainWorld.get().getAudioWorld().pauseSounds();
-            }
-            else
-            {
-                m_MainWorld.get().getAudioWorld().continueSounds();
-            }
+            setPaused(!m_disableLogic);
         }
     });
 }

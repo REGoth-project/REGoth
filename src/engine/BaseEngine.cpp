@@ -278,3 +278,18 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 
     return true;
 }
+
+void BaseEngine::setPaused(bool paused) {
+    if (paused != m_disableLogic)
+    {
+        // status changed
+        if (paused)
+        {
+            m_MainWorld.get().getAudioWorld().pauseSounds();
+        } else
+        {
+            m_MainWorld.get().getAudioWorld().continueSounds();
+        }
+        m_disableLogic = paused;
+    }
+}

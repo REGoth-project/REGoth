@@ -167,6 +167,13 @@ namespace Engine
 		{
 			return m_GameEngineSpeedFactor;
 		}
+
+		/**
+		 * Pauses or continues the game.
+		 * @param paused
+		 */
+		void setPaused(bool paused);
+
 	protected:
 
 		/**
@@ -239,5 +246,10 @@ namespace Engine
          * Global speed factor. affects all instances (world (ergo animations), ingame clock (ergo sky))
          */
 		float m_GameEngineSpeedFactor;
+
+		/**
+         * Debug only
+         */
+		bool m_disableLogic;
 	};
 }
