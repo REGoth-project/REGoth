@@ -61,12 +61,12 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
     Math::float2 absTranslation = getAbsoluteTranslation();
     Math::float2 absSize = getAbsoluteSize();
 
-    int sx = (int) (absSize.x * config.state.viewWidth + 0.5f); // Span whole viewport
+    int sx = Math::iround(absSize.x * config.state.viewWidth); // Span whole viewport
     int sy = fnt->getFontHeight() * std::max(8, (int)m_Choices.size()); // Scale with number of choices
 
 
-    int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
-    int py = (int) (config.state.viewHeight - sy);
+    int px = Math::iround(absTranslation.x * config.state.viewWidth);
+    int py = config.state.viewHeight - sy;
 
     // Draw background image
     {
@@ -83,8 +83,8 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
     // Draw text
     {
         float margin = 0.01f;
-        int pMarginx = (int)(absSize.x * margin * config.state.viewWidth + 0.5f);
-        int pMarginy = (int)(absSize.x * margin * config.state.viewHeight + 0.5f);
+        int pMarginx = Math::iround(absSize.x * margin * config.state.viewWidth);
+        int pMarginy = Math::iround(absSize.x * margin * config.state.viewHeight);
         for(unsigned i=0;i<m_Choices.size();i++)
         {
             drawText(m_Choices[i].text,

@@ -22,6 +22,7 @@
 #include <json.hpp>
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
+#include <ui/SubtitleBox.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -1538,11 +1539,14 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
         case ConversationMessage::ST_Output:
         {
+            auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (message.status == ConversationMessage::Status::INIT)
             {
                 message.status = ConversationMessage::Status::PLAYING;
                 m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+                subtitleBox.setScaling(0.0);
+                subtitleBox.setGrowDirection(+1.0);
 
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
@@ -1552,36 +1556,50 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
                 m_World.getDialogManager().setCurrentMessage(sharedMessage);
-                break;
+                return false;
             }
 
-            bool done;
-        #ifdef RE_USE_SOUND
-            if (message.canceled)
+            if (message.status == ConversationMessage::Status::PLAYING)
             {
-                m_World.getAudioWorld().stopSound(message.soundTicket);
-            }
-            // toggle this bool to switch auto skip when sound ended
-            const bool autoPlay = true;
-            if (autoPlay)
-            {
-                bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
-                done = !isPlaying;
-            } else
-            {
-                done = message.canceled;
-            }
-        #else
-            // when sound is disabled, message must be skipped manually
-            done = message.canceled;
-        #endif
-            if (done)
-            {
-                m_World.getDialogManager().stopDisplaySubtitle();
-                getModelVisual()->stopAnimations();
-            }
-            return done;
 
+                bool nextStage;
+            #ifdef RE_USE_SOUND
+                if (message.canceled)
+                {
+                    m_World.getAudioWorld().stopSound(message.soundTicket);
+                }
+                // toggle this bool to switch auto skip when sound ended
+                // TODO: read from config maybe
+                const bool autoPlay = true;
+                if (autoPlay)
+                {
+                    bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    nextStage = !isPlaying;
+                } else
+                {
+                    nextStage = message.canceled;
+                }
+            #else
+                // when sound is disabled, message must be skipped manually
+                nextStage = message.canceled;
+            #endif
+                if (nextStage)
+                {
+                    message.status = ConversationMessage::Status::FADING_OUT;
+                    subtitleBox.setGrowDirection(-1.0);
+                }
+            }
+
+            if (message.status == ConversationMessage::Status::FADING_OUT)
+            {
+                if (subtitleBox.getScaling() == 0.0f)
+                {
+                    m_World.getDialogManager().stopDisplaySubtitle();
+                    getModelVisual()->stopAnimations();
+                    return true;
+                }
+            }
+            return false;
         }
             break;
 

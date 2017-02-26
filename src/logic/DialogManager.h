@@ -161,6 +161,11 @@ namespace Logic
          */
         void performChoice(size_t choice);
 
+        /**
+         * @return the subtitle box
+         */
+        UI::SubtitleBox& getSubtitleBox() { return *m_ActiveSubtitleBox; }
+
     protected:
 
         /**

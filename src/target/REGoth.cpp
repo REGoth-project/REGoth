@@ -948,7 +948,11 @@ public:
 
 
         if(!m_NoHUD)
-            m_pEngine->getRootUIView().update(dt, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+        {
+            // TODO move this code into frameupdate? so gamespeed factor doesn't need to be applied here
+            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
+            m_pEngine->getRootUIView().update(dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+        }
 
 
 

@@ -29,6 +29,12 @@ namespace UI
          */
         void setText(const std::string& speaker, const std::string& text);
 
+        void setGrowDirection(float direction) { m_growDirection = direction; }
+
+        void setScaling(float scaling) { m_Scaling = scaling; }
+
+        float getScaling() { return m_Scaling; }
+
     protected:
 
         struct Text
@@ -50,8 +56,23 @@ namespace UI
         int32_t m_ScrollArea;
 
         /**
+         * Current scaling
+         */
+        float m_Scaling;
+
+        /**
+         * Current grow direction
+         */
+        float m_growDirection;
+
+        /**
          * Dark background behind the subtitles
          */
         Handle::TextureHandle m_BackgroundTexture;
+
+        /**
+         * Time it takes to grow from min scaling to max scaling in seconds
+         */
+        static constexpr float GROW_SHRINK_TIME = 0.4f;
     };
 }
