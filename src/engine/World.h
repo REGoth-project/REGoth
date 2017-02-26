@@ -89,11 +89,11 @@ namespace World
         {
             WorldInfo()
             {
-                lastFrameDeltaTime = 0.0;
+                m_LastFrameDeltaTime = 0.0;
             }
 
             // Last deltatime-value we have gotten here
-            double lastFrameDeltaTime;
+            double m_LastFrameDeltaTime;
 		};
 
 		WorldInstance();

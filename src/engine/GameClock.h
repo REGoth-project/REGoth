@@ -102,22 +102,17 @@ namespace Engine
 
         static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
-    private:
-        // Last deltatime-value we have gotten here
-        double lastFrameDeltaTime;
+        // Defines how much faster the ingame clock runs compared to the real time clock. Don't change this value
+        static constexpr float GAMETIME_REALTIME_RATIO = 14.5;
 
+    private:
         // Time elapsed in the game since last 00:00 in days (interval [0,1[)
-        // TODO export/import this value in json for savegames
-        float timeOfDay;
+        float m_TimeOfDay;
 
         // Number of full days elapsed in the game since "start new gothic game"
-        // TODO export/import this value in json for savegames
-        int day;
+        int m_Day;
 
-        // Defines how much faster the ingame clock runs compared to the real time clock
-        float gameTimeRealTimeRatio = 14.5;
-
-        // define an extra speedup for the ingame clock for test purposes
-        float clockSpeedFactor = 1.0;
+        // define an extra speedup for the ingame clock
+        float m_ClockSpeedFactor;
     };
 }

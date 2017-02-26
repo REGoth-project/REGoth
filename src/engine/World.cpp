@@ -424,6 +424,15 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
     }
 
+    // reset gamespeed to default when new world is loaded
+    m_pEngine->setGameEngineSpeedFactor(1.0);
+
+    auto& clock = m_pEngine->getGameClock();
+    // reset clockspeed to default on world init
+    clock.setClockSpeedFactor(1.0);
+    // for test purpose make the clock run 7 times faster than usual gameplay
+    clock.setClockSpeedFactor(7.0);
+
     LogInfo() << "Done loading world!";
     return true;
 }
@@ -477,7 +486,7 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
     // Set frametime in worldinfo
-    m_WorldInfo.lastFrameDeltaTime = deltaTime;
+    m_WorldInfo.m_LastFrameDeltaTime = deltaTime;
     m_pEngine->getGameClock().update(deltaTime);
 
     // Tell script engine the frame started
