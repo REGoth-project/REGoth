@@ -158,9 +158,11 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     {
         if(!m_pDialogBox->isHidden()){
             m_pDialogBox->onInputAction(action);
+            return;
         }
         else if (dialogManager.isTalking() && action == IA_Close) {
             dialogManager.cancelTalk();
+            return;
         }
         return;
     }
@@ -169,11 +171,21 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     if(action == IA_Close)
     {
         if(m_Console.isOpen())
+        {
             m_Console.setOpen(false);
+            return;
+        }
         else if(!m_MenuChain.empty())
+        {
             popMenu();
-        else // Nothing is open right now. Show main-menu
+            return;
+        }
+        else
+        {
+            // Nothing is open right now. Show main-menu
             pushMenu<UI::Menu_Main>();
+            return;
+        }
     }
 }
 
