@@ -1958,6 +1958,13 @@ void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
 
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
+    {
+        if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
+            m_World.getEngine()->togglePaused();
+        }
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
         if(triggered && !m_World.getDialogManager().isDialogActive())

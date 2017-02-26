@@ -12,7 +12,6 @@
 #include <bx/commandline.h>
 #include <utils/logger.h>
 #include <components/Vob.h>
-#include <ui/Hud.h>
 
 using namespace Engine;
 
@@ -20,7 +19,7 @@ const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 {
-    m_disableLogic = false;
+    m_DisableLogic = false;
     m_GameEngineSpeedFactor = 1.0;
 }
 
@@ -52,13 +51,6 @@ void GameEngine::initEngine(int argc, char** argv)
 				m_Args.testVisual += "S";
         }
     }
-
-    Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
-    {
-        if(triggered > 0.0f && !m_MainWorld.get().getEngine()->getHud().isMenuActive()){
-            setPaused(!m_disableLogic);
-        }
-    });
 }
 
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
@@ -75,7 +67,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
 //    }
 
-    if(m_disableLogic)
+    if(m_DisableLogic)
     {
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
     } else

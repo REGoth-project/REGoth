@@ -174,6 +174,11 @@ namespace Engine
 		 */
 		void setPaused(bool paused);
 
+		/**
+		 * Pauses or continues the game. Depending on the current state
+		 */
+		void togglePaused() { setPaused(!m_DisableLogic); }
+
 	protected:
 
 		/**
@@ -250,6 +255,6 @@ namespace Engine
 		/**
          * Debug only
          */
-		bool m_disableLogic;
+		bool m_DisableLogic;
 	};
 }

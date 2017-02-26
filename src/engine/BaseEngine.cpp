@@ -280,7 +280,7 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 }
 
 void BaseEngine::setPaused(bool paused) {
-    if (paused != m_disableLogic)
+    if (paused != m_DisableLogic)
     {
         // status changed
         if (paused)
@@ -290,6 +290,6 @@ void BaseEngine::setPaused(bool paused) {
         {
             m_MainWorld.get().getAudioWorld().continueSounds();
         }
-        m_disableLogic = paused;
+        m_DisableLogic = paused;
     }
 }
