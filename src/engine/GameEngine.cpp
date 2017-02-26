@@ -12,6 +12,7 @@
 #include <bx/commandline.h>
 #include <utils/logger.h>
 #include <components/Vob.h>
+#include <ui/Hud.h>
 
 using namespace Engine;
 
@@ -54,7 +55,7 @@ void GameEngine::initEngine(int argc, char** argv)
 
     Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
     {
-        if(triggered > 0.0f){
+        if(triggered > 0.0f && !m_MainWorld.get().getEngine()->getHud().isMenuActive()){
             m_disableLogic = !m_disableLogic;
             if (m_disableLogic)
             {
