@@ -103,6 +103,16 @@ public:
      */
     bool soundIsPlaying(Utils::Ticket<AudioWorld> ticket);
 
+    /**
+     * Pauses all sounds
+     */
+    void pauseSounds();
+
+    /**
+     * Continues all paused all sounds
+     */
+    void continueSounds();
+
 private:
 
     Engine::BaseEngine &m_Engine;

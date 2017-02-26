@@ -54,8 +54,17 @@ void GameEngine::initEngine(int argc, char** argv)
 
     Input::RegisterAction(ActionType::PauseGame, [this](bool, float triggered)
     {
-        if(triggered > 0.0f)
+        if(triggered > 0.0f){
             m_disableLogic = !m_disableLogic;
+            if (m_disableLogic)
+            {
+                m_MainWorld.get().getAudioWorld().pauseSounds();
+            }
+            else
+            {
+                m_MainWorld.get().getAudioWorld().continueSounds();
+            }
+        }
     });
 }
 
