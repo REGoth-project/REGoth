@@ -68,7 +68,9 @@ FUNC INT    Wld_IsTime			(VAR INT hour1, VAR INT min1, VAR INT hour2, VAR INT mi
 FUNC VOID 	Wld_InsertNpc				(VAR INT npcInstance, VAR STRING spawnPoint) 		{ };
 // Füge NSC in Welt ein. Wobei SPawnpoint entweder ein WP oder ein FP sein darf.
 func void 	Wld_InsertNpcAndRespawn (VAR INT instance, VAR STRING spawnPoint, VAR FLOAT spawnDelay)
-// !!!!!!!! weiß ich nicht Genau Ulf
+// G1: Füge NSC in Welt ein. Wobei SPawnpoint entweder ein WP oder ein FP sein darf. Stirbt dieser NSC wird
+// G1: nach "spawnDelay"-Sekunden ein neuer NSC am Spawnpoint erzeugt.
+// G2: !!!!!!!! weiß ich nicht Genau Ulf
 
 // ------------------------------------- ANIMATIONEN SPIELEN ---------------------------------
 
@@ -278,7 +280,9 @@ FUNC INT 	Npc_IsNextTargetAvailable 	(var C_NPC self )
 //				Npc_PerceiveAll() erstellt wurde. Wird diese Funktion in einem Zustand ohne aktive
 //				Wahrnehmungen benutzt, muß vorher ein Npc_PerceiveAll() aufgerufen werden
 FUNC VOID 	Npc_SetTarget 				(var C_NPC self, VAR C_NPC other )
-// Gibt dem Nsc 'self' das interne Ziel 'other'. // QUATSCH bzw. klar: --> Nur wenn per GetTarget auch der other "geholt" wird ist er vorhanden, da hier interne Variablen, die in den Skripten nicht vorhanden sind verwendet werden
+// Gibt dem Nsc 'self' das interne Ziel 'other'.
+// --> Nur wenn per GetTarget auch der other "geholt" wird ist er vorhanden,
+// da hier interne Variablen, die in den Skripten nicht vorhanden sind verwendet werden
 FUNC VOID 	AI_Attack					(VAR C_NPC self)
 // Startet Kampf AI (sollte in der ZS_Attack-Loop stehen)
 // Es wird das interne Ziel verwendet, das mit Npc_SetTarget() oder Npc_GetNextTarget() gesetzt
@@ -298,11 +302,11 @@ func void	AI_Flee						(var C_NPC self) {};
 // Der Befehl muss, wie AI_Attack(), in der ZS-Loop regelmaessig aufgerufen werden und setzt voraus, dass
 // vorher mit Npc_SetTarget( self, <var c_npc enemy> ) ein Gegner gesetzt wurde, vor dem der Npc fliehen soll.
 func void  	AI_AimAt					(VAR C_NPC attacker, VAR C_NPC target )	{};
-// !!! zielen mit FK???
+// NPC zielt mit Fernkampfwaffe auf Target-NPC
 func void 	AI_ShootAt					(VAR C_NPC attacker, VAR C_NPC target )	{ };
-// !!! schießen mit FK
+// NPC feuert mit Fernkampfwaffe auf Target-NPC
 func void	AI_StopAim					(VAR C_NPC attacker )	{ };
-// !!! stoppt das zielen mit FK ???
+// NPC beendet vorher gestartetes Zielen mit Fernkampfwaffe.
 // ------------------------------------- SONSTIGE CHECKS ------------------------------------
 
 func INT  	Npc_AreWeStronger			(VAR C_NPC self, VAR C_NPC other)			{ return 0; };
@@ -331,7 +335,8 @@ FUNC VOID 	Wld_InsertItem				(VAR INT itemInstance, VAR STRING spawnPoint) 		{ }
 FUNC VOID	AI_LookForItem				(VAR C_NPC self, VAR INT instance) {};
 // gibt die Möglichkeit nach bestimmten Items zu suchen (z.B.:Das goldene Schwert der Zerstörung, wenn vorhanden)
 func INT  	Wld_RemoveItem          	(VAR C_ITEM item)		{ };
-// !!! hiermit wird das globale Item aus der Welt gelöscht ???
+// G1: Hiermit wird das angegebene Item aus der Welt entfernt und gelöscht
+// G2: !!! hiermit wird das globale Item aus der Welt gelöscht ???
 
 // ---------------------------------------- INVENTORY ----------------------------------------
 FUNC VOID 	CreateInvItem 				(VAR C_NPC n0, VAR INT n1 ) { };
@@ -348,9 +353,12 @@ func INT  	Npc_GetInvItemBySlot    	(VAR C_NPC self, VAR INT category, VAR INT s
 // gibt jetzt die Anzahl zurueck, wenn das Item stackable ist
 //. Den Transfer machst Du dann per Npc_RemoveInvItems() und Npc_CreateInvItems().
 func void 	Npc_RemoveInvItem			(VAR C_NPC owner, VAR int itemInstance )	{};
-// !!! das globale Item wird gelöscht ???
+// G1: das angegebene Item wird aus dem Inventory des NSCs entfernt und gelöscht
+// G2: !!! das globale Item wird gelöscht ???
 func void	Npc_RemoveInvItems			(VAR C_NPC owner, VAR int itemInstance, VAR INT amount )	{ };
-// !!! wie Npc_RemoveInvItem, nur das Multislotgegenstände gelöscht werden ???
+// G1: das angegebene Anzahl des Multi-Items wird aus dem Inventory des NSCs entfernt und gelöscht
+// G2: !!! wie Npc_RemoveInvItem, nur das Multislotgegenstände gelöscht werden ???
+
 // ------------------------------------------ TRUHEN -----------------------------------------
 FUNC VOID 	Mob_CreateItems				(VAR STRING mobName, VAR INT itemInstance, VAR INT amount) {};
 // Erzeuge "amount" Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen.
@@ -371,7 +379,8 @@ FUNC VOID 	AI_UnequipWeapons			(VAR C_NPC self) {};
 FUNC VOID 	AI_UnequipArmor				(VAR C_NPC self) {};
 // Unequippe aktuelle Rüstung
 func void	AI_EquipArmor				(VAR C_NPC owner, VAR C_ITEM armor_from_owners_inventory )
-//!!! was ist diese armor_from_owners_inventory ???
+// G1: Ziehe die angebene Rüstung dem NSC "owner" an, diese muss sich in seinem Inventory befinden.
+// G2: !!! was ist diese armor_from_owners_inventory ???
 // -------------------------------------------------------------------------------------------
 FUNC C_Item Npc_GetEquippedMeleeWeapon 	(VAR C_NPC n0 ) { };
 // Liefert die gegurtete Nahkampfwaffe des NSCs.
@@ -639,7 +648,7 @@ FUNC INT  	Mis_GetStatus				(VAR INT missionName ) { return 0; };
 FUNC INT  	Mis_OnTime					(VAR INT missionName ) { return 0; };
 // Liefert TRUE, wenn sich Spieler noch innerhalb des Zeitlimits für diese Mission befindet
 func void	AI_StopProcessInfos			(var C_NPC npc)
-// ???
+// Der DialogModus wird beendet (Multiple Choice-Dialog)
 
 
 // *******************************************************************************************
@@ -664,6 +673,7 @@ FUNC INT	Npc_IsNear					(VAR C_NPC self, VAR C_NPC  other)	{ return 0; };
 FUNC INT  	Npc_GetDistToNpc			(VAR C_NPC npc1, VAR C_NPC npc2) { return 0; };
 // Liefert Entfernung ( in cm ! ) zwischend den beiden NSCs
 FUNC INT  	Npc_GetHeightToNpc			(VAR C_NPC npc1, VAR C_NPC npc2) { return 0; };
+// Gothic 2 only function
 // Liefert Höhendifferenz ( in cm ! ) zwischend den beiden NSCs
 
 FUNC INT	Npc_GetDistToWP				(VAR C_NPC self, VAR STRING wpName)
@@ -808,27 +818,31 @@ FUNC INT	Npc_GetActiveSpell			(var C_NPC self) { return 0; };
 // liefert den Zauber zurück, der auf der Hand ist (self oder other)
 // liefert -1 zurück, wenn kein Zauber auf der Hand ist
 FUNC INT	Npc_GetActiveSpell			(var C_NPC self) { return 0; };
+// Gothic 2 only function
 // liefert den Zauber zurück, der auf der Hand ist (self oder other)
 // liefert -1 zurück, wenn kein Zauber auf der Hand ist
 FUNC INT	Npc_GetLastHitSpellID			(var C_NPC self) { return 0; };
+// Gothic 2 only function
 // liefert den Zauber zurück, der den NSC zuletzt getroffen hat 
 FUNC INT	Npc_GetLastHitSpellCat			(var C_NPC self) { return 0; };
+// Gothic 2 only function
 // liefert die Category des Zaubers zurück, der den NSC zuletzt getroffen hat 
 
 FUNC INT	Npc_GetActiveSpellCat		(VAR C_NPC self) { return 0; };
 // Unterscheidet zwischen den drei Kategorien (Spell_Bad, Spell_neutral,Spell_Good) Spellkat ist Rückgabewert
 FUNC INT 	Npc_SetActiveSpellInfo 		(VAR C_NPC npc, VAR INT i1 ) { return 0; };
-// liefert den Spell-Level des Zaubers zurück, der auf der Hand ist
+// G2: liefert den Spell-Level des Zaubers zurück, der auf der Hand ist
+// G1: Hier kann ein Wert für den Zauberspruch gesetzt werden. Was dieser Wert bewirkt, haengt allein von der Nutzung im
+// G1: Skript ab. Das Programm  benutzt diesen nicht.
 FUNC INT	Npc_GetActiveSpellLevel		(VAR C_NPC self)
+// liefert den Spell-Level des Zaubers zurück, der auf der Hand ist 
 
-// ????
 func VOID 	AI_ReadySpell  				(VAR C_NPC self, VAR INT spellID, VAR INT investMana);
+// Lasse zauberspruch auf Hand erscheinen.
 func VOID 	AI_UnreadySpell				(VAR C_NPC self);
-
-
-func INT  	Npc_HasSpell   				(VAR C_NPC self, VAR INT spellID); // --> liefert true oder false zurück
-
-
+// lasse zauberspruch aus Hand verschwinden
+func INT  	Npc_HasSpell   				(VAR C_NPC self, VAR INT spellID);
+// Kann der NSC den angegebenen Zauberspruch benutzen ?
 
 
 // *******************************************************************************************
