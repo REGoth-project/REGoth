@@ -147,7 +147,7 @@ func void AI_Teleport				(var C_NPC self, var string waypoint);
 // teleportiert den NSC zur angegebenene Location
 
 // -------------------------------------------------------------------------------------------
-func STRING Npc_GetNearestWP		(var C_NPC self) { return ""; };
+func string Npc_GetNearestWP		(var C_NPC self) { return ""; };
 // liefert den Namen des am nächsten gelegenen Waypoints zurück
 func string	Npc_GetNextWP			(var C_NPC self) {return ""; };
 // Liefert den zweitnahesten WP vom NSC zurück
@@ -362,7 +362,7 @@ func void	Npc_RemoveInvItems			(var C_NPC owner, var int itemInstance, var int a
 // ------------------------------------------ TRUHEN -----------------------------------------
 func void 	Mob_CreateItems				(var string mobName, var int itemInstance, var int amount) {};
 // Erzeuge "amount" Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen.
-func int  	Mob_HasItems				(var STRING mobName, var int itemInstance ) { return 0; };
+func int  	Mob_HasItems				(var string mobName, var int itemInstance ) { return 0; };
 // Liefere Anzahl der Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen
 
 // ------------------------------------ EQUIPPEN / UNEQUIPPEN --------------------------------
@@ -917,7 +917,7 @@ func int 	Wld_DetectNpcEx             (var C_NPC self, var int npcInstance, var 
 func int 	Wld_DetectItem				(var C_NPC self, var int flags) { return 0; };
 // liefert eins zurück, wenn ein Item mit dem Entsprechende Flag (z.B.ITEM_KAT_FOOD )gefunden wurde
 // Globale Variable 'item' wird mit dem gefundenen Gegenstand initialisiert
-func STRING Npc_GetDetectedMob 			(var C_NPC self ) { return 0; };
+func string Npc_GetDetectedMob 			(var C_NPC self ) { return 0; };
 // liefert den Schemanamen des Mobsi zurück, das der Nsc entdeckt hat. Schemaname ist das String-Kürzel des Mobs, daß im Visualnamen vor dem ersten "_"-Zeichen steht, also z.B. "DOOR" wenn der Visualname "DOOR_OCR__135" ist.
 // VORSICHT: Diese Funktion ist nur in Verbindung mit PERC_MOVEMOB erlaubt !!!
 // WORKAROUND: zur Zeit werden hiermit nur Tür-MOBSIs zurückgegeben, dies soll aber wieder zurückgebaut werden
