@@ -21,7 +21,7 @@ func VOID PrintScreen           (var INT dialogNr, VAR STRING msg, VAR INT posx,
 // *******************************************************************************************
 
 FUNC INT 	Hlp_Random 			( VAR INT n0 ) { return 0; };
-// erzeugt einen Zufallswert (wobei n0 Obergrenze : [0..n0-1] ) Rückgabewert integer 
+// erzeugt einen Zufallswert (wobei n0 Obergrenze : [0..n0-1] ) Rückgabewert integer
 FUNC INT    Hlp_StrCmp			(VAR STRING s1, VAR STRING s2) { return 0; };
 // Hilfsfunktion um zwei Strings miteinander zu vergleichen liefert bei Gleichheit eins zurück
 FUNC INT  	Hlp_IsValidNpc			(VAR C_NPC self)					{ return 0; };
@@ -44,13 +44,13 @@ FUNC INT 	Hlp_GetInstanceID 		( VAR C_ITEM item ) { return 0; };
 // *******************************************************************************************
 
 FUNC VOID 	AI_Wait 			( VAR C_NPC n0, VAR float n1 ) { };
-// Character wird für n1 Sekunden in einen Wait-Zustand versetzt, 
+// Character wird für n1 Sekunden in einen Wait-Zustand versetzt,
 // d.h. er tut nichts, aber Treffer etc.(passive Wahrnehmung) werden registriert
 
 FUNC INT	Npc_GetStateTime		(VAR C_NPC self) { return 0; };
 // Liefert Anzahl Sekunden, wie lange der NSC sich in diesem Zustand im "Loop" befindet.
 FUNC VOID	Npc_SetStateTime		(VAR C_NPC self, VAR INT seconds) { };
-// _Setzt_ Anzahl Sekunden, wie lange der NSC sich in diesem Zustand im "Loop" befindet. 
+// _Setzt_ Anzahl Sekunden, wie lange der NSC sich in diesem Zustand im "Loop" befindet.
 //--> Das ist dann über Npc_GetStateTime abfragbar.
 
 FUNC INT	Wld_GetDay			() {};
@@ -77,7 +77,7 @@ FUNC VOID 	AI_PlayAni 				(VAR C_NPC n0, VAR STRING s0 ) { };
 // Npc-Instanz spielt die angegebene Animation ab
 FUNC VOID	AI_StandUp				(VAR C_NPC self) {};
 // - Ist der Nsc in einem Animatinsstate, wird die passende Rücktransition abgespielt.
-// - Benutzt der NSC gerade ein MOBSI, poppt er ins stehen.	
+// - Benutzt der NSC gerade ein MOBSI, poppt er ins stehen.
 func void	AI_StandUpQuick 		(VAR C_NPC self)
 // Wie AI_StandUp(), jedoch werden keine Rücktransitionen abgespielt, sondern auch dort wird
 // sofort in den Grundzustand "gepoppt". Wichtig für sehr eilige Situationen!
@@ -98,7 +98,7 @@ FUNC VOID 	AI_StopPointAt			(VAR C_NPC self) { };
 
 // ------------------------------------- NSC NIMMT / LEGT WEG -------------------------------
 FUNC VOID 	AI_TakeItem				(VAR C_NPC self, VAR C_ITEM item) {};
-// der Npc nimmt mit dieser Funktion die globale Item-Instanz auf 
+// der Npc nimmt mit dieser Funktion die globale Item-Instanz auf
 FUNC VOID	AI_DropItem				(VAR C_NPC self, VAR INT itemid) {};
 // Item(itemid) wird auf den Boden fallen gelassen
 
@@ -116,7 +116,7 @@ FUNC INT	AI_UseMob				(VAR C_NPC self, VAR STRING schemeName, VAR INT targetStat
 FUNC INT  	Wld_IsMobAvailable		(VAR C_NPC self, VAR STRING schemeName) {};
 // Sucht sich ein Mobsi im Umkreis von 10m und liefert TRUE falls gefunden. MOB wird nur zurückgeliefert, wenn es nicht besetzt ist.
 func int	Wld_GetMobState			(var C_NPC self, var string schemeName );
-// Liefert den State zum nächsten Mob mit 'schemeName' zurück bzw. '-1' wenn kein solches Mob gefunden wurde 
+// Liefert den State zum nächsten Mob mit 'schemeName' zurück bzw. '-1' wenn kein solches Mob gefunden wurde
 
 // -------------------------------------------- GEHEN ----------------------------------------
 
@@ -152,7 +152,7 @@ FUNC string	Npc_GetNextWP			(VAR C_NPC self) {return ""; };
 // Liefert den zweitnahesten WP vom NSC zurück
 // -------------------------------------------------------------------------------------------
 FUNC INT  Wld_IsFPAvailable			(VAR C_NPC self, VAR STRING fpName) {};
-// Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('self' zählt als Blockierer nicht!) und sichtbar 
+// Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('self' zählt als Blockierer nicht!) und sichtbar
 func int  Wld_IsNextFPAvailable     (var C_NPC self, VAR STRING fpName)
 //  wie Wld_IsFPAvailable(), aber es wird immer der nahegelegenste genommen und 'self' zählt als Blockierer!
 FUNC INT  Npc_IsOnFP				(VAR C_NPC self, VAR STRING name)
@@ -178,7 +178,7 @@ FUNC VOID 	AI_Dodge 				(var C_NPC npc ) { };
 // ----------------------------------- OVERLAY-MDS -------------------------------------------
 
 FUNC VOID 	Mdl_ApplyOverlayMds 	(var C_NPC n0, VAR STRING s1 ) { };
-// mit diesem Befehl werden Animationen auf einem höheren Layer gestartet 
+// mit diesem Befehl werden Animationen auf einem höheren Layer gestartet
 // (z.B. hat der Zombie ein Overlay über die normalen Human-Animationen)
 FUNC VOID 	Mdl_RemoveOverlayMDS	(VAR C_NPC self, VAR STRING overlayName) {};
 // Entferne ein Overlay-MDS
@@ -255,11 +255,11 @@ FUNC INT	Npc_HasRangedWeaponWithAmmo	(VAR C_NPC npc)
 
 // ----------------------------------------- ANGRIFF -----------------------------------------
 FUNC INT  	Npc_GetTarget				(VAR C_NPC self)
-// Befüllt 'other' mit dem aktuellen Ziel. Das aktuelle Ziel wird intern gespeichert, wird 
+// Befüllt 'other' mit dem aktuellen Ziel. Das aktuelle Ziel wird intern gespeichert, wird
 // durch Npc_SetTarget() bzw. Npc_GetNextTarget() gesetzt.
 // - return:	aktuelles Ziel gespeichert 	-> TRUE
 //				kein Ziel gespeichert		-> FALSE
-FUNC INT 	Npc_GetNextTarget 			(var C_NPC self ) 
+FUNC INT 	Npc_GetNextTarget 			(var C_NPC self )
 // Aktive Suche nach einem Gegner. Wird ein Gegner gefunden, so wird er als internes Ziel
 // übernommen und in 'other' geschrieben, wenn kein Gegner gefunden wurde wird das
 // interne Ziel gelöscht und 'other' ungültig gemacht.
@@ -287,7 +287,7 @@ FUNC VOID 	AI_Attack					(VAR C_NPC self)
 FUNC VOID 	AI_FinishingMove 			(var C_NPC self, VAR C_NPC other )
 // Führt den logischen Finishing Move inklusive Anis aus den Skripten heraus aus
 func void	AI_Defend					(var C_NPC self)
-// Der Befehl ist als Overlay-Message implementiert. Das heisst, dass er neben anderen Nachrichten 
+// Der Befehl ist als Overlay-Message implementiert. Das heisst, dass er neben anderen Nachrichten
 // aktiv bleibt. Er wird erst beendet, wenn der NPC eine Parade (ausgeloest durch die Attacke eines
 // anderen NPCs) durchgefuert hat.
 
@@ -307,12 +307,12 @@ func void	AI_StopAim					(VAR C_NPC attacker )	{ };
 // ------------------------------------- SONSTIGE CHECKS ------------------------------------
 
 func INT  	Npc_AreWeStronger			(VAR C_NPC self, VAR C_NPC other)			{ return 0; };
-// ermittelt den stärkeren Nsc, 
+// ermittelt den stärkeren Nsc,
 //Wenn die Summe der Level aller NPCs (human, Monster), die zu mir feindlich sind und die zu <other> freundlich sind
 //MEHR ALS DOPPELT SO HOCH ist (x  > 2*y), wie die Summe der Level aller Leute, die zu mir freundlich sind, und die
 //zu <other> feindlich sind, dann NEIN,
-//sonst JA (= wir SIND stärker, nicht echt, aber ab doppelter Gegnerstärke zu fliehen ist früh genug, sonst kommen 
-//die Jungs aus dem Rennen nicht mehr raus 
+//sonst JA (= wir SIND stärker, nicht echt, aber ab doppelter Gegnerstärke zu fliehen ist früh genug, sonst kommen
+//die Jungs aus dem Rennen nicht mehr raus
 //Beachten:
 //1) Monster können feindlich zu beiden Menschen sein --> egal, zählen auf beiden Seiten
 //2) Jemand, der z.B. zu mir freundlich und zu <other> feindlich ist, wird demnach doppelt gewertet --> ok so
@@ -353,7 +353,7 @@ func void 	Npc_RemoveInvItem			(VAR C_NPC owner, VAR int itemInstance )	{};
 func void	Npc_RemoveInvItems			(VAR C_NPC owner, VAR int itemInstance, VAR INT amount )	{ };
 // das angegebene Anzahl des Multi-Items wird aus dem Inventory des NSCs entfernt und gelöscht
 
-// ------------------------------------------ TRUHEN ----------------------------------------- 
+// ------------------------------------------ TRUHEN -----------------------------------------
 FUNC VOID 	Mob_CreateItems				(VAR STRING mobName, VAR INT itemInstance, VAR INT amount) {};
 // Erzeuge "amount" Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen.
 FUNC INT  	Mob_HasItems				(var STRING mobName, VAR INT itemInstance ) { return 0; };
@@ -406,7 +406,7 @@ FUNC INT 	Npc_IsDetectedMobOwnedByGuild(var C_NPC user, VAR INT ownerguild ) { r
 FUNC VOID 	Npc_GiveItem 				(VAR C_NPC n0, VAR C_ITEM n1, VAR C_NPC n2 ) { };
 //Der NSC "self" gibt den NSC "other" den angegebenen Gegenstand "item". Der Gegenstand wandert sofort ins Inventory des anderen.
 FUNC INT 	Npc_StartItemReactModules	(VAR C_NPC self, VAR C_NPC other, VAR C_ITEM item) { return 0; };
-// Prüfe alle ItemReact-Module von "self" auf Gegenstand "item" von Geber "other" und starte passende Reaction-Funktion 
+// Prüfe alle ItemReact-Module von "self" auf Gegenstand "item" von Geber "other" und starte passende Reaction-Funktion
 //liefert True beim finden eines Moduls
 FUNC INT  	Npc_HasOffered				(VAR C_NPC self, VAR C_NPC other, VAR INT itemInstance) { return 0; };
 //Bietet Spieler dem NSC einen Gegenstand übers Trade-Modul an ? True/False
@@ -440,7 +440,7 @@ FUNC VOID	AI_WaitTillEnd				(VAR C_NPC self, VAR C_NPC other) {};
 // 'self' wartet bis 'other' seinen laufenden AI-Befehl zu Ende gespielt hat (funzt allerdings nicht bei AI-Overlays!)
 // -------------------------------------------------------------------------------------------
 FUNC VOID 	AI_Ask 						(VAR C_NPC self, VAR FUNC anserYes, VAR FUNC answerNo ) { };
-// die angegeben Instanz (self), gibt eine Frage aus und verweist auf die selbst zu definierenden Funktionen, 
+// die angegeben Instanz (self), gibt eine Frage aus und verweist auf die selbst zu definierenden Funktionen,
 // die für die Fälle Spieler sagt ja (Daumen nach oben) und Spieler sagt nein (Daumen unten) vorhanden sein müssen
 FUNC VOID 	AI_AskText              	(VAR C_NPC self, VAR FUNC funcYes, VAR FUNC funcNo, VAR STRING strYes, VAR STRING strNo);
 // wie AI_Ask, nur das außer den Funktionen auch noch Strings für die Antworten Ja/Nein mit angegeben werden können
@@ -489,10 +489,10 @@ FUNC INT  	Npc_CheckInfo				(VAR C_NPC npc, var int important) { return 0; };
 FUNC INT  	NPC_GiveInfo				(VAR C_NPC npc, VAR INT important) { return 0; };
 // Überprüft,ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 FUNC INT  	Npc_CheckAvailableMission	(VAR C_NPC npc, VAR INT missionState, VAR INT important) { return 0; };
-// Prüfe ob zwischen dem NSC eine aktuelle Mission (AVAILABLE,RUNNING) besteht und vergleiche den Status mit den angegebenen. 
+// Prüfe ob zwischen dem NSC eine aktuelle Mission (AVAILABLE,RUNNING) besteht und vergleiche den Status mit den angegebenen.
 // Falls dieser identisch ist, wird "1" geliefert.
 FUNC INT  	Npc_CheckRunningMission		(VAR C_NPC npc, VAR INT important) { return 0; };
-// Überprueft ob zwischen dem NSC und dem Spieler eine laufende Mission besteht und startet den entsprechenden Skriptblock. 
+// Überprueft ob zwischen dem NSC und dem Spieler eine laufende Mission besteht und startet den entsprechenden Skriptblock.
 // (Returnwert 1 : Mission aktiv)
 FUNC INT  	Npc_CheckOfferMission		(VAR C_NPC npc, VAR INT important) { return 0; };
 // Überprueft ob der NSC dem Spieler einen Auftrag anbieten kann, wenn ja, wird der Offer-Block gestartet und "1" zurückgeliefert.
@@ -526,13 +526,13 @@ FUNC INT	Npc_HasDetectedNpc			(VAR C_NPC self, VAR C_NPC other) { return 0; };
 FUNC INT	Npc_IsNear					(VAR C_NPC self, VAR C_NPC  other)	{ return 0; };
 // liefert eins zurück, wenn geprüfte Instanz sich im Bereich von drei Metern zur prüfenden Instanz befindet
 FUNC INT  	Npc_GetDistToNpc			(VAR C_NPC npc1, VAR C_NPC npc2) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend den beiden NSCs
+// Liefert Entfernung ( in cm ! ) zwischend den beiden NSCs
 FUNC INT	Npc_GetDistToWP				(VAR C_NPC self, VAR STRING wpName)
 // liefert die Entfernung vom NSC 'self' zum angegebenen Waypoint in cm
 FUNC INT  	Npc_GetDistToItem			(VAR C_NPC npc, VAR C_ITEM item) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend NSC und Gegenstand
+// Liefert Entfernung ( in cm ! ) zwischend NSC und Gegenstand
 FUNC INT  	Npc_GetDistToPlayer			(VAR C_NPC npc1) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend den beiden NSCs
+// Liefert Entfernung ( in cm ! ) zwischend den beiden NSCs
 FUNC INT  	Snd_GetDistToSource			(VAR C_NPC self) { return 0; };
 // Liefert Entfernung ( in cm ! ) zum letzten logischen Sound
 
@@ -576,7 +576,7 @@ FUNC INT  	Npc_KnowsPlayer				(VAR C_NPC self, VAR C_NPC player) { return 0; };
 
 // ---------------------------------------------- ZS -----------------------------------------
 FUNC VOID	AI_StartState				(VAR C_NPC self, VAR FUNC what, VAR INT stateBehaviour, VAR STRING wpName) {};
-// Versetzt den Nsc aus den Skripten heraus in den entsprechenden ZS (what), 
+// Versetzt den Nsc aus den Skripten heraus in den entsprechenden ZS (what),
 // stateBehaviour sagt : "0"-aktuellen Zustand abbrechen "1"-aktuellen Zustand erst ordnungsgemäß beenden (End-Funktion aufrufen) ).
 FUNC VOID 	Npc_ClearAIQueue 			(var C_NPC self ) { };
 // hiermit werden alle Befehle mit sofortiger Wirkung aus der AI_Queue rausgeworfen
@@ -612,12 +612,12 @@ FUNC VOID 	Wld_SetMobRoutine			(var INT hour1, VAR INT min1, VAR STRING objName,
 
 // ------------------------------------- Overlay-TAs -----------------------------------------
 FUNC VOID 	Rtn_Exchange				(VAR STRING oldRoutine, VAR STRING newRoutine ) {};
-// Tausche aktuellen Tagesablauf des NSC "self" gegen angegebenen aus 
+// Tausche aktuellen Tagesablauf des NSC "self" gegen angegebenen aus
 // (Name wird automatisch mit "RTN_" am Anfang und NSC-Skript-ID am Ende ergänzt)
 FUNC VOID 	TA_BeginOverlay				(VAR C_NPC self ) {};
 // Melde einen Overlay-Tagesablauf an
 FUNC VOID 	TA_EndOverlay				(VAR C_NPC self ) {};
-// Beende einen Overlay-Tagesablauf 
+// Beende einen Overlay-Tagesablauf
 FUNC VOID 	TA_RemoveOverlay			(VAR C_NPC self ) {};
 // Entferne aktiven TA-Overlay
 
@@ -627,7 +627,7 @@ FUNC VOID 	TA_RemoveOverlay			(VAR C_NPC self ) {};
 // ***                                       SCALING                                       ***
 // *******************************************************************************************
 
-FUNC VOID	Mdl_SetModelScale			(VAR C_NPC self, VAR FLOAT x, VAR FLOAT y, VAR FLOAT z) {}; 
+FUNC VOID	Mdl_SetModelScale			(VAR C_NPC self, VAR FLOAT x, VAR FLOAT y, VAR FLOAT z) {};
 // zum skalieren des Meshes (Breite,Höhe,Tiefe) 1 = 100%, also Normalgröße!
 func VOID 	Mdl_SetModelFatness			(var C_NPC self, VAR FLOAT fatness) 	{};
 // Setzt Model-Z-Skalierung
@@ -650,7 +650,7 @@ FUNC VOID	Npc_ChangeAttribute			(var C_NPC self, VAR INT atr, VAR INT value) {};
 FUNC INT 	Npc_HasTalent				(VAR C_NPC self, VAR INT tal) 		{ return 0; };
 // liefert eins zurück, wenn der geprüfte Charakter das Talent tal hat
 FUNC INT 	Npc_HasFightTalent			(VAR C_NPC self, VAR INT tal) 		{ return 0; };
-// Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent 
+// Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
 
 
@@ -659,7 +659,7 @@ FUNC INT 	Npc_HasFightTalent			(VAR C_NPC self, VAR INT tal) 		{ return 0; };
 // *******************************************************************************************
 
 FUNC VOID	Npc_CreateSpell				(VAR C_NPC self, VAR INT spellnr) {};
-// NSc bekommt Zauberspruch zugewiesen kann diesen aber noch nicht gebrauchen 
+// NSc bekommt Zauberspruch zugewiesen kann diesen aber noch nicht gebrauchen
 // (erscheint ausgegraut im Auswahlkranz)
 FUNC VOID	Npc_LearnSpell				(VAR C_NPC self, VAR INT spellnr) {};
 // Was könnte das wohl heißen ? Ich glaube damit kann man den (spellnr) Zauber zuweisen
@@ -688,12 +688,12 @@ func INT  	Npc_HasSpell   				(VAR C_NPC self, VAR INT spellID);
 // ***                                   WAHRNEHMUNGEN                                     ***
 // *******************************************************************************************
 
-FUNC VOID	Npc_PercEnable				(VAR C_NPC self, VAR INT percID, VAR FUNC function) { }; 
+FUNC VOID	Npc_PercEnable				(VAR C_NPC self, VAR INT percID, VAR FUNC function) { };
 // Aktiviere Perception
-FUNC VOID 	Npc_PercDisable				(VAR C_NPC self, VAR INT percID) { }; 
+FUNC VOID 	Npc_PercDisable				(VAR C_NPC self, VAR INT percID) { };
 // Deaktiviere Perception
 FUNC VOID 	Npc_SetPercTime				(VAR C_NPC self, VAR FLOAT seconds)			{ };
-// Setze Zeitdelta für aktive Wahrnehmungen, alle Zeitdelta-Sekunden wird  WN gesendet 
+// Setze Zeitdelta für aktive Wahrnehmungen, alle Zeitdelta-Sekunden wird  WN gesendet
 // -------------------------------------------------------------------------------------------
 FUNC VOID 	Perc_SetRange				(VAR INT percID, VAR INT range)				{ };
 // Setze Reichweite fuer eine passive Wahrnehmung int cm
@@ -774,7 +774,7 @@ FUNC C_NPC 	Wld_GetPlayerPortalOwner 	()
 // liefert den NSC des aktiven Raums, in dem sich der SC gerade befindet, zurück
 // - wenn der SC 'draußen' ist, dann ist der Rückgabe-Npc 'notValid'
 // - wenn der aktive Raum besitzerlos ist, dann ist der Rückgabe-Npc 'notValid'
-FUNC INT 	Wld_GetPlayerPortalGuild 	() 
+FUNC INT 	Wld_GetPlayerPortalGuild 	()
 // liefert Gilde des aktiven Raums, in dem sich der SC gerade befindet, zurück
 // - wenn der SC 'draußen' ist, dann wird GIL_NONE zurückgegeben
 // - wenn der aktive Raum gildenlos ist, dann wird GIL_NONE zurückgeliefert
@@ -809,7 +809,7 @@ func float	IntToFloat			( var int x)	{ };
 // !!! wie float to int, nur daß ein integer in float umgewandelt wird ???
 func string ConcatStrings		(var string str1, var string str2)
 // !!!Erzeugt eine Kopie von dem ersten angegebenen String, hängt den zweiten an diesen an und gibt den neuen String zurück ???
- 
+
 
 //Die folgenden Methoden geben den Text nur unter bestimmten zusätzlichen Bedingungen aus. Für die Methoden mit dem Suffix Inst trifft dies zu, wenn die Instanz von der die Debug-Methode aufgerufen wird, zum Debuggen aktiviert wurde. Die Methoden mit dem Suffix Ch geben den Text nur aus, wenn der angegebene Channel zum Debuggen aktiviert wurde.
 
@@ -828,32 +828,32 @@ func void Log_CreateTopic( VAR STRING name, VAR INT section )
 //	Sollte bereits ein Topic dieses Names in irgendeiner Sektion existieren, wird das Topic nicht hinzugefügt.
 //
 //	Parameter:
-//	- name      Eine eindeutige Zeichenkette, die sowohl zur Identifikation als auch zur Anzeige des Topics verwendet wird. 
+//	- name      Eine eindeutige Zeichenkette, die sowohl zur Identifikation als auch zur Anzeige des Topics verwendet wird.
 //	- section	Eine, in der Constants.d definierte Konstante, die besagt, in welcher Sektion das Topic angezeigt werden soll.
-//				Die Konstante kann folgende Werte annehmen: 
+//				Die Konstante kann folgende Werte annehmen:
 //					- LOG_MISSION
-//					- LOG_NOTE 
- 
+//					- LOG_NOTE
+
 func void Log_SetTopicStatus( VAR STRING name, VAR INT status )
 //	Der Befehl ändert den Status des Topics 'name' in 'status'.
 //	Er sollte nur für Topics verwendet werden, die für die Sektion LOG_MISSION erzeugt wurden.
 //
 //	Parameter:
-//	- name      Diejenige Zeichenkette, die bei der Erstellung des Topics per Log_CreateTopic() angegeben wurde. 
+//	- name      Diejenige Zeichenkette, die bei der Erstellung des Topics per Log_CreateTopic() angegeben wurde.
 //	- status	Eine, in der Constants.d definierte Konstante, die besagt, unter welchem Status die Mission dargestellt werden soll.
-//				Folgende Werte sind möglich: 
-//					- LOG_RUNNING 
-//					- LOG_SUCCESS 
-//					- LOG_FAILED 
-//					- LOG_OBSOLETE 
- 
+//				Folgende Werte sind möglich:
+//					- LOG_RUNNING
+//					- LOG_SUCCESS
+//					- LOG_FAILED
+//					- LOG_OBSOLETE
+
 func void Log_AddEntry( VAR STRING topic, VAR STRING entry )
 //	Der Befehl fügt dem Topics topic ein neues Entrz namens entry hinzu. Wie auch bei der Erzeugung von Topics dient hier der
 //	Name sowohl zur Identifikation als auch zur Anzeige und muss somit eindeutig sein. Doppelte Einträge werden auch hier ignoriert.
 //
 //	Parameter
-//	topic       Diejenige Zeichenkette, die bei der Erstellung des Topics per Log_CreateTopic() angegeben wurde. 
-//	entry		Eine eindeutige Zeichenkette, die sowohl zur Identifikation als auch zur Anzeige des Eintrags verwendet wird. 
+//	topic       Diejenige Zeichenkette, die bei der Erstellung des Topics per Log_CreateTopic() angegeben wurde.
+//	entry		Eine eindeutige Zeichenkette, die sowohl zur Identifikation als auch zur Anzeige des Eintrags verwendet wird.
 
 
 

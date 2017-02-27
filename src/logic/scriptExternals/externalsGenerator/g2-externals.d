@@ -662,16 +662,16 @@ FUNC INT	Npc_HasDetectedNpc			(VAR C_NPC self, VAR C_NPC other) { return 0; };
 FUNC INT	Npc_IsNear					(VAR C_NPC self, VAR C_NPC  other)	{ return 0; };
 // liefert eins zurück, wenn geprüfte Instanz sich im Bereich von drei Metern zur prüfenden Instanz befindet
 FUNC INT  	Npc_GetDistToNpc			(VAR C_NPC npc1, VAR C_NPC npc2) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend den beiden NSCs
+// Liefert Entfernung ( in cm ! ) zwischend den beiden NSCs
 FUNC INT  	Npc_GetHeightToNpc			(VAR C_NPC npc1, VAR C_NPC npc2) { return 0; };
-// Liefert Höhendifferenz ( ín cm ! ) zwischend den beiden NSCs
+// Liefert Höhendifferenz ( in cm ! ) zwischend den beiden NSCs
 
 FUNC INT	Npc_GetDistToWP				(VAR C_NPC self, VAR STRING wpName)
 // liefert die Entfernung vom NSC 'self' zum angegebenen Waypoint in cm
 FUNC INT  	Npc_GetDistToItem			(VAR C_NPC npc, VAR C_ITEM item) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend NSC und Gegenstand
+// Liefert Entfernung ( in cm ! ) zwischend NSC und Gegenstand
 FUNC INT  	Npc_GetDistToPlayer			(VAR C_NPC npc1) { return 0; };
-// Liefert Entfernung ( ín cm ! ) zwischend den beiden NSCs
+// Liefert Entfernung ( in cm ! ) zwischend den beiden NSCs
 FUNC INT  	Snd_GetDistToSource			(VAR C_NPC self) { return 0; };
 // Liefert Entfernung ( in cm ! ) zum letzten logischen Sound
 
