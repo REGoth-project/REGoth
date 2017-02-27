@@ -426,21 +426,22 @@ FUNC INT  	Npc_HasOffered				(VAR C_NPC self, VAR C_NPC other, VAR INT itemInsta
 //////////////////////////////////////////////////////////////////////////////
 
 func void	ExitGame			() {};
-
+// Gothic 2 only function
 								// Beendet Gothic.
 
 func void	ExitSession			() {};
-
+// Gothic 2 only function
 								// Beendet das laufende Spiel.
 
 func int	PlayVideo			(var string Filename) {};
-
+// Gothic 2 only function
 								// Spielt eine Videodatei ab.
 								//
 								//	Filename	- Dateiname des Videos (mit Dateierweiterung, relativ zu [VIDEOS]\ )
 								//	[result]	- Boolean ob erfolgreich abgespielt
 
 func int	PlayVideoEx			(var string Filename, var int ScreenBlend, var int ExitSession) {};
+// Gothic 2 only function
 
 								// Spielt eine Videodatei mit erweiterten Optionen ab.
 								//
@@ -450,12 +451,14 @@ func int	PlayVideoEx			(var string Filename, var int ScreenBlend, var int ExitSe
 								//	[result]	- Boolean ob erfolgreich abgespielt, bei ExitSession immer erfolgreich
 
 func void	SetPercentDone		(var int PercentDone) {};
+// Gothic 2 only function
 
 								// Setz die Fortschrittsanzeige im Ladebalken.
 								//
 								//	PercentDone	- Aktueller Fortschritt des Ladevorgangs in Prozent (0-100)
 
 func void	IntroduceChapter	(var string Titel, var string Untertitel, var string Texture, var string Sound, var int WaitTime) {};
+// Gothic 2 only function
 
 								// Zeigt den Kapitelwechsel-Bildschirm an.
 								//
@@ -474,25 +477,31 @@ func void	IntroduceChapter	(var string Titel, var string Untertitel, var string 
 //////////////////////////////////////////////////////////////////////////////
 
 func int	Doc_Create			() {};
-
+// G1: erstellet ein Dokument und liefert ein Handle zurück, daß für alle weiteren Doc_...-Befehle nötig ist
 								// Erzeugt ein Dokument.
 								//
 								//	[result]	- Handle auf das Dokument (-1 = konnte nicht erzeugt werden)
 
 func int	Doc_CreateMap		() {};
+// Gothic 2 only function
 
 								// Erzeugt ein Dokument (Karte).
 								//
 								//	[result]	- Handle auf das Dokument (-1 = konnte nicht erzeugt werden)
 
 func void	Doc_SetPages		(var int Document, var int Count) {};
-
+// G1: setzt die Anzahl der Seiten dieses Dokuments. Bei mehr als zwei Seiten wird versucht ALLE
+// G1: Seiten auf den Bildschirm zu bekommen
 								// Setzt die Anzahl der Seiten eines Dokuments.
 								//
 								//	Document	- Handle auf das Dokument
 								//	Count		- Anzahl der Seiten
 
 func void	Doc_SetPage			(var int Document, var int Page, var string Texture, var int Scale) {};
+
+// G1: setzt für die Seite 'page' die Grafik-Datei 'pageimage'. Diese muß im TGA-Format vorliegen und 
+// G1: z.B. "aufgeschlagenesBuch_links.tga"  heißen
+// G1: wird bei 'page' -1 übergeben, so bezieht sich der Befehl auf ALLE Seiten des Dokuments
 
 								// Setzt die Hintergrund-Textur der Seite eines Dokuments.
 								//
@@ -502,17 +511,22 @@ func void	Doc_SetPage			(var int Document, var int Page, var string Texture, var
 
 func void	Doc_SetMargins		(var int Document, var int Page, var int Left, var int Top, var int Right, var int Bottom, var int Pixels) {};
 
+// G1: setzt die Ränder (gerechnet vom Rand der TGA-Datei, die in Doc_SetPage() gesetzt wird). Die Ränder sind in Pixeln angegeben.
+
 								// Setzt den jeweiligen Rand einer/aller Seite(n) (vom Rand der mit Doc_SetPage gesetzten Textur aus gesehen).
 								//
 								//	Document	- Handle auf das Dokument
 								//	Page		- Index der Seite (beginnt mit 0, -1 = alle)
 								//	Left		- linker Rand
-								//	Top			- oberer Rand
+								//	Top		- oberer Rand
 								//	Right		- rechter Rand
 								//	Bottom		- unterer Rand
 								//	Pixel		- Flag ob Angaben in Pixeln (Bildschirm) oder virtuellen Koordinaten (0-8192)
 
 func void	Doc_SetFont			(var int Document, var int Page, var string Font) {};
+
+// G1: setzt den Font für die angegebene Seite 'page' oder für das ganze Dokument ('page':-1)
+// G1: Fontname z.B. "Scrolls.tga"
 
 								// Setzt den Font einer/aller Seite(n).
 								//
@@ -521,6 +535,7 @@ func void	Doc_SetFont			(var int Document, var int Page, var string Font) {};
 								//	Font		- Dateiname der Font-Textur (ohne Pfad - z.B. 'Font_Default.tga')
 
 func void	Doc_SetLevel		(var int Document, var string Level) {};
+// Gothic 2 only function
 
 								// Setzt das Level-ZEN zur Anzeige der Spieler-Position (Karten).
 								//
@@ -529,6 +544,7 @@ func void	Doc_SetLevel		(var int Document, var string Level) {};
 								//	Level		- Dateiname des Level-ZENs (mit Pfad ab WORLDS - z.B. 'NewWorld\NewWorld.zen')
 
 func void	Doc_SetLevelCoords	(var int Document, var int Left, var int Top, var int Right, var int Bottom) {};
+// Gothic 2 only function
 
 								// Setzt die Grenzen des Level-Bereichs, der durch die Textur abgedeckt wird (Karten).
 								//
@@ -541,6 +557,8 @@ func void	Doc_SetLevelCoords	(var int Document, var int Left, var int Top, var i
 
 func void	Doc_PrintLine		(var int Document, var int Page, var string Text) {};
 
+// G1: Gibt Text für die Seite 'page' an. Der Text wird NICHT umgebrochen
+
 								// Setzt den Text einer Seite. Der Text wird _nicht_ umgebrochen.
 								//
 								//	Document	- Handle auf das Dokument
@@ -548,6 +566,8 @@ func void	Doc_PrintLine		(var int Document, var int Page, var string Text) {};
 								//	Text		- Textzeile
 
 func void	Doc_PrintLines		(var int Document, var int Page, var string Text) {};
+
+// G1: Gibt Text für die Seite 'page' an. Der Text WIRD umgebrochen, falls er nicht auf die in Doc_SetPage() angegebene Grafik passt.
 
 								// Setzt den Text einer Seite. Der Text wird umgebrochen falls notwendig.
 								//
@@ -557,12 +577,32 @@ func void	Doc_PrintLines		(var int Document, var int Page, var string Text) {};
 
 func void	Doc_Show			(var int Document) {};
 
+// G1: nachdem das Dokument mit den obenstehenden Befehlen befüllt und formatiert wurde, wird es hiermit nun auf den Bildschirm geschrieben!            
+
 								// Zeigt das Dokument auf dem Bildschirm an.
 								//
 								//	Document	- Handle auf das Dokument
 
 
-// - OBSOLETE -
+
+
+// ---------------------------------------- MAPS & DOCS -------------------------------------
+FUNC VOID 	Doc_Open					(VAR STRING picName ) {};
+// Gothic 1 only function
+// Öffnet ein Dokument mit dem Bild "picName" als Hintergrund
+FUNC VOID 	Doc_Font					(VAR STRING fontName ) {};
+// Gothic 1 only function
+// Benutzt den angegebenen Font für nachfolgende "Doc_Print"s.
+FUNC VOID 	Doc_Print					(VAR STRING text ) {};
+// Gothic 1 only function
+// Angegebener Text wird in das aktuelle (vorher mit Doc_Open geöffnete) Dokument geschrieben
+FUNC VOID 	Doc_MapCoordinates			(VAR STRING levelName, VAR FLOAT gamex1, VAR FLOAT gamey1, VAR FLOAT pixelx1, VAR FLOAT pixely1, VAR FLOAT gamex2, VAR FLOAT gamey2, VAR FLOAT pixelx2, VAR FLOAT pixely2) {};
+// Gothic 1 only function
+// Karte initialisieren : levelName = Name des Levels (.ZEN) aus dem die Karte einen Ausschnitt zeigt 
+// gamex1,gamey1 : Koordinaten im Spiel (linke obere Ecke der Karte) 
+// pixelx1,pixely1 : PixelKoordinaten linke obere Ecke // der Rest : alles nochmal für die rechte untere Ecke
+
+// - OBSOLETE IN GOTHIC 2-
 // func void	Doc_Open			(var string Texture) {};
 // func void	Doc_Font			(var string Font) {};
 // func void	Doc_Print			(var string Text) {};
@@ -1016,18 +1056,21 @@ func void Log_AddEntry( VAR STRING topic, VAR STRING entry )
 //	topic       Diejenige Zeichenkette, die bei der Erstellung des Topics per Log_CreateTopic() angegeben wurde.
 //	entry		Eine eindeutige Zeichenkette, die sowohl zur Identifikation als auch zur Anzeige des Eintrags verwendet wird.
 
+
 // *******************************************************************************************
 // ***                               Languages (from 1.30)                                 ***
 // *******************************************************************************************
 
 func void	Game_InitGerman		() {};
 
+								// Gothic 2 only function
 								// Setzt die interne Engine-Variablen auf Deutsch.
 								//
 								//	[result]	- Zeigt an, ob die Sprache erfolgreich geladen wurde.
 
 func void	Game_InitEnglish	() {};
 
+								// Gothic 2 only function
 								// Setzt die interne Engine-Variablen auf English.
 								//
 								//	[result]	- Zeigt an, ob die Sprache erfolgreich geladen wurde.
