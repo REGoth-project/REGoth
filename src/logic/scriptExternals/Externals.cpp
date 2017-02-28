@@ -929,18 +929,18 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Daedalus::GameState::InfoHandle hinfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
                 pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
 
+        DialogManager& dialogManager = pWorld->getDialogManager();
         Logic::DialogManager::ChoiceEntry choice;
         choice.info = hinfo;
         choice.text = text;
-        // number will be assigned by addChoiceFront
-        choice.nr = 0;
+        choice.nr = dialogManager.beforeFrontIndex();
         choice.functionSym = func;
         choice.important = false;
 
         // calling the script function info_addchoice always opens the SubDialog for special multiple choices
-        pWorld->getDialogManager().setSubDialogActive(true);
-        pWorld->getDialogManager().addChoiceFront(choice);
-        pWorld->getDialogManager().flushChoices();
+        dialogManager.setSubDialogActive(true);
+        dialogManager.addChoice(choice);
+        dialogManager.flushChoices();
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
@@ -1117,16 +1117,53 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_hasequippedmeleeweapon";
-	int32_t self = vm.popVar();
+        int32_t self = vm.popVar();
 
-	VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
-	if (!npc.isValid()) {
-	    vm.setReturn(0);
-	    return;
-	}
+        if (!npc.isValid()) {
+            vm.setReturn(0);
+            return;
+        }
 
         vm.setReturn(npc.playerController->hasEquippedMeleeWeapon());
+    });
+
+    vm->registerExternalFunction("ai_output", [=](Daedalus::DaedalusVM& vm){
+        std::string outputname = vm.popString();
+        uint32_t target = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        Daedalus::GameState::NpcHandle htarget = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(vm.getDATFile().getSymbolByIndex(target).instanceDataHandle);
+
+        auto& dialogManager = pWorld->getDialogManager();
+        auto& message = dialogManager.getScriptDialogManager()->getMessageLib().getMessageByName(outputname);
+        dialogManager.onAIOutput(hself, htarget, message);
+    });
+
+    vm->registerExternalFunction("AI_ProcessInfos", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+
+        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+
+        pWorld->getDialogManager().updateChoices(hself);
+    });
+
+
+    vm->registerExternalFunction("npc_knowsinfo", [=](Daedalus::DaedalusVM& vm){
+        int32_t infoinstance = vm.popDataValue();
+        int32_t self = vm.popVar();
+
+        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        Daedalus::GEngineClasses::C_Npc& npc = vm.getGameState().getNpc(hself);
+
+        auto& scriptDialogManager = *pWorld->getDialogManager().getScriptDialogManager();
+        bool knows = scriptDialogManager.doesNpcKnowInfo(npc.instanceSymbol, infoinstance);
+
+        //LogInfo() << "Does he kow? (" << vm.getDATFile().getSymbolByIndex(npc.instanceSymbol).name << " -> " << vm.getDATFile().getSymbolByIndex(infoinstance).name << "): " << knows;
+
+        vm.setReturn(knows);
     });
 }
 

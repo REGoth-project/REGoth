@@ -43,6 +43,8 @@ namespace Logic
 
             // Indicates whether choice should be auto played
             bool important;
+
+            static bool comparator(const ChoiceEntry& a, const ChoiceEntry& b){ return a.nr < b.nr; };
         };
 
         /**
@@ -111,11 +113,9 @@ namespace Logic
         void addChoice(ChoiceEntry& entry);
 
         /**
-         * Adds a single choice to the box.
-         * The entry will get a new nr to be guaranteed to be on top.
-         * @param entry Choice entry.
+         * @return new choice number guaranteed to be smaller than all existing ones
          */
-        void addChoiceFront(ChoiceEntry& entry);
+        int beforeFrontIndex();
 
         /**
          * Sets whether the DialogManager is in in the SubDialog state
@@ -139,8 +139,9 @@ namespace Logic
 
         /**
          * Updates the choices from script-side. Restores the original set.
+         * @param target conversation partner
          */
-        void updateChoices();
+        void updateChoices(Daedalus::GameState::NpcHandle target);
 
         /**
          * Called by the script when the interaction will end
@@ -166,6 +167,14 @@ namespace Logic
          */
         UI::SubtitleBox& getSubtitleBox() { return *m_ActiveSubtitleBox; }
 
+        /**
+         * Called when an NPC is about to say something
+         * @param self NPC talking
+         * @param target NPC talking to
+         * @param msg Message to say
+         */
+        void onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg);
+
     protected:
 
         /**
@@ -181,14 +190,6 @@ namespace Logic
          * @param infos List of choices the player has to select
          */
         void onAIProcessInfos(Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos);
-
-        /**
-         * Called when an NPC is about to say something
-         * @param self NPC talking
-         * @param target NPC talking to
-         * @param msg Message to say
-         */
-        void onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg);
 
         /**
          * Currently active subtitle box
