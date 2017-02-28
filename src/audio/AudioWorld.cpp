@@ -28,6 +28,7 @@ namespace World
         m_Engine(engine),
         m_VDFSIndex(vdfidx)
     {
+    #ifdef RE_USE_SOUND
         if (!audio_engine.getDevice())
             return;
 
@@ -49,10 +50,12 @@ namespace World
         alListenerfv(AL_ORIENTATION, listenerOri);
 
         createSounds();
+    #endif
     }
 
     AudioWorld::~AudioWorld()
     {
+    #ifdef RE_USE_SOUND
         for (int i=0; i<Config::MAX_NUM_LEVEL_AUDIO_FILES; i++)
         {
             Sound &snd = m_Allocator.getElements()[i];
@@ -67,6 +70,7 @@ namespace World
             alcDestroyContext(m_Context);
 
         delete m_VM;
+    #endif
     }
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
@@ -123,6 +127,7 @@ namespace World
         }
 
         alBufferData(snd->m_Handle, AL_FORMAT_MONO16, wav.getData(), wav.getDataSize(), wav.getRate());
+        error = alGetError();
         if (error != AL_NO_ERROR)
         {
             static bool warned = false;
@@ -138,7 +143,7 @@ namespace World
 
         return h;
     #else
-        return Handle::AudioHandle::makeInvalidHandle();
+        return Handle::SfxHandle::makeInvalidHandle();
     #endif
     }
 
@@ -201,7 +206,7 @@ namespace World
         }
         return s.soundTicket;
     #else
-        return Ticket<AudioWorld>();
+        return Utils::Ticket<AudioWorld>();
     #endif
     }
 
