@@ -532,6 +532,7 @@ namespace Logic
             {
                 messageType = EventMessageType::Conversation;
                 internInProgress = false;
+                canceled = false;
                 waitIdentifier = nullptr;
             }
 
@@ -551,8 +552,6 @@ namespace Logic
              * Export as JSON-String
              */
             virtual std::string exportPart();
-
-
 
             /**
              * Text to be displayed in the subtitle box
@@ -593,6 +592,11 @@ namespace Logic
              * Whether this is currently in progress. Set by the PlayerController.
              */
             bool internInProgress;
+
+            /**
+             * Whether this message has been kindly canceled by the ouside (i.e. DialogManager).
+             */
+            bool canceled;
 
             /**
              * Ticket. Can be used to ask AudioWorld if sound is playing.

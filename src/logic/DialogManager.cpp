@@ -174,35 +174,20 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
     conv.name = msg.name;
     conv.text = msg.text;
 
+    // Push the actual conversation-message
+    auto sharedConvMessage = selfnpc.playerController->getEM().onMessage(conv);
+
+    // Make both wait for this ai_output to complete.
+    selfnpc.playerController->getEM().waitForMessage(sharedConvMessage);
     if(target.isValid())
     {
         VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
-
         if (targetnpc.isValid())
         {
-            conv.target = targetnpc.entity;
-
-            // Check if the target is currently talking to us
-            std::shared_ptr<EventMessages::EventMessage> otherconv = targetnpc.playerController->getEM().findLastConvMessageWith(
-                    selfnpc.entity);
-
-            // Wait for the other npc to complete first
-            if (otherconv){
-                selfnpc.playerController->getEM().waitForMessage(otherconv);
-            }
+            sharedConvMessage->target = targetnpc.entity;
+            targetnpc.playerController->getEM().waitForMessage(sharedConvMessage);
         }
     }
-    conv.onMessageDone.push_back(std::make_pair(selfnpc.entity, [this](Handle::EntityHandle hostHandle, std::shared_ptr<EventMessages::EventMessage> inst) {
-        // TODO: Rework "this" capture by reworking the callback interface (add world as argument passed)
-        auto& world = this->m_World;
-        world.getDialogManager().stopDisplaySubtitle();
-	auto convMessage = std::dynamic_pointer_cast<EventMessages::ConversationMessage>(inst);
-        world.getAudioWorld().stopSound(convMessage->soundTicket);
-        auto hostVob = VobTypes::asNpcVob(world, hostHandle);
-        hostVob.playerController->getModelVisual()->stopAnimations();
-    }));
-    // Push the actual conversation-message
-    selfnpc.playerController->getEM().onMessage(conv);
 }
 
 
@@ -219,8 +204,10 @@ void DialogManager::update(double dt)
 
             if(pv.isValid() && tv.isValid())
             {
-                dialogBoxVisible = !(pv.playerController->getEM().hasConvMessageWith(tv.entity)
-                                   || tv.playerController->getEM().hasConvMessageWith(pv.entity));
+                bool playerHasConv = pv.playerController->getEM().hasConvMessageWith(tv.entity);
+                bool targetHasConv = tv.playerController->getEM().hasConvMessageWith(pv.entity);
+                bool talk = playerHasConv || targetHasConv;
+                dialogBoxVisible = ! talk;
             }
         }
 
@@ -410,7 +397,7 @@ void DialogManager::cancelTalk()
 {
     if (m_CurrentDialogMessage)
     {
-        m_CurrentDialogMessage->deleted = true;
+        m_CurrentDialogMessage->canceled = true;
         m_CurrentDialogMessage = nullptr;
     }
 }
