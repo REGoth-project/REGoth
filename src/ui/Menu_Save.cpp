@@ -59,41 +59,42 @@ void Menu_Save::gatherAvailableSavegames()
 void Menu_Save::onCustomAction(const std::string& action)
 {
     if(action.find("MENUITEM_SAVE_SLOT") != std::string::npos)
-    { 
-	std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
-	int idx = std::stoi(numStr);
-	assert(idx > 0 && idx < 16);
+    {
+		std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
+		int idx = std::stoi(numStr);
+		assert(idx > 0 && idx < 16);
 
-	if (!m_isWaitingForSaveName)
-	{
-	    m_isWaitingForSaveName = true;
-	    m_SaveName = "";
-	    m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(idx);
-            getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
-	}
-	else
-	{
-	    m_isWaitingForSaveName = false;
+		if (!m_isWaitingForSaveName)
+		{
+			m_isWaitingForSaveName = true;
+			m_SaveName = "";
+			m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(idx);
+			getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
+		}
+		else
+		{
+			m_isWaitingForSaveName = false;
 
-	    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-	    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
-	    Engine::SavegameManager::clearSavegame(idx);
+			// TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
+			// Clean data from old savegame, so we don't load into worlds we haven't been to yet
+			Engine::SavegameManager::clearSavegame(idx);
 
-	    // Write information about the current game-state
-	    Engine::SavegameManager::SavegameInfo info;
-	    info.name = m_SaveName;
-	    info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
-	    info.timePlayed = 0;
-	    Engine::SavegameManager::writeSavegameInfo(idx, info);
+			// Write information about the current game-state
+			Engine::SavegameManager::SavegameInfo info;
+			info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
+			info.name = m_SaveName;
+			info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
+			info.timePlayed = m_Engine.getGameClock().getTotalSeconds();
+			Engine::SavegameManager::writeSavegameInfo(idx, info);
 
-	    json j; m_Engine.getMainWorld().get().exportWorld(j);
+			json j; m_Engine.getMainWorld().get().exportWorld(j);
 
-	    // Save
-	    Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
-
-	    // Update list of savegames, for testing
-	    gatherAvailableSavegames();
-	}
+			// Save
+			Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
+	
+			// close menus after saving
+			getHud().popAllMenus();
+		}
     }
 }
 
@@ -123,7 +124,7 @@ void Menu_Save::onTextInput(const std::string& text)
 {
     if (m_isWaitingForSaveName && m_SaveName.size() <= 32) // Arbitrary length
     {
-	m_SaveName += text;
-	getItemScriptData(m_MenuItemSaveSlot).text[0] = m_SaveName + "_";
+		m_SaveName += text;
+		getItemScriptData(m_MenuItemSaveSlot).text[0] = m_SaveName + "_";
     }
 }

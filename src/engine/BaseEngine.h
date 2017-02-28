@@ -4,6 +4,7 @@
 #include <vdfs/fileIndex.h>
 #include <ui/View.h>
 #include <bx/commandline.h>
+#include "GameClock.h"
 
 namespace UI
 {
@@ -85,6 +86,12 @@ namespace Engine
 		World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
 
         /**
+         *
+         * @return gameclock
+         */
+        GameClock& getGameClock() { return m_GameClock; }
+
+        /**
          * @return Arguments passed to the engine
          */
         EngineArgs getEngineArgs();
@@ -160,6 +167,18 @@ namespace Engine
 		{
 			return m_GameEngineSpeedFactor;
 		}
+
+		/**
+		 * Pauses or continues the game.
+		 * @param paused
+		 */
+		void setPaused(bool paused);
+
+		/**
+		 * Pauses or continues the game. Depending on the current state
+		 */
+		void togglePaused() { setPaused(!m_DisableLogic); }
+
 	protected:
 
 		/**
@@ -199,6 +218,11 @@ namespace Engine
 		 */
 		std::vector<Handle::WorldHandle> m_Worlds;
 
+		/**
+		 * ingame clock
+		 */
+        GameClock m_GameClock;
+
         /**
          * Arguments
          */
@@ -227,5 +251,10 @@ namespace Engine
          * Global speed factor. affects all instances (world (ergo animations), ingame clock (ergo sky))
          */
 		float m_GameEngineSpeedFactor;
+
+		/**
+         * Debug only
+         */
+		bool m_DisableLogic;
 	};
 }

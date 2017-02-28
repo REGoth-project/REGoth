@@ -1411,7 +1411,7 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
             break;
 
         case EventMessages::StateMessage::EV_Wait:
-            message.waitTime -= static_cast<float>(m_World.getWorldInfo().lastFrameDeltaTime);
+            message.waitTime -= static_cast<float>(m_World.getWorldInfo().m_LastFrameDeltaTime);
             return message.waitTime < 0.0f;
             break;
 
@@ -1958,6 +1958,13 @@ void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
 
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
+    {
+        if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
+            m_World.getEngine()->togglePaused();
+        }
+    });
+
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
         if(triggered && !m_World.getDialogManager().isDialogActive())
@@ -1976,7 +1983,7 @@ void PlayerController::setupKeyBindings()
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
-        if(triggered)
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive())
             m_World.getEngine()->getHud().getConsole().setOpen(true);
     });
 

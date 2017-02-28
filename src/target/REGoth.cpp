@@ -385,9 +385,10 @@ public:
                 return "Missing argument. Usage: set day <day>";
 
             int day = std::stoi(args[2]);
-            m_pEngine->getMainWorld().get().getWorldInfo().setDay(day);
+            auto& clock = m_pEngine->getGameClock();
+            clock.setDay(day);
 
-            return "Set day to " + std::to_string(m_pEngine->getMainWorld().get().getWorldInfo().getDay());
+            return "Set day to " + std::to_string(clock.getDay());
         });
 
         console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
@@ -403,9 +404,10 @@ public:
             if(mm < 0 || mm > 59)
                 return "Invalid argument. Minutes must be in range from 0 to 59";
 
-            m_pEngine->getMainWorld().get().getWorldInfo().setTimeOfDay(hh, mm);
+            auto& clock = m_pEngine->getGameClock();
+            clock.setTimeOfDay(hh, mm);
 
-            return "Set clock to " + m_pEngine->getMainWorld().get().getWorldInfo().getTimeOfDayFormatted();
+            return "Set clock to " + clock.getTimeOfDayFormatted();
         });
 
         console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
@@ -414,7 +416,7 @@ public:
                 return "Missing argument. Usage: set clockspeed <factor>";
 
             float factor = std::stof(args[2]);
-            m_pEngine->getMainWorld().get().getWorldInfo().setClockSpeedFactor(factor);
+            m_pEngine->getGameClock().setClockSpeedFactor(factor);
 
             return "Set clockspeed to " + std::to_string(factor);
         });
@@ -583,9 +585,10 @@ public:
 
             // Write information about the current game-state
             Engine::SavegameManager::SavegameInfo info;
+            info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
             info.name = "Testsave";
             info.world = Utils::stripExtension(m_pEngine->getMainWorld().get().getZenFile());
-            info.timePlayed = 0;
+            info.timePlayed = m_pEngine->getGameClock().getTotalSeconds();
             Engine::SavegameManager::writeSavegameInfo(idx, info);
 
             json j;

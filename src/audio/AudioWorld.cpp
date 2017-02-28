@@ -385,4 +385,42 @@ namespace World
         return false;
     #endif
     }
+
+    void AudioWorld::pauseSounds() {
+#ifdef RE_USE_SOUND
+        if (!m_Context)
+            return;
+
+        alcMakeContextCurrent(m_Context);
+
+        for (Source& s : m_Sources)
+        {
+            ALint state;
+            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
+            if (state == AL_PLAYING)
+            {
+                alSourcePause(s.m_Handle);
+            }
+        }
+#endif
+    }
+
+    void AudioWorld::continueSounds() {
+#ifdef RE_USE_SOUND
+        if (!m_Context)
+            return;
+
+        alcMakeContextCurrent(m_Context);
+
+        for (Source& s : m_Sources)
+        {
+            ALint state;
+            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
+            if (state == AL_PAUSED)
+            {
+                alSourcePlay(s.m_Handle);
+            }
+        }
+#endif
+    }
 }

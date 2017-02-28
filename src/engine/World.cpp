@@ -36,8 +36,6 @@ WorldInstance::WorldInstance()
       m_PfxManager(*this),
       m_AudioWorld(nullptr)
 {
-    // Both games start at 8:00 in the morning
-    m_WorldInfo.setTimeOfDay(8, 00);
 }
 
 WorldInstance::~WorldInstance()
@@ -431,6 +429,15 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
     }
 
+    // reset gamespeed to default when new world is loaded
+    m_pEngine->setGameEngineSpeedFactor(1.0);
+
+    auto& clock = m_pEngine->getGameClock();
+    // reset clockspeed to default on world init
+    clock.setClockSpeedFactor(1.0);
+    // for test purpose make the clock run 7 times faster than usual gameplay
+    clock.setClockSpeedFactor(7.0);
+
     LogInfo() << "Done loading world!";
     return true;
 }
@@ -484,8 +491,8 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
     // Set frametime in worldinfo
-    m_WorldInfo.lastFrameDeltaTime = deltaTime;
-    m_WorldInfo.update(deltaTime);
+    m_WorldInfo.m_LastFrameDeltaTime = deltaTime;
+    m_pEngine->getGameClock().update(deltaTime);
 
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
@@ -559,7 +566,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setDateTimeDisplay(m_WorldInfo.getDateTimeFormatted());
+    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }
@@ -632,7 +639,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
             Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < m_WorldInfo.getTime())
+            if((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime())
                && (!inst.isValid() || sp.m_UsingEntity != inst))
             {
 

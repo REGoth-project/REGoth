@@ -89,8 +89,7 @@ UI::Hud::~Hud()
     removeChild(m_pClock);
     removeChild(m_pDialogBox);
 
-    while(!m_MenuChain.empty())
-        popMenu();
+    popAllMenus();
 
     delete m_pManaBar;
     delete m_pHealthBar;
@@ -158,9 +157,11 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     {
         if(!m_pDialogBox->isHidden()){
             m_pDialogBox->onInputAction(action);
+            return;
         }
         else if (dialogManager.isTalking() && action == IA_Close) {
             dialogManager.cancelTalk();
+            return;
         }
         return;
     }
@@ -169,11 +170,21 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     if(action == IA_Close)
     {
         if(m_Console.isOpen())
+        {
             m_Console.setOpen(false);
+            return;
+        }
         else if(!m_MenuChain.empty())
+        {
             popMenu();
-        else // Nothing is open right now. Show main-menu
+            return;
+        }
+        else
+        {
+            // Nothing is open right now. Show main-menu
             pushMenu<UI::Menu_Main>();
+            return;
+        }
     }
 }
 
@@ -185,11 +196,15 @@ void UI::Hud::setGameplayHudVisible(bool value)
 
 void UI::Hud::popMenu()
 {
-    // Move to other list to delete in the next frame. This makes it possible for menus to close themselfes.
+    // Move to other list to delete in the next frame. This makes it possible for menus to close themselves.
     m_MenusToDelete.push_back(m_MenuChain.back());
 
     removeChild(m_MenuChain.back());
     m_MenuChain.pop_back();
+    if (m_MenuChain.empty())
+    {
+        m_Engine.setPaused(false);
+    }
 }
 
 void UI::Hud::cleanMenus()
@@ -198,6 +213,11 @@ void UI::Hud::cleanMenus()
         delete m;
 
     m_MenusToDelete.clear();
+}
+
+void UI::Hud::popAllMenus() {
+    while(!m_MenuChain.empty())
+        popMenu();
 }
 
 
