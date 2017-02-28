@@ -178,7 +178,6 @@ bool UI::Menu::loadMenuDAT()
 
     // Load DAT-File...
     m_pVM = new Daedalus::DaedalusVM(datFile);
-    Daedalus::registerDaedalusStdLib(*m_pVM);
     Daedalus::registerGothicEngineClasses(*m_pVM);
 
     return true;

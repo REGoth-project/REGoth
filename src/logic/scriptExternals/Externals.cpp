@@ -15,7 +15,8 @@
 
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
 {
-    Daedalus::registerDaedalusStdLib(vm, verbose);
+    // don't use ZenLib externals
+    // Daedalus::registerDaedalusStdLib(vm, verbose);
     Daedalus::registerGothicEngineClasses(vm);
 }
 
@@ -1254,6 +1255,44 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         playerLog[topicName].entries.push_back(entry);
 
         pWorld->getScriptEngine().onLogEntryAdded(topicName, entry);
+    });
+
+    vm->registerExternalFunction("inttostring", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+
+        vm.setReturn(std::to_string(x));
+    });
+
+    vm->registerExternalFunction("floattoint", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+        float f = reinterpret_cast<float&>(x);
+        vm.setReturn(static_cast<int32_t>(f));
+    });
+
+    vm->registerExternalFunction("inttofloat", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+        float f = static_cast<float>(x);
+        vm.setReturn(reinterpret_cast<int32_t&>(f));
+    });
+
+    vm->registerExternalFunction("concatstrings", [](Daedalus::DaedalusVM& vm){
+        std::string s2 = vm.popString();
+        std::string s1 = vm.popString();
+
+        vm.setReturn(s1 + s2);
+    });
+
+    vm->registerExternalFunction("hlp_strcmp", [](Daedalus::DaedalusVM& vm){
+        std::string s1 = vm.popString();
+        std::string s2 = vm.popString();
+
+        vm.setReturn(s1 == s2 ? 1 : 0);
+    });
+
+    vm->registerExternalFunction("hlp_random", [=](Daedalus::DaedalusVM& vm){
+        int32_t n0 = vm.popDataValue();
+
+        vm.setReturn(rand() % n0);
     });
 }
 
