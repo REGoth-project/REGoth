@@ -309,7 +309,7 @@ func void	AI_StopAim					(var C_NPC attacker )	{ };
 // NPC beendet vorher gestartetes Zielen mit Fernkampfwaffe.
 // ------------------------------------- SONSTIGE CHECKS ------------------------------------
 
-func INT  	Npc_AreWeStronger			(var C_NPC self, var C_NPC other)			{ return 0; };
+func int  	Npc_AreWeStronger			(var C_NPC self, var C_NPC other)			{ return 0; };
 // ermittelt den stärkeren Nsc,
 //Wenn die Summe der Level aller NPCs (human, Monster), die zu mir feindlich sind und die zu <other> freundlich sind
 //MEHR ALS DOPPELT SO HOCH ist (x  > 2*y), wie die Summe der Level aller Leute, die zu mir freundlich sind, und die
@@ -319,7 +319,7 @@ func INT  	Npc_AreWeStronger			(var C_NPC self, var C_NPC other)			{ return 0; }
 //Beachten:
 //1) Monster können feindlich zu beiden Menschen sein --> egal, zählen auf beiden Seiten
 //2) Jemand, der z.B. zu mir freundlich und zu <other> feindlich ist, wird demnach doppelt gewertet --> ok so
-func INT	Npc_IsAiming				(var C_NPC self, var C_NPC other) { return 0; };
+func int	Npc_IsAiming				(var C_NPC self, var C_NPC other) { return 0; };
 // liefert eins zurück, wenn der zweite Character auf den ersten zielt (Fernkampfwaffen und Zauber)
 
 
@@ -334,7 +334,7 @@ func void 	Wld_InsertItem				(var int itemInstance, var string spawnPoint) 		{ }
 // Vorsicht, funktioniert nicht, Items werden immer im Mittelpunkt der Welt inserted
 func void	AI_LookForItem				(var C_NPC self, var int instance) {};
 // gibt die Möglichkeit nach bestimmten Items zu suchen (z.B.:Das goldene Schwert der Zerstörung, wenn vorhanden)
-func INT  	Wld_RemoveItem          	(var C_ITEM item)		{ };
+func int  	Wld_RemoveItem          	(var C_ITEM item)		{ };
 // G1: Hiermit wird das angegebene Item aus der Welt entfernt und gelöscht
 // G2: !!! hiermit wird das globale Item aus der Welt gelöscht ???
 
@@ -347,7 +347,7 @@ func C_Item Npc_GetInvItem				(var C_NPC self, var int itemInstance) 	{};
 // Ermittle ItemInstanz aus Inventory
 func int	Npc_HasItems				(var C_NPC n0, var int itemInstance) { return 0; };
 // Liefert "1", wenn NSC die angegebene Anzahl von Items besitzt.-> NpcHasItem ist damit obsolete
-func INT  	Npc_GetInvItemBySlot    	(var C_NPC self, var int category, var int slotNr)
+func int  	Npc_GetInvItemBySlot    	(var C_NPC self, var int category, var int slotNr)
 // Mit diesem Befehl läßt sich nachsehen, ob in einem bestimmten Slot einer bestimmten Kategorie ein item vorhanden ist
 // ist das der Fall, wird dieses Item in die globale Variable item geschrieben
 // gibt jetzt die Anzahl zurueck, wenn das Item stackable ist
@@ -601,13 +601,6 @@ func void 	Doc_MapCoordinates			(var string levelName, var float gamex1, var flo
 // Karte initialisieren : levelName = Name des Levels (.ZEN) aus dem die Karte einen Ausschnitt zeigt 
 // gamex1,gamey1 : Koordinaten im Spiel (linke obere Ecke der Karte) 
 // pixelx1,pixely1 : PixelKoordinaten linke obere Ecke // der Rest : alles nochmal für die rechte untere Ecke
-
-// - OBSOLETE IN GOTHIC 2-
-// func void	Doc_Open			(var string Texture) {};
-// func void	Doc_Font			(var string Font) {};
-// func void	Doc_Print			(var string Text) {};
-// func void	Doc_MapCoordinates	(var string Level, var float GameX1, var float GameY1, var float PixelX1, var float PixelY1, var float GameX2, var float GameY2, var float PixelX2, var float PixelY2) {};
-
 
 
 // *******************************************************************************************
@@ -881,7 +874,7 @@ func void 	AI_ReadySpell  				(var C_NPC self, var int spellID, var int investMa
 // Lasse zauberspruch auf Hand erscheinen.
 func void 	AI_UnreadySpell				(var C_NPC self);
 // lasse zauberspruch aus Hand verschwinden
-func INT  	Npc_HasSpell   				(var C_NPC self, var int spellID);
+func int  	Npc_HasSpell   				(var C_NPC self, var int spellID);
 // Kann der NSC den angegebenen Zauberspruch benutzen ?
 
 
@@ -1014,11 +1007,11 @@ func string ConcatStrings		(var string str1, var string str2)
 
 //Die folgenden Methoden geben den Text nur unter bestimmten zusätzlichen Bedingungen aus. Für die Methoden mit dem Suffix Inst trifft dies zu, wenn die Instanz von der die Debug-Methode aufgerufen wird, zum Debuggen aktiviert wurde. Die Methoden mit dem Suffix Ch geben den Text nur aus, wenn der angegebene Channel zum Debuggen aktiviert wurde.
 
-func void PrintDebugInst		(String text) 	{ };
+func void PrintDebugInst		(var String text) 	{ };
 // !!! gibt nur den Debugtext der eingeschalteten (SetDebugFocus --> siehe Intranetpage Erweitertes Skript-Debugging) Instanz aus ???
-func void PrintDebugInstCh		(int ch, String text)	{ };
+func void PrintDebugInstCh		(var int ch, var String text)	{ };
 // !!! gibt nur in einem bestimmten channel liegende Debuginfos einer Instanz aus ???
-func void PrintDebugCh			(int ch, String text)	{ };
+func void PrintDebugCh			(var int ch, var String text)	{ };
 // gibt nur den Text eines bestimmten Channels wieder, unabhängig von der Instanz ???
 
 // *******************************************************************************************
