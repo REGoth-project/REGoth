@@ -183,6 +183,11 @@ namespace Logic
          */
         void resetProfilingData();
 
+        /**
+         * Called when a log-entry was inserted
+         */
+        void onLogEntryAdded(const std::string& topic, const std::string& entry);
+
     protected:
 
         /**
@@ -205,11 +210,6 @@ namespace Logic
          * Called when an item got inserted into some NPCs inventory
          */
         void onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc);
-
-        /**
-         * Called when a log-entry was inserted
-         */
-        void onLogEntryAdded(const std::string& topic, const std::string& entry);
 
         /**
          * Script-VM
