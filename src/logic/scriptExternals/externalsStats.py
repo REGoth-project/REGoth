@@ -2,6 +2,10 @@
 
 import re
 
+def print_it(name, it):
+    print("in {}:".format(name))
+    print("\t" + "\n\t".join(sorted(it)))
+
 def get_externals(filename):
     with open(filename, "r") as f:
         text = f.read()
@@ -19,13 +23,7 @@ def main():
     both = impl_list & stubs_list
     only_stub = stubs_list - both
     only_impl = impl_list - both
-    print("in both:")
-    print("\t" + "\n\t".join(sorted(both)))
-    print("only in stub:")
-    print("\t" + "\n\t".join(sorted(only_stub)))
-    print("only in implemented:")
-    print("\t" + "\n\t".join(sorted(only_impl)))
 
-    print("stubs length: {}".format(len(stubs_list)))
+    print("\n".join(sorted(stubs_list)))
 
 main()
