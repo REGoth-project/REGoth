@@ -528,10 +528,18 @@ namespace Logic
                 ST_ConvMax
             };
 
+            enum class Status
+            {
+                INIT, // never seen by PlayerController yet
+                PLAYING,
+                FADING_OUT
+            };
+
             ConversationMessage()
             {
                 messageType = EventMessageType::Conversation;
-                internInProgress = false;
+                status = Status::INIT;
+                canceled = false;
                 waitIdentifier = nullptr;
             }
 
@@ -551,8 +559,6 @@ namespace Logic
              * Export as JSON-String
              */
             virtual std::string exportPart();
-
-
 
             /**
              * Text to be displayed in the subtitle box
@@ -590,9 +596,14 @@ namespace Logic
             SharedEMessage waitIdentifier;
 
             /**
-             * Whether this is currently in progress. Set by the PlayerController.
+             * stores the state of the message, to handle multiple stages/states inside the Playercontroller
              */
-            bool internInProgress;
+            Status status;
+
+            /**
+             * Whether this message has been kindly canceled by the ouside (i.e. DialogManager).
+             */
+            bool canceled;
 
             /**
              * Ticket. Can be used to ask AudioWorld if sound is playing.

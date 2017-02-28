@@ -637,5 +637,13 @@ namespace Math
 		u = 1.0f - v - w;
 	}
 
-
+	/**
+     * @brief if v compares less than hi, returns the larger of v and lo, otherwise returns the smaller of v and hi
+     */
+	template<class T>
+	T clamp(T v, T lo, T hi)
+	{
+		assert(lo < hi);
+		return (v < lo) ? lo : (hi < v) ? hi : v;
+	}
 }

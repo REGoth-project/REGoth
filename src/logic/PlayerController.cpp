@@ -22,6 +22,7 @@
 #include <json.hpp>
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
+#include <ui/SubtitleBox.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -1495,18 +1496,19 @@ PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMessage
 bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::ConversationMessage> sharedMessage,
                                        Handle::EntityHandle sourceVob)
 {
+    using EventMessages::ConversationMessage;
     auto& message = *sharedMessage;
-    switch (static_cast<EventMessages::ConversationMessage::ConversationSubType>(message.subType))
+    switch (static_cast<ConversationMessage::ConversationSubType>(message.subType))
     {
 
-        case EventMessages::ConversationMessage::ST_PlayAniSound:
+        case ConversationMessage::ST_PlayAniSound:
             break;
 
-        case EventMessages::ConversationMessage::ST_PlayAni:
+        case ConversationMessage::ST_PlayAni:
         {
             ZenLoad::zCModelAni* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
 
-            if (!message.internInProgress)
+            if (message.status == ConversationMessage::Status::INIT)
             {
                 if(isPlayerControlled())
                 {
@@ -1515,7 +1517,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
                 getModelVisual()->setAnimation(message.animation, false);
                 active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
-                message.internInProgress = true;
+                message.status = ConversationMessage::Status::PLAYING;
             }
 
             // Go as long as this animation is playing
@@ -1529,90 +1531,119 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
         }
             break;
 
-        case EventMessages::ConversationMessage::ST_PlaySound:
+        case ConversationMessage::ST_PlaySound:
             break;
 
-        case EventMessages::ConversationMessage::ST_LookAt:
+        case ConversationMessage::ST_LookAt:
             break;
 
-        case EventMessages::ConversationMessage::ST_Output:
+        case ConversationMessage::ST_Output:
         {
+            auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
-            if (!message.internInProgress)
+            if (message.status == ConversationMessage::Status::INIT)
             {
+                message.status = ConversationMessage::Status::PLAYING;
                 m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+                subtitleBox.setScaling(0.0);
+                subtitleBox.setGrowDirection(+1.0);
 
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
 
                 // Play the random dialog gesture
                 startDialogAnimation();
-                message.internInProgress = true;
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
                 m_World.getDialogManager().setCurrentMessage(sharedMessage);
-                //m_World.getDialogManager().setCurrentTalker(this->m_Entity);
+                return false;
+            }
 
-            } else
+            if (message.status == ConversationMessage::Status::PLAYING)
             {
+
+                bool nextStage;
             #ifdef RE_USE_SOUND
+                if (message.canceled)
+                {
+                    m_World.getAudioWorld().stopSound(message.soundTicket);
+                }
                 // toggle this bool to switch auto skip when sound ended
+                // TODO: read from config maybe
                 const bool autoPlay = true;
                 if (autoPlay)
                 {
-                    return !m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    nextStage = !isPlaying;
                 } else
                 {
-                    return false;
+                    nextStage = message.canceled;
                 }
             #else
-                return false;
+                // when sound is disabled, message must be skipped manually
+                nextStage = message.canceled;
             #endif
+                if (nextStage)
+                {
+                    message.status = ConversationMessage::Status::FADING_OUT;
+                    subtitleBox.setGrowDirection(-1.0);
+                }
             }
+
+            if (message.status == ConversationMessage::Status::FADING_OUT)
+            {
+                if (subtitleBox.getScaling() == 0.0f)
+                {
+                    m_World.getDialogManager().stopDisplaySubtitle();
+                    getModelVisual()->stopAnimations();
+                    return true;
+                }
+            }
+            return false;
         }
             break;
 
-        case EventMessages::ConversationMessage::ST_OutputSVM:
+        case ConversationMessage::ST_OutputSVM:
             break;
 
-        case EventMessages::ConversationMessage::ST_Cutscene:
+        case ConversationMessage::ST_Cutscene:
             break;
-        case EventMessages::ConversationMessage::ST_WaitTillEnd:
+        case ConversationMessage::ST_WaitTillEnd:
+            return message.canceled;
+        case ConversationMessage::ST_Ask:
             break;
-        case EventMessages::ConversationMessage::ST_Ask:
+        case ConversationMessage::ST_WaitForQuestion:
             break;
-        case EventMessages::ConversationMessage::ST_WaitForQuestion:
+        case ConversationMessage::ST_StopLookAt:
             break;
-        case EventMessages::ConversationMessage::ST_StopLookAt:
+        case ConversationMessage::ST_StopPointAt:
             break;
-        case EventMessages::ConversationMessage::ST_StopPointAt:
+        case ConversationMessage::ST_PointAt:
             break;
-        case EventMessages::ConversationMessage::ST_PointAt:
+        case ConversationMessage::ST_QuickLook:
             break;
-        case EventMessages::ConversationMessage::ST_QuickLook:
+        case ConversationMessage::ST_PlayAni_NoOverlay:
             break;
-        case EventMessages::ConversationMessage::ST_PlayAni_NoOverlay:
+        case ConversationMessage::ST_PlayAni_Face:
             break;
-        case EventMessages::ConversationMessage::ST_PlayAni_Face:
+        case ConversationMessage::ST_ProcessInfos:
             break;
-        case EventMessages::ConversationMessage::ST_ProcessInfos:
-            break;
-        case EventMessages::ConversationMessage::ST_StopProcessInfos:
+        case ConversationMessage::ST_StopProcessInfos:
             m_World.getDialogManager().endDialog();
             return true;
-        case EventMessages::ConversationMessage::ST_OutputSVM_Overlay:
+        case ConversationMessage::ST_OutputSVM_Overlay:
             break;
-        case EventMessages::ConversationMessage::ST_SndPlay:
+        case ConversationMessage::ST_SndPlay:
             break;
-        case EventMessages::ConversationMessage::ST_SndPlay3d:
+        case ConversationMessage::ST_SndPlay3d:
             break;
-        case EventMessages::ConversationMessage::ST_PrintScreen:
+        case ConversationMessage::ST_PrintScreen:
             break;
-        case EventMessages::ConversationMessage::ST_StartFx:
+        case ConversationMessage::ST_StartFx:
             break;
-        case EventMessages::ConversationMessage::ST_StopFx:
+        case ConversationMessage::ST_StopFx:
             break;
-        case EventMessages::ConversationMessage::ST_ConvMax:
+        case ConversationMessage::ST_ConvMax:
             break;
     }
 

@@ -12,6 +12,8 @@
 
 UI::SubtitleBox::SubtitleBox(Engine::BaseEngine& e) : View(e)
 {
+    m_Scaling = 1;
+    m_growDirection = 0;
     m_ScrollArea = 0;
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
 
@@ -46,29 +48,41 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     imguiEndScrollArea();*/
 
+    m_Scaling += dt / GROW_SHRINK_TIME * m_growDirection;
+    m_Scaling = Math::clamp(m_Scaling, 0.0f, 1.0f);
+
     // Un-normalize transforms
     Math::float2 absTranslation = getAbsoluteTranslation();
 
-    int px = Math::iround(absTranslation.x * config.state.viewWidth);
-    int py = Math::iround((absTranslation.y + 0.02f) * config.state.viewHeight);
+    float pxMax = absTranslation.x * config.state.viewWidth;
+    float pyMax = (absTranslation.y + 0.02f) * config.state.viewHeight;
 
-    int sx = Math::iround(0.5f * config.state.viewWidth);
-    int sy = 13 * 6; // 6 lines of dialog
-    int wrapAroundWidth = Math::iround(0.95f * sx);
+    float sxMax = 0.5f * config.state.viewWidth;
+    float syMax = 13 * 6; // 6 lines of dialog
 
+    Math::float2 maxSize = {sxMax, syMax};
+    Math::float2 posMax = {pxMax, pyMax};
+    Math::float2 center = posMax + maxSize / 2;
     // Draw background image
     {
+        Math::float2 pos = center - maxSize / 2 * m_Scaling;
+        Math::float2 size = maxSize * m_Scaling;
+
         // Get background image
         Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_BackgroundTexture);
 
         bgfx::ProgramHandle program = config.programs.imageProgram;
-        drawTexture(BGFX_VIEW, px, py, sx, sy,
+        drawTexture(BGFX_VIEW,
+                    Math::iround(pos.x), Math::iround(pos.y),
+                    Math::iround(size.x), Math::iround(size.y),
                     config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle, program,
                     config.uniforms.diffuseTexture);
-
     }
-    // Draw text
+    if (m_Scaling == 1.0f)
     {
+        int centerx = Math::iround(center.x);
+        int centery = Math::iround(center.y);
+        int wrapAroundWidth = Math::iround(0.95f * sxMax);
         // split so that each line is not longer than wrapAroundWidth pixel
         std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
         const char * speakerFont = DEFAULT_FONT_HI;
@@ -85,7 +99,7 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
                     unsigned before = i;
                     unsigned long after = lines.size() - i - 1;
                     std::string line = std::string(before, '\n') + lines[i] + std::string(after, '\n');
-                    drawText(line, px + (sx / 2), py + (sy / 2), A_Center, config, font);
+                    drawText(line, centerx, centery, A_Center, config, font);
                 }
                 break;
             case SubtitleBox::TextAlignment::left:
@@ -94,8 +108,8 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
                 {
                     ss << '\n' << line;
                 }
-                drawText(m_Text.speaker + std::string(lines.size(), '\n'), px + (sx / 2), py + (sy / 2), A_Center, config, speakerFont);
-                drawText(ss.str(), px + (sx / 2), py + (sy / 2), A_Center, config, dialogTextFont);
+                drawText(m_Text.speaker + std::string(lines.size(), '\n'), centerx, centery, A_Center, config, speakerFont);
+                drawText(ss.str(), centerx, centery, A_Center, config, dialogTextFont);
                 break;
         }
     }
