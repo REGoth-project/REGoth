@@ -393,7 +393,7 @@ func void Game_InitGerman();
 //
 //      [result]        - Zeigt an, ob die Sprache erfolgreich geladen wurde.
 
-func int Hlp_CutscenePlayed(string csName);
+func bool Hlp_CutscenePlayed(string csName);
 // Abfrage, ob Cutscene schon gespielt wurde (0 = Nein / 1 = Ja)
 
 func int Hlp_GetInstanceID(c_npc npc);
@@ -405,28 +405,28 @@ func int Hlp_GetInstanceID2(c_item item);
 func c_npc Hlp_GetNpc(int instanceName);
 // Ermittle einen NSC über den Instanznamen. Dieser kann einer Variablen zugewiesen werden und ist somit gezielt verfügbar
 
-func int Hlp_IsItem(c_item item, int instanceName);
+func bool Hlp_IsItem(c_item item, int instanceName);
 // Prüft, ob der Gegenstand 'item' den Instanznamen 'instanceName' trägt. Will man z.B. testen,
 // ob die globale Variable item Pfeile sind (ItMuArrow) ruft man Hlp_IsItem(item,ItMuArrow) auf.
 // Gribt bei Gleichheit TRUE, sonst FALSE zurück.
 
-func int Hlp_IsValidItem(c_item item);
+func bool Hlp_IsValidItem(c_item item);
 // Prüfe ob Item-Instanz gültig und initialisiert ist True/False
 
-func int Hlp_IsValidNpc(c_npc self);
+func bool Hlp_IsValidNpc(c_npc self);
 // Prüfe ob NSC-Instanz gültig und initialisiert ist. True/False
 
 func int Hlp_Random(int n0);
 // erzeugt einen Zufallswert (wobei n0 Obergrenze : [0..n0-1] ) Rückgabewert integer
 
-func int Hlp_StrCmp(string s1, string s2);
+func bool Hlp_StrCmp(string s1, string s2);
 // Hilfsfunktion um zwei Strings miteinander zu vergleichen liefert bei Gleichheit eins zurück
 
 func void Info_AddChoice(int i0, string s1, func f2);
 
 func void Info_ClearChoices(int i0);
 
-func int InfoManager_HasFinished();
+func bool InfoManager_HasFinished();
 
 func void IntroduceChapter(string titel, string untertitel, string texture, string sound, int waitTime);
 // Gothic 2 only function
@@ -519,7 +519,7 @@ func void Mis_AddMissionEntry(instance n0, string s1);
 func int Mis_GetStatus(int missionName);
 // Liefert aktuellen Status einer Mission zurück ( Bezogen auf den Spieler ) -> RUNNING, SUCCESS, FAILED etc.
 
-func int Mis_OnTime(int missionName);
+func bool Mis_OnTime(int missionName);
 // Liefert TRUE, wenn sich Spieler noch innerhalb des Zeitlimits für diese Mission befindet
 
 func void Mis_RemoveMission(instance n0);
@@ -533,7 +533,7 @@ func void Mob_CreateItems(string itemInstance, int itemInstance, int amount);
 func int Mob_HasItems(string itemInstance, int itemInstance);
 // Liefere Anzahl der Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen
 
-func int Npc_AreWeStronger(c_npc self, c_npc other);
+func bool Npc_AreWeStronger(c_npc self, c_npc other);
 // ermittelt den stärkeren Nsc,
 // Wenn die Summe der Level aller NPCs (human, Monster), die zu mir feindlich sind und die zu <other> freundlich sind
 // MEHR ALS DOPPELT SO HOCH ist (x > 2*y), wie die Summe der Level aller Leute, die zu mir freundlich sind, und die
@@ -544,32 +544,32 @@ func int Npc_AreWeStronger(c_npc self, c_npc other);
 // 1) Monster können feindlich zu beiden Menschen sein --> egal, zählen auf beiden Seiten
 // 2) Jemand, der z.B. zu mir freundlich und zu <other> feindlich ist, wird demnach doppelt gewertet --> ok so
 
-func int Npc_CanSeeItem(c_npc npc1, c_item item);
+func bool Npc_CanSeeItem(c_npc npc1, c_item item);
 // Prueft ob Npc1 den Gegenstand sehen kann ( ein Ray wird gecastet -> Bitte sparsam einsetzen ) True/False
 
-func int Npc_CanSeeNpc(c_npc npc1, c_npc npc2);
+func bool Npc_CanSeeNpc(c_npc npc1, c_npc npc2);
 // Prueft ob Npc1 den Npc2 sehen kann ( ein Ray wird gecastet -> Bitte sparsam einsetzen ) True/False Blickwinkelabhängig (+,-100°)+LOS von der Hüfte aus
 
-func int Npc_CanSeeNpcFreeLOS(c_npc self, c_npc other);
+func bool Npc_CanSeeNpcFreeLOS(c_npc self, c_npc other);
 // Prüft ob NSC anderen NSC sehen kann, ohne dabei den Winkel zu berücksichtigen (nur LineOfSight-Check)
 
-func int Npc_CanSeeSource(c_npc self);
+func bool Npc_CanSeeSource(c_npc self);
 // Checkt, ob NSC die Soundquelle sehen kann True/False
 
 func void Npc_ChangeAttribute(c_npc self, int atr, int value);
 // ändert den Wert des Attributs (atr) um (value) Einheiten.
 
-func int Npc_CheckAvailableMission(c_npc npc, int missionState, int important);
+func bool Npc_CheckAvailableMission(c_npc npc, int missionState, int important);
 // Prüfe ob zwischen dem NSC eine aktuelle Mission (AVAILABLE,RUNNING) besteht und vergleiche den Status mit den angegebenen.
 // Falls dieser identisch ist, wird "1" geliefert.
 
-func int Npc_CheckInfo(c_npc npc, int important);
+func bool Npc_CheckInfo(c_npc npc, int important);
 // Überprüft,ob der NSC gültige Infos für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
-func int Npc_CheckOfferMission(c_npc npc, int important);
+func bool Npc_CheckOfferMission(c_npc npc, int important);
 // Überprueft ob der NSC dem Spieler einen Auftrag anbieten kann, wenn ja, wird der Offer-Block gestartet und "1" zurückgeliefert.
 
-func int Npc_CheckRunningMission(c_npc npc, int important);
+func bool Npc_CheckRunningMission(c_npc npc, int important);
 // Überprueft ob zwischen dem NSC und dem Spieler eine laufende Mission besteht und startet den entsprechenden Skriptblock.
 // (Returnwert 1 : Mission aktiv)
 
@@ -594,7 +594,7 @@ func int Npc_GetActiveSpell(c_npc self);
 func int Npc_GetActiveSpellCat(c_npc self);
 // Unterscheidet zwischen den drei Kategorien (Spell_Bad, Spell_neutral,Spell_Good) Spellkat ist Rückgabewert
 
-func int Npc_GetActiveSpellIsScroll(instance n0);
+func bool Npc_GetActiveSpellIsScroll(instance n0);
 
 func int Npc_GetActiveSpellLevel(c_npc self);
 // liefert den Spell-Level des Zaubers zurück, der auf der Hand ist
@@ -675,7 +675,7 @@ func c_npc Npc_GetNewsVictim(c_npc self, int newsNumber);
 func c_npc Npc_GetNewsWitness(c_npc self, int newsNumber);
 // Ermittle Zeuge der News und gibt eine INstanz der Klasse C_Npc zurück
 
-func int Npc_GetNextTarget(c_npc self);
+func bool Npc_GetNextTarget(c_npc self);
 // Aktive Suche nach einem Gegner. Wird ein Gegner gefunden, so wird er als internes Ziel
 // übernommen und in 'other' geschrieben, wenn kein Gegner gefunden wurde wird das
 // interne Ziel gelöscht und 'other' ungültig gemacht.
@@ -707,110 +707,110 @@ func int Npc_GetTalentSkill(instance n0, int i1);
 
 func int Npc_GetTalentValue(instance n0, int i1);
 
-func int Npc_GetTarget(c_npc self);
+func bool Npc_GetTarget(c_npc self);
 // Befüllt 'other' mit dem aktuellen Ziel. Das aktuelle Ziel wird intern gespeichert, wird
 // durch Npc_SetTarget() bzw. Npc_GetNextTarget() gesetzt.
-// - return: aktuelles Ziel gespeichert                 -> TRUE
-//                              kein Ziel gespeichert   -> FALSE
+// - return: aktuelles Ziel gespeichert     -> TRUE
+//           kein Ziel gespeichert          -> FALSE
 
 func int Npc_GetTrueGuild(c_npc npc);
 // liefert immer!!! die wahre Gilde zurück, ignoriert also auch ohne die Regeln die Verkleidung
 
-func int NPC_GiveInfo(c_npc npc, int important);
-// Überprüft,ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
+func bool NPC_GiveInfo(c_npc npc, int important);
+// Überprüft, ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
 func void Npc_GiveItem(c_npc n0, c_item n1, c_npc n2);
 // Der NSC "self" gibt den NSC "other" den angegebenen Gegenstand "item". Der Gegenstand wandert sofort ins Inventory des anderen.
 
-func int Npc_HasBodyFlag(c_npc self, int bodyFlag);
+func bool Npc_HasBodyFlag(c_npc self, int bodyFlag);
 // Liefert >0, falls BodyFlag gesetzt ist.
 
-func int Npc_HasDetectedNpc(c_npc self, c_npc other);
+func bool Npc_HasDetectedNpc(c_npc self, c_npc other);
 // liefert zurück, ob der Spieler in Sinnesreichweite und entdeckt ist
 
-func int Npc_HasEquippedArmor(c_npc self);
+func bool Npc_HasEquippedArmor(c_npc self);
 // Armor angezogen True/False
 
-func int Npc_HasEquippedMeleeWeapon(c_npc self);
+func bool Npc_HasEquippedMeleeWeapon(c_npc self);
 // gibt eins zurück, wenn eine Nahkampfwaffe Equipped ist
 
-func int Npc_HasEquippedRangedWeapon(c_npc self);
+func bool Npc_HasEquippedRangedWeapon(c_npc self);
 // Fernkampwaffe auf dem Rücken True/False
 
-func int Npc_HasEquippedWeapon(c_npc self);
+func bool Npc_HasEquippedWeapon(c_npc self);
 // gibt eins zurück, wenn die abgefragte Instanz (self oder other) eine Waffe sichtbar mit sich rumträgt
 
-func int Npc_HasFightTalent(c_npc self, int tal);
+func bool Npc_HasFightTalent(c_npc self, int tal);
 // Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
-func int Npc_HasItems(c_npc n0, int itemInstance);
+func bool Npc_HasItems(c_npc n0, int itemInstance);
 // Liefert "1", wenn NSC die angegebene Anzahl von Items besitzt.-> NpcHasItem ist damit obsolete
 
 func int Npc_HasNews(c_npc self, int newsID, c_npc offender, c_npc victim);
 // Liefert Newsnummer>0 (für weitere Referenzen) falls entsprechende News vorhanden.
 // Nicht benötigte Parameter können mit "NULL" leergelassen werden
 
-func int Npc_HasOffered(c_npc self, c_npc other, int itemInstance);
+func bool Npc_HasOffered(c_npc self, c_npc other, int itemInstance);
 // Bietet Spieler dem NSC einen Gegenstand übers Trade-Modul an ? True/False
 
-func int Npc_HasRangedWeaponWithAmmo(c_npc npc);
+func bool Npc_HasRangedWeaponWithAmmo(c_npc npc);
 // Gibt TRUE zurück, wenn 'npc' irgendeine Fernkampfwaffe im Inventory oder in der Hand hat UND
 // dazu auch passende Munition vorhanden ist. Sonst FALSE.
 
-func int Npc_HasReadiedMeleeWeapon(c_npc self);
+func bool Npc_HasReadiedMeleeWeapon(c_npc self);
 // Nahkampfwaffe in der Hand
 
-func int Npc_HasReadiedRangedWeapon(c_npc self);
+func bool Npc_HasReadiedRangedWeapon(c_npc self);
 // Fernkampfwaffe in der Hand
 
-func int Npc_HasReadiedWeapon(c_npc self);
+func bool Npc_HasReadiedWeapon(c_npc self);
 // gibt eins zurück, wenn die Waffe schon in der Hand ist
 
-func int Npc_HasSpell(c_npc self, int spellID);
+func bool Npc_HasSpell(c_npc self, int spellID);
 // Kann der NSC den angegebenen Zauberspruch benutzen ?
 
-func int Npc_HasTalent(c_npc self, int tal);
+func bool Npc_HasTalent(c_npc self, int tal);
 // liefert eins zurück, wenn der geprüfte Charakter das Talent tal hat
 
-func int Npc_IsAiming(c_npc self, c_npc other);
+func bool Npc_IsAiming(c_npc self, c_npc other);
 // liefert eins zurück, wenn der zweite Character auf den ersten zielt (Fernkampfwaffen und Zauber)
 
-func int Npc_IsDead(c_npc n0);
+func bool Npc_IsDead(c_npc n0);
 // Funktion liefert einen Wert zurück, falls Dead true ist
 
-func int Npc_IsDetectedMobOwnedByGuild(c_npc user, int ownerguild);
+func bool Npc_IsDetectedMobOwnedByGuild(c_npc user, int ownerguild);
 // Liefert >0, falls "ownerguild" der Besitzer des vom "user" benutzten Mob ist.
 // VORSICHT: Diese Funktion ist nur in Verbindung mit PERC_MOVEMOB erlaubt !!!
 
-func int Npc_IsDetectedMobOwnedByNpc(c_npc user, c_npc owner);
+func bool Npc_IsDetectedMobOwnedByNpc(c_npc user, c_npc owner);
 // Liefert >0, falls "owner" der Besitzer des vom "user" benutzten Mob ist.
 // VORSICHT: Diese Funktion ist nur in Verbindung mit PERC_MOVEMOB erlaubt !!!
 
-func int Npc_IsDrawingSpell(instance n0);
+func bool Npc_IsDrawingSpell(instance n0);
 
-func int Npc_IsDrawingWeapon(instance n0);
+func bool Npc_IsDrawingWeapon(instance n0);
 
-func int Npc_IsInCutscene(c_npc self);
+func bool Npc_IsInCutscene(c_npc self);
 // liefert eins zurück, wenn der entsprechende Nsc in einer Cutscene ist
 
-func int Npc_IsInFightMode(c_npc self, int fmode);
+func bool Npc_IsInFightMode(c_npc self, int fmode);
 // liefert eins zurück, wenn der Charakter im angegebenen Fightmode (z.B. FMODE_MAGIC) ist
 
-func int Npc_IsInPlayersRoom(instance n0);
+func bool Npc_IsInPlayersRoom(instance n0);
 
-func int Npc_IsInRoutine(c_npc self, func state);
+func bool Npc_IsInRoutine(c_npc self, func state);
 // Check ob der angegebene Zustand der aktuelle TA des NSCs ist. True/FAlse
 
-func int Npc_IsInState(c_npc self, func state);
+func bool Npc_IsInState(c_npc self, func state);
 // Abfrage auf den aktuellen Zustand einer Spielfigur True/False
 
-func int Npc_IsNear(c_npc self, c_npc other);
+func bool Npc_IsNear(c_npc self, c_npc other);
 // liefert eins zurück, wenn geprüfte Instanz sich im Bereich von drei Metern zur prüfenden Instanz befindet
 
-func int Npc_IsNewsGossip(c_npc self, int newsNumber);
+func bool Npc_IsNewsGossip(c_npc self, int newsNumber);
 // Liefert >0, falls News "Gossip" ist
 
-func int Npc_IsNextTargetAvailable(c_npc self);
+func bool Npc_IsNextTargetAvailable(c_npc self);
 // Sucht genauso wie Npc_GetNextTarget nach einem neuen Ziel, überschreibt aber weder
 // das interne Ziel, noch 'other'
 // - return:    neues Ziel gefunden     -> TRUE
@@ -819,25 +819,25 @@ func int Npc_IsNextTargetAvailable(c_npc self);
 //              Npc_PerceiveAll() erstellt wurde. Wird diese Funktion in einem Zustand ohne aktive
 //              Wahrnehmungen benutzt, muß vorher ein Npc_PerceiveAll() aufgerufen werden
 
-func int Npc_IsOnFP(c_npc self, string name);
+func bool Npc_IsOnFP(c_npc self, string name);
 // Abfrage darauf, ob der Nsc auf einem Freepoint mit name Teilstring steht
 
-func int Npc_IsPlayer(c_npc player);
+func bool Npc_IsPlayer(c_npc player);
 // liefert eins zurück, wenn der geprüfte Charakter der Spieler himself ist
 
-func int Npc_IsPlayerInMyRoom(c_npc npc);
+func bool Npc_IsPlayerInMyRoom(c_npc npc);
 // gibt TRUE zurück, wenn sich SC im Raum des 'npc' oder seiner Gilde befindet, sonst FALSE
 
-func int Npc_IsVoiceActive(instance n0);
+func bool Npc_IsVoiceActive(instance n0);
 
-func int Npc_IsWayBlocked(c_npc self);
+func bool Npc_IsWayBlocked(c_npc self);
 // Liefert "1", falls Weg von NSC durch Hindernis versperrt ist.
 
-func int Npc_KnowsInfo(c_npc self, int infoInstance);
+func bool Npc_KnowsInfo(c_npc self, int infoInstance);
 // Liefert TRUE, wenn der angegebene Spieler die Info schon einmal erhalten hat.
 // VORSICHT: auch wenn eine permanente Info schon einmal dem Spieler erzählt wurde, so gibt diese Funktion trotzdem FALSE zurück!
 
-func int Npc_KnowsPlayer(c_npc self, c_npc player);
+func bool Npc_KnowsPlayer(c_npc self, c_npc player);
 // Kennt der NSC den Spieler? True/False
 
 func void Npc_LearnSpell(c_npc self, int spellnr);
@@ -850,10 +850,10 @@ func void Npc_MemoryEntry(c_npc self, int source, c_npc offender, int newsid, c_
 func void Npc_MemoryEntryGuild(c_npc self, int source, c_npc offender, int newsid, c_npc victimguild);
 // wie MemoryEntry nur, das die Memory für die ganze Gilde kreiert wird
 
-func int Npc_OwnedByGuild(c_item item, int guild);
+func bool Npc_OwnedByGuild(c_item item, int guild);
 // Liefert "1", wenn der angegebenen Gilde das Item gehört ( Gildenbesitz )
 
-func int Npc_OwnedByNpc(c_item item, c_npc npc);
+func bool Npc_OwnedByNpc(c_item item, c_npc npc);
 // Liefert "1", wenn dem NSC das Item gehört ( persönliches Besitzflag )
 
 func void Npc_PercDisable(c_npc self, int percID);
@@ -867,7 +867,7 @@ func void Npc_PercEnable(c_npc self, int percID, func function);
 
 func void Npc_PlayAni(instance n0, string s1);
 
-func int Npc_RefuseTalk(c_npc self);
+func bool Npc_RefuseTalk(c_npc self);
 // Abfrage ob Dialog-Refuse Counter noch aktiv ist True/False
 
 func void Npc_RemoveInvItem(c_npc owner, int itemInstance);
@@ -928,30 +928,30 @@ func void Npc_SetToFistMode(c_npc self);
 func int Npc_SetTrueGuild(c_npc npc, int guildID);
 // Setzt die wahre Gilde des NSCs
 
-func int Npc_StartItemReactModules(c_npc self, c_npc other, c_item item);
+func bool Npc_StartItemReactModules(c_npc self, c_npc other, c_item item);
 // Prüfe alle ItemReact-Module von "self" auf Gegenstand "item" von Geber "other" und starte passende Reaction-Funktion
 // liefert True beim finden eines Moduls
 
 func void Npc_StopAni(instance n0, string s1);
 
-func int Npc_WasInState(c_npc self, func state);
+func bool Npc_WasInState(c_npc self, func state);
 // Abfrage auf den vorherigen Zustand einer Spielfigur True/False
 
-func int Npc_WasPlayerInMyRoom(c_npc npc);
+func bool Npc_WasPlayerInMyRoom(c_npc npc);
 // gibt TRUE zurück, wenn sich SC vor dem letzten Raumwechsel im Raum des 'npc' oder seiner Gilde befindet, sonst FALSE
 // Raumwechsel ist dabei: Außen->Raum1, Raum1->Raum2, -> Raum1->Außen
 
 func void Perc_SetRange(int percID, int range);
 // Setze Reichweite fuer eine passive Wahrnehmung int cm
 
-func int PlayVideo(string filename);
+func bool PlayVideo(string filename);
 // Gothic 2 only function
 // Spielt eine Videodatei ab.
 //
 //      Filename        - Dateiname des Videos (mit Dateierweiterung, relativ zu [VIDEOS]\ )
 //      [result]        - Boolean ob erfolgreich abgespielt
 
-func int PlayVideoEx(string filename, int exitSession, int exitSession);
+func bool PlayVideoEx(string filename, int exitSession, int exitSession);
 // Gothic 2 only function
 // Spielt eine Videodatei mit erweiterten Optionen ab.
 //
@@ -967,13 +967,13 @@ func void PrintDebug(string s);
 // Printausgabe, die nur bei eingeschaltetem Debugmodus (Alt+D) im Spy/logfile ausgegeben wird
 
 func void PrintDebugCh(int ch, string text);
-// gibt nur den Text eines bestimmten Channels wieder, unabhängig von der Instanz ???
+// gibt nur den Text eines bestimmten Channels wieder, unabhängig von der Instanz
 
 func void PrintDebugInst(string text);
-// !!! gibt nur den Debugtext der eingeschalteten (SetDebugFocus --> siehe Intranetpage Erweitertes Skript-Debugging) Instanz aus ???
+// gibt nur den Debugtext der eingeschalteten (SetDebugFocus --> siehe Intranetpage Erweitertes Skript-Debugging) Instanz aus
 
 func void PrintDebugInstCh(int ch, string text);
-// !!! gibt nur in einem bestimmten channel liegende Debuginfos einer Instanz aus ???
+// gibt nur in einem bestimmten channel liegende Debuginfos einer Instanz aus
 
 func int PrintDialog(int i0, string s1, int i2, int i3, string s4, int i5);
 
@@ -998,10 +998,10 @@ func void SetPercentDone(int percentDone);
 func int Snd_GetDistToSource(c_npc self);
 // Liefert Entfernung ( in cm ! ) zum letzten logischen Sound
 
-func int Snd_IsSourceItem(c_npc self);
+func bool Snd_IsSourceItem(c_npc self);
 // Check, ob Quelle des letzten Sound Item war (Return >0) und setzt "item" auf diesen Gegenstand
 
-func int Snd_IsSourceNpc(c_npc self);
+func bool Snd_IsSourceNpc(c_npc self);
 // Check, ob Quelle des letzten Sound NPC war (Return >0) und setzt "other" auf diesen NPC
 
 func void Snd_Play(string s0);
@@ -1040,11 +1040,11 @@ func void Wld_AssignRoomToGuild(string s0, int guild);
 func void Wld_AssignRoomToNpc(string s0, c_npc roomowner);
 // Ordnet den Raum: 's0' dem speziellen Nsc 'roomowner' zu
 
-func int Wld_DetectItem(c_npc self, int flags);
+func bool Wld_DetectItem(c_npc self, int flags);
 // liefert eins zurück, wenn ein Item mit dem Entsprechende Flag (z.B.ITEM_KAT_FOOD )gefunden wurde
 // Globale Variable 'item' wird mit dem gefundenen Gegenstand initialisiert
 
-func int Wld_DetectNpc(c_npc self, int instance, func aiState, int guild);
+func bool Wld_DetectNpc(c_npc self, int instance, func aiState, int guild);
 // Diese Methode initilisiert die globale Skriptvariable "other" mit einem NSC, den "self" beim letzten Warnehmungscheck wargenommen hat.
 // instance     = Name der zu suchenden Instanz                                 ( "-1" angeben, wenn Instanzname unwichtig )
 // guild        = Der zu suchende NSC muss Mitglied dieser Gilde sein           ( "-1" angeben, wenn Gilde unwichtig )
@@ -1052,12 +1052,12 @@ func int Wld_DetectNpc(c_npc self, int instance, func aiState, int guild);
 // Wenn die Methode einen entsprechenden NSC gefunden hat, liefert diese "1" und 'other' ist initialisiert
 // ansonsten wird "0" geliefert und "other" wird nicht verändert.
 
-func int Wld_DetectNpcEx(c_npc self, int npcInstance, func aiState, int guild, int detectPlayer);
+func bool Wld_DetectNpcEx(c_npc self, int npcInstance, func aiState, int guild, int detectPlayer);
 // Wie Wld_DetectNpc(). Zusätzlich kann per detectPlayer=0 der Spieler ignoriert werden.
 
 func int Wld_DetectNpcExAtt(instance n0, int i1, func f2, int i3, int i4, int i5);
 
-func int Wld_DetectPlayer(c_npc self);
+func bool Wld_DetectPlayer(c_npc self);
 // liefert eins zurück, wenn der Player in der Nähe ist
 
 func void Wld_ExchangeGuildAttitudes(string name);
@@ -1107,18 +1107,18 @@ func void Wld_InsertNpcAndRespawn(int instance, string spawnDelay, float spawnDe
 
 func void Wld_InsertObject(string s0, string s1);
 
-func int Wld_IsFPAvailable(c_npc self, string fpName);
+func bool Wld_IsFPAvailable(c_npc self, string fpName);
 // Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('self' zählt als Blockierer nicht!) und sichtbar
 
-func int Wld_IsMobAvailable(c_npc self, string schemeName);
+func bool Wld_IsMobAvailable(c_npc self, string schemeName);
 // Sucht sich ein Mobsi im Umkreis von 10m und liefert TRUE falls gefunden. MOB wird nur zurückgeliefert, wenn es nicht besetzt ist.
 
-func int Wld_IsNextFPAvailable(c_npc self, string fpName);
+func bool Wld_IsNextFPAvailable(c_npc self, string fpName);
 // wie Wld_IsFPAvailable(), aber es wird immer der nahegelegenste genommen und 'self' zählt als Blockierer!
 
-func int Wld_IsRaining();
+func bool Wld_IsRaining();
 
-func int Wld_IsTime(int hour1, int min1, int hour2, int min2);
+func bool Wld_IsTime(int hour1, int min1, int hour2, int min2);
 // Liefert zurück ob die aktuelle Weltzeit zwischen den beiden angegebenen Zeiten liegt (von - bis)
 
 func void Wld_PlayEffect(string effectinstance, int originvob, int targetvob, int effectlevel, int damage, int damagetype, int bisprojectile);
