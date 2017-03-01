@@ -40,6 +40,7 @@ func int 	Hlp_GetInstanceID 		(var C_NPC npc ) { return 0; };
 // liefert die interne ID ( nicht Var aus der Instanz) zurück, um z.B. other mit self vergleichen zu können ( integer Vergleich)
 func int 	Hlp_GetInstanceID2 		(var C_ITEM item ) { return 0; };
 // liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items miteinander vergleichen zu können ( integer Vergleich)
+
 // *******************************************************************************************
 // ***                                      WARTEN / ZEIT                                  ***
 // *******************************************************************************************

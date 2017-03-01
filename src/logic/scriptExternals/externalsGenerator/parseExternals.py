@@ -61,7 +61,7 @@ def parse_functions(external_filename):
 def format_function(f_info, print_comments=True):
     returntype, func_name, params, comments = f_info
     params_formatted = ", ".join("{} {}".format(*t) for t in params)
-    signature = "{returntype} {func_name}({params_formatted});".format(**locals())
+    signature = "func {returntype} {func_name}({params_formatted});".format(**locals())
     lines = [signature]
     if print_comments:
         lines.extend(comments)
