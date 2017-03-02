@@ -559,17 +559,17 @@ func bool Npc_CanSeeSource(c_npc self);
 func void Npc_ChangeAttribute(c_npc self, int atr, int value);
 // ändert den Wert des Attributs (atr) um (value) Einheiten.
 
-func bool Npc_CheckAvailableMission(c_npc npc, int missionState, int important);
+func bool Npc_CheckAvailableMission(c_npc npc, int missionState, bool important);
 // Prüfe ob zwischen dem NSC eine aktuelle Mission (AVAILABLE,RUNNING) besteht und vergleiche den Status mit den angegebenen.
 // Falls dieser identisch ist, wird "1" geliefert.
 
-func bool Npc_CheckInfo(c_npc npc, int important);
+func bool Npc_CheckInfo(c_npc npc, bool important);
 // Überprüft,ob der NSC gültige Infos für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
-func bool Npc_CheckOfferMission(c_npc npc, int important);
+func bool Npc_CheckOfferMission(c_npc npc, bool important);
 // Überprueft ob der NSC dem Spieler einen Auftrag anbieten kann, wenn ja, wird der Offer-Block gestartet und "1" zurückgeliefert.
 
-func bool Npc_CheckRunningMission(c_npc npc, int important);
+func bool Npc_CheckRunningMission(c_npc npc, bool important);
 // Überprueft ob zwischen dem NSC und dem Spieler eine laufende Mission besteht und startet den entsprechenden Skriptblock.
 // (Returnwert 1 : Mission aktiv)
 
@@ -716,7 +716,7 @@ func bool Npc_GetTarget(c_npc self);
 func int Npc_GetTrueGuild(c_npc npc);
 // liefert immer!!! die wahre Gilde zurück, ignoriert also auch ohne die Regeln die Verkleidung
 
-func bool NPC_GiveInfo(c_npc npc, int important);
+func bool NPC_GiveInfo(c_npc npc, bool important);
 // Überprüft, ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
 func void Npc_GiveItem(c_npc n0, c_item n1, c_npc n2);
@@ -743,8 +743,8 @@ func bool Npc_HasEquippedWeapon(c_npc self);
 func bool Npc_HasFightTalent(c_npc self, int tal);
 // Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
-func bool Npc_HasItems(c_npc n0, int itemInstance);
-// Liefert "1", wenn NSC die angegebene Anzahl von Items besitzt.-> NpcHasItem ist damit obsolete
+func int Npc_HasItems(c_npc n0, int itemInstance);
+// Liefert zurück wie viele Items der NSC vom angegebenen Typ besitzt
 
 func int Npc_HasNews(c_npc self, int newsID, c_npc offender, c_npc victim);
 // Liefert Newsnummer>0 (für weitere Referenzen) falls entsprechende News vorhanden.
@@ -1052,7 +1052,7 @@ func bool Wld_DetectNpc(c_npc self, int instance, func aiState, int guild);
 // Wenn die Methode einen entsprechenden NSC gefunden hat, liefert diese "1" und 'other' ist initialisiert
 // ansonsten wird "0" geliefert und "other" wird nicht verändert.
 
-func bool Wld_DetectNpcEx(c_npc self, int npcInstance, func aiState, int guild, int detectPlayer);
+func bool Wld_DetectNpcEx(c_npc self, int npcInstance, func aiState, int guild, bool detectPlayer);
 // Wie Wld_DetectNpc(). Zusätzlich kann per detectPlayer=0 der Spieler ignoriert werden.
 
 func int Wld_DetectNpcExAtt(instance n0, int i1, func f2, int i3, int i4, int i5);
