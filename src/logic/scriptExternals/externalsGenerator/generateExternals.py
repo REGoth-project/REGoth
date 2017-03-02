@@ -45,11 +45,30 @@ class DaedalusFunction(object):
             elif param_type == "bool":
                 blines.append("bool " + param_name + " = static_cast<bool>(vm.popDataValue());")
             elif param_type == "func":
-                # funcSym popVar oder popDataValue???
+                # funcSym popVar or popDataValue???
                 blines.append("uint32_t " + param_name + " = static_cast<uint32_t>(vm.popDataValue());")
             else:
                 assert False, "unknown param type: " + param_type
             blines[-1] += ' LogInfo() << "' + param_name + ': " << ' + param_name + ';'
+
+        if self.returntype == "void":
+            pass
+        elif self.returntype == "int":
+            blines.append("vm.setReturn(0);")
+        elif self.returntype == "bool":
+            blines.append("vm.setReturn(0);")
+        elif self.returntype == "string":
+            blines.append("vm.setReturn("");")
+        elif self.returntype == "float":
+            blines.append("vm.setReturn(0.0f);")
+        elif self.returntype == "c_npc":
+            blines.append("vm.setReturnVar(0);")
+        elif self.returntype == "instance":
+            blines.append("vm.setReturnVar(0);")
+        elif self.returntype == "c_item":
+            blines.append("vm.setReturnVar(0);")
+        else:
+            assert False, "unknown return type: " + self.returntype
 
         lines.extend("\t" + line for line in blines)
         end_function = "});"
@@ -106,8 +125,7 @@ def parse_functions(external_filename):
                 params.append([param_type, param_name])
             param_names = [pname for _, pname in params]
             for pname, freq in collections.Counter(param_names).items():
-                if freq > 1:
-                    assert False, "multiple parameters with same name: " + pname + " in function: " + func_name
+                assert freq == 1, "multiple parameters with same name: " + pname + " in function: " + func_name
             comments = []
             functions.append(DaedalusFunction(returntype, func_name, params, comments))
     d = dict()
