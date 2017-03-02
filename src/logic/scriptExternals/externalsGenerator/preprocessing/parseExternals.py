@@ -101,8 +101,8 @@ def main():
                 winner = b[1] if upperCount(a[1]) < upperCount(b[1]) else a[1]
                 winners.append((i, winner))
         for i, param_name in winners:
-            modkit_params[i][1] = winner
-            wog_params[i][1] = winner
+            modkit_params[i][1] = param_name
+            wog_params[i][1] = param_name
 
     # add missing entries to each other
     for a, b in [(modkit_fs, wog_fs), (wog_fs, modkit_fs)]:
