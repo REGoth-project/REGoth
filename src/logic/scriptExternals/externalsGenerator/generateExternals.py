@@ -3,6 +3,7 @@
 import re
 import operator
 import collections
+import copy
 
 class DaedalusFunction(object):
     def __init__(self, returntype, func_name, params, comments):
@@ -11,10 +12,11 @@ class DaedalusFunction(object):
         self.params = params
         self.comments = comments
 
-    def pretty(self, print_comments=False, print_varkeyword=False):
+    def pretty(self, print_comments=False, print_varkeyword=False, print_funckeyword=True):
         var_keyword = "var " if print_varkeyword else ""
         params_formatted = ", ".join("{}{} {}".format(var_keyword, ptype, pname) for ptype, pname in self.params)
-        signature = "func {} {}({});".format(self.returntype, self.func_name, params_formatted)
+        funckeyword = "func " if print_funckeyword else ""
+        signature = funckeyword + "{} {}({});".format(self.returntype, self.func_name, params_formatted)
         lines = [signature]
         if print_comments:
             lines.extend(self.comments)
@@ -23,9 +25,10 @@ class DaedalusFunction(object):
     def register_format(self, indent=0):
         lines = []
         blines = []
+        lines.extend(["// " + self.pretty(print_funckeyword=False)] + self.comments)
         register = "vm->registerExternalFunction(\"{fname}\", [=](Daedalus::DaedalusVM& vm) {{".format(fname=self.func_name)
         lines.append(register)
-        verbose_info = "if(verbose) LogInfo() << \"{fname}\";".format(fname=self.func_name)
+        verbose_info = "if (verbose) LogInfo() << \"{fname}\";".format(fname=self.func_name)
         blines.append(verbose_info)
         for param_type, param_name in reversed(self.params):
             if param_type == "string":
@@ -52,23 +55,46 @@ class DaedalusFunction(object):
             blines[-1] += ' LogInfo() << "' + param_name + ': " << ' + param_name + ';'
 
         if self.returntype == "void":
-            pass
-        elif self.returntype == "int":
-            blines.append("vm.setReturn(0);")
-        elif self.returntype == "bool":
-            blines.append("vm.setReturn(0);")
+            default_return = ""
+        elif self.returntype in ["int", "bool"]:
+            default_return = "vm.setReturn(0);"
         elif self.returntype == "string":
-            blines.append("vm.setReturn("");")
+            default_return = "vm.setReturn("");"
         elif self.returntype == "float":
-            blines.append("vm.setReturn(0.0f);")
-        elif self.returntype == "c_npc":
-            blines.append("vm.setReturnVar(0);")
-        elif self.returntype == "instance":
-            blines.append("vm.setReturnVar(0);")
-        elif self.returntype == "c_item":
-            blines.append("vm.setReturnVar(0);")
+            default_return = "vm.setReturn(0.0f);"
+        elif self.returntype in ["c_npc", "c_item", "instance"]:
+            default_return = "vm.setReturnVar(0);"
         else:
             assert False, "unknown return type: " + self.returntype
+
+        c_npcs_indices = [i for i, (pt, pn) in enumerate(self.params) if pt == "c_npc"]
+
+        smart_args = copy.copy(self.params)
+        for i in c_npcs_indices:
+            n_npc = self.params[i][1]
+            vob_name = n_npc + "Vob"
+            smart_args[i] = ("VobTypes::NpcVobInformation", vob_name)
+            blines.append("VobTypes::NpcVobInformation {} = getNPCByInstance({});".format(vob_name, n_npc))
+
+        if len(c_npcs_indices) != 0:
+            condition = " || ".join("!{}.isValid()".format(smart_args[i][1]) for i in c_npcs_indices)
+            blines.append("if ({})".format(condition))
+            blines.append("{")
+            if default_return != "":
+                blines.append("\t" + default_return)
+            blines.append("\t" + "return;")
+            blines.append("}")
+
+        args = ", ".join(pname for ptype, pname in smart_args)
+        callobject = "Externals::{}({})".format(self.func_name, args)
+        if default_return == "":
+            blines.append(callobject + ";")
+        else:
+            return_fu = "setReturnVar" if self.returntype in ["c_npc", "c_item", "instance"] else "setReturn"
+            blines.append("vm.{}({});".format(return_fu, callobject))
+
+        if default_return != "":
+            blines.append(default_return)
 
         lines.extend("\t" + line for line in blines)
         end_function = "});"
@@ -152,13 +178,13 @@ def main():
 
 
     for prefix, fdict in category_dict.items():
-        print("-----------------------------------------------------------------")
+        print("/*")
         print("{} ({})".format(prefix, len(fdict)))
-        print("-----------------------------------------------------------------")
-        for fname, f in fdict.items():
-            print(f.pretty())
+        print("*/")
+        for fname in sorted(fdict.keys()):
+            f = fdict[fname]
             print(f.register_format(indent=1))
 
-    print("count: {}".format(len(func_dict)))
+    #print("count: {}".format(len(func_dict)))
 
 main()
