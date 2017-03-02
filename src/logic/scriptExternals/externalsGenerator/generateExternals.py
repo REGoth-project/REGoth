@@ -2,6 +2,7 @@
 
 import re
 import operator
+import collections
 
 class DaedalusFunction(object):
     def __init__(self, returntype, func_name, params, comments):
@@ -103,6 +104,10 @@ def parse_functions(external_filename):
                 param_type = param_type.lower()
                 assert param_type in known_types_lower, "unknown param type: " + param_type
                 params.append([param_type, param_name])
+            param_names = [pname for _, pname in params]
+            for pname, freq in collections.Counter(param_names).items():
+                if freq > 1:
+                    assert False, "multiple parameters with same name: " + pname + " in function: " + func_name
             comments = []
             functions.append(DaedalusFunction(returntype, func_name, params, comments))
     d = dict()

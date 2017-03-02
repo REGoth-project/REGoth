@@ -7,11 +7,11 @@ func void AI_AlignToFP(c_npc self);
 func void AI_AlignToWP(c_npc self);
 // richtet den Nsc am Waypoint aus (im Spacer gesetzte Pfeilrichtung)
 
-func void AI_Ask(c_npc self, func answerNo, func answerNo);
+func void AI_Ask(c_npc self, func anserYes, func answerNo);
 // die angegeben Instanz (self), gibt eine Frage aus und verweist auf die selbst zu definierenden Funktionen,
 // die für die Fälle Spieler sagt ja (Daumen nach oben) und Spieler sagt nein (Daumen unten) vorhanden sein müssen
 
-func void AI_AskText(c_npc self, func strNo, func strNo, string strNo, string strNo);
+func void AI_AskText(c_npc self, func funcYes, func funcNo, string strYes, string strNo);
 // wie AI_Ask, nur das außer den Funktionen auch noch Strings für die Antworten Ja/Nein mit angegeben werden können
 
 func void AI_Attack(c_npc self);
@@ -130,7 +130,7 @@ func void AI_ReadyMeleeWeapon(c_npc self);
 func void AI_ReadyRangedWeapon(c_npc self);
 // Ziehe equippte Fernkampfwaffe
 
-func void AI_ReadySpell(c_npc self, int investMana, int investMana);
+func void AI_ReadySpell(c_npc self, int spellID, int investMana);
 // Lasse zauberspruch auf Hand erscheinen.
 
 func void AI_RemoveWeapon(c_npc n0);
@@ -165,7 +165,7 @@ func void AI_StandUpQuick(c_npc self);
 // Wie AI_StandUp(), jedoch werden keine Rücktransitionen abgespielt, sondern auch dort wird
 // sofort in den Grundzustand "gepoppt". Wichtig für sehr eilige Situationen!
 
-func void AI_StartState(c_npc self, func what, int wpName, string wpName);
+func void AI_StartState(c_npc self, func what, int stateBehaviour, string wpName);
 // Versetzt den Nsc aus den Skripten heraus in den entsprechenden ZS (what),
 // stateBehaviour sagt : "0"-aktuellen Zustand abbrechen "1"-aktuellen Zustand erst ordnungsgemäß beenden (End-Funktion aufrufen) ).
 
@@ -215,7 +215,7 @@ func void AI_UseItem(c_npc self, int itemInstance);
 func void AI_UseItemToState(c_npc self, int itemInstance, int state);
 // Item benutzen bis zum angegebenen State
 
-func int AI_UseMob(c_npc self, string targetState, int targetState);
+func int AI_UseMob(c_npc self, string schemeName, int targetState);
 // Benutze Mob mit angegebenen Schema-Namen bis zum Zustand "targetState". Wird diese Funktion aufgerufen
 // und der angegebene 'targetState' ist bereits vorhanden, läuft der NSC zwar trotzdem zum MOB, tut dann aber nichts
 
@@ -271,7 +271,7 @@ func void Doc_Font(string fontName);
 // Gothic 1 only function
 // Benutzt den angegebenen Font für nachfolgende "Doc_Print"s.
 
-func void Doc_MapCoordinates(string levelName, float pixelY2, float pixelY2, float pixelY2, float pixelY2, float pixelY2, float pixelY2, float pixelY2, float pixelY2);
+func void Doc_MapCoordinates(string levelName, float gameX1, float gameY1, float pixelX1, float pixelY1, float gameX2, float gameY2, float pixelX2, float pixelY2);
 // Gothic 1 only function
 // Karte initialisieren : levelName = Name des Levels (.ZEN) aus dem die Karte einen Ausschnitt zeigt
 // gamex1,gamey1 : Koordinaten im Spiel (linke obere Ecke der Karte)
@@ -489,7 +489,7 @@ func void Mdl_ApplyRandomAni(c_npc n0, string s1, string s2);
 func void Mdl_ApplyRandomAniFreq(c_npc n0, string s1, float f2);
 // hiermit kann die Frequenz betimmt werden, wie oft die für den Animationszustand (s1) deklarierten Randomanis abgespielt werden
 
-func void Mdl_ApplyRandomFaceAni(c_npc self, string name, float probMin, float probMin, float probMin, float probMin, float probMin);
+func void Mdl_ApplyRandomFaceAni(c_npc self, string name, float timeMin, float timeMinVar, float timeMax, float timeMaxVar, float probMin);
 // Starte zufällige Gesichtsanimation
 // Mdl_ApplyRandomFaceAni ( self, ANINAME, minTime, minTimeVar, maxTime, maxTimeVar, probMin)
 // minTime      = Minimum an Zeit nachdem Ani startet (in Sekunden)
@@ -524,13 +524,13 @@ func bool Mis_OnTime(int missionName);
 
 func void Mis_RemoveMission(instance n0);
 
-func void Mis_SetStatus(int newStatus, int newStatus);
+func void Mis_SetStatus(int missionName, int newStatus);
 // Setzt den Status einer Mission ( Bezogen auf den Spieler ) -> RUNNING, SUCCESS, FAILED etc. )
 
-func void Mob_CreateItems(string itemInstance, int itemInstance, int amount);
+func void Mob_CreateItems(string mobName, int itemInstance, int amount);
 // Erzeuge "amount" Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen.
 
-func int Mob_HasItems(string itemInstance, int itemInstance);
+func int Mob_HasItems(string mobName, int itemInstance);
 // Liefere Anzahl der Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen
 
 func bool Npc_AreWeStronger(c_npc self, c_npc other);
@@ -635,7 +635,7 @@ func c_item Npc_GetEquippedMeleeWeapon(c_npc n0);
 func c_item Npc_GetEquippedRangedWeapon(c_npc n0);
 // Liefert die gegurtete Fernkampfwaffe des NSCs.
 
-func int Npc_GetGuildAttitude(c_npc npc, c_npc npc);
+func int Npc_GetGuildAttitude(c_npc npc1, c_npc npc2);
 // Ermittelt die Gildenattitüde von zwei Nsc´s direkt im Gegensatz zu Wld_GetGuildAttitude
 
 func int Npc_GetHeightToItem(instance n0, instance n1);
@@ -951,7 +951,7 @@ func bool PlayVideo(string filename);
 //      Filename        - Dateiname des Videos (mit Dateierweiterung, relativ zu [VIDEOS]\ )
 //      [result]        - Boolean ob erfolgreich abgespielt
 
-func bool PlayVideoEx(string filename, int exitSession, int exitSession);
+func bool PlayVideoEx(string filename, int screenBlend, int exitSession);
 // Gothic 2 only function
 // Spielt eine Videodatei mit erweiterten Optionen ab.
 //
@@ -980,12 +980,12 @@ func int PrintDialog(int i0, string s1, int i2, int i3, string s4, int i5);
 func void PrintMulti(string s0, string s1, string s2, string s3, string s4);
 // Printbefehl, der aus den angegebenen Strings einen Auswählt und auf den Bildschirm schreibt
 
-func void PrintScreen(int timeSec, string msg, int posx, int posy, string font, int timeSec);
+func void PrintScreen(int dialogNr, string msg, int posx, int posy, string font, int timeSec);
 // Gibt den Text 'msg' auf dem Bildschrim aus und benutzt dabei den Font 'font'.
 // Die Position ist für jede Koordinate eine Zahl zwischen 0 und 99 und gibt die prozentuale Position an.
 // Der Ursprung befindet sich oben links (also 0% X und 0% Y)
 
-func void Rtn_Exchange(string newRoutine, string newRoutine);
+func void Rtn_Exchange(string oldRoutine, string newRoutine);
 // Tausche aktuellen Tagesablauf des NSC "self" gegen angegebenen aus
 // (Name wird automatisch mit "RTN_" am Anfang und NSC-Skript-ID am Ende ergänzt)
 
@@ -1016,7 +1016,7 @@ func void TA(c_npc self, int start_h, int stop_h, func state, string waypoint);
 func void TA_BeginOverlay(c_npc self);
 // Melde einen Overlay-Tagesablauf an
 
-func void TA_CS(c_npc self, string roleName, string roleName);
+func void TA_CS(c_npc self, string csName, string roleName);
 // Cutscene an den zuletzt angegebenen Tagesablaufpunkt hängen
 // csName:      Name der Cutscene ( der Name des "CS" - Files )
 // roleName:    Die Rolle die der NSC dabei übernehmen soll.
@@ -1094,14 +1094,14 @@ func c_npc Wld_GetPlayerPortalOwner();
 // - wenn der SC 'draußen' ist, dann ist der Rückgabe-Npc 'notValid'
 // - wenn der aktive Raum besitzerlos ist, dann ist der Rückgabe-Npc 'notValid'
 
-func void Wld_InsertItem(int spawnPoint, string spawnPoint);
+func void Wld_InsertItem(int itemInstance, string spawnPoint);
 // Füge Item in Welt ein entweder an einem WP oder einem FP
 // Vorsicht, funktioniert nicht, Items werden immer im Mittelpunkt der Welt inserted
 
-func void Wld_InsertNpc(int spawnPoint, string spawnPoint);
+func void Wld_InsertNpc(int npcInstance, string spawnPoint);
 // Füge NSC in Welt ein. Wobei SPawnpoint entweder ein WP oder ein FP sein darf.
 
-func void Wld_InsertNpcAndRespawn(int instance, string spawnDelay, float spawnDelay);
+func void Wld_InsertNpcAndRespawn(int instance, string spawnPoint, float spawnDelay);
 // Füge NSC in Welt ein. Wobei SPawnpoint entweder ein WP oder ein FP sein darf. Stirbt dieser NSC wird
 // nach "spawnDelay"-Sekunden ein neuer NSC am Spawnpoint erzeugt.
 
