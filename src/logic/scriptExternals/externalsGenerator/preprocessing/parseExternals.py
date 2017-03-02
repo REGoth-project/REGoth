@@ -23,7 +23,7 @@ def parse_functions(external_filename):
     with open(external_filename, "r") as f:
         lines = f.readlines()
 
-    known_types = ["C_Item", "C_Npc", "int", "float", "string", "func", "instance"]
+    known_types = ["C_Item", "C_Npc", "int", "bool", "float", "string", "func", "instance"]
     known_types_lower = list(map(str.lower, known_types))
 
     functions = []
