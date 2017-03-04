@@ -48,8 +48,7 @@ class DaedalusFunction(object):
             elif param_type == "bool":
                 blines.append("bool " + param_name + " = static_cast<bool>(vm.popDataValue());")
             elif param_type == "func":
-                # funcSym popVar or popDataValue???
-                blines.append("uint32_t " + param_name + " = static_cast<uint32_t>(vm.popDataValue());")
+                blines.append("uint32_t " + param_name + " = static_cast<uint32_t>(vm.popVar());")
             else:
                 assert False, "unknown param type: " + param_type
             blines[-1] += ' LogInfo() << "' + param_name + ': " << ' + param_name + ';'
@@ -92,9 +91,6 @@ class DaedalusFunction(object):
         else:
             return_fu = "setReturnVar" if self.returntype in ["c_npc", "c_item", "instance"] else "setReturn"
             blines.append("vm.{}({});".format(return_fu, callobject))
-
-        if default_return != "":
-            blines.append(default_return)
 
         lines.extend("\t" + line for line in blines)
         end_function = "});"
@@ -177,7 +173,8 @@ def main():
         category_dict[category][fname] = f
 
 
-    for prefix, fdict in category_dict.items():
+    for prefix in sorted(category_dict.keys()):
+        fdict = category_dict[prefix]
         print("/*")
         print("{} ({})".format(prefix, len(fdict)))
         print("*/")
