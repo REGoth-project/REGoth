@@ -129,7 +129,7 @@ bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
     if(glyphStream.vxStream.empty())
         return false;
 
-    if (bgfx::checkAvailTransientVertexBuffer((uint32_t)glyphStream.vxStream.size(), Meshes::PositionUVVertex2D::ms_decl))
+    if (bgfx::getAvailTransientVertexBuffer((uint32_t)glyphStream.vxStream.size(), Meshes::PositionUVVertex2D::ms_decl))
     {
         bgfx::TransientVertexBuffer vb;
         bgfx::allocTransientVertexBuffer(&vb, (uint32_t)glyphStream.vxStream.size(), Meshes::PositionUVVertex2D::ms_decl);

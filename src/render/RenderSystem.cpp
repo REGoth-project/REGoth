@@ -89,7 +89,7 @@ void RenderSystem::unregisterInstanceDataBuffer(uint32_t idx)
 
 void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1.0f, float _height = 1.0f)
 {
-    if (bgfx::checkAvailTransientVertexBuffer(3, Meshes::WorldStaticMeshVertex::ms_decl) )
+    if (bgfx::getAvailTransientVertexBuffer(3, Meshes::WorldStaticMeshVertex::ms_decl) )
     {
         const bgfx::Caps* caps = bgfx::getCaps();
         const bgfx::RendererType::Enum renderer = bgfx::getRendererType();

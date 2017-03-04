@@ -3,7 +3,7 @@
 #include <thread>
 
 #include <bx/platform.h>
-#include <bgfx/bgfxplatform.h>
+#include <bgfx/platform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
 
 
