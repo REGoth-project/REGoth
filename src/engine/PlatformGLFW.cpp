@@ -9,7 +9,7 @@
 
 
 #if defined(_glfw3_h_)
-// If GLFW/glfw3.h is included before bgfxplatform.h we can enable GLFW3
+// If GLFW/glfw3.h is included before bgfx/platform.h we can enable GLFW3
 // window interop convenience code.
 
 #	if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
@@ -24,7 +24,7 @@
 #	endif //
 #	include <GLFW/glfw3native.h>
 #endif
-#include <bgfx/bgfxplatform.h>
+#include <bgfx/platform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
 
 

@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include <bgfx/bgfx.h>
 #include <debugdraw/debugdraw.h>
 #include <engine/World.h>
 #include <utils/logger.h>
