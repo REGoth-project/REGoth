@@ -41,7 +41,6 @@ bool ScriptEngine::loadDAT(const std::string& file)
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
     Logic::ScriptExternals::registerStdLib(*m_pVM, verbose);
-    m_pVM->getGameState().registerExternals();
     Logic::ScriptExternals::registerEngineExternals(m_World, m_pVM, verbose);
 
     // Register our externals
@@ -49,7 +48,6 @@ bool ScriptEngine::loadDAT(const std::string& file)
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
     ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
     ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onInventoryItemInserted(item, npc); };
-    ext.log_addentry = [this](std::string topic, std::string entry){ onLogEntryAdded(topic, entry); };
 
     m_pVM->getGameState().setGameExternals(ext);
 

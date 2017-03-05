@@ -154,6 +154,10 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
+    if(self == target)
+        return; // FIXME: Vatras right here
+
+    LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
 
@@ -170,6 +174,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
 
     EventMessages::ConversationMessage conv;
+    // TODO: content of msg.subType useful?
     conv.subType = EventMessages::ConversationMessage::ST_Output;
     conv.name = msg.name;
     conv.text = msg.text;
@@ -267,7 +272,7 @@ void DialogManager::performChoice(size_t choice)
     if(m_Interaction.choices.empty() && m_ProcessInfos)
     {
         // We chose "back" or haven't gotten to a sub-dialog
-        updateChoices();
+        updateChoices(m_Interaction.target);
     }
     // TODO Don't flush yet, wait for dialog talking chain end
     flushChoices();
@@ -351,23 +356,6 @@ bool DialogManager::init()
     LogInfo() << "Creating script-side dialog-manager";
     m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), ou);
 
-    // Register externals
-    auto onAIOutput = [&](Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg)
-    {
-        if(target == self)
-            return; // FIXME: Vatras right here
-
-        LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
-        DialogManager::onAIOutput(self, target, msg);
-    };
-
-    auto onAIProcessInfos = [&](Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos)
-    {
-        DialogManager::onAIProcessInfos(self, infos);
-    };
-
-    m_ScriptDialogMananger->registerExternals(onAIOutput, onAIProcessInfos);
-
     LogInfo() << "Adding dialog-UI to root view";
     // Add subtitle box (Hidden if there is nothing to display)
     m_ActiveSubtitleBox = new UI::SubtitleBox(*m_World.getEngine());
@@ -412,13 +400,17 @@ void DialogManager::addChoice(ChoiceEntry& entry)
     m_Interaction.choices.push_back(entry);
 }
 
-void DialogManager::addChoiceFront(ChoiceEntry& entry){
-    int32_t new_nr = entry.nr;
-    for (ChoiceEntry& e : m_Interaction.choices){
-        new_nr = std::min(new_nr, e.nr);
+int DialogManager::beforeFrontIndex(){
+    if (m_Interaction.choices.empty())
+    {
+        return 0;
     }
-    entry.nr = new_nr - 1;
-    addChoice(entry);
+    else
+    {
+        auto& minEl = *std::min_element(m_Interaction.choices.begin(), m_Interaction.choices.end(),
+                                       ChoiceEntry::comparator);
+        return minEl.nr - 1;
+    }
 }
 
 void DialogManager::setSubDialogActive(bool flag)
@@ -428,9 +420,7 @@ void DialogManager::setSubDialogActive(bool flag)
 
 void DialogManager::sortChoices()
 {
-    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), [](const ChoiceEntry& a, const ChoiceEntry& b){
-        return a.nr < b.nr;
-    });
+    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
 }
 
 void DialogManager::flushChoices()
@@ -445,9 +435,10 @@ void DialogManager::flushChoices()
         m_World.getEngine()->getHud().getDialogBox().addChoice(e);
 }
 
-void DialogManager::updateChoices()
+void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
 {
-    m_ScriptDialogMananger->processInfosFor(m_Interaction.target);
+    auto infos = m_ScriptDialogMananger->getInfos(target);
+    onAIProcessInfos(target, infos);
 }
 
 void DialogManager::exportDialogManager(json& j)

@@ -316,7 +316,6 @@ namespace World
         }
 
         m_VM = new Daedalus::DaedalusVM(datFile);
-        Daedalus::registerDaedalusStdLib(*m_VM);
         Daedalus::registerGothicEngineClasses(*m_VM);
 
         size_t count = 0;

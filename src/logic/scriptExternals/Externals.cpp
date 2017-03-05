@@ -15,7 +15,8 @@
 
 void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
 {
-    Daedalus::registerDaedalusStdLib(vm, verbose);
+    // don't use ZenLib externals
+    // Daedalus::registerDaedalusStdLib(vm, verbose);
     Daedalus::registerGothicEngineClasses(vm);
 }
 
@@ -23,6 +24,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 {
     Engine::BaseEngine* engine = world.getEngine();
     World::WorldInstance* pWorld = &world;
+    using Daedalus::GameState::NpcHandle;
+    using Daedalus::GameState::ItemHandle;
 
     auto isSymInstanceValid = [vm](size_t instance)
     {
@@ -34,7 +37,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     {
 		assert(vm->getDATFile().getSymbolByIndex(instance).instanceDataClass == Daedalus::EInstanceClass::IC_Npc);
 
-        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>
                 (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
 
         if(!hnpc.isValid())
@@ -109,7 +112,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
 
         // TODO: Need a better API for this
-        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>
                 (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
         Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
 
@@ -145,7 +148,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
 
         // TODO: Need a better API for this
-        Daedalus::GameState::NpcHandle hnpc = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>
                 (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
         Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
 
@@ -811,7 +814,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             // Don't schedule random animations when the npc is the target of the dialog manager
             // Should not be necessary since npc should be in ZS_TALK state. Remove when state issue is resolved
-            Daedalus::GameState::NpcHandle npcHandle = npc.playerController->getScriptHandle();
+            NpcHandle npcHandle = npc.playerController->getScriptHandle();
             auto& dialogManager = pWorld->getDialogManager();
             if (dialogManager.isDialogActive() && dialogManager.getTarget() == npcHandle){
                 //LogInfo() << "Animation got canceled (DialogActive): npc = " << npc.playerController->getScriptInstance().name[0] << ", ani = " << ani;
@@ -930,18 +933,18 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Daedalus::GameState::InfoHandle hinfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
                 pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
 
+        DialogManager& dialogManager = pWorld->getDialogManager();
         Logic::DialogManager::ChoiceEntry choice;
         choice.info = hinfo;
         choice.text = text;
-        // number will be assigned by addChoiceFront
-        choice.nr = 0;
+        choice.nr = dialogManager.beforeFrontIndex();
         choice.functionSym = func;
         choice.important = false;
 
         // calling the script function info_addchoice always opens the SubDialog for special multiple choices
-        pWorld->getDialogManager().setSubDialogActive(true);
-        pWorld->getDialogManager().addChoiceFront(choice);
-        pWorld->getDialogManager().flushChoices();
+        dialogManager.setSubDialogActive(true);
+        dialogManager.addChoice(choice);
+        dialogManager.flushChoices();
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
@@ -955,7 +958,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("ai_stopprocessinfos", [=](Daedalus::DaedalusVM& vm){
         // the self argument is the NPC, the player is talking with
         uint32_t self = vm.popVar();
-        Daedalus::GameState::NpcHandle hself = ZMemory::handleCast<Daedalus::GameState::NpcHandle>
+        NpcHandle hself = ZMemory::handleCast<NpcHandle>
             (vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
 
         // Notify DialogManager
@@ -1118,16 +1121,179 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_hasequippedmeleeweapon";
-	int32_t self = vm.popVar();
+        int32_t self = vm.popVar();
 
-	VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
-	if (!npc.isValid()) {
-	    vm.setReturn(0);
-	    return;
-	}
+        if (!npc.isValid()) {
+            vm.setReturn(0);
+            return;
+        }
 
         vm.setReturn(npc.playerController->hasEquippedMeleeWeapon());
+    });
+
+    vm->registerExternalFunction("ai_output", [=](Daedalus::DaedalusVM& vm){
+        std::string outputname = vm.popString();
+        uint32_t target = vm.popVar();
+        uint32_t self = vm.popVar();
+
+        NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        NpcHandle htarget = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(target).instanceDataHandle);
+
+        auto& dialogManager = pWorld->getDialogManager();
+        auto& message = dialogManager.getScriptDialogManager()->getMessageLib().getMessageByName(outputname);
+        dialogManager.onAIOutput(hself, htarget, message);
+    });
+
+    vm->registerExternalFunction("AI_ProcessInfos", [=](Daedalus::DaedalusVM& vm){
+        uint32_t self = vm.popVar();
+
+        NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+
+        pWorld->getDialogManager().updateChoices(hself);
+    });
+
+
+    vm->registerExternalFunction("npc_knowsinfo", [=](Daedalus::DaedalusVM& vm){
+        int32_t infoinstance = vm.popDataValue();
+        int32_t self = vm.popVar();
+
+        NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        Daedalus::GEngineClasses::C_Npc& npc = vm.getGameState().getNpc(hself);
+
+        auto& scriptDialogManager = *pWorld->getDialogManager().getScriptDialogManager();
+        bool knows = scriptDialogManager.doesNpcKnowInfo(npc.instanceSymbol, infoinstance);
+
+        //LogInfo() << "Does he kow? (" << vm.getDATFile().getSymbolByIndex(npc.instanceSymbol).name << " -> " << vm.getDATFile().getSymbolByIndex(infoinstance).name << "): " << knows;
+
+        vm.setReturn(knows);
+    });
+    
+    vm->registerExternalFunction("createinvitem", [=](Daedalus::DaedalusVM& vm){
+        uint32_t itemInstance = (uint32_t)vm.popDataValue(); if(verbose) LogInfo() << "itemInstance: " << itemInstance;
+        uint32_t arr_n0;
+        int32_t npc = vm.popVar(arr_n0);
+
+        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(npc).instanceDataHandle);
+
+        vm.getGameState().createInventoryItem(itemInstance, hnpc);
+
+        /*
+        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
+        auto& parsym = vm.getDATFile().getSymbolByIndex(itemInstance);
+        LogInfo() << "1: " << parsym.name;
+        LogInfo() << "2. " << npcData.name[0];
+        LogInfo() << " ##### Created Inventory-Item '" << parsym.name << "' for NPC: " << npcData.name[0];
+         */
+    });
+
+    vm->registerExternalFunction("createinvitems", [=](Daedalus::DaedalusVM& vm){
+        uint32_t num = (uint32_t)vm.popDataValue();
+        uint32_t itemInstance = (uint32_t)vm.popDataValue(); if(verbose) LogInfo() << "itemInstance: " << itemInstance;
+        uint32_t arr_n0;
+        int32_t npc = vm.popVar(arr_n0);
+
+        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(npc).instanceDataHandle);
+
+        vm.getGameState().createInventoryItem(itemInstance, hnpc, num);
+    });
+
+    vm->registerExternalFunction("hlp_getnpc", [=](Daedalus::DaedalusVM& vm){
+        int32_t instancename = vm.popDataValue(); if(verbose) LogInfo() << "instancename: " << instancename;
+
+        /*if(!vm.getDATFile().getSymbolByIndex(instancename).instanceDataHandle.isValid())
+        {
+
+        }else
+        {
+            GEngineClasses::C_Npc& npcData = getNpc(ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(instancename).instanceDataHandle));
+            if(l) LogInfo() << " [HLP_GETNPC] Name: "
+                  << npcData.name[0];
+        }*/
+
+        vm.setReturnVar(instancename);
+    });
+
+    vm->registerExternalFunction("hlp_isvalidnpc", [=](Daedalus::DaedalusVM& vm){
+        int32_t self = vm.popVar();
+
+        if(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle.isValid())
+        {
+            vm.setReturn(1);
+        }else
+        {
+            vm.setReturn(0);
+        }
+    });
+
+    vm->registerExternalFunction("log_createtopic", [=](Daedalus::DaedalusVM& vm){
+        int32_t section = vm.popDataValue();
+        std::string topicName = vm.popString();
+
+        auto& playerLog = vm.getGameState().getPlayerLog();
+        playerLog[topicName].section = static_cast<Daedalus::GameState::LogTopic::ESection>(section);
+    });
+
+    vm->registerExternalFunction("log_settopicstatus", [=](Daedalus::DaedalusVM& vm){
+        int32_t status = vm.popDataValue();
+        std::string topicName = vm.popString();
+
+        auto& playerLog = vm.getGameState().getPlayerLog();
+        playerLog[topicName].status = static_cast<Daedalus::GameState::LogTopic::ELogStatus>(status);
+    });
+
+    vm->registerExternalFunction("log_addentry", [=](Daedalus::DaedalusVM& vm){
+        std::string entry = vm.popString();
+        std::string topicName = vm.popString();
+
+        LogInfo() << "";
+        LogInfo() << " ########### New Log Entry: " << topicName << " ########### ";
+        LogInfo() << entry;
+        LogInfo() << "";
+
+        auto& playerLog = vm.getGameState().getPlayerLog();
+        playerLog[topicName].entries.push_back(entry);
+
+        pWorld->getScriptEngine().onLogEntryAdded(topicName, entry);
+    });
+
+    vm->registerExternalFunction("inttostring", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+
+        vm.setReturn(std::to_string(x));
+    });
+
+    vm->registerExternalFunction("floattoint", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+        float f = reinterpret_cast<float&>(x);
+        vm.setReturn(static_cast<int32_t>(f));
+    });
+
+    vm->registerExternalFunction("inttofloat", [](Daedalus::DaedalusVM& vm){
+        int32_t x = vm.popDataValue();
+        float f = static_cast<float>(x);
+        vm.setReturn(reinterpret_cast<int32_t&>(f));
+    });
+
+    vm->registerExternalFunction("concatstrings", [](Daedalus::DaedalusVM& vm){
+        std::string s2 = vm.popString();
+        std::string s1 = vm.popString();
+
+        vm.setReturn(s1 + s2);
+    });
+
+    vm->registerExternalFunction("hlp_strcmp", [](Daedalus::DaedalusVM& vm){
+        std::string s1 = vm.popString();
+        std::string s2 = vm.popString();
+
+        vm.setReturn(s1 == s2 ? 1 : 0);
+    });
+
+    vm->registerExternalFunction("hlp_random", [=](Daedalus::DaedalusVM& vm){
+        int32_t n0 = vm.popDataValue();
+
+        vm.setReturn(rand() % n0);
     });
 }
 
