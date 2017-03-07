@@ -78,7 +78,7 @@ endif()
 # Fix up C++ standard
 if (CMAKE_COMPILER_IS_GNUCC)
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-        message(WARNING 'Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!')
+        message(WARNING "Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
     endif()
 endif()
