@@ -12,8 +12,8 @@
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
-#include "DialogBox.h"
 #include <utils/logger.h>
+#include "DialogBox.h"
 
 UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
 {
