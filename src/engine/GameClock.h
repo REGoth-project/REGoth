@@ -13,6 +13,11 @@ namespace Engine
         GameClock();
 
         /**
+         * sets the clock to the default settings of a new game
+         */
+        void resetNewGame();
+
+        /**
          * @return current day
          */
         int getDay() const;

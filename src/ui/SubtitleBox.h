@@ -73,6 +73,6 @@ namespace UI
         /**
          * Time it takes to grow from min scaling to max scaling in seconds
          */
-        static constexpr float GROW_SHRINK_TIME = 0.4f;
+        static constexpr float GROW_SHRINK_TIME = 0.26f;
     };
 }
