@@ -38,7 +38,7 @@ namespace ViewUtil
                     const Math::float2 uvMin = Math::float2(0.0f, 0.0f),
                     const Math::float2 uvMax = Math::float2(1.0f, 1.0f))
     {
-        if (bgfx::checkAvailTransientVertexBuffer(6, PosUvVertex::ms_decl))
+        if (bgfx::getAvailTransientVertexBuffer(6, PosUvVertex::ms_decl))
         {
             bgfx::TransientVertexBuffer vb;
             bgfx::allocTransientVertexBuffer(&vb, 6, PosUvVertex::ms_decl);
