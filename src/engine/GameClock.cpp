@@ -7,8 +7,7 @@ GameClock::GameClock()
 {
     m_ClockSpeedFactor = 1.0;
     // day/clock init only necessary for test start world (not started via main menu)
-    m_Day = 1;
-    setTimeOfDay(8, 0);
+    resetNewGame();
 }
 
 int GameClock::getDay() const
@@ -98,4 +97,9 @@ void GameClock::dayTimeTohm(float timeOfDay, int& hours, int& minutes)
 {
     hours = static_cast<int>(timeOfDay * 24);
     minutes = static_cast<int>((timeOfDay * 24 - hours) * 60);
+}
+
+void GameClock::resetNewGame() {
+    setDay(0);
+    setTimeOfDay(8, 0);
 }

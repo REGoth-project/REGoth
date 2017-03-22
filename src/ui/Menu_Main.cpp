@@ -49,10 +49,8 @@ void Menu_Main::onCustomAction(const std::string& action)
 
         LogInfo() << "Starting new game...";
         m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
-        // start at day 1, 8:00 o'clock when starting a new game
-        auto& clock = m_Engine.getGameClock();
-        clock.setDay(1);
-        clock.setTimeOfDay(8, 0);
+        // reset the clock to the default starting time
+        m_Engine.getGameClock().resetNewGame();
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {

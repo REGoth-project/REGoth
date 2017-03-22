@@ -1546,7 +1546,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 message.status = ConversationMessage::Status::PLAYING;
                 m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
                 subtitleBox.setScaling(0.0);
-                subtitleBox.setGrowDirection(+1.0);
+                subtitleBox.setGrowDirection(+1.0f);
 
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
@@ -1556,7 +1556,6 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
                 m_World.getDialogManager().setCurrentMessage(sharedMessage);
-                return false;
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
@@ -1586,7 +1585,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 if (nextStage)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
-                    subtitleBox.setGrowDirection(-1.0);
+                    subtitleBox.setGrowDirection(-1.0f);
                 }
             }
 
