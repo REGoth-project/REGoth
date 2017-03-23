@@ -58,7 +58,7 @@ class DaedalusFunction(object):
         elif self.returntype in ["int", "bool"]:
             default_return = "vm.setReturn(0);"
         elif self.returntype == "string":
-            default_return = "vm.setReturn("");"
+            default_return = 'vm.setReturn("");'
         elif self.returntype == "float":
             default_return = "vm.setReturn(0.0f);"
         elif self.returntype in ["c_npc", "c_item", "instance"]:
