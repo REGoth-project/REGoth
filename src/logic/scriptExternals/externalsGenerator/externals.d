@@ -396,11 +396,9 @@ func void Game_InitGerman();
 func bool Hlp_CutscenePlayed(string csName);
 // Abfrage, ob Cutscene schon gespielt wurde (0 = Nein / 1 = Ja)
 
-func int Hlp_GetInstanceID(c_npc npc);
-// liefert die interne ID ( nicht Var aus der Instanz) zurück, um z.B. other mit self vergleichen zu können ( integer Vergleich)
-
-func int Hlp_GetInstanceID2(c_item item);
-// liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items miteinander vergleichen zu können ( integer Vergleich)
+func int Hlp_GetInstanceID(instance c_object);
+// liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items oder npcs miteinander vergleichen zu können ( integer Vergleich)
+// c_object kann vom Typ C_ITEM oder C_NPC sein
 
 func c_npc Hlp_GetNpc(int instanceName);
 // Ermittle einen NSC über den Instanznamen. Dieser kann einer Variablen zugewiesen werden und ist somit gezielt verfügbar
