@@ -139,7 +139,16 @@ std::string Console::submitCommand(const std::string& command)
     if (bestMatchIndex >= 0)
     {
         const std::vector<std::string> args = Utils::split(command, ' ');
-        const std::string result = m_CommandCallbacks.at(bestMatchIndex)(args);
+        std::string result;
+        try {
+            result = m_CommandCallbacks.at(bestMatchIndex)(args);
+        } catch (const std::out_of_range& e)
+        {
+            result = "error: argument out of range";
+        } catch (const std::invalid_argument& e)
+        {
+            result = "error: invalid argument";
+        }
         outputAdd(result);
         return result;
     }
