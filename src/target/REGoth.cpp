@@ -816,7 +816,6 @@ public:
                 amount = static_cast<unsigned int>(std::stoul(args[2]));
 
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
 
             std::vector<std::vector<std::string>> candidateLists;
             {
@@ -827,49 +826,46 @@ public:
                     cItem = Daedalus::GEngineClasses::C_Item();
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
-                    if (cItem.description == "")
-                    {
-                        cItem.description = cItem.name;
-                    }
-                    candidateLists.push_back({parSymbol.name, cItem.description, cItem.name});
+
+                    candidateLists.push_back({parSymbol.name, cItem.getInventoryName(), cItem.name});
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
             }
-
+            // std::vector<std::tuple<std::size_t, std::string>> matchCandidates;
             for (auto& candidateList : candidateLists)
             {
                 for (auto& candidate : candidateList)
                 {
-                    if (Utils::containsLike(candidate, partItemName)) {
+                    if (Utils::strippedAndLowered(candidate) == Utils::strippedAndLowered(partItemName)){
                         auto& parScriptName = candidateList[0];
+                        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
                         auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
                         Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                        return std::string("Item(s) added to the inventory: ") + cItem.description + " (" + parScriptName + ")";
+                        return std::string("Item(s) added to the inventory: ") + cItem.getInventoryName() + " (" + parScriptName + ")";
                     }
                 }
             }
             return "Item not found!";
         });
 
-        console.registerCommand("ls", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("items", [this](const std::vector<std::string>& args) -> std::string {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
             Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
             Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
-            se.getVM().getDATFile().iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
-                // reset to default values. especially name and description
-                cItem = Daedalus::GEngineClasses::C_Item();
-                // Run the script-constructor
-                se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
-                if (cItem.description == "")
-                {
-                    cItem.description = cItem.name;
-                }
-                LogInfo() << parSymbol.name << " " << cItem.description << " " << cItem.name;
-            });
+            {
+                Utils::Profiler a("gather candidates");
+                se.getVM().getDATFile().iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
+                    // reset to default values. especially name and description
+                    cItem = Daedalus::GEngineClasses::C_Item();
+                    // Run the script-constructor
+                    se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
+                    LogInfo() << parSymbol.name << " " << cItem.getInventoryName() << " " << cItem.name;
+                });
+            }
             se.getVM().getGameState().removeItem(dummyHandle);
 
-            return "items listed";
+            return "items have been written to the terminal";
         });
 
         imguiCreate(nullptr, 0, fontSize);
