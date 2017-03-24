@@ -12,6 +12,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <memory>
+#include <chrono>
 
 namespace Utils
 {
@@ -457,4 +458,16 @@ namespace Utils
      */
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
+    /**
+     * small class for easy to use time measurement via RAII
+     */
+    struct Profiler
+    {
+        std::string name;
+        std::chrono::high_resolution_clock::time_point start;
+        Profiler(const std::string& n);
+        ~Profiler();
+    };
+
+    #define PROFILE_BLOCK(pbn) Utils::Profiler _pfinstance(pbn)
 }

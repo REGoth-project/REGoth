@@ -426,3 +426,17 @@ bool Utils::containsLike(const std::string &searchSpace, const std::string &part
     return pos != std::string::npos;
 }
 
+Utils::Profiler::Profiler(const std::string& n) :
+    name(n),
+    start(std::chrono::high_resolution_clock::now())
+{}
+
+Utils::Profiler::~Profiler()
+{
+    using dura = std::chrono::duration<double>;
+    auto end = std::chrono::high_resolution_clock::now();
+    auto d = end - start;
+    LogInfo() << name << ": "
+        << std::chrono::duration_cast<dura>(d).count() * 1000
+        << " milliseconds";
+}
