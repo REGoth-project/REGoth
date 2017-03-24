@@ -811,9 +811,9 @@ public:
                 return "Missing argument. Usage: giveitem <symbol> [<amount>]";
 
             std::string partItemName = args[1];
-            unsigned int amount = 1;
+            int amount = 1;
             if (args.size() > 2)
-                amount = static_cast<unsigned int>(std::stoul(args[2]));
+                amount = std::stoi(args[2]);
 
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -839,9 +839,31 @@ public:
                     if (Utils::strippedAndLowered(candidate) == Utils::strippedAndLowered(partItemName)){
                         auto& parScriptName = candidateList[0];
                         VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
-                        auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
-                        Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                        return std::string("Item(s) added to the inventory: ") + cItem.getInventoryName() + " (" + parScriptName + ")";
+                        std::string description;
+                        std::string action;
+                        if (amount > 0)
+                        {
+                            auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
+                            Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                            description = cItem.getInventoryName();
+                            action = "added to";
+                        } else if (amount < 0) {
+                            auto handle = player.playerController->getInventory().getItem(parScriptName);
+                            if (handle.isValid())
+                            {
+                                Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                                description = cItem.getInventoryName();
+                                action = "removed from";
+                                amount = std::min(-amount, cItem.count[0]);
+                                player.playerController->getInventory().removeItem(parScriptName, amount);
+                            } else {
+                                return "error: could not remove item. item " + parScriptName + " is not in inventory";
+                            }
+                        } else {
+                            return "invalid ammount 0";
+                        }
+                        return std::string("Item(s) " + action + " the inventory: ")
+                               + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
                     }
                 }
             }
