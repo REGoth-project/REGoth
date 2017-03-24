@@ -389,7 +389,7 @@ Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::strin
 {
     Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
 
-    if(sym.instanceDataClass != Daedalus::IC_Npc)
+    if(sym.instanceDataClass != Daedalus::IC_Item)
         return Daedalus::GameState::ItemHandle();
 
     return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);

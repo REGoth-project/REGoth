@@ -806,6 +806,25 @@ public:
             		return std::string("Exiting ...");
 		});
 
+	console.registerCommand("giveitem", [this](const std::vector<std::string>& args) -> std::string {
+	    if (args.size() < 2)
+		return "Missing argument. Usage: giveitem <symbol> [<amount>]";
+
+	    std::string itemName = args[1];
+	    int amount = args.size() > 2 ? std::stoi(args[2]) : 1;
+
+	    auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+
+	    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
+
+	    if (se.hasSymbol(itemName)) {
+		player.playerController->getInventory().addItem(itemName, amount);
+		return "Item(s) added to the inventory";
+	    } 
+
+	    return "Item not found!";
+	});
+
         imguiCreate(nullptr, 0, fontSize);
         m_ImgUiCreated = true;
 
