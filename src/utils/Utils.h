@@ -449,6 +449,14 @@ namespace Utils
     void lower(std::string& in);
 
     /**
+     * number of equal characters at begin
+     * @param a
+     * @param b
+     * @return number of equal characters at begin
+     */
+    std::size_t commonStartLength(const std::string& a, const std::string& b);
+
+    /**
      * removes all non alphanumeric characters and lowers the case
      * @param in old string
      * @return new string

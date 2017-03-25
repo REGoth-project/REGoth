@@ -17,6 +17,8 @@ namespace UI
 
         // Takes list of arguments as parameter, returns command result
         typedef std::function<std::string(const std::vector<std::string>&)> CommandCallback;
+        // generator, which returns vector of candidates
+        using CandidateListGenerator = std::function<std::vector<std::string>()>;
 
         Console();
 
@@ -46,6 +48,14 @@ namespace UI
         void registerCommand(const std::string& command, CommandCallback callback);
 
         /**
+         * Adds a command to the console
+         * @param Command Command to be added.
+         * @param Callback Function to be executed if the given command was typed.
+         *
+         */
+        void registerCommand2(std::vector<CandidateListGenerator> functions, CommandCallback callback);
+
+        /**
          * Adds an autocomplete-function for an already registered command. Will get all arguments passed.
          * The last one is most likely incomplete.
          * @param command Command to add the autocomplete for
@@ -53,6 +63,11 @@ namespace UI
          */
         void registerAutocompleteFn(const std::string& command, CommandCallback callback);
 
+
+        /**
+         * Trigger autocompletion
+         */
+        void autoComplete();
 
         /**
          * Executes a given command
@@ -113,11 +128,13 @@ namespace UI
          * All registered commands
          */
         std::vector<std::string> m_Commands;
+        std::vector<std::vector<CandidateListGenerator>> m_Commands2;
 
         /**
          * All registered callbacks
          */
         std::vector<CommandCallback> m_CommandCallbacks;
+        std::vector<CommandCallback> m_CommandCallbacks2;
 
         /**
          * Callbacks for when the user wants to autocomplete an argument

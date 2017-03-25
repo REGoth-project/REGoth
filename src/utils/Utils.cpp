@@ -417,6 +417,23 @@ void Utils::lower(std::string& in)
     std::transform(in.begin(), in.end(), in.begin(), ::tolower);
 }
 
+std::size_t Utils::commonStartLength(const std::string& a, const std::string& b)
+{
+    auto minSize = std::min(a.size(), b.size());
+    std::size_t common = 0;
+    for (std::size_t i = 0; i < minSize; i++)
+    {
+        if (a[i] == b[i])
+        {
+            common++;
+        } else
+        {
+            break;
+        }
+    }
+    return common;
+}
+
 std::string Utils::strippedAndLowered(const std::string& in)
 {
     std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};

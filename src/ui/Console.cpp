@@ -1,7 +1,11 @@
 #include <bgfx/bgfx.h>
 #include <ZenLib/utils/split.h>
+#include <utils/logger.h>
 #include "Console.h"
 #include <cctype>
+#include <iterator>
+#include <algorithm>
+#include <utils/Utils.h>
 
 using namespace UI;
 
@@ -93,6 +97,9 @@ void Console::onKeyDown(int glfwKey)
     {
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
+    }else if(glfwKey == Keys::GLFW_KEY_TAB)
+    {
+        autoComplete();
     }
 }
 
@@ -165,6 +172,12 @@ void Console::registerCommand(const std::string& command,
     m_CommandCallbacks.push_back(callback);
 }
 
+void Console::registerCommand2(std::vector<std::function<std::vector<std::string>()>> functions, CommandCallback callback)
+{
+    m_Commands2.push_back(functions);
+    m_CommandCallbacks2.push_back(callback);
+}
+
 void Console::registerAutocompleteFn(const std::string& command, Console::CommandCallback callback)
 {
     m_AutocompleteCallbacks[command] = callback;
@@ -187,6 +200,107 @@ void Console::printOutput()
 void Console::outputAdd(const std::string& msg)
 {
     m_Output.push_front(msg);
+}
+
+struct MatchInfo{
+    std::size_t notMatchingCharCount;
+    std::size_t commandID;
+    std::string candidate;
+};
+
+void Console::autoComplete() {
+    using std::vector;
+    using std::string;
+
+    auto lineLower = m_TypedLine;
+    Utils::lower(lineLower);
+    std::istringstream iss(lineLower);
+    vector<string> tokens;
+    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(), std::back_inserter(tokens));
+
+    vector<std::tuple<string, bool>> newTokens;
+    for (auto& token : tokens)
+        newTokens.push_back(std::make_tuple(token, false));
+
+    if (tokens.empty())
+        return;
+
+    vector<bool> commandIsAlive(m_Commands2.size(), true);
+    for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
+    {
+        auto& token = tokens[tokenID];
+        vector<MatchInfo> matchInfosStartsWith;
+        vector<MatchInfo> matchInfosInMiddle;
+
+        for (std::size_t cmdID = 0; cmdID < m_Commands2.size(); cmdID++)
+        {
+            auto& command = m_Commands2[cmdID];
+            if (commandIsAlive[cmdID] && tokenID < command.size())
+            {
+                auto candidateGenerator = command[tokenID];
+                auto candidates = candidateGenerator();
+                for (auto& candidate : candidates)
+                {
+                    string candidateLowered = candidate;
+                    Utils::lower(candidateLowered);
+                    std::remove_if(candidateLowered.begin(), candidateLowered.end(), isspace);
+                    auto pos = candidateLowered.find(token);
+                    auto diff = candidateLowered.size() - token.size();
+                    if (pos == 0)
+                    {
+                        matchInfosStartsWith.emplace_back(MatchInfo{diff, cmdID, candidateLowered});
+                    } else if (pos != string::npos)
+                    {
+                        matchInfosInMiddle.emplace_back(MatchInfo{diff, cmdID, candidateLowered});
+                    }
+                }
+            }
+            commandIsAlive[cmdID] = false;
+        }
+        vector<MatchInfo> suggestions;
+        for (auto& matchInfos : {matchInfosStartsWith, matchInfosInMiddle})
+        {
+            if (matchInfos.empty())
+                continue;
+
+            string reference = matchInfos.front().candidate;
+            std::size_t commonLength = reference.size();
+            auto longestCandidateLen = reference.size();
+            for (auto& matchInfo : matchInfos)
+            {
+                suggestions.push_back(matchInfo);
+                commandIsAlive[matchInfo.commandID] = true;
+                commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidate), commonLength);
+                longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidate.size());
+            }
+
+            string tokenNew = reference.substr(0, commonLength);
+            bool thereIsNoLongerCandidate = longestCandidateLen == tokenNew.size();
+            newTokens[tokenID] = std::make_tuple(tokenNew, thereIsNoLongerCandidate);
+            break;
+        }
+
+        std::stringstream ss;
+        auto sorter = [](const MatchInfo& a, const MatchInfo& b) -> bool {
+            return a.notMatchingCharCount < b.notMatchingCharCount;
+        };
+        std::sort(suggestions.begin(), suggestions.end(), sorter);
+        for (auto& matchInfo : suggestions)
+        {
+            ss << matchInfo.candidate << " ";
+        }
+        LogInfo() << "suggestions: " << ss.str();
+    }
+
+    std::stringstream tokenConCat;
+    for (auto it = newTokens.begin(); it != newTokens.end(); it++)
+    {
+        bool noLongerMatch = std::get<1>(*it);
+        tokenConCat << std::get<0>(*it);
+        if (it != newTokens.end() - 1 || isspace(m_TypedLine.back()) || noLongerMatch)
+            tokenConCat << " ";
+    }
+    m_TypedLine = tokenConCat.str();
 }
 
 
