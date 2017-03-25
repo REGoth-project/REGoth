@@ -99,7 +99,7 @@ void Console::onKeyDown(int glfwKey)
         m_TypedLine.clear();
     }else if(glfwKey == Keys::GLFW_KEY_TAB)
     {
-        autoComplete();
+        autoComplete(m_TypedLine, false, true, true);
     }
 }
 
@@ -120,6 +120,11 @@ std::string Console::submitCommand(const std::string& command)
 
     if(command.empty())
         return "";
+
+    auto commandAutoCompleted = command;
+    auto commID = autoComplete(commandAutoCompleted, false, false, true);
+
+    outputAdd(" >> (Auto) " + commandAutoCompleted);
 
     size_t bestMatchSize = 0;
     int bestMatchIndex = -1;
@@ -166,21 +171,17 @@ std::string Console::submitCommand(const std::string& command)
 }
 
 void Console::registerCommand(const std::string& command,
-                              CommandCallback callback)
+                              ConsoleCommand::Callback callback)
 {
     m_Commands.push_back(command);
     m_CommandCallbacks.push_back(callback);
 }
 
-void Console::registerCommand2(std::vector<std::function<std::vector<std::string>()>> functions, CommandCallback callback)
+void Console::registerCommand2(std::vector<std::function<std::vector<std::string>()>> generators,
+                               ConsoleCommand::Callback callback,
+                               unsigned int numFixTokens)
 {
-    m_Commands2.push_back(functions);
-    m_CommandCallbacks2.push_back(callback);
-}
-
-void Console::registerAutocompleteFn(const std::string& command, Console::CommandCallback callback)
-{
-    m_AutocompleteCallbacks[command] = callback;
+    m_Commands2.emplace_back(ConsoleCommand{generators, callback, numFixTokens});
 }
 
 void Console::printOutput()
@@ -208,11 +209,11 @@ struct MatchInfo{
     std::string candidate;
 };
 
-void Console::autoComplete() {
+int Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
     using std::vector;
     using std::string;
 
-    auto lineLower = m_TypedLine;
+    auto lineLower = input;
     Utils::lower(lineLower);
     std::istringstream iss(lineLower);
     vector<string> tokens;
@@ -223,7 +224,7 @@ void Console::autoComplete() {
         newTokens.push_back(std::make_tuple(token, false));
 
     if (tokens.empty())
-        return;
+        return -1;
 
     vector<bool> commandIsAlive(m_Commands2.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
@@ -231,13 +232,15 @@ void Console::autoComplete() {
         auto& token = tokens[tokenID];
         vector<MatchInfo> matchInfosStartsWith;
         vector<MatchInfo> matchInfosInMiddle;
-
         for (std::size_t cmdID = 0; cmdID < m_Commands2.size(); cmdID++)
         {
             auto& command = m_Commands2[cmdID];
-            if (commandIsAlive[cmdID] && tokenID < command.size())
+            auto& generators = command.generators;
+            std::size_t cmdEnd = limitToFixed ? command.numFixTokens : generators.size();
+            if (commandIsAlive[cmdID] && tokenID < cmdEnd)
             {
-                auto candidateGenerator = command[tokenID];
+                commandIsAlive[cmdID] = false;
+                auto candidateGenerator = generators[tokenID];
                 auto candidates = candidateGenerator();
                 for (auto& candidate : candidates)
                 {
@@ -255,7 +258,6 @@ void Console::autoComplete() {
                     }
                 }
             }
-            commandIsAlive[cmdID] = false;
         }
         vector<MatchInfo> suggestions;
         for (auto& matchInfos : {matchInfosStartsWith, matchInfosInMiddle})
@@ -273,34 +275,48 @@ void Console::autoComplete() {
                 commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidate), commonLength);
                 longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidate.size());
             }
-
-            string tokenNew = reference.substr(0, commonLength);
-            bool thereIsNoLongerCandidate = longestCandidateLen == tokenNew.size();
-            newTokens[tokenID] = std::make_tuple(tokenNew, thereIsNoLongerCandidate);
+            if (commonLength != 0)
+            {
+                string tokenNew = reference.substr(0, commonLength);
+                bool thereIsNoLongerCandidate = longestCandidateLen == tokenNew.size();
+                newTokens[tokenID] = std::make_tuple(tokenNew, thereIsNoLongerCandidate);
+            }
             break;
         }
-
-        std::stringstream ss;
-        auto sorter = [](const MatchInfo& a, const MatchInfo& b) -> bool {
-            return a.notMatchingCharCount < b.notMatchingCharCount;
-        };
-        std::sort(suggestions.begin(), suggestions.end(), sorter);
-        for (auto& matchInfo : suggestions)
+        if (showSuggestions)
         {
-            ss << matchInfo.candidate << " ";
+            std::stringstream ss;
+            auto sorter = [](const MatchInfo& a, const MatchInfo& b) -> bool {
+                return a.notMatchingCharCount < b.notMatchingCharCount;
+            };
+            std::sort(suggestions.begin(), suggestions.end(), sorter);
+            for (auto& matchInfo : suggestions)
+            {
+                ss << matchInfo.candidate << " ";
+            }
+            LogInfo() << "suggestions: " << ss.str();
         }
-        LogInfo() << "suggestions: " << ss.str();
     }
-
-    std::stringstream tokenConCat;
-    for (auto it = newTokens.begin(); it != newTokens.end(); it++)
+    if (overwriteInput)
     {
-        bool noLongerMatch = std::get<1>(*it);
-        tokenConCat << std::get<0>(*it);
-        if (it != newTokens.end() - 1 || isspace(m_TypedLine.back()) || noLongerMatch)
-            tokenConCat << " ";
+        std::stringstream tokenConCat;
+        for (auto it = newTokens.begin(); it != newTokens.end(); it++)
+        {
+            bool noLongerMatch = std::get<1>(*it);
+            tokenConCat << std::get<0>(*it);
+            if (it != newTokens.end() - 1 || isspace(input.back()) || noLongerMatch)
+                tokenConCat << " ";
+        }
+        input = tokenConCat.str();
     }
-    m_TypedLine = tokenConCat.str();
+    if (std::count(commandIsAlive.begin(), commandIsAlive.end(), true) == 1)
+    {
+        auto comIt = std::find(commandIsAlive.begin(), commandIsAlive.end(), true);
+        auto commID = comIt - commandIsAlive.begin();
+        return static_cast<int>(commID);
+    } else {
+        return -1;
+    }
 }
 
 

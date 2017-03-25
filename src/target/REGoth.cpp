@@ -336,6 +336,12 @@ public:
         fontSize = 23.0f;
 #endif
 
+        auto gen = [](std::vector<std::string> candidates){
+            return [candidates]() -> std::vector<std::string>{
+                return candidates;
+            };
+        };
+
         auto& console = m_pEngine->getHud().getConsole();
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
@@ -800,6 +806,11 @@ public:
 
             return "Used " + std::to_string(dmg) + " mana";
         });
+
+        auto dummy = [](const std::vector<std::string>& args) -> std::string{ return "";};
+        auto itemGen = []() -> std::vector<std::string> { return {"foo", "bar"}; };
+        console.registerCommand2({gen({"giveitem", "removeitem"}), itemGen}, dummy, 1);
+        console.registerCommand2({gen({"set"}), gen({"clock", "clockspeed"})}, dummy, 2);
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
             setQuit(true);
