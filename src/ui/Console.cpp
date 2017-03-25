@@ -260,7 +260,7 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
                 }
             }
         }
-        vector<MatchInfo> suggestions;
+        std::map<string, MatchInfo> suggestions;
         for (auto& matchInfos : {matchInfosStartsWith, matchInfosInMiddle})
         {
             if (matchInfos.empty())
@@ -271,7 +271,7 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
             auto longestCandidateLen = reference.size();
             for (auto& matchInfo : matchInfos)
             {
-                suggestions.push_back(matchInfo);
+                suggestions[matchInfo.candidateLowered] = matchInfo;
                 commandIsAlive[matchInfo.commandID] = true;
                 commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidateLowered), commonLength);
                 longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidateLowered.size());
@@ -290,8 +290,13 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
             auto sorter = [](const MatchInfo& a, const MatchInfo& b) -> bool {
                 return a.notMatchingCharCount < b.notMatchingCharCount;
             };
-            std::sort(suggestions.begin(), suggestions.end(), sorter);
-            for (auto& matchInfo : suggestions)
+            vector<MatchInfo> suggestionsList;
+            for (const auto& pair : suggestions)
+            {
+                suggestionsList.push_back(pair.second);
+            }
+            std::sort(suggestionsList.begin(), suggestionsList.end(), sorter);
+            for (auto& matchInfo : suggestionsList)
             {
                 ss << matchInfo.candidate << " ";
             }

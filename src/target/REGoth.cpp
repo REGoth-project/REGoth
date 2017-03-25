@@ -808,16 +808,35 @@ public:
         });
 
         auto dummy = [](const std::vector<std::string>& args) -> std::string{ return "";};
-        auto itemGen = []() -> std::vector<std::string> { return {"Torch", "FACKEL"}; };
-        console.registerCommand2({gen({"giveitem", "removeitem"}), itemGen}, dummy, 1);
-        console.registerCommand2({gen({"set"}), gen({"clock", "clockspeed"})}, dummy, 2);
+        auto itemNamesGen = [this]() -> std::vector<std::string> {
+            auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+            std::vector<std::string> candidates;
+            {
+                Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
+                Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
+                se.getVM().getDATFile().iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
+                    // reset to default values. especially name and description
+                    cItem = Daedalus::GEngineClasses::C_Item();
+                    // Run the script-constructor
+                    se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
+
+                    candidates.push_back(parSymbol.name);
+                    std::string displayName = cItem.getInventoryName();
+                    std::replace(displayName.begin(), displayName.end(), ' ', '_');
+                    candidates.push_back(displayName);
+                    candidates.push_back(cItem.name);
+                });
+                se.getVM().getGameState().removeItem(dummyHandle);
+            }
+            return candidates;
+        };
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
             setQuit(true);
             return std::string("Exiting ...");
         });
 
-        console.registerCommand("giveitem", [this](const std::vector<std::string>& args) -> std::string {
+        auto giveitemCallback = [this](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
                 return "Missing argument. Usage: giveitem <symbol> [<amount>]";
 
@@ -880,7 +899,10 @@ public:
                 }
             }
             return "Item not found!";
-        });
+        };
+
+        console.registerCommand2({gen({"giveitem"}), itemNamesGen}, giveitemCallback, 1);
+        console.registerCommand("giveitem", giveitemCallback);
 
         console.registerCommand("items", [this](const std::vector<std::string>& args) -> std::string {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
