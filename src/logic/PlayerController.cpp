@@ -363,8 +363,8 @@ void PlayerController::onDebugDraw()
             {
                 Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
-                if(idata.count[0] > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.getInventoryName().c_str(), idata.count[0]);
+                if(idata.amount > 1)
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.getInventoryName().c_str(), idata.amount);
                 else
                     bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.getInventoryName().c_str());
 

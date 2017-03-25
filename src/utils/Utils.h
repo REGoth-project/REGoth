@@ -444,6 +444,11 @@ namespace Utils
     };
 
     /**
+     * lower all characters inplace
+     */
+    void lower(std::string& in);
+
+    /**
      * removes all non alphanumeric characters and lowers the case
      * @param in old string
      * @return new string

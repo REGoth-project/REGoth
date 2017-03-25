@@ -787,19 +787,19 @@ public:
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-		console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
-			VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-				m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
 
-			if(args.size() < 2)
-				return "Missing argument. Usage: usemana <mana>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: usemana <mana>";
 
-			int dmg = std::stoi(args[1]);
-			player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
 
-			return "Used " + std::to_string(dmg) + " mana";
-		});
+            return "Used " + std::to_string(dmg) + " mana";
+        });
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
             setQuit(true);
@@ -851,10 +851,11 @@ public:
                             auto handle = player.playerController->getInventory().getItem(parScriptName);
                             if (handle.isValid())
                             {
+                                uint32_t removeAmount = static_cast<uint32_t >(-amount);
                                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
                                 description = cItem.getInventoryName();
                                 action = "removed from";
-                                amount = std::min(-amount, cItem.count[0]);
+                                amount = std::min(removeAmount, cItem.amount);
                                 player.playerController->getInventory().removeItem(parScriptName, amount);
                             } else {
                                 return "error: could not remove item. item " + parScriptName + " is not in inventory";

@@ -412,16 +412,21 @@ std::string Utils::stripJsonComments(const std::string& json, const std::string&
     return r;
 }
 
-std::string Utils::strippedAndLowered(const std::string &in)
+void Utils::lower(std::string& in)
+{
+    std::transform(in.begin(), in.end(), in.begin(), ::tolower);
+}
+
+std::string Utils::strippedAndLowered(const std::string& in)
 {
     std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
     std::string out = in;
-    std::transform(out.begin(), out.end(), out.begin(), ::tolower);
+    lower(out);
     out.erase(std::remove_if(out.begin(), out.end(), isNotAlNum), out.end());
     return out;
 }
 
-bool Utils::containsLike(const std::string &searchSpace, const std::string &part) {
+bool Utils::containsLike(const std::string& searchSpace, const std::string& part) {
     auto pos = strippedAndLowered(searchSpace).find(strippedAndLowered(part));
     return pos != std::string::npos;
 }
