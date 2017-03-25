@@ -207,21 +207,23 @@ struct MatchInfo{
     std::size_t notMatchingCharCount;
     std::size_t commandID;
     std::string candidate;
+    std::string candidateLowered;
 };
 
 int Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
     using std::vector;
     using std::string;
 
-    auto lineLower = input;
-    Utils::lower(lineLower);
-    std::istringstream iss(lineLower);
+    std::istringstream iss(input);
     vector<string> tokens;
     std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(), std::back_inserter(tokens));
 
     vector<std::tuple<string, bool>> newTokens;
     for (auto& token : tokens)
+    {
         newTokens.push_back(std::make_tuple(token, false));
+        Utils::lower(token);
+    }
 
     if (tokens.empty())
         return -1;
@@ -246,15 +248,14 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
                 {
                     string candidateLowered = candidate;
                     Utils::lower(candidateLowered);
-                    std::remove_if(candidateLowered.begin(), candidateLowered.end(), isspace);
                     auto pos = candidateLowered.find(token);
                     auto diff = candidateLowered.size() - token.size();
                     if (pos == 0)
                     {
-                        matchInfosStartsWith.emplace_back(MatchInfo{diff, cmdID, candidateLowered});
+                        matchInfosStartsWith.emplace_back(MatchInfo{diff, cmdID, candidate, candidateLowered});
                     } else if (pos != string::npos)
                     {
-                        matchInfosInMiddle.emplace_back(MatchInfo{diff, cmdID, candidateLowered});
+                        matchInfosInMiddle.emplace_back(MatchInfo{diff, cmdID, candidate, candidateLowered});
                     }
                 }
             }
@@ -265,19 +266,19 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
             if (matchInfos.empty())
                 continue;
 
-            string reference = matchInfos.front().candidate;
+            string reference = matchInfos.front().candidateLowered;
             std::size_t commonLength = reference.size();
             auto longestCandidateLen = reference.size();
             for (auto& matchInfo : matchInfos)
             {
                 suggestions.push_back(matchInfo);
                 commandIsAlive[matchInfo.commandID] = true;
-                commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidate), commonLength);
-                longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidate.size());
+                commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidateLowered), commonLength);
+                longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidateLowered.size());
             }
             if (commonLength != 0)
             {
-                string tokenNew = reference.substr(0, commonLength);
+                string tokenNew = matchInfos.front().candidate.substr(0, commonLength);
                 bool thereIsNoLongerCandidate = longestCandidateLen == tokenNew.size();
                 newTokens[tokenID] = std::make_tuple(tokenNew, thereIsNoLongerCandidate);
             }

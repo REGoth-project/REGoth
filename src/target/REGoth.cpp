@@ -808,7 +808,7 @@ public:
         });
 
         auto dummy = [](const std::vector<std::string>& args) -> std::string{ return "";};
-        auto itemGen = []() -> std::vector<std::string> { return {"foo", "bar"}; };
+        auto itemGen = []() -> std::vector<std::string> { return {"Torch", "FACKEL"}; };
         console.registerCommand2({gen({"giveitem", "removeitem"}), itemGen}, dummy, 1);
         console.registerCommand2({gen({"set"}), gen({"clock", "clockspeed"})}, dummy, 2);
 
