@@ -133,7 +133,7 @@ void Console::onTextInput(const std::string& text)
     m_TypedLine += text;
 }
 
-std::string Console::submitCommand(const std::string& command)
+std::string Console::submitCommand(std::string command)
 {
     if((command.find_first_not_of(' ') != std::string::npos) && (m_History.empty() || m_History.back() != command))
         m_History.push_back(command);
@@ -144,16 +144,14 @@ std::string Console::submitCommand(const std::string& command)
     if(command.empty())
         return "";
 
-    auto commandAutoCompleted = command;
     // bool autoCompleteCommandTokensOnly = true;
-    // autoComplete(commandAutoCompleted, autoCompleteCommandTokensOnly, false, true);
+    // autoComplete(command, autoCompleteCommandTokensOnly, false, true);
 
-    outputAdd(" >> " + commandAutoCompleted);
+    outputAdd(" >> " + command);
 
-    std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
+    std::vector<std::string> args = Utils::split(command, ' ');
     auto commID = determineCommand(args);
 
-    // new command system
     if (commID != -1)
     {
         std::string result;
@@ -170,55 +168,8 @@ std::string Console::submitCommand(const std::string& command)
         return result;
     }
 
-    // old command system
-    size_t bestMatchSize = 0;
-    int bestMatchIndex = -1;
-    for (size_t i = 0; i < m_Commands.size(); ++i)
-    {
-        const std::string &candidate = m_Commands.at(i);
-        if (candidate.size() < bestMatchSize) {
-            // We already found a better command candidate
-            continue;
-        }
-
-        if (commandAutoCompleted.size() == candidate.size() || (commandAutoCompleted.size() > candidate.size() && commandAutoCompleted.at(candidate.size()) == ' '))
-        {
-            // it makes sense to compare
-            if (candidate == commandAutoCompleted.substr(0, candidate.size()))
-            {
-                // Match!
-                bestMatchSize = candidate.size();
-                bestMatchIndex = i;
-            }
-        }
-    }
-
-    if (bestMatchIndex >= 0)
-    {
-        std::string result;
-        try {
-            result = m_CommandCallbacks.at(bestMatchIndex)(args);
-        } catch (const std::out_of_range& e)
-        {
-            result = "error: argument out of range";
-        } catch (const std::invalid_argument& e)
-        {
-            result = "error: invalid argument";
-        }
-        outputAdd(result);
-        return result;
-    }
-
     outputAdd(" -- Command not found -- ");
-
     return "NOTFOUND";
-}
-
-void Console::registerCommand(const std::string& command,
-                              ConsoleCommand::Callback callback)
-{
-    m_Commands.push_back(command);
-    m_CommandCallbacks.push_back(callback);
 }
 
 void Console::registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,

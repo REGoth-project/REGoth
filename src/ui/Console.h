@@ -52,14 +52,6 @@ namespace UI
          * @param Callback Function to be executed if the given command was typed.
          *
          */
-        void registerCommand(const std::string& command, ConsoleCommand::Callback callback);
-
-        /**
-         * Adds a command to the console
-         * @param Command Command to be added.
-         * @param Callback Function to be executed if the given command was typed.
-         *
-         */
         void registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
                               unsigned int numFixTokens,
                               ConsoleCommand::Callback callback);
@@ -84,7 +76,7 @@ namespace UI
          * @return Output of the command.
          *         - "NOTFOUND", if the command was not found
          */
-        std::string submitCommand(const std::string& command);
+        std::string submitCommand(std::string command);
 
         /**
          * Adds a message to the history
@@ -136,13 +128,7 @@ namespace UI
         /**
          * All registered commands
          */
-        std::vector<std::string> m_Commands;
         std::vector<ConsoleCommand> m_Commands2;
-
-        /**
-         * All registered callbacks
-         */
-        std::vector<ConsoleCommand::Callback> m_CommandCallbacks;
 
         /**
          * Currently typed line
