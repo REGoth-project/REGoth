@@ -6,6 +6,7 @@
 #include <iterator>
 #include <algorithm>
 #include <utils/Utils.h>
+#include <iomanip>
 
 using namespace UI;
 
@@ -120,11 +121,31 @@ std::string Console::submitCommand(const std::string& command)
         return "";
 
     auto commandAutoCompleted = command;
-    auto commID = autoComplete(commandAutoCompleted, true, false, true);
-    autoComplete(commandAutoCompleted, false, false, true);
+    bool autoCompleteCommandTokensOnly = true;
+    auto commID = autoComplete(commandAutoCompleted, autoCompleteCommandTokensOnly, false, true);
 
     outputAdd(" >> " + commandAutoCompleted);
 
+    const std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
+
+    // new command system
+    if (commID != -1)
+    {
+        std::string result;
+        try {
+            result = m_Commands2.at(commID).callback(args);
+        } catch (const std::out_of_range& e)
+        {
+            result = "error: argument out of range";
+        } catch (const std::invalid_argument& e)
+        {
+            result = "error: invalid argument";
+        }
+        outputAdd(result);
+        return result;
+    }
+
+    // old command system
     size_t bestMatchSize = 0;
     int bestMatchIndex = -1;
     for (size_t i = 0; i < m_Commands.size(); ++i)
@@ -149,7 +170,6 @@ std::string Console::submitCommand(const std::string& command)
 
     if (bestMatchIndex >= 0)
     {
-        const std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
         std::string result;
         try {
             result = m_CommandCallbacks.at(bestMatchIndex)(args);
@@ -316,7 +336,7 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
                     std::stringstream ss;
                     for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
                     {
-                        ss << alias << " ";
+                        ss << std::setw(40) << std::left << alias;
                     }
                     LogInfo() << ss.str();
                 }
@@ -344,7 +364,3 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
         return -1;
     }
 }
-
-
-
-

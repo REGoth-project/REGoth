@@ -813,19 +813,19 @@ public:
 
         UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& datFile = se.getVM().getDATFile();
             std::vector<std::vector<std::string>> aliasGroups;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
-                se.getVM().getDATFile().iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
+                datFile.iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
                     // reset to default values. especially name and description
                     cItem = Daedalus::GEngineClasses::C_Item();
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
 
                     std::vector<std::string> aliasGroup;
-                    std::string displayName = cItem.getInventoryName();
-                    for (auto name : {parSymbol.name, displayName, cItem.name})
+                    for (auto name : {parSymbol.name, cItem.description, cItem.name})
                     {
                         std::replace(name.begin(), name.end(), ' ', '_');
                         aliasGroup.push_back(name);
@@ -842,50 +842,66 @@ public:
             return std::string("Exiting ...");
         });
 
-        auto giveitemCallback = [this, itemNamesGen](const std::vector<std::string>& args) -> std::string {
+        auto giveOrRemoveItemCallback = [this, itemNamesGen](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
-                return "Missing argument. Usage: giveitem <symbol> [<amount>]";
+                return "Missing argument. Usage: giveitem/removeitem <symbol> [<amount>]";
 
-            std::string partItemName = args[1];
+            std::string itemName = args[1];
             int amount = 1;
             if (args.size() > 2)
                 amount = std::stoi(args[2]);
 
+            if (amount < 1)
+                return "invalid ammount " + std::to_string(amount);
+
+            enum CmdType {
+                give,
+                remove
+            };
+
+            CmdType cmdType;
+            auto cmd = Utils::lowered(args[0]);
+            if (cmd == Utils::lowered("giveitem"))
+            {
+                cmdType = give;
+            } else if (cmd == Utils::lowered("removeitem"))
+            {
+                cmdType = remove;
+            } else {
+                return "internal error: could not determine command: " + args[0];
+            }
+
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
-            // std::vector<std::tuple<std::size_t, std::string>> matchCandidates;
             std::size_t index = 0;
             auto aliasGroups = itemNamesGen();
             for (auto& aliasGroup : aliasGroups)
             {
                 for (auto& alias : aliasGroup)
                 {
-                    if (alias == partItemName){
+                    if (Utils::lowered(alias) == Utils::lowered(itemName)){
                         auto& parScriptName = aliasGroup[0];
                         VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
                         std::string description;
                         std::string action;
-                        if (amount > 0)
+                        if (cmdType == give)
                         {
                             auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
                             Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                            description = cItem.getInventoryName();
+                            description = cItem.description;
                             action = "added to";
-                        } else if (amount < 0) {
+                        } else if (cmdType == remove) {
                             auto handle = player.playerController->getInventory().getItem(parScriptName);
                             if (handle.isValid())
                             {
-                                uint32_t removeAmount = static_cast<uint32_t >(-amount);
                                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                                description = cItem.getInventoryName();
+                                description =  cItem.description;
                                 action = "removed from";
-                                amount = std::min(removeAmount, cItem.amount);
+                                amount = std::min(static_cast<u_int32_t >(amount), cItem.amount);
                                 player.playerController->getInventory().removeItem(parScriptName, amount);
                             } else {
                                 return "error: could not remove item. item " + parScriptName + " is not in inventory";
                             }
-                        } else {
-                            return "invalid ammount 0";
                         }
                         return std::string("Item(s) " + action + " the inventory: ")
                                + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
@@ -895,8 +911,8 @@ public:
             return "Item not found!";
         };
 
-        console.registerCommand2({gen({{"giveitem"}}), itemNamesGen}, giveitemCallback, 1);
-        console.registerCommand("giveitem", giveitemCallback);
+        console.registerCommand2({gen({{"giveitem"}, {"removeitem"}}), itemNamesGen}, giveOrRemoveItemCallback, 1);
+        console.registerCommand("giveitem", giveOrRemoveItemCallback);
 
         console.registerCommand("items", [this](const std::vector<std::string>& args) -> std::string {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -910,7 +926,7 @@ public:
                     cItem = Daedalus::GEngineClasses::C_Item();
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
-                    LogInfo() << parSymbol.name << " " << cItem.getInventoryName() << " " << cItem.name;
+                    LogInfo() << parSymbol.name << " " << cItem.name << " " << cItem.description;
                 });
             }
             se.getVM().getGameState().removeItem(dummyHandle);

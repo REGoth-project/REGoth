@@ -356,6 +356,7 @@ void PlayerController::onDebugDraw()
         {
             // Print inventory
             const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
+            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
             uint16_t idx=20;
             bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
@@ -363,10 +364,23 @@ void PlayerController::onDebugDraw()
             {
                 Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
+                std::string displayName;
+                {
+                    if (!idata.description.empty())
+                    {
+                        displayName = idata.description;
+                    } else if (!idata.name.empty())
+                    {
+                        displayName = idata.name;
+                    } else {
+                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
+                    }
+                }
+
                 if(idata.amount > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.getInventoryName().c_str(), idata.amount);
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , displayName.c_str(), idata.amount);
                 else
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.getInventoryName().c_str());
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
 
             }
         }
