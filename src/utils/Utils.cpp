@@ -455,6 +455,21 @@ bool Utils::containsLike(const std::string& searchSpace, const std::string& part
     return pos != std::string::npos;
 }
 
+
+std::vector<std::string> Utils::findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name){
+    std::string nameLowered = Utils::lowered(name);
+    for (auto& aliasGroup : groups)
+    {
+        for (auto& alias : aliasGroup) {
+            if (Utils::lowered(alias) == nameLowered)
+            {
+                return aliasGroup;
+            }
+        }
+    }
+    return {};
+};
+
 Utils::Profiler::Profiler(const std::string& n) :
     name(n),
     start(std::chrono::high_resolution_clock::now())

@@ -477,6 +477,15 @@ namespace Utils
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
     /**
+     * searches for the first group (vector<string>) wich contains name and returns the group
+     * returns empty vector if not found any
+     * @param groups groups to search in
+     * @param name token to find
+
+     */
+    std::vector<std::string> findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name);
+
+    /**
      * small class for easy to use time measurement via RAII
      */
     struct Profiler
@@ -486,6 +495,4 @@ namespace Utils
         Profiler(const std::string& n);
         ~Profiler();
     };
-
-    #define PROFILE_BLOCK(pbn) Utils::Profiler _pfinstance(pbn)
 }

@@ -61,8 +61,8 @@ namespace UI
          *
          */
         void registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
-                              ConsoleCommand::Callback callback,
-                              unsigned int numFixTokens);
+                              unsigned int numFixTokens,
+                              ConsoleCommand::Callback callback);
 
         /**
          * Trigger autocompletion
@@ -70,9 +70,13 @@ namespace UI
          * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
          * @param showSuggestions show suggestions
          * @param overwriteTypedLine replace the console line with the suggested one
-         * @return returns the number of the command found. -1 if non matched
          */
-        int autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput);
+        void autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput);
+
+        /**
+         * searches for command which, could generate the given tokens and returns its index
+         */
+        int determineCommand(const std::vector<std::string>& tokens);
 
         /**
          * Executes a given command

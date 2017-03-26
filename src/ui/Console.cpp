@@ -48,9 +48,33 @@ Console::Console()
     m_IsOpen = false;
     outputAdd(" ----------- REGoth Console -----------");
 
-    registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
-        for(auto& c : m_Commands)
-            outputAdd(c);
+    UI::ConsoleCommand::CandidateListGenerator listTokenGen = [] () -> std::vector<std::vector<std::string>> {
+        return {{"list"}};
+    };
+
+    registerCommand2({listTokenGen}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        for(auto& c : m_Commands2)
+        {
+            std::stringstream ss;
+            unsigned int index = 0;
+            for (auto generator : c.generators)
+            {
+                if (index >= c.numFixTokens)
+                    break;
+                if (index != 0)
+                    ss << " ";
+                auto groups = generator();
+                for (auto groupIt = groups.begin(); groupIt != groups.end(); groupIt++)
+                {
+                    if (groupIt != groups.begin())
+                        ss << "/";
+                    // take only the first alias of each group for now
+                    ss << (*groupIt)[0];
+                }
+                index++;
+            }
+            outputAdd(ss.str());
+        }
         return "";
     });
 }
@@ -121,12 +145,13 @@ std::string Console::submitCommand(const std::string& command)
         return "";
 
     auto commandAutoCompleted = command;
-    bool autoCompleteCommandTokensOnly = true;
-    auto commID = autoComplete(commandAutoCompleted, autoCompleteCommandTokensOnly, false, true);
+    // bool autoCompleteCommandTokensOnly = true;
+    // autoComplete(commandAutoCompleted, autoCompleteCommandTokensOnly, false, true);
 
     outputAdd(" >> " + commandAutoCompleted);
 
-    const std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
+    std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
+    auto commID = determineCommand(args);
 
     // new command system
     if (commID != -1)
@@ -197,8 +222,8 @@ void Console::registerCommand(const std::string& command,
 }
 
 void Console::registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
-                               ConsoleCommand::Callback callback,
-                               unsigned int numFixTokens)
+                               unsigned int numFixTokens,
+                               ConsoleCommand::Callback callback)
 {
     m_Commands2.emplace_back(ConsoleCommand{generators, callback, numFixTokens});
 }
@@ -240,13 +265,37 @@ struct MatchInfo
     };
 };
 
-int Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
+int Console::determineCommand(const std::vector<std::string>& tokens)
+{
+    for (std::size_t commID = 0; commID < m_Commands2.size(); commID++)
+    {
+        auto& command = m_Commands2.at(commID);
+        if (command.numFixTokens > tokens.size())
+            continue;
+        bool allStagesMatched = true;
+        for (std::size_t tokenID = 0; tokenID < command.numFixTokens; tokenID++)
+        {
+            auto group = Utils::findNameInGroups(command.generators.at(tokenID)(), tokens.at(tokenID));
+            if (group.empty())
+                allStagesMatched = false;
+        }
+        if (allStagesMatched)
+        {
+            return static_cast<int>(commID);
+        }
+    }
+    return -1;
+}
+
+void Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
     using std::vector;
     using std::string;
 
     std::istringstream iss(input);
     vector<string> tokens;
     std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(), std::back_inserter(tokens));
+    if (tokens.empty())
+        return;
 
     vector<std::tuple<string, bool>> newTokens;
     for (auto& token : tokens)
@@ -254,9 +303,6 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
         newTokens.push_back(std::make_tuple(token, false));
         Utils::lower(token);
     }
-
-    if (tokens.empty())
-        return -1;
 
     vector<bool> commandIsAlive(m_Commands2.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
@@ -336,7 +382,7 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
                     std::stringstream ss;
                     for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
                     {
-                        ss << std::setw(40) << std::left << alias;
+                        ss << std::left << std::setw(40) << alias;
                     }
                     LogInfo() << ss.str();
                 }
@@ -355,12 +401,5 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
         }
         input = tokenConCat.str();
     }
-    if (std::count(commandIsAlive.begin(), commandIsAlive.end(), true) == 1)
-    {
-        auto comIt = std::find(commandIsAlive.begin(), commandIsAlive.end(), true);
-        auto commID = comIt - commandIsAlive.begin();
-        return static_cast<int>(commID);
-    } else {
-        return -1;
-    }
 }
+
