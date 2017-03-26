@@ -176,7 +176,7 @@ void Console::registerCommand(const std::string& command,
     m_CommandCallbacks.push_back(callback);
 }
 
-void Console::registerCommand2(std::vector<std::function<std::vector<std::string>()>> generators,
+void Console::registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
                                ConsoleCommand::Callback callback,
                                unsigned int numFixTokens)
 {
@@ -202,11 +202,22 @@ void Console::outputAdd(const std::string& msg)
     m_Output.push_front(msg);
 }
 
-struct MatchInfo{
+struct MatchInfo
+{
+    std::size_t pos;
     std::size_t notMatchingCharCount;
     std::size_t commandID;
+    std::size_t groupID;
     std::string candidate;
     std::string candidateLowered;
+
+    static bool compare(const MatchInfo& a, const MatchInfo& b) {
+        if (a.pos != b.pos){
+            return a.pos < b.pos;
+        } else {
+            return a.notMatchingCharCount < b.notMatchingCharCount;
+        }
+    };
 };
 
 int Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
@@ -233,6 +244,7 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
         auto& token = tokens[tokenID];
         vector<MatchInfo> matchInfosStartsWith;
         vector<MatchInfo> matchInfosInMiddle;
+        vector<vector<vector<string>>> allGroups(m_Commands2.size());
         for (std::size_t cmdID = 0; cmdID < m_Commands2.size(); cmdID++)
         {
             auto& command = m_Commands2[cmdID];
@@ -242,24 +254,35 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
             {
                 commandIsAlive[cmdID] = false;
                 auto candidateGenerator = generators[tokenID];
-                auto candidates = candidateGenerator();
-                for (auto& candidate : candidates)
+                auto groups = candidateGenerator();
+                for (std::size_t groupID = 0; groupID < groups.size(); groupID++)
                 {
-                    string candidateLowered = candidate;
-                    Utils::lower(candidateLowered);
-                    auto pos = candidateLowered.find(token);
-                    auto diff = candidateLowered.size() - token.size();
-                    if (pos == 0)
+                    auto& aliasGroup = groups[groupID];
+                    allGroups[cmdID].push_back(aliasGroup);
+                    if (aliasGroup.empty())
+                        continue;
+                    std::vector<MatchInfo> groupInfos;
+                    for (auto& candidate : aliasGroup)
                     {
-                        matchInfosStartsWith.emplace_back(MatchInfo{diff, cmdID, candidate, candidateLowered});
-                    } else if (pos != string::npos)
+                        string candidateLowered = candidate;
+                        Utils::lower(candidateLowered);
+                        auto pos = candidateLowered.find(token);
+                        auto diff = candidateLowered.size() - token.size();
+                        MatchInfo matchInfo = MatchInfo{pos, diff, cmdID, groupID, candidate, candidateLowered};
+                        groupInfos.push_back(matchInfo);
+                    }
+                    std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
+                    auto& bestMatch = groupInfos.at(0);
+                    if (bestMatch.pos == 0)
                     {
-                        matchInfosInMiddle.emplace_back(MatchInfo{diff, cmdID, candidate, candidateLowered});
+                        matchInfosStartsWith.push_back(bestMatch);
+                    } else if (bestMatch.pos != string::npos)
+                    {
+                        matchInfosInMiddle.push_back(bestMatch);
                     }
                 }
             }
         }
-        std::map<string, MatchInfo> suggestions;
         for (auto& matchInfos : {matchInfosStartsWith, matchInfosInMiddle})
         {
             if (matchInfos.empty())
@@ -270,7 +293,6 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
             auto longestCandidateLen = reference.size();
             for (auto& matchInfo : matchInfos)
             {
-                suggestions[matchInfo.candidateLowered] = matchInfo;
                 commandIsAlive[matchInfo.commandID] = true;
                 commonLength = std::min(Utils::commonStartLength(reference, matchInfo.candidateLowered), commonLength);
                 longestCandidateLen = std::max(longestCandidateLen, matchInfo.candidateLowered.size());
@@ -285,20 +307,19 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
         }
         if (showSuggestions)
         {
-            std::stringstream ss;
-            auto sorter = [](const MatchInfo& a, const MatchInfo& b) -> bool {
-                return a.notMatchingCharCount < b.notMatchingCharCount;
-            };
-            vector<MatchInfo> suggestionsList;
-            for (const auto& pair : suggestions)
-            {
-                suggestionsList.push_back(pair.second);
-            }
-            std::sort(suggestionsList.begin(), suggestionsList.end(), sorter);
             LogInfo() << "suggestions:";
-            for (auto& matchInfo : suggestionsList)
+            for (auto matchInfos : {&matchInfosStartsWith, &matchInfosInMiddle})
             {
-                LogInfo() << matchInfo.candidate;
+                std::sort(matchInfos->begin(), matchInfos->end(), MatchInfo::compare);
+                for (auto& matchInfo : *matchInfos)
+                {
+                    std::stringstream ss;
+                    for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
+                    {
+                        ss << alias << " ";
+                    }
+                    LogInfo() << ss.str();
+                }
             }
         }
     }

@@ -16,7 +16,7 @@ namespace UI
         // Takes list of arguments as parameter, returns command result
         typedef std::function<std::string(const std::vector<std::string>&)> Callback;
         // generator, which returns vector of candidates
-        using CandidateListGenerator = std::function<std::vector<std::string>()>;
+        using CandidateListGenerator = std::function<std::vector<std::vector<std::string>>()>;
 
         std::vector<CandidateListGenerator> generators;
         Callback callback;

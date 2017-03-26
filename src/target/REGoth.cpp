@@ -336,8 +336,9 @@ public:
         fontSize = 23.0f;
 #endif
 
-        auto gen = [](std::vector<std::string> candidates){
-            return [candidates]() -> std::vector<std::string>{
+        std::function<UI::ConsoleCommand::CandidateListGenerator(std::vector<std::vector<std::string>>)> gen =
+                [](std::vector<std::vector<std::string>> candidates) {
+            return [candidates]() {
                 return candidates;
             };
         };
@@ -691,11 +692,11 @@ public:
             return "Could not find NPC " + requested;
         };
 
-        auto npcNamesGen = [this]() -> std::vector<std::string> {
+        UI::ConsoleCommand::CandidateListGenerator npcNamesGen = [this]() {
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<std::string> candidates;
+            std::vector<std::vector<std::string>> aliasGroups;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
@@ -703,19 +704,22 @@ public:
                     continue;
 
                 Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-                std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
-                std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-                for (auto npcName : {&npcDisplayName, &npcDatFileName})
+                const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+                const std::string& npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
+
+                std::vector<std::string> group;
+                for (auto npcName : {npcDisplayName, npcDatFileName})
                 {
-                    std::replace(npcName->begin(), npcName->end(), ' ', '_');
-                    candidates.push_back(std::move(*npcName));
+                    std::replace(npcName.begin(), npcName.end(), ' ', '_');
+                    group.push_back(std::move(npcName));
                 }
+                aliasGroups.push_back(std::move(group));
             }
-            return candidates;
+            return aliasGroups;
         };
 
+        console.registerCommand2({gen({{"tp"}}), npcNamesGen}, tpCallback, 1);
         console.registerCommand("tp", tpCallback);
-        console.registerCommand2({gen({"tp"}), npcNamesGen}, tpCallback, 1);
 
         auto killCallback = [this](const std::vector<std::string>& args) -> std::string {
 
@@ -807,10 +811,9 @@ public:
             return "Used " + std::to_string(dmg) + " mana";
         });
 
-        auto dummy = [](const std::vector<std::string>& args) -> std::string{ return "";};
-        auto itemNamesGen = [this]() -> std::vector<std::string> {
+        UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
-            std::vector<std::string> candidates;
+            std::vector<std::vector<std::string>> aliasGroups;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
@@ -820,16 +823,18 @@ public:
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
 
+                    std::vector<std::string> aliasGroup;
                     std::string displayName = cItem.getInventoryName();
                     for (auto name : {parSymbol.name, displayName, cItem.name})
                     {
                         std::replace(name.begin(), name.end(), ' ', '_');
-                        candidates.push_back(name);
+                        aliasGroup.push_back(name);
                     }
+                    aliasGroups.push_back(aliasGroup);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
             }
-            return candidates;
+            return aliasGroups;
         };
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
@@ -850,45 +855,47 @@ public:
 
             // std::vector<std::tuple<std::size_t, std::string>> matchCandidates;
             std::size_t index = 0;
-            auto candidates = itemNamesGen();
-            for (const auto& candidate : candidates)
+            auto aliasGroups = itemNamesGen();
+            for (auto& aliasGroup : aliasGroups)
             {
-                if (candidate == partItemName){
-                    auto& parScriptName = candidates[(index / 3) * 3];
-                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
-                    std::string description;
-                    std::string action;
-                    if (amount > 0)
-                    {
-                        auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
-                        Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                        description = cItem.getInventoryName();
-                        action = "added to";
-                    } else if (amount < 0) {
-                        auto handle = player.playerController->getInventory().getItem(parScriptName);
-                        if (handle.isValid())
+                for (auto& alias : aliasGroup)
+                {
+                    if (alias == partItemName){
+                        auto& parScriptName = aliasGroup[0];
+                        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
+                        std::string description;
+                        std::string action;
+                        if (amount > 0)
                         {
-                            uint32_t removeAmount = static_cast<uint32_t >(-amount);
+                            auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
                             Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
                             description = cItem.getInventoryName();
-                            action = "removed from";
-                            amount = std::min(removeAmount, cItem.amount);
-                            player.playerController->getInventory().removeItem(parScriptName, amount);
+                            action = "added to";
+                        } else if (amount < 0) {
+                            auto handle = player.playerController->getInventory().getItem(parScriptName);
+                            if (handle.isValid())
+                            {
+                                uint32_t removeAmount = static_cast<uint32_t >(-amount);
+                                Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                                description = cItem.getInventoryName();
+                                action = "removed from";
+                                amount = std::min(removeAmount, cItem.amount);
+                                player.playerController->getInventory().removeItem(parScriptName, amount);
+                            } else {
+                                return "error: could not remove item. item " + parScriptName + " is not in inventory";
+                            }
                         } else {
-                            return "error: could not remove item. item " + parScriptName + " is not in inventory";
+                            return "invalid ammount 0";
                         }
-                    } else {
-                        return "invalid ammount 0";
+                        return std::string("Item(s) " + action + " the inventory: ")
+                               + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
                     }
-                    return std::string("Item(s) " + action + " the inventory: ")
-                           + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
                 }
-                index++;
             }
             return "Item not found!";
         };
 
-        console.registerCommand2({gen({"giveitem"}), itemNamesGen}, giveitemCallback, 1);
+        console.registerCommand2({gen({{"giveitem"}}), itemNamesGen}, giveitemCallback, 1);
         console.registerCommand("giveitem", giveitemCallback);
 
         console.registerCommand("items", [this](const std::vector<std::string>& args) -> std::string {
