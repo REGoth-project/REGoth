@@ -607,6 +607,46 @@ public:
             return "World saved to slot: " + std::to_string(idx);
         });
 
+        UI::ConsoleCommand::CandidateListGenerator npcNamesGen = [this]() {
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+            auto& scriptEngine = worldInstance.getScriptEngine();
+            auto& datFile = scriptEngine.getVM().getDATFile();
+            std::vector<std::vector<std::string>> aliasGroups;
+            for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
+            {
+                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
+                if (!npcVobInfo.isValid())
+                    continue;
+
+                Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
+                const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+                const std::string& npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
+
+                std::vector<std::string> group;
+                for (auto npcName : {npcDatFileName, npcDisplayName})
+                {
+                    std::replace(npcName.begin(), npcName.end(), ' ', '_');
+                    group.push_back(std::move(npcName));
+                }
+                aliasGroups.push_back(std::move(group));
+            }
+            return aliasGroups;
+        };
+
+        auto findNameInGroups = [](std::vector<std::vector<std::string>> groups, std::string name) -> std::vector<std::string>{
+            Utils::lower(name);
+            for (auto& aliasGroup : groups)
+            {
+                for (auto& alias : aliasGroup) {
+                    if (Utils::lowered(alias) == name)
+                    {
+                        return aliasGroup;
+                    }
+                }
+            }
+            return {};
+        };
+
         console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
@@ -661,7 +701,7 @@ public:
             return "Experience points successfully given";
         });
 
-        auto tpCallback = [this](const std::vector<std::string>& args) -> std::string {
+        auto tpCallback = [this, npcNamesGen, findNameInGroups](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
                 return "Missing argument(s). Usage: tp <name>";
 
@@ -670,52 +710,30 @@ public:
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            auto npcHandle = scriptEngine.findWorldNPC(requested);
-            if (npcHandle.isValid())
-            {
-                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npcHandle);
-                Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-                std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-                std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+            auto aliasGroups = npcNamesGen();
+            auto group = findNameInGroups(aliasGroups, requested);
 
-                Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-                Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
-                // player keeps a respectful distance of 1 to the NPC
-                float respectfulDistance = 1;
-                Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                player.playerController->teleportToPosition(newPos);
-                // player looks towards NPC
-                player.playerController->setDirection((-1) * npcDirection);
-                return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
+            if (group.size() >= 2)
+            {
+                std::string npcDatFileName = group[0];
+                std::string npcDisplayName = group[1];
+                Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
+                if (npcScriptHandle.isValid())
+                {
+                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                    Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
+                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
+                    Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
+                    // player keeps a respectful distance of 1 to the NPC
+                    float respectfulDistance = 1;
+                    Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
+                    player.playerController->teleportToPosition(newPos);
+                    // player looks towards NPC
+                    player.playerController->setDirection((-1) * npcDirection);
+                    return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
+                }
             }
             return "Could not find NPC " + requested;
-        };
-
-        UI::ConsoleCommand::CandidateListGenerator npcNamesGen = [this]() {
-            auto& worldInstance = m_pEngine->getMainWorld().get();
-            auto& scriptEngine = worldInstance.getScriptEngine();
-            auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<std::vector<std::string>> aliasGroups;
-            for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
-            {
-                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
-                if (!npcVobInfo.isValid())
-                    continue;
-
-                Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-                const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
-                const std::string& npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-
-                std::vector<std::string> group;
-                for (auto npcName : {npcDisplayName, npcDatFileName})
-                {
-                    std::replace(npcName.begin(), npcName.end(), ' ', '_');
-                    group.push_back(std::move(npcName));
-                }
-                aliasGroups.push_back(std::move(group));
-            }
-            return aliasGroups;
         };
 
         console.registerCommand2({gen({{"tp"}}), npcNamesGen}, tpCallback, 1);
