@@ -449,6 +449,11 @@ namespace Utils
     void lower(std::string& in);
 
     /**
+     *  @return lowered copy of the string
+     */
+    std::string lowered(const std::string& in);
+
+    /**
      * number of equal characters at begin
      * @param a
      * @param b

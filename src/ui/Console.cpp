@@ -116,15 +116,14 @@ std::string Console::submitCommand(const std::string& command)
     m_HistoryIndex = -1;
     m_PendingLine.clear();
 
-    outputAdd(" >> " + command);
-
     if(command.empty())
         return "";
 
     auto commandAutoCompleted = command;
-    auto commID = autoComplete(commandAutoCompleted, false, false, true);
+    auto commID = autoComplete(commandAutoCompleted, true, false, true);
+    autoComplete(commandAutoCompleted, false, false, true);
 
-    outputAdd(" >> (Auto) " + commandAutoCompleted);
+    outputAdd(" >> " + commandAutoCompleted);
 
     size_t bestMatchSize = 0;
     int bestMatchIndex = -1;
@@ -136,10 +135,10 @@ std::string Console::submitCommand(const std::string& command)
             continue;
         }
 
-        if (command.size() == candidate.size() || (command.size() > candidate.size() && command.at(candidate.size()) == ' '))
+        if (commandAutoCompleted.size() == candidate.size() || (commandAutoCompleted.size() > candidate.size() && commandAutoCompleted.at(candidate.size()) == ' '))
         {
             // it makes sense to compare
-            if (candidate == command.substr(0, candidate.size()))
+            if (candidate == commandAutoCompleted.substr(0, candidate.size()))
             {
                 // Match!
                 bestMatchSize = candidate.size();
@@ -150,7 +149,7 @@ std::string Console::submitCommand(const std::string& command)
 
     if (bestMatchIndex >= 0)
     {
-        const std::vector<std::string> args = Utils::split(command, ' ');
+        const std::vector<std::string> args = Utils::split(commandAutoCompleted, ' ');
         std::string result;
         try {
             result = m_CommandCallbacks.at(bestMatchIndex)(args);
@@ -296,11 +295,11 @@ int Console::autoComplete(std::string& input, bool limitToFixed, bool showSugges
                 suggestionsList.push_back(pair.second);
             }
             std::sort(suggestionsList.begin(), suggestionsList.end(), sorter);
+            LogInfo() << "suggestions:";
             for (auto& matchInfo : suggestionsList)
             {
-                ss << matchInfo.candidate << " ";
+                LogInfo() << matchInfo.candidate;
             }
-            LogInfo() << "suggestions: " << ss.str();
         }
     }
     if (overwriteInput)

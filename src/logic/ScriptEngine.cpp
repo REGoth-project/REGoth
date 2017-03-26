@@ -338,9 +338,9 @@ std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 
     return outSet;
 }
 
-std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string namePart)
+Handle::EntityHandle ScriptEngine::findWorldNPC(std::string name)
 {
-    std::set<Handle::EntityHandle> outSet;
+    std::string nameLower = Utils::lowered(name);
     auto& datFile = getVM().getDATFile();
 
     for(const Handle::EntityHandle& npc : getWorldNPCs())
@@ -353,15 +353,17 @@ std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string n
         std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
         std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
 
-        for (const auto& npcName : {npcDisplayName, npcDatFileName})
+        for (auto npcName : {npcDisplayName, npcDatFileName})
         {
-            if (Utils::containsLike(npcName, namePart))
+            std::replace(npcName.begin(), npcName.end(), ' ', '_');
+            Utils::lower(npcName);
+            if (nameLower == npcName)
             {
-                outSet.insert(npc);
+                return npc;
             }
         }
     }
-    return outSet;
+    return Handle::EntityHandle();
 }
 
 void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& entry)
