@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <chrono>
+#include <sstream>
 
 namespace Utils
 {
@@ -481,12 +482,37 @@ namespace Utils
      * returns empty vector if not found any
      * @param groups groups to search in
      * @param name token to find
-
      */
     std::vector<std::string> findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name);
 
     /**
-     * small class for easy to use time measurement via RAII
+     * performs case insensitive euqal check
+     * @return true if strings are equal ignoring case
+     */
+    bool stringEqualIngoreCase(const std::string a, const std::string b);
+
+    /**
+     * concatenates tokens using delim inbetweeen
+     * @tparam Iterator
+     * @param begin
+     * @param end
+     * @param delim
+     * @return concatenated string
+     */
+    template<class Iterator>
+    std::string join(Iterator begin, Iterator end, const std::string& delim){
+        std::stringstream ss;
+        for (auto it = begin; it != end; it++)
+        {
+            if (it != begin)
+                ss << delim;
+            ss << *it;
+        }
+        return ss.str();
+    }
+
+    /**
+     * small class for easy to use time measurement
      */
     struct Profiler
     {

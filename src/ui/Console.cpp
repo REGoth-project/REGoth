@@ -48,32 +48,10 @@ Console::Console()
     m_IsOpen = false;
     outputAdd(" ----------- REGoth Console -----------");
 
-    UI::ConsoleCommand::CandidateListGenerator listTokenGen = [] () -> std::vector<std::vector<std::string>> {
-        return {{"list"}};
-    };
-
-    registerCommand2({listTokenGen}, 1, [this](const std::vector<std::string>& args) -> std::string {
-        for(auto& c : m_Commands2)
+    registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
+        for(auto& command : m_Commands2)
         {
-            std::stringstream ss;
-            unsigned int index = 0;
-            for (auto generator : c.generators)
-            {
-                if (index >= c.numFixTokens)
-                    break;
-                if (index != 0)
-                    ss << " ";
-                auto groups = generator();
-                for (auto groupIt = groups.begin(); groupIt != groups.end(); groupIt++)
-                {
-                    if (groupIt != groups.begin())
-                        ss << "/";
-                    // take only the first alias of each group for now
-                    ss << (*groupIt)[0];
-                }
-                index++;
-            }
-            outputAdd(ss.str());
+            outputAdd(command.commandName);
         }
         return "";
     });
@@ -172,11 +150,22 @@ std::string Console::submitCommand(std::string command)
     return "NOTFOUND";
 }
 
-void Console::registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
-                               unsigned int numFixTokens,
-                               ConsoleCommand::Callback callback)
+ConsoleCommand& Console::registerCommand(const std::string& command,
+                              ConsoleCommand::Callback callback)
 {
-    m_Commands2.emplace_back(ConsoleCommand{generators, callback, numFixTokens});
+    auto tokens = Utils::split(command, ' ');
+    std::vector<ConsoleCommand::CandidateListGenerator> generators;
+    auto simpleGen = [](std::string token) -> std::vector<std::vector<std::string>> {
+        return {{token}};
+    };
+    for (auto tokenIt = tokens.rbegin(); tokenIt != tokens.rend(); tokenIt++)
+    {
+        std::string token = *tokenIt;
+        generators.push_back(std::bind(simpleGen, token));
+    }
+    auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
+    m_Commands2.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
+    return m_Commands2.back();
 }
 
 void Console::printOutput()

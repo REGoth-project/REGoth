@@ -18,9 +18,14 @@ namespace UI
         // generator, which returns vector of candidates
         using CandidateListGenerator = std::function<std::vector<std::vector<std::string>>()>;
 
+        std::string commandName;
         std::vector<CandidateListGenerator> generators;
         Callback callback;
-        unsigned int numFixTokens;
+        std::size_t numFixTokens;
+
+        void registerAutoComplete(CandidateListGenerator generator){
+            generators.push_back(generator);
+        }
     };
 
     class Console
@@ -52,9 +57,7 @@ namespace UI
          * @param Callback Function to be executed if the given command was typed.
          *
          */
-        void registerCommand2(std::vector<ConsoleCommand::CandidateListGenerator> generators,
-                              unsigned int numFixTokens,
-                              ConsoleCommand::Callback callback);
+        ConsoleCommand& registerCommand(const std::string& command, ConsoleCommand::Callback callback);
 
         /**
          * Trigger autocompletion

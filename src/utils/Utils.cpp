@@ -457,18 +457,28 @@ bool Utils::containsLike(const std::string& searchSpace, const std::string& part
 
 
 std::vector<std::string> Utils::findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name){
-    std::string nameLowered = Utils::lowered(name);
     for (auto& aliasGroup : groups)
     {
         for (auto& alias : aliasGroup) {
-            if (Utils::lowered(alias) == nameLowered)
+            if (Utils::stringEqualIngoreCase(alias, name))
             {
                 return aliasGroup;
             }
         }
     }
     return {};
-};
+}
+
+bool Utils::stringEqualIngoreCase(const std::string a, const std::string b) {
+    if (a.size() != b.size())
+        return false;
+    for (std::size_t i = 0; i < a.size(); i++)
+    {
+        if (::tolower(a[i]) != ::tolower(b[i]))
+            return false;
+    }
+    return true;
+}
 
 Utils::Profiler::Profiler(const std::string& n) :
     name(n),

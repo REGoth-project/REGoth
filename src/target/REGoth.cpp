@@ -344,7 +344,7 @@ public:
         };
 
         auto& console = m_pEngine->getHud().getConsole();
-        console.registerCommand2({gen({{"stats"}})}, 1, [](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
 
@@ -352,7 +352,7 @@ public:
             return "Toggled stats";
         });
 
-        console.registerCommand2({gen({{"hud"}})}, 1, [&](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("hud", [&](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
 
@@ -361,7 +361,7 @@ public:
             return "Toggled hud";
         });
 
-        console.registerCommand2({gen({{"camera"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("camera", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: camera <mode> | (0=Free, 1=Static, 2=FirstPerson, 3=ThirdPerson)";
@@ -373,11 +373,11 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-        console.registerCommand2({gen({{"test"}})}, 1, [](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
 
-        console.registerCommand2({gen({{"set"}}), gen({{"day"}})}, 2, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the day
             if(args.size() < 3)
                 return "Missing argument. Usage: set day <day>";
@@ -389,7 +389,7 @@ public:
             return "Set day to " + std::to_string(clock.getDay());
         });
 
-        console.registerCommand2({gen({{"set"}}), gen({{"clock"}})}, 2, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the world time
             if(args.size() != 4)
                 return "Invalid arguments. Usage: set clock [hh mm]";
@@ -408,7 +408,7 @@ public:
             return "Set clock to " + clock.getTimeOfDayFormatted();
         });
 
-        console.registerCommand2({gen({{"set"}}), gen({{"clockspeed"}})}, 2, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the time of day
             if(args.size() < 3)
                 return "Missing argument. Usage: set clockspeed <factor>";
@@ -419,7 +419,7 @@ public:
             return "Set clockspeed to " + std::to_string(factor);
         });
 
-        console.registerCommand2({gen({{"set"}}), gen({{"gamespeed"}})}, 2, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("set gamespeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the game time
             if(args.size() < 3)
                 return "Missing argument. Usage: set gamespeed <factor:default=1>";
@@ -430,7 +430,7 @@ public:
             return "Set gamespeed to " + std::to_string(factor);
         });
 
-        console.registerCommand2({gen({{"camera"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
@@ -445,7 +445,7 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
-        console.registerCommand2({gen({{"goto"}}), gen({{"waypoint"}})}, 2, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
             if(args.size() != 3)
                 return "Invalid argument. Usage: goto waypoint [waypoint]";
 
@@ -464,7 +464,7 @@ public:
             return "Player moved to waypoint " + waypointArgument;
         });
 
-        console.registerCommand2({gen({{"heroimport"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
 
             std::ifstream f("hero.json");
@@ -479,7 +479,7 @@ public:
             return "Hero successfully imported from: hero.json";
         });
 
-        console.registerCommand2({gen({{"switchlevel"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
 
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -540,7 +540,7 @@ public:
             return "Successfully switched world to: " + file;
         });
 
-        console.registerCommand2({gen({{"load"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() != 2)
                 return "Missing argument. Usage: load <savegame>";
@@ -567,7 +567,7 @@ public:
             m_pEngine->addWorld("", worldPath);
         });
 
-        console.registerCommand2({gen({{"save"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: save <savegame>";
@@ -624,7 +624,7 @@ public:
             return aliasGroups;
         };
 
-        console.registerCommand2({gen({{"knockout"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation npc;
             auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -661,7 +661,7 @@ public:
             return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
         });
 
-        console.registerCommand2({gen({{"givexp"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
             if(args.size() != 2)
@@ -713,7 +713,7 @@ public:
             return "Could not find NPC " + requested;
         };
 
-        console.registerCommand2({gen({{"tp"}}), npcNamesGen}, 1, tpCallback);
+        console.registerCommand("tp", tpCallback).registerAutoComplete(npcNamesGen);
 
         auto killCallback = [this](const std::vector<std::string>& args) -> std::string {
 
@@ -764,9 +764,9 @@ public:
             return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
         };
 
-        console.registerCommand2({gen({{"kill"}}), npcNamesGen}, 1, killCallback);
+        console.registerCommand("kill", killCallback).registerAutoComplete(npcNamesGen);
 
-        console.registerCommand2({gen({{"interrupt"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -776,7 +776,7 @@ public:
             return "Interrupted player, cleared EM";
         });
 
-        console.registerCommand2({gen({{"hurtself"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -790,7 +790,7 @@ public:
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-        console.registerCommand2({gen({{"usemana"}})}, 1, [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                     m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
@@ -830,7 +830,7 @@ public:
             return aliasGroups;
         };
 
-        console.registerCommand2({gen({{"quit"}})}, 1, [](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
             setQuit(true);
             return std::string("Exiting ...");
         });
@@ -901,7 +901,7 @@ public:
             return "Item not found!";
         };
 
-        console.registerCommand2({gen({{"giveitem"}, {"removeitem"}}), itemNamesGen}, 1, giveOrRemoveItemCallback);
+        console.registerCommand("giveitem", giveOrRemoveItemCallback).registerAutoComplete(itemNamesGen);
 
         imguiCreate(nullptr, 0, fontSize);
         m_ImgUiCreated = true;
