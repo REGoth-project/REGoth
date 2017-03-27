@@ -239,8 +239,14 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
     using std::string;
 
     vector<string> tokens = Utils::splitAndRemoveEmpty(input, ' ');
-    if (tokens.empty())
-        return;
+
+    bool lookAhead = false;
+    if (tokens.empty() || isspace(input.back()))
+    {
+        // append empty pseudo token to trigger lookahead for the next token
+        tokens.push_back("");
+        lookAhead = true;
+    }
 
     vector<std::tuple<string, bool>> newTokens;
     for (auto& token : tokens)
@@ -347,6 +353,11 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
                 LogInfo() << ss.str();
             }
         }
+    }
+    if (lookAhead && std::get<0>(newTokens.back()) == "")
+    {
+        tokens.pop_back();
+        newTokens.pop_back();
     }
     if (overwriteInput)
     {

@@ -63,7 +63,7 @@ namespace UI
 
         /**
          * Trigger autocompletion
-         * @param line to work on
+         * @param command to work on
          * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
          * @param showSuggestions show suggestions
          * @param overwriteTypedLine replace the console line with the suggested one
