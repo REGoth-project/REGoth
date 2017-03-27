@@ -113,14 +113,14 @@ void Console::onTextInput(const std::string& text)
 
 std::string Console::submitCommand(std::string command)
 {
-    std::vector<std::string> args = Utils::split(command, ' ');
+    std::vector<std::string> args = Utils::splitAndRemoveEmpty(command, ' ');
     if(!args.empty() && (m_History.empty() || m_History.back() != command))
         m_History.push_back(command);
 
     m_HistoryIndex = -1;
     m_PendingLine.clear();
 
-    if(command.empty())
+    if(args.empty())
         return "";
 
     // bool autoCompleteCommandTokensOnly = true;
@@ -152,7 +152,7 @@ std::string Console::submitCommand(std::string command)
 
 ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleCommand::Callback callback)
 {
-    auto tokens = Utils::split(command, ' ');
+    auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
     std::vector<ConsoleCommand::CandidateListGenerator> generators;
     auto simpleGen = [](std::string token) -> std::vector<std::vector<std::string>> {
         return {{token}};
@@ -238,7 +238,7 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
     using std::vector;
     using std::string;
 
-    const vector<string> tokens = Utils::split(input, ' ');
+    vector<string> tokens = Utils::splitAndRemoveEmpty(input, ' ');
     if (tokens.empty())
         return;
 
@@ -317,19 +317,34 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
         }
         if (showSuggestions)
         {
+            vector<vector<string>> suggestions;
             LogInfo() << "suggestions:";
             for (auto matchInfos : {&matchInfosStartsWith, &matchInfosInMiddle})
             {
                 std::sort(matchInfos->begin(), matchInfos->end(), MatchInfo::compare);
                 for (auto& matchInfo : *matchInfos)
                 {
-                    std::stringstream ss;
+                    suggestions.push_back({});
                     for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
                     {
-                        ss << std::left << std::setw(40) << alias;
+                        suggestions.back().push_back(alias);
                     }
-                    LogInfo() << ss.str();
                 }
+            }
+            std::size_t maxSuggestions = 15;
+            for (auto& suggestionEntry : suggestions)
+            {
+                if (maxSuggestions-- == 0)
+                {
+                    LogInfo() << "... (suggestion maximum reached)";
+                    break;
+                }
+                std::stringstream ss;
+                for (auto& alias : suggestionEntry)
+                {
+                    ss << std::left << std::setw(40) << alias;
+                }
+                LogInfo() << ss.str();
             }
         }
     }

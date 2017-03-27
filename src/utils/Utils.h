@@ -512,6 +512,14 @@ namespace Utils
     }
 
     /**
+     * splits s on the given delimiter and removes empty entries caused by multiple delimiters
+     * @param s
+     * @param delim
+     * @return vector of tokens
+     */
+    std::vector<std::string> splitAndRemoveEmpty(const std::string &s, const char delim);
+
+    /**
      * small class for easy to use time measurement
      */
     struct Profiler

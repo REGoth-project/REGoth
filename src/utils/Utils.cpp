@@ -480,6 +480,12 @@ bool Utils::stringEqualIngoreCase(const std::string a, const std::string b) {
     return true;
 }
 
+std::vector<std::string> Utils::splitAndRemoveEmpty(const std::string &s, const char delim) {
+    std::vector<std::string> tokens = Utils::split(s, delim);
+    tokens.erase(std::remove(tokens.begin(), tokens.end(), ""), tokens.end());
+    return tokens;
+}
+
 Utils::Profiler::Profiler(const std::string& n) :
     name(n),
     start(std::chrono::high_resolution_clock::now())

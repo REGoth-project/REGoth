@@ -21,6 +21,7 @@ namespace UI
         std::string commandName;
         std::vector<CandidateListGenerator> generators;
         Callback callback;
+        // number of tokens, that must match to identify this command
         std::size_t numFixTokens;
 
         ConsoleCommand& registerAutoComplete(CandidateListGenerator generator){
