@@ -23,8 +23,9 @@ namespace UI
         Callback callback;
         std::size_t numFixTokens;
 
-        void registerAutoComplete(CandidateListGenerator generator){
+        ConsoleCommand& registerAutoComplete(CandidateListGenerator generator){
             generators.push_back(generator);
+            return *this;
         }
     };
 
@@ -131,7 +132,7 @@ namespace UI
         /**
          * All registered commands
          */
-        std::vector<ConsoleCommand> m_Commands2;
+        std::vector<ConsoleCommand> m_Commands;
 
         /**
          * Currently typed line

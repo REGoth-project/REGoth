@@ -49,7 +49,7 @@ Console::Console()
     outputAdd(" ----------- REGoth Console -----------");
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
-        for(auto& command : m_Commands2)
+        for(auto& command : m_Commands)
         {
             outputAdd(command.commandName);
         }
@@ -134,7 +134,7 @@ std::string Console::submitCommand(std::string command)
     {
         std::string result;
         try {
-            result = m_Commands2.at(commID).callback(args);
+            result = m_Commands.at(commID).callback(args);
         } catch (const std::out_of_range& e)
         {
             result = "error: argument out of range";
@@ -150,8 +150,7 @@ std::string Console::submitCommand(std::string command)
     return "NOTFOUND";
 }
 
-ConsoleCommand& Console::registerCommand(const std::string& command,
-                              ConsoleCommand::Callback callback)
+ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleCommand::Callback callback)
 {
     auto tokens = Utils::split(command, ' ');
     std::vector<ConsoleCommand::CandidateListGenerator> generators;
@@ -164,8 +163,8 @@ ConsoleCommand& Console::registerCommand(const std::string& command,
         generators.push_back(std::bind(simpleGen, token));
     }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
-    m_Commands2.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
-    return m_Commands2.back();
+    m_Commands.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
+    return m_Commands.back();
 }
 
 void Console::printOutput()
@@ -207,9 +206,10 @@ struct MatchInfo
 
 int Console::determineCommand(const std::vector<std::string>& tokens)
 {
-    for (std::size_t commID = 0; commID < m_Commands2.size(); commID++)
+    std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
+    for (std::size_t commID = 0; commID < m_Commands.size(); commID++)
     {
-        auto& command = m_Commands2.at(commID);
+        auto& command = m_Commands.at(commID);
         if (command.numFixTokens > tokens.size())
             continue;
         bool allStagesMatched = true;
@@ -221,8 +221,15 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
         }
         if (allStagesMatched)
         {
-            return static_cast<int>(commID);
+            numMatchingTokens[commID] = command.numFixTokens;
         }
+    }
+    auto itMaxelement = std::max_element(numMatchingTokens.begin(), numMatchingTokens.end());
+    if (*itMaxelement != 0)
+    {
+        // case: at least one command matched with command.numFixTokens
+        auto commID = itMaxelement - numMatchingTokens.begin();
+        return static_cast<int>(commID);
     }
     return -1;
 }
@@ -241,16 +248,16 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
         newTokens.push_back(std::make_tuple(token, false));
     }
 
-    vector<bool> commandIsAlive(m_Commands2.size(), true);
+    vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
         auto tokenLowered = Utils::lowered(tokens[tokenID]);
         vector<MatchInfo> matchInfosStartsWith;
         vector<MatchInfo> matchInfosInMiddle;
-        vector<vector<vector<string>>> allGroups(m_Commands2.size());
-        for (std::size_t cmdID = 0; cmdID < m_Commands2.size(); cmdID++)
+        vector<vector<vector<string>>> allGroups(m_Commands.size());
+        for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
         {
-            auto& command = m_Commands2[cmdID];
+            auto& command = m_Commands[cmdID];
             auto& generators = command.generators;
             std::size_t cmdEnd = limitToFixed ? command.numFixTokens : generators.size();
             if (commandIsAlive[cmdID] && tokenID < cmdEnd)

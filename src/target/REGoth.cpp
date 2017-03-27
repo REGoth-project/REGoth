@@ -643,40 +643,63 @@ public:
 
         auto tpCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
-                return "Missing argument(s). Usage: tp <name>";
+                return "Missing argument(s). Usage: tp [<npc:default=PC_HERO>] <targetnpc>";
 
-            std::string requested = args[1];
+            std::string teleporterName = "PC_HERO";
+            std::string targetName;
+            if (args.size() >= 3)
+            {
+                teleporterName = args[1];
+                targetName = args[2];
+            } else {
+                targetName = args[1];
+            }
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
             auto aliasGroups = worlddNpcNamesGen();
-            auto group = Utils::findNameInGroups(aliasGroups, requested);
 
-            if (group.size() >= 2)
+            std::vector<VobTypes::NpcVobInformation> vobInfos;
+            std::vector<std::string> fullNames;
+            for (auto& requestedName : {teleporterName, targetName})
             {
-                std::string npcDatFileName = group[0];
-                std::string npcDisplayName = group[1];
-                Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
-                if (npcScriptHandle.isValid())
+                auto group = Utils::findNameInGroups(aliasGroups, requestedName);
+                bool success = false;
+                if (group.size() >= 2)
                 {
-                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
-                    Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
-                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-                    Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
-                    // player keeps a respectful distance of 1 to the NPC
-                    float respectfulDistance = 1;
-                    Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                    player.playerController->teleportToPosition(newPos);
-                    // player looks towards NPC
-                    player.playerController->setDirection((-1) * npcDirection);
-                    return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
+                    std::string npcDatFileName = group[0];
+                    std::string npcDisplayName = group[1];
+                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
+                    if (npcScriptHandle.isValid())
+                    {
+                        success = true;
+                        VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                        vobInfos.push_back(npcVobInfo);
+                        fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
+                    }
                 }
+                if (!success)
+                    return "Could not find NPC " + requestedName;
             }
-            return "Could not find NPC " + requested;
+
+            VobTypes::NpcVobInformation& teleporter = vobInfos.at(0);
+            VobTypes::NpcVobInformation& target = vobInfos.at(1);
+            Math::float3 targetPosition = target.position->m_WorldMatrix.Translation();
+            Math::float3 targetDirection = target.playerController->getDirection();
+            // keep a respectful distance of 1 to the NPC
+            float respectfulDistance = 1;
+            Math::float3 newPos = targetPosition + respectfulDistance * targetDirection;
+            teleporter.playerController->teleportToPosition(newPos);
+            // look towards NPC
+            teleporter.playerController->setDirection((-1) * targetDirection);
+            return "Teleported " + fullNames[0] + " to " + fullNames[1];
+
         };
 
-        console.registerCommand("tp", tpCallback).registerAutoComplete(worlddNpcNamesGen);
+        console.registerCommand("tp", tpCallback)
+                .registerAutoComplete(worlddNpcNamesGen)
+                .registerAutoComplete(worlddNpcNamesGen);
 
         auto killOrKnockoutCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
 
