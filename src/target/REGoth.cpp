@@ -445,16 +445,26 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
+        auto waypointNamesGen = [this]() -> std::vector<std::vector<std::string>> {
+            std::vector<std::vector<std::string>> groups;
+            auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
+            for (auto& waypoint : waypoints)
+            {
+                groups.push_back({waypoint.name});
+            }
+            return groups;
+        };
+
         console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
             if(args.size() != 3)
                 return "Invalid argument. Usage: goto waypoint [waypoint]";
 
-            const std::string &waypointArgument = args[2];
+            const std::string& waypointArgument = args[2];
             const World::Waynet::WaynetInstance& waynet = m_pEngine->getMainWorld().get().getWaynet();
             Logic::ScriptEngine &scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
             const auto waypointIndex = World::Waynet::getWaypointIndex(waynet, waypointArgument);
             if(waypointIndex == World::Waynet::INVALID_WAYPOINT)
-                return "Error: Waypoint" + waypointArgument + "not found";
+                return "Error: Waypoint " + waypointArgument + " not found";
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
             if(!player.isValid())
@@ -462,7 +472,7 @@ public:
             player.playerController->teleportToWaypoint(waypointIndex);
 
             return "Player moved to waypoint " + waypointArgument;
-        });
+        }).registerAutoComplete(waypointNamesGen);
 
         console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
