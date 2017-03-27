@@ -877,7 +877,7 @@ public:
                     {
                         Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
                         description =  cItem.description;
-                        amount = std::min(static_cast<u_int32_t >(amount), cItem.amount);
+                        amount = std::min(static_cast<uint32_t>(amount), cItem.amount);
                         player.playerController->getInventory().removeItem(parScriptName, amount);
                     } else {
                         return "error: could not remove item. item " + parScriptName + " is not in inventory";
