@@ -113,7 +113,8 @@ void Console::onTextInput(const std::string& text)
 
 std::string Console::submitCommand(std::string command)
 {
-    if((command.find_first_not_of(' ') != std::string::npos) && (m_History.empty() || m_History.back() != command))
+    std::vector<std::string> args = Utils::split(command, ' ');
+    if(!args.empty() && (m_History.empty() || m_History.back() != command))
         m_History.push_back(command);
 
     m_HistoryIndex = -1;
@@ -127,7 +128,6 @@ std::string Console::submitCommand(std::string command)
 
     outputAdd(" >> " + command);
 
-    std::vector<std::string> args = Utils::split(command, ' ');
     auto commID = determineCommand(args);
 
     if (commID != -1)
@@ -158,7 +158,7 @@ ConsoleCommand& Console::registerCommand(const std::string& command,
     auto simpleGen = [](std::string token) -> std::vector<std::vector<std::string>> {
         return {{token}};
     };
-    for (auto tokenIt = tokens.rbegin(); tokenIt != tokens.rend(); tokenIt++)
+    for (auto tokenIt = tokens.begin(); tokenIt != tokens.end(); tokenIt++)
     {
         std::string token = *tokenIt;
         generators.push_back(std::bind(simpleGen, token));
@@ -231,9 +231,7 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
     using std::vector;
     using std::string;
 
-    std::istringstream iss(input);
-    vector<string> tokens;
-    std::copy(std::istream_iterator<string>(iss), std::istream_iterator<string>(), std::back_inserter(tokens));
+    const vector<string> tokens = Utils::split(input, ' ');
     if (tokens.empty())
         return;
 
@@ -241,13 +239,12 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
     for (auto& token : tokens)
     {
         newTokens.push_back(std::make_tuple(token, false));
-        Utils::lower(token);
     }
 
     vector<bool> commandIsAlive(m_Commands2.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
-        auto& token = tokens[tokenID];
+        auto tokenLowered = Utils::lowered(tokens[tokenID]);
         vector<MatchInfo> matchInfosStartsWith;
         vector<MatchInfo> matchInfosInMiddle;
         vector<vector<vector<string>>> allGroups(m_Commands2.size());
@@ -272,8 +269,8 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
                     {
                         string candidateLowered = candidate;
                         Utils::lower(candidateLowered);
-                        auto pos = candidateLowered.find(token);
-                        auto diff = candidateLowered.size() - token.size();
+                        auto pos = candidateLowered.find(tokenLowered);
+                        auto diff = candidateLowered.size() - tokenLowered.size();
                         MatchInfo matchInfo = MatchInfo{pos, diff, cmdID, groupID, candidate, candidateLowered};
                         groupInfos.push_back(matchInfo);
                     }

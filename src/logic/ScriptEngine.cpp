@@ -338,9 +338,8 @@ std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 
     return outSet;
 }
 
-Handle::EntityHandle ScriptEngine::findWorldNPC(std::string name)
+Handle::EntityHandle ScriptEngine::findWorldNPC(const std::string& name)
 {
-    std::string nameLower = Utils::lowered(name);
     auto& datFile = getVM().getDATFile();
 
     for(const Handle::EntityHandle& npc : getWorldNPCs())
@@ -349,15 +348,14 @@ Handle::EntityHandle ScriptEngine::findWorldNPC(std::string name)
         if (!npcVobInfo.isValid())
             continue;
 
-        Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-        std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-        std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+        Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+        std::string npcDisplayName = npcScriptObject.name[0];
+        std::string npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.instanceSymbol).name;
 
         for (auto npcName : {npcDisplayName, npcDatFileName})
         {
             std::replace(npcName.begin(), npcName.end(), ' ', '_');
-            Utils::lower(npcName);
-            if (nameLower == npcName)
+            if (Utils::stringEqualIngoreCase(name, npcName))
             {
                 return npc;
             }

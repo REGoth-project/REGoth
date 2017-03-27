@@ -134,7 +134,7 @@ namespace Logic
          * @param namePart full or partial name to be looked for
          * @return List of all NPCs whose names are similar to namePart
          */
-        Handle::EntityHandle findWorldNPC(std::string name);
+        Handle::EntityHandle findWorldNPC(const std::string& name);
 
         /**
          * Looks up the handle currently stored inside the given symbol. If it doesn't hold the right type or nothing
