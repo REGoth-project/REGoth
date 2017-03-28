@@ -852,6 +852,11 @@ public:
                         std::replace(name.begin(), name.end(), ' ', '_');
                         aliasGroup.push_back(name);
                     }
+                    if (aliasGroup[1] == aliasGroup[2])
+                    {
+                        // most of the items have description equal to name, so remove one of them
+                        aliasGroup.pop_back();
+                    }
                     aliasGroups.push_back(aliasGroup);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
@@ -881,7 +886,7 @@ public:
             std::size_t index = 0;
             auto aliasGroups = itemNamesGen();
             auto group = Utils::findNameInGroups(aliasGroups, itemName);
-            if (group.size() == 3)
+            if (group.size() >= 1)
             {
                 auto& parScriptName = group[0];
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
