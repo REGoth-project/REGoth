@@ -8,6 +8,7 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <ui/ConsoleBox.h>
 
 namespace UI
 {
@@ -34,7 +35,9 @@ namespace UI
     {
     public:
 
-        Console();
+        Console(Engine::BaseEngine& e);
+
+        ~Console();
 
         /**
          * Updates and draws the console
@@ -68,7 +71,8 @@ namespace UI
          * @param showSuggestions show suggestions
          * @param overwriteTypedLine replace the console line with the suggested one
          */
-        void autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput);
+        using Suggestion = std::vector<std::string>;
+        std::vector<std::vector<Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
 
         /**
          * searches for command which, could generate the given tokens and returns its index
@@ -94,6 +98,10 @@ namespace UI
          */
         bool isOpen(){ return m_IsOpen; }
         void setOpen(bool open){ m_IsOpen = open; }
+
+        const std::list<std::string>& getOutputLines() { return m_Output; }
+        const std::string& getTypedLine() { return m_TypedLine; }
+        const std::vector<std::vector<Suggestion>>& getSuggestions() { return m_SuggestionsList; }
 
     private:
 
@@ -136,6 +144,11 @@ namespace UI
         std::vector<ConsoleCommand> m_Commands;
 
         /**
+         * suggestions for each token
+         */
+        std::vector<std::vector<Suggestion>> m_SuggestionsList;
+
+        /**
          * Currently typed line
          */
         std::string m_TypedLine;
@@ -144,6 +157,14 @@ namespace UI
          * Whether the console is currently shown
          */
         bool m_IsOpen;
+
+        Engine::BaseEngine& m_BaseEngine;
+
+        /**
+         * console window
+         */
+        UI::ConsoleBox m_ConsoleBox;
+
     };
 }
 

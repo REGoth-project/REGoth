@@ -358,7 +358,7 @@ void PlayerController::onDebugDraw()
             const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
             Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
-            uint16_t idx=20;
+            uint16_t idx=27;
             bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
             for(Daedalus::GameState::ItemHandle i : items)
             {
@@ -2028,7 +2028,9 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
         if(triggered && !m_World.getEngine()->getHud().isMenuActive())
+        {
             m_World.getEngine()->getHud().getConsole().setOpen(true);
+        }
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {

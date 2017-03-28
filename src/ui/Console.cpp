@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <utils/Utils.h>
 #include <iomanip>
+#include <engine/BaseEngine.h>
 
 using namespace UI;
 
@@ -41,11 +42,15 @@ namespace Keys
     const int GLFW_KEY_F10 = 299;
 };
 
-Console::Console()
+Console::Console(Engine::BaseEngine& e) :
+    m_BaseEngine(e),
+    m_ConsoleBox(e, *this)
 {
     m_Config.height = 10;
     m_HistoryIndex = 0;
     m_IsOpen = false;
+
+    m_BaseEngine.getRootUIView().addChild(&m_ConsoleBox);
     outputAdd(" ----------- REGoth Console -----------");
 
     registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
@@ -57,8 +62,13 @@ Console::Console()
     });
 }
 
+Console::~Console() {
+    m_BaseEngine.getRootUIView().removeChild(&m_ConsoleBox);
+}
+
 void Console::update()
 {
+    return;
     bgfx::dbgTextPrintf(0, (uint16_t)(GLOBAL_Y + m_Config.height + 1), 0x4f, "> %s", m_TypedLine.c_str());
     printOutput();
 }
@@ -66,11 +76,13 @@ void Console::update()
 void Console::onKeyDown(int glfwKey)
 {
     // If this is Escape or F10, close/open the console
-    if(glfwKey == Keys::GLFW_KEY_ESCAPE)
+    if(glfwKey == Keys::GLFW_KEY_ESCAPE){
         setOpen(false);
+    }
 
-    if(glfwKey == Keys::GLFW_KEY_F10)
+    if(glfwKey == Keys::GLFW_KEY_F10){
         setOpen(!isOpen());
+    }
 
     if(glfwKey == Keys::GLFW_KEY_UP)
     {
@@ -81,6 +93,7 @@ void Console::onKeyDown(int glfwKey)
                 m_PendingLine = m_TypedLine;
             ++m_HistoryIndex;
             m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            m_SuggestionsList.clear();
         }
     }else if(glfwKey == Keys::GLFW_KEY_DOWN)
     {
@@ -91,24 +104,38 @@ void Console::onKeyDown(int glfwKey)
                 m_TypedLine = m_PendingLine;
             else
                 m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            m_SuggestionsList.clear();
         }
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
+        {
             m_TypedLine.pop_back();
+            m_SuggestionsList = autoComplete(m_TypedLine, false, false);
+        }
     }else if(glfwKey == Keys::GLFW_KEY_ENTER)
     {
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
+        m_SuggestionsList.clear();
     }else if(glfwKey == Keys::GLFW_KEY_TAB)
     {
-        autoComplete(m_TypedLine, false, true, true);
+        std::string oldLine;
+        do
+        {
+            oldLine = m_TypedLine;
+            m_SuggestionsList = autoComplete(m_TypedLine, false, true);
+        } while (m_TypedLine != oldLine);
     }
 }
 
 void Console::onTextInput(const std::string& text)
 {
-    m_TypedLine += text;
+    if (!text.empty())
+    {
+        m_TypedLine += text;
+        m_SuggestionsList = autoComplete(m_TypedLine, false, false);
+    }
 }
 
 std::string Console::submitCommand(std::string command)
@@ -124,7 +151,7 @@ std::string Console::submitCommand(std::string command)
         return "";
 
     // bool autoCompleteCommandTokensOnly = true;
-    // autoComplete(command, autoCompleteCommandTokensOnly, false, true);
+    // autoComplete(command, autoCompleteCommandTokensOnly, true);
 
     outputAdd(" >> " + command);
 
@@ -234,7 +261,8 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
     return -1;
 }
 
-void Console::autoComplete(std::string& input, bool limitToFixed, bool showSuggestions, bool overwriteInput) {
+using Suggestion = std::vector<std::string>;
+std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, bool limitToFixed, bool overwriteInput) {
     using std::vector;
     using std::string;
 
@@ -254,6 +282,7 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
         newTokens.push_back(std::make_tuple(token, false));
     }
 
+    vector<vector<vector<string>>> suggestionsList;
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
@@ -321,37 +350,22 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
             }
             break;
         }
-        if (showSuggestions)
+        // generate suggestions
         {
-            vector<vector<string>> suggestions;
-            LogInfo() << "suggestions:";
+            vector<vector<string>> suggestionsForThisToken;
             for (auto matchInfos : {&matchInfosStartsWith, &matchInfosInMiddle})
             {
                 std::sort(matchInfos->begin(), matchInfos->end(), MatchInfo::compare);
                 for (auto& matchInfo : *matchInfos)
                 {
-                    suggestions.push_back({});
+                    suggestionsForThisToken.push_back({});
                     for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
                     {
-                        suggestions.back().push_back(alias);
+                        suggestionsForThisToken.back().push_back(alias);
                     }
                 }
             }
-            std::size_t maxSuggestions = 15;
-            for (auto& suggestionEntry : suggestions)
-            {
-                if (maxSuggestions-- == 0)
-                {
-                    LogInfo() << "... (suggestion maximum reached)";
-                    break;
-                }
-                std::stringstream ss;
-                for (auto& alias : suggestionEntry)
-                {
-                    ss << std::left << std::setw(40) << alias;
-                }
-                LogInfo() << ss.str();
-            }
+            suggestionsList.push_back(suggestionsForThisToken);
         }
     }
     if (lookAhead && std::get<0>(newTokens.back()) == "")
@@ -371,5 +385,7 @@ void Console::autoComplete(std::string& input, bool limitToFixed, bool showSugge
         }
         input = tokenConCat.str();
     }
+    return suggestionsList;
 }
+
 
