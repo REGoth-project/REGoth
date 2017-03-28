@@ -32,6 +32,9 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
     View::update(dt, mstate, config);
 
+    // draw text 13 pixel apart from left screen edge
+    const int textXOffset = 13;
+
     int consoleSizeX = config.state.viewWidth;
     int consoleSizeY = Math::iround(config.state.viewHeight * 0.25f);
     // Draw console
@@ -55,7 +58,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
         outputLines.push_back(m_Console.getTypedLine());
         auto joined = Utils::join(outputLines.begin(), outputLines.end(), "\n");
-        drawText(joined, 0, consoleSizeY, A_BottomLeft, config, font);
+        drawText(joined, textXOffset, consoleSizeY, A_BottomLeft, config, font);
     }
     // Draw suggestions
     {
@@ -98,6 +101,6 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
                     suggestionBoxSizeX, suggestionBoxSizeY,
                     config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle, program,
                     config.uniforms.diffuseTexture);
-        drawText(joined, 0, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+        drawText(joined, textXOffset, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
     }
 }
