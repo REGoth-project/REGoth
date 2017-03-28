@@ -2,6 +2,7 @@
 // Created by desktop on 11.08.16.
 //
 
+#include <algorithm>
 #include <imgui/imgui.h>
 #include <render/RenderSystem.h>
 #include <entry/input.h>
@@ -48,7 +49,7 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     imguiEndScrollArea();*/
 
-    m_Scaling += dt / GROW_SHRINK_TIME * m_growDirection;
+    m_Scaling += static_cast<float>(dt) / GROW_SHRINK_TIME * m_growDirection;
     m_Scaling = Math::clamp(m_Scaling, 0.0f, 1.0f);
 
     // Un-normalize transforms
@@ -61,10 +62,10 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     int wrapAroundWidth = Math::iround(0.95f * sxMax);
     std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
     auto fontHeight = fnt->getFontHeight();
-    std::size_t linesOfText = lines.size() + 1; // +1 for speaker
+    int linesOfText = static_cast<int>(lines.size()) + 1; // +1 for speaker
     // render the Box as if there were at least 4 lines of text
     // so that the size won't change as often, but is still adjusted for very long texts (mods?)
-    linesOfText = std::max(linesOfText, 4ul);
+    linesOfText = std::max(linesOfText, 4);
     float syMax = fontHeight * (linesOfText + 2); // +2 for some extra space
 
     Math::float2 maxSize = {sxMax, syMax};
