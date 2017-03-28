@@ -640,13 +640,23 @@ public:
             if(args.size() != 2)
                 return "Missing argument. Usage: givexp <experience points>";
 
-            if (!s1.getVM().getDATFile().hasSymbolName("B_GiveXP"))
-                return "B_GiveXP is undefined!";
+            std::string scriptName;
+            // B_GiveXP is called B_GivePlayerXP in Gothic II
+            for (auto scriptFunctionName : {"B_GiveXP", "B_GivePlayerXP"})
+            {
+                if (s1.getVM().getDATFile().hasSymbolName(scriptFunctionName))
+                {
+                    scriptName = scriptFunctionName;
+                    break;
+                }
+            }
+            if (scriptName.empty())
+                return "error: could not find script functions";
 
             int exp = std::stoi(args[1]);
             s1.prepareRunFunction();
             s1.pushInt(exp);
-            s1.runFunction("B_GiveXP");
+            s1.runFunction(scriptName);
 
             return "Experience points successfully given";
         });
