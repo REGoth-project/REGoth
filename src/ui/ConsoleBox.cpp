@@ -32,8 +32,12 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
     View::update(dt, mstate, config);
 
-    // draw text 13 pixel apart from left screen edge
+    // 13 pixel extra space left and right of text
     const int textXOffset = 13;
+    const std::size_t maxSuggestions = 15;
+    // space between columns in pixel
+    const int spaceBetweenColumns = 40;
+    const std::size_t maxNumConsoleHistoryLines = 10;
 
     int consoleSizeX = config.state.viewWidth;
     int consoleSizeY = Math::iround(config.state.viewHeight * 0.25f);
@@ -52,8 +56,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         // draw console output + current line
         std::stringstream ss;
         auto& outputList = m_Console.getOutputLines();
-        std::size_t maxDisplayLines = 10;
-        std::size_t numLines = std::min(outputList.size(), maxDisplayLines);
+        std::size_t numLines = std::min(outputList.size(), maxNumConsoleHistoryLines);
         std::vector<std::string> outputLines(numLines);
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
         outputLines.push_back(m_Console.getTypedLine());
@@ -63,44 +66,87 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
     // Draw suggestions
     {
         const auto& suggestionsList = m_Console.getSuggestions();
+        // check if suggestions for last token are empty
         if (suggestionsList.empty() || suggestionsList.back().empty())
             return;
 
         const auto& suggestions = suggestionsList.back();
-        std::size_t maxSuggestions = 10;
-        std::vector<std::string> lines;
-        std::size_t i = 0;
-        std::size_t fillWidth = 40;
-        for (auto& suggestionEntry : suggestions)
+        std::size_t columnID = 0;
+        std::vector<std::vector<std::string>> columns;
+        std::vector<int> columnWidths;
+        while (true)
         {
-            if (i >= maxSuggestions)
+            bool columnEmpty = true;
+            std::vector<std::string> column;
+            std::size_t row = 0;
+            int columnWidth = 0;
+            for (auto& suggestionEntry : suggestions)
             {
-                lines.back() = "...";
+                if (row >= maxSuggestions)
+                    break;
+
+                if (columnID < suggestionEntry.size())
+                {
+                    columnEmpty = false;
+                    int w, h;
+                    fnt->calcTextMetrics(suggestionEntry[columnID], w, h);
+                    columnWidth = std::max(columnWidth, w);
+                    column.push_back(suggestionEntry[columnID]);
+                } else {
+                    column.push_back("");
+                }
+                row++;
+            }
+
+            columnID++;
+            if (columnEmpty)
                 break;
-            }
-            std::stringstream ss;
-            for (auto& alias : suggestionEntry)
+            else
             {
-                ss << std::left << std::setw(fillWidth) << alias;
+                columns.push_back(column);
+                columnWidths.push_back(columnWidth);
             }
-            lines.push_back(ss.str());
-            i++;
         }
-        // FIXME: glyphs are not monospace. print each column separately?
-        int glyphWidth = 10;
         int fontHeight = fnt->getFontHeight();
-        int suggestionBoxSizeX = fillWidth * suggestions.front().size() * glyphWidth;
-        int suggestionBoxSizeY = fontHeight * lines.size();
-        auto joined = Utils::join(lines.begin(), lines.end(), "\n");
+        int suggestionBoxSizeX = std::accumulate(columnWidths.begin(), columnWidths.end(), 0);
+        suggestionBoxSizeX += (columns.size() - 1) * spaceBetweenColumns;
+        int suggestionBoxSizeY = fontHeight * columns.front().size();
         // Get background image
         Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_SuggestionsBackgroundTexture);
 
+        // find start of token which is currently auto-completed
+        std::string strBefore = m_Console.getTypedLine();
+        if (!strBefore.empty() && !isspace(strBefore.back()))
+        {
+            auto lastSpaceIt = std::find(strBefore.rbegin(), strBefore.rend(), ' ');
+            if (lastSpaceIt == strBefore.rend())
+                strBefore.clear();
+            else{
+                auto dropCount = lastSpaceIt - strBefore.rbegin();
+                //strBefore.erase(strBefore.rbegin(), lastSpaceIt);
+                strBefore.erase(strBefore.end() - dropCount, strBefore.end());
+            }
+        }
+        int xOffset;
+        {
+            int w, h;
+            fnt->calcTextMetrics(strBefore, w, h);
+            xOffset = w;
+        }
+
         bgfx::ProgramHandle program = config.programs.imageProgram;
         drawTexture(BGFX_VIEW,
-                    0, consoleSizeY,
-                    suggestionBoxSizeX, suggestionBoxSizeY,
+                    xOffset, consoleSizeY,
+                    suggestionBoxSizeX + 2 * textXOffset, suggestionBoxSizeY,
                     config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle, program,
                     config.uniforms.diffuseTexture);
-        drawText(joined, textXOffset, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+
+        int colID = 0;
+        int columnOffsetX = xOffset;
+        for (auto& column : columns){
+            auto joined = Utils::join(column.begin(), column.end(), "\n");
+            drawText(joined, textXOffset + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+            columnOffsetX += columnWidths[colID++] + spaceBetweenColumns;
+        }
     }
 }
