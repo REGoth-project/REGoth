@@ -106,19 +106,6 @@ namespace UI
     private:
 
         /**
-         * Draws history over the commandline
-         */
-        void printOutput();
-
-        struct
-        {
-            /**
-             * Lines of history + current line
-             */
-            int height;
-        }m_Config;
-
-        /**
          * Last submitted commands
          */
         std::vector<std::string> m_History;

@@ -46,7 +46,6 @@ Console::Console(Engine::BaseEngine& e) :
     m_BaseEngine(e),
     m_ConsoleBox(e, *this)
 {
-    m_Config.height = 10;
     m_HistoryIndex = 0;
     m_IsOpen = false;
 
@@ -68,9 +67,6 @@ Console::~Console() {
 
 void Console::update()
 {
-    return;
-    bgfx::dbgTextPrintf(0, (uint16_t)(GLOBAL_Y + m_Config.height + 1), 0x4f, "> %s", m_TypedLine.c_str());
-    printOutput();
 }
 
 void Console::onKeyDown(int glfwKey)
@@ -192,20 +188,6 @@ ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleComm
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
     m_Commands.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
     return m_Commands.back();
-}
-
-void Console::printOutput()
-{
-    int i=0;
-    for(const std::string& s : m_Output)
-    {
-        if(i == m_Config.height)
-            break;
-
-        bgfx::dbgTextPrintf(0, (uint16_t)(GLOBAL_Y + m_Config.height - i), 0x0f, "| %s", s.c_str());
-
-        i++;
-    }
 }
 
 void Console::outputAdd(const std::string& msg)
