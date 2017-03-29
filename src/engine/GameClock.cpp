@@ -1,5 +1,6 @@
 #include "GameClock.h"
 #include <cmath>
+#include <math/mathlib.h>
 
 using namespace Engine;
 
@@ -12,60 +13,46 @@ GameClock::GameClock()
 
 int GameClock::getDay() const
 {
-    return m_Day;
+    return Math::ifloor(m_totalTimeInDays);
 }
 
 void GameClock::setDay(int newDay) {
-    m_Day = newDay;
+    m_totalTimeInDays += newDay - getDay();
 }
 
 void GameClock::update(float deltaRealTimeSeconds)
 {
-    m_TimeOfDay += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
-    if (m_TimeOfDay >= 1.0f)
-    {
-        float overFlowTimeOfDay = m_TimeOfDay;
-        m_TimeOfDay = std::fmod(m_TimeOfDay, 1.0f);
-        // handles also case where the ingame clock is updated by huge dt (> 1 day)
-        m_Day += std::lround(overFlowTimeOfDay - m_TimeOfDay);
-    }
+    m_totalTimeInDays += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
 }
 
 void GameClock::getTimeOfDay(int& hours, int& minutes) const
 {
-    dayTimeTohm(m_TimeOfDay, hours, minutes);
+    dayTimeTohm(getTimeOfDay(), hours, minutes);
 }
 
 float GameClock::getTimeOfDay() const
 {
-    return m_TimeOfDay;
+    return m_totalTimeInDays - getDay();
 }
 
 std::string GameClock::getDateTimeFormatted() const
 {
-    return "Day " + std::to_string(m_Day) + ", " + getTimeOfDayFormatted();
+    return "Day " + std::to_string(getDay()) + ", " + getTimeOfDayFormatted();
 }
 
-void GameClock::setTimeOfDay(int hours, int minutes, bool onlyForward)
+void GameClock::setTimeOfDay(int hours, int minutes)
 {
-    float newTimeOfDay = hmToDayTime(hours, minutes);
-    if (onlyForward && newTimeOfDay < m_TimeOfDay)
-    {
-        m_Day++;
-    }
-    m_TimeOfDay = newTimeOfDay;
+    m_totalTimeInDays = getDay() + hmToDayTime(hours, minutes);
 }
 
 void GameClock::setTotalSeconds(std::size_t s)
 {
-    float inDays = s / static_cast<float>(SECONDS_IN_A_DAY);
-    m_Day = static_cast<int>(inDays);
-    m_TimeOfDay = inDays - m_Day;
+    m_totalTimeInDays = s / static_cast<float>(SECONDS_IN_A_DAY);
 }
 
 std::size_t GameClock::getTotalSeconds()
 {
-    return static_cast<std::size_t>((m_Day + m_TimeOfDay) * SECONDS_IN_A_DAY);
+    return static_cast<std::size_t>(m_totalTimeInDays * SECONDS_IN_A_DAY);
 }
 
 void GameClock::setClockSpeedFactor(float factor){
@@ -78,7 +65,7 @@ float GameClock::totalSpeedUp() const
 }
 
 float GameClock::getTime(){
-    return m_Day + m_TimeOfDay;
+    return m_totalTimeInDays;
 }
 
 std::string GameClock::getTimeOfDayFormatted() const

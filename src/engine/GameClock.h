@@ -51,11 +51,12 @@ namespace Engine
 
         /**
          * Set time to hours/minutes (24h format)
+         * hours + minutes / 60.0 may be greater than 24 or smaller than 0
+         * and the day will be adjusted in this case
          * @param hours
          * @param minutes
-         * @param onlyForward indicates whether the day should be incremented as well if given clock time is in past
          */
-        void setTimeOfDay(int hours, int minutes, bool onlyForward=false);
+        void setTimeOfDay(int hours, int minutes);
 
         /**
          * sets the total time directly
@@ -111,11 +112,14 @@ namespace Engine
         static constexpr float GAMETIME_REALTIME_RATIO = 14.5;
 
     private:
+        // Time elapsed since Day 0 00:00 in days
+        float m_totalTimeInDays;
+
         // Time elapsed in the game since last 00:00 in days (interval [0,1[)
-        float m_TimeOfDay;
+        float m_TimeOfDay2;
 
         // Number of full days elapsed in the game since "start new gothic game"
-        int m_Day;
+        int m_Day2;
 
         // define an extra speedup for the ingame clock
         float m_ClockSpeedFactor;
