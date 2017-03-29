@@ -75,11 +75,11 @@ func void AI_GotoNextFP(c_npc self, string fpName);
 func void AI_GotoNpc(c_npc self, c_npc other);
 // "self" geht zu "other"
 
-func void AI_GotoSound(c_npc n0);
-// Npc läuft zum Sound
+func void AI_GotoSound(c_npc npc);
+// Npc npc läuft zum Sound
 
-func void AI_GotoWP(c_npc n0, string s0);
-// Npc-Instanz läuft zum namentlich angegeben Waypoint
+func void AI_GotoWP(c_npc npc, string s0);
+// Npc-Instanz npc läuft zum namentlich angegeben Waypoint
 
 func void AI_LookAt(c_npc self, string name);
 // Schaue auf einen Wegpunkt (Wegpunktname angeben) oder auf ein anderes Objekt (Vobname angeben)
@@ -100,10 +100,10 @@ func void AI_OutputSVM_Overlay(c_npc self, c_npc target, string svmname);
 // wie AI_OutputSVM, wartet jedoch NICHT mit der Ausführung des nächsten AI_...-Befehls, bis
 // das SVM zuende gespielt wird. (Für Kommentare kurz vor und während dem Kampf!)
 
-func void AI_PlayAni(c_npc n0, string s0);
-// Npc-Instanz spielt die angegebene Animation ab
+func void AI_PlayAni(c_npc npc, string animationName);
+// Npc-Instanz npc spielt die angegebene Animation ab
 
-func void AI_PlayAniBS(c_npc npc, string aniname, int bodystate);
+func void AI_PlayAniBS(c_npc npc, string animationName, int bodystate);
 // Beim Abspielen einer Ani mit diesem Befehl kann ein Bodystate angemeldet werden
 
 func void AI_PlayCutscene(c_npc self, string csName);
@@ -141,7 +141,7 @@ func void AI_SetNpcsToState(c_npc self, func aiStateFunc, int radius);
 // VORSICHT: Diese Funktion ist Buggy, wird aber derzeit auch NICHT verwendet!
 // -> FINGER WEG!!! (SN)
 
-func void AI_SetWalkmode(c_npc n, int n0);
+func void AI_SetWalkmode(c_npc npc, int n0);
 // gibt an mit welchem Walkmode Run etc der Character durch das Level läuft
 // NPC_RUN               : Rennen
 // NPC_WALK              : Gehen
@@ -191,11 +191,11 @@ func void AI_TakeMob(instance n0, string s1);
 func void AI_Teleport(c_npc self, string waypoint);
 // teleportiert den NSC zur angegebenene Location
 
-func void AI_TurnAway(c_npc n0, c_npc n1);
-// Der NSC "self" dreht dem NSC "other" den Rücken zu.
+func void AI_TurnAway(c_npc turner, c_npc npc);
+// Der NSC turner dreht dem NSC npc den Rücken zu.
 
-func void AI_TurnToNpc(c_npc n0, c_npc n1);
-// drehe Dich zum angegeben (zweiten) Npc um
+func void AI_TurnToNpc(c_npc turner, c_npc npc);
+// dreht npc turner zu NSC npc
 
 func void AI_TurnToSound(c_npc self);
 // Charakter dreht sich zur Geräuschquelle
@@ -365,7 +365,7 @@ func void Doc_Show(int document);
 //
 //      Document        - Handle auf das Dokument
 
-func void EquipItem(c_npc n0, int n1);
+func void EquipItem(c_npc npc, int n1);
 // gibt dem Nsc direkt das angegebene Item an den Gürtel
 
 func void ExitGame();
@@ -376,10 +376,10 @@ func void ExitSession();
 // Gothic 2 only function
 // Beendet das laufende Spiel.
 
-func int FloatToInt(float x);
+func int FloatToInt(float f);
 // !!! konvertiert einen float in einen int, hier wäre es noch ganz schön zu wissen, wie mit dem float umgesprungen wird --> schneiden oder runden ???
 
-func string FloatToString(float r0);
+func string FloatToString(float f);
 
 func void Game_InitEnglish();
 // Gothic 2 only function
@@ -414,15 +414,15 @@ func bool Hlp_IsValidItem(c_item item);
 func bool Hlp_IsValidNpc(c_npc self);
 // Prüfe ob NSC-Instanz gültig und initialisiert ist. True/False
 
-func int Hlp_Random(int n0);
-// erzeugt einen Zufallswert (wobei n0 Obergrenze : [0..n0-1] ) Rückgabewert integer
+func int Hlp_Random(int maxNotIncluded);
+// erzeugt einen Zufallswert (wobei maxNotIncluded Obergrenze : [0..n0-1] ) Rückgabewert integer
 
 func bool Hlp_StrCmp(string s1, string s2);
 // Hilfsfunktion um zwei Strings miteinander zu vergleichen liefert bei Gleichheit eins zurück
 
-func void Info_AddChoice(int i0, string s1, func f2);
+func void Info_AddChoice(c_info info, string text, func f);
 
-func void Info_ClearChoices(int i0);
+func void Info_ClearChoices(c_info info);
 
 func bool InfoManager_HasFinished();
 
@@ -443,7 +443,7 @@ func string IntToString(int x);
 // !!!Funktion überträgt eine Integer variable in eine Stringvariable (Rückgabewert : string)???
 
 func void Log_AddEntry(string topic, string entry);
-//      Der Befehl fügt dem Topics topic ein neues Entrz namens entry hinzu. Wie auch bei der Erzeugung von Topics dient hier der
+//      Der Befehl fügt dem Topics topic ein neues Entry namens entry hinzu. Wie auch bei der Erzeugung von Topics dient hier der
 //      Name sowohl zur Identifikation als auch zur Anzeige und muss somit eindeutig sein. Doppelte Einträge werden auch hier ignoriert.
 //
 //      Parameter
@@ -481,15 +481,15 @@ func void Mdl_ApplyOverlayMds(c_npc n0, string s1);
 func void Mdl_ApplyOverlayMDSTimed(c_npc self, string overlayname, float timeTicks);
 // Overlay-MDS wird gestartet und automatisch nach der angegebenen Zeit abgeschaltet
 
-func void Mdl_ApplyRandomAni(c_npc n0, string s1, string s2);
+func void Mdl_ApplyRandomAni(c_npc npc, string s1, string s2);
 // Fügt Zufallsanimationen (am Kopf kratzen, an den Sack packen etc (s2)) für bestimmte Animationszustände (s1) ein
 
-func void Mdl_ApplyRandomAniFreq(c_npc n0, string s1, float f2);
+func void Mdl_ApplyRandomAniFreq(c_npc npc, string s1, float f);
 // hiermit kann die Frequenz betimmt werden, wie oft die für den Animationszustand (s1) deklarierten Randomanis abgespielt werden
 
-func void Mdl_ApplyRandomFaceAni(c_npc self, string name, float timeMin, float timeMinVar, float timeMax, float timeMaxVar, float probMin);
+func void Mdl_ApplyRandomFaceAni(c_npc self, string animationName, float minTime, float minTimeVar, float maxTime, float maxTimeVar, float probMin);
 // Starte zufällige Gesichtsanimation
-// Mdl_ApplyRandomFaceAni ( self, ANINAME, minTime, minTimeVar, maxTime, maxTimeVar, probMin)
+// Mdl_ApplyRandomFaceAni ( self, animationName, minTime, minTimeVar, maxTime, maxTimeVar, probMin)
 // minTime      = Minimum an Zeit nachdem Ani startet (in Sekunden)
 // maxTime      = Maximum an Zeit nachdem Ani startet (in Sekunden)
 // minTimeVar   = Abweichung von minTime (in Sekunden)
@@ -542,8 +542,8 @@ func bool Npc_AreWeStronger(c_npc self, c_npc other);
 // 1) Monster können feindlich zu beiden Menschen sein --> egal, zählen auf beiden Seiten
 // 2) Jemand, der z.B. zu mir freundlich und zu <other> feindlich ist, wird demnach doppelt gewertet --> ok so
 
-func bool Npc_CanSeeItem(c_npc npc1, c_item item);
-// Prueft ob Npc1 den Gegenstand sehen kann ( ein Ray wird gecastet -> Bitte sparsam einsetzen ) True/False
+func bool Npc_CanSeeItem(c_npc npc, c_item item);
+// Prueft ob Npc den Gegenstand sehen kann ( ein Ray wird gecastet -> Bitte sparsam einsetzen ) True/False
 
 func bool Npc_CanSeeNpc(c_npc npc1, c_npc npc2);
 // Prueft ob Npc1 den Npc2 sehen kann ( ein Ray wird gecastet -> Bitte sparsam einsetzen ) True/False Blickwinkelabhängig (+,-100°)+LOS von der Hüfte aus
@@ -592,7 +592,9 @@ func int Npc_GetActiveSpell(c_npc self);
 func int Npc_GetActiveSpellCat(c_npc self);
 // Unterscheidet zwischen den drei Kategorien (Spell_Bad, Spell_neutral,Spell_Good) Spellkat ist Rückgabewert
 
-func bool Npc_GetActiveSpellIsScroll(instance n0);
+func bool Npc_GetActiveSpellIsScroll(c_npc self);
+// Gibt zurück ob der aktive Zauber auf der Hand des NPC self eine Spruchrolle ist.
+// Wird benutzt um die korrekten Manakosten des Zaubers zu ermitteln, da sich Manakosten von Spruchrollen und Runen unterscheiden.
 
 func int Npc_GetActiveSpellLevel(c_npc self);
 // liefert den Spell-Level des Zaubers zurück, der auf der Hand ist
@@ -718,7 +720,7 @@ func int Npc_GetTrueGuild(c_npc npc);
 func bool NPC_GiveInfo(c_npc npc, bool important);
 // Überprüft, ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
-func void Npc_GiveItem(c_npc n0, c_item n1, c_npc n2);
+func void Npc_GiveItem(c_npc npc0, c_item n1, c_npc npc2);
 // Der NSC "self" gibt den NSC "other" den angegebenen Gegenstand "item". Der Gegenstand wandert sofort ins Inventory des anderen.
 
 func bool Npc_HasBodyFlag(c_npc self, int bodyFlag);
@@ -742,7 +744,7 @@ func bool Npc_HasEquippedWeapon(c_npc self);
 func bool Npc_HasFightTalent(c_npc self, int tal);
 // Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
-func int Npc_HasItems(c_npc n0, int itemInstance);
+func int Npc_HasItems(c_npc npc0, int itemInstance);
 // Liefert zurück wie viele Items der NSC vom angegebenen Typ besitzt
 
 func int Npc_HasNews(c_npc self, int newsID, c_npc offender, c_npc victim);
@@ -774,7 +776,7 @@ func bool Npc_HasTalent(c_npc self, int tal);
 func bool Npc_IsAiming(c_npc self, c_npc other);
 // liefert eins zurück, wenn der zweite Character auf den ersten zielt (Fernkampfwaffen und Zauber)
 
-func bool Npc_IsDead(c_npc n0);
+func bool Npc_IsDead(c_npc npc);
 // Funktion liefert einen Wert zurück, falls Dead true ist
 
 func bool Npc_IsDetectedMobOwnedByGuild(c_npc user, int ownerguild);
@@ -832,7 +834,7 @@ func bool Npc_IsVoiceActive(instance n0);
 func bool Npc_IsWayBlocked(c_npc self);
 // Liefert "1", falls Weg von NSC durch Hindernis versperrt ist.
 
-func bool Npc_KnowsInfo(c_npc self, int infoInstance);
+func bool Npc_KnowsInfo(c_npc self, c_info info);
 // Liefert TRUE, wenn der angegebene Spieler die Info schon einmal erhalten hat.
 // VORSICHT: auch wenn eine permanente Info schon einmal dem Spieler erzählt wurde, so gibt diese Funktion trotzdem FALSE zurück!
 
@@ -876,8 +878,8 @@ func void Npc_RemoveInvItems(c_npc owner, int itemInstance, int amount);
 // das angegebene Anzahl des Multi-Items wird aus dem Inventory des NSCs entfernt und gelöscht
 // wie Npc_RemoveInvItem, nur das Multislotgegenstände gelöscht werden
 
-func void Npc_SendPassivePerc(c_npc npc1, int perc_type, c_npc npc2, c_npc npc3);
-// Sende eine passive Wahrnehmung aus.Npc1 = wer schickt Npc2 = Opfer, Npc3 = Täter
+func void Npc_SendPassivePerc(c_npc npc1, int perc_type, c_npc victim, c_npc offender);
+// Sende eine passive Wahrnehmung aus.Npc1 = wer schickt victim = Opfer, offender = Täter
 
 func void Npc_SendSinglePerc(c_npc self, c_npc target, int percID);
 // verschicke Wahrnehmung an einzelnen NSC
@@ -979,7 +981,7 @@ func int PrintDialog(int i0, string s1, int i2, int i3, string s4, int i5);
 func void PrintMulti(string s0, string s1, string s2, string s3, string s4);
 // Printbefehl, der aus den angegebenen Strings einen Auswählt und auf den Bildschirm schreibt
 
-func void PrintScreen(int dialogNr, string msg, int posx, int posy, string font, int timeSec);
+func void PrintScreen(int dialogNr, string msg, int posX, int posY, string font, int timeSec);
 // Gibt den Text 'msg' auf dem Bildschrim aus und benutzt dabei den Font 'font'.
 // Die Position ist für jede Koordinate eine Zahl zwischen 0 und 99 und gibt die prozentuale Position an.
 // Der Ursprung befindet sich oben links (also 0% X und 0% Y)
@@ -1153,7 +1155,8 @@ func void Wld_SetObjectRoutine(int hour1, int min1, string objName, int state);
 func void Wld_SetTime(int hour, int min);
 // Setzt die Uhrzeit auf hour:min. hour kann größer als 23 sein, um zum nächsten Tag zu springen.
 
-func void Wld_SpawnNpcRange(instance n0, int i1, int i2, float r3);
+func void Wld_SpawnNpcRange(c_npc summoner, c_npc creature, int count, float distance);
+// NPC summoner beschwört die Diener creature der Anzahl count. Die Diener erscheinen in einer Entfernung von distance (in cm).
 
-func void Wld_StopEffect(string s0);
+func void Wld_StopEffect(string effectName);
 
