@@ -115,12 +115,6 @@ namespace Engine
         // Time elapsed since Day 0 00:00 in days
         float m_totalTimeInDays;
 
-        // Time elapsed in the game since last 00:00 in days (interval [0,1[)
-        float m_TimeOfDay2;
-
-        // Number of full days elapsed in the game since "start new gothic game"
-        int m_Day2;
-
         // define an extra speedup for the ingame clock
         float m_ClockSpeedFactor;
     };
