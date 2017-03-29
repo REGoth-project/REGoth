@@ -2026,13 +2026,6 @@ void PlayerController::setupKeyBindings()
         }
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
-        if(triggered && !m_World.getEngine()->getHud().isMenuActive())
-        {
-            m_World.getEngine()->getHud().getConsole().setOpen(true);
-        }
-    });
-
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
         m_isDrawWeaponMelee = triggered;
     });

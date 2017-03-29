@@ -985,7 +985,7 @@ public:
             {
                 m_stopWatch.start();
 
-                if(m_pEngine->getHud().getConsole().isOpen())
+                if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
                     m_pEngine->getHud().getConsole().onKeyDown(i);
                 else if (keyMap.find(i) != keyMap.end())
                 {
@@ -998,7 +998,7 @@ public:
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        if(m_pEngine->getHud().getConsole().isOpen())
+                        if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
                             m_pEngine->getHud().getConsole().onKeyDown(i);
                         else if (keyMap.find(i) != keyMap.end())
                         {
