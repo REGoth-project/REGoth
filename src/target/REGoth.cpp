@@ -336,13 +336,6 @@ public:
         fontSize = 23.0f;
 #endif
 
-        std::function<UI::ConsoleCommand::CandidateListGenerator(std::vector<std::vector<std::string>>)> gen =
-                [](std::vector<std::vector<std::string>> candidates) {
-            return [candidates]() {
-                return candidates;
-            };
-        };
-
         auto& console = m_pEngine->getHud().getConsole();
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
