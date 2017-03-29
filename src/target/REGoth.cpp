@@ -1053,8 +1053,12 @@ public:
 
         if(!m_NoHUD)
         {
-            bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-            bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+            uint16_t xOffset = 0;
+
+            if (m_pEngine->getHud().getConsole().isOpen())
+                xOffset = 100;
+            bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+            bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
         }
 
         // This dummy draw call is here to make sure that view 0 is cleared
