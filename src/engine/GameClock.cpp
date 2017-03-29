@@ -1,27 +1,31 @@
 #include "GameClock.h"
 #include <cmath>
 #include <math/mathlib.h>
+#include <ZenLib/utils/logger.h>
 
 using namespace Engine;
 
 GameClock::GameClock()
 {
     m_ClockSpeedFactor = 1.0;
+    m_totalTimeInDays = 0;
+
     // day/clock init only necessary for test start world (not started via main menu)
     resetNewGame();
 }
 
 int GameClock::getDay() const
 {
-    return Math::ifloor(m_totalTimeInDays);
+    return lround(floor(m_totalTimeInDays));
 }
 
 void GameClock::setDay(int newDay) {
     m_totalTimeInDays += newDay - getDay();
 }
 
-void GameClock::update(float deltaRealTimeSeconds)
+void GameClock::update(double deltaRealTimeSeconds)
 {
+    LogInfo() << getTimeOfDay() / (totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY);
     m_totalTimeInDays += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
 }
 
@@ -30,7 +34,7 @@ void GameClock::getTimeOfDay(int& hours, int& minutes) const
     dayTimeTohm(getTimeOfDay(), hours, minutes);
 }
 
-float GameClock::getTimeOfDay() const
+double GameClock::getTimeOfDay() const
 {
     return m_totalTimeInDays - getDay();
 }
@@ -47,7 +51,7 @@ void GameClock::setTimeOfDay(int hours, int minutes)
 
 void GameClock::setTotalSeconds(std::size_t s)
 {
-    m_totalTimeInDays = s / static_cast<float>(SECONDS_IN_A_DAY);
+    m_totalTimeInDays = s / static_cast<double>(SECONDS_IN_A_DAY);
 }
 
 std::size_t GameClock::getTotalSeconds()
@@ -64,7 +68,7 @@ float GameClock::totalSpeedUp() const
     return GAMETIME_REALTIME_RATIO * m_ClockSpeedFactor;
 }
 
-float GameClock::getTime(){
+double GameClock::getTime(){
     return m_totalTimeInDays;
 }
 
@@ -75,18 +79,19 @@ std::string GameClock::getTimeOfDayFormatted() const
     return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
 }
 
-float GameClock::hmToDayTime(int hours, int minutes)
+double GameClock::hmToDayTime(int hours, int minutes)
 {
     return (hours + minutes / 60.0f) / 24.0f;
 }
 
-void GameClock::dayTimeTohm(float timeOfDay, int& hours, int& minutes)
+void GameClock::dayTimeTohm(double timeOfDay, int& hours, int& minutes)
 {
     hours = static_cast<int>(timeOfDay * 24);
     minutes = static_cast<int>((timeOfDay * 24 - hours) * 60);
 }
 
 void GameClock::resetNewGame() {
+    m_totalTimeInDays = 0;
     setDay(0);
     setTimeOfDay(8, 0);
 }

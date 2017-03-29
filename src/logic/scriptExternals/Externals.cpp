@@ -765,9 +765,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         auto& clock = pWorld->getEngine()->getGameClock();
         int32_t hour, min;
         clock.getTimeOfDay(hour, min);
-        float timeOfDay = clock.getTimeOfDay();
-        float timeOfDay1 = clock.hmToDayTime(hour1, min1);
-        float timeOfDay2 = clock.hmToDayTime(hour2, min2);
+        double timeOfDay = clock.getTimeOfDay();
+        double timeOfDay1 = clock.hmToDayTime(hour1, min1);
+        double timeOfDay2 = clock.hmToDayTime(hour2, min2);
         bool inside;
         if (timeOfDay1 < timeOfDay2)
         {
