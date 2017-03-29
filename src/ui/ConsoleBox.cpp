@@ -32,15 +32,22 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
     View::update(dt, mstate, config);
 
-    // 13 pixel extra space left and right of text
-    const int textXOffset = 13;
+    // 13 pixel extra space to left screen edge
+    const int xDistanceToEdge = 13;
+    int suggestionXBorderSize;
+    {
+        int spaceWidth, dummyHeight;
+        fnt->calcTextMetrics(" ", spaceWidth, dummyHeight);
+        suggestionXBorderSize = spaceWidth;
+    }
     const std::size_t maxSuggestions = 15;
     // space between columns in pixel
     const int spaceBetweenColumns = 40;
-    const std::size_t maxNumConsoleHistoryLines = 10;
-
     int consoleSizeX = config.state.viewWidth;
     int consoleSizeY = Math::iround(config.state.viewHeight * 0.25f);
+    // -1, because we need space for the typed line
+    const std::size_t maxNumConsoleHistoryLines = consoleSizeY / fnt->getFontHeight() - 1;
+
     // Draw console
     {
         // Draw console background image
@@ -61,7 +68,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
         outputLines.push_back(m_Console.getTypedLine());
         auto joined = Utils::join(outputLines.begin(), outputLines.end(), "\n");
-        drawText(joined, textXOffset, consoleSizeY, A_BottomLeft, config, font);
+        drawText(joined, xDistanceToEdge, consoleSizeY, A_BottomLeft, config, font);
     }
     // Draw suggestions
     {
@@ -122,30 +129,28 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
             if (lastSpaceIt == strBefore.rend())
                 strBefore.clear();
             else{
-                auto dropCount = lastSpaceIt - strBefore.rbegin();
-                //strBefore.erase(strBefore.rbegin(), lastSpaceIt);
-                strBefore.erase(strBefore.end() - dropCount, strBefore.end());
+                auto numNonSpacesAtEnd = lastSpaceIt - strBefore.rbegin();
+                strBefore.erase(strBefore.end() - numNonSpacesAtEnd, strBefore.end());
             }
         }
-        int xOffset;
+        int strBeforeWidth;
         {
             int w, h;
             fnt->calcTextMetrics(strBefore, w, h);
-            xOffset = w;
+            strBeforeWidth = w;
         }
-
         bgfx::ProgramHandle program = config.programs.imageProgram;
         drawTexture(BGFX_VIEW,
-                    xOffset, consoleSizeY,
-                    suggestionBoxSizeX + 2 * textXOffset, suggestionBoxSizeY,
+                    xDistanceToEdge + strBeforeWidth - suggestionXBorderSize, consoleSizeY,
+                    suggestionBoxSizeX + 2 * suggestionXBorderSize, suggestionBoxSizeY,
                     config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle, program,
                     config.uniforms.diffuseTexture);
 
         int colID = 0;
-        int columnOffsetX = xOffset;
+        int columnOffsetX = strBeforeWidth;
         for (auto& column : columns){
             auto joined = Utils::join(column.begin(), column.end(), "\n");
-            drawText(joined, textXOffset + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+            drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
             columnOffsetX += columnWidths[colID++] + spaceBetweenColumns;
         }
     }

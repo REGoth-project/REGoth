@@ -153,7 +153,7 @@ std::string Console::submitCommand(std::string command)
     // bool autoCompleteCommandTokensOnly = true;
     // autoComplete(command, autoCompleteCommandTokensOnly, true);
 
-    outputAdd(" >> " + command);
+    outputAdd(">> " + command);
 
     auto commID = determineCommand(args);
 
@@ -173,7 +173,7 @@ std::string Console::submitCommand(std::string command)
         return result;
     }
 
-    outputAdd(" -- Command not found -- ");
+    outputAdd("-- Command not found --");
     return "NOTFOUND";
 }
 
