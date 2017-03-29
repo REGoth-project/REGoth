@@ -25,7 +25,6 @@ void GameClock::setDay(int newDay) {
 
 void GameClock::update(double deltaRealTimeSeconds)
 {
-    LogInfo() << getTimeOfDay() / (totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY);
     m_totalTimeInDays += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
 }
 
