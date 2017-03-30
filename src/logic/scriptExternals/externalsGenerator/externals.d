@@ -37,12 +37,12 @@ func void AI_Dodge(C_NPC npc);
 func void AI_DrawWeapon(C_NPC npc);
 // Equipte Waffe wird gezogen
 
-func void AI_DropItem(C_NPC self, C_ITEM item);
+func void AI_DropItem(C_NPC npc, C_Item_ID itemID);
 // Item wird auf den Boden fallen gelassen
 
 func void AI_DropMob(C_NPC npc);
 
-func void AI_EquipArmor(C_NPC owner, C_ITEM armorFromOwnersInventory);
+func void AI_EquipArmor(C_NPC owner, C_Item_ID armorFromOwnersInventory);
 // Ziehe die angebene Rüstung dem NSC "owner" an, diese muss sich in seinem Inventory befinden.
 
 func void AI_EquipBestArmor(C_NPC npc);
@@ -66,13 +66,13 @@ func void AI_GotoFP(C_NPC npc, string freepointName);
 // Suchkriterium wie bei Wld_IsFPAvailable()
 
 func void AI_GotoItem(C_NPC npc, C_ITEM item);
-// "self" geht zu "item"
+// "npc" geht zu "item"
 
 func void AI_GotoNextFP(C_NPC npc, string freepointName);
 // wie AI_GotoFP() allerdings Suchkriterium wie bei Wld_IsNextFPAvailable()
 
 func void AI_GotoNpc(C_NPC npc, C_NPC other);
-// "self" geht zu "other"
+// "npc" geht zu "other"
 
 func void AI_GotoSound(C_NPC npc);
 // Npc npc läuft zum Sound
@@ -80,7 +80,7 @@ func void AI_GotoSound(C_NPC npc);
 func void AI_GotoWP(C_NPC npc, string waypointName);
 // Npc-Instanz npc läuft zum namentlich angegeben Waypoint
 
-func void AI_LookAt(C_NPC self, string wpOrVob);
+func void AI_LookAt(C_NPC npc, string wpOrVob);
 // Schaue auf einen Wegpunkt (Wegpunktname angeben) oder auf ein anderes Objekt (Vobname angeben)
 
 func void AI_LookAtNpc(C_NPC npc, C_NPC other);
@@ -208,10 +208,10 @@ func void AI_UnequipWeapons(C_NPC npc);
 func void AI_UnreadySpell(C_NPC npc);
 // lasse zauberspruch aus Hand verschwinden
 
-func void AI_UseItem(C_NPC npc, C_ITEM item);
+func void AI_UseItem(C_NPC npc, C_Item_ID itemID);
 // Item bis zum Ende benutzen
 
-func void AI_UseItemToState(C_NPC self, C_ITEM item, int state);
+func void AI_UseItemToState(C_NPC npc, C_Item_ID itemID, int state);
 // Item benutzen bis zum angegebenen State
 
 func int AI_UseMob(C_NPC npc, string schemeName, int targetState);
@@ -228,7 +228,7 @@ func void AI_WaitForQuestion(C_NPC npc, func scriptFunc);
 func void AI_WaitMS(C_NPC npc, int milliSeconds);
 
 func void AI_WaitTillEnd(C_NPC npc, C_NPC other);
-// 'self' wartet bis 'other' seinen laufenden AI-Befehl zu Ende gespielt hat (funzt allerdings nicht bei AI-Overlays!)
+// 'npc' wartet bis 'other' seinen laufenden AI-Befehl zu Ende gespielt hat (funzt allerdings nicht bei AI-Overlays!)
 
 func void AI_WhirlAround(C_NPC npc, C_NPC other);
 // schnelle Drehung zu other
@@ -248,10 +248,10 @@ func void Apply_Options_Video();
 func string ConcatStrings(string s1, string s2);
 // Erzeugt eine Kopie von dem ersten angegebenen String, hängt den zweiten an diesen an und gibt den neuen String zurück
 
-func void CreateInvItem(C_NPC npc, C_ITEM item);
-// gibt der angegebenen Instanz (self oder other) ein Item ins Inventory
+func void CreateInvItem(C_NPC npc, C_Item_ID itemID);
+// gibt der angegebenen Instanz npc ein Item ins Inventory
 
-func void CreateInvItems(C_NPC npc, C_ITEM item, int amount);
+func void CreateInvItems(C_NPC npc, C_Item_ID itemID, int amount);
 // wie vorherige Funktion, nur das Multi-Items (z.B.: 100 Pfeile) ins Inventory kreiert werden
 
 func int Doc_Create();
@@ -364,7 +364,7 @@ func void Doc_Show(int document);
 //
 //      Document        - Handle auf das Dokument
 
-func void EquipItem(C_NPC npc, C_ITEM item);
+func void EquipItem(C_NPC npc, C_Item_ID itemID);
 // gibt dem Nsc direkt das angegebene Item an den Gürtel
 
 func void ExitGame();
@@ -395,9 +395,9 @@ func bool Game_InitGerman();
 func bool Hlp_CutscenePlayed(string csName);
 // Abfrage, ob Cutscene schon gespielt wurde (0 = Nein / 1 = Ja)
 
-func int Hlp_GetInstanceID(instance itemOrNPC);
+func int Hlp_GetInstanceID(C_Instance itemOrNPC);
 // liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items oder npcs miteinander vergleichen zu können ( integer Vergleich)
-// c_object kann vom Typ C_ITEM oder C_NPC sein
+// itemOrNPC kann vom Typ C_ITEM oder C_NPC sein
 
 func C_NPC Hlp_GetNpc(int npcInstance);
 // Ermittle einen NSC über den Instanznamen. Dieser kann einer Variablen zugewiesen werden und ist somit gezielt verfügbar
@@ -419,10 +419,10 @@ func int Hlp_Random(int excludedUpperBound);
 func bool Hlp_StrCmp(string s1, string s2);
 // Hilfsfunktion um zwei Strings miteinander zu vergleichen liefert bei Gleichheit eins zurück
 
-func void Info_AddChoice(C_INFO info, string text, func f);
+func void Info_AddChoice(C_INFO_ID infoID, string text, func f);
 // Fügt der Dialogoption info eine neue Subdialog-Option hinzu (Reihenfolge: oben einfügen, nicht unten dranhängen)
 
-func void Info_ClearChoices(C_INFO info);
+func void Info_ClearChoices(C_INFO_ID infoID);
 // Löscht alle Subdialogoptionen, die zur Dialogoption info gehören
 
 func bool InfoManager_HasFinished();
@@ -479,7 +479,7 @@ func void Mdl_ApplyOverlayMds(C_NPC npc, string mdsName);
 // mit diesem Befehl werden Animationen auf einem höheren Layer gestartet
 // (z.B. hat der Zombie ein Overlay über die normalen Human-Animationen)
 
-func void Mdl_ApplyOverlayMDSTimed(C_NPC npc, string mdsName, float timeTicks);
+func void Mdl_ApplyOverlayMDSTimed(C_NPC npc, string mdsName, int timeTicks);
 // Overlay-MDS wird gestartet und automatisch nach der angegebenen Zeit abgeschaltet
 
 func void Mdl_ApplyRandomAni(C_NPC npc, string animationName, string alias);
@@ -490,7 +490,7 @@ func void Mdl_ApplyRandomAniFreq(C_NPC npc, string animationName, float freq);
 
 func void Mdl_ApplyRandomFaceAni(C_NPC npc, string animationName, float minTime, float minTimeVar, float maxTime, float maxTimeVar, float probMin);
 // Starte zufällige Gesichtsanimation
-// Mdl_ApplyRandomFaceAni ( self, animationName, minTime, minTimeVar, maxTime, maxTimeVar, probMin)
+// Mdl_ApplyRandomFaceAni ( npc, animationName, minTime, minTimeVar, maxTime, maxTimeVar, probMin)
 // minTime      = Minimum an Zeit nachdem Ani startet (in Sekunden)
 // maxTime      = Maximum an Zeit nachdem Ani startet (in Sekunden)
 // minTimeVar   = Abweichung von minTime (in Sekunden)
@@ -589,21 +589,21 @@ func void Npc_ExchangeRoutine(C_NPC npc, string routineName);
 // Tausche meherere Tagesabläufe aus
 
 func int Npc_GetActiveSpell(C_NPC npc);
-// liefert den Zauber zurück, der auf der Hand ist (self oder other)
+// liefert den Zauber zurück, der auf der Hand des NPC ist
 // liefert -1 zurück, wenn kein Zauber auf der Hand ist
 
 func int Npc_GetActiveSpellCat(C_NPC npc);
 // Unterscheidet zwischen den drei Kategorien (Spell_Bad, Spell_neutral,Spell_Good) Spellkat ist Rückgabewert
 
 func bool Npc_GetActiveSpellIsScroll(C_NPC npc);
-// Gibt zurück ob der aktive Zauber auf der Hand des NPC self eine Spruchrolle ist.
+// Gibt zurück ob der aktive Zauber auf der Hand des NPC npc eine Spruchrolle ist.
 // Wird benutzt um die korrekten Manakosten des Zaubers zu ermitteln, da sich Manakosten von Spruchrollen und Runen unterscheiden.
 
 func int Npc_GetActiveSpellLevel(C_NPC npc);
 // liefert den Spell-Level des Zaubers zurück, der auf der Hand ist
 
 func int Npc_GetAttitude(C_NPC npc, C_NPC other);
-// Gibt die Attitüde von self zu other zurück (temp. / perm. / Gilden )
+// Gibt die Attitüde von npc zu other zurück (temp. / perm. / Gilden )
 
 func int Npc_GetBodyState(C_NPC npc);
 // Ermittle BodyState ( Liefert BS_-Konstanten )
@@ -629,7 +629,7 @@ func int Npc_GetDistToPlayer(C_NPC npc);
 // Liefert Entfernung ( in cm ! ) zwischen npc und Spieler
 
 func int Npc_GetDistToWP(C_NPC npc, string waypointName);
-// liefert die Entfernung vom NSC 'self' zum angegebenen Waypoint in cm
+// liefert die Entfernung vom NSC 'npc' zum angegebenen Waypoint in cm
 
 func C_ITEM Npc_GetEquippedArmor(C_NPC npc);
 // Liefert die angelegte Rüstung des NSCs.
@@ -688,7 +688,7 @@ func bool Npc_GetNextTarget(C_NPC npc);
 // übernommen und in 'other' geschrieben, wenn kein Gegner gefunden wurde wird das
 // interne Ziel gelöscht und 'other' ungültig gemacht.
 // Kriterien:   1. gesetzter Gegner, der nicht tot/bewußtlos ist wird genommen...
-//              2. ...dann der nächstbeste aNSC demgegenüber 'self' HOSTILE ist (auch weder tot noch bewußtlos)
+//              2. ...dann der nächstbeste aNSC demgegenüber 'npc' HOSTILE ist (auch weder tot noch bewußtlos)
 // - return:    neues Ziel gefunden     -> TRUE
 //              kein Ziel gefunden      -> FALSE
 // VORSICHT:    Beruht auf der aktuellsten VOB-Liste, die durch aktive Wahrnehmungen oder durch
@@ -729,7 +729,7 @@ func int Npc_GetTrueGuild(C_NPC npc);
 func bool NPC_GiveInfo(C_NPC npc, bool important);
 // Überprüft, ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
-func void Npc_GiveItem(C_NPC npc, C_ITEM item, C_NPC other);
+func void Npc_GiveItem(C_NPC npc, C_ITEM_ID item, C_NPC other);
 // Der NSC "npc" gibt dem NSC "other" den angegebenen Gegenstand "item". Der Gegenstand wandert sofort ins Inventory des anderen.
 
 func bool Npc_HasBodyFlag(C_NPC npc, int bodyFlag);
@@ -750,7 +750,7 @@ func bool Npc_HasEquippedRangedWeapon(C_NPC npc);
 func bool Npc_HasEquippedWeapon(C_NPC npc);
 // gibt eins zurück, wenn der npc eine Waffe sichtbar mit sich rumträgt
 
-func bool Npc_HasFightTalent(C_NPC self, int talent);
+func bool Npc_HasFightTalent(C_NPC npc, int talent);
 // NICHT IMPLEMENTIERT. Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
 func int Npc_HasItems(C_NPC npc, int itemInstance);
@@ -859,7 +859,7 @@ func void Npc_LearnSpell(C_NPC npc, int spell);
 
 func void Npc_MemoryEntry(C_NPC npc, int source, C_NPC offender, int newsID, C_NPC victim);
 // mit dieser Funktion wird eine NSC bezogene News geschrieben newsID : News ID source > 0 : "gossip", ansonsten "witness",
-// self: NSC, bei dem News eingespeist werden soll, other: Täter victim : Opfer
+// npc: NSC, bei dem News eingespeist werden soll, offender: Täter, victim : Opfer
 
 func void Npc_MemoryEntryGuild(C_NPC npc, int source, C_NPC offender, int newsID, C_NPC victimGuild);
 // wie MemoryEntry nur, das die Memory für die ganze Gilde kreiert wird
@@ -927,7 +927,7 @@ func void Npc_SetTalentValue(C_NPC npc, int talent, int value);
 // setzt talent value auf den angegebenen Wert. Wird in gothic 1 benutzt für 1h/2h/bow/crossbow/picklock/pickpocket
 
 func void Npc_SetTarget(C_NPC npc, C_NPC other);
-// Gibt dem Nsc 'self' das interne Ziel 'other'.
+// Gibt dem Nsc 'npc' das interne Ziel 'other'.
 // --> Nur wenn per GetTarget auch der other "geholt" wird ist er vorhanden,
 // da hier interne Variablen, die in den Skripten nicht vorhanden sind verwendet werden
 
@@ -1122,27 +1122,27 @@ func void Wld_InsertItem(int itemInstance, string fpOrWPName);
 func void Wld_InsertNpc(int npcInstance, string fpOrWPName);
 // Füge NSC in Welt ein. Wobei Spawnpoint entweder ein WP oder ein FP sein darf.
 
-func void Wld_InsertNpcAndRespawn(int instanceNpc, string fpOrWPName, float spawnDelaySec);
+func void Wld_InsertNpcAndRespawn(int instanceNpc, string fpOrWPName, int spawnDelaySec);
 // Füge NSC in Welt ein. Wobei Spawnpoint entweder ein WP oder ein FP sein darf. Stirbt dieser NSC wird
 // nach "spawnDelay"-Sekunden ein neuer NSC am Spawnpoint erzeugt.
 
 func void Wld_InsertObject(string objName, string fpOrWPName);
 
 func bool Wld_IsFPAvailable(C_NPC npc, string freepointName);
-// Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('self' zählt als Blockierer nicht!) und sichtbar
+// Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('npc' zählt als Blockierer nicht!) und sichtbar
 
 func bool Wld_IsMobAvailable(C_NPC npc, string schemeName);
 // Sucht sich ein Mobsi im Umkreis von 10m und liefert TRUE falls gefunden. MOB wird nur zurückgeliefert, wenn es nicht besetzt ist.
 
 func bool Wld_IsNextFPAvailable(C_NPC npc, string freepointName);
-// wie Wld_IsFPAvailable(), aber es wird immer der nahegelegenste genommen und 'self' zählt als Blockierer!
+// wie Wld_IsFPAvailable(), aber es wird immer der nahegelegenste genommen und 'npc' zählt als Blockierer!
 
 func bool Wld_IsRaining();
 
 func bool Wld_IsTime(int hour1, int min1, int hour2, int min2);
 // Liefert zurück ob die aktuelle Weltzeit zwischen den beiden angegebenen Zeiten liegt (von - bis)
 
-func void Wld_PlayEffect(string effectVFXName, int originvob, int targetvob, int effectLevel, int damage, int damageType, bool bIsProjectile);
+func void Wld_PlayEffect(string effectVFXName, C_INSTANCE originvob, C_INSTANCE targetvob, int effectLevel, int damage, int damageType, bool bIsProjectile);
 // effectVFXName: Name der VisualFX-Instanz
 // originvob: Ursprung/Verursacher (muss existieren!) NPC, item, freepoint, ...
 // targetvob: Ziel fuer Effekt + Schaden
@@ -1175,7 +1175,7 @@ func void Wld_SetObjectRoutine(int hour, int min, string objName, int state);
 func void Wld_SetTime(int hour, int min);
 // Setzt die Uhrzeit auf hour:min. hour kann größer als 23 sein, um zum nächsten Tag zu springen.
 
-func void Wld_SpawnNpcRange(C_NPC summoner, C_NPC creature, int count, float radius);
+func void Wld_SpawnNpcRange(C_NPC summoner, C_NPC_ID creature, int count, float radius);
 // NPC summoner beschwört die Diener creature der Anzahl count. Die Diener erscheinen in einer Entfernung von radius (in cm).
 
 func void Wld_StopEffect(string vfxName);
