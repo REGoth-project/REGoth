@@ -37,7 +37,7 @@ func void AI_Dodge(C_NPC npc);
 func void AI_DrawWeapon(C_NPC npc);
 // Equipte Waffe wird gezogen
 
-func void AI_DropItem(C_NPC npc, C_Item_ID itemID);
+func void AI_DropItem(C_NPC npc, C_Item_ID itemInstance);
 // Item wird auf den Boden fallen gelassen
 
 func void AI_DropMob(C_NPC npc);
@@ -208,10 +208,10 @@ func void AI_UnequipWeapons(C_NPC npc);
 func void AI_UnreadySpell(C_NPC npc);
 // lasse zauberspruch aus Hand verschwinden
 
-func void AI_UseItem(C_NPC npc, C_Item_ID itemID);
+func void AI_UseItem(C_NPC npc, C_Item_ID itemInstance);
 // Item bis zum Ende benutzen
 
-func void AI_UseItemToState(C_NPC npc, C_Item_ID itemID, int state);
+func void AI_UseItemToState(C_NPC npc, C_Item_ID itemInstance, int state);
 // Item benutzen bis zum angegebenen State
 
 func int AI_UseMob(C_NPC npc, string schemeName, int targetState);
@@ -248,10 +248,10 @@ func void Apply_Options_Video();
 func string ConcatStrings(string s1, string s2);
 // Erzeugt eine Kopie von dem ersten angegebenen String, hängt den zweiten an diesen an und gibt den neuen String zurück
 
-func void CreateInvItem(C_NPC npc, C_Item_ID itemID);
+func void CreateInvItem(C_NPC npc, C_Item_ID itemInstance);
 // gibt der angegebenen Instanz npc ein Item ins Inventory
 
-func void CreateInvItems(C_NPC npc, C_Item_ID itemID, int amount);
+func void CreateInvItems(C_NPC npc, C_Item_ID itemInstance, int amount);
 // wie vorherige Funktion, nur das Multi-Items (z.B.: 100 Pfeile) ins Inventory kreiert werden
 
 func int Doc_Create();
@@ -364,7 +364,7 @@ func void Doc_Show(int document);
 //
 //      Document        - Handle auf das Dokument
 
-func void EquipItem(C_NPC npc, C_Item_ID itemID);
+func void EquipItem(C_NPC npc, C_Item_ID itemInstance);
 // gibt dem Nsc direkt das angegebene Item an den Gürtel
 
 func void ExitGame();
@@ -419,11 +419,11 @@ func int Hlp_Random(int excludedUpperBound);
 func bool Hlp_StrCmp(string s1, string s2);
 // Hilfsfunktion um zwei Strings miteinander zu vergleichen liefert bei Gleichheit eins zurück
 
-func void Info_AddChoice(C_INFO_ID infoID, string text, func f);
+func void Info_AddChoice(C_INFO_ID infoInstance, string text, func f);
 // Fügt der Dialogoption info eine neue Subdialog-Option hinzu (Reihenfolge: oben einfügen, nicht unten dranhängen)
 
-func void Info_ClearChoices(C_INFO_ID infoID);
-// Löscht alle Subdialogoptionen, die zur Dialogoption info gehören
+func void Info_ClearChoices(C_INFO_ID infoInstance);
+// Löscht alle Subdialogoptionen, die zur Dialogoption gehören
 
 func bool InfoManager_HasFinished();
 
