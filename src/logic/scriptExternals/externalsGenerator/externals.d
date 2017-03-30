@@ -61,14 +61,14 @@ func void AI_Flee(C_NPC npc);
 // Der Befehl muss, wie AI_Attack(), in der ZS-Loop regelmaessig aufgerufen werden und setzt voraus, dass
 // vorher mit Npc_SetTarget( self, <var C_NPC enemy> ) ein Gegner gesetzt wurde, vor dem der Npc fliehen soll.
 
-func void AI_GotoFP(C_NPC npc, string freepointName);
+func void AI_GotoFP(C_NPC npc, string freepoint);
 // Sucht sich einen Freepoint im Umkreis von 20m vom NSC, bewegt sich dorthin und richtet sich entsprechend aus.
 // Suchkriterium wie bei Wld_IsFPAvailable()
 
 func void AI_GotoItem(C_NPC npc, C_ITEM item);
 // "npc" geht zu "item"
 
-func void AI_GotoNextFP(C_NPC npc, string freepointName);
+func void AI_GotoNextFP(C_NPC npc, string freepoint);
 // wie AI_GotoFP() allerdings Suchkriterium wie bei Wld_IsNextFPAvailable()
 
 func void AI_GotoNpc(C_NPC npc, C_NPC other);
@@ -77,7 +77,7 @@ func void AI_GotoNpc(C_NPC npc, C_NPC other);
 func void AI_GotoSound(C_NPC npc);
 // Npc npc läuft zum Sound
 
-func void AI_GotoWP(C_NPC npc, string waypointName);
+func void AI_GotoWP(C_NPC npc, string waypoint);
 // Npc-Instanz npc läuft zum namentlich angegeben Waypoint
 
 func void AI_LookAt(C_NPC npc, string wpOrVob);
@@ -86,7 +86,7 @@ func void AI_LookAt(C_NPC npc, string wpOrVob);
 func void AI_LookAtNpc(C_NPC npc, C_NPC other);
 // Schaue zu einem NSC
 
-func void AI_LookForItem(C_NPC npc, int instanceItem);
+func void AI_LookForItem(C_NPC npc, C_ITEM_ID itemInstance);
 // gibt die Möglichkeit nach bestimmten Items zu suchen (z.B.:Das goldene Schwert der Zerstörung, wenn vorhanden)
 
 func void AI_Output(C_NPC npc, C_NPC target, string wavName);
@@ -164,7 +164,7 @@ func void AI_StandUpQuick(C_NPC npc);
 // Wie AI_StandUp(), jedoch werden keine Rücktransitionen abgespielt, sondern auch dort wird
 // sofort in den Grundzustand "gepoppt". Wichtig für sehr eilige Situationen!
 
-func void AI_StartState(C_NPC npc, func state, bool waitForCurrentStateEnd, string waypointName);
+func void AI_StartState(C_NPC npc, func state, bool waitForCurrentStateEnd, string waypoint);
 // Versetzt den Nsc aus den Skripten heraus in den entsprechenden ZS (what),
 // stateBehaviour sagt : "0"-aktuellen Zustand abbrechen "1"-aktuellen Zustand erst ordnungsgemäß beenden (End-Funktion aufrufen) ).
 
@@ -187,7 +187,7 @@ func void AI_TakeItem(C_NPC npc, C_ITEM item);
 
 func void AI_TakeMob(C_NPC npc, string mobName);
 
-func void AI_Teleport(C_NPC npc, string waypointName);
+func void AI_Teleport(C_NPC npc, string waypoint);
 // teleportiert den NSC zur angegebenene Location
 
 func void AI_TurnAway(C_NPC turner, C_NPC npc);
@@ -395,15 +395,15 @@ func bool Game_InitGerman();
 func bool Hlp_CutscenePlayed(string csName);
 // Abfrage, ob Cutscene schon gespielt wurde (0 = Nein / 1 = Ja)
 
-func int Hlp_GetInstanceID(C_Instance itemOrNPC);
+func int Hlp_GetInstanceID(Instance itemOrNPC);
 // liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items oder npcs miteinander vergleichen zu können ( integer Vergleich)
 // itemOrNPC kann vom Typ C_ITEM oder C_NPC sein
 
-func C_NPC Hlp_GetNpc(int npcInstance);
+func C_NPC Hlp_GetNpc(C_NPC_ID npcInstance);
 // Ermittle einen NSC über den Instanznamen. Dieser kann einer Variablen zugewiesen werden und ist somit gezielt verfügbar
 
-func bool Hlp_IsItem(C_ITEM item, int instanceName);
-// Prüft, ob der Gegenstand 'item' den Instanznamen 'instanceName' trägt. Will man z.B. testen,
+func bool Hlp_IsItem(C_ITEM item, C_ITEM_ID itemInstance);
+// Prüft, ob der Gegenstand 'item' den Instanznamen 'itemInstance' trägt. Will man z.B. testen,
 // ob die globale Variable item Pfeile sind (ItMuArrow) ruft man Hlp_IsItem(item,ItMuArrow) auf.
 // Gribt bei Gleichheit TRUE, sonst FALSE zurück.
 
@@ -427,12 +427,12 @@ func void Info_ClearChoices(C_INFO_ID infoID);
 
 func bool InfoManager_HasFinished();
 
-func void IntroduceChapter(string titel, string untertitel, string texture, string wavName, int waitTimeMS);
+func void IntroduceChapter(string titel, string subtitle, string texture, string wavName, int waitTimeMS);
 // Gothic 2 only function
 // Zeigt den Kapitelwechsel-Bildschirm an.
 //
 //      Titel           - Text des Titels
-//      Untertitel      - text des Untertitels
+//      subtitle        - text des Untertitels
 //      Texture         - Dateiname der Hintergrundtextur
 //      Sound           - Dateiname des abgespielten Sounds
 //      waitTimeMS      - Anzahl in Millisekunden, die der Bildschirm angezeigt wird
@@ -526,10 +526,10 @@ func void Mis_RemoveMission(instance n0);
 func void Mis_SetStatus(int missionName, int newStatus);
 // Setzt den Status einer Mission ( Bezogen auf den Spieler ) -> RUNNING, SUCCESS, FAILED etc. )
 
-func void Mob_CreateItems(string mobName, int itemInstance, int amount);
+func void Mob_CreateItems(string mobName, C_ITEM_ID itemInstance, int amount);
 // Erzeuge "amount" Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen.
 
-func int Mob_HasItems(string mobName, int itemInstance);
+func int Mob_HasItems(string mobName, C_ITEM_ID itemInstance);
 // Liefere Anzahl der Items der Instanz "itemInstance" in oCMobContainer mit angegebenen Vobnamen
 
 func bool Npc_AreWeStronger(C_NPC npc, C_NPC other);
@@ -628,7 +628,7 @@ func int Npc_GetDistToNpc(C_NPC npc, C_NPC other);
 func int Npc_GetDistToPlayer(C_NPC npc);
 // Liefert Entfernung ( in cm ! ) zwischen npc und Spieler
 
-func int Npc_GetDistToWP(C_NPC npc, string waypointName);
+func int Npc_GetDistToWP(C_NPC npc, string waypoint);
 // liefert die Entfernung vom NSC 'npc' zum angegebenen Waypoint in cm
 
 func C_ITEM Npc_GetEquippedArmor(C_NPC npc);
@@ -650,7 +650,7 @@ func int Npc_GetHeightToNpc(C_NPC npc1, C_NPC npc2);
 // Gothic 2 only function
 // Liefert Höhendifferenz ( in cm ! ) zwischend den beiden NSCs
 
-func bool Npc_GetInvItem(C_NPC npc, int itemInstance);
+func bool Npc_GetInvItem(C_NPC npc, C_ITEM_ID itemInstance);
 // Ermittle ItemInstanz aus Inventory
 // befüllt globale Variable "item" mit dem gefundenen C_Item, falls das item gültig ist. Gibt TRUE zurück, wenn das item gültig ist.
 
@@ -753,14 +753,14 @@ func bool Npc_HasEquippedWeapon(C_NPC npc);
 func bool Npc_HasFightTalent(C_NPC npc, int talent);
 // NICHT IMPLEMENTIERT. Spezialabfrage auf Kampftalente (z.B. 1hSword) ansonsten wie Npc_HasTalent
 
-func int Npc_HasItems(C_NPC npc, int itemInstance);
+func int Npc_HasItems(C_NPC npc, C_ITEM_ID itemInstance);
 // Liefert zurück wie viele Items der NSC vom angegebenen Typ besitzt
 
 func int Npc_HasNews(C_NPC npc, int newsID, C_NPC offender, C_NPC victim);
 // Liefert Newsnummer>0 (für weitere Referenzen) falls entsprechende News vorhanden.
 // Nicht benötigte Parameter können mit "NULL" leergelassen werden
 
-func bool Npc_HasOffered(C_NPC npc, C_NPC other, int itemInstance);
+func bool Npc_HasOffered(C_NPC npc, C_NPC other, C_ITEM_ID itemInstance);
 // Bietet Spieler dem NSC einen Gegenstand übers Trade-Modul an ? True/False
 
 func bool Npc_HasRangedWeaponWithAmmo(C_NPC npc);
@@ -832,8 +832,8 @@ func bool Npc_IsNextTargetAvailable(C_NPC npc);
 //              Npc_PerceiveAll() erstellt wurde. Wird diese Funktion in einem Zustand ohne aktive
 //              Wahrnehmungen benutzt, muß vorher ein Npc_PerceiveAll() aufgerufen werden
 
-func bool Npc_IsOnFP(C_NPC npc, string freepointName);
-// Abfrage darauf, ob der Nsc auf einem Freepoint mit freepointName Teilstring steht
+func bool Npc_IsOnFP(C_NPC npc, string freepoint);
+// Abfrage darauf, ob der Nsc auf einem Freepoint mit freepoint Teilstring steht
 
 func bool Npc_IsPlayer(C_NPC npc);
 // liefert eins zurück, wenn der geprüfte Charakter der Spieler himself ist
@@ -847,7 +847,7 @@ func bool Npc_IsVoiceActive(C_NPC npc);
 func bool Npc_IsWayBlocked(C_NPC npc);
 // Liefert "1", falls Weg von NSC durch Hindernis versperrt ist.
 
-func bool Npc_KnowsInfo(C_NPC npc, int instanceInfo);
+func bool Npc_KnowsInfo(C_NPC npc, C_INFO_ID instanceInfo);
 // Liefert TRUE, wenn der angegebene Spieler die Info schon einmal erhalten hat.
 // VORSICHT: auch wenn eine permanente Info schon einmal dem Spieler erzählt wurde, so gibt diese Funktion trotzdem FALSE zurück!
 
@@ -884,11 +884,11 @@ func void Npc_PlayAni(C_NPC npc, string animationName);
 func bool Npc_RefuseTalk(C_NPC npc);
 // Abfrage ob Dialog-Refuse Counter noch aktiv ist True/False
 
-func bool Npc_RemoveInvItem(C_NPC owner, int instanceItem);
+func bool Npc_RemoveInvItem(C_NPC owner, C_ITEM_ID itemInstance);
 // das angegebene Item wird aus dem Inventory des NSCs entfernt und gelöscht
 // True wenn erfolgreich
 
-func bool Npc_RemoveInvItems(C_NPC owner, int instanceItem, int amount);
+func bool Npc_RemoveInvItems(C_NPC owner, C_ITEM_ID itemInstance, int amount);
 // das angegebene Anzahl des Multi-Items wird aus dem Inventory des NSCs entfernt und gelöscht
 // wie Npc_RemoveInvItem, nur das Multislotgegenstände gelöscht werden
 // True wenn erfolgreich
@@ -1030,7 +1030,7 @@ func void Snd_Play(string sfxName);
 func void Snd_Play3D(C_NPC npc, string sfxName);
 // spielt einen 3D-Sound ab.
 
-func void TA(C_NPC npc, int start_h, int stop_h, func state, string waypointName);
+func void TA(C_NPC npc, int start_h, int stop_h, func state, string waypoint);
 // Mit _(Zustandsname) wird ein neuer Tagesablauf generiert, siehe TA.d
 
 func void TA_BeginOverlay(C_NPC npc);
@@ -1044,7 +1044,7 @@ func void TA_CS(C_NPC npc, string csName, string roleName);
 func void TA_EndOverlay(C_NPC npc);
 // Beende einen Overlay-Tagesablauf
 
-func void TA_Min(C_NPC npc, int start_h, int start_m, int stop_h, int stop_m, func state, string waypointName);
+func void TA_Min(C_NPC npc, int start_h, int start_m, int stop_h, int stop_m, func state, string waypoint);
 // Tagesablaufpunkt minutengenau angeben
 
 func void TA_RemoveOverlay(C_NPC npc);
@@ -1065,18 +1065,18 @@ func bool Wld_DetectItem(C_NPC npc, int flags);
 // liefert eins zurück, wenn ein Item mit dem Entsprechende Flag (z.B.ITEM_KAT_FOOD )gefunden wurde
 // Globale Variable 'item' wird mit dem gefundenen Gegenstand initialisiert
 
-func bool Wld_DetectNpc(C_NPC npc, int instanceNpc, func aiState, int guild);
+func bool Wld_DetectNpc(C_NPC npc, C_NPC_ID npcInstance, func aiState, int guild);
 // Diese Methode initilisiert die globale Skriptvariable "other" mit einem NSC, den "npc" beim letzten Warnehmungscheck wargenommen hat.
-// instanceNpc  = Name der zu suchenden Instanz                                 ( "-1" angeben, wenn Instanzname unwichtig )
+// npcInstance  = Name der zu suchenden Instanz                                 ( "-1" angeben, wenn Instanzname unwichtig )
 // guild        = Der zu suchende NSC muss Mitglied dieser Gilde sein           ( "-1" angeben, wenn Gilde unwichtig )
 // aiState      = Der AI-Zustandsname, in dem sich der NSC befinden soll        ( NOFUNC angeben, wenn AI-State unwichtig )
 // Wenn die Methode einen entsprechenden NSC gefunden hat, liefert diese "1" und 'other' ist initialisiert
 // ansonsten wird "0" geliefert und "other" wird nicht verändert.
 
-func bool Wld_DetectNpcEx(C_NPC npc, int instanceNpc, func aiState, int guild, bool detectPlayer);
+func bool Wld_DetectNpcEx(C_NPC npc, C_NPC_ID npcInstance, func aiState, int guild, bool detectPlayer);
 // Wie Wld_DetectNpc(). Zusätzlich kann per detectPlayer=0 der Spieler ignoriert werden.
 
-func int Wld_DetectNpcExAtt(C_NPC npc, int instanceName, func state, int guild, bool detectPlayer, int Attitude);
+func int Wld_DetectNpcExAtt(C_NPC npc, C_NPC_ID npcInstance, func aiState, int guild, bool detectPlayer, int Attitude);
 
 func bool Wld_DetectPlayer(C_NPC npc);
 // liefert eins zurück, wenn der Player in der Nähe ist
@@ -1115,26 +1115,26 @@ func C_NPC Wld_GetPlayerPortalOwner();
 // - wenn der SC 'draußen' ist, dann ist der Rückgabe-Npc 'notValid'
 // - wenn der aktive Raum besitzerlos ist, dann ist der Rückgabe-Npc 'notValid'
 
-func void Wld_InsertItem(int itemInstance, string fpOrWPName);
+func void Wld_InsertItem(C_ITEM_ID itemInstance, string fpOrWPName);
 // Füge Item in Welt ein entweder an einem WP oder einem FP
 // Vorsicht, funktioniert nicht, Items werden immer im Mittelpunkt der Welt inserted
 
-func void Wld_InsertNpc(int npcInstance, string fpOrWPName);
+func void Wld_InsertNpc(C_NPC_ID npcInstance, string fpOrWPName);
 // Füge NSC in Welt ein. Wobei Spawnpoint entweder ein WP oder ein FP sein darf.
 
-func void Wld_InsertNpcAndRespawn(int instanceNpc, string fpOrWPName, int spawnDelaySec);
+func void Wld_InsertNpcAndRespawn(C_NPC_ID npcInstance, string fpOrWPName, int spawnDelaySec);
 // Füge NSC in Welt ein. Wobei Spawnpoint entweder ein WP oder ein FP sein darf. Stirbt dieser NSC wird
 // nach "spawnDelay"-Sekunden ein neuer NSC am Spawnpoint erzeugt.
 
 func void Wld_InsertObject(string objName, string fpOrWPName);
 
-func bool Wld_IsFPAvailable(C_NPC npc, string freepointName);
+func bool Wld_IsFPAvailable(C_NPC npc, string freepoint);
 // Sucht einen Freepoint im Umkreis von 20m vom NSC und liefert TRUE falls vorhanden und frei ('npc' zählt als Blockierer nicht!) und sichtbar
 
 func bool Wld_IsMobAvailable(C_NPC npc, string schemeName);
 // Sucht sich ein Mobsi im Umkreis von 10m und liefert TRUE falls gefunden. MOB wird nur zurückgeliefert, wenn es nicht besetzt ist.
 
-func bool Wld_IsNextFPAvailable(C_NPC npc, string freepointName);
+func bool Wld_IsNextFPAvailable(C_NPC npc, string freepoint);
 // wie Wld_IsFPAvailable(), aber es wird immer der nahegelegenste genommen und 'npc' zählt als Blockierer!
 
 func bool Wld_IsRaining();
@@ -1142,7 +1142,7 @@ func bool Wld_IsRaining();
 func bool Wld_IsTime(int hour1, int min1, int hour2, int min2);
 // Liefert zurück ob die aktuelle Weltzeit zwischen den beiden angegebenen Zeiten liegt (von - bis)
 
-func void Wld_PlayEffect(string effectVFXName, C_INSTANCE originvob, C_INSTANCE targetvob, int effectLevel, int damage, int damageType, bool bIsProjectile);
+func void Wld_PlayEffect(string effectVFXName, Instance originvob, Instance targetvob, int effectLevel, int damage, int damageType, bool bIsProjectile);
 // effectVFXName: Name der VisualFX-Instanz
 // originvob: Ursprung/Verursacher (muss existieren!) NPC, item, freepoint, ...
 // targetvob: Ziel fuer Effekt + Schaden
@@ -1155,7 +1155,7 @@ func void Wld_PlayEffect(string effectVFXName, C_INSTANCE originvob, C_INSTANCE 
 func bool Wld_RemoveItem(C_ITEM item);
 // Hiermit wird das angegebene Item aus der Welt entfernt und gelöscht, gibt TRUE zurück wenn erfolgreich
 
-func void Wld_RemoveNpc(int npcInstance);
+func void Wld_RemoveNpc(C_NPC_ID npcInstance);
 
 func void Wld_SendTrigger(string vobName);
 // Sendet eine Trigger-Nachricht an das VOB (z.B. Mover) mit dem angegeben Namen.
