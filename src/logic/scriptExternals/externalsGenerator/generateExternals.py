@@ -5,6 +5,12 @@ import operator
 import collections
 import copy
 
+int_alias = ["bool", "C_Item_ID", "C_Npc_ID", "C_Info_ID"]
+cinstance_types = ["C_Item", "C_Npc", "C_Info", "instance"]
+primitives = ["int", "float", "string", "func"] + int_alias
+known_types = primitives + cinstance_types
+known_types_lower = list(map(str.lower, all_types))
+
 class DaedalusFunction(object):
     def __init__(self, returntype, func_name, params, comments):
         self.returntype = returntype
@@ -37,13 +43,7 @@ class DaedalusFunction(object):
                 blines.append("int32_t " + param_name + " = vm.popDataValue();")
             elif param_type == "float":
                 blines.append("float " + param_name + " = vm.popFloatValue();")
-            elif param_type == "c_npc":
-                #blines.append("uint32_t arr_" + param_name + ";\n")
-                #blines.append("int32_t " + param_name + " = vm.popVar(arr_" + param_name + ");")
-                blines.append("int32_t " + param_name + " = vm.popVar();")
-            elif param_type == "c_item":
-                blines.append("int32_t " + param_name + " = vm.popVar();")
-            elif param_type == "instance":
+            elif param_type in ["c_npc", "c_item", "instance"]:
                 blines.append("int32_t " + param_name + " = vm.popVar();")
             elif param_type == "bool":
                 blines.append("bool " + param_name + " = static_cast<bool>(vm.popDataValue());")
@@ -102,9 +102,6 @@ class DaedalusFunction(object):
 def parse_functions(external_filename):
     with open(external_filename, "r") as f:
         lines = f.readlines()
-
-    known_types = ["C_Item", "C_Npc", "int", "bool", "float", "string", "func", "instance"]
-    known_types_lower = list(map(str.lower, known_types))
 
     functions = []
 
@@ -180,7 +177,7 @@ def main():
         print("*/")
         for fname in sorted(fdict.keys()):
             f = fdict[fname]
-            print(f.register_format(indent=1))
+            print(f.register_format(indent=1).replace("\t", 4 * " "))
 
     #print("count: {}".format(len(func_dict)))
 
