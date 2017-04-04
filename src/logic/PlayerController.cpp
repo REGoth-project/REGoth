@@ -61,7 +61,9 @@ PlayerController::PlayerController(World::WorldInstance& world,
                                    Daedalus::GameState::NpcHandle scriptInstance)
         : Controller(world, entity),
           m_Inventory(world, scriptInstance),
-          m_AIStateMachine(world, entity)
+          m_AIStateMachine(world, entity),
+          m_NPCAnimationHandler(world, entity),
+          m_AIHandler(world, entity)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
     m_RoutineState.routineActive = true;
@@ -146,10 +148,10 @@ void PlayerController::onUpdate(float deltaTime)
     if (model)
     {
         // Make sure the idle-animation is running
-        if (!model->getAnimationHandler().getActiveAnimationPtr())
+        /*if (!model->getAnimationHandler().getActiveAnimationPtr())
         {
             model->setAnimation(ModelVisual::Idle);
-        }
+        }*/
 
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
@@ -160,14 +162,28 @@ void PlayerController::onUpdate(float deltaTime)
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
 
-        if(!m_NoAniRootPosHack)
+        Animations::Animation* activeAnim = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+        if(!m_NoAniRootPosHack && activeAnim)
         {
             // Apply model root-velcoity
-            Math::float3 position = getEntityTransform().Translation();
-            position += getEntityTransform().Rotate(getModelVisual()->getAnimationHandler().getRootNodeVelocity());
+            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_MOVE_MODEL)
+            {
+                // Move by translation-velocity
+                m_MoveState.position += getEntityTransform().Rotate(
+                        getModelVisual()->getAnimationHandler().getRootNodeVelocityAvg());
+            }
+
+            bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
 
             Math::Matrix t = getEntityTransform();
-            t.Translation(position);
+            t.Translation(m_MoveState.position);
+
+            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_ROTATE_MODEL)
+            {
+                // Rotate by rotation-velocity
+                t = t * getModelVisual()->getAnimationHandler().getRootNodeRotationVelocity();
+            }
+
             setEntityTransform(t);
 
             m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
@@ -219,7 +235,7 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
     placeOnGround();
 
     // Start with idle-animation
-    getModelVisual()->setAnimation(ModelVisual::Idle);
+    //getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
 void PlayerController::gotoWaypoint(size_t wp)
@@ -290,7 +306,7 @@ bool PlayerController::travelPath(float deltaTime)
     }
 
     // Set run animation
-    getModelVisual()->setAnimation(ModelVisual::Run);
+    //getModelVisual()->setAnimation(ModelVisual::Run);
 
     if (differenceXZ.lengthSquared() < 0.5f) // TODO: Find a nice setting for this
     {
@@ -826,6 +842,9 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if(!getEM().isEmpty() || getUsedMob().isValid())
         return;
 
+    m_AIHandler.playerUpdate(deltaTime);
+    return;
+
     // FIXME: Temporary test-code
     static bool lastDraw = false;
 
@@ -1049,7 +1068,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     // Apply animation-velocity
-    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityAvg() * deltaTime;
+    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityTotal() * deltaTime;
 
     float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
     m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
@@ -1688,6 +1707,12 @@ void PlayerController::setDirection(const Math::float3& direction)
                                                   Math::float3(0, 1, 0)).Invert());
 }
 
+void PlayerController::applyRotationY(float rad)
+{
+    m_MoveState.direction = Math::Matrix::CreateRotationY(rad) * m_MoveState.direction;
+    setDirection(m_MoveState.direction);
+}
+
 bool PlayerController::isPlayerControlled()
 {
     return m_World.getScriptEngine().getPlayerEntity() == m_Entity;
@@ -2009,6 +2034,8 @@ void PlayerController::setupKeyBindings()
         }
     });
 
+    m_AIHandler.bindKeys();
+
     Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
 
         if(triggered && !m_World.getDialogManager().isDialogActive())
@@ -2024,6 +2051,11 @@ void PlayerController::setupKeyBindings()
             else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
+        if(triggered)
+            m_World.getEngine()->getHud().getConsole().setOpen(true);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
@@ -2090,7 +2122,7 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
-    });
+    });*/
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
         static bool s_triggered = false;
@@ -2657,3 +2689,4 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
+

@@ -160,7 +160,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 anim->m_NextName = p.ani().m_Next;
                 anim->m_BlendIn = p.ani().m_BlendIn;
                 anim->m_BlendOut = p.ani().m_BlendOut;
-                anim->m_Flags = p.ani().m_Flags;
+                anim->m_Flags = (Animation::EModelScriptAniFlags)p.ani().m_Flags;
                 anim->m_FirstFrame = p.ani().m_FirstFrame;
                 anim->m_LastFrame = p.ani().m_FirstFrame;
                 anim->m_Dir = p.ani().m_Dir;

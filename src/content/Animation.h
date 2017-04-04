@@ -34,6 +34,25 @@ namespace Animations
     // information in a model script
     struct Animation : public Handle::HandleTypeDescriptor<Handle::AnimationHandle>
     {
+        enum EModelScriptAniFlags : uint32_t
+        {
+            MSB_FLAG_NONE = 0,
+            /// Animation moves model in world space
+            MSB_FLAG_MOVE_MODEL = 0x00000001,
+
+            /// Animation rotates model in world space
+            MSB_FLAG_ROTATE_MODEL = 0x00000002,
+
+            /// Animation is queued after the current any on layer instead of started immediately
+            MSB_FLAG_QUEUE_ANI = 0x00000004,
+
+            /// Don't stick to ground
+            MSB_FLAG_FLY = 0x00000008,
+
+            /// Idle animation
+            MSB_FLAG_IDLE = 0x00000010,
+        };
+
         // different  values pulled here for quick access and normalization
 
         // PERF: make this a fixed length string and make sure that no temps are created on compare
@@ -51,7 +70,7 @@ namespace Animations
         // required to look up the handle, alias can't be resolved until all animations are loaded
         // FIXME: could be removed when building an index of animations
         //std::string                             m_AliasName;
-        uint32_t                                m_Flags = 0;
+        EModelScriptAniFlags                    m_Flags = MSB_FLAG_NONE;
         float                                   m_FpsRate = 0.0f;
         // TODO: obsolete
         unsigned                                m_FrameCount = 0;

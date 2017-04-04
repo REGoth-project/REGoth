@@ -6,6 +6,8 @@
 #include "Inventory.h"
 #include "LogicDef.h"
 #include "NpcScriptState.h"
+#include "NpcAnimationHandler.h"
+#include "NpcAIHandler.h"
 
 namespace UI
 {
@@ -167,6 +169,12 @@ namespace Logic
         void setDirection(const Math::float3& direction);
 
         /**
+         * Applies a rotation to the NPCs Y-Axis
+         * @param rad Rotation to apply in radians
+         */
+        void applyRotationY(float rad);
+
+        /**
          * @return The direction the player is facing
          */
         Math::float3 getDirection()
@@ -234,6 +242,11 @@ namespace Logic
          * @return The ModelVisual of the underlaying vob
          */
         ModelVisual* getModelVisual();
+
+        /**
+         * @return Animation handler of this NPC
+         */
+        NpcAnimationHandler& getNpcAnimationHandler(){ return m_NPCAnimationHandler; }
 
         /**
          * Places the playercontroller on the ground again. TODO: TESTING-ONLY!
@@ -413,6 +426,11 @@ namespace Logic
          * Enables/Disables physics on this NPC
          */
          void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
+
+        /**
+         * @return Currently held weapon type
+         */
+        EWeaponMode getWeaponMode(){ return m_EquipmentState.weaponMode; }
 
         /**
          * @return Classes which want to get exported on save should return true here
@@ -595,6 +613,15 @@ namespace Logic
          */
         NpcScriptState m_AIStateMachine;
 
+        /**
+         * Animation handler
+         */
+        NpcAnimationHandler m_NPCAnimationHandler;
+
+        /**
+         * AI/Input handler
+         */
+        NpcAIHandler m_AIHandler;
 
         /**
          * refuse talk countdown

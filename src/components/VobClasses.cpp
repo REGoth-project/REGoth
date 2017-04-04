@@ -194,6 +194,9 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.getAnimHandler().setWorld(*vob.world);
     anim.getAnimHandler().loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
+    // Meshlib changed, re-get all animation
+    vob.playerController->getNpcAnimationHandler().initAnimations();
+
     // TODO: Move to other place (MDS)
 	// Load all default animations
 	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
