@@ -30,7 +30,7 @@ namespace Engine
         /**
          * updates the game time with the given real time
          */
-        void update(float deltaRealTimeSeconds);
+        void update(double deltaRealTimeSeconds);
 
         /**
          * Converts time to hours/minutes (24h format)
@@ -42,7 +42,7 @@ namespace Engine
         /**
          * @return time elapsed in days since last midnight (0:00)
          */
-        float getTimeOfDay() const;
+        double getTimeOfDay() const;
 
         /**
          * @return Day + time of day as string
@@ -51,11 +51,12 @@ namespace Engine
 
         /**
          * Set time to hours/minutes (24h format)
+         * hours + minutes / 60.0 may be greater than 24 or smaller than 0
+         * the day will be adjusted in this case
          * @param hours
          * @param minutes
-         * @param onlyForward indicates whether the day should be incremented as well if given clock time is in past
          */
-        void setTimeOfDay(int hours, int minutes, bool onlyForward=false);
+        void setTimeOfDay(int hours, int minutes);
 
         /**
          * sets the total time directly
@@ -80,9 +81,9 @@ namespace Engine
         float totalSpeedUp() const;
 
         /**
-         * @return time in days since "new game" started
+         * @return time in days since day 0 0:00
          */
-        float getTime();
+        double getTime();
 
         /**
          * @return time of day as string in hh:mm format
@@ -93,17 +94,17 @@ namespace Engine
          * helper function for conversion
          * @param hours
          * @param minutes
-         * @return converts timespan in hours/minutes to days (float)
+         * @return converts timeOfDay in hours/minutes to days (double)
          */
-        static float hmToDayTime(int hours, int minutes);
+        static double hmToDayTime(int hours, int minutes);
 
         /**
          * helper function for conversion
          * @param hours
          * @param minutes
-         * @return converts timeOfDay in days (float) to hours/minutes
+         * @return converts timeOfDay in days (double) to hours/minutes
          */
-        static void dayTimeTohm(float timeOfDay, int& hours, int& minutes);
+        static void dayTimeTohm(double timeOfDay, int& hours, int& minutes);
 
         static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
@@ -111,11 +112,8 @@ namespace Engine
         static constexpr float GAMETIME_REALTIME_RATIO = 14.5;
 
     private:
-        // Time elapsed in the game since last 00:00 in days (interval [0,1[)
-        float m_TimeOfDay;
-
-        // Number of full days elapsed in the game since "start new gothic game"
-        int m_Day;
+        // Time elapsed since Day 0 00:00 in days
+        double m_totalTimeInDays;
 
         // define an extra speedup for the ingame clock
         float m_ClockSpeedFactor;

@@ -2,6 +2,7 @@
 // Created by desktop on 11.08.16.
 //
 
+#include <algorithm>
 #include <imgui/imgui.h>
 #include <render/RenderSystem.h>
 #include <entry/input.h>
@@ -48,7 +49,7 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     imguiEndScrollArea();*/
 
-    m_Scaling += dt / GROW_SHRINK_TIME * m_growDirection;
+    m_Scaling += static_cast<float>(dt) / GROW_SHRINK_TIME * m_growDirection;
     m_Scaling = Math::clamp(m_Scaling, 0.0f, 1.0f);
 
     // Un-normalize transforms
@@ -58,7 +59,14 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     float pyMax = (absTranslation.y + 0.02f) * config.state.viewHeight;
 
     float sxMax = 0.5f * config.state.viewWidth;
-    float syMax = 13 * 6; // 6 lines of dialog
+    int wrapAroundWidth = Math::iround(0.95f * sxMax);
+    std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
+    auto fontHeight = fnt->getFontHeight();
+    int linesOfText = static_cast<int>(lines.size()) + 1; // +1 for speaker
+    // render the Box as if there were at least 4 lines of text
+    // so that the size won't change as often, but is still adjusted for very long texts (mods?)
+    linesOfText = std::max(linesOfText, 4);
+    float syMax = fontHeight * (linesOfText + 2); // +2 for some extra space
 
     Math::float2 maxSize = {sxMax, syMax};
     Math::float2 posMax = {pxMax, pyMax};
@@ -82,9 +90,7 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     {
         int centerx = Math::iround(center.x);
         int centery = Math::iround(center.y);
-        int wrapAroundWidth = Math::iround(0.95f * sxMax);
         // split so that each line is not longer than wrapAroundWidth pixel
-        std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
         const char * speakerFont = DEFAULT_FONT_HI;
         const char * dialogTextFont = DEFAULT_FONT;
         // TODO read alignment from config

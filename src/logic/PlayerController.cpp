@@ -356,17 +356,31 @@ void PlayerController::onDebugDraw()
         {
             // Print inventory
             const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
+            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
-            uint16_t idx=20;
+            uint16_t idx=27;
             bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
             for(Daedalus::GameState::ItemHandle i : items)
             {
                 Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
-                if(idata.count[0] > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , idata.name.c_str(), idata.count[0]);
+                std::string displayName;
+                {
+                    if (!idata.description.empty())
+                    {
+                        displayName = idata.description;
+                    } else if (!idata.name.empty())
+                    {
+                        displayName = idata.name;
+                    } else {
+                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
+                    }
+                }
+
+                if(idata.amount > 1)
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , displayName.c_str(), idata.amount);
                 else
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", idata.name.c_str());
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
 
             }
         }
@@ -2010,11 +2024,6 @@ void PlayerController::setupKeyBindings()
             else if (hud.isTopMenu<UI::Menu_Status>())
                 hud.popMenu();
         }
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
-        if(triggered && !m_World.getEngine()->getHud().isMenuActive())
-            m_World.getEngine()->getHud().getConsole().setOpen(true);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {

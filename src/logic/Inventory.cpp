@@ -117,7 +117,7 @@ unsigned int Inventory::getItemCount(Daedalus::GameState::ItemHandle item)
     Logic::ScriptEngine& vm = m_World.getScriptEngine();
 
     if(item.isValid())
-        return vm.getGameState().getItem(item).count[0];
+        return vm.getGameState().getItem(item).amount;
 
     return 0;
 }
@@ -133,7 +133,7 @@ void Inventory::exportInventory(json& j)
         std::string instanceName = vm.getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
 
         // Save instance and amount. Rest will be initialized by script on loading
-        j[instanceName] = data.count[0];
+        j[instanceName] = data.amount;
     }
 }
 
@@ -160,7 +160,7 @@ void Inventory::clear()
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
 
-        removeItem(item, (uint32_t)data.count[0]);
+        removeItem(item, data.amount);
     }
 
     assert(getItems().empty());

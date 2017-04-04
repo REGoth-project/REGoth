@@ -354,14 +354,6 @@ public:
             return "Toggled hud";
         });
 
-        console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
-            static bool s_Stats = false;
-            s_Stats = !s_Stats;
-
-            bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
-            return "Toggled stats";
-        });
-
         console.registerCommand("camera", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
@@ -374,13 +366,12 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-
         console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
 
         console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
-            // modifies the world time
+            // modifies the day
             if(args.size() < 3)
                 return "Missing argument. Usage: set day <day>";
 
@@ -447,16 +438,26 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
+        auto waypointNamesGen = [this]() -> std::vector<std::vector<std::string>> {
+            std::vector<std::vector<std::string>> groups;
+            auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
+            for (auto& waypoint : waypoints)
+            {
+                groups.push_back({waypoint.name});
+            }
+            return groups;
+        };
+
         console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
             if(args.size() != 3)
                 return "Invalid argument. Usage: goto waypoint [waypoint]";
 
-            const std::string &waypointArgument = args[2];
+            const std::string& waypointArgument = args[2];
             const World::Waynet::WaynetInstance& waynet = m_pEngine->getMainWorld().get().getWaynet();
             Logic::ScriptEngine &scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
             const auto waypointIndex = World::Waynet::getWaypointIndex(waynet, waypointArgument);
             if(waypointIndex == World::Waynet::INVALID_WAYPOINT)
-                return "Error: Waypoint" + waypointArgument + "not found";
+                return "Error: Waypoint " + waypointArgument + " not found";
 
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
             if(!player.isValid())
@@ -464,7 +465,7 @@ public:
             player.playerController->teleportToWaypoint(waypointIndex);
 
             return "Player moved to waypoint " + waypointArgument;
-        });
+        }).registerAutoComplete(waypointNamesGen);
 
         console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
             auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -600,46 +601,31 @@ public:
             return "World saved to slot: " + std::to_string(idx);
         });
 
-        console.registerCommand("knockout", [this](const std::vector<std::string>& args) -> std::string {
-
-            VobTypes::NpcVobInformation npc;
-            auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
+        UI::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {
             auto& worldInstance = m_pEngine->getMainWorld().get();
-
-            if(args.size() == 1)
-                npc = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
-            else
+            auto& scriptEngine = worldInstance.getScriptEngine();
+            auto& datFile = scriptEngine.getVM().getDATFile();
+            std::vector<std::vector<std::string>> aliasGroups;
+            for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
-                std::stringstream joinedArgs;
-                for (auto it = args.begin() + 1; it != args.end(); ++it)
-                {
-                    joinedArgs << *it;
-                }
+                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
+                if (!npcVobInfo.isValid())
+                    continue;
 
-                std::string requested = joinedArgs.str();
-                auto matches = scriptEngine.findWorldNPCsNameLike(requested);
-                for (auto& candidate : matches)
-                {
-                    npc = VobTypes::asNpcVob(worldInstance, candidate);
-                    break;
-                }
+                Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                const std::string& npcDisplayName = npcScriptObject.name[0];
+                const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.instanceSymbol).name;
 
-                if(!npc.isValid())
-                    return "Could not find NPC " + requested;
+                std::vector<std::string> group;
+                for (auto npcName : {npcDatFileName, npcDisplayName})
+                {
+                    std::replace(npcName.begin(), npcName.end(), ' ', '_');
+                    group.push_back(std::move(npcName));
+                }
+                aliasGroups.push_back(std::move(group));
             }
-
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-
-            Logic::EventMessages::StateMessage sm;
-            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
-            sm.functionSymbol = Logic::NPC_PRGAISTATE_UNCONSCIOUS;
-            sm.isPrgState = true;
-            sm.other = VobTypes::getScriptHandle(player);
-
-            npc.playerController->getEM().onMessage(sm);
-
-            return npc.playerController->getScriptInstance().name[0] + " is now in UNCONSCIOUS state";
-        });
+            return aliasGroups;
+        };
 
         console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -647,183 +633,296 @@ public:
             if(args.size() != 2)
                 return "Missing argument. Usage: givexp <experience points>";
 
-            if (!s1.getVM().getDATFile().hasSymbolName("B_GiveXP"))
-                return "B_GiveXP is undefined!";
+            std::string scriptName;
+            // B_GiveXP is called B_GivePlayerXP in Gothic II
+            for (auto scriptFunctionName : {"B_GiveXP", "B_GivePlayerXP"})
+            {
+                if (s1.getVM().getDATFile().hasSymbolName(scriptFunctionName))
+                {
+                    scriptName = scriptFunctionName;
+                    break;
+                }
+            }
+            if (scriptName.empty())
+                return "error: could not find script functions";
 
             int exp = std::stoi(args[1]);
             s1.prepareRunFunction();
             s1.pushInt(exp);
-            s1.runFunction("B_GiveXP");
+            s1.runFunction(scriptName);
 
             return "Experience points successfully given";
         });
 
-        std::function<std::string(std::string)> tpToNameLike = [this](std::string requested) -> std::string {
+        auto tpCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument(s). Usage: tp [<npc:default=PC_HERO>] <targetnpc>";
+
+            std::string teleporterName = "PC_HERO";
+            std::string targetName;
+            if (args.size() >= 3)
+            {
+                teleporterName = args[1];
+                targetName = args[2];
+            } else {
+                targetName = args[1];
+            }
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            auto matches = scriptEngine.findWorldNPCsNameLike(requested);
-            for (auto& npc : matches)
-            {
-                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
-                Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-                std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-                std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+            auto aliasGroups = worlddNpcNamesGen();
 
-                Math::float3 npcPosition = npcVobInfo.position->m_WorldMatrix.Translation();
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
-                Math::float3 npcDirection = npcVobInfo.playerController->getDirection();
-                // player keeps a respectful distance of 1 to the NPC
-                float respectfulDistance = 1;
-                Math::float3 newPos = npcPosition + respectfulDistance * npcDirection;
-                player.playerController->teleportToPosition(newPos);
-                // player looks towards NPC
-                player.playerController->setDirection((-1) * npcDirection);
-                return "Teleported to " + npcDisplayName + " (" + npcDatFileName + ")";
+            std::vector<VobTypes::NpcVobInformation> vobInfos;
+            std::vector<std::string> fullNames;
+            for (auto& requestedName : {teleporterName, targetName})
+            {
+                auto group = Utils::findNameInGroups(aliasGroups, requestedName);
+                bool success = false;
+                if (group.size() >= 2)
+                {
+                    std::string npcDatFileName = group[0];
+                    std::string npcDisplayName = group[1];
+                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
+                    if (npcScriptHandle.isValid())
+                    {
+                        success = true;
+                        VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                        vobInfos.push_back(npcVobInfo);
+                        fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
+                    }
+                }
+                if (!success)
+                    return "Could not find NPC " + requestedName;
             }
-            return "Could not find NPC " + requested;
+
+            VobTypes::NpcVobInformation& teleporter = vobInfos.at(0);
+            VobTypes::NpcVobInformation& target = vobInfos.at(1);
+            Math::float3 targetPosition = target.position->m_WorldMatrix.Translation();
+            Math::float3 targetDirection = target.playerController->getDirection();
+            // keep a respectful distance of 1 to the NPC
+            float respectfulDistance = 1;
+            Math::float3 newPos = targetPosition + respectfulDistance * targetDirection;
+            teleporter.playerController->teleportToPosition(newPos);
+            // look towards NPC
+            teleporter.playerController->setDirection((-1) * targetDirection);
+            return "Teleported " + fullNames[0] + " to " + fullNames[1];
+
         };
 
-        console.registerCommand("tp", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
-            if (args.size() < 2)
-                return "Missing argument(s). Usage: tp <name>";
+        console.registerCommand("tp", tpCallback)
+                .registerAutoComplete(worlddNpcNamesGen)
+                .registerAutoComplete(worlddNpcNamesGen);
 
-            std::stringstream joinedArgs;
-            for (auto it = args.begin() + 1; it != args.end(); ++it)
-            {
-                joinedArgs << *it;
-            }
-            return tpToNameLike(joinedArgs.str());
-        });
+        auto killOrKnockoutCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
 
-        console.registerCommand("goto npc", [this, tpToNameLike](const std::vector<std::string>& args) -> std::string {
-            if(args.size() < 3)
-                return "Missing argument(s). Usage: goto npc <name>";
-
-            std::stringstream joinedArgs;
-            for (auto it = args.begin() + 2; it != args.end(); ++it)
-            {
-                joinedArgs << *it;
-            }
-            return tpToNameLike(joinedArgs.str());
-        });
-
-        console.registerCommand("kill", [this](const std::vector<std::string>& args) -> std::string {
-
-            VobTypes::NpcVobInformation npc;
+            auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
             auto& worldInstance = m_pEngine->getMainWorld().get();
-            auto& s = worldInstance.getScriptEngine();
 
-            if(args.size() == 1)
+            VobTypes::NpcVobInformation npcVobInfo;
+
+            if (args.size() == 1)
             {
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, s.getPlayerEntity());
-                std::set<Handle::EntityHandle> nearNPCs = s.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 3.0f);
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
+                std::set<Handle::EntityHandle> nearNPCs = scriptEngine.getNPCsInRadius(player.position->m_WorldMatrix.Translation(), 3.0f);
+                // don't kill the play
+                nearNPCs.erase(scriptEngine.getPlayerEntity());
 
                 if(nearNPCs.empty())
-                    return "No NPCs in range!";
-
-                // Chose one at random, skip the player
-                for(Handle::EntityHandle e : nearNPCs)
                 {
-                    if(e != s.getPlayerEntity())
-                    {
-                        npc = VobTypes::asNpcVob(worldInstance, e);
-                        break;
-                    }
+                    return "No NPCs in range!";
+                } else {
+                    // Chose one at random
+                    npcVobInfo = VobTypes::asNpcVob(worldInstance, *nearNPCs.begin());
                 }
             }
             else
             {
-                std::stringstream joinedArgs;
-                for (auto it = args.begin() + 1; it != args.end(); ++it)
-                {
-                    joinedArgs << *it;
-                }
+                const std::string& requested = args.at(1);
+                auto aliasGroups = worlddNpcNamesGen();
+                auto group = Utils::findNameInGroups(aliasGroups, requested);
 
-                std::string requested = joinedArgs.str();
-                auto matches = s.findWorldNPCsNameLike(requested);
-                for (auto& candidate : matches)
-                {
-                    npc = VobTypes::asNpcVob(worldInstance, candidate);
-                    break;
+                if (group.size() >= 2) {
+                    std::string npcDatFileName = group[0];
+                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(npcDatFileName);
+                    if (npcScriptHandle.isValid()) {
+                        npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                    }
+                } else {
+                    return "NPC not found in this world: " + requested;
                 }
             }
 
-            if(!npc.isValid())
+            if(!npcVobInfo.isValid())
                 return "Invalid NPC";
 
-            Logic::EventMessages::StateMessage sm;
-            sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
-            sm.functionSymbol = Logic::NPC_PRGAISTATE_DEAD;
-            sm.isPrgState = true;
+            std::string stateName;
+            if (Utils::stringEqualIngoreCase(args.at(0), "knockout"))
+            {
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(worldInstance, scriptEngine.getPlayerEntity());
 
-            npc.playerController->die(s.getPlayerEntity());
+                Logic::EventMessages::StateMessage sm;
+                sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+                sm.functionSymbol = Logic::NPC_PRGAISTATE_UNCONSCIOUS;
+                sm.isPrgState = true;
+                sm.other = VobTypes::getScriptHandle(player);
 
-            return npc.playerController->getScriptInstance().name[0] + " is now in DEAD state";
-        });
+                npcVobInfo.playerController->getEM().onMessage(sm);
+                stateName = "UNCONSCIOUS";
+
+            } else if (Utils::stringEqualIngoreCase(args.at(0), "kill"))
+            {
+                Logic::EventMessages::StateMessage sm;
+                sm.subType = Logic::EventMessages::StateMessage::EV_StartState;
+                sm.functionSymbol = Logic::NPC_PRGAISTATE_DEAD;
+                sm.isPrgState = true;
+                npcVobInfo.playerController->die(scriptEngine.getPlayerEntity());
+                stateName = "DEAD";
+            } else{
+                return "internal error";
+            }
+            Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+            const std::string& npcDisplayName = npcScriptObject.name[0];
+            const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+            std::string npnNameFull = npcDisplayName + " (" + npcDatFileName + ")";
+
+            return npnNameFull + " is now in " + stateName + " state";
+        };
+
+        console.registerCommand("knockout", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);
+        console.registerCommand("kill", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);
 
         console.registerCommand("interrupt", [this](const std::vector<std::string>& args) -> std::string {
-
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
-
+            auto& world = m_pEngine->getMainWorld().get();
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
             player.playerController->interrupt();
-
             return "Interrupted player, cleared EM";
         });
 
         console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
-
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
-
             if(args.size() < 2)
                 return "Missing argument. Usage: hurtself <damage>";
 
             int dmg = std::stoi(args[1]);
+
+            auto& world = m_pEngine->getMainWorld().get();
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
             player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, -dmg);
 
             return "Hurt player by " + std::to_string(dmg) + " HP";
         });
 
-		console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("usemana", [this](const std::vector<std::string>& args) -> std::string {
 
-			VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-				m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                    m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
 
-			if(args.size() < 2)
-				return "Missing argument. Usage: usemana <mana>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: usemana <mana>";
 
-			int dmg = std::stoi(args[1]);
-			player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
+            int dmg = std::stoi(args[1]);
+            player.playerController->changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_MANA, -dmg);
 
-			return "Used " + std::to_string(dmg) + " mana";
-		});
+            return "Used " + std::to_string(dmg) + " mana";
+        });
 
-		console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
-            		setQuit(true);
-            		return std::string("Exiting ...");
-		});
+        UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
+            auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& datFile = se.getVM().getDATFile();
+            std::vector<std::vector<std::string>> aliasGroups;
+            {
+                Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
+                Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
+                datFile.iterateSymbolsOfClass("C_ITEM", [&](size_t i, Daedalus::PARSymbol& parSymbol){
+                    // reset to default values. especially name and description
+                    cItem = Daedalus::GEngineClasses::C_Item();
+                    // Run the script-constructor
+                    se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
 
-	console.registerCommand("giveitem", [this](const std::vector<std::string>& args) -> std::string {
-	    if (args.size() < 2)
-		return "Missing argument. Usage: giveitem <symbol> [<amount>]";
+                    std::vector<std::string> aliasGroup;
+                    for (auto name : {parSymbol.name, cItem.description, cItem.name})
+                    {
+                        std::replace(name.begin(), name.end(), ' ', '_');
+                        aliasGroup.push_back(name);
+                    }
+                    if (aliasGroup[1] == aliasGroup[2])
+                    {
+                        // most of the items have description equal to name, so remove one of them
+                        aliasGroup.pop_back();
+                    }
+                    aliasGroups.push_back(aliasGroup);
+                });
+                se.getVM().getGameState().removeItem(dummyHandle);
+            }
+            return aliasGroups;
+        };
 
-	    std::string itemName = args[1];
-	    int amount = args.size() > 2 ? std::stoi(args[2]) : 1;
+        console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
+            setQuit(true);
+            return std::string("Exiting ...");
+        });
 
-	    auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+        auto giveOrRemoveItemCallback = [this, itemNamesGen](const std::vector<std::string>& args, bool give) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument. Usage: giveitem/removeitem <symbol> [<amount>]";
 
-	    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
+            std::string itemName = args[1];
+            int amount = 1;
+            if (args.size() > 2)
+                amount = std::stoi(args[2]);
 
-	    if (se.hasSymbol(itemName)) {
-		player.playerController->getInventory().addItem(itemName, amount);
-		return "Item(s) added to the inventory";
-	    } 
+            if (amount < 1)
+                return "invalid ammount " + std::to_string(amount);
 
-	    return "Item not found!";
-	});
+            auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
+
+            std::size_t index = 0;
+            auto aliasGroups = itemNamesGen();
+            auto group = Utils::findNameInGroups(aliasGroups, itemName);
+            if (group.size() >= 1)
+            {
+                auto& parScriptName = group[0];
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
+                std::string description;
+                if (give)
+                {
+                    auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
+                    Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                    description = cItem.description;
+                } else {
+                    auto handle = player.playerController->getInventory().getItem(parScriptName);
+                    if (handle.isValid())
+                    {
+                        Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                        description =  cItem.description;
+                        amount = std::min(static_cast<uint32_t>(amount), cItem.amount);
+                        player.playerController->getInventory().removeItem(parScriptName, amount);
+                    } else {
+                        return "error: could not remove item. item " + parScriptName + " is not in inventory";
+                    }
+                }
+                std::string action = give ? "added to" : "removed from";
+                return std::string("Item(s) " + action + " the inventory: ")
+                       + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
+
+            }
+            return "Item not found!";
+        };
+
+        auto giveitemCallback = [giveOrRemoveItemCallback](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument. Usage: giveitem <item> [<amount>]";
+            return giveOrRemoveItemCallback(args, true);
+        };
+
+        auto removeitemCallback = [giveOrRemoveItemCallback](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument. Usage: removeitem <item> [<amount>]";
+            return giveOrRemoveItemCallback(args, false);
+        };
+
+        console.registerCommand("giveitem", giveitemCallback).registerAutoComplete(itemNamesGen);
+        console.registerCommand("removeitem", removeitemCallback).registerAutoComplete(itemNamesGen);
 
         imguiCreate(nullptr, 0, fontSize);
         m_ImgUiCreated = true;
@@ -879,7 +978,7 @@ public:
             {
                 m_stopWatch.start();
 
-                if(m_pEngine->getHud().getConsole().isOpen())
+                if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
                     m_pEngine->getHud().getConsole().onKeyDown(i);
                 else if (keyMap.find(i) != keyMap.end())
                 {
@@ -892,7 +991,7 @@ public:
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        if(m_pEngine->getHud().getConsole().isOpen())
+                        if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
                             m_pEngine->getHud().getConsole().onKeyDown(i);
                         else if (keyMap.find(i) != keyMap.end())
                         {
@@ -947,8 +1046,12 @@ public:
 
         if(!m_NoHUD)
         {
-            bgfx::dbgTextPrintf(0, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-            bgfx::dbgTextPrintf(0, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+            uint16_t xOffset = 0;
+
+            if (m_pEngine->getHud().getConsole().isOpen())
+                xOffset = 100;
+            bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+            bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
         }
 
         // This dummy draw call is here to make sure that view 0 is cleared

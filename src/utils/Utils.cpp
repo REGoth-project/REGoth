@@ -412,17 +412,91 @@ std::string Utils::stripJsonComments(const std::string& json, const std::string&
     return r;
 }
 
-std::string Utils::strippedAndLowered(const std::string &in)
+void Utils::lower(std::string& in)
+{
+    std::transform(in.begin(), in.end(), in.begin(), ::tolower);
+}
+
+std::string Utils::lowered(const std::string& in)
+{
+    auto copy = in;
+    Utils::lower(copy);
+    return copy;
+}
+
+std::size_t Utils::commonStartLength(const std::string& a, const std::string& b)
+{
+    auto minSize = std::min(a.size(), b.size());
+    std::size_t common = 0;
+    for (std::size_t i = 0; i < minSize; i++)
+    {
+        if (a[i] == b[i])
+        {
+            common++;
+        } else
+        {
+            break;
+        }
+    }
+    return common;
+}
+
+std::string Utils::strippedAndLowered(const std::string& in)
 {
     std::function<bool(char)> isNotAlNum = [](char c){ return std::isalnum(c) == 0;};
     std::string out = in;
-    std::transform(out.begin(), out.end(), out.begin(), ::tolower);
+    lower(out);
     out.erase(std::remove_if(out.begin(), out.end(), isNotAlNum), out.end());
     return out;
 }
 
-bool Utils::containsLike(const std::string &searchSpace, const std::string &part) {
+bool Utils::containsLike(const std::string& searchSpace, const std::string& part) {
     auto pos = strippedAndLowered(searchSpace).find(strippedAndLowered(part));
     return pos != std::string::npos;
 }
 
+
+std::vector<std::string> Utils::findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name){
+    for (auto& aliasGroup : groups)
+    {
+        for (auto& alias : aliasGroup) {
+            if (Utils::stringEqualIngoreCase(alias, name))
+            {
+                return aliasGroup;
+            }
+        }
+    }
+    return {};
+}
+
+bool Utils::stringEqualIngoreCase(const std::string a, const std::string b) {
+    if (a.size() != b.size())
+        return false;
+    for (std::size_t i = 0; i < a.size(); i++)
+    {
+        if (::tolower(a[i]) != ::tolower(b[i]))
+            return false;
+    }
+    return true;
+}
+
+std::vector<std::string> Utils::splitAndRemoveEmpty(const std::string &s, const char delim) {
+    std::vector<std::string> tokens = Utils::split(s, delim);
+    tokens.erase(std::remove(tokens.begin(), tokens.end(), ""), tokens.end());
+    return tokens;
+}
+
+Utils::Profiler::Profiler(const std::string& n) :
+    name(n),
+    start(std::chrono::high_resolution_clock::now())
+{}
+
+Utils::Profiler::~Profiler()
+{
+    using dura = std::chrono::duration<double>;
+    auto end = std::chrono::high_resolution_clock::now();
+    auto d = end - start;
+    LogInfo() << name << ": "
+        << std::chrono::duration_cast<dura>(d).count() * 1000
+        << " milliseconds";
+}

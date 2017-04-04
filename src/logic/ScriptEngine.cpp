@@ -338,9 +338,8 @@ std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 
     return outSet;
 }
 
-std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string namePart)
+Handle::EntityHandle ScriptEngine::findWorldNPC(const std::string& name)
 {
-    std::set<Handle::EntityHandle> outSet;
     auto& datFile = getVM().getDATFile();
 
     for(const Handle::EntityHandle& npc : getWorldNPCs())
@@ -349,19 +348,20 @@ std::set<Handle::EntityHandle> ScriptEngine::findWorldNPCsNameLike(std::string n
         if (!npcVobInfo.isValid())
             continue;
 
-        Daedalus::GEngineClasses::C_Npc& npcScripObject = VobTypes::getScriptObject(npcVobInfo);
-        std::string npcDisplayName = npcVobInfo.playerController->getScriptInstance().name[0];
-        std::string npcDatFileName = datFile.getSymbolByIndex(npcScripObject.instanceSymbol).name;
+        Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+        std::string npcDisplayName = npcScriptObject.name[0];
+        std::string npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.instanceSymbol).name;
 
-        for (const auto& npcName : {npcDisplayName, npcDatFileName})
+        for (auto npcName : {npcDisplayName, npcDatFileName})
         {
-            if (Utils::containsLike(npcName, namePart))
+            std::replace(npcName.begin(), npcName.end(), ' ', '_');
+            if (Utils::stringEqualIngoreCase(name, npcName))
             {
-                outSet.insert(npc);
+                return npc;
             }
         }
     }
-    return outSet;
+    return Handle::EntityHandle();
 }
 
 void ScriptEngine::onLogEntryAdded(const std::string& topic, const std::string& entry)

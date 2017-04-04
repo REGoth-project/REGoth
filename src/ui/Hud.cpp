@@ -15,7 +15,9 @@
 #include <utils/logger.h>
 #include "DialogBox.h"
 
-UI::Hud::Hud(Engine::BaseEngine& e) : View(e)
+UI::Hud::Hud(Engine::BaseEngine& e) :
+        View(e),
+        m_Console(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
 
@@ -169,12 +171,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     // Close console or last menu, in case it's open
     if(action == IA_Close)
     {
-        if(m_Console.isOpen())
-        {
-            m_Console.setOpen(false);
-            return;
-        }
-        else if(!m_MenuChain.empty())
+        if(!m_MenuChain.empty())
         {
             popMenu();
             return;

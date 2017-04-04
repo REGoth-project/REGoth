@@ -129,12 +129,12 @@ namespace Logic
         const std::set<Handle::EntityHandle>& getWorldNPCs(){ return m_WorldNPCs; }
 
         /**
-         * Searches the current world for NPCs whose display-name or DATFile-name contain the given string.
-         * Comparison is case insensitive and strips off all non-alphanumeric characters first
+         * Searches the current world for NPCs with the given display-name or DATFile-name
+         * Comparison is case insensitive
          * @param namePart full or partial name to be looked for
          * @return List of all NPCs whose names are similar to namePart
          */
-        std::set<Handle::EntityHandle> findWorldNPCsNameLike(std::string namePart);
+        Handle::EntityHandle findWorldNPC(const std::string& name);
 
         /**
          * Looks up the handle currently stored inside the given symbol. If it doesn't hold the right type or nothing

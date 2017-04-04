@@ -8,6 +8,8 @@
 
 #include <content/VertexTypes.h>
 
+constexpr unsigned int DISTANCE_BETWEEN_GLYPHS = 1;
+
 namespace FontUtil
 {
     void appendGlyph(std::vector<Meshes::PositionUVVertex2D>& vxStream,
@@ -120,7 +122,7 @@ void UI::zFont::appendGlyph(UI::zFont::GlyphStream& glyphStream, unsigned char c
                               g.uvBottomRight);
 
         // Shift xpos for the next character
-        glyphStream.xPos += g.width;
+        glyphStream.xPos += g.width + DISTANCE_BETWEEN_GLYPHS;
     }
 }
 
@@ -163,7 +165,7 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
             Glyph g;
             getGlyphOf((unsigned char)txt[i], g);
 
-            xPos += g.width;
+            xPos += g.width + DISTANCE_BETWEEN_GLYPHS;
         }
 
         xMax = std::max(xPos, xMax);
@@ -191,7 +193,7 @@ std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxW
             lastSpace = i;
         }
 
-        w += g.width;
+        w += g.width + DISTANCE_BETWEEN_GLYPHS;
         if(w > maxWidth && spaceFound)
         {
             spaceFound = false;

@@ -8,17 +8,36 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <ui/ConsoleBox.h>
 
 namespace UI
 {
+    struct ConsoleCommand
+    {
+        // Takes list of arguments as parameter, returns command result
+        typedef std::function<std::string(const std::vector<std::string>&)> Callback;
+        // generator, which returns vector of candidates
+        using CandidateListGenerator = std::function<std::vector<std::vector<std::string>>()>;
+
+        std::string commandName;
+        std::vector<CandidateListGenerator> generators;
+        Callback callback;
+        // number of tokens, that must match to identify this command
+        std::size_t numFixTokens;
+
+        ConsoleCommand& registerAutoComplete(CandidateListGenerator generator){
+            generators.push_back(generator);
+            return *this;
+        }
+    };
+
     class Console
     {
     public:
 
-        // Takes list of arguments as parameter, returns command result
-        typedef std::function<std::string(const std::vector<std::string>&)> CommandCallback;
+        Console(Engine::BaseEngine& e);
 
-        Console();
+        ~Console();
 
         /**
          * Updates and draws the console
@@ -43,16 +62,22 @@ namespace UI
          * @param Callback Function to be executed if the given command was typed.
          *
          */
-        void registerCommand(const std::string& command, CommandCallback callback);
+        ConsoleCommand& registerCommand(const std::string& command, ConsoleCommand::Callback callback);
 
         /**
-         * Adds an autocomplete-function for an already registered command. Will get all arguments passed.
-         * The last one is most likely incomplete.
-         * @param command Command to add the autocomplete for
-         * @param callback Callback triggered on autocomplete
+         * Trigger autocompletion
+         * @param command to work on
+         * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
+         * @param showSuggestions show suggestions
+         * @param overwriteTypedLine replace the console line with the suggested one
          */
-        void registerAutocompleteFn(const std::string& command, CommandCallback callback);
+        using Suggestion = std::vector<std::string>;
+        std::vector<std::vector<Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
 
+        /**
+         * searches for command which, could generate the given tokens and returns its index
+         */
+        int determineCommand(const std::vector<std::string>& tokens);
 
         /**
          * Executes a given command
@@ -60,7 +85,7 @@ namespace UI
          * @return Output of the command.
          *         - "NOTFOUND", if the command was not found
          */
-        std::string submitCommand(const std::string& command);
+        std::string submitCommand(std::string command);
 
         /**
          * Adds a message to the history
@@ -74,20 +99,11 @@ namespace UI
         bool isOpen(){ return m_IsOpen; }
         void setOpen(bool open){ m_IsOpen = open; }
 
+        const std::list<std::string>& getOutputLines() { return m_Output; }
+        const std::string& getTypedLine() { return m_TypedLine; }
+        const std::vector<std::vector<Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+
     private:
-
-        /**
-         * Draws history over the commandline
-         */
-        void printOutput();
-
-        struct
-        {
-            /**
-             * Lines of history + current line
-             */
-            int height;
-        }m_Config;
 
         /**
          * Last submitted commands
@@ -112,17 +128,12 @@ namespace UI
         /**
          * All registered commands
          */
-        std::vector<std::string> m_Commands;
+        std::vector<ConsoleCommand> m_Commands;
 
         /**
-         * All registered callbacks
+         * suggestions for each token
          */
-        std::vector<CommandCallback> m_CommandCallbacks;
-
-        /**
-         * Callbacks for when the user wants to autocomplete an argument
-         */
-        std::map<std::string, CommandCallback> m_AutocompleteCallbacks;
+        std::vector<std::vector<Suggestion>> m_SuggestionsList;
 
         /**
          * Currently typed line
@@ -133,6 +144,14 @@ namespace UI
          * Whether the console is currently shown
          */
         bool m_IsOpen;
+
+        Engine::BaseEngine& m_BaseEngine;
+
+        /**
+         * console window
+         */
+        UI::ConsoleBox m_ConsoleBox;
+
     };
 }
 

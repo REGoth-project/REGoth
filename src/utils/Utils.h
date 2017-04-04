@@ -12,6 +12,8 @@
 #include <vector>
 #include <stdlib.h>
 #include <memory>
+#include <chrono>
+#include <sstream>
 
 namespace Utils
 {
@@ -443,6 +445,24 @@ namespace Utils
     };
 
     /**
+     * lower all characters inplace
+     */
+    void lower(std::string& in);
+
+    /**
+     *  @return lowered copy of the string
+     */
+    std::string lowered(const std::string& in);
+
+    /**
+     * number of equal characters at begin
+     * @param a
+     * @param b
+     * @return number of equal characters at begin
+     */
+    std::size_t commonStartLength(const std::string& a, const std::string& b);
+
+    /**
      * removes all non alphanumeric characters and lowers the case
      * @param in old string
      * @return new string
@@ -457,4 +477,56 @@ namespace Utils
      */
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
+    /**
+     * searches for the first group (vector<string>) wich contains name and returns the group
+     * returns empty vector if not found any
+     * @param groups groups to search in
+     * @param name token to find
+     */
+    std::vector<std::string> findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name);
+
+    /**
+     * performs case insensitive euqal check
+     * @return true if strings are equal ignoring case
+     */
+    bool stringEqualIngoreCase(const std::string a, const std::string b);
+
+    /**
+     * concatenates tokens using delim inbetweeen
+     * @tparam Iterator
+     * @param begin
+     * @param end
+     * @param delim
+     * @return concatenated string
+     */
+    template<class Iterator>
+    std::string join(Iterator begin, Iterator end, const std::string& delim){
+        std::stringstream ss;
+        for (auto it = begin; it != end; it++)
+        {
+            if (it != begin)
+                ss << delim;
+            ss << *it;
+        }
+        return ss.str();
+    }
+
+    /**
+     * splits s on the given delimiter and removes empty entries caused by multiple delimiters
+     * @param s
+     * @param delim
+     * @return vector of tokens
+     */
+    std::vector<std::string> splitAndRemoveEmpty(const std::string &s, const char delim);
+
+    /**
+     * small class for easy to use time measurement
+     */
+    struct Profiler
+    {
+        std::string name;
+        std::chrono::high_resolution_clock::time_point start;
+        Profiler(const std::string& n);
+        ~Profiler();
+    };
 }
