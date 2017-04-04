@@ -92,8 +92,14 @@ namespace Components
 		/**
 		 * @return Velocity of the root node in m/s
 		 */
-		Math::float3 getRootNodeVelocityAvg();
+		Math::float3 getRootNodeVelocityTotal();
 		Math::float3 getRootNodeVelocity(){ return m_AnimRootVelocity; };
+		const Math::Matrix& getRootNodeRotationVelocity(){ return m_AnimRootRotationVelocity; }
+
+		/**
+		 * @return Animation-velocity averaged over a few frames
+		 */
+		Math::float3 getRootNodeVelocityAvg();
 
 		/**
 		 * Returns the position of the node at the given frame
@@ -110,6 +116,12 @@ namespace Components
 		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
 		 */
         Animations::Animation* getActiveAnimationPtr();
+		Handle::AnimationHandle getAcitveAnimation(){ return m_ActiveAnimation; }
+
+		/**
+		 * @return Value in range 0..1 telling how far we are with playing the active animation
+		 */
+		float getActiveAnimationProgress();
 
 		/**
 		 * @return Number of nodes in this skeleton
@@ -133,6 +145,22 @@ namespace Components
 		const ZenLoad::zCModelMeshLib& getMeshLib()
 		{
 			return m_MeshLib;
+		}
+
+		/**
+		 * @return Name of the currently loaded mesh-lib
+		 */
+		const std::string& getMeshLibName()
+		{
+			return m_MeshLibName;
+		}
+
+		/**
+		 * @return Currently active overlay
+		 */
+		const std::string& getOverlay()
+		{
+			return m_ActiveOverlay;
 		}
 
 		/**
@@ -209,8 +237,17 @@ namespace Components
 		 * @brief Root-Node-Veclocity in m/s
 		 */
 		Math::float3 m_AnimRootVelocity;
+		Math::Matrix m_AnimRootRotationVelocity;
 		size_t m_AnimRootNodeVelocityUpdatedHash; // AnimHash when this was last updated
 		Math::float3 m_AnimRootPosition;
+		Math::Matrix m_AnimRootRotation;
+
+		/**
+		 * Smoothes the model-velocity over a few frames
+		 */
+		enum{ NUM_VELOCITY_AVERAGE_STEPS = 8 };
+		Math::float3 m_AnimVelocityRingBuff[NUM_VELOCITY_AVERAGE_STEPS];
+		unsigned m_AnimVelocityRingCurrent = 0;
 
 		/**
 		 * @brief Value useful to check if there was an actual change. This value is modified every time

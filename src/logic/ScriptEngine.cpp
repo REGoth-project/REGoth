@@ -17,6 +17,9 @@ using namespace Logic;
 // Set to 1 to generate valid timing data for script-calls
 #define PROFILE_SCRIPT_CALLS 0
 
+//const char* PLAYER_INSTANCE = "Orcwarrior_Roam";
+const char* PLAYER_INSTANCE = "PC_HERO";
+
 ScriptEngine::ScriptEngine(World::WorldInstance& world)
     : m_World(world)
 {
@@ -189,14 +192,14 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
             LogInfo() << "Done!";
         }
     }else {
-        VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
-                                "WP_INTRO_FALL3");
+        //VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
+        //                        "WP_INTRO_FALL3");
     }
 
     LogInfo() << "Creating player";
 
     // Create player, if not already present
-    Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
+    Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol(PLAYER_INSTANCE);
     if(firstStart || !hplayer.isValid())
     {
         std::vector<size_t> startpoints = m_World.findStartPoints();
@@ -205,9 +208,9 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
         {
             std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
 
-            LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
+            LogInfo() << "Inserting player of class '" << PLAYER_INSTANCE << "' at startpoint '" << startpoint << "'";
 
-            m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO",
+            m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, PLAYER_INSTANCE,
                                                      startpoint); // FIXME: Read startpoint at levelchange
 
 
@@ -244,10 +247,10 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
             pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
 
         // If this is the hero, link it
-        if(vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
+        if(vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName(PLAYER_INSTANCE))
         {
             // Player should already be in the world and script-instances should be initialized.
-            Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
+            Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol(PLAYER_INSTANCE);
 
             VobTypes::NpcVobInformation player = VobTypes::getVobFromScriptHandle(m_World, hplayer);
 

@@ -19,6 +19,11 @@ AnimHandler::AnimHandler()
     m_AnimationStateHash = 0;
     m_pWorld = nullptr;
     m_AnimationFrame = 0.0f;
+
+    for(unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
+    {
+        m_AnimVelocityRingBuff[i] = Math::float3(0,0,0);
+    }
 }
 
 /**
@@ -119,7 +124,7 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
         return;
 
     // Reset velocity
-    m_AnimRootVelocity = Math::float3(0, 0, 0);
+    //m_AnimRootVelocity = Math::float3(0, 0, 0);
 
     // find and apply given animation name
     m_ActiveAnimation = anim;
@@ -127,6 +132,8 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
     Animations::Animation *animPtr = getActiveAnimationPtr();
     if(!animPtr || !animPtr->m_Data.isValid())
         return;
+
+    LogInfo() << "Playing ani: " << animPtr->m_Name;
 
     // If reversed, we need to start at the last frame
     m_AnimationFrame = 0;//static_cast<float>(animPtr->m_FirstFrame);
@@ -176,8 +183,8 @@ void AnimHandler::updateAnimations(double deltaTime)
 
         if(next.isValid())
         {
-            if(anim->m_NextName != "S_RUN" && anim->m_NextName  != "S_RUNL")
-                LogInfo() << "Setting next Ani: " << anim->m_NextName;
+            //if(anim->m_NextName != "S_RUN" && anim->m_NextName  != "S_RUNL")
+            //    LogInfo() << "Setting next Ani: " << anim->m_NextName;
 
             playAnimation(next);
             return;
@@ -237,14 +244,35 @@ void AnimHandler::updateAnimations(double deltaTime)
                                                          Math::float3(sampleNext.position.v),
                                                          frameFract);
 
-        if(nodeIdx == 0 && (reversed ? frameNext < frameNum : frameNext > frameNum) ) // Last frame resets the animation back, we don't want any hickups here
-            m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
-
-
         // Build transformation matrix from the sample-information
         // Note: Precomputing this is hard because of interpolation
-        Math::Matrix trans = Math::Matrix::CreateFromQuaternion(interpRotation);
+        Math::Matrix rotation = Math::Matrix::CreateFromQuaternion(interpRotation);
+        Math::Matrix trans = rotation;
         trans.Translation(interpPosition);
+
+        // Update velocities
+        if(nodeIdx == 0 && (reversed ? frameNext < frameNum : frameNext > frameNum) ) // Last frame resets the animation back, we don't want any hickups here
+        {
+            if(!reversed && frameNum == 0) // FIXME: This won't work for reversed animations
+            {
+                m_AnimRootPosition = Math::float3(sample.position.v);
+                m_AnimRootRotation = rotation;
+            }else
+            {
+                // Only set the velocity on the second frame onwards, since we don't know the travel distance
+                // until the next frame yet
+                m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
+            }
+
+
+            // Update averaging ringbuffer
+            m_AnimVelocityRingBuff[m_AnimVelocityRingCurrent] = m_AnimRootVelocity;
+            m_AnimVelocityRingCurrent = (m_AnimVelocityRingCurrent + 1) % NUM_VELOCITY_AVERAGE_STEPS;
+
+            m_AnimRootRotationVelocity = rotation * m_AnimRootRotation.Invert();
+        }
+
+
 
         m_NodeTransforms[nodeIdx] = trans;
     }
@@ -256,6 +284,7 @@ void AnimHandler::updateAnimations(double deltaTime)
         if (i == 0)
         {
             m_AnimRootPosition = m_NodeTransforms[i].Translation();
+            m_AnimRootRotation = m_NodeTransforms[i].Rotation();
             m_NodeTransforms[i].Translation(Math::float3(0.0f, 0.0f, 0.0f));
         }
 
@@ -304,7 +333,7 @@ Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
 }
 
 
-Math::float3 AnimHandler::getRootNodeVelocityAvg()
+Math::float3 AnimHandler::getRootNodeVelocityTotal()
 {
     Animations::Animation *anim = getActiveAnimationPtr();
     if(!anim)
@@ -447,4 +476,25 @@ Animations::Animation &AnimHandler::getAnimation(Handle::AnimationHandle h)
 Math::float3 AnimHandler::getRootNodePosition()
 {
     return m_AnimRootPosition;
+}
+
+float AnimHandler::getActiveAnimationProgress()
+{
+    Animations::Animation* anim = getActiveAnimationPtr();
+    if(!anim || !anim->m_Data.isValid())
+        return 0.0f;
+
+    return m_AnimationFrame / (float)anim->m_FrameCount;
+}
+
+Math::float3 AnimHandler::getRootNodeVelocityAvg()
+{
+    Math::float3 avg(0,0,0);
+
+    for(unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
+    {
+        avg += m_AnimVelocityRingBuff[i];
+    }
+
+    return avg / (float)NUM_VELOCITY_AVERAGE_STEPS;
 }

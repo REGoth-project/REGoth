@@ -361,6 +361,22 @@ void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
     }
 }
 
+void ModelVisual::playAnimation(const std::string& anim)
+{
+    // TODO: Implement the priority stuff
+    if(getAnimationHandler().hasAnimation(anim))
+    {
+        setAnimation(anim, false); // Don't loop
+    }
+}
+
+void ModelVisual::playAnimation(Handle::AnimationHandle anim)
+{
+    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).getAnimHandler();
+
+    animHandler.playAnimation(anim);
+}
+
 const char* ModelVisual::getAnimationName(ModelVisual::EModelAnimType type)
 {
 	return ANIMATION_NAMES[type];
@@ -747,3 +763,6 @@ bool ModelVisual::isAnimPlaying(const std::string& name)
     return getAnimationHandler().getActiveAnimationPtr()
             && getAnimationHandler().getActiveAnimationPtr()->m_Name == name;
 }
+
+
+
