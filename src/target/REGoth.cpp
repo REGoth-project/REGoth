@@ -957,28 +957,36 @@ public:
 
 	bool update() BX_OVERRIDE
 	{
-        const int KEY_UP = 265;
-        const int KEY_DOWN = 264;
-        const int KEY_LEFT = 263;
-        const int KEY_RIGHT = 262;
-        const int KEY_ENTER = 257;
-        const int KEY_ESCAPE = 256;
-	const int KEY_BACKSPACE = 259;
-        std::map<int, UI::EInputAction> keyMap = {{KEY_UP,     UI::IA_Up},
-                                                  {KEY_DOWN,   UI::IA_Down},
-                                                  {KEY_LEFT,   UI::IA_Left},
-                                                  {KEY_RIGHT,  UI::IA_Right},
-                                                  {KEY_ENTER,  UI::IA_Accept},
-                                                  {KEY_ESCAPE, UI::IA_Close},
-						  {KEY_BACKSPACE, UI::IA_Backspace}};
+        std::map<int, UI::EInputAction> keyMap = {{GLFW_KEY_UP,     UI::IA_Up},
+                                                  {GLFW_KEY_DOWN,   UI::IA_Down},
+                                                  {GLFW_KEY_LEFT,   UI::IA_Left},
+                                                  {GLFW_KEY_RIGHT,  UI::IA_Right},
+                                                  {GLFW_KEY_ENTER,  UI::IA_Accept},
+                                                  {GLFW_KEY_ESCAPE, UI::IA_Close},
+                                                  {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
+                                                  {GLFW_KEY_0, UI::IA_0},
+                                                  {GLFW_KEY_1, UI::IA_1},
+                                                  {GLFW_KEY_2, UI::IA_2},
+                                                  {GLFW_KEY_3, UI::IA_3},
+                                                  {GLFW_KEY_4, UI::IA_4},
+                                                  {GLFW_KEY_5, UI::IA_5},
+                                                  {GLFW_KEY_6, UI::IA_6},
+                                                  {GLFW_KEY_7, UI::IA_7},
+                                                  {GLFW_KEY_8, UI::IA_8},
+                                                  {GLFW_KEY_9, UI::IA_9},
+                                                  {GLFW_KEY_HOME, UI::IA_HOME},
+                                                  {GLFW_KEY_END, UI::IA_END},
+                                                  {GLFW_KEY_PAGE_UP, UI::IA_Up},
+                                                  {GLFW_KEY_PAGE_DOWN, UI::IA_Down}};
 
+        const auto CONSOLE_TOGGLE_KEY = GLFW_KEY_F10;
         std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
                 m_stopWatch.start();
 
-                if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
+                if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
                     m_pEngine->getHud().getConsole().onKeyDown(i);
                 else if (keyMap.find(i) != keyMap.end())
                 {
@@ -991,7 +999,7 @@ public:
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
+                        if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
                             m_pEngine->getHud().getConsole().onKeyDown(i);
                         else if (keyMap.find(i) != keyMap.end())
                         {
