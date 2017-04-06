@@ -335,15 +335,17 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
         // generate suggestions
         {
             vector<vector<string>> suggestionsForThisToken;
+            std::set<string> known;
             for (auto matchInfos : {&matchInfosStartsWith, &matchInfosInMiddle})
             {
                 std::sort(matchInfos->begin(), matchInfos->end(), MatchInfo::compare);
                 for (auto& matchInfo : *matchInfos)
                 {
-                    suggestionsForThisToken.push_back({});
-                    for (auto& alias : allGroups[matchInfo.commandID][matchInfo.groupID])
+                    auto& aliasGroup = allGroups[matchInfo.commandID][matchInfo.groupID];
+                    bool notInSet = known.insert(Utils::lowered(Utils::join(aliasGroup.begin(), aliasGroup.end(), ""))).second;
+                    if (notInSet)
                     {
-                        suggestionsForThisToken.back().push_back(alias);
+                        suggestionsForThisToken.push_back(aliasGroup);
                     }
                 }
             }
