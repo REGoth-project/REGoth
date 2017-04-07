@@ -2027,6 +2027,8 @@ void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
 
+    m_AIHandler.bindKeys();
+
     Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
     {
         if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
