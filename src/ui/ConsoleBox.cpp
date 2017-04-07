@@ -91,14 +91,14 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
             {
                 if (row >= maxSuggestions)
                     break;
-
-                if (columnID < suggestionEntry.size())
+                auto& aliasList = suggestionEntry.aliasList;
+                if (columnID < aliasList.size())
                 {
                     columnEmpty = false;
                     int w, h;
-                    fnt->calcTextMetrics(suggestionEntry[columnID], w, h);
+                    fnt->calcTextMetrics(aliasList[columnID], w, h);
                     columnWidth = std::max(columnWidth, w);
-                    column.push_back(suggestionEntry[columnID]);
+                    column.push_back(aliasList[columnID]);
                 } else {
                     column.push_back("");
                 }

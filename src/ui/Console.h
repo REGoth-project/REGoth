@@ -12,12 +12,20 @@
 
 namespace UI
 {
+
+    struct SuggestionBase
+    {
+        std::vector<std::string> aliasList;
+    };
+
     struct ConsoleCommand
     {
         // Takes list of arguments as parameter, returns command result
-        typedef std::function<std::string(const std::vector<std::string>&)> Callback;
+        using Callback = std::function<std::string(const std::vector<std::string>&)>;
+
+        using Suggestion = SuggestionBase;//std::vector<std::string>;
         // generator, which returns vector of candidates
-        using CandidateListGenerator = std::function<std::vector<std::vector<std::string>>()>;
+        using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
 
         std::string commandName;
         std::vector<CandidateListGenerator> generators;
@@ -71,8 +79,7 @@ namespace UI
          * @param showSuggestions show suggestions
          * @param overwriteTypedLine replace the console line with the suggested one
          */
-        using Suggestion = std::vector<std::string>;
-        std::vector<std::vector<Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
+        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
 
         /**
          * searches for command which, could generate the given tokens and returns its index
@@ -101,7 +108,7 @@ namespace UI
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
-        const std::vector<std::vector<Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+        const std::vector<std::vector<UI::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
 
     private:
 
@@ -133,7 +140,7 @@ namespace UI
         /**
          * suggestions for each token
          */
-        std::vector<std::vector<Suggestion>> m_SuggestionsList;
+        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> m_SuggestionsList;
 
         /**
          * Currently typed line

@@ -177,13 +177,12 @@ ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleComm
 {
     auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
     std::vector<ConsoleCommand::CandidateListGenerator> generators;
-    auto simpleGen = [](std::string token) -> std::vector<std::vector<std::string>> {
-        return {{token}};
+    auto simpleGen = [](std::string token) -> std::vector<ConsoleCommand::Suggestion> {
+        return {ConsoleCommand::Suggestion {{token}}};
     };
     for (auto tokenIt = tokens.begin(); tokenIt != tokens.end(); tokenIt++)
     {
-        std::string token = *tokenIt;
-        generators.push_back(std::bind(simpleGen, token));
+        generators.push_back(std::bind(simpleGen, *tokenIt));
     }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
     m_Commands.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
@@ -198,17 +197,21 @@ void Console::outputAdd(const std::string& msg)
 struct MatchInfo
 {
     std::size_t pos;
-    std::size_t notMatchingCharCount;
+    std::size_t caseMatches;
     std::size_t commandID;
     std::size_t groupID;
     std::string candidate;
     std::string candidateLowered;
 
+
+    // smaller means better match
     static bool compare(const MatchInfo& a, const MatchInfo& b) {
         if (a.pos != b.pos){
             return a.pos < b.pos;
+        } else if (a.candidate.size() != b.candidate.size()){
+            return a.candidate.size() < b.candidate.size();
         } else {
-            return a.notMatchingCharCount < b.notMatchingCharCount;
+            return a.caseMatches > b.caseMatches;
         }
     };
 };
@@ -224,8 +227,8 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
         bool allStagesMatched = true;
         for (std::size_t tokenID = 0; tokenID < command.numFixTokens; tokenID++)
         {
-            auto group = Utils::findNameInGroups(command.generators.at(tokenID)(), tokens.at(tokenID));
-            if (group.empty())
+            auto suggestion = Utils::findSuggestion(command.generators.at(tokenID)(), tokens.at(tokenID));
+            if (suggestion.aliasList.empty())
                 allStagesMatched = false;
         }
         if (allStagesMatched)
@@ -243,7 +246,7 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
     return -1;
 }
 
-using Suggestion = std::vector<std::string>;
+using Suggestion = UI::ConsoleCommand::Suggestion;
 std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, bool limitToFixed, bool overwriteInput) {
     using std::vector;
     using std::string;
@@ -264,14 +267,15 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
         newTokens.push_back(std::make_tuple(token, false));
     }
 
-    vector<vector<vector<string>>> suggestionsList;
+    vector<vector<Suggestion>> suggestionsList;
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
-        auto tokenLowered = Utils::lowered(tokens[tokenID]);
+        const string& token = tokens[tokenID];
+        auto tokenLowered = Utils::lowered(token);
         vector<MatchInfo> matchInfosStartsWith;
         vector<MatchInfo> matchInfosInMiddle;
-        vector<vector<vector<string>>> allGroups(m_Commands.size());
+        vector<vector<Suggestion>> suggestionsByCommand(m_Commands.size());
         for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
         {
             auto& command = m_Commands[cmdID];
@@ -281,21 +285,26 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
             {
                 commandIsAlive[cmdID] = false;
                 auto candidateGenerator = generators[tokenID];
-                auto groups = candidateGenerator();
-                for (std::size_t groupID = 0; groupID < groups.size(); groupID++)
+                auto suggestions = candidateGenerator();
+                for (std::size_t suggestionID = 0; suggestionID < suggestions.size(); suggestionID++)
                 {
-                    auto& aliasGroup = groups[groupID];
-                    allGroups[cmdID].push_back(aliasGroup);
-                    if (aliasGroup.empty())
+                    auto& suggestion = suggestions[suggestionID];
+                    suggestionsByCommand[cmdID].push_back(suggestion);
+                    auto& aliasList = suggestion.aliasList;
+                    if (aliasList.empty())
                         continue;
                     std::vector<MatchInfo> groupInfos;
-                    for (auto& candidate : aliasGroup)
+                    for (auto& candidate : aliasList)
                     {
                         string candidateLowered = candidate;
                         Utils::lower(candidateLowered);
                         auto pos = candidateLowered.find(tokenLowered);
-                        auto diff = candidateLowered.size() - tokenLowered.size();
-                        MatchInfo matchInfo = MatchInfo{pos, diff, cmdID, groupID, candidate, candidateLowered};
+                        unsigned int caseMatches = 0;
+                        for (std::size_t i = 0; i < token.size(); i++)
+                        {
+                            caseMatches += (token[i] == candidate[pos + i]);
+                        }
+                        MatchInfo matchInfo = MatchInfo{pos, caseMatches, cmdID, suggestionID, candidate, candidateLowered};
                         groupInfos.push_back(matchInfo);
                     }
                     std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
@@ -326,7 +335,10 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
             }
             if (commonLength != 0)
             {
-                string tokenNew = matchInfos.front().candidate.substr(0, commonLength);
+                vector<MatchInfo> sortedMatches = matchInfos;
+                std::sort(sortedMatches.begin(), sortedMatches.end(), MatchInfo::compare);
+                auto bestMatch = sortedMatches.front();
+                string tokenNew = bestMatch.candidate.substr(0, commonLength);
                 bool thereIsNoLongerCandidate = longestCandidateLen == tokenNew.size();
                 newTokens[tokenID] = std::make_tuple(tokenNew, thereIsNoLongerCandidate);
             }
@@ -334,18 +346,19 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
         }
         // generate suggestions
         {
-            vector<vector<string>> suggestionsForThisToken;
+            vector<Suggestion> suggestionsForThisToken;
             std::set<string> known;
             for (auto matchInfos : {&matchInfosStartsWith, &matchInfosInMiddle})
             {
                 std::sort(matchInfos->begin(), matchInfos->end(), MatchInfo::compare);
                 for (auto& matchInfo : *matchInfos)
                 {
-                    auto& aliasGroup = allGroups[matchInfo.commandID][matchInfo.groupID];
-                    bool notInSet = known.insert(Utils::lowered(Utils::join(aliasGroup.begin(), aliasGroup.end(), ""))).second;
+                    auto& suggestion = suggestionsByCommand[matchInfo.commandID][matchInfo.groupID];
+                    auto& aliasList = suggestion.aliasList;
+                    bool notInSet = known.insert(Utils::lowered(Utils::join(aliasList.begin(), aliasList.end(), ""))).second;
                     if (notInSet)
                     {
-                        suggestionsForThisToken.push_back(aliasGroup);
+                        suggestionsForThisToken.push_back(suggestion);
                     }
                 }
             }

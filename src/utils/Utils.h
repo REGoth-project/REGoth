@@ -14,6 +14,7 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
+#include <ui/Console.h>
 
 namespace Utils
 {
@@ -478,12 +479,12 @@ namespace Utils
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
     /**
-     * searches for the first group (vector<string>) wich contains name and returns the group
-     * returns empty vector if not found any
-     * @param groups groups to search in
+     * searches for the first suggestion which contains name and returns it
+     * returns suggestion with empty vector if not found any
+     * @param suggestions suggestions to search in
      * @param name token to find
      */
-    std::vector<std::string> findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name);
+    UI::ConsoleCommand::Suggestion findSuggestion(const std::vector<UI::ConsoleCommand::Suggestion>& suggestions, const std::string& name);
 
     /**
      * performs case insensitive euqal check

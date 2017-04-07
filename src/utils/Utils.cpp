@@ -456,17 +456,16 @@ bool Utils::containsLike(const std::string& searchSpace, const std::string& part
 }
 
 
-std::vector<std::string> Utils::findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name){
-    for (auto& aliasGroup : groups)
+UI::ConsoleCommand::Suggestion Utils::findSuggestion(const std::vector<UI::ConsoleCommand::Suggestion>& suggestions, const std::string& name){
+    for (auto& suggestion : suggestions)
     {
-        for (auto& alias : aliasGroup) {
-            if (Utils::stringEqualIngoreCase(alias, name))
-            {
-                return aliasGroup;
-            }
+        auto& aliasList = suggestion.aliasList;
+        if (std::find(aliasList.begin(), aliasList.end(), name) != aliasList.end())
+        {
+            return suggestion;
         }
     }
-    return {};
+    return UI::ConsoleCommand::Suggestion();
 }
 
 bool Utils::stringEqualIngoreCase(const std::string a, const std::string b) {

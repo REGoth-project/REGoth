@@ -438,14 +438,14 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
-        auto waypointNamesGen = [this]() -> std::vector<std::vector<std::string>> {
-            std::vector<std::vector<std::string>> groups;
+        auto waypointNamesGen = [this]() -> std::vector<UI::ConsoleCommand::Suggestion> {
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
             for (auto& waypoint : waypoints)
             {
-                groups.push_back({waypoint.name});
+                suggestions.push_back(UI::ConsoleCommand::Suggestion {{waypoint.name}});
             }
-            return groups;
+            return suggestions;
         };
 
         console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
@@ -605,7 +605,7 @@ public:
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<std::vector<std::string>> aliasGroups;
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
@@ -622,9 +622,9 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                aliasGroups.push_back(std::move(group));
+                suggestions.push_back(UI::ConsoleCommand::Suggestion{group});
             }
-            return aliasGroups;
+            return suggestions;
         };
 
         console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
@@ -677,13 +677,14 @@ public:
             std::vector<std::string> fullNames;
             for (auto& requestedName : {teleporterName, targetName})
             {
-                auto group = Utils::findNameInGroups(aliasGroups, requestedName);
+                auto suggestion = Utils::findSuggestion(aliasGroups, requestedName);
+                auto& aliasList = suggestion.aliasList;
                 bool success = false;
-                if (group.size() >= 2)
+                if (aliasList.size() >= 2)
                 {
-                    std::string npcDatFileName = group[0];
-                    std::string npcDisplayName = group[1];
-                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
+                    std::string npcDatFileName = aliasList[0];
+                    std::string npcDisplayName = aliasList[1];
+                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(aliasList[0]);
                     if (npcScriptHandle.isValid())
                     {
                         success = true;
@@ -740,10 +741,11 @@ public:
             {
                 const std::string& requested = args.at(1);
                 auto aliasGroups = worlddNpcNamesGen();
-                auto group = Utils::findNameInGroups(aliasGroups, requested);
+                auto suggestion = Utils::findSuggestion(aliasGroups, requested);
+                auto& aliasList = suggestion.aliasList;
 
-                if (group.size() >= 2) {
-                    std::string npcDatFileName = group[0];
+                if (aliasList.size() >= 2) {
+                    std::string npcDatFileName = aliasList[0];
                     Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(npcDatFileName);
                     if (npcScriptHandle.isValid()) {
                         npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
@@ -829,7 +831,7 @@ public:
         UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
             auto& datFile = se.getVM().getDATFile();
-            std::vector<std::vector<std::string>> aliasGroups;
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
@@ -839,22 +841,22 @@ public:
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
 
-                    std::vector<std::string> aliasGroup;
+                    std::vector<std::string> aliasList;
                     for (auto name : {parSymbol.name, cItem.description, cItem.name})
                     {
                         std::replace(name.begin(), name.end(), ' ', '_');
-                        aliasGroup.push_back(name);
+                        aliasList.push_back(name);
                     }
-                    if (aliasGroup[1] == aliasGroup[2])
+                    if (aliasList[1] == aliasList[2])
                     {
                         // most of the items have description equal to name, so remove one of them
-                        aliasGroup.pop_back();
+                        aliasList.pop_back();
                     }
-                    aliasGroups.push_back(aliasGroup);
+                    suggestions.push_back(UI::ConsoleCommand::Suggestion{aliasList});
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
             }
-            return aliasGroups;
+            return suggestions;
         };
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
@@ -878,10 +880,11 @@ public:
 
             std::size_t index = 0;
             auto aliasGroups = itemNamesGen();
-            auto group = Utils::findNameInGroups(aliasGroups, itemName);
-            if (group.size() >= 1)
+            auto suggestion = Utils::findSuggestion(aliasGroups, itemName);
+            auto& aliasList = suggestion.aliasList;
+            if (aliasList.size() >= 1)
             {
-                auto& parScriptName = group[0];
+                auto& parScriptName = aliasList[0];
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
                 std::string description;
                 if (give)
