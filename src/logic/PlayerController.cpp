@@ -2057,7 +2057,7 @@ void PlayerController::setupKeyBindings()
         if(triggered)
             m_World.getEngine()->getHud().getConsole().setOpen(true);
     });
-
+/*
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
         m_isDrawWeaponMelee = triggered;
     });

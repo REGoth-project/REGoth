@@ -354,7 +354,7 @@ void NpcAnimationHandler::StartAni_Turn(float direction)
 
     // Get angles
     float turnSpeed = 1.5f; // TODO: Calculate this somehow
-    float turnRad = direction * turnSpeed * (float)m_World.getWorldInfo().lastFrameDeltaTime;
+    float turnRad = direction * turnSpeed * (float)m_World.getWorldInfo().m_LastFrameDeltaTime;
 
     // Apply
     getController().applyRotationY(turnRad);
