@@ -139,7 +139,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
 {
     LogInfo() << "load model script " << file_name;
 
-    ssize_t name_end = file_name.rfind('.');
+    size_t name_end = file_name.rfind('.');
     std::string name = file_name.substr(0, name_end);
 
     Animation *anim = nullptr;
