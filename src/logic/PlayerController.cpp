@@ -2321,6 +2321,8 @@ void PlayerController::exportPart(json& j)
         }
     }
 
+    j["refusetalktime"] = this->m_RefuseTalkTime;
+
     // Import state
     m_AIStateMachine.exportScriptState(j["AIState"]);
 }
@@ -2397,6 +2399,8 @@ void PlayerController::importObject(const json& j, bool noTransform)
             equipItem(h);
         }
     }
+
+    this->setRefuseTalkTime(j["refusetalktime"]);
 
     // Import state
     m_AIStateMachine.importScriptState(j["AIState"]);
