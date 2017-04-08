@@ -2400,10 +2400,8 @@ void PlayerController::importObject(const json& j, bool noTransform)
         }
     }
 
-    // Needed for compatibility with Savegame Version '1'
-    constexpr float REFUSETALKTIME_DEFAULT = 0.0f;
-
-    this->setRefuseTalkTime(j["refusetalktime"].is_number_float() ? j["refusetalktime"] : REFUSETALKTIME_DEFAULT);
+    // Needed for compatibility with savegame version '1'
+    this->setRefuseTalkTime(j["refusetalktime"].is_number_float() ? static_cast<float>(j["refusetalktime"]) : 0.0f);
 
     // Import state
     m_AIStateMachine.importScriptState(j["AIState"]);
