@@ -198,13 +198,17 @@ bool Engine::SavegameManager::init(Engine::GameEngine& engine)
 
 std::vector<std::string> SavegameManager::gatherAvailableSavegames()
 {
-    const int MAX_NUM_SLOTS = 15 + 1; // 15 usual slots + current
-    std::vector<std::string> names(MAX_NUM_SLOTS);
+    constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
+    constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
+
+    int numSlots = (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1) ? G1_MAX_SLOTS : G2_MAX_SLOTS;
+
+    std::vector<std::string> names(numSlots);
 
     // Try every slot, skip current (slot 0)
-    for(int i=1;i<MAX_NUM_SLOTS;i++)
+    for (int i = 1; i < numSlots; ++i)
     {
-        if(isSavegameAvailable(i))
+        if (isSavegameAvailable(i))
         {
             SavegameInfo info = readSavegameInfo(i);
             names[i] = info.name;
