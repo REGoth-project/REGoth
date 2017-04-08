@@ -14,6 +14,7 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
+#include <algorithm>
 
 namespace Utils
 {
@@ -26,6 +27,17 @@ namespace Utils
         Math::float3 min;
         Math::float3 max;
     };
+
+    /**
+     * @return String given in 's' with all characters uppercase
+     */
+    inline std::string toUpper(const std::string& s)
+    {
+        std::string upp = s;
+        std::transform(upp.begin(), upp.end(), upp.begin(), ::toupper);
+
+        return upp;
+    }
 
     /**
      * @return Random number in range of -1...1

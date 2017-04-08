@@ -173,7 +173,7 @@ void PlayerController::onUpdate(float deltaTime)
                         getModelVisual()->getAnimationHandler().getRootNodeVelocityAvg());
             }
 
-            bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
+            //bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
 
             Math::Matrix t = getEntityTransform();
             t.Translation(m_MoveState.position);

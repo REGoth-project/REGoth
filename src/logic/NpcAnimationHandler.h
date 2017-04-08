@@ -75,7 +75,7 @@ namespace Logic
         /**
          * @return Whether the model is currently standing around
          */
-        bool isStanding();
+        bool isStanding(bool allowTurning = false);
 
         /**
          * @return Controller this is attached to

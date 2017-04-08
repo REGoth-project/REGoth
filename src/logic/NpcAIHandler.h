@@ -18,6 +18,19 @@ namespace Logic
     class PlayerController;
 
     /**
+     * Possible movement-states for the player.
+     * Turning is a modifier that can be applied to all of them.
+     */
+    enum class EMovementState
+    {
+        None,
+        Forward,
+        Backward,
+        StrafeLeft,
+        StrafeRight
+    };
+
+    /**
      * This is not only for NPCs and AI, but also handles the players inputs
      */
     class NpcAIHandler
@@ -92,6 +105,11 @@ namespace Logic
          * Vob (PlayerController) this belongs to
          */
         Handle::EntityHandle m_HostVob;
+
+        /**
+         * Current movment state
+         */
+        EMovementState m_ActiveMovementState;
     };
 }
 

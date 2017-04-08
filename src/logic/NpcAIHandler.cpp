@@ -25,7 +25,141 @@ void NpcAIHandler::update(float deltaTime)
 void NpcAIHandler::playerUpdate(float deltaTime)
 {
     if(!getController().getEM().isEmpty())
-        return; // Messages are being played, don't handle inputs
+    {
+        // While something else is playing, don't allow any movement state to be active
+        m_ActiveMovementState = EMovementState::None;
+
+        // Messages are being played, don't handle inputs
+        return;
+    }
+
+    switch(m_ActiveMovementState)
+    {
+        case EMovementState::None:
+
+            // Check for turns
+            if(m_MovementState.isTurnLeft)
+            {
+                getNpcAnimationHandler().Action_TurnLeft();
+            } else if(m_MovementState.isTurnRight)
+            {
+                getNpcAnimationHandler().Action_TurnRight();
+            }else
+            {
+                getNpcAnimationHandler().Action_Stand();
+            }
+
+            // Only allow changing states when the character is standing (ie. not playing transition animations)
+            if(getNpcAnimationHandler().isStanding(true))
+            {
+                if (m_MovementState.isForward)
+                {
+                    m_ActiveMovementState = EMovementState::Forward;
+                }
+
+                if (m_MovementState.isBackward)
+                {
+                    m_ActiveMovementState = EMovementState::Backward;
+                }
+
+                if (m_MovementState.isStrafeLeft)
+                {
+                    m_ActiveMovementState = EMovementState::StrafeLeft;
+                }
+
+                if (m_MovementState.isStrafeRight)
+                {
+                    m_ActiveMovementState = EMovementState::StrafeRight;
+                }
+            }
+            break;
+
+        case EMovementState::Forward:
+            bgfx::dbgTextPrintf(0, 5, 0x4, "Forward");
+            if(m_MovementState.isForward)
+            {
+                // Forward-key still pressed, keep going
+                getNpcAnimationHandler().Action_GoForward();
+
+                // And check for turns
+                if(m_MovementState.isTurnLeft)
+                {
+                    getNpcAnimationHandler().Action_TurnLeft();
+                } else if(m_MovementState.isTurnRight)
+                {
+                    getNpcAnimationHandler().Action_TurnRight();
+                }
+            }else
+            {
+                // Forward-key not pressed anymore, go back to "standing"
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::Backward:
+            bgfx::dbgTextPrintf(0, 5, 0x4, "Backward");
+            if(m_MovementState.isBackward)
+            {
+                // Backward-key still pressed, keep going
+                getNpcAnimationHandler().Action_GoBackward();
+
+                // And check for turns
+                if(m_MovementState.isTurnLeft)
+                {
+                    getNpcAnimationHandler().Action_TurnLeft();
+                } else if(m_MovementState.isTurnRight)
+                {
+                    getNpcAnimationHandler().Action_TurnRight();
+                }
+            }else
+            {
+                // Backward-key not pressed anymore, go back to "standing"
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::StrafeLeft:
+            if(m_MovementState.isStrafeLeft)
+            {
+                // Strafe-key still pressed, keep going
+                getNpcAnimationHandler().Action_StrafeLeft();
+
+                // And check for turns
+                if(m_MovementState.isTurnLeft)
+                {
+                    getNpcAnimationHandler().Action_TurnLeft();
+                } else if(m_MovementState.isTurnRight)
+                {
+                    getNpcAnimationHandler().Action_TurnRight();
+                }
+            }else
+            {
+                // Strafe-key not pressed anymore, go back to "standing"
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::StrafeRight:
+            if(m_MovementState.isStrafeRight)
+            {
+                // Strafe-key still pressed, keep going
+                getNpcAnimationHandler().Action_StrafeRight();
+
+                // And check for turns
+                if(m_MovementState.isTurnLeft)
+                {
+                    getNpcAnimationHandler().Action_TurnLeft();
+                } else if(m_MovementState.isTurnRight)
+                {
+                    getNpcAnimationHandler().Action_TurnRight();
+                }
+            }else
+            {
+                // Strafe-key not pressed anymore, go back to "standing"
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+    }
 
     bool actionTriggered = false;
 
@@ -33,7 +167,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
      * TODO: There is still a problem when you switch directions frame-perfect from forward to backward
      * You will then walk forward while holding the back-key.
      */
-
+/*
     if(m_MovementState.isForward && !m_MovementState.isBackward)
     {
         getNpcAnimationHandler().Action_GoForward();
@@ -75,7 +209,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         getNpcAnimationHandler().Action_Stand();
     }
 
-
+*/
 
     resetKeyStates();
 }

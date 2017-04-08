@@ -125,15 +125,25 @@ bool NpcAnimationHandler::isAnimationActive(const std::string& anim)
 {
     if(getAnimHandler().getActiveAnimationPtr())
     {
-        return getAnimHandler().getActiveAnimationPtr()->m_Name == anim;
+        return Utils::toUpper(getAnimHandler().getActiveAnimationPtr()->m_Name) == Utils::toUpper(anim);
     }
 
     return false;
 }
 
-bool NpcAnimationHandler::isStanding()
+bool NpcAnimationHandler::isStanding(bool allowTurning)
 {
-    return isAnimationActive("s_run") || isAnimationActive("s_walk");
+    bool standing = isAnimationActive("s_run") || isAnimationActive("s_walk");
+
+    if(allowTurning)
+    {
+        standing = standing || isAnimationActive(getActiveSet().t_runturnL)
+                            || isAnimationActive(getActiveSet().t_runturnR)
+                            || isAnimationActive(getActiveSet().t_walkturnL)
+                            || isAnimationActive(getActiveSet().t_walkturnR);
+    }
+
+    return standing;
 }
 
 void NpcAnimationHandler::initAnimations()
