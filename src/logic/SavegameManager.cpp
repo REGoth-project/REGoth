@@ -3,9 +3,15 @@
 #include <utils/logger.h>
 #include <json/json.hpp>
 #include <fstream>
+#include "engine/GameEngine.h"
 
 using json = nlohmann::json;
 using namespace Engine;
+
+/**
+ * Gameengine-instance pointer
+ */
+Engine::GameEngine* gameEngine;
 
 // Enures that all folders to save into the given savegame-slot exist
 void ensureSavegameFolders(int idx)
@@ -15,6 +21,19 @@ void ensureSavegameFolders(int idx)
 	if(!Utils::mkdir(userdata))
 		LogError() << "Failed to create userdata-directory at: " << userdata;
 
+    std::string gameType;
+    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
+    {
+        gameType = "/Gothic";
+    }
+    else
+    {
+        gameType = "/Gothic 2";
+    }
+
+    if (Utils::mkdir(userdata + gameType))
+        LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
+
     if(Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
 		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
@@ -23,7 +42,12 @@ std::string SavegameManager::buildSavegamePath(int idx)
 {
     std::string userdata = Utils::getUserDataLocation();
 
-    return userdata + "/savegame_" + std::to_string(idx);
+    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
+    {
+        return userdata + "/Gothic/savegame_" + std::to_string(idx);
+    }
+
+    return userdata + "/Gothic 2/savegame_" + std::to_string(idx);
 }
 
 std::vector<std::string> SavegameManager::getSavegameWorlds(int idx)
@@ -128,7 +152,6 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
     return o;
 }
 
-
 bool SavegameManager::writeWorld(int idx, const std::string& worldName, const std::string& data)
 {
     std::string file = buildSavegamePath(idx) + "/world_" + worldName + ".json";
@@ -164,6 +187,13 @@ std::string SavegameManager::readWorld(int idx, const std::string& worldName)
 std::string SavegameManager::buildWorldPath(int idx, const std::string& worldName)
 {
    return buildSavegamePath(idx) + "/world_" + worldName + ".json"; 
+}
+
+bool Engine::SavegameManager::init(Engine::GameEngine& engine)
+{
+    gameEngine = &engine;
+
+    return true;
 }
 
 std::vector<std::string> SavegameManager::gatherAvailableSavegames()

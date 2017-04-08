@@ -4,8 +4,15 @@
 
 namespace Engine
 {
+    class GameEngine;
+
     namespace SavegameManager
     {
+        /**
+         * @param GameEngine-pointer
+         */
+        bool init(Engine::GameEngine& engine);
+
         /**
          * Assembles a list of all available savegame names. Every entry will correspond to an index number.
          * Empty names mean, that there is no save currently stored.
