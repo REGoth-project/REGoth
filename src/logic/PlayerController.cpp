@@ -590,7 +590,6 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
         return m_EquipmentState.activeWeapon;
 
     ModelVisual* model = getModelVisual();
-    ModelVisual::EModelAnimType drawingAnimation = ModelVisual::EModelAnimType::Idle;
 
     // Remove anything that was active before putting something new there
     m_EquipmentState.activeWeapon.invalidate();
@@ -598,17 +597,14 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
     // Check what kind of weapon we got here
     if (m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
     {
-        drawingAnimation = ModelVisual::EModelAnimType::Draw1h;
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
     } else if (m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
     {
-        drawingAnimation = ModelVisual::EModelAnimType::Draw2h;
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
     } else
     {
-        drawingAnimation = ModelVisual::EModelAnimType::DrawFist;
         m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
     }
 
@@ -629,9 +625,6 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
         // TODO: Listen to ani-events for this!
         model->setNodeVisual(itemData.visual, EModelNode::Righthand);
     }
-
-    // Play drawing animation
-    model->playAnimation(drawingAnimation);
 
     // Couldn't draw anything
     return m_EquipmentState.activeWeapon;
@@ -1893,7 +1886,9 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
        || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
        || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
-        equipItem(item);
+        // FIXME: Hack to only allow equipping when no weapon is drawn
+        if(getWeaponMode() == EWeaponMode::WeaponNone)
+            equipItem(item);
         return false;
     }
 
@@ -2212,6 +2207,9 @@ void PlayerController::setupKeyBindings()
                 // Pick it up
                 VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
                 item.itemController->pickUp(m_Entity);
+
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_Stand_2_IGet_1"));
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_IGet_2_Stand_1"));
 
                 return;
             }

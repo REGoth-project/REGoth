@@ -55,9 +55,25 @@ namespace Logic
         void Action_TurnRight();
 
         /**
+         * Plays the pull-weapon animation (with transitions)
+         * @param part Animation is segmented into two parts
+         */
+        void Action_DrawWeapon(int part);
+
+        /**
+         * Plays the remove-weapon animation (with transitions)
+         */
+        void Action_UndrawWeapon();
+
+        /**
+         * Plays the fight-forward animation (with transitions)
+         */
+        void Action_FightForward();
+
+        /**
          * Goes back to the standing-state, when possible
          */
-        void Action_Stand();
+        void Action_Stand(bool force = false);
 
         /**
          * Stops any of the turning-animations, if they are currently playing
@@ -91,6 +107,11 @@ namespace Logic
          * @return Global animation library
          */
         Animations::AnimationLibrary& getAnimLib() const;
+
+        /**
+         * @return String used for naming animations from the given type (ie. 1H, 2H, CBOW)
+         */
+        std::string getWeaponAniTag(EWeaponMode weapon);
     protected:
 
         /**
@@ -100,9 +121,12 @@ namespace Logic
         void startAni_Backward();
         void startAni_StrafeLeft();
         void startAni_StrafeRight();
-        void startAni_Stand();
+        void startAni_Stand(bool force = false);
         void startAni_TurnLeft();
         void startAni_TurnRight();
+        void startAni_DrawWeapon(int part);
+        void startAni_UndrawWeapon();
+        void startAni_FightForward();
 
 
 
@@ -126,6 +150,7 @@ namespace Logic
          * @param anim Animation to play
          */
         void playAnimation(Handle::AnimationHandle anim);
+        void playAnimation(const std::string& anim);
 
         struct AnimationSet
         {

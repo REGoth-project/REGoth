@@ -15,6 +15,7 @@ NpcAIHandler::NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hos
         : m_World(world), m_HostVob(hostVob)
 {
     unbindKeys();
+    m_ActiveMovementState = EMovementState::None;
 }
 
 void NpcAIHandler::update(float deltaTime)
@@ -32,6 +33,9 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         // Messages are being played, don't handle inputs
         return;
     }
+
+    if(m_MovementState.isAction)
+        bgfx::dbgTextPrintf(0, 6, 0x4, "Action");
 
     switch(m_ActiveMovementState)
     {
@@ -52,22 +56,36 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             // Only allow changing states when the character is standing (ie. not playing transition animations)
             if(getNpcAnimationHandler().isStanding(true))
             {
-                if (m_MovementState.isForward)
+                if(m_MovementState.isLastWeaponKey)
                 {
-                    m_ActiveMovementState = EMovementState::Forward;
-                }
+                    if(getController().getWeaponMode() == EWeaponMode::WeaponNone){
 
-                if (m_MovementState.isBackward)
+                        getController().drawWeaponMelee();
+                        m_ActiveMovementState = EMovementState::DrawWeapon;
+                    }else
+                    {
+                        getController().undrawWeapon();
+                        m_ActiveMovementState = EMovementState::UndrawWeapon;
+                    }
+
+
+                }else if (m_MovementState.isForward)
+                {
+                    if(m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone)
+                    {
+                        m_ActiveMovementState = EMovementState::FightForward;
+                    }else
+                    {
+                        m_ActiveMovementState = EMovementState::Forward;
+                    }
+
+                }else if (m_MovementState.isBackward)
                 {
                     m_ActiveMovementState = EMovementState::Backward;
-                }
-
-                if (m_MovementState.isStrafeLeft)
+                }else if (m_MovementState.isStrafeLeft)
                 {
                     m_ActiveMovementState = EMovementState::StrafeLeft;
-                }
-
-                if (m_MovementState.isStrafeRight)
+                }else if (m_MovementState.isStrafeRight)
                 {
                     m_ActiveMovementState = EMovementState::StrafeRight;
                 }
@@ -159,6 +177,45 @@ void NpcAIHandler::playerUpdate(float deltaTime)
                 m_ActiveMovementState = EMovementState::None;
             }
             break;
+
+        case EMovementState::DrawWeapon:
+            getNpcAnimationHandler().Action_DrawWeapon(0);
+
+            if(getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
+            {
+                // Wait until the drawing-animation is over, then go to standing state
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::UndrawWeapon:
+            getNpcAnimationHandler().Action_UndrawWeapon();
+
+            if(getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
+            {
+                // Wait until the undrawing-animation is over, then go to standing state
+                m_ActiveMovementState = EMovementState::None;
+
+                // Actually undraw the weapon and go back to normal state
+                getController().undrawWeapon();
+            }
+            break;
+
+        case EMovementState::FightForward:
+            if(m_MovementState.isForward && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightForward();
+            } else
+            {
+                // FIXME: Find out when the animation actually ended
+                getNpcAnimationHandler().Action_Stand(true);
+            }
+
+            if(getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
     }
 
     bool actionTriggered = false;
@@ -239,16 +296,26 @@ void NpcAIHandler::bindKeys()
     m_MovementState.actionTurnRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float) {
         m_MovementState.isTurnLeft = m_MovementState.isTurnLeft || triggered;
     });
+
+    m_MovementState.actionTurnRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
+        m_MovementState.isLastWeaponKey = m_MovementState.isLastWeaponKey || triggered;
+    });
+
+    m_MovementState.actionAction = Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float) {
+        m_MovementState.isAction = m_MovementState.isAction || triggered;
+    });
 }
 
 void NpcAIHandler::unbindKeys()
 {
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerForward,     m_MovementState.actionForward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerBackward,    m_MovementState.actionBackward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeLeft,  m_MovementState.actionStrafeLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeRight, m_MovementState.actionStrafeRight);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnLeft,    m_MovementState.actionTurnLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnRight,   m_MovementState.actionTurnRight);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerForward,           m_MovementState.actionForward);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerBackward,          m_MovementState.actionBackward);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeLeft,        m_MovementState.actionStrafeLeft);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeRight,       m_MovementState.actionStrafeRight);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnLeft,          m_MovementState.actionTurnLeft);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnRight,         m_MovementState.actionTurnRight);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerDrawWeaponMelee,   m_MovementState.actionLastWeapon);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerAction,   m_MovementState.actionAction);
 
     // Zero out everything
     m_MovementState = {};
@@ -262,6 +329,8 @@ void NpcAIHandler::resetKeyStates()
     m_MovementState.isBackward = false;
     m_MovementState.isTurnLeft = false;
     m_MovementState.isTurnRight = false;
+    m_MovementState.isLastWeaponKey = false;
+    m_MovementState.isAction = false;
     //MoveSpeed1 = false;
     //MoveSpeed2 = false;
 }

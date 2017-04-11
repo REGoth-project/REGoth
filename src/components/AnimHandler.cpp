@@ -222,6 +222,8 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t frameNext = reversed ? (frameNum - 1) % Math::trunc(numFrames)
                                 : (frameNum + 1) % Math::trunc(numFrames);
 
+    if(abs(frameNext - frameNum) > 1)
+        frameNext = frameNum;
 
     float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
 

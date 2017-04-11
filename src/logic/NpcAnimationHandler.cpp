@@ -72,10 +72,26 @@ void NpcAnimationHandler::Action_TurnRight()
     StartAni_Turn(1.0f);
 }
 
-void NpcAnimationHandler::Action_Stand()
+void NpcAnimationHandler::Action_Stand(bool force)
 {
-    startAni_Stand();
+    startAni_Stand(force);
 }
+
+void NpcAnimationHandler::Action_DrawWeapon(int part)
+{
+    startAni_DrawWeapon(part);
+}
+
+void NpcAnimationHandler::Action_UndrawWeapon()
+{
+    startAni_UndrawWeapon();
+}
+
+void NpcAnimationHandler::Action_FightForward()
+{
+    startAni_FightForward();
+}
+
 
 bool NpcAnimationHandler::playAnimationTrans(const std::string& anim)
 {
@@ -133,7 +149,7 @@ bool NpcAnimationHandler::isAnimationActive(const std::string& anim)
 
 bool NpcAnimationHandler::isStanding(bool allowTurning)
 {
-    bool standing = isAnimationActive("s_run") || isAnimationActive("s_walk");
+    bool standing = isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk);
 
     if(allowTurning)
     {
@@ -146,6 +162,24 @@ bool NpcAnimationHandler::isStanding(bool allowTurning)
     return standing;
 }
 
+std::string NpcAnimationHandler::getWeaponAniTag(EWeaponMode weapon)
+{
+    std::string str;
+    switch(weapon)
+    {
+        case EWeaponMode::WeaponNone:       str = ""; break;
+        case EWeaponMode::Weapon1h:         str = "1H"; break;
+        case EWeaponMode::Weapon2h:         str = "2H"; break;
+        case EWeaponMode::WeaponBow:        str = "BOW"; break;
+        case EWeaponMode::WeaponCrossBow:   str = "CBOW"; break;
+        case EWeaponMode::WeaponMagic:      str = "MAG"; break;
+        case EWeaponMode::WeaponFist:       str = "FIST"; break;
+        default: str = ""; break;
+    }
+
+    return str;
+}
+
 void NpcAnimationHandler::initAnimations()
 {
     Animations::AnimationLibrary& lib = getAnimLib();
@@ -156,18 +190,7 @@ void NpcAnimationHandler::initAnimations()
     for(int i=0;i<(int)EWeaponMode::NUM_WEAPON_MODES;i++)
     {
         // Get string representation of the current mode
-        std::string weapon;
-        switch((EWeaponMode)i)
-        {
-            case EWeaponMode::WeaponNone:       weapon = ""; break;
-            case EWeaponMode::Weapon1h:         weapon = "1H"; break;
-            case EWeaponMode::Weapon2h:         weapon = "2H"; break;
-            case EWeaponMode::WeaponBow:        weapon = "BOW"; break;
-            case EWeaponMode::WeaponCrossBow:   weapon = "CBOW"; break;
-            case EWeaponMode::WeaponMagic:      weapon = "MAG"; break;
-            case EWeaponMode::WeaponFist:       weapon = "FIST"; break;
-            default: weapon = ""; break;
-        }
+        std::string weapon = getWeaponAniTag((EWeaponMode)i);
 
         /****** Movement animations ******/
         n = weapon + "RUN";
@@ -318,7 +341,7 @@ void NpcAnimationHandler::startAni_TurnRight()
     }
 }
 
-void NpcAnimationHandler::startAni_Stand()
+void NpcAnimationHandler::startAni_Stand(bool force)
 {
     if(isAnimationActive(getActiveSet().s_walk)) // Standing in walk-mode
     {
@@ -338,13 +361,21 @@ void NpcAnimationHandler::startAni_Stand()
     {
         playAnimation(getActiveSet().t_runl_2_run);
     }else if(  isAnimationActive(getActiveSet().t_runturnL)
-            || isAnimationActive(getActiveSet().t_runturnR))
+            || isAnimationActive(getActiveSet().t_runturnR)
+            || isAnimationActive(getActiveSet().t_runstrafeL)
+            || isAnimationActive(getActiveSet().t_runstrafeR))
     {
         playAnimation(getActiveSet().s_run);
     }else if(  isAnimationActive(getActiveSet().t_walkturnL)
-            || isAnimationActive(getActiveSet().t_walkturnR))
+            || isAnimationActive(getActiveSet().t_walkturnR)
+            || isAnimationActive(getActiveSet().t_walkstrafeL)
+            || isAnimationActive(getActiveSet().t_walkstrafeR))
     {
         playAnimation(getActiveSet().s_walk);
+    }else if(force)
+    {
+        // FIXME: Respect walkmode
+        playAnimation(getActiveSet().s_run);
     }
 }
 
@@ -370,12 +401,54 @@ void NpcAnimationHandler::StartAni_Turn(float direction)
     getController().applyRotationY(turnRad);
 }
 
+void NpcAnimationHandler::startAni_DrawWeapon(int part)
+{
+    // FIXME: This are more conditions than i'd like to have...
+    // Check on the weapon-mode and play the corresponding animation
+    EWeaponMode mode = getController().getWeaponMode();
+    std::string first = "T_RUN_2_" + getWeaponAniTag(mode);
+    std::string second = "T_" + getWeaponAniTag(mode) + "_2_" + getWeaponAniTag(mode) + "RUN";
+
+    if(!isStanding())
+    {
+        if (!isAnimationActive(first) && !isAnimationActive(second)
+            && !isAnimationActive("S_" + getWeaponAniTag(mode))) // This is played when the part is done
+        {
+            playAnimation(first);
+        }
+
+        if (!isAnimationActive(first) && !isAnimationActive(second)
+            && !isStanding()) // This is played when the part is done
+        {
+            playAnimation(second);
+        }
+    }
+
+}
+
+void NpcAnimationHandler::startAni_UndrawWeapon()
+{
+    // Check on the weapon-mode and play the corresponding animation
+    //EWeaponMode mode = getController().getWeaponMode();
+
+    // FIXME: Find the right animation to play...
+    if(!isAnimationActive(getActiveSet().s_run))
+    {
+        playAnimation(getActiveSet().s_run);
+    }
+}
+
 const NpcAnimationHandler::AnimationSet& NpcAnimationHandler::getActiveSet()
 {
     return m_Anims[(int)getController().getWeaponMode()];
 }
 
 void NpcAnimationHandler::playAnimation(Handle::AnimationHandle anim)
+{
+    getAnimHandler().playAnimation(anim);
+}
+
+void NpcAnimationHandler::playAnimation(const std::string& anim)
 {
     getAnimHandler().playAnimation(anim);
 }
@@ -425,6 +498,18 @@ void NpcAnimationHandler::stopTurningAnimations()
         startAni_Stand();
     }
 }
+
+void NpcAnimationHandler::startAni_FightForward()
+{
+    std::string anim = "S_" + getWeaponAniTag(getController().getWeaponMode()) + "ATTACK";
+    if(!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+
+
+
 
 
 

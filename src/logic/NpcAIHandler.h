@@ -27,7 +27,10 @@ namespace Logic
         Forward,
         Backward,
         StrafeLeft,
-        StrafeRight
+        StrafeRight,
+        DrawWeapon,
+        UndrawWeapon,
+        FightForward,
     };
 
     /**
@@ -84,7 +87,8 @@ namespace Logic
             bool isTurnRight = false;
             bool isStrafeLeft = false;
             bool isStrafeRight = false;
-
+            bool isLastWeaponKey = false;
+            bool isAction = false;
             /**
              * All bound actions. Stored so we can unbind them later
              */
@@ -94,6 +98,8 @@ namespace Logic
             Engine::Action* actionTurnRight = nullptr;
             Engine::Action* actionStrafeLeft = nullptr;
             Engine::Action* actionStrafeRight = nullptr;
+            Engine::Action* actionLastWeapon = nullptr;
+            Engine::Action* actionAction = nullptr;
         }m_MovementState;
 
         /**
