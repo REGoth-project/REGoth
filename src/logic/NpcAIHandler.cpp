@@ -134,7 +134,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Backward-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
-                getNpcAnimationHandler().Action_Stand(true);
+                getNpcAnimationHandler().Action_Stand();
             }
             break;
 
@@ -156,7 +156,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
-                getNpcAnimationHandler().Action_Stand(true);
+                getNpcAnimationHandler().Action_Stand();
             }
             break;
 
@@ -178,7 +178,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
-                getNpcAnimationHandler().Action_Stand(true);
+                getNpcAnimationHandler().Action_Stand();
             }
             break;
 
