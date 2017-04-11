@@ -170,7 +170,7 @@ void PlayerController::onUpdate(float deltaTime)
             {
                 // Move by translation-velocity
                 m_MoveState.position += getEntityTransform().Rotate(
-                        getModelVisual()->getAnimationHandler().getRootNodeVelocityAvg());
+                        getModelVisual()->getAnimationHandler().getRootNodeVelocity());
             }
 
             //bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
@@ -835,6 +835,19 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if(!getEM().isEmpty() || getUsedMob().isValid())
         return;
 
+    // TODO: HACK, take this out!
+    float moveMod = 1.0f;
+    if (m_MoveSpeed1)
+        moveMod *= 4.0f;
+
+    if (m_MoveSpeed2)
+        moveMod *= 16.0f;
+
+    m_MoveSpeed2 = false;
+    m_MoveSpeed1 = false;
+
+    getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
+
     m_AIHandler.playerUpdate(deltaTime);
     return;
 
@@ -1050,15 +1063,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         return;
 
 
-    // TODO: HACK, take this out!
-    float moveMod = 1.0f;
-    if (m_MoveSpeed1)
-        moveMod *= 4.0f;
 
-    if (m_MoveSpeed2)
-        moveMod *= 16.0f;
-
-    getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityTotal() * deltaTime;
@@ -2112,14 +2117,14 @@ void PlayerController::setupKeyBindings()
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float) {
         m_isStrafeRight = m_isStrafeRight || triggered;
     });
-
+*/
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
         m_MoveSpeed1 = m_MoveSpeed1 || triggered;
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed2, [this](bool triggered, float intensity) {
         m_MoveSpeed2 = m_MoveSpeed2 || triggered;
-    });*/
+    });
 
     Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float intensity) {
         static bool s_triggered = false;
