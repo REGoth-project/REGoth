@@ -134,7 +134,7 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
     if(!animPtr || !animPtr->m_Data.isValid())
         return;
 
-    LogInfo() << "Playing ani: " << animPtr->m_Name;
+    //LogInfo() << "Playing ani: " << animPtr->m_Name;
 
     // If reversed, we need to start at the last frame
     m_AnimationFrame = 0;//static_cast<float>(animPtr->m_FirstFrame);
