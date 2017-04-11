@@ -73,7 +73,7 @@ namespace Logic
         /**
          * Goes back to the standing-state, when possible
          */
-        void Action_Stand(bool force = false);
+        void Action_Stand(bool force = false, bool allowTurning = false);
 
         /**
          * Stops any of the turning-animations, if they are currently playing
@@ -121,7 +121,7 @@ namespace Logic
         void startAni_Backward();
         void startAni_StrafeLeft();
         void startAni_StrafeRight();
-        void startAni_Stand(bool force = false);
+        void startAni_Stand(bool force = false, bool allowTurning = false);
         void startAni_TurnLeft();
         void startAni_TurnRight();
         void startAni_DrawWeapon(int part);

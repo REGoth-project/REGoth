@@ -235,7 +235,7 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     // 1H
     anim.getAnimHandler().addAnimation("-S_1HATTACK");
 
-    anim.getAnimHandler().playAnimation("S_RUNL");
+    //anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
 void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int headTextureIdx,

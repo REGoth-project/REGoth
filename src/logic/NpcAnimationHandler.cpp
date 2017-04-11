@@ -72,9 +72,9 @@ void NpcAnimationHandler::Action_TurnRight()
     StartAni_Turn(1.0f);
 }
 
-void NpcAnimationHandler::Action_Stand(bool force)
+void NpcAnimationHandler::Action_Stand(bool force, bool allowTurning )
 {
-    startAni_Stand(force);
+    startAni_Stand(force, allowTurning);
 }
 
 void NpcAnimationHandler::Action_DrawWeapon(int part)
@@ -317,11 +317,11 @@ void NpcAnimationHandler::startAni_StrafeRight()
 
 void NpcAnimationHandler::startAni_TurnLeft()
 {
-    if(isAnimationActive(getActiveSet().s_walk)) // Standing, walk-mode
+    if(isAnimationActive(getActiveSet().s_walk) || isAnimationActive(getActiveSet().t_walkturnR)) // Standing, walk-mode
     {
         // Start walking backward
         playAnimation(getActiveSet().t_walkturnL);
-    }else if(isAnimationActive(getActiveSet().s_run)) // Standing, run-mode
+    }else if(isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().t_runturnR)) // Standing, run-mode
     {
         // Jump back in running mode
         playAnimation(getActiveSet().t_runturnL);
@@ -330,20 +330,24 @@ void NpcAnimationHandler::startAni_TurnLeft()
 
 void NpcAnimationHandler::startAni_TurnRight()
 {
-    if(isAnimationActive(getActiveSet().s_walk)) // Standing, walk-mode
+    if(isAnimationActive(getActiveSet().s_walk) || isAnimationActive(getActiveSet().t_walkturnL)) // Standing, walk-mode
     {
         // Start walking backward
         playAnimation(getActiveSet().t_walkturnR);
-    }else if(isAnimationActive(getActiveSet().s_run)) // Standing, run-mode
+    }else if(isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().t_runturnL)) // Standing, run-mode
     {
         // Jump back in running mode
         playAnimation(getActiveSet().t_runturnR);
     }
 }
 
-void NpcAnimationHandler::startAni_Stand(bool force)
+void NpcAnimationHandler::startAni_Stand(bool force, bool allowTurning )
 {
-    if(isAnimationActive(getActiveSet().s_walk)) // Standing in walk-mode
+    if(isAnimationActive(Handle::AnimationHandle::makeInvalidHandle()))
+    {
+        // Default to idle-animation here
+        playAnimation(getActiveSet().s_run);
+    }else if(isAnimationActive(getActiveSet().s_walk)) // Standing in walk-mode
     {
 
     }else if(isAnimationActive(getActiveSet().s_walkl)) // Forward in walk-mode
@@ -360,16 +364,18 @@ void NpcAnimationHandler::startAni_Stand(bool force)
     }else if(isAnimationActive(getActiveSet().s_runl)) // Forward in run-mode
     {
         playAnimation(getActiveSet().t_runl_2_run);
-    }else if(  isAnimationActive(getActiveSet().t_runturnL)
+    }else if( !allowTurning &&
+            (  isAnimationActive(getActiveSet().t_runturnL)
             || isAnimationActive(getActiveSet().t_runturnR)
             || isAnimationActive(getActiveSet().t_runstrafeL)
-            || isAnimationActive(getActiveSet().t_runstrafeR))
+            || isAnimationActive(getActiveSet().t_runstrafeR)))
     {
         playAnimation(getActiveSet().s_run);
-    }else if(  isAnimationActive(getActiveSet().t_walkturnL)
+    }else if( !allowTurning &&
+            (  isAnimationActive(getActiveSet().t_walkturnL)
             || isAnimationActive(getActiveSet().t_walkturnR)
             || isAnimationActive(getActiveSet().t_walkstrafeL)
-            || isAnimationActive(getActiveSet().t_walkstrafeR))
+            || isAnimationActive(getActiveSet().t_walkstrafeR)))
     {
         playAnimation(getActiveSet().s_walk);
     }else if(force)

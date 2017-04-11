@@ -306,7 +306,7 @@ bool PlayerController::travelPath(float deltaTime)
     }
 
     // Set run animation
-    //getModelVisual()->setAnimation(ModelVisual::Run);
+    getModelVisual()->setAnimation(ModelVisual::Run);
 
     if (differenceXZ.lengthSquared() < 0.5f) // TODO: Find a nice setting for this
     {

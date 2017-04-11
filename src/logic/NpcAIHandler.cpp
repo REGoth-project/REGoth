@@ -48,10 +48,10 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             } else if(m_MovementState.isTurnRight)
             {
                 getNpcAnimationHandler().Action_TurnRight();
-            }else
-            {
-                getNpcAnimationHandler().Action_Stand();
             }
+
+            getNpcAnimationHandler().Action_Stand(false, m_MovementState.isTurnLeft || m_MovementState.isTurnRight);
+
 
             // Only allow changing states when the character is standing (ie. not playing transition animations)
             if(getNpcAnimationHandler().isStanding(true))
@@ -111,6 +111,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Forward-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
+                getNpcAnimationHandler().Action_Stand(); // FIXME: Shouldn't need to force stand here (and in the other states)
             }
             break;
 
@@ -133,6 +134,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Backward-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
+                getNpcAnimationHandler().Action_Stand(true);
             }
             break;
 
@@ -154,6 +156,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
+                getNpcAnimationHandler().Action_Stand(true);
             }
             break;
 
@@ -175,6 +178,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
+                getNpcAnimationHandler().Action_Stand(true);
             }
             break;
 
