@@ -2529,7 +2529,7 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     auto& stats = getScriptInstance();
 
     statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
-    statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+    statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_DEXTERITY]);
 
     statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
                              stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
