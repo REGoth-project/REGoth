@@ -9,7 +9,7 @@ int_alias = ["bool", "C_Item_ID", "C_Npc_ID", "C_Info_ID"]
 cinstance_types = ["C_Item", "C_Npc", "C_Info", "instance"]
 primitives = ["int", "float", "string", "func"] + int_alias
 known_types = primitives + cinstance_types
-known_types_lower = list(map(str.lower, all_types))
+known_types_lower = list(map(str.lower, known_types))
 
 class DaedalusFunction(object):
     def __init__(self, returntype, func_name, params, comments):
@@ -153,12 +153,45 @@ def parse_functions(external_filename):
         d[f.func_name.lower()] = f
     return d
 
+def types_ok(t1, n1, t2, n2):
+    if t1 == t2:
+        return True
+    if t1 in ["int", "bool"] and t2 in ["int", "bool"]:
+        return True
+    cinstance_types_lower = list(map(str.lower, cinstance_types))
+    int_alias_lower = list(map(str.lower, int_alias[1:]))
+    if t1 in cinstance_types_lower and t2 in cinstance_types_lower:
+        return True
+    if "instance" in n1.lower() and t2 == "int":
+        if t1 in int_alias_lower:
+            return True
+    return False
 
 def main():
     filename = "externals.d"
     func_dict = parse_functions(filename)
     for f in func_dict.values():
         pass#print(f.pretty())
+
+    if False:
+        filename2 = "gothic_library.d"
+        func_dict2 = parse_functions(filename2)
+        for fname in func_dict2.keys():
+            differ = False
+            f1 = func_dict[fname]
+            f2 = func_dict2[fname]
+            if not types_ok(f1.returntype, "", f2.returntype, ""):
+                print("different return types")
+                differ = True
+            for (t1, n1), (t2, n2) in zip(f1.params, f2.params):
+                if not types_ok(t1, n1, t2, n2):
+                    print("different param types: {} {}".format(t1, t2))
+                    differ = True
+            if differ:
+                print(f1.pretty())
+                print(f2.pretty())
+                print("")
+        return
 
     default_category = "other"
     categories = ["doc", "npc", "hlp", "snd", "wld", "mis", "mdl", "ai"]

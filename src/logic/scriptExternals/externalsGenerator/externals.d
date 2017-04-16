@@ -42,16 +42,16 @@ func void AI_DropItem(C_NPC npc, C_Item_ID itemInstance);
 
 func void AI_DropMob(C_NPC npc);
 
-func void AI_EquipArmor(C_NPC owner, C_Item_ID armorFromOwnersInventory);
-// Ziehe die angebene Rüstung dem NSC "owner" an, diese muss sich in seinem Inventory befinden.
+func void AI_EquipArmor(C_NPC npc, C_Item_ID itemInstance);
+// Ziehe die angebene Rüstung dem NSC "npc" an, diese muss sich in seinem Inventory befinden.
 
 func void AI_EquipBestArmor(C_NPC npc);
 // Wunder, Wunder hier wird die beste im Inventory vorhandene Rüstung angezogen
 
-func void AI_EquipBestMeleeWeapon(C_NPC npc);
+func int AI_EquipBestMeleeWeapon(C_NPC npc);
 // sucht im Inventory nach der besten Nahkampfwaffe und hängt sie an den Gürtel
 
-func void AI_EquipBestRangedWeapon(C_NPC npc);
+func int AI_EquipBestRangedWeapon(C_NPC npc);
 // sucht im Inventory nach der besten Fernkampfwaffe und ploppt sie auf den Rücken der Instanz
 
 func void AI_FinishingMove(C_NPC npc, C_NPC other);
@@ -395,7 +395,7 @@ func bool Game_InitGerman();
 func bool Hlp_CutscenePlayed(string csName);
 // Abfrage, ob Cutscene schon gespielt wurde (0 = Nein / 1 = Ja)
 
-func int Hlp_GetInstanceID(Instance itemOrNPC);
+func int Hlp_GetInstanceID(Instance itemOrNpcInstance);
 // liefert die interne ID ( nicht Var aus der Instanz) zurück, um zwei items oder npcs miteinander vergleichen zu können ( integer Vergleich)
 // itemOrNPC kann vom Typ C_ITEM oder C_NPC sein
 
@@ -513,7 +513,7 @@ func void Mdl_SetVisualBody(C_NPC npc, string bodyMesh, int bodyTex, int skinCol
 func void Mdl_StartFaceAni(C_NPC npc, string animationName, float intensity, float holdTime);
 // Starte Gesichtsanimation // intensity 1 = 100% // holdTime -1 = forever
 
-func void Mis_AddMissionEntry(instance n0, string s1);
+func void Mis_AddMissionEntry(Instance n0, string s1);
 
 func int Mis_GetStatus(int missionName);
 // Liefert aktuellen Status einer Mission zurück ( Bezogen auf den Spieler ) -> RUNNING, SUCCESS, FAILED etc.
@@ -521,7 +521,7 @@ func int Mis_GetStatus(int missionName);
 func bool Mis_OnTime(int missionName);
 // Liefert TRUE, wenn sich Spieler noch innerhalb des Zeitlimits für diese Mission befindet
 
-func void Mis_RemoveMission(instance n0);
+func void Mis_RemoveMission(Instance n0);
 
 func void Mis_SetStatus(int missionName, int newStatus);
 // Setzt den Status einer Mission ( Bezogen auf den Spieler ) -> RUNNING, SUCCESS, FAILED etc. )
@@ -652,7 +652,7 @@ func int Npc_GetHeightToNpc(C_NPC npc1, C_NPC npc2);
 
 func bool Npc_GetInvItem(C_NPC npc, C_ITEM_ID itemInstance);
 // Ermittle ItemInstanz aus Inventory
-// befüllt globale Variable "item" mit dem gefundenen C_Item, falls das item gültig ist. Gibt TRUE zurück, wenn das item gültig ist.
+// befüllt globale Variable "item" mit dem gefundenen C_Item, falls das item gültig ist. Gibt TRUE zurück, wenn item im inventar gefunden wurde
 
 func int Npc_GetInvItemBySlot(C_NPC npc, int category, int slotNr);
 // Mit diesem Befehl läßt sich nachsehen, ob in einem bestimmten Slot einer bestimmten Kategorie ein item vorhanden ist
@@ -729,8 +729,8 @@ func int Npc_GetTrueGuild(C_NPC npc);
 func bool NPC_GiveInfo(C_NPC npc, bool important);
 // Überprüft, ob der NSC eine (!) gültige Info für den Spieler hat und startet diese gegebenenfalls (Returnwert "1").
 
-func void Npc_GiveItem(C_NPC npc, C_ITEM_ID item, C_NPC other);
-// Der NSC "npc" gibt dem NSC "other" den angegebenen Gegenstand "item". Der Gegenstand wandert sofort ins Inventory des anderen.
+func void Npc_GiveItem(C_NPC npc, C_ITEM_ID itemInstance, C_NPC other);
+// Der NSC "npc" gibt dem NSC "other" den angegebenen Gegenstand "itemInstance". Der Gegenstand wandert sofort ins Inventory des anderen.
 
 func bool Npc_HasBodyFlag(C_NPC npc, int bodyFlag);
 // Liefert 1, falls BodyFlag gesetzt ist, sonst 0
@@ -886,12 +886,12 @@ func bool Npc_RefuseTalk(C_NPC npc);
 
 func bool Npc_RemoveInvItem(C_NPC owner, C_ITEM_ID itemInstance);
 // das angegebene Item wird aus dem Inventory des NSCs entfernt und gelöscht
-// True wenn erfolgreich
+// True wenn erfolgreich (mindestens 1 Gegenstand vom Typ itemInstance befand sich im Inventar)
 
 func bool Npc_RemoveInvItems(C_NPC owner, C_ITEM_ID itemInstance, int amount);
 // das angegebene Anzahl des Multi-Items wird aus dem Inventory des NSCs entfernt und gelöscht
 // wie Npc_RemoveInvItem, nur das Multislotgegenstände gelöscht werden
-// True wenn erfolgreich
+// True wenn erfolgreich (mindestens 1 Gegenstand vom Typ itemInstance befand sich im Inventar)
 
 func void Npc_SendPassivePerc(C_NPC npc1, int perc_type, C_NPC victim, C_NPC offender);
 // Sende eine passive Wahrnehmung aus.Npc1 = wer schickt victim = Opfer, offender = Täter
@@ -998,8 +998,7 @@ func int PrintDialog(int dialogNr, string text, int x, int y, string font, int t
 func void PrintMulti(string text1, string text2, string text3, string text4, string text5);
 // Printbefehl, der aus den angegebenen Strings einen Auswählt und auf den Bildschirm schreibt
 
-func bool PrintScreen(int dialogNr, string text, int posX, int posY, string font, int timeSec);
-// Variable dialogNr wird nicht benutzt
+func bool PrintScreen(string text, int posX, int posY, string font, int timeSec);
 // Gibt den Text 'text' auf dem Bildschrim aus und benutzt dabei den Font 'font'.
 // Die Position ist für jede Koordinate eine Zahl zwischen 0 und 99 und gibt die prozentuale Position an.
 // Der Ursprung befindet sich oben links (also 0% X und 0% Y)
@@ -1175,8 +1174,8 @@ func void Wld_SetObjectRoutine(int hour, int min, string objName, int state);
 func void Wld_SetTime(int hour, int min);
 // Setzt die Uhrzeit auf hour:min. hour kann größer als 23 sein, um zum nächsten Tag zu springen.
 
-func void Wld_SpawnNpcRange(C_NPC summoner, C_NPC_ID creature, int count, float radius);
-// NPC summoner beschwört die Diener creature der Anzahl count. Die Diener erscheinen in einer Entfernung von radius (in cm).
+func void Wld_SpawnNpcRange(C_NPC summoner, C_NPC_ID npcInstance, int count, float radius);
+// NPC summoner beschwört die Diener npcInstance der Anzahl count. Die Diener erscheinen in einer Entfernung von radius (in cm).
 
 func void Wld_StopEffect(string vfxName);
 
