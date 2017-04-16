@@ -22,7 +22,7 @@ class DaedalusFunction(object):
         var_keyword = "var " if print_varkeyword else ""
         params_formatted = ", ".join("{}{} {}".format(var_keyword, ptype, pname) for ptype, pname in self.params)
         funckeyword = "func " if print_funckeyword else ""
-        signature = funckeyword + "{} {}({});".format(self.returntype, self.func_name, params_formatted)
+        signature = funckeyword + "{} {}({})".format(self.returntype, self.func_name, params_formatted)
         lines = [signature]
         if print_comments:
             lines.extend(self.comments)
@@ -116,8 +116,6 @@ def parse_functions(external_filename):
         elif not match:
             if not comments_ended:
                 comment = line
-                if not comment.startswith("//"):
-                    comment = "// " + comment
                 functions[-1].comments.append(comment)
             else:
                 pass
@@ -168,10 +166,14 @@ def types_ok(t1, n1, t2, n2):
     return False
 
 def main():
-    filename = "externals.d"
+    filename = "externals.doxy.d"
     func_dict = parse_functions(filename)
-    for f in func_dict.values():
-        pass#print(f.pretty())
+    print("/** @file */\n")
+    for fname in sorted(func_dict.keys()):
+        f = func_dict[fname]
+        print(f.pretty(print_comments=True, print_varkeyword=True, print_funckeyword=True))
+        print("")
+    return
 
     if False:
         filename2 = "gothic_library.d"
