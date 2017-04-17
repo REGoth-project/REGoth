@@ -459,13 +459,13 @@ bool Utils::containsLike(const std::string& searchSpace, const std::string& part
 UI::ConsoleCommand::Suggestion Utils::findSuggestion(const std::vector<UI::ConsoleCommand::Suggestion>& suggestions, const std::string& name){
     for (auto& suggestion : suggestions)
     {
-        auto& aliasList = suggestion.aliasList;
+        auto& aliasList = suggestion->aliasList;
         if (std::find(aliasList.begin(), aliasList.end(), name) != aliasList.end())
         {
             return suggestion;
         }
     }
-    return UI::ConsoleCommand::Suggestion();
+    return nullptr;
 }
 
 bool Utils::stringEqualIngoreCase(const std::string a, const std::string b) {

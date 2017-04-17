@@ -91,7 +91,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
             {
                 if (row >= maxSuggestions)
                     break;
-                auto& aliasList = suggestionEntry.aliasList;
+                auto& aliasList = suggestionEntry->aliasList;
                 if (columnID < aliasList.size())
                 {
                     columnEmpty = false;

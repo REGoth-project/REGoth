@@ -443,7 +443,8 @@ public:
             auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
             for (auto& waypoint : waypoints)
             {
-                suggestions.push_back(UI::ConsoleCommand::Suggestion {{waypoint.name}});
+                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {{waypoint.name}});
+                suggestions.push_back(suggestion);
             }
             return suggestions;
         };
@@ -622,7 +623,8 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                suggestions.push_back(UI::ConsoleCommand::Suggestion{group});
+                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::NPCSuggestion>(group, npc);
+                suggestions.push_back(suggestion);
             }
             return suggestions;
         };
@@ -671,24 +673,24 @@ public:
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            auto aliasGroups = worlddNpcNamesGen();
+            auto suggestions = worlddNpcNamesGen();
 
             std::vector<VobTypes::NpcVobInformation> vobInfos;
             std::vector<std::string> fullNames;
             for (auto& requestedName : {teleporterName, targetName})
             {
-                auto suggestion = Utils::findSuggestion(aliasGroups, requestedName);
-                auto& aliasList = suggestion.aliasList;
+                auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
+                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
                 bool success = false;
-                if (aliasList.size() >= 2)
+                if (suggestion != nullptr)
                 {
-                    std::string npcDatFileName = aliasList[0];
-                    std::string npcDisplayName = aliasList[1];
-                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(aliasList[0]);
-                    if (npcScriptHandle.isValid())
+                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                    if (npcVobInfo.isValid())
                     {
                         success = true;
-                        VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                        auto& aliasList = suggestion->aliasList;
+                        std::string npcDatFileName = aliasList[0];
+                        std::string npcDisplayName = aliasList[1];
                         vobInfos.push_back(npcVobInfo);
                         fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
                     }
@@ -740,16 +742,11 @@ public:
             else
             {
                 const std::string& requested = args.at(1);
-                auto aliasGroups = worlddNpcNamesGen();
-                auto suggestion = Utils::findSuggestion(aliasGroups, requested);
-                auto& aliasList = suggestion.aliasList;
-
-                if (aliasList.size() >= 2) {
-                    std::string npcDatFileName = aliasList[0];
-                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(npcDatFileName);
-                    if (npcScriptHandle.isValid()) {
-                        npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
-                    }
+                auto suggestions = worlddNpcNamesGen();
+                auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
+                if (suggestion != nullptr) {
+                    npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                 } else {
                     return "NPC not found in this world: " + requested;
                 }
@@ -852,7 +849,8 @@ public:
                         // most of the items have description equal to name, so remove one of them
                         aliasList.pop_back();
                     }
-                    suggestions.push_back(UI::ConsoleCommand::Suggestion{aliasList});
+                    UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {aliasList});
+                    suggestions.push_back(suggestion);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
             }
@@ -879,11 +877,11 @@ public:
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
             std::size_t index = 0;
-            auto aliasGroups = itemNamesGen();
-            auto suggestion = Utils::findSuggestion(aliasGroups, itemName);
-            auto& aliasList = suggestion.aliasList;
-            if (aliasList.size() >= 1)
+            auto suggestions = itemNamesGen();
+            auto suggestion = Utils::findSuggestion(suggestions, itemName);
+            if (suggestion != nullptr)
             {
+                auto& aliasList = suggestion->aliasList;
                 auto& parScriptName = aliasList[0];
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
                 std::string description;

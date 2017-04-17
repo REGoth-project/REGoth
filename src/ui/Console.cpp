@@ -178,7 +178,8 @@ ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleComm
     auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
     std::vector<ConsoleCommand::CandidateListGenerator> generators;
     auto simpleGen = [](std::string token) -> std::vector<ConsoleCommand::Suggestion> {
-        return {ConsoleCommand::Suggestion {{token}}};
+        ConsoleCommand::Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{token}});
+        return {suggestion};
     };
     for (auto tokenIt = tokens.begin(); tokenIt != tokens.end(); tokenIt++)
     {
@@ -228,7 +229,7 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
         for (std::size_t tokenID = 0; tokenID < command.numFixTokens; tokenID++)
         {
             auto suggestion = Utils::findSuggestion(command.generators.at(tokenID)(), tokens.at(tokenID));
-            if (suggestion.aliasList.empty())
+            if (suggestion == nullptr)
                 allStagesMatched = false;
         }
         if (allStagesMatched)
@@ -290,7 +291,7 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
                 {
                     auto& suggestion = suggestions[suggestionID];
                     suggestionsByCommand[cmdID].push_back(suggestion);
-                    auto& aliasList = suggestion.aliasList;
+                    auto& aliasList = suggestion->aliasList;
                     if (aliasList.empty())
                         continue;
                     std::vector<MatchInfo> groupInfos;
@@ -354,7 +355,7 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
                 for (auto& matchInfo : *matchInfos)
                 {
                     auto& suggestion = suggestionsByCommand[matchInfo.commandID][matchInfo.groupID];
-                    auto& aliasList = suggestion.aliasList;
+                    auto& aliasList = suggestion->aliasList;
                     bool notInSet = known.insert(Utils::lowered(Utils::join(aliasList.begin(), aliasList.end(), ""))).second;
                     if (notInSet)
                     {

@@ -8,6 +8,7 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <memory>
 #include <ui/ConsoleBox.h>
 
 namespace UI
@@ -15,7 +16,20 @@ namespace UI
 
     struct SuggestionBase
     {
+        SuggestionBase(const std::vector<std::string>& aliasList) :
+                aliasList(aliasList)
+        {}
+        virtual ~SuggestionBase() {};
         std::vector<std::string> aliasList;
+    };
+
+    struct NPCSuggestion : SuggestionBase
+    {
+        NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle) :
+            SuggestionBase(aliasList),
+            npcHandle(npcHandle)
+        {}
+        Handle::EntityHandle npcHandle;
     };
 
     struct ConsoleCommand
@@ -23,7 +37,7 @@ namespace UI
         // Takes list of arguments as parameter, returns command result
         using Callback = std::function<std::string(const std::vector<std::string>&)>;
 
-        using Suggestion = SuggestionBase;//std::vector<std::string>;
+        using Suggestion = std::shared_ptr<SuggestionBase>;
         // generator, which returns vector of candidates
         using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
 

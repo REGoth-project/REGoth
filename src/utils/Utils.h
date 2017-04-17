@@ -480,7 +480,7 @@ namespace Utils
 
     /**
      * searches for the first suggestion which contains name and returns it
-     * returns suggestion with empty vector if not found any
+     * returns nullptr if not found any
      * @param suggestions suggestions to search in
      * @param name token to find
      */
