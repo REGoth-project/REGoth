@@ -17,10 +17,12 @@ namespace UI
     struct SuggestionBase
     {
         SuggestionBase(const std::vector<std::string>& aliasList) :
-                aliasList(aliasList)
+                aliasList(aliasList),
+                bestAliasMatchIndex(0)
         {}
         virtual ~SuggestionBase() {};
         std::vector<std::string> aliasList;
+        std::size_t bestAliasMatchIndex;
     };
 
     struct NPCSuggestion : SuggestionBase
@@ -91,7 +93,12 @@ namespace UI
          * @param input command to work on
          * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
          */
-        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> generateSuggestions(const std::string& input, bool limitToFixed);
+        void generateSuggestions(const std::string& input, bool limitToFixed);
+
+        /**
+         * splits line, removes empty entries, adds empty string for lookahead trigger
+         */
+        static std::vector<std::string> tokenized(const std::string& line);
 
         /**
          * searches for command which, could generate the given tokens and returns its index

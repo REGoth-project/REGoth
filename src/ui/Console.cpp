@@ -106,7 +106,7 @@ void Console::onKeyDown(int glfwKey)
                 m_PendingLine = m_TypedLine;
             ++m_HistoryIndex;
             m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            invalidateSuggestions();
+            generateSuggestions(m_TypedLine, false);
         }
     }else if(glfwKey == Keys::GLFW_KEY_DOWN)
     {
@@ -117,47 +117,40 @@ void Console::onKeyDown(int glfwKey)
                 m_TypedLine = m_PendingLine;
             else
                 m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            invalidateSuggestions();
+            generateSuggestions(m_TypedLine, false);
         }
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
         {
             m_TypedLine.pop_back();
-            m_SuggestionsList = generateSuggestions(m_TypedLine, false);
+            generateSuggestions(m_TypedLine, false);
         }
     }else if(glfwKey == Keys::GLFW_KEY_ENTER)
     {
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
-        invalidateSuggestions();
+        generateSuggestions(m_TypedLine, false);
     }else if(glfwKey == Keys::GLFW_KEY_TAB)
     {
         if (m_SuggestionsList.empty())
         {
-            m_SuggestionsList = generateSuggestions(m_TypedLine, false);
+            generateSuggestions(m_TypedLine, false);
         }
         else if (!m_SuggestionsList.back().empty())
         {
             // default for now: only auto complete last token
             const auto& suggestions = m_SuggestionsList.back();
             auto bestSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
-            std::vector<std::string> tokens = Utils::splitAndRemoveEmpty(m_TypedLine, ' ');
-            if (tokens.empty() || isspace(m_TypedLine.back()))
-            {
-                // append empty pseudo token to trigger lookahead for the next token
-                tokens.push_back("");
-            }
-            // TODO save/lookup bestMatchIndex instead of always using alias0
-            tokens.back() = bestSuggestion->aliasList.at(0);
+            std::vector<std::string> tokens = tokenized(m_TypedLine);
+            tokens.back() = bestSuggestion->aliasList.at(bestSuggestion->bestAliasMatchIndex);
             std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
             if (!tokens.empty())
             {
                 newLine += " ";
             }
             m_TypedLine = newLine;
-
-            m_SuggestionsList = generateSuggestions(m_TypedLine, false);
+            generateSuggestions(m_TypedLine, false);
         }
     }
 }
@@ -167,7 +160,7 @@ void Console::onTextInput(const std::string& text)
     if (!text.empty())
     {
         m_TypedLine += text;
-        m_SuggestionsList = generateSuggestions(m_TypedLine, false);
+        generateSuggestions(m_TypedLine, false);
     }
 }
 
@@ -285,17 +278,11 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
 }
 
 using Suggestion = UI::ConsoleCommand::Suggestion;
-std::vector<std::vector<Suggestion>> Console::generateSuggestions(const std::string& input, bool limitToFixed) {
+void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
 
-    vector<string> tokens = Utils::splitAndRemoveEmpty(input, ' ');
-
-    if (tokens.empty() || isspace(input.back()))
-    {
-        // append empty pseudo token to trigger lookahead for the next token
-        tokens.push_back("");
-    }
+    vector<string> tokens = tokenized(input);
 
     vector<vector<Suggestion>> suggestionsList;
     vector<bool> commandIsAlive(m_Commands.size(), true);
@@ -325,6 +312,9 @@ std::vector<std::vector<Suggestion>> Console::generateSuggestions(const std::str
                     std::vector<MatchInfo> groupInfos;
                     for (auto& candidate : aliasList)
                     {
+                        // skip empty string alias
+                        if (candidate.empty())
+                            continue;
                         string candidateLowered = candidate;
                         Utils::lower(candidateLowered);
                         auto pos = candidateLowered.find(tokenLowered);
@@ -336,12 +326,17 @@ std::vector<std::vector<Suggestion>> Console::generateSuggestions(const std::str
                         MatchInfo matchInfo = MatchInfo{pos, caseMatches, cmdID, suggestionID, candidate, candidateLowered};
                         groupInfos.push_back(matchInfo);
                     }
-                    std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
-                    auto& bestMatch = groupInfos.at(0);
-                    if (bestMatch.pos != string::npos)
+                    if (!groupInfos.empty())
                     {
-                        commandIsAlive[cmdID] = true;
-                        matchInfos.push_back(bestMatch);
+                        std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
+                        auto& bestMatch = groupInfos.at(0);
+                        if (bestMatch.pos != string::npos)
+                        {
+                            commandIsAlive[cmdID] = true;
+                            matchInfos.push_back(bestMatch);
+                            auto it = std::find(suggestion->aliasList.begin(), suggestion->aliasList.end(), bestMatch.candidate);
+                            suggestion->bestAliasMatchIndex = it - suggestion->aliasList.begin();
+                        }
                     }
                 }
             }
@@ -365,12 +360,23 @@ std::vector<std::vector<Suggestion>> Console::generateSuggestions(const std::str
             suggestionsList.push_back(suggestionsForThisToken);
         }
     }
-    return suggestionsList;
+    invalidateSuggestions();
+    m_SuggestionsList = suggestionsList;
 }
 
 void Console::invalidateSuggestions() {
     m_ConsoleBox.setSelectionIndex(0);
     m_SuggestionsList.clear();
+}
+
+std::vector<std::string> Console::tokenized(const std::string &line) {
+    std::vector<std::string> tokens = Utils::splitAndRemoveEmpty(line, ' ');
+    if (tokens.empty() || isspace(line.back()))
+    {
+        // append empty pseudo token to trigger lookahead for the next token
+        tokens.push_back("");
+    }
+    return tokens;
 }
 
 
