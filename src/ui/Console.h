@@ -88,12 +88,10 @@ namespace UI
 
         /**
          * Trigger autocompletion
-         * @param command to work on
+         * @param input command to work on
          * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
-         * @param showSuggestions show suggestions
-         * @param overwriteTypedLine replace the console line with the suggested one
          */
-        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
+        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> generateSuggestions(const std::string& input, bool limitToFixed);
 
         /**
          * searches for command which, could generate the given tokens and returns its index

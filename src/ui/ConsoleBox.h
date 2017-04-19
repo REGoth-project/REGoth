@@ -29,7 +29,9 @@ namespace UI
         /**
          * sets the current selection index
          */
-        void setSelectionIndex(int newIndex) {m_CurrentlySelected = newIndex;};
+        void setSelectionIndex(int newIndex);
+
+        int getSelectionIndex() const { return m_CurrentlySelected;}
 
     protected:
 

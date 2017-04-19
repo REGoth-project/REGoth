@@ -191,3 +191,16 @@ void UI::ConsoleBox::addSelectionIndex(int add) {
     int suggestionCount = static_cast<int>(suggestionsList.back().size());
     m_CurrentlySelected = Utils::mod(m_CurrentlySelected + add, suggestionCount);
 }
+
+void UI::ConsoleBox::setSelectionIndex(int newIndex) {
+    /*
+    const auto& suggestionsList = m_Console.getSuggestions();
+    // check if suggestions for last token are empty
+    if (suggestionsList.empty() || suggestionsList.back().empty())
+        return;
+
+    int suggestionCount = static_cast<int>(suggestionsList.back().size());
+    m_CurrentlySelected = Math::clamp(newIndex, 0, suggestionCount - 1);
+    */
+    m_CurrentlySelected = newIndex;
+}
