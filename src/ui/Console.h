@@ -127,6 +127,11 @@ namespace UI
     private:
 
         /**
+         * clears the suggestion list and sets the current selection index to 0
+         */
+        void invalidateSuggestions();
+
+        /**
          * Last submitted commands
          */
         std::vector<std::string> m_History;

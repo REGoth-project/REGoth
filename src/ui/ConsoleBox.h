@@ -19,6 +19,18 @@ namespace UI
          */
         void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
 
+        /**
+         * Increases the selection index by the given amount.
+         * perform periodic wrap around
+         */
+
+        void addSelectionIndex(int add);
+
+        /**
+         * sets the current selection index
+         */
+        void setSelectionIndex(int newIndex) {m_CurrentlySelected = newIndex;};
+
     protected:
 
         struct
@@ -40,5 +52,10 @@ namespace UI
          * Suggestions background image
          */
         Handle::TextureHandle m_SuggestionsBackgroundTexture;
+
+        /**
+         * Index of selected entry
+         */
+        int m_CurrentlySelected;
     };
 }

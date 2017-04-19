@@ -75,11 +75,28 @@ void Console::onKeyDown(int glfwKey)
     if(glfwKey == Keys::GLFW_KEY_ESCAPE){
         setOpen(false);
     }
-
     if(glfwKey == Keys::GLFW_KEY_F10){
         setOpen(!isOpen());
     }
-
+    if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
+    {
+        m_ConsoleBox.addSelectionIndex(1);
+    }
+    if(glfwKey == Keys::GLFW_KEY_PAGE_UP)
+    {
+        m_ConsoleBox.addSelectionIndex(-1);
+    }
+    if(glfwKey == Keys::GLFW_KEY_HOME)
+    {
+        m_ConsoleBox.setSelectionIndex(0);
+    }
+    if(glfwKey == Keys::GLFW_KEY_END)
+    {
+        if (!m_SuggestionsList.empty())
+        {
+            m_ConsoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
+        }
+    }
     if(glfwKey == Keys::GLFW_KEY_UP)
     {
         const int historySize = m_History.size();
@@ -89,7 +106,7 @@ void Console::onKeyDown(int glfwKey)
                 m_PendingLine = m_TypedLine;
             ++m_HistoryIndex;
             m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            m_SuggestionsList.clear();
+            invalidateSuggestions();
         }
     }else if(glfwKey == Keys::GLFW_KEY_DOWN)
     {
@@ -100,7 +117,7 @@ void Console::onKeyDown(int glfwKey)
                 m_TypedLine = m_PendingLine;
             else
                 m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            m_SuggestionsList.clear();
+            invalidateSuggestions();
         }
     }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
     {
@@ -113,7 +130,7 @@ void Console::onKeyDown(int glfwKey)
     {
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
-        m_SuggestionsList.clear();
+        invalidateSuggestions();
     }else if(glfwKey == Keys::GLFW_KEY_TAB)
     {
         std::string oldLine;
@@ -209,10 +226,10 @@ struct MatchInfo
     static bool compare(const MatchInfo& a, const MatchInfo& b) {
         if (a.pos != b.pos){
             return a.pos < b.pos;
-        } else if (a.candidate.size() != b.candidate.size()){
-            return a.candidate.size() < b.candidate.size();
-        } else {
+        } else if (a.caseMatches != b.caseMatches){
             return a.caseMatches > b.caseMatches;
+        } else {
+            return a.candidate < b.candidate;
         }
     };
 };
@@ -384,6 +401,11 @@ std::vector<std::vector<Suggestion>> Console::autoComplete(std::string& input, b
         input = tokenConCat.str();
     }
     return suggestionsList;
+}
+
+void Console::invalidateSuggestions() {
+    m_ConsoleBox.setSelectionIndex(0);
+    m_SuggestionsList.clear();
 }
 
 
