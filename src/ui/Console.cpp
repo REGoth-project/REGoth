@@ -51,14 +51,6 @@ Console::Console(Engine::BaseEngine& e) :
 
     m_BaseEngine.getRootUIView().addChild(&m_ConsoleBox);
     outputAdd(" ----------- REGoth Console -----------");
-
-    registerCommand("list", [this](const std::vector<std::string>& args) -> std::string {
-        for(auto& command : m_Commands)
-        {
-            outputAdd(command.commandName);
-        }
-        return "";
-    });
 }
 
 Console::~Console() {
