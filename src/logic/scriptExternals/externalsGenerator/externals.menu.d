@@ -1,5 +1,5 @@
 ///
-/// \weakgroup parser_menu ZenGin MENU parser externals.
+/// \weakgroup parser_menu MENU parser
 /// @{
 ///
 
@@ -62,7 +62,7 @@ FUNC int PlayVideo(VAR string FileName)
 ///             is centered. After the video has been skipped or ends, the game
 ///             session unpaused, and the music system is re-enabled (if the
 ///             Gothic.ini option \b SOUND.musicEnabled is enabled (default)).
-/// \note       The function is also registered in the GAME parser.
+/// \note       The function is also registered in the \ref parser_game.
 {
 	return FALSE;
 };
