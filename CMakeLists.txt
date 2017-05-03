@@ -10,6 +10,22 @@ set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
+function(get_submodules)
+    set(git_cmd "git")
+    set(git_arg1 "submodule")
+    set(git_arg2 "update")
+    set(git_arg3 "--init")
+    set(git_arg4 "--recursive")
+
+    execute_process(COMMAND ${git_cmd} ${git_arg1} ${git_arg2} ${git_arg3} ${git_arg4}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE git_out)
+
+        message(STATUS ${git_out})
+endfunction(get_submodules)
+
+get_submodules()
+
 if(EMSCRIPTEN)
 
     # cmake -DCMAKE_TOOLCHAIN_FILE="/usr/lib/emscripten/cmake/Modules/Platform/Emscripten.cmake" ..
