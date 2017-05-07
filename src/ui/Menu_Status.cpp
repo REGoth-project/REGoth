@@ -91,5 +91,6 @@ void Menu_Status::onInputAction(EInputAction action)
         case IA_Right:break;
         case IA_Close: break;
         case IA_Accept:break;
+        default:break;
     }
 }

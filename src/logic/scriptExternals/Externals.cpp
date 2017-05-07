@@ -930,29 +930,21 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string text = vm.popString();
         uint32_t info = vm.popVar();
 
-        Daedalus::GameState::InfoHandle hinfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
+        Daedalus::GameState::InfoHandle hInfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
                 pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
 
-        DialogManager& dialogManager = pWorld->getDialogManager();
-        Logic::DialogManager::ChoiceEntry choice;
-        choice.info = hinfo;
-        choice.text = text;
-        choice.nr = dialogManager.beforeFrontIndex();
-        choice.functionSym = func;
-        choice.important = false;
-
-        // calling the script function info_addchoice always opens the SubDialog for special multiple choices
-        dialogManager.setSubDialogActive(true);
-        dialogManager.addChoice(choice);
-        dialogManager.flushChoices();
+        auto& cInfo = vm.getGameState().getInfo(hInfo);
+        cInfo.addChoice(Daedalus::GEngineClasses::SubChoice{text, func});
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
         uint32_t info = vm.popVar();
 
-        // after info_clearchoices is called the SubDialog is never active
-        pWorld->getDialogManager().setSubDialogActive(false);
-        pWorld->getDialogManager().clearChoices();
+        Daedalus::GameState::InfoHandle hInfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
+                vm.getDATFile().getSymbolByIndex(info).instanceDataHandle);
+
+        auto& cInfo = vm.getGameState().getInfo(hInfo);
+        cInfo.subChoices.clear();
     });
 
     vm->registerExternalFunction("ai_stopprocessinfos", [=](Daedalus::DaedalusVM& vm){

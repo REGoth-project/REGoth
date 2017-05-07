@@ -13,6 +13,7 @@ UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e, UI::Console& console) :
     m_Config.height = 10;
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
+    m_CurrentlySelected = 0;
 }
 
 UI::ConsoleBox::~ConsoleBox()
@@ -26,6 +27,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         return;
 
     auto font = DEFAULT_FONT;
+    auto fontSelected = DEFAULT_FONT_HI;
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
     if(!fnt)
         return;
@@ -40,7 +42,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         fnt->calcTextMetrics(" ", spaceWidth, dummyHeight);
         suggestionXBorderSize = spaceWidth;
     }
-    const std::size_t maxSuggestions = 15;
+    unsigned int previewBefore = 9;
+    unsigned int previewAfter = 9;
     // space between columns in pixel
     const int spaceBetweenColumns = 40;
     int consoleSizeX = config.state.viewWidth;
@@ -78,6 +81,27 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
             return;
 
         const auto& suggestions = suggestionsList.back();
+
+        // find preview range
+        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, 0, static_cast<int>(suggestions.size() - 1));
+        int shownStart = m_CurrentlySelected - previewBefore;
+        // past the end index
+        int shownEnd = m_CurrentlySelected + previewAfter + 1;
+        if (shownStart < 0)
+        {
+            shownEnd += -shownStart;
+            shownStart = 0;
+        }
+        if (shownEnd > static_cast<int>(suggestions.size()))
+        {
+            shownStart -= shownEnd - suggestions.size();
+            shownEnd = suggestions.size();
+        }
+        // clamp start index
+        shownStart = std::max(shownStart, 0);
+        int currentlySelectedRelative = m_CurrentlySelected - shownStart;
+
+        // fill columns
         std::size_t columnID = 0;
         std::vector<std::vector<std::string>> columns;
         std::vector<int> columnWidths;
@@ -85,24 +109,20 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         {
             bool columnEmpty = true;
             std::vector<std::string> column;
-            std::size_t row = 0;
             int columnWidth = 0;
-            for (auto& suggestionEntry : suggestions)
+            for (int row = shownStart; row < shownEnd; row++)
             {
-                if (row >= maxSuggestions)
-                    break;
-
-                if (columnID < suggestionEntry.size())
+                auto& aliasList = suggestions.at(row)->aliasList;
+                if (columnID < aliasList.size())
                 {
                     columnEmpty = false;
                     int w, h;
-                    fnt->calcTextMetrics(suggestionEntry[columnID], w, h);
+                    fnt->calcTextMetrics(aliasList[columnID], w, h);
                     columnWidth = std::max(columnWidth, w);
-                    column.push_back(suggestionEntry[columnID]);
+                    column.push_back(aliasList[columnID]);
                 } else {
                     column.push_back("");
                 }
-                row++;
             }
 
             columnID++;
@@ -149,9 +169,27 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         int colID = 0;
         int columnOffsetX = strBeforeWidth;
         for (auto& column : columns){
+            std::vector<std::string> columnsSelected(column.size());
+            std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));
             auto joined = Utils::join(column.begin(), column.end(), "\n");
             drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+            auto joinedSelected = Utils::join(columnsSelected.begin(), columnsSelected.end(), "\n");
+            drawText(joinedSelected, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, fontSelected);
             columnOffsetX += columnWidths[colID++] + spaceBetweenColumns;
         }
     }
+}
+
+void UI::ConsoleBox::increaseSelectionIndex(int amount) {
+    const auto& suggestionsList = m_Console.getSuggestions();
+    // check if suggestions for last token are empty
+    if (suggestionsList.empty() || suggestionsList.back().empty())
+        return;
+
+    int suggestionCount = static_cast<int>(suggestionsList.back().size());
+    m_CurrentlySelected = Utils::mod(m_CurrentlySelected + amount, suggestionCount);
+}
+
+void UI::ConsoleBox::setSelectionIndex(int newIndex) {
+    m_CurrentlySelected = newIndex;
 }

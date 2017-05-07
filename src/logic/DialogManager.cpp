@@ -32,7 +32,6 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
     m_Talking = false;
-    m_SubDialogActive = false;
     m_CurrentDialogMessage = nullptr;
     m_ProcessInfos = false;
 }
@@ -234,29 +233,28 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
 void DialogManager::performChoice(size_t choice)
 {
     assert(choice < m_Interaction.choices.size());
+    auto& choiceEntry = m_Interaction.choices[choice];
 
     // Hide the options box
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
 
     // Get actual selected info-object
-    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.choices[choice].info);
+    Daedalus::GameState::InfoHandle infoHandle = choiceEntry.info;
+    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(infoHandle);
 
     // Set instances again, since they could have been changed across the frames
     getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
 
-    size_t fnSym = m_Interaction.choices[choice].functionSym;
-
-    if (m_SubDialogActive)
+    if (m_Interaction.CurrentInfo.isValid())
     {
-        m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
-    } else
-    {
-        clearChoices();
+        // case: we are in a subdialog
+        info.removeChoice(choice);
     }
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
+    size_t fnSym = choiceEntry.functionSym;
     m_World.getScriptEngine().runFunctionBySymIndex(fnSym);
 
     // We now know this information. Do this before actually triggering the dialog, since then we can update the
@@ -269,9 +267,16 @@ void DialogManager::performChoice(size_t choice)
         m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
     }
 
-    if(m_Interaction.choices.empty() && m_ProcessInfos)
+    if (info.subChoices.empty())
     {
-        // We chose "back" or haven't gotten to a sub-dialog
+        m_Interaction.CurrentInfo.invalidate();
+    } else {
+        m_Interaction.CurrentInfo = infoHandle;
+    }
+
+    if(m_ProcessInfos)
+    {
+        clearChoices();
         updateChoices(m_Interaction.target);
     }
     // TODO Don't flush yet, wait for dialog talking chain end
@@ -313,6 +318,7 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 
 void DialogManager::endDialog()
 {
+    m_Interaction.CurrentInfo.invalidate();
     importantKnown.clear();
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
@@ -413,14 +419,9 @@ int DialogManager::beforeFrontIndex(){
     }
 }
 
-void DialogManager::setSubDialogActive(bool flag)
-{
-    m_SubDialogActive = flag;
-}
-
 void DialogManager::sortChoices()
 {
-    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
+    std::stable_sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
 }
 
 void DialogManager::flushChoices()
@@ -428,8 +429,7 @@ void DialogManager::flushChoices()
     // Sort by importance index
     sortChoices();
 
-    // Open dialog box
-
+    // flush to DialogBox
     m_World.getEngine()->getHud().getDialogBox().clearChoices();
     for(ChoiceEntry& e : m_Interaction.choices)
         m_World.getEngine()->getHud().getDialogBox().addChoice(e);
@@ -437,6 +437,28 @@ void DialogManager::flushChoices()
 
 void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
 {
+    auto infoHandle = m_Interaction.CurrentInfo;
+    if (infoHandle.isValid())
+    {
+        // case: we are in a subdialog
+        const auto& cInfo = getGameState().getInfo(infoHandle);
+        if (!cInfo.subChoices.empty())
+        {
+            const int nr = 0; // all subchoices will have the same number, stable sort won't change the order
+            const bool important = false;
+            m_Interaction.choices.clear();
+            for (const auto& subChoice : cInfo.subChoices)
+            {
+                m_Interaction.choices.push_back(ChoiceEntry{subChoice.text,
+                                                            subChoice.functionSym,
+                                                            infoHandle,
+                                                            nr,
+                                                            important});
+            }
+            flushChoices();
+            return;
+        }
+    }
     auto infos = m_ScriptDialogMananger->getInfos(target);
     onAIProcessInfos(target, infos);
 }

@@ -53,7 +53,7 @@ namespace Logic
         bool init();
 
         /**
-         * Updates the boxes according to the coices taken by the user
+         * Updates the boxes according to the choices taken by the user
          * @param dt time since last frame
          */
         void update(double dt);
@@ -116,11 +116,6 @@ namespace Logic
          * @return new choice number guaranteed to be smaller than all existing ones
          */
         int beforeFrontIndex();
-
-        /**
-         * Sets whether the DialogManager is in in the SubDialog state
-         */
-        void setSubDialogActive(bool flag);
 
         /**
          * Sets the current Dialog Message. To be able to cancel it
@@ -218,6 +213,11 @@ namespace Logic
             std::vector<Daedalus::GameState::InfoHandle> infos;
             std::vector<size_t> functions;
             std::vector<std::pair<size_t, size_t>> optionsSorted;
+            /**
+             * Handle to the the current Dialogoption
+             * Used to identify which Subchoices to show or to check if there are any
+             */
+            Daedalus::GameState::InfoHandle CurrentInfo;
         } m_Interaction;
 
         /**
@@ -239,13 +239,6 @@ namespace Logic
          * Whether a subtitlebox is currently shown
          */
         bool m_Talking;
-
-        /**
-         * Whether a hero is inside a multiple choice test.
-         * When true the queue will not be cleared and normal dialog options will not be added
-         * This state is left when the script calls the script function Info_ClearChoices
-         */
-        bool m_SubDialogActive;
 
         /**
          * Can be used to cancel the current Dialog Sound, when IA_Close occurs.

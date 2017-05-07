@@ -440,14 +440,15 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
-        auto waypointNamesGen = [this]() -> std::vector<std::vector<std::string>> {
-            std::vector<std::vector<std::string>> groups;
+        auto waypointNamesGen = [this]() -> std::vector<UI::ConsoleCommand::Suggestion> {
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
             for (auto& waypoint : waypoints)
             {
-                groups.push_back({waypoint.name});
+                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {{waypoint.name}});
+                suggestions.push_back(suggestion);
             }
-            return groups;
+            return suggestions;
         };
 
         console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
@@ -607,7 +608,7 @@ public:
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<std::vector<std::string>> aliasGroups;
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
@@ -624,9 +625,10 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                aliasGroups.push_back(std::move(group));
+                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::NPCSuggestion>(group, npc);
+                suggestions.push_back(suggestion);
             }
-            return aliasGroups;
+            return suggestions;
         };
 
         console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
@@ -673,23 +675,24 @@ public:
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
 
-            auto aliasGroups = worlddNpcNamesGen();
+            auto suggestions = worlddNpcNamesGen();
 
             std::vector<VobTypes::NpcVobInformation> vobInfos;
             std::vector<std::string> fullNames;
             for (auto& requestedName : {teleporterName, targetName})
             {
-                auto group = Utils::findNameInGroups(aliasGroups, requestedName);
+                auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
+                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
                 bool success = false;
-                if (group.size() >= 2)
+                if (suggestion != nullptr)
                 {
-                    std::string npcDatFileName = group[0];
-                    std::string npcDisplayName = group[1];
-                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(group[0]);
-                    if (npcScriptHandle.isValid())
+                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                    if (npcVobInfo.isValid())
                     {
                         success = true;
-                        VobTypes::NpcVobInformation npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
+                        auto& aliasList = suggestion->aliasList;
+                        std::string npcDatFileName = aliasList[0];
+                        std::string npcDisplayName = aliasList[1];
                         vobInfos.push_back(npcVobInfo);
                         fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
                     }
@@ -741,15 +744,11 @@ public:
             else
             {
                 const std::string& requested = args.at(1);
-                auto aliasGroups = worlddNpcNamesGen();
-                auto group = Utils::findNameInGroups(aliasGroups, requested);
-
-                if (group.size() >= 2) {
-                    std::string npcDatFileName = group[0];
-                    Daedalus::GameState::NpcHandle npcScriptHandle = scriptEngine.getNPCFromSymbol(npcDatFileName);
-                    if (npcScriptHandle.isValid()) {
-                        npcVobInfo = VobTypes::getVobFromScriptHandle(worldInstance, npcScriptHandle);
-                    }
+                auto suggestions = worlddNpcNamesGen();
+                auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
+                if (suggestion != nullptr) {
+                    npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                 } else {
                     return "NPC not found in this world: " + requested;
                 }
@@ -831,7 +830,7 @@ public:
         UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
             auto& datFile = se.getVM().getDATFile();
-            std::vector<std::vector<std::string>> aliasGroups;
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
@@ -841,22 +840,23 @@ public:
                     // Run the script-constructor
                     se.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), i, Daedalus::IC_Item);
 
-                    std::vector<std::string> aliasGroup;
+                    std::vector<std::string> aliasList;
                     for (auto name : {parSymbol.name, cItem.description, cItem.name})
                     {
                         std::replace(name.begin(), name.end(), ' ', '_');
-                        aliasGroup.push_back(name);
+                        aliasList.push_back(name);
                     }
-                    if (aliasGroup[1] == aliasGroup[2])
+                    if (aliasList[1] == aliasList[2])
                     {
                         // most of the items have description equal to name, so remove one of them
-                        aliasGroup.pop_back();
+                        aliasList.pop_back();
                     }
-                    aliasGroups.push_back(aliasGroup);
+                    UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {aliasList});
+                    suggestions.push_back(suggestion);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
             }
-            return aliasGroups;
+            return suggestions;
         };
 
         console.registerCommand("quit", [](const std::vector<std::string>& args) -> std::string {
@@ -879,11 +879,12 @@ public:
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
             std::size_t index = 0;
-            auto aliasGroups = itemNamesGen();
-            auto group = Utils::findNameInGroups(aliasGroups, itemName);
-            if (group.size() >= 1)
+            auto suggestions = itemNamesGen();
+            auto suggestion = Utils::findSuggestion(suggestions, itemName);
+            if (suggestion != nullptr)
             {
-                auto& parScriptName = group[0];
+                auto& aliasList = suggestion->aliasList;
+                auto& parScriptName = aliasList[0];
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
                 std::string description;
                 if (give)
@@ -959,28 +960,36 @@ public:
 
 	bool update() BX_OVERRIDE
 	{
-        const int KEY_UP = 265;
-        const int KEY_DOWN = 264;
-        const int KEY_LEFT = 263;
-        const int KEY_RIGHT = 262;
-        const int KEY_ENTER = 257;
-        const int KEY_ESCAPE = 256;
-	const int KEY_BACKSPACE = 259;
-        std::map<int, UI::EInputAction> keyMap = {{KEY_UP,     UI::IA_Up},
-                                                  {KEY_DOWN,   UI::IA_Down},
-                                                  {KEY_LEFT,   UI::IA_Left},
-                                                  {KEY_RIGHT,  UI::IA_Right},
-                                                  {KEY_ENTER,  UI::IA_Accept},
-                                                  {KEY_ESCAPE, UI::IA_Close},
-						  {KEY_BACKSPACE, UI::IA_Backspace}};
+        std::map<int, UI::EInputAction> keyMap = {{GLFW_KEY_UP,     UI::IA_Up},
+                                                  {GLFW_KEY_DOWN,   UI::IA_Down},
+                                                  {GLFW_KEY_LEFT,   UI::IA_Left},
+                                                  {GLFW_KEY_RIGHT,  UI::IA_Right},
+                                                  {GLFW_KEY_ENTER,  UI::IA_Accept},
+                                                  {GLFW_KEY_ESCAPE, UI::IA_Close},
+                                                  {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
+                                                  {GLFW_KEY_0, UI::IA_0},
+                                                  {GLFW_KEY_1, UI::IA_1},
+                                                  {GLFW_KEY_2, UI::IA_2},
+                                                  {GLFW_KEY_3, UI::IA_3},
+                                                  {GLFW_KEY_4, UI::IA_4},
+                                                  {GLFW_KEY_5, UI::IA_5},
+                                                  {GLFW_KEY_6, UI::IA_6},
+                                                  {GLFW_KEY_7, UI::IA_7},
+                                                  {GLFW_KEY_8, UI::IA_8},
+                                                  {GLFW_KEY_9, UI::IA_9},
+                                                  {GLFW_KEY_HOME, UI::IA_HOME},
+                                                  {GLFW_KEY_END, UI::IA_END},
+                                                  {GLFW_KEY_PAGE_UP, UI::IA_Up},
+                                                  {GLFW_KEY_PAGE_DOWN, UI::IA_Down}};
 
+        const auto CONSOLE_TOGGLE_KEY = GLFW_KEY_F10;
         std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
                 m_stopWatch.start();
 
-                if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
+                if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
                     m_pEngine->getHud().getConsole().onKeyDown(i);
                 else if (keyMap.find(i) != keyMap.end())
                 {
@@ -993,7 +1002,7 @@ public:
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        if(m_pEngine->getHud().getConsole().isOpen() || i == GLFW_KEY_F10)
+                        if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
                             m_pEngine->getHud().getConsole().onKeyDown(i);
                         else if (keyMap.find(i) != keyMap.end())
                         {

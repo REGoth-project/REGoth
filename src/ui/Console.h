@@ -8,16 +8,40 @@
 #include <vector>
 #include <functional>
 #include <map>
+#include <memory>
 #include <ui/ConsoleBox.h>
 
 namespace UI
 {
+
+    struct SuggestionBase
+    {
+        SuggestionBase(const std::vector<std::string>& aliasList) :
+                aliasList(aliasList),
+                bestAliasMatchIndex(0)
+        {}
+        virtual ~SuggestionBase() {};
+        std::vector<std::string> aliasList;
+        std::size_t bestAliasMatchIndex;
+    };
+
+    struct NPCSuggestion : SuggestionBase
+    {
+        NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle) :
+            SuggestionBase(aliasList),
+            npcHandle(npcHandle)
+        {}
+        Handle::EntityHandle npcHandle;
+    };
+
     struct ConsoleCommand
     {
         // Takes list of arguments as parameter, returns command result
-        typedef std::function<std::string(const std::vector<std::string>&)> Callback;
+        using Callback = std::function<std::string(const std::vector<std::string>&)>;
+
+        using Suggestion = std::shared_ptr<SuggestionBase>;
         // generator, which returns vector of candidates
-        using CandidateListGenerator = std::function<std::vector<std::vector<std::string>>()>;
+        using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
 
         std::string commandName;
         std::vector<CandidateListGenerator> generators;
@@ -66,13 +90,15 @@ namespace UI
 
         /**
          * Trigger autocompletion
-         * @param command to work on
+         * @param input command to work on
          * @param limitToFixed limit the number of tokens evaluated to numFixTokens for each command
-         * @param showSuggestions show suggestions
-         * @param overwriteTypedLine replace the console line with the suggested one
          */
-        using Suggestion = std::vector<std::string>;
-        std::vector<std::vector<Suggestion>> autoComplete(std::string& input, bool limitToFixed, bool overwriteInput);
+        void generateSuggestions(const std::string& input, bool limitToFixed);
+
+        /**
+         * splits line, removes empty entries, adds empty string for lookahead trigger
+         */
+        static std::vector<std::string> tokenized(const std::string& line);
 
         /**
          * searches for command which, could generate the given tokens and returns its index
@@ -101,9 +127,14 @@ namespace UI
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
-        const std::vector<std::vector<Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+        const std::vector<std::vector<UI::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
 
     private:
+
+        /**
+         * clears the suggestion list and sets the current selection index to 0
+         */
+        void invalidateSuggestions();
 
         /**
          * Last submitted commands
@@ -133,7 +164,7 @@ namespace UI
         /**
          * suggestions for each token
          */
-        std::vector<std::vector<Suggestion>> m_SuggestionsList;
+        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> m_SuggestionsList;
 
         /**
          * Currently typed line

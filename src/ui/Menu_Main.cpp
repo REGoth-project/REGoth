@@ -37,6 +37,7 @@ void Menu_Main::onInputAction(EInputAction action)
         case IA_Right:break;
         case IA_Close: getHud().popMenu(); break;
         case IA_Accept:break;
+        default:break;
     }
 }
 
