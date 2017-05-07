@@ -72,11 +72,11 @@ void Console::onKeyDown(int glfwKey)
     }
     if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
     {
-        m_ConsoleBox.addSelectionIndex(1);
+        m_ConsoleBox.increaseSelectionIndex(1);
     }
     if(glfwKey == Keys::GLFW_KEY_PAGE_UP)
     {
-        m_ConsoleBox.addSelectionIndex(-1);
+        m_ConsoleBox.increaseSelectionIndex(-1);
     }
     if(glfwKey == Keys::GLFW_KEY_HOME)
     {
