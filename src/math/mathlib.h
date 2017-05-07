@@ -643,7 +643,7 @@ namespace Math
 	template<class T>
 	T clamp(T v, T lo, T hi)
 	{
-		assert(lo < hi);
+		assert(lo <= hi);
 		return (v < lo) ? lo : (hi < v) ? hi : v;
 	}
 }
