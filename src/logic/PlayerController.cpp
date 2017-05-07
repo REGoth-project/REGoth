@@ -2321,6 +2321,8 @@ void PlayerController::exportPart(json& j)
         }
     }
 
+    j["refusetalktime"] = this->m_RefuseTalkTime;
+
     // Import state
     m_AIStateMachine.exportScriptState(j["AIState"]);
 }
@@ -2396,6 +2398,15 @@ void PlayerController::importObject(const json& j, bool noTransform)
 
             equipItem(h);
         }
+    }
+
+    // import refusetalktime
+    {
+        // Needed for compatibility with savegame version '1'
+        auto it = j.find("refusetalktime");
+        this->setRefuseTalkTime(it != j.end() ? static_cast<float>(*it) : 0.0f);
+        // use the following, when compatibility with savegame version '1' is not needed anymore
+        // this->setRefuseTalkTime(static_cast<float>(j["refusetalktime"]);
     }
 
     // Import state
