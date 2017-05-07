@@ -2321,8 +2321,6 @@ void PlayerController::exportPart(json& j)
         }
     }
 
-    j["refusetalktime"] = this->m_RefuseTalkTime;
-
     // Import state
     m_AIStateMachine.exportScriptState(j["AIState"]);
 }

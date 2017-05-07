@@ -328,6 +328,8 @@ public:
 
 		ddInit();
 
+        // Init SavegameManager
+        Engine::SavegameManager::init(*m_pEngine);
 
         // Imgui.
         float fontSize = 18.0f;//18

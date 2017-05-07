@@ -3,9 +3,15 @@
 #include <utils/logger.h>
 #include <json/json.hpp>
 #include <fstream>
+#include "engine/GameEngine.h"
 
 using json = nlohmann::json;
 using namespace Engine;
+
+/**
+ * Gameengine-instance pointer
+ */
+Engine::GameEngine* gameEngine;
 
 // Enures that all folders to save into the given savegame-slot exist
 void ensureSavegameFolders(int idx)
@@ -15,6 +21,19 @@ void ensureSavegameFolders(int idx)
 	if(!Utils::mkdir(userdata))
 		LogError() << "Failed to create userdata-directory at: " << userdata;
 
+    std::string gameType;
+    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
+    {
+        gameType = "/Gothic";
+    }
+    else
+    {
+        gameType = "/Gothic 2";
+    }
+
+    if (Utils::mkdir(userdata + gameType))
+        LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
+
     if(Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
 		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
@@ -23,7 +42,12 @@ std::string SavegameManager::buildSavegamePath(int idx)
 {
     std::string userdata = Utils::getUserDataLocation();
 
-    return userdata + "/savegame_" + std::to_string(idx);
+    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
+    {
+        return userdata + "/Gothic/savegame_" + std::to_string(idx);
+    }
+
+    return userdata + "/Gothic 2/savegame_" + std::to_string(idx);
 }
 
 std::vector<std::string> SavegameManager::getSavegameWorlds(int idx)
@@ -128,7 +152,6 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
     return o;
 }
 
-
 bool SavegameManager::writeWorld(int idx, const std::string& worldName, const std::string& data)
 {
     std::string file = buildSavegamePath(idx) + "/world_" + worldName + ".json";
@@ -166,15 +189,26 @@ std::string SavegameManager::buildWorldPath(int idx, const std::string& worldNam
    return buildSavegamePath(idx) + "/world_" + worldName + ".json"; 
 }
 
+bool Engine::SavegameManager::init(Engine::GameEngine& engine)
+{
+    gameEngine = &engine;
+
+    return true;
+}
+
 std::vector<std::string> SavegameManager::gatherAvailableSavegames()
 {
-    const int MAX_NUM_SLOTS = 15 + 1; // 15 usual slots + current
-    std::vector<std::string> names(MAX_NUM_SLOTS);
+    constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
+    constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
+
+    int numSlots = (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1) ? G1_MAX_SLOTS : G2_MAX_SLOTS;
+
+    std::vector<std::string> names(numSlots);
 
     // Try every slot, skip current (slot 0)
-    for(int i=1;i<MAX_NUM_SLOTS;i++)
+    for (int i = 1; i < numSlots; ++i)
     {
-        if(isSavegameAvailable(i))
+        if (isSavegameAvailable(i))
         {
             SavegameInfo info = readSavegameInfo(i);
             names[i] = info.name;

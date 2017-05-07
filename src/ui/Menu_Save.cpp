@@ -66,8 +66,10 @@ void Menu_Save::onCustomAction(const std::string& action)
 
 		if (!m_isWaitingForSaveName)
 		{
+            const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(idx) ? Engine::SavegameManager::readSavegameInfo(idx).name : "";
+
 			m_isWaitingForSaveName = true;
-			m_SaveName = "";
+			m_SaveName = saveGameName;
 			m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(idx);
 			getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
 		}

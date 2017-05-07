@@ -4,8 +4,15 @@
 
 namespace Engine
 {
+    class GameEngine;
+
     namespace SavegameManager
     {
+        /**
+         * @param GameEngine-pointer
+         */
+        bool init(Engine::GameEngine& engine);
+
         /**
          * Assembles a list of all available savegame names. Every entry will correspond to an index number.
          * Empty names mean, that there is no save currently stored.
@@ -48,7 +55,7 @@ namespace Engine
             std::string name; // Name to be displayed in the menus
             std::string world; // World the player is currently in. (Name only, no ".zen" or other extensions)
             std::size_t timePlayed; // Time played in seconds
-            static constexpr unsigned int LATEST_KNOWN_VERSION = 2; // latest version. check where needed. increment when needed.
+            static constexpr unsigned int LATEST_KNOWN_VERSION = 1; // latest version. check where needed. increment when needed.
         };
 
         /**
