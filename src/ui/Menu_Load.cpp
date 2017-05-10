@@ -30,24 +30,24 @@ void Menu_Load::gatherAvailableSavegames()
     using namespace Daedalus;
     using namespace GEngineClasses;
 
-    std::vector<std::string> names = SavegameManager::gatherAvailableSavegames();
+    auto names = SavegameManager::gatherAvailableSavegames();
 
-    // There are 15 labels in the original menus
+    // There are 15/20 labels in the original menus
     // Slot 0 is for the current game, so skip it
     for(unsigned i=1;i<names.size();i++)
     {
         std::string sym = "MENUITEM_LOAD_SLOT" + std::to_string(i);
         assert(m_pVM->getDATFile().hasSymbolName(sym));
         
-        if(!names[i].empty())
+        if(names[i] != nullptr)
         {
             // Toggle selectable depending on whether we actually have a slot here
             getItemScriptData(sym).flags |= C_Menu_Item::IT_SELECTABLE;
-            getItemScriptData(sym).text[0] = names[i];
+            getItemScriptData(sym).text[0] = *names[i];
         }else 
         {
             getItemScriptData(sym).flags &= ~C_Menu_Item::IT_SELECTABLE;
-            getItemScriptData(sym).text[0] = "";
+            getItemScriptData(sym).text[0] = "---";
         }
     }
 }
@@ -65,31 +65,11 @@ void Menu_Load::onCustomAction(const std::string& action)
         // Find the corresponding number
         std::string numStr = name.substr(std::string("MENUITEM_SAVE_SLOT").size());
         int idx = std::stoi(numStr);
-
-        // Lock to number of savegames
-        assert(idx > 0 && idx < 16);
-
-        if(!SavegameManager::isSavegameAvailable(idx))
-        {
-            LogInfo() << "Savegame at slot " << idx << " not available!";
+        std::string error = SavegameManager::loadSaveGameSlot(idx);
+        if (!error.empty()){
+            LogWarn() << error;
             return;
         }
-
-        // Read general information about the saved game. Most importantly the world the player saved in
-        SavegameManager::SavegameInfo info = SavegameManager::readSavegameInfo(idx);
-
-        std::string worldPath = SavegameManager::buildWorldPath(idx, info.world);
-
-        // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
-        // if it was missing. Also, IF the player saved there, there should be a save for this.
-        if(!Utils::getFileSize(worldPath))
-        {
-            LogWarn() << "Target world-file invalid: " << worldPath;
-            return;
-        }
-
-        m_Engine.loadWorld(info.world + ".zen", worldPath);
-        m_Engine.getGameClock().setTotalSeconds(info.timePlayed);
 
         // Close menu_load & menu_main after loading the world
         getHud().popAllMenus();

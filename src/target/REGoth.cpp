@@ -553,55 +553,40 @@ public:
 
             using namespace Engine;
 
-            int idx = std::stoi(args[1]);
-
-            if(!SavegameManager::isSavegameAvailable(idx))
-                return "Savegame in slot " + std::to_string(idx) + " no available!";
-
-            // Read general information about the saved game. Most importantly the world the player saved in
-            SavegameManager::SavegameInfo info = SavegameManager::readSavegameInfo(idx);
-
-            std::string worldPath = SavegameManager::buildWorldPath(idx, info.world);
-
-            // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
-            // if it was missing. Also, IF the player saved there, there should be a save for this.
-            if(!Utils::getFileSize(worldPath))
-                return "Target world invalid!";
-
-            clearActions();
-            m_pEngine->removeWorld(m_pEngine->getMainWorld());
-            m_pEngine->addWorld("", worldPath);
+            int index = std::stoi(args[1]);
+            int maxSlots = SavegameManager::maxSlots();
+            if (index < 1 || index >= maxSlots){
+                return "invalid slot index " + std::to_string(index) + ". allowed range: 1.." + std::to_string(maxSlots-1);
+            }
+            auto error = SavegameManager::loadSaveGameSlot(index);
+            if (!error.empty()){
+                return error;
+            }
+            return "savegame successfully loaded!";
         });
 
         console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
-                return "Missing argument. Usage: save <savegame>";
+                return "Missing argument. Usage: save <slotindex> [<savegamename>]";
 
-            int idx = std::stoi(args[1]);
+            int index = std::stoi(args[1]);
+            int maxSlots = Engine::SavegameManager::maxSlots();
+            if (index < 1 || index >= maxSlots){
+                return "invalid slot index " + std::to_string(index) + ". allowed range: 1.." + std::to_string(maxSlots-1);
+            }
 
-            if(idx < 1)
-                return "Invalid index. Must be greater than 0!";
+            std::string saveGameName;
+            if (args.size() >= 3)
+            {
+                saveGameName = args[2];
+            } else if (Engine::SavegameManager::isSavegameAvailable(index)){
+                saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
+            }
 
-            // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-            // Clean data from old savegame, so we don't load into worlds we haven't been to yet
-            Engine::SavegameManager::clearSavegame(idx);
+            Engine::SavegameManager::saveToSaveGameSlot(index, saveGameName);
 
-            // Write information about the current game-state
-            Engine::SavegameManager::SavegameInfo info;
-            info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
-            info.name = "Testsave";
-            info.world = Utils::stripExtension(m_pEngine->getMainWorld().get().getZenFile());
-            info.timePlayed = m_pEngine->getGameClock().getTotalSeconds();
-            Engine::SavegameManager::writeSavegameInfo(idx, info);
-
-            json j;
-            m_pEngine->getMainWorld().get().exportWorld(j);
-
-            // Save
-            Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
-
-            return "World saved to slot: " + std::to_string(idx);
+            return "World saved to slot: " + std::to_string(index);
         });
 
         UI::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {

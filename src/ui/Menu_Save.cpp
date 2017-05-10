@@ -40,17 +40,17 @@ void Menu_Save::gatherAvailableSavegames()
 {
     using namespace Engine;
 
-    std::vector<std::string> names = SavegameManager::gatherAvailableSavegames();
+    auto names = SavegameManager::gatherAvailableSavegames();
 
-    // There are 15 labels in the original menus
+    // There are 15/20 labels in the original menus
     // Slot 0 is for the current game, so skip it
     for(unsigned i=1;i<names.size();i++)
     {
         std::string sym = "MENUITEM_SAVE_SLOT" + std::to_string(i);
         assert(m_pVM->getDATFile().hasSymbolName(sym));
         
-        if(!names[i].empty())
-            getItemScriptData(sym).text[0] = names[i];
+        if(names[i] != nullptr)
+            getItemScriptData(sym).text[0] = *names[i];
         else 
             getItemScriptData(sym).text[0] = "---";
     }
@@ -62,7 +62,7 @@ void Menu_Save::onCustomAction(const std::string& action)
     {
 		std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
 		int idx = std::stoi(numStr);
-		assert(idx > 0 && idx < 16);
+		assert(idx > 0 && idx < Engine::SavegameManager::maxSlots());
 
 		if (!m_isWaitingForSaveName)
 		{
@@ -76,24 +76,7 @@ void Menu_Save::onCustomAction(const std::string& action)
 		else
 		{
 			m_isWaitingForSaveName = false;
-
-			// TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-			// Clean data from old savegame, so we don't load into worlds we haven't been to yet
-			Engine::SavegameManager::clearSavegame(idx);
-
-			// Write information about the current game-state
-			Engine::SavegameManager::SavegameInfo info;
-			info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
-			info.name = m_SaveName;
-			info.world = Utils::stripExtension(m_Engine.getMainWorld().get().getZenFile());
-			info.timePlayed = m_Engine.getGameClock().getTotalSeconds();
-			Engine::SavegameManager::writeSavegameInfo(idx, info);
-
-			json j; m_Engine.getMainWorld().get().exportWorld(j);
-
-			// Save
-			Engine::SavegameManager::writeWorld(idx, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
-	
+            Engine::SavegameManager::saveToSaveGameSlot(idx, m_SaveName);
 			// close menus after saving
 			getHud().popAllMenus();
 		}

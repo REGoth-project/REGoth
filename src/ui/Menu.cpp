@@ -95,7 +95,7 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         // Update info-text
         if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0 && m_pInfoText)
         {
-           m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]); 
+            m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]);
         }
     }
 
@@ -156,9 +156,7 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
         m_pInfoText->setTranslation(Math::float2(infoX, infoY));
         m_pInfoText->setAlignment(A_TopCenter);
-        m_pInfoText->setText("Ein neues Abenteuer beginnen");
         m_pInfoText->setFont(UI::DEFAULT_FONT);
-
     }
 }
 
@@ -219,7 +217,8 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
             m_pVM->initializeInstance(ZMemory::toBigHandle(items.back()),
                                       m_pVM->getDATFile().getSymbolIndexByName(menu.items[i]),
                                       Daedalus::IC_MenuItem);
-
+            //LogInfo() << getItemScriptData(items.back()).text[0];
+            //LogInfo() << getItemScriptData(items.back()).text[1];
         }
     }
 
