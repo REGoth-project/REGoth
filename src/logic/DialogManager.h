@@ -59,6 +59,12 @@ namespace Logic
         void update(double dt);
 
         /**
+         * To be called when one of the given actions were triggered
+         * @param action Input action
+         */
+        void onInputAction(UI::EInputAction action);
+
+        /**
          * Start dialog
          */
         void startDialog(Daedalus::GameState::NpcHandle target);
@@ -111,11 +117,6 @@ namespace Logic
          * @param entry Choice entry.
          */
         void addChoice(ChoiceEntry& entry);
-
-        /**
-         * @return new choice number guaranteed to be smaller than all existing ones
-         */
-        int beforeFrontIndex();
 
         /**
          * Sets the current Dialog Message. To be able to cancel it

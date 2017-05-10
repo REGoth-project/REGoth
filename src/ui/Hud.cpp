@@ -150,38 +150,30 @@ void UI::Hud::onInputAction(UI::EInputAction action)
 {
     auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
 
-    // Notify last menu in chain
-    if(!m_MenuChain.empty() && action != IA_Close)
+    if(!m_MenuChain.empty())
     {
-        m_MenuChain.back()->onInputAction(action);
+        // case: a menu is open
+        if (action == IA_Close)
+            popMenu();
+        else
+            m_MenuChain.back()->onInputAction(action); // Notify last menu in chain
         return;
     }else if(dialogManager.isDialogActive())
     {
-        if(!m_pDialogBox->isHidden()){
-            m_pDialogBox->onInputAction(action);
-            return;
-        }
-        else if (dialogManager.isTalking() && action == IA_Close) {
-            dialogManager.cancelTalk();
-            return;
-        }
+        // case: a dialog is active
+        dialogManager.onInputAction(action);
         return;
     }
 
-    // Close console or last menu, in case it's open
-    if(action == IA_Close)
+    // case: Nothing is open right now.
+    switch (action)
     {
-        if(!m_MenuChain.empty())
-        {
-            popMenu();
-            return;
-        }
-        else
-        {
-            // Nothing is open right now. Show main-menu
+        case IA_Close:
+            // Show main-menu
             pushMenu<UI::Menu_Main>();
             return;
-        }
+        default:
+            return;
     }
 }
 
