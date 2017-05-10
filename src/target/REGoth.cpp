@@ -555,8 +555,8 @@ public:
 
             int index = std::stoi(args[1]);
             int maxSlots = SavegameManager::maxSlots();
-            if (index < 1 || index >= maxSlots){
-                return "invalid slot index " + std::to_string(index) + ". allowed range: 1.." + std::to_string(maxSlots-1);
+            if (!(index >= 0 && index < maxSlots)){
+                return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
             auto error = SavegameManager::loadSaveGameSlot(index);
             if (!error.empty()){
@@ -572,8 +572,8 @@ public:
 
             int index = std::stoi(args[1]);
             int maxSlots = Engine::SavegameManager::maxSlots();
-            if (index < 1 || index >= maxSlots){
-                return "invalid slot index " + std::to_string(index) + ". allowed range: 1.." + std::to_string(maxSlots-1);
+            if (!(index >= 0 && index < maxSlots)){
+                return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
 
             std::string saveGameName;

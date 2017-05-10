@@ -32,23 +32,29 @@ void Menu_Load::gatherAvailableSavegames()
 
     auto names = SavegameManager::gatherAvailableSavegames();
 
-    // There are 15/20 labels in the original menus
-    // Slot 0 is for the current game, so skip it
-    for(unsigned i=1;i<names.size();i++)
+    // gothic 1: Slot 1-15. gothic 2: Slot 1-20 + Slot0 (quicksave)
+    for(unsigned i=0;i<names.size();i++)
     {
         std::string sym = "MENUITEM_LOAD_SLOT" + std::to_string(i);
-        assert(m_pVM->getDATFile().hasSymbolName(sym));
-        
+        bool slotSymbolFound = m_pVM->getDATFile().hasSymbolName(sym);
+        if (!slotSymbolFound && i == 0)
+            continue; // Gothic 1 does not have a quicksave slot in the load-menu
+
+        assert(slotSymbolFound);
+        std::string displayName;
         if(names[i] != nullptr)
         {
             // Toggle selectable depending on whether we actually have a slot here
             getItemScriptData(sym).flags |= C_Menu_Item::IT_SELECTABLE;
-            getItemScriptData(sym).text[0] = *names[i];
+            displayName = *names[i];
         }else 
         {
             getItemScriptData(sym).flags &= ~C_Menu_Item::IT_SELECTABLE;
-            getItemScriptData(sym).text[0] = "---";
+            displayName = "---";
         }
+        // never overwrite displayname of quicksave slot (i==0)
+        if (i != 0)
+            getItemScriptData(sym).text[0] = displayName;
     }
 }
 

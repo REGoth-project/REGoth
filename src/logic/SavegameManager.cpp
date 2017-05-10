@@ -202,8 +202,8 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
 
     std::vector<std::shared_ptr<const std::string>> names(numSlots, nullptr);
 
-    // Try every slot, skip current (slot 0)
-    for (int i = 1; i < numSlots; ++i)
+    // Try every slot
+    for (int i = 0; i < numSlots; ++i)
     {
         if (isSavegameAvailable(i))
         {
@@ -229,7 +229,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
 
 std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     // Lock to number of savegames
-    assert(index > 0 && index < maxSlots());
+    assert(index >= 0 && index < maxSlots());
 
     if(!isSavegameAvailable(index))
     {
@@ -266,10 +266,10 @@ int Engine::SavegameManager::maxSlots() {
 }
 
 void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegameName) {
-    assert(index > 0 && index < maxSlots());
+    assert(index >= 0 && index < maxSlots());
 
     if (savegameName.empty())
-        savegameName = std::string("Slot ") + std::to_string(index);
+        savegameName = std::string("Slot") + std::to_string(index);
 
     // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
     // Clean data from old savegame, so we don't load into worlds we haven't been to yet

@@ -43,11 +43,13 @@ void Menu_Save::gatherAvailableSavegames()
     auto names = SavegameManager::gatherAvailableSavegames();
 
     // There are 15/20 labels in the original menus
-    // Slot 0 is for the current game, so skip it
-    for(unsigned i=1;i<names.size();i++)
+    for(unsigned i=0;i<names.size();i++)
     {
         std::string sym = "MENUITEM_SAVE_SLOT" + std::to_string(i);
-        assert(m_pVM->getDATFile().hasSymbolName(sym));
+        bool slotSymbolFound = m_pVM->getDATFile().hasSymbolName(sym);
+        if (!slotSymbolFound && i == 0)
+            continue; // Gothic 1+2 do not have a quicksave slot in the save-menu
+        assert(slotSymbolFound);
         
         if(names[i] != nullptr)
             getItemScriptData(sym).text[0] = *names[i];
@@ -61,22 +63,22 @@ void Menu_Save::onCustomAction(const std::string& action)
     if(action.find("MENUITEM_SAVE_SLOT") != std::string::npos)
     {
 		std::string numStr = action.substr(std::string("MENUITEM_SAVE_SLOT").size());
-		int idx = std::stoi(numStr);
-		assert(idx > 0 && idx < Engine::SavegameManager::maxSlots());
+		int index = std::stoi(numStr);
+		assert(index >= 0 && index < Engine::SavegameManager::maxSlots());
 
 		if (!m_isWaitingForSaveName)
 		{
-            const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(idx) ? Engine::SavegameManager::readSavegameInfo(idx).name : "";
+            const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(index) ? Engine::SavegameManager::readSavegameInfo(index).name : "";
 
 			m_isWaitingForSaveName = true;
 			m_SaveName = saveGameName;
-			m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(idx);
+			m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(index);
 			getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
 		}
 		else
 		{
 			m_isWaitingForSaveName = false;
-            Engine::SavegameManager::saveToSaveGameSlot(idx, m_SaveName);
+            Engine::SavegameManager::saveToSaveGameSlot(index, m_SaveName);
 			// close menus after saving
 			getHud().popAllMenus();
 		}

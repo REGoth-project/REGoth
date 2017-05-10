@@ -217,8 +217,6 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
             m_pVM->initializeInstance(ZMemory::toBigHandle(items.back()),
                                       m_pVM->getDATFile().getSymbolIndexByName(menu.items[i]),
                                       Daedalus::IC_MenuItem);
-            //LogInfo() << getItemScriptData(items.back()).text[0];
-            //LogInfo() << getItemScriptData(items.back()).text[1];
         }
     }
 
