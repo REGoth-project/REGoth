@@ -57,6 +57,8 @@ namespace Engine
 
 		DebugSkySpeed,
 
+		Quicksave,
+		Quickload,
 		OpenStatusMenu,
 		OpenConsole,
         Escape,

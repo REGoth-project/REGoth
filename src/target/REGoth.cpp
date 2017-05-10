@@ -1110,6 +1110,17 @@ public:
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
+        if (m_pEngine->getQuickload())
+        {
+            m_pEngine->setQuickload(false);
+
+            if (!m_pEngine->getHud().isMenuActive() && !m_pEngine->getMainWorld().get().getDialogManager().isDialogActive())
+            {
+                auto error = Engine::SavegameManager::loadSaveGameSlot(0);
+                if (!error.empty())
+                    LogWarn() << error;
+            }
+        }
 
         return true;
 	}

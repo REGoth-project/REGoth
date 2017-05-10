@@ -179,6 +179,9 @@ namespace Engine
 		 */
 		void togglePaused() { setPaused(!m_DisableLogic); }
 
+        void setQuickload(bool active) { m_Quickload = active; }
+        bool getQuickload() { return m_Quickload; }
+
 	protected:
 
 		/**
@@ -256,5 +259,11 @@ namespace Engine
          * Debug only
          */
 		bool m_DisableLogic;
+
+        /**
+         * Flag indicating whether the engine should load the quicksave slot after frame drawing.
+         * This flag is introduced to guarantee a specific execution point (not when the binding fires)
+         */
+		bool m_Quickload;
 	};
 }

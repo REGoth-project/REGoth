@@ -23,6 +23,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
+#include <logic/SavegameManager.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -2001,6 +2002,20 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
+
+    Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
+    {
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive() && !m_World.getDialogManager().isDialogActive()){
+            Engine::SavegameManager::saveToSaveGameSlot(0, "");
+        }
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
+    {
+        if(triggered){
+            m_World.getEngine()->setQuickload(true);
+        }
+    });
 
     Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
     {
