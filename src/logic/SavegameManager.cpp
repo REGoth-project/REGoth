@@ -75,14 +75,16 @@ void SavegameManager::clearSavegame(int idx)
     Utils::forEachFile(buildSavegamePath(idx), [](const std::string& path, const std::string& name, const std::string& ext)
     {
         // Make sure this is a REGoth-file
-        if(name.find("regoth_") == std::string::npos && name.find("world_") == std::string::npos)
+        bool isRegothFile = (Utils::startsWith(name, "regoth_") || Utils::startsWith(name, "world_"))
+                            && Utils::endsWith(name, ".json");
+        if(!isRegothFile)
             return; // Better not touch that one
 
         // Empty the file
-        FILE* f = fopen((path + "/" + name).c_str(), "w");
+        FILE* f = fopen(path.c_str(), "w");
         if(!f)
         {
-            LogWarn() << "Failed to clear file: " << path << "/" << name;
+            LogWarn() << "Failed to clear file: " << path;
             return;
         }
 

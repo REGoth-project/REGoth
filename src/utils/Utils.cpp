@@ -499,3 +499,12 @@ Utils::Profiler::~Profiler()
         << std::chrono::duration_cast<dura>(d).count() * 1000
         << " milliseconds";
 }
+
+bool Utils::startsWith(const std::string& searchSpace, const std::string& start) {
+    return searchSpace.find(start) == 0;
+}
+
+bool Utils::endsWith(const std::string& searchSpace, const std::string& end) {
+    auto pos = searchSpace.size() - end.size();
+    return end.size() <= searchSpace.size() && searchSpace.find(end, pos) != std::string::npos;
+}
