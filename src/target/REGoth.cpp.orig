@@ -368,10 +368,7 @@ public:
             return "Cameramode changed to " + std::to_string(idx);
         });
 
-        console.registerCommand("test", [this](const std::vector<std::string>& args) -> std::string {
-            auto& worldInstance = m_pEngine->getMainWorld().get();
-            auto& scriptEngine = worldInstance.getScriptEngine();
-            auto& datFile = scriptEngine.getVM().getDATFile();
+        console.registerCommand("test", [](const std::vector<std::string>& args) -> std::string {
             return "Hello World!";
         });
 
@@ -1107,11 +1104,16 @@ public:
 
         if(m_pEngine->getHud().getConsole().isOpen())
         {
+<<<<<<< HEAD
+            m_pEngine->getHud().getConsole().update();
+        }
+        if (disableBindings){
+=======
             float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
             m_pEngine->getHud().getConsole().getConsoleBox().update(
                     dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
-        }
-        if (disableBindings){
+
+>>>>>>> ConsoleHiddenBugFix
             Engine::Input::clearTriggered();
         }
 
