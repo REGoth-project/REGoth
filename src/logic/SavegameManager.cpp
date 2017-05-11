@@ -31,10 +31,10 @@ void ensureSavegameFolders(int idx)
         gameType = "/Gothic 2";
     }
 
-    if (Utils::mkdir(userdata + gameType))
+    if (!Utils::mkdir(userdata + gameType))
         LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
 
-    if(Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
+    if(!Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
 		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
 

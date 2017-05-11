@@ -322,7 +322,8 @@ bool Utils::mkdir(const std::string& dir)
     mode_t nMode = 0733; // UNIX style permissions
     nError = ::mkdir(dir.c_str(),nMode); // can be used on non-Windows
 #endif
-	return nError == 0 || (nError == -1 && errno == EEXIST);
+    auto errorCode = errno;
+	return nError == 0 || (nError == -1 && errorCode == EEXIST);
 }
     
 std::string Utils::getUserDataLocation()
