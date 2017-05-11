@@ -1104,7 +1104,9 @@ public:
 
         if(m_pEngine->getHud().getConsole().isOpen())
         {
-            m_pEngine->getHud().getConsole().update();
+            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
+            m_pEngine->getHud().getConsole().getConsoleBox().update(
+                    dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
         }
         if (disableBindings){
             Engine::Input::clearTriggered();
