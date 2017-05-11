@@ -966,18 +966,18 @@ public:
                                                   {GLFW_KEY_END, UI::IA_END},
                                                   {GLFW_KEY_PAGE_UP, UI::IA_Up},
                                                   {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
-                                                  {GLFW_KEY_B, UI::IA_ToggleStatusMenu}};
+                                                  {GLFW_KEY_B, UI::IA_ToggleStatusMenu},
+                                                  {GLFW_KEY_F10, UI::IA_ToggleConsole}};
 
-        const auto CONSOLE_TOGGLE_KEY = GLFW_KEY_F10;
         std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
                 m_stopWatch.start();
 
-                if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
+                if(m_pEngine->getHud().getConsole().isOpen())
                     m_pEngine->getHud().getConsole().onKeyDown(i);
-                else if (keyMap.find(i) != keyMap.end())
+                if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
                 }
@@ -988,9 +988,9 @@ public:
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
-                        if(m_pEngine->getHud().getConsole().isOpen() || i == CONSOLE_TOGGLE_KEY)
+                        if(m_pEngine->getHud().getConsole().isOpen())
                             m_pEngine->getHud().getConsole().onKeyDown(i);
-                        else if (keyMap.find(i) != keyMap.end())
+                        if (keyMap.find(i) != keyMap.end())
                         {
                             m_pEngine->getHud().onInputAction(keyMap[i]);
                         }

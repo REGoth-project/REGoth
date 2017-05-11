@@ -151,8 +151,12 @@ void UI::Hud::onTextInput(const std::string& text)
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
     auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
-
-    if(!m_MenuChain.empty())
+    if (m_Engine.getHud().getConsole().isOpen())
+    {
+        if (action == IA_Close || action == IA_ToggleConsole)
+            m_Console.setOpen(false);
+        return;
+    } else if(!m_MenuChain.empty())
     {
         // Notify last menu in chain
         bool close = m_MenuChain.back()->onInputAction(action);
@@ -171,6 +175,9 @@ void UI::Hud::onInputAction(UI::EInputAction action)
         case IA_Close:
             // Show main-menu
             pushMenu<UI::Menu_Main>();
+            return;
+        case IA_ToggleConsole:
+            m_Engine.getHud().getConsole().setOpen(true);
             return;
         case IA_ToggleStatusMenu:
         {

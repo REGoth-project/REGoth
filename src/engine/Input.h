@@ -59,8 +59,6 @@ namespace Engine
 
 		Quicksave,
 		Quickload,
-		OpenStatusMenu,
-		OpenConsole,
         Escape,
 		UI_Up,
 		UI_Down,

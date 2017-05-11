@@ -63,13 +63,6 @@ void Console::update()
 
 void Console::onKeyDown(int glfwKey)
 {
-    // If this is Escape or F10, close/open the console
-    if(glfwKey == Keys::GLFW_KEY_ESCAPE){
-        setOpen(false);
-    }
-    if(glfwKey == Keys::GLFW_KEY_F10){
-        setOpen(!isOpen());
-    }
     if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
     {
         m_ConsoleBox.increaseSelectionIndex(1);
