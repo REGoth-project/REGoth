@@ -50,7 +50,7 @@ void Menu_Load::gatherAvailableSavegames()
         }else 
         {
             getItemScriptData(sym).flags &= ~C_Menu_Item::IT_SELECTABLE;
-            displayName = "---";
+            displayName = Menu_Load::EMPTY_SLOT_DISPLAYNAME;
         }
         // never overwrite displayname of quicksave slot (i==0)
         if (i != 0)

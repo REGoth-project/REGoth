@@ -965,7 +965,8 @@ public:
                                                   {GLFW_KEY_HOME, UI::IA_HOME},
                                                   {GLFW_KEY_END, UI::IA_END},
                                                   {GLFW_KEY_PAGE_UP, UI::IA_Up},
-                                                  {GLFW_KEY_PAGE_DOWN, UI::IA_Down}};
+                                                  {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
+                                                  {GLFW_KEY_B, UI::IA_ToggleStatusMenu}};
 
         const auto CONSOLE_TOGGLE_KEY = GLFW_KEY_F10;
         std::string frameInputText = getFrameTextInput();
@@ -1001,7 +1002,8 @@ public:
         // Pass text input from this frame
         m_pEngine->getHud().onTextInput(frameInputText);
 
-        if(!m_pEngine->getHud().getConsole().isOpen())
+        bool disableBindings = m_pEngine->getHud().getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
+        if(!disableBindings)
             Engine::Input::fireBindings();
 
 
@@ -1103,7 +1105,8 @@ public:
         if(m_pEngine->getHud().getConsole().isOpen())
         {
             m_pEngine->getHud().getConsole().update();
-
+        }
+        if (disableBindings){
             Engine::Input::clearTriggered();
         }
 

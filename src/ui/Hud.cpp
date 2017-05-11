@@ -13,7 +13,9 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include <utils/logger.h>
+#include <components/VobClasses.h>
 #include "DialogBox.h"
+#include <logic/PlayerController.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e) :
         View(e),
@@ -152,15 +154,13 @@ void UI::Hud::onInputAction(UI::EInputAction action)
 
     if(!m_MenuChain.empty())
     {
-        // case: a menu is open
-        if (action == IA_Close)
+        // Notify last menu in chain
+        bool close = m_MenuChain.back()->onInputAction(action);
+        if (close)
             popMenu();
-        else
-            m_MenuChain.back()->onInputAction(action); // Notify last menu in chain
         return;
     }else if(dialogManager.isDialogActive())
     {
-        // case: a dialog is active
         dialogManager.onInputAction(action);
         return;
     }
@@ -172,6 +172,16 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             // Show main-menu
             pushMenu<UI::Menu_Main>();
             return;
+        case IA_ToggleStatusMenu:
+        {
+            UI::Menu_Status& statsScreen = pushMenu<UI::Menu_Status>();
+            // TODO: Refactor move this into menu_status.create/new function?
+            // Update the players status menu once
+            auto& s = m_Engine.getMainWorld().get().getScriptEngine();
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_Engine.getMainWorld().get(), s.getPlayerEntity());
+            player.playerController->updateStatusScreen(statsScreen);
+            return;
+        }
         default:
             return;
     }

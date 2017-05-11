@@ -255,7 +255,7 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
 }
 
 
-void UI::Menu::onInputAction(EInputAction action)
+bool UI::Menu::onInputAction(EInputAction action)
 {
     switch(action)
     {
@@ -286,11 +286,12 @@ void UI::Menu::onInputAction(EInputAction action)
             break;
 
         case IA_Close:
-            setHidden(true);
-            break;
+            return true;
+
         default:
             break;
     }
+    return false;
 }
 
 

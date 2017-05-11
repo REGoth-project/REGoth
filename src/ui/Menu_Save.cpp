@@ -54,7 +54,7 @@ void Menu_Save::gatherAvailableSavegames()
         if(names[i] != nullptr)
             getItemScriptData(sym).text[0] = *names[i];
         else 
-            getItemScriptData(sym).text[0] = "---";
+            getItemScriptData(sym).text[0] = Menu_Save::EMPTY_SLOT_DISPLAYNAME;
     }
 }
 
@@ -68,43 +68,50 @@ void Menu_Save::onCustomAction(const std::string& action)
 
 		if (!m_isWaitingForSaveName)
 		{
-            const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(index) ? Engine::SavegameManager::readSavegameInfo(index).name : "";
+            m_isWaitingForSaveName = true;
+            m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(index);
 
-			m_isWaitingForSaveName = true;
-			m_SaveName = saveGameName;
-			m_MenuItemSaveSlot = "MENUITEM_SAVE_SLOT" + std::to_string(index);
-			getItemScriptData(m_MenuItemSaveSlot).text[0] = "_";
+            const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(index) ? Engine::SavegameManager::readSavegameInfo(index).name : "";
+            m_SaveName.clear();
+            onTextInput(saveGameName);
 		}
 		else
 		{
 			m_isWaitingForSaveName = false;
             Engine::SavegameManager::saveToSaveGameSlot(index, m_SaveName);
-			// close menus after saving
-			getHud().popAllMenus();
+            // close menus after saving
+            getHud().popAllMenus();
 		}
     }
 }
 
-void Menu_Save::onInputAction(EInputAction action)
+bool Menu_Save::onInputAction(EInputAction action)
 {
     if (!m_isWaitingForSaveName)
-	Menu::onInputAction(action);
+        return Menu::onInputAction(action);
     else
     {
-	switch (action)
-	{
-	    case IA_Accept:
-		if(!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
-		break;
+        switch (action)
+        {
+            case IA_Accept:
+                if(!m_SelectableItems.empty())
+                    performSelectAction(m_SelectableItems[m_SelectedItem]);
+                break;
 
-	    case IA_Backspace:
-		if (m_SaveName.size() > 0)
-		    m_SaveName.pop_back();
-
-	    default:
-		break;
-	}
+            case IA_Backspace:
+                if (m_SaveName.size() > 0)
+                    m_SaveName.pop_back();
+                break;
+            case IA_Close:
+                m_isWaitingForSaveName = false;
+                // restore displayname of current slot
+                gatherAvailableSavegames();
+                break;
+            default:
+                break;
+        }
     }
+    return false;
 }
 
 void Menu_Save::onTextInput(const std::string& text)

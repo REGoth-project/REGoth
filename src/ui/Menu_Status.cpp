@@ -79,18 +79,9 @@ void Menu_Status::setExperienceNext(int xpNext)
     getItemScriptData("MENU_ITEM_LEVEL_NEXT").text[0] = std::to_string(xpNext);
 }
 
-void Menu_Status::onInputAction(EInputAction action)
+bool Menu_Status::onInputAction(EInputAction action)
 {
-    Menu::onInputAction(action);
-
-    switch(action)
-    {
-        case IA_Up:break;
-        case IA_Down:break;
-        case IA_Left:break;
-        case IA_Right:break;
-        case IA_Close: break;
-        case IA_Accept:break;
-        default:break;
-    }
+    bool baseclassClose = Menu::onInputAction(action);
+    // close this menu if either the parent function wants to close or this function
+    return baseclassClose || (action == IA_ToggleStatusMenu);
 }

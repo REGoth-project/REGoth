@@ -2017,27 +2017,10 @@ void PlayerController::setupKeyBindings()
         }
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)
     {
-        if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive()){
             m_World.getEngine()->togglePaused();
-        }
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
-
-        if(triggered && !m_World.getDialogManager().isDialogActive())
-        {
-            UI::Hud &hud = m_World.getEngine()->getHud();
-            if (!hud.isMenuActive())
-            {
-                UI::Menu_Status& statsScreen = hud.pushMenu<UI::Menu_Status>();
-
-                // Update the players status menu once
-                updateStatusScreen(statsScreen);
-            }
-            else if (hud.isTopMenu<UI::Menu_Status>())
-                hud.popMenu();
         }
     });
 

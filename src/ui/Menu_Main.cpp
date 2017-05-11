@@ -25,20 +25,9 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
     return s;
 }
 
-void Menu_Main::onInputAction(EInputAction action)
+bool Menu_Main::onInputAction(EInputAction action)
 {
-    Menu::onInputAction(action);
-
-    switch(action)
-    {
-        case IA_Up:break;
-        case IA_Down:break;
-        case IA_Left:break;
-        case IA_Right:break;
-        case IA_Close: getHud().popMenu(); break;
-        case IA_Accept:break;
-        default:break;
-    }
+    return Menu::onInputAction(action);
 }
 
 
