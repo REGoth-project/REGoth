@@ -154,7 +154,7 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
                                const ZenLoad::oCMsgConversationData& msg)
 {
     if(self == target)
-        return; // FIXME: Vatras right here
+        0; // FIXME: Vatras right here
 
     LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
     // Make a new message for the talking NPC

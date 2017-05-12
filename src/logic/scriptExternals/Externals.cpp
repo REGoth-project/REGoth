@@ -686,11 +686,22 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if(npc.isValid())
         {
-            vm.setReturn((int)npc.playerController->getAIStateMachine().getCurrentStateTime());
+            float time = npc.playerController->getAIStateMachine().getCurrentStateTime();
+            vm.setReturn(static_cast<int>(time));
         }else
         {
             vm.setReturn(0);
         }
+    });
+
+    vm->registerExternalFunction("npc_setstatetime", [=](Daedalus::DaedalusVM& vm) {
+        if(verbose) LogInfo() << "npc_setstatetime";
+        int seconds = vm.popDataValue(); if(verbose) LogInfo() << "seconds: " << seconds;
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+        npc.playerController->getAIStateMachine().setCurrentStateTime(seconds);
     });
 
     vm->registerExternalFunction("wld_detectnpc", [=](Daedalus::DaedalusVM& vm){

@@ -571,3 +571,8 @@ void NpcScriptState::clearRoutine()
     m_Routine.routine.clear();
 }
 
+void NpcScriptState::setCurrentStateTime(float time) {
+    if (m_CurrentState.valid)
+        m_CurrentState.stateTime = time;
+}
+
