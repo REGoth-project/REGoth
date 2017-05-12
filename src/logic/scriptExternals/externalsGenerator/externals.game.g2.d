@@ -9,8 +9,8 @@ FUNC void AI_PlayFX(VAR C_NPC Origin, VAR C_VOB Target, VAR C_VFX_NAME VfxName)
 ///                 Reference to the character object
 ///                 where the visual effect is played.
 /// \param      Target
-///                 Optional reference to a game object (character or item)
-///                 that will be used as the target for the visual effect.
+///                 Optional reference to a game object that will be used as
+///                 the target for the visual effect.
 /// \param      VfxName
 ///                 Name of the visual effect.
 /// \details    The message queue handler does nothing if \b GAME.itemEffects
@@ -66,7 +66,13 @@ FUNC void AI_Snd_Play(VAR C_NPC Origin, VAR string Name)
 ///             If \p Name is empty, the sound effect "NOWAVE" will be played.
 ///             The message queue handler does nothing if a sound effect or
 ///             direct sound (file) object with the same name already exists.
-/// \todo       Document the sound effect naming convention for multi sounds.
+/// \details    If the \p Name of a sound effect contains a "_V[0-9]" the voice
+///             (chord channel) of a multi sound is played. Multi sound effects
+///             have to be defined with consecutive numbers and start with 0.
+/// \details    For every sound effect (and multi sound voice) alternate sound
+///             effects (variation frames) are loaded and randomly selected.
+///             Alternate sound effects have to be defined with the suffix "_A"
+///             and consecutive numbers that start with 1.
 /// \sa         Snd_Play()
 /// \sa         Snd_Play3d()
 /// \sa         AI_Snd_Play3D()
@@ -80,8 +86,7 @@ FUNC void AI_Snd_Play3D(VAR C_NPC Origin, VAR C_VOB Emitter, VAR string Name)
 /// \param      Origin
 ///                 Reference to the character object where sound is queued.
 /// \param      Emitter
-///                 Reference to a game object (character or item)
-///                 that emits the sound.
+///                 Reference to a game object that emits the sound.
 /// \param      Name
 ///                 Optional name of the sound effect (no ".WAV" included)
 ///                 or name of the sound file (".WAV" included in filename).
@@ -89,7 +94,13 @@ FUNC void AI_Snd_Play3D(VAR C_NPC Origin, VAR C_VOB Emitter, VAR string Name)
 ///             If \p Name is empty, the sound effect "NOWAVE" will be played.
 ///             The message queue handler does nothing if a sound effect or
 ///             direct sound (file) object with the same name already exists.
-/// \todo       Document the sound effect naming convention for multi sounds.
+/// \details    If the \p Name of a sound effect contains a "_V[0-9]" the voice
+///             (chord channel) of a multi sound is played. Multi sound effects
+///             have to be defined with consecutive numbers and start with 0.
+/// \details    For every sound effect (and multi sound voice) alternate sound
+///             effects (variation frames) are loaded and randomly selected.
+///             Alternate sound effects have to be defined with the suffix "_A"
+///             and consecutive numbers that start with 1.
 /// \sa         Snd_Play()
 /// \sa         Snd_Play3d()
 /// \sa         AI_Snd_Play()
@@ -219,8 +230,13 @@ FUNC int Npc_GetHeightToNpc(VAR C_NPC Origin, VAR C_NPC Target)
 	return 0;
 };
 
-FUNC int Npc_GetLastHitSpellCat(VAR C_NPC Character)
-/// \todo       Document the visual effect spell tracing.
+FUNC int Npc_GetLastHitSpellCat(VAR C_NPC Target)
+/// \brief      Last spell category of a visual effect target.
+/// \return     Returns the last spell category (SPELL_*) or -1.
+/// \details    On initialization a visual effect saves the active spell
+///             category of the origin at the \p Target. This feature is
+///             intended to solve the problem that the active spell of the
+///             origin might have been changed before the effect is perceived.
 /// \note       The function is only available in G2.
 /// \bug        The implementation does not leave the result on the stack
 ///             if \p Character is not a valid character object reference.
@@ -228,8 +244,13 @@ FUNC int Npc_GetLastHitSpellCat(VAR C_NPC Character)
 	return -1;
 };
 
-FUNC int Npc_GetLastHitSpellID(VAR C_NPC Character)
-/// \todo       Document the visual effect spell tracing.
+FUNC int Npc_GetLastHitSpellID(VAR C_NPC Target)
+/// \brief      Last spell instance of a visual effect target.
+/// \return     Returns the last spell instance (SPL_*) or -1.
+/// \details    On initialization a visual effect saves the active spell
+///             instance of the origin at the \p Target. This feature is
+///             intended to solve the problem that the active spell of the
+///             origin might have been changed before the effect is perceived.
 /// \note       The function is only available in G2.
 /// \bug        The implementation does not leave the result on the stack
 ///             if \p Character is not a valid character object reference.
@@ -276,7 +297,7 @@ FUNC int Npc_IsDrawingSpell(VAR C_NPC Character)
 /// \brief      Returns the spell that a character is readying.
 /// \param      Character
 ///                 Reference to the character object.
-/// \return     Returns the spell identifier (SPL_*) of the first message
+/// \return     Returns the spell instance (SPL_*) of the first message
 ///             to ready a spell in the \b Character's queue,
 ///             or -1 if there is no such message.
 /// \note       The function is only available in G2.
