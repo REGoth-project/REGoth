@@ -1,6 +1,7 @@
 #pragma once 
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace Engine
 {
@@ -15,10 +16,10 @@ namespace Engine
 
         /**
          * Assembles a list of all available savegame names. Every entry will correspond to an index number.
-         * Empty names mean, that there is no save currently stored.
+         * nullptr means, that there is no save currently stored.
          * @return List of available saves
          */
-        std::vector<std::string> gatherAvailableSavegames();
+        std::vector<std::shared_ptr<const std::string>> gatherAvailableSavegames();
 
         /**
          * Checks if the given savegame-slot contains valid data
@@ -90,11 +91,30 @@ namespace Engine
         std::string readWorld(int idx, const std::string& worldName);
 
         /**
+         * loads the savegame of the specified slotindex
+         * @param index slotindex
+         * @return empty string if successful, else error message
+         */
+        std::string loadSaveGameSlot(int index);
+
+        /**
+         * saves the current world to the given slot
+         * @param index slotindex
+         * @param savegameName label of the savegame. If empty string, then "Slot <index>" is used as name
+         */
+        void saveToSaveGameSlot(int index, std::string savegameName);
+
+        /**
          * Builds the path to a saved worldfile from the given slot
          * @param idx Index of the savegame
          * @param worldName Name of the world to appear in the path
          * @return full path + filename to the given world
          */
         std::string buildWorldPath(int idx, const std::string& worldName);
+
+        constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
+        constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
+
+        int maxSlots();
     }
 }

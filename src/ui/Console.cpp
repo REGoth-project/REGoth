@@ -2,16 +2,12 @@
 #include <ZenLib/utils/split.h>
 #include <utils/logger.h>
 #include "Console.h"
-#include <cctype>
 #include <iterator>
-#include <algorithm>
 #include <utils/Utils.h>
 #include <iomanip>
 #include <engine/BaseEngine.h>
 
 using namespace UI;
-
-const uint16_t GLOBAL_Y = 25;
 
 /* Function keys */
 namespace Keys
@@ -47,29 +43,15 @@ Console::Console(Engine::BaseEngine& e) :
     m_ConsoleBox(e, *this)
 {
     m_HistoryIndex = 0;
-    m_IsOpen = false;
-
-    m_BaseEngine.getRootUIView().addChild(&m_ConsoleBox);
+    setOpen(false);
     outputAdd(" ----------- REGoth Console -----------");
 }
 
 Console::~Console() {
-    m_BaseEngine.getRootUIView().removeChild(&m_ConsoleBox);
-}
-
-void Console::update()
-{
 }
 
 void Console::onKeyDown(int glfwKey)
 {
-    // If this is Escape or F10, close/open the console
-    if(glfwKey == Keys::GLFW_KEY_ESCAPE){
-        setOpen(false);
-    }
-    if(glfwKey == Keys::GLFW_KEY_F10){
-        setOpen(!isOpen());
-    }
     if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
     {
         m_ConsoleBox.increaseSelectionIndex(1);

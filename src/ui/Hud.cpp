@@ -13,7 +13,9 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include <utils/logger.h>
+#include <components/VobClasses.h>
 #include "DialogBox.h"
+#include <logic/PlayerController.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e) :
         View(e),
@@ -149,39 +151,46 @@ void UI::Hud::onTextInput(const std::string& text)
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
     auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
-
-    // Notify last menu in chain
-    if(!m_MenuChain.empty() && action != IA_Close)
+    if (m_Engine.getHud().getConsole().isOpen())
     {
-        m_MenuChain.back()->onInputAction(action);
+        if (action == IA_Close || action == IA_ToggleConsole)
+            m_Console.setOpen(false);
+        return;
+    } else if(!m_MenuChain.empty())
+    {
+        // Notify last menu in chain
+        bool close = m_MenuChain.back()->onInputAction(action);
+        if (close)
+            popMenu();
         return;
     }else if(dialogManager.isDialogActive())
     {
-        if(!m_pDialogBox->isHidden()){
-            m_pDialogBox->onInputAction(action);
-            return;
-        }
-        else if (dialogManager.isTalking() && action == IA_Close) {
-            dialogManager.cancelTalk();
-            return;
-        }
+        dialogManager.onInputAction(action);
         return;
     }
 
-    // Close console or last menu, in case it's open
-    if(action == IA_Close)
+    // case: Nothing is open right now.
+    switch (action)
     {
-        if(!m_MenuChain.empty())
-        {
-            popMenu();
-            return;
-        }
-        else
-        {
-            // Nothing is open right now. Show main-menu
+        case IA_Close:
+            // Show main-menu
             pushMenu<UI::Menu_Main>();
             return;
+        case IA_ToggleConsole:
+            m_Engine.getHud().getConsole().setOpen(true);
+            return;
+        case IA_ToggleStatusMenu:
+        {
+            UI::Menu_Status& statsScreen = pushMenu<UI::Menu_Status>();
+            // TODO: Refactor move this into menu_status.create/new function?
+            // Update the players status menu once
+            auto& s = m_Engine.getMainWorld().get().getScriptEngine();
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_Engine.getMainWorld().get(), s.getPlayerEntity());
+            player.playerController->updateStatusScreen(statsScreen);
+            return;
         }
+        default:
+            return;
     }
 }
 

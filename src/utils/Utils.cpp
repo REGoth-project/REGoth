@@ -322,7 +322,8 @@ bool Utils::mkdir(const std::string& dir)
     mode_t nMode = 0733; // UNIX style permissions
     nError = ::mkdir(dir.c_str(),nMode); // can be used on non-Windows
 #endif
-	return nError == 0 || (nError == -1 && errno == EEXIST);
+    auto errorCode = errno;
+	return nError == 0 || (nError == -1 && errorCode == EEXIST);
 }
     
 std::string Utils::getUserDataLocation()
@@ -498,4 +499,13 @@ Utils::Profiler::~Profiler()
     LogInfo() << name << ": "
         << std::chrono::duration_cast<dura>(d).count() * 1000
         << " milliseconds";
+}
+
+bool Utils::startsWith(const std::string& searchSpace, const std::string& start) {
+    return searchSpace.find(start) == 0;
+}
+
+bool Utils::endsWith(const std::string& searchSpace, const std::string& end) {
+    auto pos = searchSpace.size() - end.size();
+    return end.size() <= searchSpace.size() && searchSpace.find(end, pos) != std::string::npos;
 }

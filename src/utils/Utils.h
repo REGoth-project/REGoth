@@ -530,4 +530,14 @@ namespace Utils
         Profiler(const std::string& n);
         ~Profiler();
     };
+
+    /**
+     * checks if string searchSpace starts with start
+     */
+    bool startsWith(const std::string& searchSpace, const std::string& start);
+
+    /**
+     * checks if string searchSpace ends with end
+     */
+    bool endsWith(const std::string& searchSpace, const std::string& end);
 }

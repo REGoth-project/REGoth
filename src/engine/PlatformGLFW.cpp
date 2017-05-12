@@ -213,9 +213,10 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::DebugMoveSpeed2, true);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, false);
 
+    bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);
+    bindKey(GLFW_KEY_F9, ActionType::Quickload, false);
     bindKey(GLFW_KEY_P, ActionType::PauseGame, false);
 
-    bindKey(GLFW_KEY_B, ActionType::OpenStatusMenu, false);
     bindKey(GLFW_KEY_ESCAPE, ActionType::UI_Close, false);
     bindKey(GLFW_KEY_UP, ActionType::UI_Up, false);
     bindKey(GLFW_KEY_DOWN, ActionType::UI_Down, false);

@@ -31,10 +31,10 @@ void ensureSavegameFolders(int idx)
         gameType = "/Gothic 2";
     }
 
-    if (Utils::mkdir(userdata + gameType))
+    if (!Utils::mkdir(userdata + gameType))
         LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
 
-    if(Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
+    if(!Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
 		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
 
@@ -75,14 +75,16 @@ void SavegameManager::clearSavegame(int idx)
     Utils::forEachFile(buildSavegamePath(idx), [](const std::string& path, const std::string& name, const std::string& ext)
     {
         // Make sure this is a REGoth-file
-        if(name.find("regoth_") == std::string::npos && name.find("world_") == std::string::npos)
+        bool isRegothFile = (Utils::startsWith(name, "regoth_") || Utils::startsWith(name, "world_"))
+                            && Utils::endsWith(name, ".json");
+        if(!isRegothFile)
             return; // Better not touch that one
 
         // Empty the file
-        FILE* f = fopen((path + "/" + name).c_str(), "w");
+        FILE* f = fopen(path.c_str(), "w");
         if(!f)
         {
-            LogWarn() << "Failed to clear file: " << path << "/" << name;
+            LogWarn() << "Failed to clear file: " << path;
             return;
         }
 
@@ -196,27 +198,97 @@ bool Engine::SavegameManager::init(Engine::GameEngine& engine)
     return true;
 }
 
-std::vector<std::string> SavegameManager::gatherAvailableSavegames()
+std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailableSavegames()
 {
-    constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
-    constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
+    int numSlots = maxSlots();
 
-    int numSlots = (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1) ? G1_MAX_SLOTS : G2_MAX_SLOTS;
+    std::vector<std::shared_ptr<const std::string>> names(numSlots, nullptr);
 
-    std::vector<std::string> names(numSlots);
-
-    // Try every slot, skip current (slot 0)
-    for (int i = 1; i < numSlots; ++i)
+    // Try every slot
+    for (int i = 0; i < numSlots; ++i)
     {
         if (isSavegameAvailable(i))
         {
             SavegameInfo info = readSavegameInfo(i);
-            names[i] = info.name;
+            names[i] = std::make_shared<const std::string>(info.name);
         } 
     }
-
-    LogInfo() << "Available savegames: " << names;
+    // for log purpose only
+    {
+        std::vector<std::string> names2;
+        for (auto& namePtr : names)
+        {
+            if (namePtr)
+                names2.push_back(*namePtr);
+            else
+                names2.push_back("");
+        }
+        LogInfo() << "Available savegames: " << names2;
+    }
 
     return names;
+}
+
+std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
+    // Lock to number of savegames
+    assert(index >= 0 && index < maxSlots());
+
+    if(!isSavegameAvailable(index))
+    {
+        return "Savegame at slot " + std::to_string(index) + " not available!";
+    }
+
+    // Read general information about the saved game. Most importantly the world the player saved in
+    SavegameInfo info = readSavegameInfo(index);
+
+    std::string worldPath = buildWorldPath(index, info.world);
+
+    // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
+    // if it was missing. Also, IF the player saved there, there should be a save for this.
+    if(!Utils::getFileSize(worldPath))
+    {
+        return "Target world-file invalid: " + worldPath;
+    }
+
+    gameEngine->loadWorld(info.world + ".zen", worldPath);
+    gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
+    return "";
+}
+
+int Engine::SavegameManager::maxSlots() {
+    switch(gameEngine->getMainWorld().get().getBasicGameType())
+    {
+        case World::EGameType::GT_Gothic1:
+            return G1_MAX_SLOTS;
+        case World::EGameType::GT_Gothic2:
+            return G2_MAX_SLOTS;
+        default:
+            return G2_MAX_SLOTS;
+    }
+}
+
+void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegameName) {
+    assert(index >= 0 && index < maxSlots());
+
+    if (savegameName.empty())
+        savegameName = std::string("Slot") + std::to_string(index);
+
+    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
+    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
+    Engine::SavegameManager::clearSavegame(index);
+
+    // Write information about the current game-state
+    Engine::SavegameManager::SavegameInfo info;
+    info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
+    info.name = savegameName;
+    info.world = Utils::stripExtension(gameEngine->getMainWorld().get().getZenFile());
+    info.timePlayed = gameEngine->getGameClock().getTotalSeconds();
+    Engine::SavegameManager::writeSavegameInfo(index, info);
+
+    json j;
+    gameEngine->getMainWorld().get().exportWorld(j);
+
+    // Save
+    Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
 }
 

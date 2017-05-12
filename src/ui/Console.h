@@ -64,11 +64,6 @@ namespace UI
         ~Console();
 
         /**
-         * Updates and draws the console
-         */
-        void update();
-
-        /**
          * To be called when a key got pressed.
          * @param glfwKey Key ID, glfw style
          */
@@ -122,12 +117,13 @@ namespace UI
         /**
          * @return Whether the console is currently shown
          */
-        bool isOpen(){ return m_IsOpen; }
-        void setOpen(bool open){ m_IsOpen = open; }
+        bool isOpen(){ return !m_ConsoleBox.isHidden(); }
+        void setOpen(bool open){ m_ConsoleBox.setHidden(!open); }
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
         const std::vector<std::vector<UI::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+        ConsoleBox& getConsoleBox() { return m_ConsoleBox; }
 
     private:
 
@@ -170,11 +166,6 @@ namespace UI
          * Currently typed line
          */
         std::string m_TypedLine;
-
-        /**
-         * Whether the console is currently shown
-         */
-        bool m_IsOpen;
 
         Engine::BaseEngine& m_BaseEngine;
 

@@ -36,6 +36,7 @@ BaseEngine::BaseEngine() : m_RootUIView(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
+    m_Quickload = false;
 }
 
 BaseEngine::~BaseEngine()

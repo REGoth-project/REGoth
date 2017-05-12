@@ -406,21 +406,9 @@ void DialogManager::addChoice(ChoiceEntry& entry)
     m_Interaction.choices.push_back(entry);
 }
 
-int DialogManager::beforeFrontIndex(){
-    if (m_Interaction.choices.empty())
-    {
-        return 0;
-    }
-    else
-    {
-        auto& minEl = *std::min_element(m_Interaction.choices.begin(), m_Interaction.choices.end(),
-                                       ChoiceEntry::comparator);
-        return minEl.nr - 1;
-    }
-}
-
 void DialogManager::sortChoices()
 {
+    // stable (!) sort is needed to keep the order of the (not-numbered) sub-choices
     std::stable_sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
 }
 
@@ -487,6 +475,15 @@ void DialogManager::importDialogManager(const json& j)
 
         for(int info : it.value())
             m_World.getDialogManager().getScriptDialogManager()->setNpcInfoKnown((unsigned int)npcInstance, (unsigned int)info);
+    }
+}
+
+void DialogManager::onInputAction(UI::EInputAction action) {
+    auto& dialogBox = m_World.getEngine()->getHud().getDialogBox();
+    if(!dialogBox.isHidden()){
+        dialogBox.onInputAction(action);
+    } else if (isTalking() && action == UI::EInputAction::IA_Close) {
+        cancelTalk();
     }
 }
 

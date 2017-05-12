@@ -21,6 +21,8 @@ namespace UI
         void gatherAvailableSavegames();   
 
         void onCustomAction(const std::string& action);
+
+        static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
     private:
     };
 }

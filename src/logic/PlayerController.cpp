@@ -23,6 +23,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
+#include <logic/SavegameManager.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -2002,27 +2003,24 @@ void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
 
-    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
+    Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
     {
-        if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
-            m_World.getEngine()->togglePaused();
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive() && !m_World.getDialogManager().isDialogActive()){
+            Engine::SavegameManager::saveToSaveGameSlot(0, "");
         }
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
+    Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
+    {
+        if(triggered){
+            m_World.getEngine()->setQuickload(true);
+        }
+    });
 
-        if(triggered && !m_World.getDialogManager().isDialogActive())
-        {
-            UI::Hud &hud = m_World.getEngine()->getHud();
-            if (!hud.isMenuActive())
-            {
-                UI::Menu_Status& statsScreen = hud.pushMenu<UI::Menu_Status>();
-
-                // Update the players status menu once
-                updateStatusScreen(statsScreen);
-            }
-            else if (hud.isTopMenu<UI::Menu_Status>())
-                hud.popMenu();
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)
+    {
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive()){
+            m_World.getEngine()->togglePaused();
         }
     });
 
