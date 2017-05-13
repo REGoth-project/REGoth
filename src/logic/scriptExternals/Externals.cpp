@@ -71,28 +71,31 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     auto getItemByInstance = [vm, engine](size_t instance)
     {
+        auto& parSymbol = vm->getDATFile().getSymbolByIndex(instance);
         Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>
-                (vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
+                (parSymbol.instanceDataHandle);
 
-        // Get data of npc this belongs to
-        Daedalus::GEngineClasses::C_Item& itemData = vm->getGameState().getItem(hitem);
-        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
+        if (hitem.isValid())
+        {
+            // Get data of npc this belongs to
+            Daedalus::GEngineClasses::C_Item& itemData = vm->getGameState().getItem(hitem);
+            VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
 
-		if(userData)
-		{
-			World::WorldInstance& world = engine->getWorldInstance(userData->world);
-			Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
+            if(userData)
+            {
+                World::WorldInstance& world = engine->getWorldInstance(userData->world);
+                Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
 
-			return vob;
-		}
-		else{
-			LogWarn() << "No userptr on item: " << itemData.name;
-
-			Vob::VobInformation vob;
-			vob.entity.invalidate();
-
-			return vob;
-		}
+                return vob;
+            } else {
+                LogWarn() << "No userptr on item: " << itemData.name;
+            }
+        } else {
+            LogWarn() << "could not get item handle from ParSymbol: " << parSymbol.name;
+        }
+        Vob::VobInformation vob;
+        vob.entity.invalidate();
+        return vob;
     };
 
     /**
@@ -284,12 +287,18 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("npc_getdisttoitem", [=](Daedalus::DaedalusVM& vm){
 
-        uint32_t item = static_cast<uint32_t>(vm.popDataValue());
+        uint32_t item = vm.popVar();
         uint32_t arr_npc;
         int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
 
         VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
         Vob::VobInformation itemvob = getItemByInstance(item);
+
+        if (not itemvob.isValid())
+        {
+            vm.setReturn(INT32_MAX);
+            return;
+        }
 
         float dist = (Vob::getTransform(npcvob).Translation() - Vob::getTransform(itemvob).Translation()).length();
 

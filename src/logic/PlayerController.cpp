@@ -2529,9 +2529,7 @@ std::string PlayerController::getGuildName()
 {
     // Guilds are stored as an array in a symbol called "TXT_GUILDS"
     auto& sym = m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("TXT_GUILDS");
-    std::string* adr = sym.getStrAddr((unsigned int)getScriptInstance().guild);
-
-    return *adr;
+    return sym.getString((unsigned int)getScriptInstance().guild);
 }
 
 void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
