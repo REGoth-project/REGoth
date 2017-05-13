@@ -69,15 +69,6 @@ namespace World
         std::vector<size_t> m_VisibleEntities;
     };
 
-	/**
-	 * Basic gametype this is. Needed for sky configuration, for example
-	 */
-	enum EGameType
-	{
-		GT_Gothic1,
-		GT_Gothic2
-	};
-
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
     public:
@@ -149,7 +140,7 @@ namespace World
 		/**
 		 * @return Basic gametype this is. Needed for sky configuration, for example
 		 */
-		EGameType getBasicGameType();
+		Daedalus::GameType getBasicGameType();
 
         /**
          * Data access

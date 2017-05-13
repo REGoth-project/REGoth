@@ -13,13 +13,6 @@
 #include <logic/visuals/ModelVisual.h>
 #include <debugdraw/debugdraw.h>
 
-void ::Logic::ScriptExternals::registerStdLib(Daedalus::DaedalusVM& vm, bool verbose)
-{
-    // don't use ZenLib externals
-    // Daedalus::registerDaedalusStdLib(vm, verbose);
-    Daedalus::registerGothicEngineClasses(vm);
-}
-
 void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose)
 {
     Engine::BaseEngine* engine = world.getEngine();

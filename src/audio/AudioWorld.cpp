@@ -316,7 +316,7 @@ namespace World
         }
 
         m_VM = new Daedalus::DaedalusVM(datFile);
-        Daedalus::registerGothicEngineClasses(*m_VM);
+        Daedalus::registerGothicEngineClasses(*m_VM, m_Engine.getMainWorld().get().getBasicGameType());
 
         size_t count = 0;
         m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s){

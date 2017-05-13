@@ -145,8 +145,8 @@ void UI::Menu::initializeInstance(const std::string& instance)
             Daedalus::PARSymbol& symX =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_X");
             Daedalus::PARSymbol& symY =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_Y");
 
-            infoX = symX.getIntValue() / 8192.0f;
-            infoY = symY.getIntValue() / 8192.0f;
+            infoX = symX.getInt() / 8192.0f;
+            infoY = symY.getInt() / 8192.0f;
         }
         float sX = 1.0f - infoX * 2.0f;
         float sY = 1.0f - infoY;
@@ -176,7 +176,7 @@ bool UI::Menu::loadMenuDAT()
 
     // Load DAT-File...
     m_pVM = new Daedalus::DaedalusVM(datFile);
-    Daedalus::registerGothicEngineClasses(*m_pVM);
+    Daedalus::registerGothicEngineClasses(*m_pVM, Daedalus::GameType::GT_Gothic2);
 
     return true;
 }

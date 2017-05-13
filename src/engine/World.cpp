@@ -681,12 +681,13 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     return mp;
 }
 
-EGameType WorldInstance::getBasicGameType()
+Daedalus::GameType WorldInstance::getBasicGameType()
 {
-    std::map<std::string, EGameType> m = {{"newworld.zen", GT_Gothic2},
-                                          {"oldworld.zen", GT_Gothic2},
-                                          {"addonworld.zen", GT_Gothic2},
-                                          {"world.zen", GT_Gothic1}};
+    using Daedalus::GameType;
+    std::map<std::string, GameType> m = {{"newworld.zen", GameType::GT_Gothic2},
+                                          {"oldworld.zen", GameType::GT_Gothic2},
+                                          {"addonworld.zen", GameType::GT_Gothic2},
+                                          {"world.zen", GameType::GT_Gothic1}};
 
     std::string lower;
     std::transform(m_ZenFile.begin(), m_ZenFile.end(), std::back_inserter(lower), ::tolower);
@@ -697,7 +698,7 @@ EGameType WorldInstance::getBasicGameType()
     LogInfo() << "ZEN unknown, defaulting to Gothic 2 skycolors";
 
     // Default to gothic 2
-    return GT_Gothic2;
+    return GameType::GT_Gothic2;
 }
 
 void WorldInstance::exportWorld(json& j)

@@ -145,7 +145,7 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
         if (Flags::skyType.getParam(0).empty()
             || Flags::skyType.getParam(0) == "auto")
         {
-            if (world.getBasicGameType() == World::GT_Gothic2)
+            if (world.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
                 skyColor = skyColor_g2;
             else
                 skyColor = skyColor_g1;

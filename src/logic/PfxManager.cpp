@@ -36,7 +36,7 @@ bool Logic::PfxManager::loadParticleFXDAT()
 
     // Load DAT-File...
     m_pVM = new Daedalus::DaedalusVM(datFile);
-    Daedalus::registerGothicEngineClasses(*m_pVM);
+    Daedalus::registerGothicEngineClasses(*m_pVM, m_World.getBasicGameType());
 
     m_DefaultEmitter = {0};
 
