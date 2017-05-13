@@ -593,6 +593,7 @@ public:
         });
 
         UI::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {
+            using Suggestion = UI::ConsoleCommand::Suggestion;
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
@@ -613,7 +614,7 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::NPCSuggestion>(group, npc);
+                Suggestion suggestion = std::make_shared<UI::NPCSuggestion>(group, npc);
                 suggestions.push_back(suggestion);
             }
             return suggestions;

@@ -18,11 +18,11 @@ namespace UI
     {
         SuggestionBase(const std::vector<std::string>& aliasList) :
                 aliasList(aliasList),
-                bestAliasMatchIndex(0)
+                anyStartsWith(false)
         {}
         virtual ~SuggestionBase() {};
         std::vector<std::string> aliasList;
-        std::size_t bestAliasMatchIndex;
+        bool anyStartsWith;
     };
 
     struct NPCSuggestion : SuggestionBase

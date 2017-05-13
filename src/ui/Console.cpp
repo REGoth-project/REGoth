@@ -104,7 +104,6 @@ void Console::onKeyDown(int glfwKey)
     {
         submitCommand(m_TypedLine);
         m_TypedLine.clear();
-        generateSuggestions(m_TypedLine, false);
     }else if(glfwKey == Keys::GLFW_KEY_TAB)
     {
         if (m_SuggestionsList.empty())
@@ -117,7 +116,7 @@ void Console::onKeyDown(int glfwKey)
             const auto& suggestions = m_SuggestionsList.back();
             auto bestSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
             std::vector<std::string> tokens = tokenized(m_TypedLine);
-            tokens.back() = bestSuggestion->aliasList.at(bestSuggestion->bestAliasMatchIndex);
+            tokens.back() = bestSuggestion->aliasList.at(0);
             std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
             if (!tokens.empty())
             {
@@ -199,28 +198,6 @@ void Console::outputAdd(const std::string& msg)
     m_Output.push_front(msg);
 }
 
-struct MatchInfo
-{
-    std::size_t pos;
-    std::size_t caseMatches;
-    std::size_t commandID;
-    std::size_t groupID;
-    std::string candidate;
-    std::string candidateLowered;
-
-
-    // smaller means better match
-    static bool compare(const MatchInfo& a, const MatchInfo& b) {
-        if (a.pos != b.pos){
-            return a.pos < b.pos;
-        } else if (a.caseMatches != b.caseMatches){
-            return a.caseMatches > b.caseMatches;
-        } else {
-            return a.candidate < b.candidate;
-        }
-    };
-};
-
 int Console::determineCommand(const std::vector<std::string>& tokens)
 {
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
@@ -252,6 +229,7 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
 }
 
 using Suggestion = UI::ConsoleCommand::Suggestion;
+
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
@@ -259,13 +237,27 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     vector<string> tokens = tokenized(input);
 
     vector<vector<Suggestion>> suggestionsList;
+
+    auto suggestionCompare = [](const Suggestion& a, const Suggestion& b) -> int {
+        int anyStartsWithRelation = b->anyStartsWith - a->anyStartsWith;
+        if (anyStartsWithRelation != 0)
+            return anyStartsWithRelation;
+        auto minSize = std::min(a->aliasList.size(), b->aliasList.size());
+        for (std::size_t i = 0; i < minSize; ++i)
+        {
+            auto relation = a->aliasList[0].compare(b->aliasList[0]);
+            if (relation != 0)
+                return relation;
+        }
+        return static_cast<int>(a->aliasList.size()) - static_cast<int>(b->aliasList.size());
+    };
+
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
         const string& token = tokens[tokenID];
         auto tokenLowered = Utils::lowered(token);
-        vector<MatchInfo> matchInfos;
-        vector<vector<Suggestion>> suggestionsByCommand(m_Commands.size());
+        vector<Suggestion> matches;
         for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
         {
             auto& command = m_Commands[cmdID];
@@ -274,64 +266,37 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
             if (commandIsAlive[cmdID] && tokenID < cmdEnd)
             {
                 commandIsAlive[cmdID] = false;
-                auto candidateGenerator = generators[tokenID];
-                auto suggestions = candidateGenerator();
-                for (std::size_t suggestionID = 0; suggestionID < suggestions.size(); suggestionID++)
+                auto suggestions = generators[tokenID]();
+                for (auto& suggestion : suggestions)
                 {
-                    auto& suggestion = suggestions[suggestionID];
-                    suggestionsByCommand[cmdID].push_back(suggestion);
-                    auto& aliasList = suggestion->aliasList;
-                    if (aliasList.empty())
-                        continue;
-                    std::vector<MatchInfo> groupInfos;
-                    for (auto& candidate : aliasList)
+                    bool matched = false;
+                    for (auto& candidate : suggestion->aliasList)
                     {
-                        // skip empty string alias
-                        if (candidate.empty())
-                            continue;
-                        string candidateLowered = candidate;
-                        Utils::lower(candidateLowered);
-                        auto pos = candidateLowered.find(tokenLowered);
-                        unsigned int caseMatches = 0;
-                        for (std::size_t i = 0; i < token.size(); i++)
-                        {
-                            caseMatches += (token[i] == candidate[pos + i]);
-                        }
-                        MatchInfo matchInfo = MatchInfo{pos, caseMatches, cmdID, suggestionID, candidate, candidateLowered};
-                        groupInfos.push_back(matchInfo);
-                    }
-                    if (!groupInfos.empty())
-                    {
-                        std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
-                        auto& bestMatch = groupInfos.at(0);
-                        if (bestMatch.pos != string::npos)
+                        auto pos = Utils::lowered(candidate).find(tokenLowered);
+                        if (!candidate.empty() && pos != std::string::npos)
                         {
                             commandIsAlive[cmdID] = true;
-                            matchInfos.push_back(bestMatch);
-                            auto it = std::find(suggestion->aliasList.begin(), suggestion->aliasList.end(), bestMatch.candidate);
-                            suggestion->bestAliasMatchIndex = it - suggestion->aliasList.begin();
+                            matched = true;
+                            if (pos == 0)
+                                suggestion->anyStartsWith = true;
                         }
                     }
+                    if (matched)
+                        matches.push_back(suggestion);
                 }
             }
         }
         // generate suggestions
         {
-            vector<Suggestion> suggestionsForThisToken;
-            std::set<string> known;
-            std::sort(matchInfos.begin(), matchInfos.end(), MatchInfo::compare);
-            for (const auto& matchInfo : matchInfos)
-            {
-                auto& suggestion = suggestionsByCommand[matchInfo.commandID][matchInfo.groupID];
-                auto& aliasList = suggestion->aliasList;
-                // filter out duplicates
-                bool notInSet = known.insert(Utils::lowered(Utils::join(aliasList.begin(), aliasList.end(), ""))).second;
-                if (notInSet)
-                {
-                    suggestionsForThisToken.push_back(suggestion);
-                }
-            }
-            suggestionsList.push_back(suggestionsForThisToken);
+            std::sort(matches.begin(), matches.end(), [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+                return suggestionCompare(a, b) < 0;
+            });
+            // filter out duplicates in consecutive groups
+            auto uniquePredicate = [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+                return suggestionCompare(a, b) == 0;
+            };
+            matches.erase(std::unique(matches.begin(), matches.end(), uniquePredicate), matches.end());
+            suggestionsList.push_back(std::move(matches));
         }
     }
     invalidateSuggestions();
