@@ -294,7 +294,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
         Vob::VobInformation itemvob = getItemByInstance(item);
 
-        if (not itemvob.isValid())
+        if (!itemvob.isValid())
         {
             vm.setReturn(INT32_MAX);
             return;
