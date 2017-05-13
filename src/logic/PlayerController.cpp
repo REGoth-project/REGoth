@@ -2296,7 +2296,7 @@ void PlayerController::exportPart(json& j)
     j["scriptObj"]["spawnDelay"] = scriptObj.spawnDelay;
     j["scriptObj"]["senses"] = scriptObj.senses;
     j["scriptObj"]["senses_range"] = scriptObj.senses_range;
-    j["scriptObj"]["ai"] = Utils::putArray(scriptObj.ai);
+    j["scriptObj"]["aivar"] = Utils::putArray(scriptObj.aivar);
     j["scriptObj"]["wp"] = scriptObj.wp;
     j["scriptObj"]["exp"] = scriptObj.exp;
     j["scriptObj"]["exp_next"] = scriptObj.exp_next;
@@ -2375,7 +2375,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
         scriptObj.spawnDelay = j["scriptObj"]["spawnDelay"];
         scriptObj.senses = j["scriptObj"]["senses"];
         scriptObj.senses_range = j["scriptObj"]["senses_range"];
-        Utils::putArray(scriptObj.ai, j["scriptObj"]["ai"]);
+        Utils::putArray(scriptObj.aivar, j["scriptObj"]["aivar"]);
         scriptObj.wp = j["scriptObj"]["wp"];
         scriptObj.exp = j["scriptObj"]["exp"];
         scriptObj.exp_next = j["scriptObj"]["exp_next"];
