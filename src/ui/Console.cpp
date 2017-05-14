@@ -6,6 +6,7 @@
 #include <utils/Utils.h>
 #include <iomanip>
 #include <engine/BaseEngine.h>
+#include <GLFW/glfw3.h>
 
 using namespace UI;
 
@@ -15,27 +16,6 @@ namespace Keys
     // All keys mapped to ascii-characters
     const int PrintableBegin = 32;
     const int PrintableEnd = 93; // Inclusive
-
-    const int GLFW_KEY_ESCAPE = 256;
-    const int GLFW_KEY_ENTER = 257;
-    const int GLFW_KEY_TAB = 258;
-    const int GLFW_KEY_BACKSPACE = 259;
-    const int GLFW_KEY_INSERT = 260;
-    const int GLFW_KEY_DELETE = 261;
-    const int GLFW_KEY_RIGHT = 262;
-    const int GLFW_KEY_LEFT = 263;
-    const int GLFW_KEY_DOWN = 264;
-    const int GLFW_KEY_UP = 265;
-    const int GLFW_KEY_PAGE_UP = 266;
-    const int GLFW_KEY_PAGE_DOWN = 267;
-    const int GLFW_KEY_HOME = 268;
-    const int GLFW_KEY_END = 269;
-    const int GLFW_KEY_CAPS_LOCK = 280;
-    const int GLFW_KEY_SCROLL_LOCK = 281;
-    const int GLFW_KEY_NUM_LOCK = 282;
-    const int GLFW_KEY_PRINT_SCREEN = 283;
-    const int GLFW_KEY_PAUSE = 284;
-    const int GLFW_KEY_F10 = 299;
 };
 
 Console::Console(Engine::BaseEngine& e) :
@@ -50,28 +30,28 @@ Console::Console(Engine::BaseEngine& e) :
 Console::~Console() {
 }
 
-void Console::onKeyDown(int glfwKey)
+void Console::onKeyDown(int glfwKey, int mods)
 {
-    if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
+    if(glfwKey == GLFW_KEY_PAGE_DOWN)
     {
         m_ConsoleBox.increaseSelectionIndex(1);
     }
-    if(glfwKey == Keys::GLFW_KEY_PAGE_UP)
+    if(glfwKey == GLFW_KEY_PAGE_UP)
     {
         m_ConsoleBox.increaseSelectionIndex(-1);
     }
-    if(glfwKey == Keys::GLFW_KEY_HOME)
+    if(glfwKey == GLFW_KEY_HOME)
     {
         m_ConsoleBox.setSelectionIndex(0);
     }
-    if(glfwKey == Keys::GLFW_KEY_END)
+    if(glfwKey == GLFW_KEY_END)
     {
         if (!m_SuggestionsList.empty())
         {
             m_ConsoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
         }
     }
-    if(glfwKey == Keys::GLFW_KEY_UP)
+    if(glfwKey == GLFW_KEY_UP)
     {
         const int historySize = m_History.size();
         if(historySize > m_HistoryIndex + 1)
@@ -79,33 +59,40 @@ void Console::onKeyDown(int glfwKey)
             if (m_HistoryIndex < 0)
                 m_PendingLine = m_TypedLine;
             ++m_HistoryIndex;
-            m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            generateSuggestions(m_TypedLine, false);
+            auto newLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            setTypedLine(newLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_DOWN)
+    }else if(glfwKey == GLFW_KEY_DOWN)
     {
         if(m_HistoryIndex >= 0)
         {
             --m_HistoryIndex;
+            std::string newLine;
             if (m_HistoryIndex < 0)
-                m_TypedLine = m_PendingLine;
+                newLine = m_PendingLine;
             else
-                m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            generateSuggestions(m_TypedLine, false);
+                newLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            setTypedLine(newLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
+    }else if(glfwKey == GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
         {
             m_TypedLine.pop_back();
             generateSuggestions(m_TypedLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_ENTER)
+    }else if(glfwKey == GLFW_KEY_ENTER)
     {
-        submitCommand(m_TypedLine);
-        m_TypedLine.clear();
-        generateSuggestions(m_TypedLine, false);
-    }else if(glfwKey == Keys::GLFW_KEY_TAB)
+        if (m_ConsoleBox.getSelectionIndex() != -1)
+        {
+            replaceSelectedToken();
+            m_ConsoleBox.setSelectionIndex(-1);
+        } else
+        {
+            submitCommand(m_TypedLine);
+            setTypedLine("", false);
+        }
+    }else if(glfwKey == GLFW_KEY_TAB)
     {
         if (m_SuggestionsList.empty())
         {
@@ -115,16 +102,21 @@ void Console::onKeyDown(int glfwKey)
         {
             // default for now: only auto complete last token
             const auto& suggestions = m_SuggestionsList.back();
-            auto bestSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
-            std::vector<std::string> tokens = tokenized(m_TypedLine);
-            tokens.back() = bestSuggestion->aliasList.at(bestSuggestion->bestAliasMatchIndex);
-            std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
-            if (!tokens.empty())
+            if (suggestions.size() == 1)
             {
-                newLine += " ";
+                m_ConsoleBox.setSelectionIndex(0);
+                replaceSelectedToken();
+            } else {
+                if (m_ConsoleBox.getSelectionIndex() == -1)
+                {
+                    // nothing is selected -> select first element
+                    m_ConsoleBox.setSelectionIndex(0);
+                    if (mods & GLFW_MOD_SHIFT)
+                        m_ConsoleBox.increaseSelectionIndex(-1);
+                } else {
+                    m_ConsoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
+                }
             }
-            m_TypedLine = newLine;
-            generateSuggestions(m_TypedLine, false);
         }
     }
 }
@@ -132,10 +124,7 @@ void Console::onKeyDown(int glfwKey)
 void Console::onTextInput(const std::string& text)
 {
     if (!text.empty())
-    {
-        m_TypedLine += text;
-        generateSuggestions(m_TypedLine, false);
-    }
+        setTypedLine(m_TypedLine + text);
 }
 
 std::string Console::submitCommand(std::string command)
@@ -199,28 +188,6 @@ void Console::outputAdd(const std::string& msg)
     m_Output.push_front(msg);
 }
 
-struct MatchInfo
-{
-    std::size_t pos;
-    std::size_t caseMatches;
-    std::size_t commandID;
-    std::size_t groupID;
-    std::string candidate;
-    std::string candidateLowered;
-
-
-    // smaller means better match
-    static bool compare(const MatchInfo& a, const MatchInfo& b) {
-        if (a.pos != b.pos){
-            return a.pos < b.pos;
-        } else if (a.caseMatches != b.caseMatches){
-            return a.caseMatches > b.caseMatches;
-        } else {
-            return a.candidate < b.candidate;
-        }
-    };
-};
-
 int Console::determineCommand(const std::vector<std::string>& tokens)
 {
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
@@ -251,7 +218,15 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
     return -1;
 }
 
+/*
+int naturalComparator(const std::string& left, const std::string& right)
+{
+    auto leftVec = Utils::splitAndRemoveEmpty(left, '_');
+    auto rightVe = Utils::splitAndRemoveEmpty(right, '_');
+}*/
+
 using Suggestion = UI::ConsoleCommand::Suggestion;
+
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
@@ -259,13 +234,27 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     vector<string> tokens = tokenized(input);
 
     vector<vector<Suggestion>> suggestionsList;
+
+    auto suggestionCompare = [](const Suggestion& a, const Suggestion& b) -> int {
+        int anyStartsWithRelation = b->anyStartsWith - a->anyStartsWith;
+        if (anyStartsWithRelation != 0)
+            return anyStartsWithRelation;
+        auto minSize = std::min(a->aliasList.size(), b->aliasList.size());
+        for (std::size_t i = 0; i < minSize; ++i)
+        {
+            auto relation = a->aliasList[0].compare(b->aliasList[0]);
+            if (relation != 0)
+                return relation;
+        }
+        return static_cast<int>(a->aliasList.size()) - static_cast<int>(b->aliasList.size());
+    };
+
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
         const string& token = tokens[tokenID];
         auto tokenLowered = Utils::lowered(token);
-        vector<MatchInfo> matchInfos;
-        vector<vector<Suggestion>> suggestionsByCommand(m_Commands.size());
+        vector<Suggestion> matches;
         for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
         {
             auto& command = m_Commands[cmdID];
@@ -274,64 +263,37 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
             if (commandIsAlive[cmdID] && tokenID < cmdEnd)
             {
                 commandIsAlive[cmdID] = false;
-                auto candidateGenerator = generators[tokenID];
-                auto suggestions = candidateGenerator();
-                for (std::size_t suggestionID = 0; suggestionID < suggestions.size(); suggestionID++)
+                auto suggestions = generators[tokenID]();
+                for (auto& suggestion : suggestions)
                 {
-                    auto& suggestion = suggestions[suggestionID];
-                    suggestionsByCommand[cmdID].push_back(suggestion);
-                    auto& aliasList = suggestion->aliasList;
-                    if (aliasList.empty())
-                        continue;
-                    std::vector<MatchInfo> groupInfos;
-                    for (auto& candidate : aliasList)
+                    bool matched = false;
+                    for (auto& candidate : suggestion->aliasList)
                     {
-                        // skip empty string alias
-                        if (candidate.empty())
-                            continue;
-                        string candidateLowered = candidate;
-                        Utils::lower(candidateLowered);
-                        auto pos = candidateLowered.find(tokenLowered);
-                        unsigned int caseMatches = 0;
-                        for (std::size_t i = 0; i < token.size(); i++)
-                        {
-                            caseMatches += (token[i] == candidate[pos + i]);
-                        }
-                        MatchInfo matchInfo = MatchInfo{pos, caseMatches, cmdID, suggestionID, candidate, candidateLowered};
-                        groupInfos.push_back(matchInfo);
-                    }
-                    if (!groupInfos.empty())
-                    {
-                        std::sort(groupInfos.begin(), groupInfos.end(), MatchInfo::compare);
-                        auto& bestMatch = groupInfos.at(0);
-                        if (bestMatch.pos != string::npos)
+                        auto pos = Utils::lowered(candidate).find(tokenLowered);
+                        if (!candidate.empty() && pos != std::string::npos)
                         {
                             commandIsAlive[cmdID] = true;
-                            matchInfos.push_back(bestMatch);
-                            auto it = std::find(suggestion->aliasList.begin(), suggestion->aliasList.end(), bestMatch.candidate);
-                            suggestion->bestAliasMatchIndex = it - suggestion->aliasList.begin();
+                            matched = true;
+                            if (pos == 0)
+                                suggestion->anyStartsWith = true;
                         }
                     }
+                    if (matched)
+                        matches.push_back(suggestion);
                 }
             }
         }
         // generate suggestions
         {
-            vector<Suggestion> suggestionsForThisToken;
-            std::set<string> known;
-            std::sort(matchInfos.begin(), matchInfos.end(), MatchInfo::compare);
-            for (const auto& matchInfo : matchInfos)
-            {
-                auto& suggestion = suggestionsByCommand[matchInfo.commandID][matchInfo.groupID];
-                auto& aliasList = suggestion->aliasList;
-                // filter out duplicates
-                bool notInSet = known.insert(Utils::lowered(Utils::join(aliasList.begin(), aliasList.end(), ""))).second;
-                if (notInSet)
-                {
-                    suggestionsForThisToken.push_back(suggestion);
-                }
-            }
-            suggestionsList.push_back(suggestionsForThisToken);
+            std::sort(matches.begin(), matches.end(), [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+                return suggestionCompare(a, b) < 0;
+            });
+            // filter out duplicates in consecutive groups
+            auto uniquePredicate = [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+                return a->aliasList == b->aliasList;
+            };
+            matches.erase(std::unique(matches.begin(), matches.end(), uniquePredicate), matches.end());
+            suggestionsList.push_back(std::move(matches));
         }
     }
     invalidateSuggestions();
@@ -339,7 +301,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
 }
 
 void Console::invalidateSuggestions() {
-    m_ConsoleBox.setSelectionIndex(0);
+    m_ConsoleBox.setSelectionIndex(-1);
     m_SuggestionsList.clear();
 }
 
@@ -351,6 +313,27 @@ std::vector<std::string> Console::tokenized(const std::string &line) {
         tokens.push_back("");
     }
     return tokens;
+}
+
+void Console::replaceSelectedToken() {
+    // default for now: only auto complete last token
+    const auto& suggestions = m_SuggestionsList.back();
+    auto selectedSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
+    std::vector<std::string> tokens = tokenized(m_TypedLine);
+    tokens.back() = selectedSuggestion->aliasList.at(0);
+    std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
+    if (!tokens.empty())
+    {
+        newLine += " ";
+    }
+    setTypedLine(newLine);
+}
+
+void Console::setTypedLine(const std::string &newLine, bool triggerSuggestions) {
+    m_TypedLine = newLine;
+    invalidateSuggestions();
+    if (triggerSuggestions)
+        generateSuggestions(m_TypedLine, false);
 }
 
 

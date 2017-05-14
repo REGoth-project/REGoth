@@ -18,11 +18,11 @@ namespace UI
     {
         SuggestionBase(const std::vector<std::string>& aliasList) :
                 aliasList(aliasList),
-                bestAliasMatchIndex(0)
+                anyStartsWith(false)
         {}
         virtual ~SuggestionBase() {};
         std::vector<std::string> aliasList;
-        std::size_t bestAliasMatchIndex;
+        bool anyStartsWith;
     };
 
     struct NPCSuggestion : SuggestionBase
@@ -66,8 +66,9 @@ namespace UI
         /**
          * To be called when a key got pressed.
          * @param glfwKey Key ID, glfw style
+         * @param mods glfw key modifier flags
          */
-        void onKeyDown(int glfwKey);
+        void onKeyDown(int glfwKey, int mods);
 
         /**
          * To be called when there was text input since the last frame
@@ -91,6 +92,11 @@ namespace UI
         void generateSuggestions(const std::string& input, bool limitToFixed);
 
         /**
+         * inserts the current selected suggestion
+         */
+        void replaceSelectedToken();
+
+        /**
          * splits line, removes empty entries, adds empty string for lookahead trigger
          */
         static std::vector<std::string> tokenized(const std::string& line);
@@ -107,6 +113,13 @@ namespace UI
          *         - "NOTFOUND", if the command was not found
          */
         std::string submitCommand(std::string command);
+
+        /**
+         * sets the typed line to the given value
+         * @param triggerSuggestions if true, the suggestion list is recalculated
+         * @param newLine new line
+         */
+        void setTypedLine(const std::string& newLine, bool triggerSuggestions = true);
 
         /**
          * Adds a message to the history
