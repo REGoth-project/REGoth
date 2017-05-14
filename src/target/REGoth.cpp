@@ -975,32 +975,15 @@ public:
 
         std::string frameInputText = getFrameTextInput();
         for (int i = 0; i < NUM_KEYS; i++) {
-            if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
+            if (getKeysTriggered()[i]) // If key has been pushed the first time or repeatedly
             {
-                int mods = 0; // TODO lookup mods
-                m_stopWatch.start();
+                int mods = getModsTriggered()[i];
 
                 if(m_pEngine->getHud().getConsole().isOpen())
                     m_pEngine->getHud().getConsole().onKeyDown(i, mods);
                 if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
-                }
-            }
-            else if (getKeysState()[i]) // If key is being held and stopwatch reached time limit, fire actions
-            {
-                int mods = 0; // TODO lookup mods
-                if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
-                {
-                    if (m_stopWatch.DelayedByArgMS(70))
-                    {
-                        if(m_pEngine->getHud().getConsole().isOpen())
-                            m_pEngine->getHud().getConsole().onKeyDown(i, mods);
-                        if (keyMap.find(i) != keyMap.end())
-                        {
-                            m_pEngine->getHud().onInputAction(keyMap[i]);
-                        }
-                    }
                 }
             }
         }
@@ -1143,7 +1126,6 @@ public:
     int64_t m_timeOffset;
     float axis;
     int32_t m_scrollArea;
-    Utils::StopWatch m_stopWatch;
     bool m_NoHUD;
     // prevents imgui from crashing if we failed on startup and didn't init it
     bool m_ImgUiCreated = false;

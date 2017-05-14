@@ -1,6 +1,7 @@
 #pragma once
 #include <bitset>
 #include <functional>
+#include <vector>
 #include <map>
 #include <unordered_map>
 #include <type_traits>
@@ -160,6 +161,7 @@ namespace Engine
 		static void setMouseLockCallback(std::function<void(bool /* lock */)> callback);
 
 		static const std::bitset<NUM_KEYS>& getKeysTriggered(){ return keyTriggered; }
+		static const std::vector<int32_t>& getModsTriggered(){ return modsTriggered; }
         static const std::bitset<NUM_KEYS>& getKeysState() { return keyState; }
 
 		static void clearTriggered();
@@ -174,6 +176,7 @@ namespace Engine
 
 		static std::bitset<NUM_KEYS> keyState;
 		static std::bitset<NUM_KEYS> keyTriggered;
+		static std::vector<int32_t> modsTriggered;
 
 		static std::bitset<NUM_MOUSEBUTTONS> mouseButtonState;
 		static std::bitset<NUM_MOUSEBUTTONS> mouseButtonTriggered;

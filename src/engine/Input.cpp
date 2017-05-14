@@ -53,6 +53,7 @@ std::multimap<ActionType, Action> Input::actionTypeToActionMap;
 
 std::bitset<Input::NUM_KEYS> Input::keyState;
 std::bitset<Input::NUM_KEYS> Input::keyTriggered;
+std::vector<int32_t> Input::modsTriggered(Input::NUM_KEYS);
 
 std::bitset<Input::NUM_MOUSEBUTTONS> Input::mouseButtonState;
 std::bitset<Input::NUM_MOUSEBUTTONS> Input::mouseButtonTriggered;
@@ -124,10 +125,17 @@ void Input::keyEvent(int key, int scancode, int action, int mods)
     {
         keyState[key] = true;
         keyTriggered[key] = true;
+        modsTriggered[key] = mods;
+    }
+    else if (KEY_ACTION_REPEAT == action)
+    {
+        keyTriggered[key] = true;
+        modsTriggered[key] = mods;
     }
     else if(KEY_ACTION_RELEASE == action)
     {
         keyState[key] = false;
+        modsTriggered[key] = 0;
     }
 }
 
@@ -314,6 +322,7 @@ void Input::clearTriggered()
     for(int i=0;i<NUM_KEYS;i++)
     {
         keyTriggered[i] = false;
+        modsTriggered[i] = 0;
     }
 }
 
