@@ -13,7 +13,7 @@ UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e, UI::Console& console) :
     m_Config.height = 10;
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
-    m_CurrentlySelected = 0;
+    m_CurrentlySelected = -1;
 }
 
 UI::ConsoleBox::~ConsoleBox()
@@ -83,10 +83,11 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         const auto& suggestions = suggestionsList.back();
 
         // find preview range
-        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, 0, static_cast<int>(suggestions.size() - 1));
-        int shownStart = m_CurrentlySelected - previewBefore;
+        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, -1, static_cast<int>(suggestions.size() - 1));
+        int currentlySelectedRelative = m_CurrentlySelected == -1 ? 0 : m_CurrentlySelected;
+        int shownStart = currentlySelectedRelative - previewBefore;
         // past the end index
-        int shownEnd = m_CurrentlySelected + previewAfter + 1;
+        int shownEnd = currentlySelectedRelative + previewAfter + 1;
         if (shownStart < 0)
         {
             shownEnd += -shownStart;
@@ -99,7 +100,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         }
         // clamp start index
         shownStart = std::max(shownStart, 0);
-        int currentlySelectedRelative = m_CurrentlySelected - shownStart;
+        currentlySelectedRelative -= shownStart;
+
 
         // fill columns
         std::size_t columnID = 0;
@@ -170,7 +172,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         int columnOffsetX = strBeforeWidth;
         for (auto& column : columns){
             std::vector<std::string> columnsSelected(column.size());
-            std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));
+            if (m_CurrentlySelected != -1)
+                std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));
             auto joined = Utils::join(column.begin(), column.end(), "\n");
             drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
             auto joinedSelected = Utils::join(columnsSelected.begin(), columnsSelected.end(), "\n");

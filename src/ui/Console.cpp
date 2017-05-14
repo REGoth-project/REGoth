@@ -6,6 +6,7 @@
 #include <utils/Utils.h>
 #include <iomanip>
 #include <engine/BaseEngine.h>
+#include <GLFW/glfw3.h>
 
 using namespace UI;
 
@@ -15,27 +16,6 @@ namespace Keys
     // All keys mapped to ascii-characters
     const int PrintableBegin = 32;
     const int PrintableEnd = 93; // Inclusive
-
-    const int GLFW_KEY_ESCAPE = 256;
-    const int GLFW_KEY_ENTER = 257;
-    const int GLFW_KEY_TAB = 258;
-    const int GLFW_KEY_BACKSPACE = 259;
-    const int GLFW_KEY_INSERT = 260;
-    const int GLFW_KEY_DELETE = 261;
-    const int GLFW_KEY_RIGHT = 262;
-    const int GLFW_KEY_LEFT = 263;
-    const int GLFW_KEY_DOWN = 264;
-    const int GLFW_KEY_UP = 265;
-    const int GLFW_KEY_PAGE_UP = 266;
-    const int GLFW_KEY_PAGE_DOWN = 267;
-    const int GLFW_KEY_HOME = 268;
-    const int GLFW_KEY_END = 269;
-    const int GLFW_KEY_CAPS_LOCK = 280;
-    const int GLFW_KEY_SCROLL_LOCK = 281;
-    const int GLFW_KEY_NUM_LOCK = 282;
-    const int GLFW_KEY_PRINT_SCREEN = 283;
-    const int GLFW_KEY_PAUSE = 284;
-    const int GLFW_KEY_F10 = 299;
 };
 
 Console::Console(Engine::BaseEngine& e) :
@@ -50,28 +30,28 @@ Console::Console(Engine::BaseEngine& e) :
 Console::~Console() {
 }
 
-void Console::onKeyDown(int glfwKey)
+void Console::onKeyDown(int glfwKey, int mods)
 {
-    if(glfwKey == Keys::GLFW_KEY_PAGE_DOWN)
+    if(glfwKey == GLFW_KEY_PAGE_DOWN)
     {
         m_ConsoleBox.increaseSelectionIndex(1);
     }
-    if(glfwKey == Keys::GLFW_KEY_PAGE_UP)
+    if(glfwKey == GLFW_KEY_PAGE_UP)
     {
         m_ConsoleBox.increaseSelectionIndex(-1);
     }
-    if(glfwKey == Keys::GLFW_KEY_HOME)
+    if(glfwKey == GLFW_KEY_HOME)
     {
         m_ConsoleBox.setSelectionIndex(0);
     }
-    if(glfwKey == Keys::GLFW_KEY_END)
+    if(glfwKey == GLFW_KEY_END)
     {
         if (!m_SuggestionsList.empty())
         {
             m_ConsoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
         }
     }
-    if(glfwKey == Keys::GLFW_KEY_UP)
+    if(glfwKey == GLFW_KEY_UP)
     {
         const int historySize = m_History.size();
         if(historySize > m_HistoryIndex + 1)
@@ -79,32 +59,40 @@ void Console::onKeyDown(int glfwKey)
             if (m_HistoryIndex < 0)
                 m_PendingLine = m_TypedLine;
             ++m_HistoryIndex;
-            m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            generateSuggestions(m_TypedLine, false);
+            auto newLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            setTypedLine(newLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_DOWN)
+    }else if(glfwKey == GLFW_KEY_DOWN)
     {
         if(m_HistoryIndex >= 0)
         {
             --m_HistoryIndex;
+            std::string newLine;
             if (m_HistoryIndex < 0)
-                m_TypedLine = m_PendingLine;
+                newLine = m_PendingLine;
             else
-                m_TypedLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
-            generateSuggestions(m_TypedLine, false);
+                newLine = m_History.at(m_History.size() - m_HistoryIndex - 1);
+            setTypedLine(newLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_BACKSPACE)
+    }else if(glfwKey == GLFW_KEY_BACKSPACE)
     {
         if(m_TypedLine.size() >= 1)
         {
             m_TypedLine.pop_back();
             generateSuggestions(m_TypedLine, false);
         }
-    }else if(glfwKey == Keys::GLFW_KEY_ENTER)
+    }else if(glfwKey == GLFW_KEY_ENTER)
     {
-        submitCommand(m_TypedLine);
-        m_TypedLine.clear();
-    }else if(glfwKey == Keys::GLFW_KEY_TAB)
+        if (m_ConsoleBox.getSelectionIndex() != -1)
+        {
+            replaceSelectedToken();
+            m_ConsoleBox.setSelectionIndex(-1);
+        } else
+        {
+            submitCommand(m_TypedLine);
+            setTypedLine("", false);
+        }
+    }else if(glfwKey == GLFW_KEY_TAB)
     {
         if (m_SuggestionsList.empty())
         {
@@ -114,16 +102,21 @@ void Console::onKeyDown(int glfwKey)
         {
             // default for now: only auto complete last token
             const auto& suggestions = m_SuggestionsList.back();
-            auto bestSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
-            std::vector<std::string> tokens = tokenized(m_TypedLine);
-            tokens.back() = bestSuggestion->aliasList.at(0);
-            std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
-            if (!tokens.empty())
+            if (suggestions.size() == 1)
             {
-                newLine += " ";
+                m_ConsoleBox.setSelectionIndex(0);
+                replaceSelectedToken();
+            } else {
+                if (m_ConsoleBox.getSelectionIndex() == -1)
+                {
+                    // nothing is selected -> select first element
+                    m_ConsoleBox.setSelectionIndex(0);
+                    if (mods & GLFW_MOD_SHIFT)
+                        m_ConsoleBox.increaseSelectionIndex(-1);
+                } else {
+                    m_ConsoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
+                }
             }
-            m_TypedLine = newLine;
-            generateSuggestions(m_TypedLine, false);
         }
     }
 }
@@ -131,10 +124,7 @@ void Console::onKeyDown(int glfwKey)
 void Console::onTextInput(const std::string& text)
 {
     if (!text.empty())
-    {
-        m_TypedLine += text;
-        generateSuggestions(m_TypedLine, false);
-    }
+        setTypedLine(m_TypedLine + text);
 }
 
 std::string Console::submitCommand(std::string command)
@@ -228,6 +218,13 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
     return -1;
 }
 
+/*
+int naturalComparator(const std::string& left, const std::string& right)
+{
+    auto leftVec = Utils::splitAndRemoveEmpty(left, '_');
+    auto rightVe = Utils::splitAndRemoveEmpty(right, '_');
+}*/
+
 using Suggestion = UI::ConsoleCommand::Suggestion;
 
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
@@ -293,7 +290,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
             });
             // filter out duplicates in consecutive groups
             auto uniquePredicate = [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
-                return suggestionCompare(a, b) == 0;
+                return a->aliasList == b->aliasList;
             };
             matches.erase(std::unique(matches.begin(), matches.end(), uniquePredicate), matches.end());
             suggestionsList.push_back(std::move(matches));
@@ -304,7 +301,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
 }
 
 void Console::invalidateSuggestions() {
-    m_ConsoleBox.setSelectionIndex(0);
+    m_ConsoleBox.setSelectionIndex(-1);
     m_SuggestionsList.clear();
 }
 
@@ -316,6 +313,27 @@ std::vector<std::string> Console::tokenized(const std::string &line) {
         tokens.push_back("");
     }
     return tokens;
+}
+
+void Console::replaceSelectedToken() {
+    // default for now: only auto complete last token
+    const auto& suggestions = m_SuggestionsList.back();
+    auto selectedSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
+    std::vector<std::string> tokens = tokenized(m_TypedLine);
+    tokens.back() = selectedSuggestion->aliasList.at(0);
+    std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
+    if (!tokens.empty())
+    {
+        newLine += " ";
+    }
+    setTypedLine(newLine);
+}
+
+void Console::setTypedLine(const std::string &newLine, bool triggerSuggestions) {
+    m_TypedLine = newLine;
+    invalidateSuggestions();
+    if (triggerSuggestions)
+        generateSuggestions(m_TypedLine, false);
 }
 
 

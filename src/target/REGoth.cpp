@@ -977,10 +977,11 @@ public:
         for (int i = 0; i < NUM_KEYS; i++) {
             if (getKeysTriggered()[i]) // If key has been triggered start the stopwatch
             {
+                int mods = 0; // TODO lookup mods
                 m_stopWatch.start();
 
                 if(m_pEngine->getHud().getConsole().isOpen())
-                    m_pEngine->getHud().getConsole().onKeyDown(i);
+                    m_pEngine->getHud().getConsole().onKeyDown(i, mods);
                 if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
@@ -988,12 +989,13 @@ public:
             }
             else if (getKeysState()[i]) // If key is being held and stopwatch reached time limit, fire actions
             {
+                int mods = 0; // TODO lookup mods
                 if (m_stopWatch.getTimeDiffFromStartToNow() > 400)
                 {
                     if (m_stopWatch.DelayedByArgMS(70))
                     {
                         if(m_pEngine->getHud().getConsole().isOpen())
-                            m_pEngine->getHud().getConsole().onKeyDown(i);
+                            m_pEngine->getHud().getConsole().onKeyDown(i, mods);
                         if (keyMap.find(i) != keyMap.end())
                         {
                             m_pEngine->getHud().onInputAction(keyMap[i]);
