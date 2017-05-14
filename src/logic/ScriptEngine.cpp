@@ -40,7 +40,7 @@ bool ScriptEngine::loadDAT(const std::string& file)
     // Register externals
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
-    Logic::ScriptExternals::registerStdLib(*m_pVM, verbose);
+    Daedalus::registerGothicEngineClasses(*m_pVM, m_World.getBasicGameType());
     Logic::ScriptExternals::registerEngineExternals(m_World, m_pVM, verbose);
 
     // Register our externals

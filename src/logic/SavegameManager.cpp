@@ -21,15 +21,7 @@ void ensureSavegameFolders(int idx)
 	if(!Utils::mkdir(userdata))
 		LogError() << "Failed to create userdata-directory at: " << userdata;
 
-    std::string gameType;
-    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
-    {
-        gameType = "/Gothic";
-    }
-    else
-    {
-        gameType = "/Gothic 2";
-    }
+    std::string gameType = "/" + SavegameManager::gameSpecificSubFolderName();
 
     if (!Utils::mkdir(userdata + gameType))
         LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
@@ -41,13 +33,7 @@ void ensureSavegameFolders(int idx)
 std::string SavegameManager::buildSavegamePath(int idx)
 {
     std::string userdata = Utils::getUserDataLocation();
-
-    if (gameEngine->getMainWorld().get().getBasicGameType() == World::EGameType::GT_Gothic1)
-    {
-        return userdata + "/Gothic/savegame_" + std::to_string(idx);
-    }
-
-    return userdata + "/Gothic 2/savegame_" + std::to_string(idx);
+    return userdata + "/" + SavegameManager::gameSpecificSubFolderName() + "/savegame_" + std::to_string(idx);
 }
 
 std::vector<std::string> SavegameManager::getSavegameWorlds(int idx)
@@ -258,9 +244,9 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
 int Engine::SavegameManager::maxSlots() {
     switch(gameEngine->getMainWorld().get().getBasicGameType())
     {
-        case World::EGameType::GT_Gothic1:
+        case Daedalus::GameType::GT_Gothic1:
             return G1_MAX_SLOTS;
-        case World::EGameType::GT_Gothic2:
+        case Daedalus::GameType::GT_Gothic2:
             return G2_MAX_SLOTS;
         default:
             return G2_MAX_SLOTS;
@@ -290,5 +276,13 @@ void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegame
 
     // Save
     Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
+}
+
+std::string Engine::SavegameManager::gameSpecificSubFolderName() {
+    // FIXME can't get gameType from World if no world is loaded (game should start with the menu)
+    if (gameEngine->getMainWorld().get().getBasicGameType() == Daedalus::GameType::GT_Gothic1)
+        return  "Gothic";
+    else
+        return  "Gothic 2";
 }
 

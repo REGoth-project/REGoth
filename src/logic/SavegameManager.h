@@ -115,6 +115,8 @@ namespace Engine
         constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
         constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
 
+        std::string gameSpecificSubFolderName();
+
         int maxSlots();
     }
 }
