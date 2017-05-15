@@ -4,6 +4,31 @@
 ///
 
 FUNC void AI_AimAt(VAR C_NPC Attacker, VAR C_NPC Target)
+/// \brief      Start aiming with a ranged weapon (queued, overlay).
+/// \param      Attacker
+///                 Object reference to the character that aims at \p Target.
+/// \param      Target
+///                 Object reference to the character that \p Attacker aims at.
+/// \details    The message is active as long as the \p Target is alive and
+///             the \p Attacker still has ammunition for the ranged weapon.
+///             Before checking for the ammunition the message handler is
+///             waiting for the \p Attacker to draw the ranged weapon (bow or
+///             crossbow). A message with high priority is queued to remove
+///             the weapon if the \p Attacker has no ammunition.
+/// \details    While the message is active and the animation state is AIM,
+///             the turn animations are stopped and the aim animation is
+///             interpolated to point at the \p Target. If the angle becomes
+///             greater than 45 degrees, the \p Attacker loses the target lock
+///             and starts turning to the \p Target.
+/// \details    The \p Attacker is expected to be standing, because the message
+///             handler requests a transition animation from WALK to AIM.
+///             And the \p Attacker is forced into standing state when the
+///             aiming is finalized.
+/// \sa         AI_StopAim
+/// \warning    In G2 the game will crash if \b Attacker is not a valid
+///             character object reference.
+/// \bug        In G1 the \b Attacker is not removed from the stack
+///             if \p Target is not a valid character object reference.
 {
 };
 
@@ -201,6 +226,14 @@ FUNC void AI_StartState(VAR C_NPC Character, VAR func AIState, VAR BOOL EndPrevS
 };
 
 FUNC void AI_StopAim(VAR C_NPC Attacker)
+/// \brief      Stop aiming with a ranged weapon (queued).
+/// \param      Attacker
+///                 Object reference to a character that aims at a target.
+/// \details    Aiming is finalized and the \p Attacker is forced into standing
+///             state.
+/// \sa         AI_AimAt
+/// \warning    In G2 the game will crash if \b Attacker is not a valid
+///             character object reference.
 {
 };
 

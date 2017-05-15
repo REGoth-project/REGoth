@@ -22,7 +22,7 @@ FUNC void AI_PlayFX(VAR C_NPC Origin, VAR C_VOB Target, VAR C_VFX_NAME VfxName)
 /// \details    The effect is created with level 1 (VFX parser instance
 ///             "<VFXNAME>_L1" instead of "<VFXNAME>" if present),
 ///             without damage, and not as projectile.
-/// \sa         AI_StopFX()
+/// \sa         AI_StopFX
 /// \note       The function is only available in G2.
 {
 };
@@ -47,7 +47,7 @@ FUNC BOOL AI_PrintScreen(VAR string Text, VAR int PosX, VAR int PosY, VAR string
 ///             but the font manager converts all filenames to upper case.
 /// \details    If the game view already displays a line at the specified
 ///             position, the existing line is replaced.
-/// \sa         PrintScreen()
+/// \sa         PrintScreen
 /// \note       The function is only available in G2.
 /// \bug        The implementation removes an additional int from
 ///             the stack after retrieving the defined parameters.
@@ -73,9 +73,9 @@ FUNC void AI_Snd_Play(VAR C_NPC Origin, VAR string Name)
 ///             effects (variation frames) are loaded and randomly selected.
 ///             Alternate sound effects have to be defined with the suffix "_A"
 ///             and consecutive numbers that start with 1.
-/// \sa         Snd_Play()
-/// \sa         Snd_Play3d()
-/// \sa         AI_Snd_Play3D()
+/// \sa         Snd_Play
+/// \sa         Snd_Play3d
+/// \sa         AI_Snd_Play3D
 /// \warning    The ZenGin raises a fault if the \p Name includes ".MP3".
 /// \note       The function is only available in G2.
 {
@@ -101,9 +101,9 @@ FUNC void AI_Snd_Play3D(VAR C_NPC Origin, VAR C_VOB Emitter, VAR string Name)
 ///             effects (variation frames) are loaded and randomly selected.
 ///             Alternate sound effects have to be defined with the suffix "_A"
 ///             and consecutive numbers that start with 1.
-/// \sa         Snd_Play()
-/// \sa         Snd_Play3d()
-/// \sa         AI_Snd_Play()
+/// \sa         Snd_Play
+/// \sa         Snd_Play3d
+/// \sa         AI_Snd_Play
 /// \note       The ZenGin raises a fault if the \p Name includes ".MP3".
 /// \note       The function is only available in G2.
 {
@@ -118,7 +118,7 @@ FUNC void AI_StopFX(VAR C_NPC Origin, VAR C_VFX_NAME VfxName)
 ///                 Name of the visual effect.
 /// \details    The name comparison for the existing effect is case sensitive
 ///             (\p VfxName should be upper case).
-/// \sa         AI_PlayFX()
+/// \sa         AI_PlayFX
 /// \note       The function is only available in G2.
 {
 };
@@ -137,8 +137,8 @@ FUNC void Doc_SetLevelCoords(VAR DOC_HANDLE Map, VAR int Left, VAR int Top, VAR 
 ///                 Level coordinate of the bottom border.
 /// \details    If the function is not used or all coordinates are set to 0,
 ///             the game uses the bounding box of the current world.
-/// \sa         Doc_CreateMap()
-/// \sa         Doc_SetLevel()
+/// \sa         Doc_CreateMap
+/// \sa         Doc_SetLevel
 /// \note       The function is only available in G2.
 {
 };
@@ -334,7 +334,9 @@ FUNC void Npc_StopAni(VAR C_NPC Character, VAR string AniName)
 /// \param      AniName
 ///                 Name of the animation to stop and dequeue.
 /// \details    Only non-overlay animation messages are dequeued.
-/// \sa         Npc_PlayAni() AI_PlayAni() AI_PlayAniBS()
+/// \sa         AI_PlayAni
+/// \sa         AI_PlayAniBS
+/// \sa         Npc_PlayAni
 /// \note       The comparison is case sensitive
 ///             (\p AniName should be upper case).
 /// \note       The function is only available in G2.
@@ -396,7 +398,9 @@ FUNC BOOL Wld_DetectNpcExAtt(VAR C_NPC NonPlayer, VAR C_NPC_ID NpcId, VAR func A
 /// \details    Characters that are dead, unconscious, fading away,
 ///             or locked by magic (SPL_ICECUBE, SPL_PYROKINESIS, SPL_ICEWAVE,
 ///             SPL_WHIRLWIND, SPL_GREENTENTACLE, SPL_SUCKENERGY) are ignored.
-/// \sa         Npc_PerceiveAll() Wld_DetectNpc() Wld_DetectNpcEx()
+/// \sa         Npc_PerceiveAll
+/// \sa         Wld_DetectNpc
+/// \sa         Wld_DetectNpcEx
 /// \note       The function is only available in G2.
 {
 	return FALSE;
@@ -418,7 +422,7 @@ FUNC void Wld_StopEffect(VAR C_VFX_NAME VfxName)
 /// \note       The comparison is case sensitive
 ///             (\p VfxName should be upper case).
 /// \details    The visual effect objects are searched in the player's world.
-/// \sa         Wld_PlayEffect()
+/// \sa         Wld_PlayEffect
 /// \note       The function is only available in G2.
 {
 };
