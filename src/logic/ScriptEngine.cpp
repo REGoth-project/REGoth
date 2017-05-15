@@ -63,38 +63,10 @@ void ScriptEngine::prepareRunFunction()
     pushInt(0);
 }
 
-
 int32_t ScriptEngine::runFunction(const std::string& fname)
 {
-    assert(m_pVM->getDATFile().hasSymbolName(fname));
-
-    return runFunction(m_pVM->getDATFile().getSymbolByName(fname).address);
-}
-
-int32_t ScriptEngine::runFunction(size_t addr)
-{
-	if(addr == 0)
-		return -1;
-
-    // Place the call-operation
-    m_pVM->doCallOperation(addr);
-
-    m_pVM->clearCallStack();
-
-    // Execute the instructions
-    while(m_pVM->doStack());
-
-    int32_t ret = 0;
-
-    // Only pop if the VM didn't mess up
-    if(!m_pVM->isStackEmpty())
-        ret = m_pVM->popDataValue();
-    else
-        LogWarn() << "DaedalusVM: Safety int was popped by scriptcode!";
-
-    // Restore to previous VM-State
-    m_pVM->popState();
-    return ret;
+    assert(getVM().getDATFile().hasSymbolName(fname));
+    return runFunctionBySymIndex(getVM().getDATFile().getSymbolIndexByName(fname));
 }
 
 int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
@@ -102,17 +74,12 @@ int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
 #if PROFILE_SCRIPT_CALLS
     startProfiling(symIdx);
 #endif
-
-    int32_t r = runFunction(getVM().getDATFile().getSymbolByIndex(symIdx).address);
-
+    int32_t ret = m_pVM->runFunctionBySymIndex(symIdx);
 #if PROFILE_SCRIPT_CALLS
     stopProfiling(symIdx);
 #endif
-
-    return r;
+    return ret;
 }
-
-
 
 void ScriptEngine::pushInt(int32_t v)
 {

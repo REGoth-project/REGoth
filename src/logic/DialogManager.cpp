@@ -313,7 +313,7 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
     targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
 
     /*m_World.getScriptEngine().prepareRunFunction();
-    m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk").address);*/
+    m_World.getScriptEngine().runFunction("ZS_Talk");*/
 }
 
 void DialogManager::endDialog()

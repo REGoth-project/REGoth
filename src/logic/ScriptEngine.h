@@ -84,7 +84,6 @@ namespace Logic
          * @return value returned by the function
          */
         int32_t runFunction(const std::string& fname);
-        int32_t runFunction(size_t addr);
         int32_t runFunctionBySymIndex(size_t symIdx);
 
         /**
