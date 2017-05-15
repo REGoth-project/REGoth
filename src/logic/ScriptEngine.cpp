@@ -58,9 +58,6 @@ void ScriptEngine::prepareRunFunction()
 {
     // Clean the VM for this run
     m_pVM->pushState();
-
-    // Init stack with a value of 0. Some functions do not return, and thus, a default must be given.
-    pushInt(0);
 }
 
 int32_t ScriptEngine::runFunction(const std::string& fname)
