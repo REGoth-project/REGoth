@@ -60,18 +60,18 @@ void ScriptEngine::prepareRunFunction()
     m_pVM->pushState();
 }
 
-int32_t ScriptEngine::runFunction(const std::string& fname)
+int32_t ScriptEngine::runFunction(const std::string& fname, bool clearDataStack)
 {
     assert(getVM().getDATFile().hasSymbolName(fname));
-    return runFunctionBySymIndex(getVM().getDATFile().getSymbolIndexByName(fname));
+    return runFunctionBySymIndex(getVM().getDATFile().getSymbolIndexByName(fname), clearDataStack);
 }
 
-int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx)
+int32_t ScriptEngine::runFunctionBySymIndex(size_t symIdx, bool clearDataStack)
 {
 #if PROFILE_SCRIPT_CALLS
     startProfiling(symIdx);
 #endif
-    int32_t ret = m_pVM->runFunctionBySymIndex(symIdx);
+    int32_t ret = m_pVM->runFunctionBySymIndex(symIdx, clearDataStack);
 #if PROFILE_SCRIPT_CALLS
     stopProfiling(symIdx);
 #endif
