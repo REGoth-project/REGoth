@@ -31,7 +31,7 @@ FUNC void AI_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target, VAR func AIState)
 {
 };
 
-FUNC void AI_CombatReactToDamage(C_NPC Character)
+FUNC void AI_CombatReactToDamage(VAR C_NPC Character)
 /// \bug        The implementation leaves the \p Character on the stack.
 {
 };
@@ -52,7 +52,7 @@ FUNC void AI_DrawWeapon(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_DropItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
@@ -60,7 +60,7 @@ FUNC void AI_DropMob(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_EquipArmor(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void AI_EquipArmor(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
@@ -118,15 +118,15 @@ FUNC void AI_LookAtNpc(VAR C_NPC Character, VAR C_NPC Target)
 {
 };
 
-FUNC void AI_Output(VAR C_NPC Character, VAR C_NPC Target, VAR string OUName)
+FUNC void AI_Output(VAR C_NPC Character, VAR C_NPC Target, VAR string OuName)
 {
 };
 
-FUNC void AI_OutputSVM(VAR C_NPC Character, VAR C_NPC Target, VAR string SVMName)
+FUNC void AI_OutputSVM(VAR C_NPC Character, VAR C_NPC Target, VAR string SvmName)
 {
 };
 
-FUNC void AI_OutputSVM_Overlay(VAR C_NPC Character, VAR C_NPC Target, VAR string SVMName)
+FUNC void AI_OutputSVM_Overlay(VAR C_NPC Character, VAR C_NPC Target, VAR string SvmName)
 {
 };
 
@@ -138,7 +138,7 @@ FUNC void AI_PlayAniBS(VAR C_NPC Character, VAR string AniName, VAR int NextBody
 {
 };
 
-FUNC void AI_PlayCutscene(VAR C_NPC Character, VAR string CSName)
+FUNC void AI_PlayCutscene(VAR C_NPC Character, VAR string CsName)
 {
 };
 
@@ -196,7 +196,7 @@ FUNC void AI_StandUpQuick(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_StartState(VAR C_NPC Character, VAR func AIState, VAR int EndPrevState, VAR string WaypointName)
+FUNC void AI_StartState(VAR C_NPC Character, VAR func AIState, VAR BOOL EndPrevState, VAR string WaypointName)
 {
 };
 
@@ -252,15 +252,15 @@ FUNC void AI_UnreadySpell(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_UseItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void AI_UseItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
-FUNC void AI_UseItemToState(VAR C_NPC Character, VAR int ItemInstance, VAR int TargetState)
+FUNC void AI_UseItemToState(VAR C_NPC Character, VAR C_ITEM_ID ItemId, VAR int TargetState)
 {
 };
 
-FUNC int AI_UseMob(VAR C_NPC Character, VAR string SchemeName, VAR int TargetState)
+FUNC BOOL AI_UseMob(VAR C_NPC Character, VAR string SchemeName, VAR int TargetState)
 {
 	return FALSE;
 };
@@ -294,11 +294,11 @@ FUNC string ConcatStrings(VAR string Str, VAR string Append)
 	return "";
 };
 
-FUNC void CreateInvItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void CreateInvItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
-FUNC void CreateInvItems(VAR C_NPC Character, VAR int ItemInstance, VAR int Amount)
+FUNC void CreateInvItems(VAR C_NPC Character, VAR C_ITEM_ID ItemId, VAR int Amount)
 {
 };
 
@@ -344,11 +344,11 @@ FUNC void Doc_SetLevel(VAR int Doc, VAR string LevelName)
 {
 };
 
-FUNC void Doc_SetMargins(VAR int Doc, VAR int Page, VAR int Left, VAR int Top, VAR int Right, VAR int Bottom, VAR int SetMargin)
+FUNC void Doc_SetMargins(VAR int Doc, VAR int Page, VAR int Left, VAR int Top, VAR int Right, VAR int Bottom, VAR BOOL SetMargin)
 {
 };
 
-FUNC void Doc_SetPage(VAR int Doc, VAR int Page, VAR string Texture, VAR int Scale)
+FUNC void Doc_SetPage(VAR int Doc, VAR int Page, VAR string Texture, VAR BOOL Scale)
 {
 };
 
@@ -360,7 +360,7 @@ FUNC void Doc_Show(VAR int Doc)
 {
 };
 
-FUNC void EquipItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void EquipItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
@@ -380,30 +380,30 @@ FUNC string FloatToString(VAR float Value)
 
 FUNC int Hlp_CutscenePlayed(VAR string CSName)
 {
-	return FALSE;
+	return 0;
 };
 
-FUNC int Hlp_GetInstanceID(VAR C_VOB NpcOrItem)
+FUNC C_VOB_ID Hlp_GetInstanceID(VAR C_VOB Object)
 {
 	return -1;
 };
 
-FUNC C_NPC Hlp_GetNpc(VAR int NpcInstance)
+FUNC C_NPC Hlp_GetNpc(VAR C_NPC_ID NpcId)
 {
 	return NULL;
 };
 
-FUNC int Hlp_IsItem(VAR C_Item ItemObject, VAR int ItemInstance)
+FUNC BOOL Hlp_IsItem(VAR C_Item ItemObject, VAR C_ITEM_ID ItemId)
 {
 	return FALSE;
 };
 
-FUNC int Hlp_IsValidItem(VAR C_VOB Object)
+FUNC BOOL Hlp_IsValidItem(VAR C_Item ItemObject)
 {
 	return FALSE;
 };
 
-FUNC int Hlp_IsValidNpc(VAR C_VOB Object)
+FUNC BOOL Hlp_IsValidNpc(VAR C_NPC Character)
 {
 	return FALSE;
 };
@@ -413,22 +413,22 @@ FUNC int Hlp_Random(VAR int Dividend)
 	return 0;
 };
 
-FUNC int Hlp_StrCmp(VAR string Str1, VAR string Str2)
+FUNC BOOL Hlp_StrCmp(VAR string Str1, VAR string Str2)
 {
 	return FALSE;
 };
 
-FUNC void Info_AddChoice(VAR int InfoInstance, VAR string ChoiceText, VAR func ChoiceFunc)
+FUNC void Info_AddChoice(VAR C_INFO_ID InfoId, VAR string ChoiceText, VAR func ChoiceFunc)
 {
 };
 
-FUNC void Info_ClearChoices(VAR int InfoInstance)
+FUNC void Info_ClearChoices(VAR C_INFO_ID InfoId)
 {
 };
 
-FUNC int InfoManager_HasFinished()
+FUNC BOOL InfoManager_HasFinished()
 {
-	return 1;
+	return TRUE;
 };
 
 FUNC void IntroduceChapter(VAR string Title, VAR string Text, VAR string Texture, VAR string SfxName, VAR int Milliseconds)
@@ -494,7 +494,7 @@ FUNC void Mdl_SetVisual(VAR C_NPC Character, VAR string VisualName)
 {
 };
 
-FUNC void Mdl_SetVisualBody(VAR C_NPC Character, VAR string Body, VAR int BodyNr, VAR int BodyClr, VAR string Head, VAR int HeadNr, VAR int TeethNr, VAR int ArmorInstance)
+FUNC void Mdl_SetVisualBody(VAR C_NPC Character, VAR string Body, VAR int BodyNr, VAR int BodyClr, VAR string Head, VAR int HeadNr, VAR int TeethNr, VAR C_ITEM_ID ArmorId)
 {
 };
 
@@ -502,62 +502,63 @@ FUNC void Mdl_StartFaceAni(VAR C_NPC Character, VAR string FaceAniName, VAR floa
 {
 };
 
-FUNC void Mis_AddMissionEntry(VAR C_Mission MissionInstance, VAR string Text)
+FUNC void Mis_AddMissionEntry(VAR C_Mission Mission, VAR string Text)
 /// \bug        The implementation removes an int instead of a C_Mission
 ///             from the stack.
 {
 };
 
-FUNC int Mis_GetStatus(VAR int MissionInstance)
+FUNC int Mis_GetStatus(VAR C_MISSION_ID MissionId)
 {
 	return -1;
 };
 
-FUNC int Mis_OnTime(VAR int MissingInstance)
+FUNC BOOL Mis_OnTime(VAR C_MISSION_ID MissionId)
 /// \bug        The external is linked to \ref Mis_SetStatus.
 {
+	return FALSE;
 };
 
-FUNC void Mis_RemoveMission(VAR C_Mission MissionInstance)
+FUNC void Mis_RemoveMission(VAR C_Mission Mission)
 /// \bug        The implementation removes an int instead of a C_Mission
 ///             from the stack.
 {
 };
 
-FUNC void Mis_SetStatus(VAR int MissionInstance, VAR int NewStatus)
+FUNC void Mis_SetStatus(VAR C_MISSION_ID MissionId, VAR int NewStatus)
 {
 };
 
-FUNC void Mob_CreateItems(VAR string MobContainerName, VAR int ItemInstance, VAR int Amount)
+FUNC void Mob_CreateItems(VAR string MobContainerName, VAR C_ITEM_ID ItemId, VAR int Amount)
 {
 };
 
-FUNC int Mob_HasItems(VAR string MobContainerName, VAR int ItemInstance)
+FUNC int Mob_HasItems(VAR string MobContainerName, VAR C_ITEM_ID ItemId)
 {
 	return 0;
 };
 
-FUNC int Npc_AreWeStronger(VAR C_NPC Character, VAR C_NPC Target)
+FUNC BOOL Npc_AreWeStronger(VAR C_NPC Character, VAR C_NPC Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CanSeeItem(VAR C_NPC Character, VAR C_Item Target)
+FUNC BOOL Npc_CanSeeItem(VAR C_NPC Character, VAR C_Item Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target)
+FUNC BOOL Npc_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CanSeeNpcFreeLOS(VAR C_NPC Character, VAR C_NPC Target)
+FUNC BOOL Npc_CanSeeNpcFreeLOS(VAR C_NPC Character, VAR C_NPC Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CanSeeSource(VAR C_NPC Character)
+FUNC BOOL Npc_CanSeeSource(VAR C_NPC Character)
 {
 	return FALSE;
 };
@@ -566,22 +567,22 @@ FUNC void Npc_ChangeAttribute(VAR C_NPC Character, VAR int Attribute, VAR int Va
 {
 };
 
-FUNC int Npc_CheckAvailableMission(VAR C_NPC NonPlayer, VAR int Status, VAR int Important)
+FUNC BOOL Npc_CheckAvailableMission(VAR C_NPC NonPlayer, VAR int Status, VAR BOOL Important)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CheckInfo(VAR C_NPC NonPlayer, VAR int Important)
+FUNC BOOL Npc_CheckInfo(VAR C_NPC NonPlayer, VAR BOOL Important)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CheckOfferMission(VAR C_NPC NonPlayer, VAR int Important)
+FUNC BOOL Npc_CheckOfferMission(VAR C_NPC NonPlayer, VAR BOOL Important)
 {
 	return FALSE;
 };
 
-FUNC int Npc_CheckRunningMission(VAR C_NPC NonPlayer, VAR int Important)
+FUNC BOOL Npc_CheckRunningMission(VAR C_NPC NonPlayer, VAR BOOL Important)
 {
 	return FALSE;
 };
@@ -594,7 +595,7 @@ FUNC void Npc_CreateSpell(VAR C_NPC Character, VAR int SpellId)
 {
 };
 
-FUNC int Npc_DeleteNews(VAR C_NPC Character, VAR int NewsId)
+FUNC BOOL Npc_DeleteNews(VAR C_NPC Character, VAR int NewsId)
 {
 	return FALSE;
 };
@@ -686,7 +687,7 @@ FUNC int Npc_GetGuildAttitude(VAR C_NPC Character, VAR C_NPC Target)
 	return ATT_NEUTRAL;
 };
 
-FUNC int Npc_GetInvItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC BOOL Npc_GetInvItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 	return FALSE;
 };
@@ -716,7 +717,7 @@ FUNC C_NPC Npc_GetNewsWitness(VAR C_NPC Character, VAR int NewsId)
 	return NULL;
 };
 
-FUNC int Npc_GetNextTarget(VAR C_NPC Character)
+FUNC BOOL Npc_GetNextTarget(VAR C_NPC Character)
 {
 	return FALSE;
 };
@@ -753,7 +754,7 @@ FUNC int Npc_GetTalentValue(VAR C_NPC Character, VAR int Talent)
 	return 0;
 };
 
-FUNC int Npc_GetTarget(VAR C_NPC Character)
+FUNC BOOL Npc_GetTarget(VAR C_NPC Character)
 {
 	return FALSE;
 };
@@ -763,48 +764,48 @@ FUNC int Npc_GetTrueGuild(VAR C_NPC Character)
 	return 0;
 };
 
-FUNC int Npc_GiveInfo(VAR C_NPC NonPlayer, VAR int Important)
+FUNC BOOL Npc_GiveInfo(VAR C_NPC NonPlayer, VAR BOOL Important)
 {
 	return FALSE;
 };
 
-FUNC void Npc_GiveItem(VAR C_NPC Character, VAR int ItemInstance, VAR C_NPC Target)
+FUNC void Npc_GiveItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId, VAR C_NPC Target)
 {
 };
 
-FUNC int Npc_HasBodyFlag(VAR C_NPC Character, VAR int BodyStates)
+FUNC BOOL Npc_HasBodyFlag(VAR C_NPC Character, VAR int BodyStates)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasDetectedNpc(VAR C_NPC NonPlayer, VAR C_NPC Target)
+FUNC BOOL Npc_HasDetectedNpc(VAR C_NPC NonPlayer, VAR C_NPC Target)
 /// \bug        The implementation does not leave the result on the stack
 ///             if \p NonPlayer or \p Target are invalid character references.
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasEquippedArmor(VAR C_NPC Character)
+FUNC BOOL Npc_HasEquippedArmor(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasEquippedMeleeWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasEquippedMeleeWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasEquippedRangedWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasEquippedRangedWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasEquippedWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasEquippedWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasItems(VAR C_NPC Character, VAR int ItemInstance)
+FUNC int Npc_HasItems(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 	return 0;
 };
@@ -814,122 +815,122 @@ FUNC int Npc_HasNews(VAR C_NPC Character, VAR int NewsId, VAR C_NPC NewsOffender
 	return 0;
 };
 
-FUNC int Npc_HasOffered(VAR C_NPC Character, VAR C_NPC Player, VAR int ItemInstance)
+FUNC BOOL Npc_HasOffered(VAR C_NPC Character, VAR C_NPC Player, VAR C_ITEM_ID ItemId)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasRangedWeaponWithAmmo(VAR C_NPC Character)
+FUNC BOOL Npc_HasRangedWeaponWithAmmo(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasReadiedMeleeWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasReadiedMeleeWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasReadiedRangedWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasReadiedRangedWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasReadiedWeapon(VAR C_NPC Character)
+FUNC BOOL Npc_HasReadiedWeapon(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_HasSpell(VAR C_NPC Character, VAR int SpellId)
+FUNC BOOL Npc_HasSpell(VAR C_NPC Character, VAR int SpellId)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsAiming(VAR C_NPC Attacker, VAR C_NPC Target)
+FUNC BOOL Npc_IsAiming(VAR C_NPC Attacker, VAR C_NPC Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsDead(VAR C_NPC Character)
+FUNC BOOL Npc_IsDead(VAR C_NPC Character)
 {
 	return TRUE;
 };
 
-FUNC int Npc_IsDetectedMobOwnedByGuild(VAR C_NPC Character, VAR int Guild)
+FUNC BOOL Npc_IsDetectedMobOwnedByGuild(VAR C_NPC Character, VAR int Guild)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsDetectedMobOwnedByNpc(VAR C_NPC Character, VAR C_NPC Owner)
+FUNC BOOL Npc_IsDetectedMobOwnedByNpc(VAR C_NPC Character, VAR C_NPC Owner)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsInCutscene(VAR C_NPC Character)
+FUNC BOOL Npc_IsInCutscene(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsInFightMode(VAR C_NPC Character, VAR int WeaponMode)
+FUNC BOOL Npc_IsInFightMode(VAR C_NPC Character, VAR int WeaponMode)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsInRoutine(VAR C_NPC Character, VAR func Routine)
+FUNC BOOL Npc_IsInRoutine(VAR C_NPC Character, VAR func Routine)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsInState(VAR C_NPC Character, VAR func AIState)
+FUNC BOOL Npc_IsInState(VAR C_NPC Character, VAR func AIState)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsNear(VAR C_NPC Origin, VAR C_NPC Target)
+FUNC BOOL Npc_IsNear(VAR C_NPC Origin, VAR C_NPC Target)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsNewsGossip(VAR C_NPC Character, VAR int NewsId)
+FUNC BOOL Npc_IsNewsGossip(VAR C_NPC Character, VAR int NewsId)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsNextTargetAvailable(VAR C_NPC Character)
+FUNC BOOL Npc_IsNextTargetAvailable(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsOnFP(VAR C_NPC Character, VAR string FreePointName)
+FUNC BOOL Npc_IsOnFP(VAR C_NPC Character, VAR string FreePointName)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsPlayer(VAR C_NPC Character)
+FUNC BOOL Npc_IsPlayer(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsPlayerInMyRoom(VAR C_NPC Owner)
+FUNC BOOL Npc_IsPlayerInMyRoom(VAR C_NPC Owner)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsVoiceActive(VAR C_NPC Character)
+FUNC BOOL Npc_IsVoiceActive(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_IsWayBlocked(VAR C_NPC Character)
+FUNC BOOL Npc_IsWayBlocked(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_KnowsInfo(VAR C_NPC Character, VAR int InfoInstance)
+FUNC BOOL Npc_KnowsInfo(VAR C_NPC Character, VAR C_INFO_ID InfoId)
 {
 	return FALSE;
 };
 
-FUNC int Npc_KnowsPlayer(VAR C_NPC Character, VAR C_NPC Player)
+FUNC BOOL Npc_KnowsPlayer(VAR C_NPC Character, VAR C_NPC Player)
 {
 	return FALSE;
 };
@@ -938,20 +939,20 @@ FUNC void Npc_LearnSpell(VAR C_NPC Character, VAR int SpellId)
 {
 };
 
-FUNC void Npc_MemoryEntry(VAR C_NPC Witness, VAR int Gossip, VAR C_NPC Offender, VAR int NewsId, VAR C_NPC NewsVictim)
+FUNC void Npc_MemoryEntry(VAR C_NPC Witness, VAR BOOL Gossip, VAR C_NPC Offender, VAR int NewsId, VAR C_NPC NewsVictim)
 {
 };
 
-FUNC void Npc_MemoryEntryGuild(VAR C_NPC Witness, VAR int Gossip, VAR C_NPC Offender, VAR int NewsId, VAR C_NPC NewsVictim)
+FUNC void Npc_MemoryEntryGuild(VAR C_NPC Witness, VAR BOOL Gossip, VAR C_NPC Offender, VAR int NewsId, VAR C_NPC NewsVictim)
 {
 };
 
-FUNC int Npc_OwnedByGuild(VAR C_Item ItemObject, VAR int Guild)
+FUNC BOOL Npc_OwnedByGuild(VAR C_Item ItemObject, VAR int Guild)
 {
 	return FALSE;
 };
 
-FUNC int Npc_OwnedByNpc(VAR C_Item ItemObject, VAR C_NPC Owner)
+FUNC BOOL Npc_OwnedByNpc(VAR C_Item ItemObject, VAR C_NPC Owner)
 {
 	return FALSE;
 };
@@ -972,17 +973,17 @@ FUNC void Npc_PlayAni(VAR C_NPC Character, VAR string AniName)
 {
 };
 
-FUNC int Npc_RefuseTalk(VAR C_NPC Character)
+FUNC BOOL Npc_RefuseTalk(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Npc_RemoveInvItem(VAR C_NPC Character, VAR int ItemInstance)
+FUNC BOOL Npc_RemoveInvItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 	return FALSE;
 };
 
-FUNC int Npc_RemoveInvItems(VAR C_NPC Character, VAR int ItemInstance, VAR int Amount)
+FUNC BOOL Npc_RemoveInvItems(VAR C_NPC Character, VAR C_ITEM_ID ItemId, VAR int Amount)
 {
 	return FALSE;
 };
@@ -998,6 +999,7 @@ FUNC void Npc_SendSinglePerc(VAR C_NPC Origin, VAR C_NPC Target, VAR int Percept
 FUNC int Npc_SetActiveSpellInfo(VAR C_NPC Character, VAR int TransformInstance)
 /// \bug        The implementation does not leave the result on the stack.
 {
+	return 0;
 };
 
 FUNC void Npc_SetAttitude(VAR C_NPC Character, VAR int Attitude)
@@ -1040,7 +1042,7 @@ FUNC void Npc_SetTempAttitude(VAR C_NPC Character, VAR int Attitude)
 {
 };
 
-FUNC void Npc_SetToFightMode(VAR C_NPC Character, VAR int ItemInstance)
+FUNC void Npc_SetToFightMode(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 {
 };
 
@@ -1051,19 +1053,20 @@ FUNC void Npc_SetToFistMode(VAR C_NPC Character)
 FUNC int Npc_SetTrueGuild(VAR C_NPC Character, VAR int Guild)
 /// \bug        The implementation does not leave a result on the stack.
 {
+	return 0;
 };
 
-FUNC int Npc_StartItemReactModules(VAR C_NPC Taker, VAR C_NPC Giver, VAR C_Item ItemObject)
+FUNC BOOL Npc_StartItemReactModules(VAR C_NPC Taker, VAR C_NPC Giver, VAR C_Item ItemObject)
 {
 	return FALSE;
 };
 
-FUNC int Npc_WasInState(VAR C_NPC Character, VAR func AIState)
+FUNC BOOL Npc_WasInState(VAR C_NPC Character, VAR func AIState)
 {
 	return FALSE;
 };
 
-FUNC int Npc_WasPlayerInMyRoom(VAR C_NPC Owner)
+FUNC BOOL Npc_WasPlayerInMyRoom(VAR C_NPC Owner)
 {
 	return FALSE;
 };
@@ -1092,7 +1095,7 @@ FUNC void PrintDebugInstCh(VAR int Channel, VAR string Text)
 {
 };
 
-FUNC int PrintDialog(VAR int GameViewId, VAR string Text, VAR int PosX, VAR int PosY, VAR string Font, VAR int Seconds)
+FUNC BOOL PrintDialog(VAR int GameViewId, VAR string Text, VAR int PosX, VAR int PosY, VAR string Font, VAR int Seconds)
 {
 	return FALSE;
 };
@@ -1101,7 +1104,7 @@ FUNC void PrintMulti(VAR string TextVariant1, VAR string TextVariant2, VAR strin
 {
 };
 
-FUNC int PrintScreen(VAR string Text, VAR int PosX, VAR int PosY, VAR string Font, VAR int Seconds)
+FUNC BOOL PrintScreen(VAR string Text, VAR int PosX, VAR int PosY, VAR string Font, VAR int Seconds)
 /// \bug        The implementation removes an additional int from
 ///             the stack after retrieving the defined parameters.
 {
@@ -1121,12 +1124,12 @@ FUNC int Snd_GetDistToSource(VAR C_NPC Character)
 	return 2147483647;
 };
 
-FUNC int Snd_IsSourceItem(VAR C_NPC Character)
+FUNC BOOL Snd_IsSourceItem(VAR C_NPC Character)
 {
 	return FALSE;
 };
 
-FUNC int Snd_IsSourceNpc(VAR C_NPC Character)
+FUNC BOOL Snd_IsSourceNpc(VAR C_NPC Character)
 {
 	return FALSE;
 };
@@ -1167,7 +1170,7 @@ FUNC void Tal_Configure(VAR int Talent, VAR int Relevance)
 /// \bug        The implementation removes an additional C_NPC from the stack
 ///             and leaves an additional integer (Hlp_IsValidNpc) on the stack.
 {
-;
+};
 
 FUNC void Wld_AssignRoomToGuild(VAR string RoomName, VAR int Guild)
 {
@@ -1213,7 +1216,7 @@ FUNC int Wld_GetFormerPlayerPortalGuild()
 
 FUNC C_NPC Wld_GetFormerPlayerPortalOwner()
 {
-	Hlp_GetNpc(-1);
+	return NULL;
 };
 
 FUNC int Wld_GetGuildAttitude(VAR int Guild, VAR int TargetGuild)
@@ -1233,7 +1236,7 @@ FUNC int Wld_GetPlayerPortalGuild()
 
 FUNC C_NPC Wld_GetPlayerPortalOwner()
 {
-	Hlp_GetNpc(-1);
+	return NULL;
 };
 
 FUNC void Wld_InsertItem(VAR C_ITEM_ID ItemId, VAR string SpawnPoint)
