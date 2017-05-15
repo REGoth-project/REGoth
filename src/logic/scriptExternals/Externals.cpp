@@ -809,8 +809,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             npc.playerController->getEM().onMessage(sm);
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("ai_playani", [=](Daedalus::DaedalusVM& vm){
