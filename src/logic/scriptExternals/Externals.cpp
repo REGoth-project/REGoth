@@ -833,8 +833,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
                 npc.playerController->getEM().onMessage(sm);
             }
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("mdl_applyoverlaymds", [=](Daedalus::DaedalusVM& vm){
@@ -847,8 +845,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             npc.playerController->getModelVisual()->applyOverlay(overlayname);
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("mdl_removeoverlaymds", [=](Daedalus::DaedalusVM& vm){
@@ -862,8 +858,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             // TODO: Implement using of multiple overlays!
             npc.playerController->getModelVisual()->applyOverlay("");
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("wld_isfpavailable", [=](Daedalus::DaedalusVM& vm){
