@@ -33,10 +33,35 @@ FUNC void AI_AimAt(VAR C_NPC Attacker, VAR C_NPC Target)
 };
 
 FUNC void AI_AlignToFP(VAR C_NPC Character)
+/// \brief      Align \p Character to an used spot (queued).
+/// \param      Character
+///                 Reference to the character object.
+/// \details    The message handler is first searching for a spot that is
+///             in use by the \p Character (in a 2 meters bounding box).
+/// \details    If a used spot is found, the \p Character is turning to the
+///             position that is 2 meters in front of the spot
+///             until the angle is 1 degree or less.
+/// \sa         AI_GotoFP
+/// \sa         AI_GotoNextFP
+/// \sa         Npc_IsOnFP
+/// \sa         Wld_IsFPAvailable
+/// \sa         Wld_IsNextFPAvailable
 {
 };
 
 FUNC void AI_AlignToWP(VAR C_NPC Character)
+/// \brief      Align \p Character to nearest waypoint (queued).
+/// \param      Character
+///                 Reference to the character object.
+/// \details    The function searches for the nearest waypoint, calculates the
+///             position that is 2 meters in front of the waypoint, and queues
+///             a message for the \p Character to turn to that position.
+/// \details    The message handler calculates the angle to the position and
+///             turns the \p Character until the remaining angle is 0.
+/// \sa         AI_GotoWP
+/// \sa         Npc_GetDistToWP
+/// \sa         Npc_GetNearestWP
+/// \sa         Npc_GetNextWP
 {
 };
 
@@ -111,7 +136,28 @@ FUNC void AI_Flee(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_GotoFP(VAR C_NPC Character, VAR string FreePointName)
+FUNC void AI_GotoFP(VAR C_NPC Character, VAR string NamePart)
+/// \brief      Use and walk to the nearest free spot (queued).
+/// \param      Character
+///                 Reference to the character object.
+/// \param      NamePart
+///                 Substring that has to be present in the name of the spot
+///                 (always converted to upper case).
+/// \details    The message handler is searching for the nearest spot
+///             (in a 14 meters bounding box) where the name of the spot
+///             includes \p NamePart, that is available for the \p Character,
+///             and that is in the free line of sight for the \p Character.
+/// \details    If a valid spot is found, the spot is marked as in use by the
+///             \p Character for 30 seconds, the \p Character is walking to
+///             the spot (with a target variance of up to 50 centimetres),
+///             and thereafter the \p Character is turning to the position
+///             that is 2 meters in front of the spot until the angle is
+///             less than 3 degrees.
+/// \sa         AI_AlignToFP
+/// \sa         AI_GotoNextFP
+/// \sa         Npc_IsOnFP
+/// \sa         Wld_IsFPAvailable
+/// \sa         Wld_IsNextFPAvailable
 {
 };
 
@@ -119,7 +165,29 @@ FUNC void AI_GotoItem(VAR C_NPC Character, VAR C_Item Target)
 {
 };
 
-FUNC void AI_GotoNextFP(VAR C_NPC Character, VAR string FreePointName)
+FUNC void AI_GotoNextFP(VAR C_NPC Character, VAR string NamePart)
+/// \brief      Use and walk to the next free spot (queued).
+/// \param      Character
+///                 Reference to the character object.
+/// \param      NamePart
+///                 Substring that has to be present in the name of the spot
+///                 (always converted to upper case).
+/// \details    The message handler is searching for any spot
+///             (in a 14 meters bounding box) where the name of the spot
+///             includes \p NamePart, that is available and not in use by
+///             the \p Character, and that is in the free line of sight
+///             for the \p Character.
+/// \details    If a valid spot is found, the spot is marked as in use by the
+///             \p Character for 30 seconds, the \p Character is walking to
+///             the spot (with a target variance of up to 50 centimetres),
+///             and thereafter the \p Character is turning to the position
+///             that is 2 meters in front of the spot until the angle is
+///             less than 3 degrees.
+/// \sa         AI_AlignToFP
+/// \sa         AI_GotoFP
+/// \sa         Npc_IsOnFP
+/// \sa         Wld_IsFPAvailable
+/// \sa         Wld_IsNextFPAvailable
 {
 };
 
@@ -131,7 +199,22 @@ FUNC void AI_GotoSound(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_GotoWP(VAR C_NPC Character, VAR string WaypointName)
+FUNC void AI_GotoWP(VAR C_NPC Character, VAR string Name)
+/// \brief      Use the waynet to walk to a waypoint (queued).
+/// \param      Character
+///                 Reference to the character object.
+/// \param      Name
+///                 Target waypoint name
+///                 (the comparison is case sensitive, should be upper case).
+/// \details    The message handler is first searching for a route from the
+///             nearest waypoint to the target waypoint specified by \p Name.
+/// \details    If the route has been found and created, the \p Character uses
+///             the waynet to walk to the target waypoint (includes chasm and
+///             climbing handling, and the automatic usage of ladder objects).
+/// \sa         AI_AlignToWP
+/// \sa         Npc_GetDistToWP
+/// \sa         Npc_GetNearestWP
+/// \sa         Npc_GetNextWP
 {
 };
 
@@ -695,7 +778,20 @@ FUNC int Npc_GetDistToPlayer(VAR C_NPC Target)
 	return 2147483647;
 };
 
-FUNC int Npc_GetDistToWP(VAR C_NPC Origin, VAR string WaypointName)
+FUNC int Npc_GetDistToWP(VAR C_NPC Origin, VAR string Name)
+/// \brief      Calculate the distance to a waypoint.
+/// \param      Origin
+///                 Reference to the character object.
+/// \param      Name
+///                 Target waypoint name
+///                 (the comparison is case sensitive, should be upper case).
+/// \return     Returns the distance in centimetres or 2147483647
+///             if the \p Origin is not a valid character reference or
+///             if no waypoint has been found by \p Name.
+/// \sa         AI_AlignToWP
+/// \sa         AI_GotoWP
+/// \sa         Npc_GetNearestWP
+/// \sa         Npc_GetNextWP
 {
 	return 2147483647;
 };
@@ -730,7 +826,17 @@ FUNC int Npc_GetInvItemBySlot(VAR C_NPC Character, VAR int Category, VAR int Slo
 	return 0;
 };
 
-FUNC string Npc_GetNearestWP(VAR C_NPC Character)
+FUNC string Npc_GetNearestWP(VAR C_NPC Origin)
+/// \brief      Returns the name of the nearest waypoint.
+/// \param      Origin
+///                 Reference to the character object.
+/// \return     Returns the name of the nearest waypoint or an empty string
+///             if the \p Origin is not a valid character reference or
+///             if no waypoint has been found.
+/// \sa         AI_AlignToWP
+/// \sa         AI_GotoWP
+/// \sa         Npc_GetDistToWP
+/// \sa         Npc_GetNextWP
 {
 	return "";
 };
@@ -755,7 +861,17 @@ FUNC BOOL Npc_GetNextTarget(VAR C_NPC Character)
 	return FALSE;
 };
 
-FUNC string Npc_GetNextWP(VAR C_NPC Character)
+FUNC string Npc_GetNextWP(VAR C_NPC Origin)
+/// \brief      Returns the name of the second nearest waypoint.
+/// \param      Origin
+///                 Reference to the character object.
+/// \return     Returns the name of the second nearest waypoint
+///             or an empty string if the \p Origin is not a valid character
+///             reference or if no waypoint has been found.
+/// \sa         AI_AlignToWP
+/// \sa         AI_GotoWP
+/// \sa         Npc_GetDistToWP
+/// \sa         Npc_GetNearestWP
 {
 	return "";
 };
@@ -933,7 +1049,26 @@ FUNC BOOL Npc_IsNextTargetAvailable(VAR C_NPC Character)
 	return FALSE;
 };
 
-FUNC BOOL Npc_IsOnFP(VAR C_NPC Character, VAR string FreePointName)
+FUNC BOOL Npc_IsOnFP(VAR C_NPC Character, VAR string NamePart)
+/// \brief      Check if \p Character is near a used spot.
+/// \param      Character
+///                 Reference to the character object.
+/// \param      NamePart
+///                 Substring that has to be present in the name of the spot
+///                 (the comparison is case sensitive, should be upper case).
+/// \return     Returns TRUE if the \p Character is using the nearest spot.
+/// \details    The message handler is searching for the nearest spot
+///             (in a 2 meters bounding box) where the name of the spot
+///             includes \p NamePart, that is available for the \p Character,
+///             and that is in the free line of sight for the \p Character.
+/// \note       If the \p Character is currently using the spot, the spot is
+///             made available again for usage if the \p Character is currently
+///             not inside a 1x2x1 meter bounding box of the spot.
+/// \sa         AI_AlignToFP
+/// \sa         AI_GotoFP
+/// \sa         AI_GotoNextFP
+/// \sa         Wld_IsFPAvailable
+/// \sa         Wld_IsNextFPAvailable
 {
 	return FALSE;
 };
@@ -1288,7 +1423,27 @@ FUNC void Wld_InsertObject(VAR string MobVisualName, VAR string SpawnPoint)
 {
 };
 
-FUNC BOOL Wld_IsFPAvailable(VAR C_NPC Character, VAR string FreePointName)
+FUNC BOOL Wld_IsFPAvailable(VAR C_NPC Character, VAR string NamePart)
+/// \brief      Check if nearest spot is available.
+/// \param      Character
+///                 Reference to the character object.
+/// \param      NamePart
+///                 Substring that has to be present in the name of the spot
+///                 (always converted to upper case).
+/// \return     Returns TRUE if the nearest spot is available for the
+///             \p Character.
+/// \details    The function is searching for the nearest spot
+///             (in a 14 meters bounding box) where the name of the spot
+///             includes \p NamePart, that is available for the \p Character,
+///             and that is in the free line of sight for the \p Character.
+/// \note       If the \p Character is currently using the spot, the spot is
+///             made available again for usage if the \p Character is currently
+///             not inside a 1x2x1 meter bounding box of the spot.
+/// \sa         AI_AlignToFP
+/// \sa         AI_GotoFP
+/// \sa         AI_GotoNextFP
+/// \sa         Npc_IsOnFP
+/// \sa         Wld_IsNextFPAvailable
 {
 	return FALSE;
 };
@@ -1298,7 +1453,28 @@ FUNC BOOL Wld_IsMobAvailable(VAR C_NPC Character, VAR string SchemeName)
 	return FALSE;
 };
 
-FUNC BOOL Wld_IsNextFPAvailable(VAR C_NPC Character, VAR string FreePointName)
+FUNC BOOL Wld_IsNextFPAvailable(VAR C_NPC Character, VAR string NamePart)
+/// \brief      Check if any spot is available.
+/// \param      Character
+///                 Reference to the character object.
+/// \param      NamePart
+///                 Substring that has to be present in the name of the spot
+///                 (always converted to upper case).
+/// \return     Returns TRUE if any spot is available for the
+///             \p Character.
+/// \details    The function is searching for any spot
+///             (in a 14 meters bounding box) where the name of the spot
+///             includes \p NamePart, that is available and not in use by
+///             the \p Character, and that is in the free line of sight
+///             for the \p Character.
+/// \note       If the \p Character is currently using the spot, the spot is
+///             made available again for usage if the \p Character is currently
+///             not inside a 1x2x1 meter bounding box of the spot.
+/// \sa         AI_AlignToFP
+/// \sa         AI_GotoFP
+/// \sa         AI_GotoNextFP
+/// \sa         Npc_IsOnFP
+/// \sa         Wld_IsFPAvailable
 {
 	return FALSE;
 };
