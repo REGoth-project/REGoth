@@ -36,12 +36,10 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if(!hnpc.isValid())
         {
             LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
+            LogWarn() << "Callstack: " << vm->getCallStack();
 
             VobTypes::NpcVobInformation vob;
             vob.entity.invalidate();
-
-            LogInfo() << "Callstack: " << vm->getCallStack();
-
             return vob;
         }
 
@@ -809,8 +807,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             npc.playerController->getEM().onMessage(sm);
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("ai_playani", [=](Daedalus::DaedalusVM& vm){
@@ -835,8 +831,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
                 npc.playerController->getEM().onMessage(sm);
             }
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("mdl_applyoverlaymds", [=](Daedalus::DaedalusVM& vm){
@@ -849,8 +843,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             npc.playerController->getModelVisual()->applyOverlay(overlayname);
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("mdl_removeoverlaymds", [=](Daedalus::DaedalusVM& vm){
@@ -864,8 +856,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             // TODO: Implement using of multiple overlays!
             npc.playerController->getModelVisual()->applyOverlay("");
         }
-
-        vm.setReturn(0);
     });
 
     vm->registerExternalFunction("wld_isfpavailable", [=](Daedalus::DaedalusVM& vm){
@@ -941,20 +931,20 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
         uint32_t func = vm.popVar();
         std::string text = vm.popString();
-        uint32_t info = vm.popVar();
+        uint32_t infoInstance = vm.popDataValue();
 
         Daedalus::GameState::InfoHandle hInfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
-                pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(info).instanceDataHandle);
+                pWorld->getScriptEngine().getVM().getDATFile().getSymbolByIndex(infoInstance).instanceDataHandle);
 
         auto& cInfo = vm.getGameState().getInfo(hInfo);
         cInfo.addChoice(Daedalus::GEngineClasses::SubChoice{text, func});
     });
 
     vm->registerExternalFunction("info_clearchoices", [=](Daedalus::DaedalusVM& vm){
-        uint32_t info = vm.popVar();
+        uint32_t infoInstance = vm.popDataValue();
 
         Daedalus::GameState::InfoHandle hInfo = ZMemory::handleCast<Daedalus::GameState::InfoHandle>(
-                vm.getDATFile().getSymbolByIndex(info).instanceDataHandle);
+                vm.getDATFile().getSymbolByIndex(infoInstance).instanceDataHandle);
 
         auto& cInfo = vm.getGameState().getInfo(hInfo);
         cInfo.subChoices.clear();

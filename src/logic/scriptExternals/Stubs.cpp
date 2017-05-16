@@ -111,7 +111,9 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         std::string schemename = vm.popString(); if(verbose) LogInfo() << "schemename: " << schemename;
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
-        vm.setReturn(0);
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        // vm.setReturn(0);
     });
 
     vm.registerExternalFunction("doc_create", [=](Daedalus::DaedalusVM& vm) {
@@ -722,13 +724,9 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
     vm.registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "playvideo";
         std::string filename = vm.popString(); if(verbose) LogInfo() << "filename: " << filename;
-        vm.setReturn(0);
-    });
-
-    vm.registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "playvideo";
-        std::string s0 = vm.popString(); if(verbose) LogInfo() << "s0: " << s0;
-        vm.setReturn(0);
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        // vm.setReturn(0);
     });
 
     vm.registerExternalFunction("playvideoex", [=](Daedalus::DaedalusVM& vm) {
@@ -736,7 +734,9 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         int exitsession = vm.popDataValue(); if(verbose) LogInfo() << "exitsession: " << exitsession;
         int screenblend = vm.popDataValue(); if(verbose) LogInfo() << "screenblend: " << screenblend;
         std::string filename = vm.popString(); if(verbose) LogInfo() << "filename: " << filename;
-        vm.setReturn(0);
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        // vm.setReturn(0);
     });
 
     vm.registerExternalFunction("printdialog", [=](Daedalus::DaedalusVM& vm) {

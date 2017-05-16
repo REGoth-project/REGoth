@@ -642,7 +642,7 @@ public:
             int exp = std::stoi(args[1]);
             s1.prepareRunFunction();
             s1.pushInt(exp);
-            s1.runFunction(scriptName);
+            s1.runFunction(scriptName, false);
 
             return "Experience points successfully given";
         });
