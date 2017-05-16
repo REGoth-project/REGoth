@@ -385,7 +385,27 @@ FUNC void AI_Wait(VAR C_NPC Character, VAR float Seconds)
 {
 };
 
-FUNC void AI_WaitForQuestion(VAR C_NPC NonPlayer, VAR func OnYesNo)
+FUNC void AI_WaitForQuestion(VAR C_NPC NonPlayer, VAR func OnQuestion)
+/// \brief      Wait 20 seconds for a player question (queued).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      OnQuestion
+///                 Function that is called when the player tries to
+///                 talk to the \p NonPlayer character.
+/// \details    If the player tries to talk to the \p NonPlayer while the
+///             message is active:
+///             the global instance variable \b SELF is set to \p NonPlayer,
+///             the global instance variable \b OTHER is set to the player,
+///             and the script function \p OnQuestion is called.
+/// \note       If the player did not try to talk to the \p NonPlayer,
+///             the message handler removes the message after the timeout,
+///             sets the global instance variable \b SELF to \p NonPlayer,
+///             and tries to call the script function \b B_NPCBye.
+///             But the timeout callback is broken, because all symbol names
+///             are converted to upper case during the parsing process, and
+///             therefore the script function cannot be found.
+/// \sa         AI_Ask
+/// \sa         AI_AskText
 {
 };
 
