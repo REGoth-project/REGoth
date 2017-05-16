@@ -1554,14 +1554,13 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
         case ConversationMessage::ST_Output:
         {
+            // Vatras' preach or Herold accounce
+            bool isMonolog = message.target == this->m_Entity;
             auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (message.status == ConversationMessage::Status::INIT)
             {
                 message.status = ConversationMessage::Status::PLAYING;
-                m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
-                subtitleBox.setScaling(0.0);
-                subtitleBox.setGrowDirection(+1.0f);
 
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
@@ -1570,7 +1569,12 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 startDialogAnimation();
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
-                m_World.getDialogManager().setCurrentMessage(sharedMessage);
+                if (!isMonolog){
+                    m_World.getDialogManager().setCurrentMessage(sharedMessage);
+                    m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+                    subtitleBox.setScaling(0.0);
+                    subtitleBox.setGrowDirection(+1.0f);
+                }
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
@@ -1600,15 +1604,17 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 if (nextStage)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
-                    subtitleBox.setGrowDirection(-1.0f);
+                    if (!isMonolog)
+                        subtitleBox.setGrowDirection(-1.0f);
                 }
             }
 
             if (message.status == ConversationMessage::Status::FADING_OUT)
             {
-                if (subtitleBox.getScaling() == 0.0f)
+                if (isMonolog || subtitleBox.getScaling() == 0.0f)
                 {
-                    m_World.getDialogManager().stopDisplaySubtitle();
+                    if (!isMonolog)
+                        m_World.getDialogManager().stopDisplaySubtitle();
                     getModelVisual()->stopAnimations();
                     return true;
                 }
