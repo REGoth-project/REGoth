@@ -25,9 +25,9 @@ FUNC void AI_AimAt(VAR C_NPC Attacker, VAR C_NPC Target)
 ///             And the \p Attacker is forced into standing state when the
 ///             aiming is finalized.
 /// \sa         AI_StopAim
-/// \warning    In G2 the game will crash if \b Attacker is not a valid
+/// \warning    In G2 the game will crash if \p Attacker is not a valid
 ///             character object reference.
-/// \bug        In G1 the \b Attacker is not removed from the stack
+/// \bug        In G1 the \p Attacker is not removed from the stack
 ///             if \p Target is not a valid character object reference.
 {
 };
@@ -125,7 +125,27 @@ FUNC void AI_AskText(VAR C_NPC NonPlayer, VAR func OnYes, VAR func OnNo, VAR str
 {
 };
 
-FUNC void AI_Attack(VAR C_NPC Character)
+FUNC void AI_Attack(VAR C_NPC Attacker)
+/// \param      Attacker
+///                 Object reference to the character.
+/// \details    If the message queue for the \p Attacker is empty
+///             (overlay messages are allowed/ignored)
+///             determine and queue the next fight action for the \p Attacker.
+/// \details    Before determining the fight action, the game checks if
+///             the \p Attacker is not swimming/diving and not in a weapon mode
+///             (a message is queued to draw a weapon in the last mode) or if
+///             the \p Attacker is in a ranged weapon mode (bow or crossbow)
+///             and has no ammunition
+///             (a message is queued to remove the weapon,
+///             and another message is queued to equip the best weapon -
+///             but without a weapon mode, therefore, without any effect).
+/// \note       This function queues messages for the \p Attacker. Therefore,
+///             subsequent calls are ignored until the queue is empty.
+/// \sa         Npc_ClearAIQueue
+/// \sa         Npc_GetTarget
+/// \sa         Npc_GetNextTarget
+/// \sa         Npc_IsNextTargetAvailable
+/// \sa         Npc_SetTarget
 {
 };
 
