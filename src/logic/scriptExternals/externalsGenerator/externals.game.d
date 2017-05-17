@@ -152,6 +152,25 @@ FUNC void AI_Attack(VAR C_NPC Attacker)
 };
 
 FUNC void AI_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target, VAR func AIState)
+/// \brief      Start AI state if a character object can be seen (queued).
+/// \param      Character
+///                 Object reference to the origin character.
+/// \param      Target
+///                 Object reference to the target character.
+/// \param      AIState
+///                 AI state that is started for the \p Character
+///                 if the \p Target can be seen.
+/// \details    The message handler clears the message queue of the \p Character
+///             and immediately starts the \p AIState for the \p Character
+///             (without waiting for the current AI state to end)
+///             if the \p Character can see the \p Target.
+/// \details    The \p Character can see the \p Target if the distance is
+///             not greater than the \b C_NPC.senses_range of the \p Character,
+///             there are no opaque static world polys between the objects,
+///             and the angle to the \p Target is 90 degrees or less.
+/// \sa         Npc_CanSeeItem
+/// \sa         Npc_CanSeeNpc
+/// \sa         Npc_CanSeeNpcFreeLOS
 {
 };
 
@@ -753,17 +772,55 @@ FUNC BOOL Npc_AreWeStronger(VAR C_NPC Character, VAR C_NPC Target)
 	return FALSE;
 };
 
-FUNC BOOL Npc_CanSeeItem(VAR C_NPC Character, VAR C_Item Target)
+FUNC BOOL Npc_CanSeeItem(VAR C_NPC Origin, VAR C_Item Target)
+/// \brief      Checks if an item object can be seen (direct).
+/// \param      Origin
+///                 Object reference to the character.
+/// \param      Target
+///                 Object reference to the item.
+/// \return     Returns TRUE if the \p Target can be seen by the \p Origin.
+/// \details    The \p Origin can see the \p Target if the distance
+///             is not greater than the \b C_NPC.senses_range of the \p Origin,
+///             there are no opaque static world polys between the objects,
+///             and the angle to the \p Target is 90 degrees or less.
+/// \sa         AI_CanSeeNpc
+/// \sa         Npc_CanSeeNpc
+/// \sa         Npc_CanSeeNpcFreeLOS
 {
 	return FALSE;
 };
 
-FUNC BOOL Npc_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target)
+FUNC BOOL Npc_CanSeeNpc(VAR C_NPC Origin, VAR C_NPC Target)
+/// \brief      Checks if a character object can be seen (direct).
+/// \param      Origin
+///                 Object reference to the origin character.
+/// \param      Target
+///                 Object reference to the target character.
+/// \return     Returns TRUE if the \p Target can be seen by the \p Origin.
+/// \details    The \p Origin can see the \p Target if the distance
+///             is not greater than the \b C_NPC.senses_range of the \p Origin,
+///             there are no opaque static world polys between the objects,
+///             and the angle to the \p Target is 90 degrees or less.
+/// \sa         AI_CanSeeNpc
+/// \sa         Npc_CanSeeItem
+/// \sa         Npc_CanSeeNpcFreeLOS
 {
 	return FALSE;
 };
 
-FUNC BOOL Npc_CanSeeNpcFreeLOS(VAR C_NPC Character, VAR C_NPC Target)
+FUNC BOOL Npc_CanSeeNpcFreeLOS(VAR C_NPC Origin, VAR C_NPC Target)
+/// \brief      Checks if a character is in free line of sight (direct).
+/// \param      Origin
+///                 Object reference to the origin character.
+/// \param      Target
+///                 Object reference to the target character.
+/// \return     Returns TRUE if the \p Target is in free line of sight.
+/// \details    The \p Target is in free line of sight if the distance
+///             is not greater than the \b C_NPC.senses_range of the \p Origin,
+///             and there are no opaque static world polys between the objects.
+/// \sa         AI_CanSeeNpc
+/// \sa         Npc_CanSeeItem
+/// \sa         Npc_CanSeeNpc
 {
 	return FALSE;
 };
