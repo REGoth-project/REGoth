@@ -168,6 +168,9 @@ FUNC void AI_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target, VAR func AIState)
 ///             not greater than the \b C_NPC.senses_range of the \p Character,
 ///             there are no opaque static world polys between the objects,
 ///             and the angle to the \p Target is 90 degrees or less.
+/// \note       A \p Target that is hiding in a barrel cannot be seen
+///             (current interactive object is in state 1
+///             and the scheme name contains the substring "BARREL").
 /// \sa         Npc_CanSeeItem
 /// \sa         Npc_CanSeeNpc
 /// \sa         Npc_CanSeeNpcFreeLOS
@@ -801,6 +804,9 @@ FUNC BOOL Npc_CanSeeNpc(VAR C_NPC Origin, VAR C_NPC Target)
 ///             is not greater than the \b C_NPC.senses_range of the \p Origin,
 ///             there are no opaque static world polys between the objects,
 ///             and the angle to the \p Target is 90 degrees or less.
+/// \note       A \p Target that is hiding in a barrel cannot be seen
+///             (current interactive object is in state 1
+///             and the scheme name contains the substring "BARREL").
 /// \sa         AI_CanSeeNpc
 /// \sa         Npc_CanSeeItem
 /// \sa         Npc_CanSeeNpcFreeLOS
@@ -818,6 +824,9 @@ FUNC BOOL Npc_CanSeeNpcFreeLOS(VAR C_NPC Origin, VAR C_NPC Target)
 /// \details    The \p Target is in free line of sight if the distance
 ///             is not greater than the \b C_NPC.senses_range of the \p Origin,
 ///             and there are no opaque static world polys between the objects.
+/// \note       A \p Target that is hiding in a barrel cannot be seen
+///             (current interactive object is in state 1
+///             and the scheme name contains the substring "BARREL").
 /// \sa         AI_CanSeeNpc
 /// \sa         Npc_CanSeeItem
 /// \sa         Npc_CanSeeNpc
