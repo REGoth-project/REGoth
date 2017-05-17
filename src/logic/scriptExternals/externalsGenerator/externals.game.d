@@ -126,10 +126,12 @@ FUNC void AI_AskText(VAR C_NPC NonPlayer, VAR func OnYes, VAR func OnNo, VAR str
 };
 
 FUNC void AI_Attack(VAR C_NPC Attacker)
+/// \brief      Determine and queue the next fight action (direct).
 /// \param      Attacker
 ///                 Object reference to the character.
 /// \details    If the message queue for the \p Attacker is empty
 ///             (overlay messages are allowed/ignored)
+///             and the \p Attacker has an enemy, the fight AI is used to
 ///             determine and queue the next fight action for the \p Attacker.
 /// \details    Before determining the fight action, the game checks if
 ///             the \p Attacker is not swimming/diving and not in a weapon mode
