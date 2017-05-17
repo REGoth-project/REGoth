@@ -65,11 +65,63 @@ FUNC void AI_AlignToWP(VAR C_NPC Character)
 {
 };
 
-FUNC void AI_Ask(VAR C_NPC Character, VAR func OnYes, VAR func OnNo)
+FUNC void AI_Ask(VAR C_NPC NonPlayer, VAR func OnYes, VAR func OnNo)
+/// \brief      Wait for a player choice (queued).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      OnYes
+///                 Function that is called when the player selects the
+///                 first choice.
+/// \param      OnNo
+///                 Function that is called when the player selects the
+///                 second choice.
+/// \details    A choice dialog is displayed in the center of the screen
+///             when the player is holding down the ACTION key while
+///             this message is active and the \p NonPlayer is focused.
+///             The selection in the dialog is made by using the
+///             FORWARD key for the first choice ("Ja") or the
+///             BACKWARD key for the second choice ("Nein").
+/// \details    After the player selected the choice:
+///             the global instance variable \b SELF is set to \p NonPlayer,
+///             the global instance variable \b OTHER is set to the player,
+///             and the script function \p OnYes or \p OnNo is called.
+/// \note       Due to changes in the game controls, this feature is
+///             broken in G2 and the player is not able to select the choice
+///             (the first choice is immediately selected).
+/// \sa         AI_AskText
+/// \sa         AI_WaitForQuestion
 {
 };
 
-FUNC void AI_AskText(VAR C_NPC Character, VAR func OnYes, VAR func OnNo, VAR string TextYes, VAR string TextNo)
+FUNC void AI_AskText(VAR C_NPC NonPlayer, VAR func OnYes, VAR func OnNo, VAR string TextYes, VAR string TextNo)
+/// \brief      Wait for a player choice (queued).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      OnYes
+///                 Function that is called when the player selects the
+///                 first choice.
+/// \param      OnNo
+///                 Function that is called when the player selects the
+///                 second choice.
+/// \param      TextYes
+///                 String that is displayed for the first choice.
+/// \param      TextNo
+///                 String that is displayed for the second choice.
+/// \details    A choice dialog is displayed in the center of the screen
+///             when the player is holding down the ACTION key while
+///             this message is active and the \p NonPlayer is focused.
+///             The selection in the dialog is made by using the
+///             FORWARD key for the first choice or the
+///             BACKWARD key for the second choice.
+/// \details    After the player selected the choice:
+///             the global instance variable \b SELF is set to \p NonPlayer,
+///             the global instance variable \b OTHER is set to the player,
+///             and the script function \p OnYes or \p OnNo is called.
+/// \note       Due to changes in the game controls, this feature is
+///             broken in G2 and the player is not able to select the choice
+///             (the first choice is immediately selected).
+/// \sa         AI_Ask
+/// \sa         AI_WaitForQuestion
 {
 };
 
