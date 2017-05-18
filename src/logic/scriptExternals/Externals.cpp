@@ -357,8 +357,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         // Push the message
         selfvob.playerController->getEM().onMessage(msg);
-
-        vm.setReturn(0);
     });
 
     /*vm->registerExternalFunction("snd_getdisttosource", [=](Daedalus::DaedalusVM& vm){
