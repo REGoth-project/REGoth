@@ -216,6 +216,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
 }
 
 std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
+    ExcludeFrameTime exclude(*gameEngine);
     // Lock to number of savegames
     assert(index >= 0 && index < maxSlots());
 
@@ -254,6 +255,7 @@ int Engine::SavegameManager::maxSlots() {
 }
 
 void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegameName) {
+    ExcludeFrameTime exclude(*gameEngine);
     assert(index >= 0 && index < maxSlots());
 
     if (savegameName.empty())

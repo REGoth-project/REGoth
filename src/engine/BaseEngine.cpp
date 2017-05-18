@@ -40,6 +40,7 @@ BaseEngine::BaseEngine() : m_RootUIView(*this)
 
     m_GameEngineSpeedFactor = 1.0;
     m_Paused = false;
+    m_ExcludedFrameTime = 0;
 }
 
 BaseEngine::~BaseEngine()
@@ -297,3 +298,5 @@ void BaseEngine::setPaused(bool paused) {
         m_Paused = paused;
     }
 }
+
+size_t ExcludeFrameTime::m_ReferenceCounter = 0;

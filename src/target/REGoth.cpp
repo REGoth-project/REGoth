@@ -1005,10 +1005,16 @@ public:
             // Notify bgfx about framebuffer resize
             bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height);
         }
+        int64_t excludedFrameTime = m_pEngine->getExludedFrameTime();
+        m_pEngine->resetExludedFrameTime();
+        // TODO: toogle this in multiplayer mode or disable via ExcludeFrameTime's constructor arg
+        const bool isMultiplayer = false;
+        if (isMultiplayer)
+            excludedFrameTime = 0;
 
         int64_t now = bx::getHPCounter();
         static int64_t last = now;
-        const int64_t frameTime = now - last;
+        const int64_t frameTime = (now - last) - excludedFrameTime;
         last = now;
         const double freq = double(bx::getHPFrequency());
         const double toMs = 1000.0 / freq;
