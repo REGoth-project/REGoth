@@ -148,7 +148,7 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const 
 
 void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
-    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
+    m_Worlds.erase(std::remove(m_Worlds.begin(), m_Worlds.end(), world), m_Worlds.end());
 
     for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
     {
