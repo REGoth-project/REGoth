@@ -178,15 +178,46 @@ FUNC void AI_CanSeeNpc(VAR C_NPC Character, VAR C_NPC Target, VAR func AIState)
 };
 
 FUNC void AI_CombatReactToDamage(VAR C_NPC Character)
+/// \brief      Not implemented.
+/// \param      Character
+///                 Optional object reference to a character.
 /// \bug        The implementation leaves the \p Character on the stack.
 {
 };
 
-FUNC void AI_ContinueRoutine(VAR C_NPC Character)
+FUNC void AI_ContinueRoutine(VAR C_NPC NonPlayer)
+/// \brief      Reset character and start daily routine (queued).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \details    This function is a shortcut for:
+///             -# AI_StandUpQuick(NonPlayer);
+///             -# AI_StopLookAt(NonPlayer);
+///             -# AI_StopPointAt(NonPlayer);
+///             -# AI_RemoveWeapon(NonPlayer);
+///             -# AI_StartState(NonPlayer, 0, FALSE, "");
+///             .
+/// \note       In contrast to a AI_StartState call, the global instance
+///             variables OTHER and VICTIM are not saved and always NULL
+///             in the daily routine.
+/// \sa         AI_RemoveWeapon
+/// \sa         AI_StandUpQuick
+/// \sa         AI_StartState
+/// \sa         AI_StopLookAt
+/// \sa         AI_StopPointAt
 {
 };
 
-FUNC void AI_Defend(VAR C_NPC Character)
+FUNC void AI_Defend(VAR C_NPC Target)
+/// \brief      Start defending against the next melee attack (queued, overlay).
+/// \param      Target
+///                 Object reference to the character.
+/// \details    The message handler marks the \p Target as defending and waits
+///             until a defence parade is signaled.
+/// \details    If an attacker executes a forward or side attack
+///             and the enemy is marked as defending,
+///             a parade message is queued for the \p Target
+///             and the defence parade is signaled.
+/// \sa         AI_Attack
 {
 };
 
