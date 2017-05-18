@@ -32,7 +32,7 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
     m_Talking = false;
-    m_CurrentDialogMessage = nullptr;
+    m_Interaction.currentDialogMessage = nullptr;
     m_ProcessInfos = false;
 }
 
@@ -77,6 +77,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
     clearChoices();
 
+    auto& importantKnown = m_Interaction.importantKnown;
     // Acquire all information we should be able to see right now
     for(const auto& infoHandle : infos)
     {
@@ -153,9 +154,6 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    if(self == target)
-        0; // FIXME: Vatras right here
-
     LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
@@ -246,7 +244,7 @@ void DialogManager::performChoice(size_t choice)
     getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
 
-    if (m_Interaction.CurrentInfo.isValid())
+    if (m_Interaction.currentInfo.isValid())
     {
         // case: we are in a subdialog
         info.removeChoice(choice);
@@ -269,9 +267,9 @@ void DialogManager::performChoice(size_t choice)
 
     if (info.subChoices.empty())
     {
-        m_Interaction.CurrentInfo.invalidate();
+        m_Interaction.currentInfo.invalidate();
     } else {
-        m_Interaction.CurrentInfo = infoHandle;
+        m_Interaction.currentInfo = infoHandle;
     }
 
     if(m_ProcessInfos)
@@ -318,8 +316,8 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
 
 void DialogManager::endDialog()
 {
-    m_Interaction.CurrentInfo.invalidate();
-    importantKnown.clear();
+    m_Interaction.currentInfo.invalidate();
+    m_Interaction.importantKnown.clear();
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
     m_DialogActive = false;
@@ -389,10 +387,10 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    if (m_CurrentDialogMessage)
+    if (m_Interaction.currentDialogMessage)
     {
-        m_CurrentDialogMessage->canceled = true;
-        m_CurrentDialogMessage = nullptr;
+        m_Interaction.currentDialogMessage->canceled = true;
+        m_Interaction.currentDialogMessage = nullptr;
     }
 }
 
@@ -425,7 +423,7 @@ void DialogManager::flushChoices()
 
 void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
 {
-    auto infoHandle = m_Interaction.CurrentInfo;
+    auto infoHandle = m_Interaction.currentInfo;
     if (infoHandle.isValid())
     {
         // case: we are in a subdialog
@@ -485,5 +483,9 @@ void DialogManager::onInputAction(UI::EInputAction action) {
     } else if (isTalking() && action == UI::EInputAction::IA_Close) {
         cancelTalk();
     }
+}
+
+void DialogManager::setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message) {
+    m_Interaction.currentDialogMessage = message;
 }
 
