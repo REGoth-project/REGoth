@@ -234,15 +234,52 @@ FUNC void AI_Dodge(VAR C_NPC Character)
 ///             STRAFEL transition animation is started.
 /// \details    Else, if there is enough free space on the right, the current
 ///             STRAFER transition animation is started.
-/// \details    The message is only deleted if there is no free space
-///             available in the first run, or in later runs,
-///             if the animation is invalid or no longer active.
 /// \note       The animation "T_JUMPB" is hard-coded, it's not using the
 ///             current JUMPB transition animation ("T_<WeaponMode>JUMPB").
 {
 };
 
 FUNC void AI_DrawWeapon(VAR C_NPC Character)
+/// \brief      Draw an equipped weapon or enable fist mode (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler first checks that the \p Character is
+///             not swimming and is not already in a weapon mode.
+/// \details    Afterwards a transition into standing mode is requested
+///             (but walking is allowed)
+///             and the objects in both hand slots are dropped.
+/// \details    If the \p Character is currently running:
+///             - the weapon mode is selected (in this order):
+///               -# "MAG" if any spell or rune is equipped
+///               -# "FIST" if no melee weapon is equipped
+///               -# "DAG" if a melee weapon is equipped
+///                  that has the ITEM_DAG flag
+///               -# "1H" if a melee weapon is equipped
+///                  that has the ITEM_SWD or the ITEM_AXE flag
+///               -# "2H" if a melee weapon is equipped
+///                  that has the ITEM_2HD_SWD or the ITEM_2HD_AXE flag
+///               -# "BOW" if a ranged weapon is equipped
+///                  that has the ITEM_BOW flag
+///                  and ammunition is available
+///               -# "CBOW" if a ranged weapon is equipped
+///                  that has the ITEM_CROSSBOW flag
+///                  and ammunition is available
+///               .
+///             - the animation "T_MOVE_2_<WeaponMode>MOVE" is started
+///             .
+/// \details    Else, if the \p Character is currently not running:
+///             - the weapon mode is selected (see above,
+///               but starting with "FIST"
+///               and ending with "MAG")
+///             - the following animations are started:
+///               -# "T_RUN_2_<WeaponMode>"
+///               -# "T_<WeaponMode>_2_<WeaponMode>RUN"
+///               -# "S_<WeaponMode><WalkMode>"
+///                  (walk modes: "WALK", "RUN", "SNEAK")
+///               .
+///             .
+/// \note       The animations are expected to enable the weapon mode
+///             (with a "DEF_FIGHTMODE" animation event).
 {
 };
 
