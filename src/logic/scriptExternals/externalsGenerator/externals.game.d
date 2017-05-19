@@ -222,6 +222,23 @@ FUNC void AI_Defend(VAR C_NPC Target)
 };
 
 FUNC void AI_Dodge(VAR C_NPC Character)
+/// \brief      Stand and jump back or strafe (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler always requests a
+///             transition into standing mode (but walking is allowed).
+/// \details    If there is enough free space behind the \p Character and the
+///             animation "T_JUMPB" exists, the animation is started, followed
+///             by the current WALK state animation.
+/// \details    Else, if there is enough free space on the left, the current
+///             STRAFEL transition animation is started.
+/// \details    Else, if there is enough free space on the right, the current
+///             STRAFER transition animation is started.
+/// \details    The message is only deleted if there is no free space
+///             available in the first run, or in later runs,
+///             if the animation is invalid or no longer active.
+/// \note       The animation "T_JUMPB" is hard-coded, it's not using the
+///             current JUMPB transition animation ("T_<WeaponMode>JUMPB").
 {
 };
 
