@@ -284,6 +284,18 @@ FUNC void AI_DrawWeapon(VAR C_NPC Character)
 };
 
 FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
+/// \brief      Drop an item to the ground (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \param      ItemId
+///                 Symbol index of a C_Item instance
+///                 (global instance variable \b ITEM is also supported).
+/// \details    If an item with the \p ItemId is present in the inventory
+///             of the \p Character, it is unequipped (if it was active),
+///             removed from the inventory, and dropped to the ground.
+/// \bug        Two items are removed but only one item is dropped
+///             (one item is removed by this message handler
+///              and a second item in the drop message handler).
 {
 };
 
