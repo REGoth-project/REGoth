@@ -19,8 +19,6 @@ const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 {
-    m_DisableLogic = false;
-    m_GameEngineSpeedFactor = 1.0;
 }
 
 GameEngine::~GameEngine()
@@ -67,7 +65,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
 //    }
 
-    if(m_DisableLogic)
+    if(m_Paused)
     {
         getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
     } else

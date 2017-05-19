@@ -177,7 +177,7 @@ namespace Engine
 		/**
 		 * Pauses or continues the game. Depending on the current state
 		 */
-		void togglePaused() { setPaused(!m_DisableLogic); }
+		void togglePaused() { setPaused(!m_Paused); }
 
         void setQuickload(bool active) { m_Quickload = active; }
         bool getQuickload() { return m_Quickload; }
@@ -256,9 +256,9 @@ namespace Engine
 		float m_GameEngineSpeedFactor;
 
 		/**
-         * Debug only
+         * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
-		bool m_DisableLogic;
+		bool m_Paused;
 
         /**
          * Flag indicating whether the engine should load the quicksave slot after frame drawing.

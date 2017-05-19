@@ -37,6 +37,9 @@ BaseEngine::BaseEngine() : m_RootUIView(*this)
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
     m_Quickload = false;
+
+    m_GameEngineSpeedFactor = 1.0;
+    m_Paused = false;
 }
 
 BaseEngine::~BaseEngine()
@@ -148,7 +151,7 @@ Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const 
 
 void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
-    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
+    m_Worlds.erase(std::remove(m_Worlds.begin(), m_Worlds.end(), world), m_Worlds.end());
 
     for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
     {
@@ -158,6 +161,7 @@ void BaseEngine::removeWorld(Handle::WorldHandle world)
             break;
         }
     }
+    onWorldRemoved(world);
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -281,16 +285,15 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 }
 
 void BaseEngine::setPaused(bool paused) {
-    if (paused != m_DisableLogic)
+    if (paused != m_Paused)
     {
-        // status changed
-        if (paused)
+        if (m_MainWorld.isValid())
         {
-            m_MainWorld.get().getAudioWorld().pauseSounds();
-        } else
-        {
-            m_MainWorld.get().getAudioWorld().continueSounds();
+            if (paused)
+                m_MainWorld.get().getAudioWorld().pauseSounds();
+            else
+                m_MainWorld.get().getAudioWorld().continueSounds();
         }
-        m_DisableLogic = paused;
+        m_Paused = paused;
     }
 }
