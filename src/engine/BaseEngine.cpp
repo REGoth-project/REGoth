@@ -36,7 +36,6 @@ BaseEngine::BaseEngine() : m_RootUIView(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
-    m_Quickload = false;
 
     m_GameEngineSpeedFactor = 1.0;
     m_Paused = false;
@@ -296,6 +295,35 @@ void BaseEngine::setPaused(bool paused) {
                 m_MainWorld.get().getAudioWorld().continueSounds();
         }
         m_Paused = paused;
+    }
+}
+
+void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction) {
+    m_SaveGameActionQueue.push(saveGameAction);
+}
+
+void BaseEngine::processSaveGameActionQueue() {
+    while (!m_SaveGameActionQueue.empty())
+    {
+        SavegameManager::SaveGameAction action = m_SaveGameActionQueue.front();
+        switch (action.type)
+        {
+            case SavegameManager::Save:
+                if (!getMainWorld().get().getDialogManager().isDialogActive())
+                {
+                    // only save while not in Dialog
+                    Engine::SavegameManager::saveToSaveGameSlot(action.slot, action.saveName);
+                }
+                break;
+            case SavegameManager::Load:
+                {
+                    auto error = Engine::SavegameManager::loadSaveGameSlot(action.slot);
+                    if (!error.empty())
+                        LogWarn() << error;
+                }
+                break;
+        }
+        m_SaveGameActionQueue.pop();
     }
 }
 

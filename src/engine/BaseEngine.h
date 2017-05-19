@@ -4,6 +4,7 @@
 #include <vdfs/fileIndex.h>
 #include <ui/View.h>
 #include <bx/commandline.h>
+#include <logic/SavegameManager.h>
 #include "GameClock.h"
 
 namespace UI
@@ -179,12 +180,23 @@ namespace Engine
 		 */
 		void togglePaused() { setPaused(!m_Paused); }
 
-		void addToExludedFrameTime(int64_t elapsed) { m_ExcludedFrameTime += elapsed; };
+		/**
+		 * increase the time, which the current frame should not treat as elapsed
+		 */
+		void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
+
 		int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
 		void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
 
-        void setQuickload(bool active) { m_Quickload = active; }
-        bool getQuickload() { return m_Quickload; }
+		/**
+		 * Insert the given action at the end of the queue
+		 */
+		void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
+
+		/**
+		 * process all queued actions by FIFO
+		 */
+		void processSaveGameActionQueue();
 
 	protected:
 
@@ -265,10 +277,9 @@ namespace Engine
 		bool m_Paused;
 
         /**
-         * Flag indicating whether the engine should load the quicksave slot after frame drawing.
-         * This flag is introduced to guarantee a specific execution point (not when the binding fires)
+         * save/load action queue
          */
-		bool m_Quickload;
+		std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

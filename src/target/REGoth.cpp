@@ -561,17 +561,16 @@ public:
             if (!(index >= 0 && index < maxSlots)){
                 return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
-            auto error = SavegameManager::loadSaveGameSlot(index);
-            if (!error.empty()){
-                return error;
-            }
-            return "savegame successfully loaded!";
+            this->m_pEngine->queueSaveGameAction({SavegameManager::Load, index, ""});
+            return "loading savegame...";
         });
 
         console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: save <slotindex> [<savegamename>]";
+
+            using namespace Engine;
 
             int index = std::stoi(args[1]);
             int maxSlots = Engine::SavegameManager::maxSlots();
@@ -587,9 +586,9 @@ public:
                 saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
             }
 
-            Engine::SavegameManager::saveToSaveGameSlot(index, saveGameName);
+            this->m_pEngine->queueSaveGameAction({SavegameManager::Save, index, saveGameName});
 
-            return "World saved to slot: " + std::to_string(index);
+            return "Saving world to slot: " + std::to_string(index) + "...";
         });
 
         UI::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {
@@ -1110,17 +1109,7 @@ public:
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
-        if (m_pEngine->getQuickload())
-        {
-            m_pEngine->setQuickload(false);
-
-            if (!m_pEngine->getHud().isMenuActive() && !m_pEngine->getMainWorld().get().getDialogManager().isDialogActive())
-            {
-                auto error = Engine::SavegameManager::loadSaveGameSlot(0);
-                if (!error.empty())
-                    LogWarn() << error;
-            }
-        }
+        m_pEngine->processSaveGameActionQueue();
 
         return true;
 	}

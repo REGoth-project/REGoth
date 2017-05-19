@@ -2011,15 +2011,15 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
     {
-        if(triggered && !m_World.getEngine()->getHud().isMenuActive() && !m_World.getDialogManager().isDialogActive()){
-            Engine::SavegameManager::saveToSaveGameSlot(0, "");
+        if(triggered){
+            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Save, 0, ""});
         }
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
     {
         if(triggered){
-            m_World.getEngine()->setQuickload(true);
+            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Load, 0, ""});
         }
     });
 

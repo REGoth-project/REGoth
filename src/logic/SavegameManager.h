@@ -118,5 +118,18 @@ namespace Engine
         std::string gameSpecificSubFolderName();
 
         int maxSlots();
+
+        enum SaveGameActionType
+        {
+            Save,
+            Load
+        };
+
+        struct SaveGameAction
+        {
+            SaveGameActionType type;
+            int slot;
+            std::string saveName;
+        };
     }
 }
