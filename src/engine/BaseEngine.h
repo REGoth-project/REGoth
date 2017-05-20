@@ -87,10 +87,14 @@ namespace Engine
 		World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
 
         /**
-         *
-         * @return gameclock
+         * @return Gameclock
          */
         GameClock& getGameClock() { return m_GameClock; }
+
+        /**
+         * @return Console
+         */
+        UI::Console& getConsole() { return m_Console; }
 
         /**
          * @return Arguments passed to the engine
@@ -108,7 +112,7 @@ namespace Engine
 		 */
 		UI::Hud& getHud(){ return *m_pHUD; }
 
-                UI::zFontCache& getFontCache(){ return *m_pFontCache; }
+        UI::zFontCache& getFontCache(){ return *m_pFontCache; }
 
         Audio::AudioEngine &getAudioEngine() { return *m_AudioEngine; }
 
@@ -237,10 +241,15 @@ namespace Engine
 		 */
 		std::vector<Handle::WorldHandle> m_Worlds;
 
-		/**
-		 * ingame clock
-		 */
+        /**
+         * ingame clock
+         */
         GameClock m_GameClock;
+
+        /**
+         * ingame clock
+         */
+        UI::Console m_Console;
 
         /**
          * Arguments

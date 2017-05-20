@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <engine/BaseEngine.h>
 #include <GLFW/glfw3.h>
+#include <ui/Hud.h>
 
 using namespace UI;
 
@@ -19,11 +20,10 @@ namespace Keys
 };
 
 Console::Console(Engine::BaseEngine& e) :
-    m_BaseEngine(e),
-    m_ConsoleBox(e, *this)
+    m_BaseEngine(e)
 {
     m_HistoryIndex = 0;
-    setOpen(false);
+    m_Open = false;
     outputAdd(" ----------- REGoth Console -----------");
 }
 
@@ -32,23 +32,24 @@ Console::~Console() {
 
 void Console::onKeyDown(int glfwKey, int mods)
 {
+    auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();
     if(glfwKey == GLFW_KEY_PAGE_DOWN)
     {
-        m_ConsoleBox.increaseSelectionIndex(1);
+        consoleBox.increaseSelectionIndex(1);
     }
     if(glfwKey == GLFW_KEY_PAGE_UP)
     {
-        m_ConsoleBox.increaseSelectionIndex(-1);
+        consoleBox.increaseSelectionIndex(-1);
     }
     if(glfwKey == GLFW_KEY_HOME)
     {
-        m_ConsoleBox.setSelectionIndex(0);
+        consoleBox.setSelectionIndex(0);
     }
     if(glfwKey == GLFW_KEY_END)
     {
         if (!m_SuggestionsList.empty())
         {
-            m_ConsoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
+            consoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
         }
     }
     if(glfwKey == GLFW_KEY_UP)
@@ -83,10 +84,10 @@ void Console::onKeyDown(int glfwKey, int mods)
         }
     }else if(glfwKey == GLFW_KEY_ENTER)
     {
-        if (m_ConsoleBox.getSelectionIndex() != -1)
+        if (consoleBox.getSelectionIndex() != -1)
         {
             replaceSelectedToken();
-            m_ConsoleBox.setSelectionIndex(-1);
+            consoleBox.setSelectionIndex(-1);
         } else
         {
             submitCommand(m_TypedLine);
@@ -104,17 +105,17 @@ void Console::onKeyDown(int glfwKey, int mods)
             const auto& suggestions = m_SuggestionsList.back();
             if (suggestions.size() == 1)
             {
-                m_ConsoleBox.setSelectionIndex(0);
+                consoleBox.setSelectionIndex(0);
                 replaceSelectedToken();
             } else {
-                if (m_ConsoleBox.getSelectionIndex() == -1)
+                if (consoleBox.getSelectionIndex() == -1)
                 {
                     // nothing is selected -> select first element
-                    m_ConsoleBox.setSelectionIndex(0);
+                    consoleBox.setSelectionIndex(0);
                     if (mods & GLFW_MOD_SHIFT)
-                        m_ConsoleBox.increaseSelectionIndex(-1);
+                        consoleBox.increaseSelectionIndex(-1);
                 } else {
-                    m_ConsoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
+                    consoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
                 }
             }
         }
@@ -301,7 +302,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
 }
 
 void Console::invalidateSuggestions() {
-    m_ConsoleBox.setSelectionIndex(-1);
+    m_BaseEngine.getHud().getConsoleBox().setSelectionIndex(-1);
     m_SuggestionsList.clear();
 }
 
@@ -318,7 +319,7 @@ std::vector<std::string> Console::tokenized(const std::string &line) {
 void Console::replaceSelectedToken() {
     // default for now: only auto complete last token
     const auto& suggestions = m_SuggestionsList.back();
-    auto selectedSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
+    auto selectedSuggestion = suggestions.at(m_BaseEngine.getHud().getConsoleBox().getSelectionIndex());
     std::vector<std::string> tokens = tokenized(m_TypedLine);
     tokens.back() = selectedSuggestion->aliasList.at(0);
     std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
@@ -334,6 +335,12 @@ void Console::setTypedLine(const std::string &newLine, bool triggerSuggestions) 
     invalidateSuggestions();
     if (triggerSuggestions)
         generateSuggestions(m_TypedLine, false);
+}
+
+void Console::setOpen(bool open) {
+    m_Open = open;
+    if (!open)
+        invalidateSuggestions();
 }
 
 

@@ -338,7 +338,7 @@ public:
         fontSize = 23.0f;
 #endif
 
-        auto& console = m_pEngine->getHud().getConsole();
+        auto& console = m_pEngine->getConsole();
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
@@ -347,7 +347,7 @@ public:
             return "Toggled stats";
         });
 
-        console.registerCommand("hud", [&](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
 
@@ -515,12 +515,12 @@ public:
             m_pEngine->getMainWorld().get().getDialogManager().exportDialogManager(dialogMan);
 
             // Temporary save
-            m_pEngine->getHud().getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
+            m_pEngine->getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
 
             // Check if a savegame for this world exists
             if(Utils::fileExists(file + ".json"))
             {
-                m_pEngine->getHud().getConsole().submitCommand("load " + file);
+                m_pEngine->getConsole().submitCommand("load " + file);
             }else
             {
                 clearActions();
@@ -978,8 +978,8 @@ public:
             {
                 int mods = getModsTriggered()[i];
 
-                if(m_pEngine->getHud().getConsole().isOpen())
-                    m_pEngine->getHud().getConsole().onKeyDown(i, mods);
+                if(m_pEngine->getConsole().isOpen())
+                    m_pEngine->getConsole().onKeyDown(i, mods);
                 if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
@@ -990,7 +990,7 @@ public:
         // Pass text input from this frame
         m_pEngine->getHud().onTextInput(frameInputText);
 
-        bool disableBindings = m_pEngine->getHud().getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
+        bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
         if(!disableBindings)
             Engine::Input::fireBindings();
 
@@ -1038,10 +1038,7 @@ public:
 
         if(!m_NoHUD)
         {
-            uint16_t xOffset = 0;
-
-            if (m_pEngine->getHud().getConsole().isOpen())
-                xOffset = 100;
+            uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
             bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
             bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
         }
@@ -1063,45 +1060,46 @@ public:
         // Draw and process all UI-Views
         // Set render states.
 
-
-        if(!m_NoHUD)
         {
-            // TODO move this code into frameupdate? so gamespeed factor doesn't need to be applied here
+            auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
             float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
-            m_pEngine->getRootUIView().update(dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+            if(m_NoHUD)
+            {
+                // draw console even if HUD is disabled
+                m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
+            } else
+            {
+                m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
+            }
         }
 
 
+        // debug draw
+        {
+            ddSetTransform(nullptr);
+            ddDrawAxis(0.0f, 0.0f, 0.0f);
 
-        ddSetTransform(nullptr);
-        ddDrawAxis(0.0f, 0.0f, 0.0f);
+            ddPush();
+            ddSetColor(0xff00ff00);
+            ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
+            Aabb aabb =
+                    {
+                            {  -1.0f, -1.0f, -1.0f },
+                            { 1.0f, 1.0f, 1.0f },
+                    };
+            ddDraw(aabb);
 
-        ddPush();
-        ddSetColor(0xff00ff00);
-        ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
-        Aabb aabb =
-                {
-                        {  -1.0f, -1.0f, -1.0f },
-                        { 1.0f, 1.0f, 1.0f },
-                };
-        ddDraw(aabb);
+            ddSetTransform(nullptr);
+            ddSetColor(0xff0000ff);
+            ddMoveTo(0,0,0);
+            ddLineTo(10,0,0);
+            ddPop();
 
-        ddSetTransform(nullptr);
-        ddSetColor(0xff0000ff);
-        ddMoveTo(0,0,0);
-        ddLineTo(10,0,0);
-        ddPop();
-
-        ddEnd();
+            ddEnd();
+        }
 
         imguiEndFrame();
 
-        if(m_pEngine->getHud().getConsole().isOpen())
-        {
-            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
-            m_pEngine->getHud().getConsole().getConsoleBox().update(
-                    dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
-        }
         if (disableBindings){
             Engine::Input::clearTriggered();
         }

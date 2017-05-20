@@ -1427,7 +1427,7 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
             break;
 
         case EventMessages::StateMessage::EV_Wait:
-            message.waitTime -= static_cast<float>(m_World.getWorldInfo().m_LastFrameDeltaTime);
+            message.waitTime -= static_cast<float>(m_World.getEngine()->getGameClock().getLastDt());
             return message.waitTime < 0.0f;
             break;
 

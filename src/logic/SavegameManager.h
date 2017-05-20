@@ -129,7 +129,8 @@ namespace Engine
         {
             SaveGameActionType type;
             int slot;
-            std::string saveName;
+            // only used for Save-actions
+            std::string savegameName;
         };
     }
 }

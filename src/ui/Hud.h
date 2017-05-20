@@ -25,14 +25,13 @@ namespace UI
     class Menu_Settings;
     class Menu;
     class DialogBox;
+    class LoadingScreen;
 
     class Hud : public View
     {
     public:
         Hud(Engine::BaseEngine& e);
         ~Hud();
-
-
 
         /**
          * Updates/draws the UI-Views
@@ -74,14 +73,19 @@ namespace UI
         void onTextInput(const std::string& text);
 
         /**
-         * @return Games console
+         * @return Console-Box
          */
-        UI::Console& getConsole(){ return m_Console; }
+        UI::ConsoleBox& getConsoleBox(){ return *m_pConsoleBox; }
 
         /**
          * @return Dialog-box
          */
         DialogBox& getDialogBox(){ return *m_pDialogBox; }
+
+        /**
+         * LoadingScreen
+         */
+        LoadingScreen& getLoadingScreen(){ return *m_pLoadingScreen; }
 
         /**
          * Controls visibility of gameplay-hud
@@ -132,20 +136,8 @@ namespace UI
         BarView* m_pEnemyHealthBar;
         TextView* m_pClock;
         DialogBox* m_pDialogBox;
-
-        /**
-         * Console
-         */
-        UI::Console m_Console;
-
-        /**
-         * Menus
-         */
-        Menu_Status* m_pStatusMenu;
-        Menu_Main* m_pMainMenu;
-        Menu_Load* m_pMenuLoad;
-        Menu_Save* m_pMenuSave;
-        Menu_Settings* m_pMenuSettings;
+        LoadingScreen* m_pLoadingScreen;
+        ConsoleBox* m_pConsoleBox;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed

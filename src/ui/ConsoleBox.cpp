@@ -6,11 +6,9 @@
 #include "zFont.h"
 #include <ui/Console.h>
 
-UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e, UI::Console& console) :
-    View(e),
-    m_Console(console)
+UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e) :
+    View(e)
 {
-    m_Config.height = 10;
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
     m_CurrentlySelected = -1;
@@ -22,17 +20,16 @@ UI::ConsoleBox::~ConsoleBox()
 
 void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    m_IsHidden = !m_Console.isOpen();
+    m_IsHidden = !m_Engine.getConsole().isOpen();
     if (m_IsHidden)
         return;
+    View::update(dt, mstate, config);
 
     auto font = DEFAULT_FONT;
     auto fontSelected = DEFAULT_FONT_HI;
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
     if(!fnt)
         return;
-
-    View::update(dt, mstate, config);
 
     // 13 pixel extra space to left screen edge
     const int xDistanceToEdge = 13;
@@ -51,6 +48,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
     // -1, because we need space for the typed line
     const std::size_t maxNumConsoleHistoryLines = consoleSizeY / fnt->getFontHeight() - 1;
 
+    auto& console = m_Engine.getConsole();
     // Draw console
     {
         // Draw console background image
@@ -65,17 +63,17 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
         // draw console output + current line
         std::stringstream ss;
-        auto& outputList = m_Console.getOutputLines();
+        auto& outputList = console.getOutputLines();
         std::size_t numLines = std::min(outputList.size(), maxNumConsoleHistoryLines);
         std::vector<std::string> outputLines(numLines);
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
-        outputLines.push_back(m_Console.getTypedLine());
+        outputLines.push_back(console.getTypedLine());
         auto joined = Utils::join(outputLines.begin(), outputLines.end(), "\n");
         drawText(joined, xDistanceToEdge, consoleSizeY, A_BottomLeft, config, font);
     }
     // Draw suggestions
     {
-        const auto& suggestionsList = m_Console.getSuggestions();
+        const auto& suggestionsList = console.getSuggestions();
         // check if suggestions for last token are empty
         if (suggestionsList.empty() || suggestionsList.back().empty())
             return;
@@ -144,7 +142,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_SuggestionsBackgroundTexture);
 
         // find start of token which is currently auto-completed
-        std::string strBefore = m_Console.getTypedLine();
+        std::string strBefore = console.getTypedLine();
         if (!strBefore.empty() && !isspace(strBefore.back()))
         {
             auto lastSpaceIt = std::find(strBefore.rbegin(), strBefore.rend(), ' ');
@@ -184,7 +182,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 }
 
 void UI::ConsoleBox::increaseSelectionIndex(int amount) {
-    const auto& suggestionsList = m_Console.getSuggestions();
+    const auto& suggestionsList = m_Engine.getConsole().getSuggestions();
     // check if suggestions for last token are empty
     if (suggestionsList.empty() || suggestionsList.back().empty())
         return;

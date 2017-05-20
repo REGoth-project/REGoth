@@ -13,6 +13,11 @@ namespace Engine
         GameClock();
 
         /**
+         * @return the delta time of the last frame update
+         */
+        double getLastDt();
+
+        /**
          * sets the clock to the default settings of a new game
          */
         void resetNewGame();
@@ -117,5 +122,8 @@ namespace Engine
 
         // define an extra speedup for the ingame clock
         float m_ClockSpeedFactor;
+
+        // last known delta t
+        double m_LastFrameDeltaTime;
     };
 }

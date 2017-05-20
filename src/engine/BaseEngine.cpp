@@ -15,6 +15,7 @@
 #include <ui/Hud.h>
 #include <ui/zFont.h>
 #include <utils/cli.h>
+#include <ui/LoadingScreen.h>
 
 using namespace Engine;
 
@@ -32,7 +33,9 @@ namespace Flags
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
-BaseEngine::BaseEngine() : m_RootUIView(*this)
+BaseEngine::BaseEngine() :
+        m_RootUIView(*this),
+        m_Console(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
@@ -105,7 +108,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     getRootUIView().addChild(m_pHUD);
 }
 
-Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
+Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
 {
     std::string worldFile = _worldFile;
 
@@ -251,6 +254,9 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 
 Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
 {
+    // doesn't work yet since frame is not drawn
+    getHud().getLoadingScreen().setHidden(false);
+
     Engine::Input::clearActions(); // FIXME: This should be taken care of by the objects having something bound
 
     while(!m_WorldInstances.empty())
@@ -259,7 +265,9 @@ Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const st
         removeWorld(w);
     }
 
-    return addWorld(worldFile, savegame); 
+    auto worldHandle = addWorld(worldFile, savegame);
+    getHud().getLoadingScreen().setHidden(true);
+    return worldHandle;
 }
 
 void BaseEngine::setMainWorld(Handle::WorldHandle world)
@@ -312,7 +320,7 @@ void BaseEngine::processSaveGameActionQueue() {
                 if (!getMainWorld().get().getDialogManager().isDialogActive())
                 {
                     // only save while not in Dialog
-                    Engine::SavegameManager::saveToSaveGameSlot(action.slot, action.saveName);
+                    Engine::SavegameManager::saveToSaveGameSlot(action.slot, action.savegameName);
                 }
                 break;
             case SavegameManager::Load:

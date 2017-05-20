@@ -73,20 +73,6 @@ namespace World
     {
     public:
 
-        /**
-         * Information about the state of the world
-         */
-        struct WorldInfo
-        {
-            WorldInfo()
-            {
-                m_LastFrameDeltaTime = 0.0;
-            }
-
-            // Last deltatime-value we have gotten here
-            double m_LastFrameDeltaTime;
-		};
-
 		WorldInstance();
 		~WorldInstance();
 
@@ -234,11 +220,6 @@ namespace World
 		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
 
 		/**
-		 * @return Information about the state of the world
-		 */
-		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
-
-		/**
 		 * @return Map of freepoints
 		 */
 		std::vector<Handle::EntityHandle> getFreepoints(const std::string& tag);
@@ -279,6 +260,12 @@ namespace World
          * Imports a single vob from a json-object
          */
 		void importSingleVob(const json& j);
+
+    private:
+        /**
+         * copying a world is not allowed and results in a compile error
+         */
+        WorldInstance(const WorldInstance& other) = delete;
 
 	protected:
 
@@ -371,11 +358,6 @@ namespace World
 		 * This worlds print-screen manager
 		 */
 		UI::PrintScreenMessages* m_PrintScreenMessageView;
-
-		/**
-		 * Information about the state of the world
-		 */
-		WorldInfo m_WorldInfo;
 
 		/**
 		 * Pfx-cache

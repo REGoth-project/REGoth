@@ -130,13 +130,13 @@ namespace UI
         /**
          * @return Whether the console is currently shown
          */
-        bool isOpen(){ return !m_ConsoleBox.isHidden(); }
-        void setOpen(bool open){ m_ConsoleBox.setHidden(!open); }
+        bool isOpen(){ return m_Open; }
+        void setOpen(bool open);
+        void toggleOpen(){ setOpen(!isOpen()); }
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
         const std::vector<std::vector<UI::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
-        ConsoleBox& getConsoleBox() { return m_ConsoleBox; }
 
     private:
 
@@ -180,13 +180,12 @@ namespace UI
          */
         std::string m_TypedLine;
 
-        Engine::BaseEngine& m_BaseEngine;
-
         /**
-         * console window
+         * Console active
          */
-        UI::ConsoleBox m_ConsoleBox;
+        bool m_Open;
 
+        Engine::BaseEngine& m_BaseEngine;
     };
 }
 

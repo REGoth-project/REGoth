@@ -490,10 +490,6 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
-    // Set frametime in worldinfo
-    m_WorldInfo.m_LastFrameDeltaTime = deltaTime;
-    m_pEngine->getGameClock().update(deltaTime);
-
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
 

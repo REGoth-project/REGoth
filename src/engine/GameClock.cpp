@@ -9,6 +9,7 @@ GameClock::GameClock()
 {
     m_ClockSpeedFactor = 1.0;
     m_totalTimeInDays = 0;
+    m_LastFrameDeltaTime = 0;
 
     // day/clock init only necessary for test start world (not started via main menu)
     resetNewGame();
@@ -25,6 +26,7 @@ void GameClock::setDay(int newDay) {
 
 void GameClock::update(double deltaRealTimeSeconds)
 {
+    m_LastFrameDeltaTime = deltaRealTimeSeconds;
     m_totalTimeInDays += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
 }
 
@@ -93,4 +95,8 @@ void GameClock::resetNewGame() {
     m_totalTimeInDays = 0;
     setDay(0);
     setTimeOfDay(8, 0);
+}
+
+double GameClock::getLastDt() {
+    return m_LastFrameDeltaTime;
 }
