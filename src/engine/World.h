@@ -20,6 +20,7 @@
 #include <json.hpp>
 #include <logic/PfxManager.h>
 #include "BspTree.h"
+#include <logic/CameraController.h>
 
 using json = nlohmann::json;
 
@@ -73,18 +74,46 @@ namespace World
     {
     public:
 
-		WorldInstance();
+		WorldInstance(Engine::BaseEngine& engine);
 		~WorldInstance();
 
 		/**
 		* @param zen file
 		*/
-		bool init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());
+		bool init(const std::string& zen, const json& j = json());
 
         /**
          * Creates an entity with the given components and returns its handle
          */
         Components::ComponentAllocator::Handle addEntity(Components::ComponentMask components = 0);
+
+        /**
+         * creates camera and returns it
+         */
+        Handle::EntityHandle createCamera();
+
+        /**
+         * @return this world's camera
+         */
+        Handle::EntityHandle getCamera();
+
+        /**
+         * @return The given component of the world's camera
+         */
+        template<typename T>
+        T& getCameraComp()
+        {
+            return getComponentAllocator().getElement<T>(m_Camera);
+        }
+
+        /**
+         * @return Camera-Controller of the camera
+         */
+        Logic::CameraController* getCameraController()
+        {
+            Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
+            return dynamic_cast<Logic::CameraController*>(ptr);
+        }
 
 		/**
 		 * Removes the entitiy with the given handle
@@ -363,5 +392,10 @@ namespace World
 		 * Pfx-cache
 		 */
 		Logic::PfxManager m_PfxManager;
+
+		/**
+         * Players camera entity
+         */
+		Handle::EntityHandle m_Camera;
     };
 }

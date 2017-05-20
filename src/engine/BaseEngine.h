@@ -5,6 +5,7 @@
 #include <ui/View.h>
 #include <bx/commandline.h>
 #include <logic/SavegameManager.h>
+#include <future>
 #include "GameClock.h"
 
 namespace UI
@@ -49,11 +50,21 @@ namespace Engine
 		virtual void initEngine(int argc, char** argv);
 
 		/**
+         * @return Basic gametype this is. Needed for sky configuration, for example
+         */
+		Daedalus::GameType getBasicGameType() { return m_BasicGameType; };
+
+		/**
+         * @return Basic gametype this is. Needed for sky configuration, for example
+         */
+		void setBasicGameType(Daedalus::GameType type) { m_BasicGameType = type; }
+
+		/**
 		 * @brief Adds a world based of the given file
 		 * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
 		 *		  or on disk (TODO)
 		 */
-		Handle::WorldHandle  addWorld(const std::string& worldFile, const std::string& savegame = "");
+		Handle::WorldHandle addWorld(const std::string& worldFile, const std::string& savegame = "");
 
         /**
          * Removes the current world and loads a new one
@@ -62,11 +73,16 @@ namespace Engine
          */
         Handle::WorldHandle loadWorld(const std::string& worldFile, const std::string& savegame = "");
 
-		/**
-		 * Removes a world and everything inside
-		 * @param world World to remove
-		 */
-		void removeWorld(Handle::WorldHandle world);
+        /**
+         * Removes a world and everything inside
+         * @param world World to remove
+         */
+        void removeWorld(Handle::WorldHandle world);
+
+        /**
+         * Removes all worlds and everything inside
+         */
+        void removeAllWorlds();
 
 		/**
 		 * @brief Frame update // TODO: Remove width and height
@@ -132,11 +148,11 @@ namespace Engine
 		 */
 		Textures::TextureAllocator& getEngineTextureAlloc(){ return m_EngineTextureAlloc; }
 
-        /**
+		/**
          * Sets the currently active world. Player and camera will be taken from this world.
          * @param world
          */
-        void setMainWorld(Handle::WorldHandle world);
+		void setMainWorld(Handle::WorldHandle world);
 
         /**
          * @return data-access to the main world
@@ -200,7 +216,9 @@ namespace Engine
 		/**
 		 * process all queued actions by FIFO
 		 */
-		void processSaveGameActionQueue();
+        void processSaveGameActionQueue();
+
+        void processAsyncActionQueue();
 
 	protected:
 
@@ -221,10 +239,15 @@ namespace Engine
 		 */
 		virtual void loadArchives();
 
+        /**
+         *
+         */
+        Daedalus::GameType m_BasicGameType;
+
 		/**
 		 * Currently active world instances
 		 */
-		std::list<World::WorldInstance> m_WorldInstances;
+		std::list<std::unique_ptr<World::WorldInstance>> m_WorldInstances;
 
         /**
          * Main world of this engine-instance
@@ -289,6 +312,17 @@ namespace Engine
          * save/load action queue
          */
 		std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
+        struct AsyncAction
+        {
+            AsyncAction(std::shared_future<void> job) :
+                job(job)
+            {
+            }
+            std::function<void(BaseEngine& engine)> prolog;
+            std::shared_future<void> job;
+            std::function<void(BaseEngine& engine)> epilog;
+        };
+		std::queue<AsyncAction> m_AsyncActionQueue;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

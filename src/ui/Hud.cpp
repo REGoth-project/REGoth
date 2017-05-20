@@ -159,7 +159,6 @@ void UI::Hud::onTextInput(const std::string& text)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-    auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
     if (m_Engine.getConsole().isOpen())
     {
         if (action == IA_Close || action == IA_ToggleConsole)
@@ -172,9 +171,9 @@ void UI::Hud::onInputAction(UI::EInputAction action)
         if (close)
             popMenu();
         return;
-    }else if(dialogManager.isDialogActive())
+    }else if(m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {
-        dialogManager.onInputAction(action);
+        m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
         return;
     }
 

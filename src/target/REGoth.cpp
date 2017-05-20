@@ -35,6 +35,7 @@
 #include <logic/SavegameManager.h>
 #include <utils/cli.h>
 #include <utils/zTools.h>
+#include <ui/Menu_Main.h>
 
 using json = nlohmann::json;
 
@@ -313,17 +314,12 @@ public:
 
 		m_pEngine->initEngine(_argc, _argv);
 
-
         showSplash();
 
-        // Add startworld
-        Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
-        if (!w.isValid())
-        {
-           LogError() << "Failed to add world, world handle is invalid!";
-           Platform::setQuit(true);
-           return;
-        }
+        auto& menuMain = m_pEngine->getHud().pushMenu<UI::Menu_Main>();
+        auto gameType = menuMain.determineGameType();
+        m_pEngine->setBasicGameType(gameType);
+
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
@@ -363,7 +359,7 @@ public:
 
             int idx = std::stoi(args[1]);
 
-            m_pEngine->getMainCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
+            m_pEngine->getMainWorld().get().getCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
 
             return "Cameramode changed to " + std::to_string(idx);
         });
@@ -372,6 +368,22 @@ public:
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
+            static std::vector<Handle::WorldHandle> worlds;
+            static int i = 0;
+            if (i == 0)
+            {
+                worlds.push_back(m_pEngine->getMainWorld());
+                worlds.push_back(m_pEngine->loadWorld("oldmine.zen"));
+            }
+            {
+                std::swap(worlds.front(), worlds.back());
+                m_pEngine->setMainWorld(worlds.front());
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
+                                                                        m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+                Engine::Input::clearActions();
+                player.playerController->setupKeyBindings();
+            }
+            i++;
             return "Hello World!";
         });
 
@@ -928,7 +940,8 @@ public:
     int shutdown() override
     {
 		// remove (destroy) the world so that it shuts down properly
-        m_pEngine->removeWorld(m_pEngine->getMainWorld());
+        m_pEngine->removeAllWorlds();
+        m_pEngine->setMainWorld(Handle::WorldHandle::makeInvalidHandle());
 
         delete m_pEngine;
 

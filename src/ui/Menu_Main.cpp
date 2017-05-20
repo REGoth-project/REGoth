@@ -38,9 +38,18 @@ void Menu_Main::onCustomAction(const std::string& action)
         getHud().popMenu();
 
         LogInfo() << "Starting new game...";
-        m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
-        // reset the clock to the default starting time
-        m_Engine.getGameClock().resetNewGame();
+
+        m_Engine.removeAllWorlds();
+        Handle::WorldHandle worldHandle = m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
+        if (worldHandle.isValid())
+        {
+            m_Engine.setMainWorld(worldHandle);
+            // reset the clock to the default starting time
+            m_Engine.getGameClock().resetNewGame();
+        } else
+        {
+            LogError() << "Failed to add given startup world, world handle is invalid!";
+        }
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
@@ -55,4 +64,9 @@ void Menu_Main::onCustomAction(const std::string& action)
     {
         Engine::Platform::setQuit(true);
     }
+}
+
+Daedalus::GameType Menu_Main::determineGameType() {
+    bool isGothic2 = m_pVM->getDATFile().hasSymbolName("C_Menu_Item.hideOnValue");
+    return isGothic2 ? Daedalus::GameType::GT_Gothic2 : Daedalus::GameType::GT_Gothic1;
 }

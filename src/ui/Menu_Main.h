@@ -29,6 +29,10 @@ namespace UI
          */
         static Menu_Main* create(Engine::BaseEngine& e);
 
+        /**
+         * @return the gametype of the Menu's VM (based on the existence of Gothic 2 specific symbols)
+         */
+        Daedalus::GameType determineGameType();
 
         virtual void onCustomAction(const std::string& action) override;
     protected:

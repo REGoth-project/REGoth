@@ -25,8 +25,9 @@
 
 using namespace World;
 
-WorldInstance::WorldInstance()
-	: m_WorldMesh(*this),
+WorldInstance::WorldInstance(Engine::BaseEngine& engine)
+	: m_pEngine(&engine),
+      m_WorldMesh(*this),
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
       m_Sky(*this),
@@ -48,10 +49,10 @@ WorldInstance::~WorldInstance()
     delete m_AudioWorld;
 }
 
-bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
+bool WorldInstance::init(const std::string& zen, const json& j)
 {
-    m_pEngine = &engine;
     m_ZenFile = zen;
+    Engine::BaseEngine& engine = *m_pEngine;
 
     m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
@@ -679,22 +680,7 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
 
 Daedalus::GameType WorldInstance::getBasicGameType()
 {
-    using Daedalus::GameType;
-    std::map<std::string, GameType> m = {{"newworld.zen", GameType::GT_Gothic2},
-                                          {"oldworld.zen", GameType::GT_Gothic2},
-                                          {"addonworld.zen", GameType::GT_Gothic2},
-                                          {"world.zen", GameType::GT_Gothic1}};
-
-    std::string lower;
-    std::transform(m_ZenFile.begin(), m_ZenFile.end(), std::back_inserter(lower), ::tolower);
-
-    if(m.find(lower) != m.end())
-        return m[lower];
-
-    LogInfo() << "ZEN unknown, defaulting to Gothic 2 skycolors";
-
-    // Default to gothic 2
-    return GameType::GT_Gothic2;
+    return m_pEngine->getBasicGameType();
 }
 
 void WorldInstance::exportWorld(json& j)
@@ -819,6 +805,34 @@ void WorldInstance::importVobs(const json& j)
             importSingleVob(vob);
         }
     }
+}
+
+Handle::EntityHandle WorldInstance::createCamera() {
+    // Add player-camera
+    m_Camera = addEntity(Components::PositionComponent::MASK);
+
+    Math::Matrix lookAt = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0));
+    getCameraComp<Components::PositionComponent>().m_WorldMatrix = lookAt.Invert();
+
+    getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation(Math::float3(0.0f, 50.0f, 50.0f));
+
+    Components::LogicComponent& logic = Components::Actions::initComponent<Components::LogicComponent>(
+            getComponentAllocator(),
+            m_Camera);
+
+    Logic::CameraController* cam = new Logic::CameraController(*this, m_Camera);
+    logic.m_pLogicController = cam;
+
+    LogInfo() << "Setting camera mode to third-person";
+    cam->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+    //cam->getCameraSettings().freeCameraSettings.moveSpeed = 5.0f;
+    //cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
+
+    return m_Camera;
+}
+
+Handle::EntityHandle WorldInstance::getCamera() {
+    return m_Camera;
 }
 
 

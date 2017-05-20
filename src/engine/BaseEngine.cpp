@@ -40,6 +40,7 @@ BaseEngine::BaseEngine() :
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
 
+    m_BasicGameType = Daedalus::GameType::GT_Gothic2;
     m_GameEngineSpeedFactor = 1.0;
     m_Paused = false;
     m_ExcludedFrameTime = 0;
@@ -112,10 +113,8 @@ Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const s
 {
     std::string worldFile = _worldFile;
 
-    m_WorldInstances.emplace_back();
-
-	World::WorldInstance& world = m_WorldInstances.back();
-	onWorldCreated(world.getMyHandle());
+    std::unique_ptr<World::WorldInstance> pWorldInstance = std::make_unique<World::WorldInstance>(*this);
+	World::WorldInstance& world = *pWorldInstance;
 
     // Try to load a savegame
     json savegameData;
@@ -125,7 +124,7 @@ Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const s
         std::stringstream saveData;
         saveData << f.rdbuf();
 
-        savegameData = json::parse(saveData);
+        savegameData = json::parse(saveData); // expensive operation
         worldFile = savegameData["zenfile"];
     }
 
@@ -140,13 +139,13 @@ Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const s
             return Handle::WorldHandle::makeInvalidHandle();
         }
     }
-
-    if (!world.init(*this, worldFile, savegameData))
+    if (!world.init(worldFile, savegameData)) // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
         return Handle::WorldHandle::makeInvalidHandle();
     }
-
+    onWorldCreated(world.getMyHandle());
+    m_WorldInstances.push_back(std::move(pWorldInstance));
 	m_Worlds.push_back(world.getMyHandle());
 
 	return world.getMyHandle();
@@ -158,7 +157,7 @@ void BaseEngine::removeWorld(Handle::WorldHandle world)
 
     for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
     {
-        if(&(*it) == &world.get())
+        if(it->get() == &world.get())
         {
             m_WorldInstances.erase(it);
             break;
@@ -251,30 +250,16 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
     return m_Args;
 }
 
-
 Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
 {
-    // doesn't work yet since frame is not drawn
-    getHud().getLoadingScreen().setHidden(false);
-
     Engine::Input::clearActions(); // FIXME: This should be taken care of by the objects having something bound
-
-    while(!m_WorldInstances.empty())
-    {
-        Handle::WorldHandle w = m_Worlds.front();
-        removeWorld(w);
-    }
-
-    auto worldHandle = addWorld(worldFile, savegame);
-    getHud().getLoadingScreen().setHidden(true);
-    return worldHandle;
+    return addWorld(worldFile, savegame);
 }
 
 void BaseEngine::setMainWorld(Handle::WorldHandle world)
 {
     m_MainWorld = world;
 }
-
 
 bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 {
@@ -333,6 +318,37 @@ void BaseEngine::processSaveGameActionQueue() {
         }
         m_SaveGameActionQueue.pop();
     }
+}
+
+void BaseEngine::processAsyncActionQueue()
+{
+    while (!m_AsyncActionQueue.empty())
+    {
+        auto& action = m_AsyncActionQueue.front();
+        if (action.prolog)
+        {
+            action.prolog(*this);
+            action.prolog = nullptr;
+        }
+        bool running = action.job.valid() && action.job.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready;
+        if (running)
+        {
+            return;
+        } else
+        {
+            action.epilog(*this);
+            m_AsyncActionQueue.pop();
+        }
+    }
+}
+
+void BaseEngine::removeAllWorlds() {
+    while(!m_WorldInstances.empty())
+    {
+        Handle::WorldHandle w = m_Worlds.front();
+        removeWorld(w);
+    }
+    setMainWorld(Handle::WorldHandle::makeInvalidHandle());
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

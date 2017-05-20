@@ -237,13 +237,18 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
         return "Target world-file invalid: " + worldPath;
     }
 
-    gameEngine->loadWorld(info.world + ".zen", worldPath);
-    gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
+    gameEngine->removeAllWorlds();
+    Handle::WorldHandle worldHandle = gameEngine->loadWorld(info.world + ".zen", worldPath);
+    if (worldHandle.isValid())
+    {
+        gameEngine->setMainWorld(worldHandle);
+        gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
+    }
     return "";
 }
 
 int Engine::SavegameManager::maxSlots() {
-    switch(gameEngine->getMainWorld().get().getBasicGameType())
+    switch(gameEngine->getBasicGameType())
     {
         case Daedalus::GameType::GT_Gothic1:
             return G1_MAX_SLOTS;
@@ -281,8 +286,7 @@ void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegame
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {
-    // FIXME can't get gameType from World if no world is loaded (game should start with the menu)
-    if (gameEngine->getMainWorld().get().getBasicGameType() == Daedalus::GameType::GT_Gothic1)
+    if (gameEngine->getBasicGameType() == Daedalus::GameType::GT_Gothic1)
         return  "Gothic";
     else
         return  "Gothic 2";

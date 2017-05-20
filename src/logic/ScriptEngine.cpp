@@ -40,7 +40,7 @@ bool ScriptEngine::loadDAT(const std::string& file)
     // Register externals
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
-    Daedalus::registerGothicEngineClasses(*m_pVM, m_World.getBasicGameType());
+    Daedalus::registerGothicEngineClasses(*m_pVM);
     Logic::ScriptExternals::registerEngineExternals(m_World, m_pVM, verbose);
 
     // Register our externals
@@ -175,12 +175,6 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
 
         }
     }
-
-    LogInfo() << "Setting camera mode to third-person";
-
-    Engine::GameEngine* e = reinterpret_cast<Engine::GameEngine*>(m_World.getEngine());
-    //e->getMainCameraController()->setTransforms(m_World.getWaynet().waypoints[startpoints[0]].position);
-    e->getMainCameraController()->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)
