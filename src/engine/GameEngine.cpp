@@ -97,7 +97,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     if (NULL != hmd && 0 != (hmd->flags & BGFX_HMD_RENDERING))
     {
         float view[16];
-        bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation().v);
+        if (getMainWorld().isValid())
+            bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation().v);
         bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
 
         // Set view 0 default viewport.
@@ -128,7 +129,6 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         m_DefaultRenderSystem.getConfig().state.viewWidth = width;
         m_DefaultRenderSystem.getConfig().state.viewHeight = height;
     }
-
 
 
     bgfx::touch(0);

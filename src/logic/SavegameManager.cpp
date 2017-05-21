@@ -13,6 +13,11 @@ using namespace Engine;
  */
 Engine::GameEngine* gameEngine;
 
+/**
+ * last slot we loaded a world from, get's invalidated on "start new game"
+ */
+int currentSlotIndex = -1;
+
 // Enures that all folders to save into the given savegame-slot exist
 void ensureSavegameFolders(int idx)
 {
@@ -140,48 +145,44 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
     return o;
 }
 
+bool SavegameManager::writePlayer(int idx, const std::string& playerName, const std::string& data)
+{
+    return writeFileInSlot(idx, playerName + ".json", data);
+}
+
+std::string SavegameManager::readPlayer(int idx, const std::string& playerName)
+{
+    return SavegameManager::readFileInSlot(idx, playerName + ".json");
+}
+
 bool SavegameManager::writeWorld(int idx, const std::string& worldName, const std::string& data)
 {
-    std::string file = buildSavegamePath(idx) + "/world_" + worldName + ".json";
-
-    ensureSavegameFolders(idx);
-    
-    LogInfo() << "Writing world-file: " << file;
-
-    std::ofstream f(file);
-
-    if(!f.is_open())
-    {
-        LogWarn() << "Failed to save data! Could not open file: " + file; 
-        return false;
-    }
-
-    f << data;
-
-    return true;
+    return writeFileInSlot(idx, "world_" + worldName + ".json", data);
 }
 
 std::string SavegameManager::readWorld(int idx, const std::string& worldName)
 {
-    std::string file = buildSavegamePath(idx) + "/world_" + worldName + ".json";
-
-    if(!Utils::getFileSize(file))
-        return ""; // Not found or empty
-
-    LogInfo() << "Reading world-file: " << file;
-    return Utils::readFileContents(file);
+    return SavegameManager::readFileInSlot(idx,  "world_" + worldName + ".json");
 }
         
 std::string SavegameManager::buildWorldPath(int idx, const std::string& worldName)
 {
-   return buildSavegamePath(idx) + "/world_" + worldName + ".json"; 
+   return buildSavegamePath(idx) + "/world_" + worldName + ".json";
 }
 
-bool Engine::SavegameManager::init(Engine::GameEngine& engine)
+void Engine::SavegameManager::init(Engine::GameEngine& engine)
 {
     gameEngine = &engine;
+    invalidateCurrentSlotIndex();
+}
 
-    return true;
+void Engine::SavegameManager::invalidateCurrentSlotIndex()
+{
+    currentSlotIndex = -1;
+}
+
+int ::Engine::SavegameManager::getCurrentSlotIndex() {
+    return currentSlotIndex;
 }
 
 std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailableSavegames()
@@ -242,6 +243,8 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     if (worldHandle.isValid())
     {
         gameEngine->setMainWorld(worldHandle);
+        json player = json::parse(readPlayer(index, "player"));
+        gameEngine->getMainWorld().get().importSingleVob(player);
         gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
     }
     return "";
@@ -270,19 +273,26 @@ void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegame
     // Clean data from old savegame, so we don't load into worlds we haven't been to yet
     Engine::SavegameManager::clearSavegame(index);
 
+    World::WorldInstance& world = gameEngine->getMainWorld().get();
     // Write information about the current game-state
     Engine::SavegameManager::SavegameInfo info;
     info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
     info.name = savegameName;
-    info.world = Utils::stripExtension(gameEngine->getMainWorld().get().getZenFile());
+    info.world = Utils::stripExtension(world.getZenFile());
     info.timePlayed = gameEngine->getGameClock().getTotalSeconds();
     Engine::SavegameManager::writeSavegameInfo(index, info);
 
-    json j;
-    gameEngine->getMainWorld().get().exportWorld(j);
+    // remove all players from this world
+    json playerJson = world.exportAndRemoveNPC(world.getScriptEngine().getPlayerEntity());
+    Engine::SavegameManager::writePlayer(index, "player", Utils::iso_8859_1_to_utf8(playerJson.dump()));
 
-    // Save
-    Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(j.dump(4)));
+    // save world
+    json mainWorldjson;
+    world.exportWorld(mainWorldjson);
+    Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(mainWorldjson.dump(4)));
+
+    // import player again
+    world.importSingleVob(playerJson);
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {
@@ -290,5 +300,33 @@ std::string Engine::SavegameManager::gameSpecificSubFolderName() {
         return  "Gothic";
     else
         return  "Gothic 2";
+}
+
+std::string Engine::SavegameManager::readFileInSlot(int idx, const std::string &relativePath) {
+    std::string file = buildSavegamePath(idx) + "/" + relativePath;
+
+    if(!Utils::getFileSize(file))
+        return ""; // Not found or empty
+
+    LogInfo() << "Reading save-file: " << file;
+    return Utils::readFileContents(file);
+}
+
+bool Engine::SavegameManager::writeFileInSlot(int idx, const std::string& relativePath, const std::string& data) {
+    std::string file = buildSavegamePath(idx) + "/" + relativePath;
+    ensureSavegameFolders(idx);
+
+    LogInfo() << "Writing save-file: " << file;
+
+    std::ofstream f(file);
+    if(!f.is_open())
+    {
+        LogWarn() << "Failed to save data! Could not open file: " + file;
+        return false;
+    }
+
+    f << data;
+
+    return true;
 }
 

@@ -16,6 +16,8 @@
 #include <ui/zFont.h>
 #include <utils/cli.h>
 #include <ui/LoadingScreen.h>
+#include <components/VobClasses.h>
+#include <logic/PlayerController.h>
 
 using namespace Engine;
 
@@ -153,6 +155,9 @@ Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const s
 
 void BaseEngine::removeWorld(Handle::WorldHandle world)
 {
+    if (m_MainWorld.isValid() && m_MainWorld == world)
+        m_MainWorld.invalidate();
+
     m_Worlds.erase(std::remove(m_Worlds.begin(), m_Worlds.end(), world), m_Worlds.end());
 
     for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
@@ -252,7 +257,6 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
 
 Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
 {
-    Engine::Input::clearActions(); // FIXME: This should be taken care of by the objects having something bound
     return addWorld(worldFile, savegame);
 }
 
@@ -313,6 +317,26 @@ void BaseEngine::processSaveGameActionQueue() {
                     auto error = Engine::SavegameManager::loadSaveGameSlot(action.slot);
                     if (!error.empty())
                         LogWarn() << error;
+                }
+                break;
+            case SavegameManager::SwitchLevel:
+                {
+                    auto& oldWorld = getMainWorld().get();
+                    auto exportedPlayer = oldWorld.exportAndRemoveNPC(oldWorld.getScriptEngine().getPlayerEntity());
+                    removeWorld(getMainWorld());
+                    auto newWorld = addWorld(action.savegameName);
+                    setMainWorld(newWorld);
+                    auto playerNew = newWorld.get().importSingleVob(exportedPlayer);
+                    // TODO find out start position after level change
+                    // TODO move this code out of the BaseEngine
+                    std::vector<size_t> startpoints = newWorld.get().findStartPoints();
+                    if (!startpoints.empty())
+                    {
+                        auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
+                        playerVob.playerController->teleportToWaypoint(startpoints.front());
+                        std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
+                        LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
+                    }
                 }
                 break;
         }

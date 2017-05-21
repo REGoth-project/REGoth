@@ -47,6 +47,7 @@ bool ScriptEngine::loadDAT(const std::string& file)
     Daedalus::GameState::DaedalusGameState::GameExternals ext;
     ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
     ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
+    ext.wld_removenpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCRemoved(npc); };
     ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onInventoryItemInserted(item, npc); };
 
     m_pVM->getGameState().setGameExternals(ext);
@@ -154,27 +155,6 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
         VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
                                 "WP_INTRO_FALL3");
     }
-
-    LogInfo() << "Creating player";
-
-    // Create player, if not already present
-    Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
-    if(firstStart || !hplayer.isValid())
-    {
-        std::vector<size_t> startpoints = m_World.findStartPoints();
-
-        if (!startpoints.empty())
-        {
-            std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
-
-            LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
-
-            m_PlayerEntity = VobTypes::Wld_InsertNpc(m_World, "PC_HERO",
-                                                     startpoint); // FIXME: Read startpoint at levelchange
-
-
-        }
-    }
 }
 
 void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint)
@@ -184,7 +164,7 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
     // Create the NPC-vob
     Handle::EntityHandle e = VobTypes::initNPCFromScript(m_World, npc);
     Vob::VobInformation v = Vob::asVob(m_World, e);
-    m_WorldNPCs.insert(e);
+    registerNpc(e);
 
     VobTypes::NpcVobInformation vob = VobTypes::getVobFromScriptHandle(m_World, npc);
 
@@ -210,7 +190,7 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
             assert(player.isValid());
 
             // Set this as our current player
-            m_PlayerEntity = player.entity;
+            setPlayerEntity(player.entity);
 
             // TODO: Take bindings out of playercontroller
             player.playerController->setupKeyBindings();
@@ -521,6 +501,44 @@ void ScriptEngine::importScriptEngine(const json& j)
         dat.getSymbolByName(p[0]).intData.push_back(p[1]);
     }
 
+}
+
+void ScriptEngine::createDefaultPlayer() {
+    LogInfo() << "Creating player";
+
+    Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
+    assert(!hplayer.isValid());
+
+    std::vector<size_t> startpoints = m_World.findStartPoints();
+
+    if (!startpoints.empty())
+    {
+        std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
+
+        LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
+
+        VobTypes::Wld_InsertNpc(m_World, "PC_HERO", startpoint);
+    }
+}
+
+void ScriptEngine::onNPCRemoved(Daedalus::GameState::NpcHandle npc) {
+    VobTypes::NpcVobInformation npcVob = VobTypes::getVobFromScriptHandle(m_World, npc);
+    if(npcVob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
+    {
+        // clear key bindings
+        Engine::Input::clearActions();
+        setPlayerEntity(Handle::EntityHandle::makeInvalidHandle());
+        auto invalidHandle = Daedalus::GameState::NpcHandle();
+        setInstanceNPC("hero", invalidHandle);
+    }
+}
+
+void ScriptEngine::registerNpc(Handle::EntityHandle e) {
+    m_WorldNPCs.insert(e);
+}
+
+void ScriptEngine::unregisterNpc(Handle::EntityHandle e) {
+    m_WorldNPCs.erase(e);
 }
 
 

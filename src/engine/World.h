@@ -21,6 +21,7 @@
 #include <logic/PfxManager.h>
 #include "BspTree.h"
 #include <logic/CameraController.h>
+#include <components/Vob.h>
 
 using json = nlohmann::json;
 
@@ -274,11 +275,24 @@ namespace World
 		 */
 		void exportWorld(json& j);
 
+		/**
+		 * Exports the given controllers to a json-object
+		 * @param logicController may be nullptr
+		 * @param visualController may be nullptr
+		 * @param j json-object to write into
+		 */
+		void exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j);
+
         /**
          * Imports vobs from a json-object
          * @param j
          */
         void importVobs(const json& j);
+
+		/**
+		 * export npc (i.e. player) and remove him from world
+		 */
+		json exportAndRemoveNPC(Handle::EntityHandle handle);
 
 		/**
 		 * @return world-file this is built after
@@ -287,8 +301,9 @@ namespace World
 
 		/**
          * Imports a single vob from a json-object
+         * @return entity handle if successfull, else invalid handle
          */
-		void importSingleVob(const json& j);
+		Handle::EntityHandle importSingleVob(const json& j);
 
     private:
         /**

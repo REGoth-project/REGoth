@@ -40,6 +40,11 @@ namespace Logic
         void initForWorld(const std::string& world, bool firstStart = true);
 
         /**
+         * If a new game is started a PC_HERO instance must be created
+         */
+        void createDefaultPlayer();
+
+        /**
          * Returns a list of all global symbols the game would have saved inside a savegame together
          * with their values.
          *
@@ -116,6 +121,11 @@ namespace Logic
         Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
 
         /**
+         * Sets the entity of the NPC the player is currently playing as
+         */
+        void setPlayerEntity(Handle::EntityHandle player){ m_PlayerEntity = player; }
+
+        /**
          * Returns a list of all npcs found inside the given sphere
          * @param center Center of the search-sphere
          * @param radius Radius of the search-sphere
@@ -154,6 +164,9 @@ namespace Logic
 
         void registerMob(Handle::EntityHandle e);
         void unregisterMob(Handle::EntityHandle e);
+
+        void registerNpc(Handle::EntityHandle e);
+        void unregisterNpc(Handle::EntityHandle e);
 
         /**
          * Applies the given items effects on the given NPC or equips it. Does not delete the item or anything else.
@@ -200,6 +213,11 @@ namespace Logic
          * Called when an npc got inserted into the world
          */
         void onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint);
+
+        /**
+         * Called when an npc got removed from the world
+         */
+        void onNPCRemoved(Daedalus::GameState::NpcHandle npc);
 
         /**
          * Called after the NPC got inserted into the world. At this point, it is fully initialized and can be used.

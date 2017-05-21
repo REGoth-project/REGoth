@@ -12,7 +12,11 @@ namespace Engine
         /**
          * @param GameEngine-pointer
          */
-        bool init(Engine::GameEngine& engine);
+        void init(Engine::GameEngine& engine);
+
+        void invalidateCurrentSlotIndex();
+
+        int getCurrentSlotIndex();
 
         /**
          * Assembles a list of all available savegame names. Every entry will correspond to an index number.
@@ -74,6 +78,23 @@ namespace Engine
         SavegameInfo readSavegameInfo(int idx);
 
         /**
+         * Writes actual player-data into the given savegame
+         * @param idx Index of the savegame
+         * @param playerName Name of the player which is saved. No extensions, just the name.
+         * @param data Data containing the playercontroller.
+         * @return success
+         */
+        bool writePlayer(int idx, const std::string& playerName, const std::string& data);
+
+        /**
+         * Reads player-data for the player with the given name.
+         * @param idx Index of the savegame
+         * @param playerName Name of the player to load
+         * @return Data of the given savegame's player. Empty string if not found or no data
+         */
+        std::string readPlayer(int idx, const std::string& playerName);
+
+        /**
          * Writes actual world-data into the given savegame
          * @param idx Index of the savegame
          * @param worldName Name of the world which is saved. No extensions, just the name.
@@ -86,9 +107,25 @@ namespace Engine
          * Reads world-data for the world with the given name.
          * @param idx Index of the savegame
          * @param worldName Name of the world to load
-         * @return Data of the given savegames world. Empty string of not found or no data
+         * @return Data of the given savegames world. Empty string if not found or no data
          */
         std::string readWorld(int idx, const std::string& worldName);
+
+        /**
+         * write the file with the specified filename to the given slot
+         * @param idx slot index
+         * @param relativePath filename relative to the savegame slot folder
+         * @param file content to be saved.
+         * @return success
+         */
+        bool writeFileInSlot(int idx, const std::string& relativePath, const std::string& data);
+
+        /**
+         * reads the file with the specified filename in the given slot
+         * @param idx slot index
+         * @param relativePath filename relative to the savegame slot folder
+         */
+        std::string readFileInSlot(int idx, const std::string& relativePath);
 
         /**
          * loads the savegame of the specified slotindex
@@ -122,7 +159,8 @@ namespace Engine
         enum SaveGameActionType
         {
             Save,
-            Load
+            Load,
+            SwitchLevel
         };
 
         struct SaveGameAction

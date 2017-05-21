@@ -319,13 +319,13 @@ public:
         auto& menuMain = m_pEngine->getHud().pushMenu<UI::Menu_Main>();
         auto gameType = menuMain.determineGameType();
         m_pEngine->setBasicGameType(gameType);
+        // Init SavegameManager
+        Engine::SavegameManager::init(*m_pEngine);
 
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
 
-        // Init SavegameManager
-        Engine::SavegameManager::init(*m_pEngine);
 
         // Imgui.
         float fontSize = 18.0f;//18
@@ -380,8 +380,6 @@ public:
                 m_pEngine->setMainWorld(worlds.front());
                 VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
                                                                         m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
-                Engine::Input::clearActions();
-                player.playerController->setupKeyBindings();
             }
             i++;
             return "Hello World!";
@@ -500,18 +498,22 @@ public:
             return "Hero successfully imported from: hero.json";
         });
 
-        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args2) -> std::string {
+            auto args = args2;
+            if (args.size() == 1)
+                args.push_back("oldmine.zen");
 
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
             if(args.size() < 2)
                 return "Missing argument. Usage: switchlevel <zenfile>";
 
-            return "Command currently broken! Try in a later release";
+            std::string zenFilename = args[1];
+            if(!m_pEngine->getVDFSIndex().hasFile(zenFilename))
+                return "File '" + zenFilename + "' not found.";
 
-            std::string file = args[1];
-            if(!m_pEngine->getVDFSIndex().hasFile(file))
-                return "File '" + file + "' not found.";
+            m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
+            /*
 
             // Export hero
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s1.getPlayerEntity());
@@ -557,8 +559,9 @@ public:
 
             // Import dialog info
             m_pEngine->getMainWorld().get().getDialogManager().importDialogManager(dialogMan);
+             */
 
-            return "Successfully switched world to: " + file;
+            return "Switching player to world: " + zenFilename;
         });
 
         console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {

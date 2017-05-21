@@ -41,6 +41,11 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
 
 WorldInstance::~WorldInstance()
 {
+    // kick out player if he is still in this world (clears key bindings)
+    auto player = getScriptEngine().getPlayerEntity();
+    if (player.isValid())
+        exportAndRemoveNPC(player);
+
     if (m_PrintScreenMessageView && getEngine())
         getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
 
@@ -585,17 +590,17 @@ std::vector<size_t> WorldInstance::findStartPoints()
 
 	// General
 
-	auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
+    // Gothic 1
+    auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
+    if(it != m_Waynet.waypointsByName.end())
+        pts.push_back((*it).second);
+
+	it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
 	if(it != m_Waynet.waypointsByName.end())
 		pts.push_back((*it).second);
 
 	if(!pts.empty())
 		return pts;
-
-    // Gothic 1
-    it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
-    if(it != m_Waynet.waypointsByName.end())
-        pts.push_back((*it).second);
 
     for(size_t i=0;i<m_Waynet.waypoints.size();i++)
     {
@@ -702,28 +707,15 @@ void WorldInstance::exportWorld(json& j)
         // TODO: This could be done in parallel
         for (size_t i = 0; i < num; i++)
         {
-            // Only export if both logic and visual want to be exported
-            /*if(Components::hasComponent<Components::LogicComponent>(ents[i])
-               && logics[i].m_pLogicController && !logics[i].m_pLogicController->shouldExport())
-                continue;
-
-            if(Components::hasComponent<Components::VisualComponent>(ents[i])
-               && visuals[i].m_pVisualController && !visuals[i].m_pVisualController->shouldExport())
-                continue;*/
+            Logic::Controller* logicController = nullptr;
+            Logic::VisualController* visualController = nullptr;
+            if (Components::hasComponent<Components::LogicComponent>(ents[i]))
+                logicController = logics[i].m_pLogicController;
+            if (Components::hasComponent<Components::VisualComponent>(ents[i]))
+                visualController = visuals[i].m_pVisualController;
 
             // Do the actual export
-            if (Components::hasComponent<Components::LogicComponent>(ents[i]))
-            {
-                if (logics[i].m_pLogicController && logics[i].m_pLogicController->shouldExport())
-                    logics[i].m_pLogicController->exportObject(jvobs["controllers"][i]["logic"]);
-            }
-
-            if (Components::hasComponent<Components::VisualComponent>(ents[i]))
-            {
-                if (visuals[i].m_pVisualController && visuals[i].m_pVisualController->shouldExport())
-                    visuals[i].m_pVisualController->exportObject(jvobs["controllers"][i]["visual"]);
-            }
-
+            exportControllers(logicController, visualController, jvobs["controllers"][i]);
         }
     }
 
@@ -734,7 +726,7 @@ void WorldInstance::exportWorld(json& j)
     m_DialogManager.exportDialogManager(j["dialogManager"]);
 }
 
-void WorldInstance::importSingleVob(const json& j)
+Handle::EntityHandle WorldInstance::importSingleVob(const json& j)
 {
     // This has a logic and visual controller
 
@@ -759,12 +751,10 @@ void WorldInstance::importSingleVob(const json& j)
     }else
     {
         entity = Vob::constructVob(*this);
-
-
     }
 
     if(!entity.isValid())
-        return;
+        return Handle::EntityHandle::makeInvalidHandle();
 
     if(j.find("visual") != j.end())
     {
@@ -793,6 +783,7 @@ void WorldInstance::importSingleVob(const json& j)
         if(vob.visual)
             vob.visual->importObject(j["visual"]);
     }
+    return entity;
 }
 
 void WorldInstance::importVobs(const json& j)
@@ -833,6 +824,22 @@ Handle::EntityHandle WorldInstance::createCamera() {
 
 Handle::EntityHandle WorldInstance::getCamera() {
     return m_Camera;
+}
+
+json WorldInstance::exportAndRemoveNPC(Handle::EntityHandle entityHandle) {
+    VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(*this, entityHandle);
+    json j;
+    exportControllers(playerVob.playerController, playerVob.visual, j);
+
+    VobTypes::Wld_RemoveNpc(*this, entityHandle);
+    return j;
+}
+
+void WorldInstance::exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j) {
+    if (logicController && logicController->shouldExport())
+        logicController->exportObject(j["logic"]);
+    if (visualController && visualController->shouldExport())
+        visualController->exportObject(j["visual"]);
 }
 
 

@@ -354,6 +354,14 @@ Handle::EntityHandle VobTypes::MOB_GetByName(World::WorldInstance& world, const 
     return Handle::EntityHandle::makeInvalidHandle();
 }
 
+void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle npc) {
+    world.getScriptEngine().unregisterNpc(npc);
+    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, npc);
+    world.getScriptEngine().getGameState().removeNPC(vob.playerController->getScriptHandle());
+    // finally remove entity from game
+    world.removeEntity(npc);
+}
+
 
 
 

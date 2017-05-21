@@ -35,6 +35,7 @@ void Menu_Main::onCustomAction(const std::string& action)
 {
     if(action == "NEW_GAME")
     {
+        Engine::SavegameManager::invalidateCurrentSlotIndex();
         getHud().popMenu();
 
         LogInfo() << "Starting new game...";
@@ -44,6 +45,7 @@ void Menu_Main::onCustomAction(const std::string& action)
         if (worldHandle.isValid())
         {
             m_Engine.setMainWorld(worldHandle);
+            worldHandle.get().getScriptEngine().createDefaultPlayer();
             // reset the clock to the default starting time
             m_Engine.getGameClock().resetNewGame();
         } else
