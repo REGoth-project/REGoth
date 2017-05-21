@@ -178,24 +178,6 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
         // FIXME: Some waypoints don't seem to exist?
         if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
             pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
-
-        // If this is the hero, link it
-        if(vob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
-        {
-            // Player should already be in the world and script-instances should be initialized.
-            Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
-
-            VobTypes::NpcVobInformation player = VobTypes::getVobFromScriptHandle(m_World, hplayer);
-
-            assert(player.isValid());
-
-            // Set this as our current player
-            setPlayerEntity(player.entity);
-
-            // TODO: Take bindings out of playercontroller
-            player.playerController->setupKeyBindings();
-            setInstanceNPC("hero", VobTypes::getScriptHandle(player));
-        }
     }
 }
 
@@ -503,11 +485,14 @@ void ScriptEngine::importScriptEngine(const json& j)
 
 }
 
-void ScriptEngine::createDefaultPlayer() {
-    LogInfo() << "Creating player";
-
-    Daedalus::GameState::NpcHandle hplayer = getNPCFromSymbol("PC_HERO");
-    assert(!hplayer.isValid());
+Handle::EntityHandle ScriptEngine::createDefaultPlayer(const std::string& symbolname)
+{
+    LogInfo() << "Creating default player";
+    if (!hasSymbol(symbolname))
+    {
+        LogError() << "Error: could not start as NPC with name: " + symbolname;
+        return Handle::EntityHandle::makeInvalidHandle();
+    }
 
     std::vector<size_t> startpoints = m_World.findStartPoints();
 
@@ -515,29 +500,24 @@ void ScriptEngine::createDefaultPlayer() {
     {
         std::string startpoint = m_World.getWaynet().waypoints[startpoints[0]].name;
 
-        LogInfo() << "Inserting player of class 'PC_HERO' at startpoint '" << startpoint << "'";
+        LogInfo() << "Inserting player of class '" + symbolname + "' at startpoint '" << startpoint << "'";
 
-        VobTypes::Wld_InsertNpc(m_World, "PC_HERO", startpoint);
+        return VobTypes::Wld_InsertNpc(m_World, symbolname, startpoint);
     }
+    return Handle::EntityHandle::makeInvalidHandle();
 }
 
-void ScriptEngine::onNPCRemoved(Daedalus::GameState::NpcHandle npc) {
-    VobTypes::NpcVobInformation npcVob = VobTypes::getVobFromScriptHandle(m_World, npc);
-    if(npcVob.playerController->getScriptInstance().instanceSymbol == m_pVM->getDATFile().getSymbolIndexByName("PC_HERO"))
-    {
-        // clear key bindings
-        Engine::Input::clearActions();
-        setPlayerEntity(Handle::EntityHandle::makeInvalidHandle());
-        auto invalidHandle = Daedalus::GameState::NpcHandle();
-        setInstanceNPC("hero", invalidHandle);
-    }
+void ScriptEngine::onNPCRemoved(Daedalus::GameState::NpcHandle npc)
+{
 }
 
-void ScriptEngine::registerNpc(Handle::EntityHandle e) {
+void ScriptEngine::registerNpc(Handle::EntityHandle e)
+{
     m_WorldNPCs.insert(e);
 }
 
-void ScriptEngine::unregisterNpc(Handle::EntityHandle e) {
+void ScriptEngine::unregisterNpc(Handle::EntityHandle e)
+{
     m_WorldNPCs.erase(e);
 }
 

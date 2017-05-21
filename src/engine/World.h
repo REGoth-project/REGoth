@@ -283,11 +283,11 @@ namespace World
 		 */
 		void exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j);
 
-        /**
+		/**
          * Imports vobs from a json-object
          * @param j
          */
-        void importVobs(const json& j);
+		void importVobs(const json& j);
 
 		/**
 		 * export npc (i.e. player) and remove him from world
@@ -304,6 +304,17 @@ namespace World
          * @return entity handle if successfull, else invalid handle
          */
 		Handle::EntityHandle importSingleVob(const json& j);
+
+		/**
+         * import single vob from json and take control over it
+         * @return entity handle if successfull, else invalid handle
+         */
+		Handle::EntityHandle importVobAndTakeControl(const json& j);
+
+		/**
+         * take control over the given entity (camera, movement(key bindings))
+         */
+		void takeControlOver(Handle::EntityHandle entityHandle);
 
     private:
         /**

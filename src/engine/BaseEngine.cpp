@@ -321,12 +321,12 @@ void BaseEngine::processSaveGameActionQueue() {
                 break;
             case SavegameManager::SwitchLevel:
                 {
-                    auto& oldWorld = getMainWorld().get();
-                    auto exportedPlayer = oldWorld.exportAndRemoveNPC(oldWorld.getScriptEngine().getPlayerEntity());
+                    auto exportedPlayer = getMainWorld().get().exportAndRemoveNPC(
+                            getMainWorld().get().getScriptEngine().getPlayerEntity());
                     removeWorld(getMainWorld());
                     auto newWorld = addWorld(action.savegameName);
                     setMainWorld(newWorld);
-                    auto playerNew = newWorld.get().importSingleVob(exportedPlayer);
+                    auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
                     // TODO find out start position after level change
                     // TODO move this code out of the BaseEngine
                     std::vector<size_t> startpoints = newWorld.get().findStartPoints();

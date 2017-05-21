@@ -355,10 +355,20 @@ Handle::EntityHandle VobTypes::MOB_GetByName(World::WorldInstance& world, const 
 }
 
 void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle npc) {
-    world.getScriptEngine().unregisterNpc(npc);
     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, npc);
+
+    // if npc is the current controlled entity clear up bindings, "hero" and invalidate player entity
+    if(npc == world.getScriptEngine().getPlayerEntity())
+    {
+        // clear key bindings
+        Engine::Input::clearActions();
+        world.getScriptEngine().setPlayerEntity(Handle::EntityHandle::makeInvalidHandle());
+        auto invalidHandle = Daedalus::GameState::NpcHandle();
+        world.getScriptEngine().setInstanceNPC("hero", invalidHandle);
+    }
+
+    world.getScriptEngine().unregisterNpc(npc);
     world.getScriptEngine().getGameState().removeNPC(vob.playerController->getScriptHandle());
-    // finally remove entity from game
     world.removeEntity(npc);
 }
 

@@ -239,12 +239,12 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     }
 
     gameEngine->removeAllWorlds();
-    Handle::WorldHandle worldHandle = gameEngine->loadWorld(info.world + ".zen", worldPath);
+    Handle::WorldHandle worldHandle = gameEngine->addWorld(info.world + ".zen", worldPath);
     if (worldHandle.isValid())
     {
         gameEngine->setMainWorld(worldHandle);
-        json player = json::parse(readPlayer(index, "player"));
-        gameEngine->getMainWorld().get().importSingleVob(player);
+        json playerJson = json::parse(readPlayer(index, "player"));
+        gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
         gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
     }
     return "";
@@ -292,7 +292,7 @@ void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegame
     Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(mainWorldjson.dump(4)));
 
     // import player again
-    world.importSingleVob(playerJson);
+    world.importVobAndTakeControl(playerJson);
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {

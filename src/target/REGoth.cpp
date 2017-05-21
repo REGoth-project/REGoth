@@ -501,7 +501,7 @@ public:
         console.registerCommand("switchlevel", [this](const std::vector<std::string>& args2) -> std::string {
             auto args = args2;
             if (args.size() == 1)
-                args.push_back("oldmine.zen");
+                args.push_back("world.zen");
 
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -634,6 +634,31 @@ public:
             return suggestions;
         };
 
+        console.registerCommand("control", [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument. Usage: control <npc>";
+
+            std::string requested = args[1];
+
+            auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+
+            auto suggestions = worlddNpcNamesGen();
+            auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+            auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
+            if (suggestion != nullptr) {
+                worldInstance.takeControlOver(suggestion->npcHandle);
+                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                const std::string& npcDisplayName = npcScriptObject.name[0];
+                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                std::string npnNameFull = npcDisplayName + " (" + npcDatFileName + ")";
+                return "took control over " + npnNameFull;
+            }
+            return "NPC not found in this world: " + requested;
+
+        }).registerAutoComplete(worlddNpcNamesGen);
+
         console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -663,9 +688,13 @@ public:
 
         auto tpCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
-                return "Missing argument(s). Usage: tp [<npc:default=PC_HERO>] <targetnpc>";
+                return "Missing argument(s). Usage: tp [<npc:default=player>] <targetnpc>";
 
-            std::string teleporterName = "PC_HERO";
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+            auto& scriptEngine = worldInstance.getScriptEngine();
+            auto& datFile = scriptEngine.getVM().getDATFile();
+
+            std::string teleporterName;
             std::string targetName;
             if (args.size() >= 3)
             {
@@ -674,9 +703,6 @@ public:
             } else {
                 targetName = args[1];
             }
-            auto& worldInstance = m_pEngine->getMainWorld().get();
-            auto& scriptEngine = worldInstance.getScriptEngine();
-            auto& datFile = scriptEngine.getVM().getDATFile();
 
             auto suggestions = worlddNpcNamesGen();
 
@@ -684,18 +710,28 @@ public:
             std::vector<std::string> fullNames;
             for (auto& requestedName : {teleporterName, targetName})
             {
-                auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
-                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
                 bool success = false;
-                if (suggestion != nullptr)
+                Handle::EntityHandle entityHandle = Handle::EntityHandle::makeInvalidHandle();
+                if (!requestedName.empty())
                 {
-                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                    auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
+                    auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
+                    if (suggestion != nullptr)
+                        entityHandle = suggestion->npcHandle;
+                } else
+                {
+                    // case: no argument given
+                    entityHandle = scriptEngine.getPlayerEntity();
+                }
+                if (entityHandle.isValid())
+                {
+                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, entityHandle);
                     if (npcVobInfo.isValid())
                     {
                         success = true;
-                        auto& aliasList = suggestion->aliasList;
-                        std::string npcDatFileName = aliasList[0];
-                        std::string npcDisplayName = aliasList[1];
+                        Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                        const std::string& npcDisplayName = npcScriptObject.name[0];
+                        const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
                         vobInfos.push_back(npcVobInfo);
                         fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
                     }
@@ -704,8 +740,8 @@ public:
                     return "Could not find NPC " + requestedName;
             }
 
-            VobTypes::NpcVobInformation& teleporter = vobInfos.at(0);
-            VobTypes::NpcVobInformation& target = vobInfos.at(1);
+            VobTypes::NpcVobInformation teleporter = vobInfos.at(0);
+            VobTypes::NpcVobInformation target = vobInfos.at(1);
             Math::float3 targetPosition = target.position->m_WorldMatrix.Translation();
             Math::float3 targetDirection = target.playerController->getDirection();
             // keep a respectful distance of 1 to the NPC

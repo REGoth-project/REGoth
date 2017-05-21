@@ -84,7 +84,7 @@ namespace VobTypes
 
     /**
      * removes npc from the given world, also removes from script engine.
-     * if the script name of npc is PC_HERO, key bindings get cleared and the script engine's player entity gets invalidated
+     * if the npc is the player entity, key bindings get cleared and script engine's player entity gets invalidated
      */
     void Wld_RemoveNpc(World::WorldInstance& world, Handle::EntityHandle npc);
 

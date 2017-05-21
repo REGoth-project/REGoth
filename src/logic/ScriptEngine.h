@@ -40,9 +40,9 @@ namespace Logic
         void initForWorld(const std::string& world, bool firstStart = true);
 
         /**
-         * If a new game is started a PC_HERO instance must be created
+         * If a new game this method will create an instance of the class with the given name at some startpoint
          */
-        void createDefaultPlayer();
+        Handle::EntityHandle createDefaultPlayer(const std::string& symbolName);
 
         /**
          * Returns a list of all global symbols the game would have saved inside a savegame together

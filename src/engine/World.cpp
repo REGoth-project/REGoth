@@ -842,6 +842,22 @@ void WorldInstance::exportControllers(Logic::Controller* logicController, Logic:
         visualController->exportObject(j["visual"]);
 }
 
+void WorldInstance::takeControlOver(Handle::EntityHandle entityHandle) {
+    VobTypes::NpcVobInformation npcVob = VobTypes::asNpcVob(*this, entityHandle);
+
+    getScriptEngine().setPlayerEntity(entityHandle);
+    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(npcVob));
+    // reset bindings
+    Engine::Input::clearActions();
+    npcVob.playerController->setupKeyBindings();
+}
+
+Handle::EntityHandle WorldInstance::importVobAndTakeControl(const json &j) {
+    auto player = importSingleVob(j);
+    takeControlOver(player);
+    return player;
+}
+
 
 
 
