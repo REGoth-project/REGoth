@@ -590,12 +590,14 @@ std::vector<size_t> WorldInstance::findStartPoints()
 
 	// General
 
+    /*
     // Gothic 1
     auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
     if(it != m_Waynet.waypointsByName.end())
         pts.push_back((*it).second);
+    */
 
-	it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
+	auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
 	if(it != m_Waynet.waypointsByName.end())
 		pts.push_back((*it).second);
 

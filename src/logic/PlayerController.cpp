@@ -203,7 +203,6 @@ void PlayerController::continueRoutine()
 
 void PlayerController::teleportToWaypoint(size_t wp)
 {
-
     m_AIState.closestWaypoint = wp;
 
     teleportToPosition(m_World.getWaynet().waypoints[wp].position);

@@ -152,8 +152,7 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
             LogInfo() << "Done!";
         }
     }else {
-        VobTypes::Wld_InsertNpc(m_World, "PC_THIEF",
-                                "WP_INTRO_FALL3");
+        VobTypes::Wld_InsertNpc(m_World, "PC_THIEF", "WP_INTRO_FALL3");
     }
 }
 
@@ -163,21 +162,19 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
 
     // Create the NPC-vob
     Handle::EntityHandle e = VobTypes::initNPCFromScript(m_World, npc);
-    Vob::VobInformation v = Vob::asVob(m_World, e);
     registerNpc(e);
 
-    VobTypes::NpcVobInformation vob = VobTypes::getVobFromScriptHandle(m_World, npc);
+    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
-    if(vob.isValid())
+    if(vob.isValid() && !spawnpoint.empty())
     {
-        // Place NPC to it's location
-        Logic::PlayerController* pc = reinterpret_cast<Logic::PlayerController*>(v.logic);
-
-        //LogInfo() << "Spawnpoint: " << spawnpoint;
-
-        // FIXME: Some waypoints don't seem to exist?
         if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
-            pc->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+            vob.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
+        else
+        {
+            LogError() << "spawnpoint does not exist: " << spawnpoint;
+            assert(false);
+        }
     }
 }
 
@@ -502,7 +499,11 @@ Handle::EntityHandle ScriptEngine::createDefaultPlayer(const std::string& symbol
 
         LogInfo() << "Inserting player of class '" + symbolname + "' at startpoint '" << startpoint << "'";
 
-        return VobTypes::Wld_InsertNpc(m_World, symbolname, startpoint);
+        auto entityHandle = VobTypes::Wld_InsertNpc(m_World, symbolname, startpoint);
+        // FIXME startpoints are inverted?
+        auto playerController = VobTypes::asNpcVob(m_World, entityHandle).playerController;
+        playerController->setDirection(-1 * playerController->getDirection());
+        return entityHandle;
     }
     return Handle::EntityHandle::makeInvalidHandle();
 }

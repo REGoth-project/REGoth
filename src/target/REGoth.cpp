@@ -501,7 +501,7 @@ public:
         console.registerCommand("switchlevel", [this](const std::vector<std::string>& args2) -> std::string {
             auto args = args2;
             if (args.size() == 1)
-                args.push_back("world.zen");
+                args.push_back(m_pEngine->getEngineArgs().startupZEN);
 
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
 

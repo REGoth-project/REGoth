@@ -46,7 +46,7 @@ void Menu_Main::onCustomAction(const std::string& action)
         if (worldHandle.isValid())
         {
             m_Engine.setMainWorld(worldHandle);
-            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer("EBR_108_VELAYA");
+            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer("PC_HERO");
             worldHandle.get().takeControlOver(player);
             // reset the clock to the default starting time
             m_Engine.getGameClock().resetNewGame();

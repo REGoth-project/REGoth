@@ -333,9 +333,11 @@ void BaseEngine::processSaveGameActionQueue() {
                     if (!startpoints.empty())
                     {
                         auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
-                        playerVob.playerController->teleportToWaypoint(startpoints.front());
                         std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
                         LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
+                        playerVob.playerController->teleportToWaypoint(startpoints.front());
+                        // FIXME seems like player start-points are inverted?
+                        playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
                     }
                 }
                 break;
