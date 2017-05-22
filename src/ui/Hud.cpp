@@ -129,19 +129,19 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
     View::update(dt, mstate, config);
 }
 
-void UI::Hud::setHealth(float value)
+void UI::Hud::setHealth(int32_t value, int32_t maxValue)
 {
-    m_pHealthBar->setValue(value);
+    m_pHealthBar->setValue(value, maxValue);
 }
 
-void UI::Hud::setMana(float value)
+void UI::Hud::setMana(int32_t value, int32_t maxValue)
 {
-    m_pManaBar->setValue(value);
+    m_pManaBar->setValue(value, maxValue);
 }
 
-void UI::Hud::setEnemyHealth(float value)
+void UI::Hud::setEnemyHealth(int32_t value, int32_t maxValue)
 {
-    m_pEnemyHealthBar->setValue(value);
+    m_pEnemyHealthBar->setValue(value, maxValue);
 }
 
 void UI::Hud::setDateTimeDisplay(const std::string &timeStr)

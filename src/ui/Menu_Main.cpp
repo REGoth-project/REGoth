@@ -35,12 +35,13 @@ void Menu_Main::onCustomAction(const std::string& action)
 {
     if(action == "NEW_GAME")
     {
-        Engine::SavegameManager::invalidateCurrentSlotIndex();
+        LogInfo() << "Starting new game...";
         getHud().popMenu();
 
-        LogInfo() << "Starting new game...";
-
+        // TODO: extract method: clearSession(): invalidates slot index, remove active world, inactive worlds...
+        Engine::SavegameManager::invalidateCurrentSlotIndex();
         m_Engine.removeAllWorlds();
+
         Handle::WorldHandle worldHandle = m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
         if (worldHandle.isValid())
         {

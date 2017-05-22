@@ -41,19 +41,22 @@ namespace UI
         void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
 
         /**
-         * @param value Value for health-bar in 0..1 range
+         * @param value for health-bar of current player
+         * @param maxValue for health-bar of current player
          */
-        void setHealth(float value);
+        void setHealth(int32_t value, int32_t maxValue);
 
         /**
-         * @param value Value for mana-bar in 0..1 range
+         * @param value for mana-bar of current player
+         * @param maxValue for mana-bar of current player
          */
-        void setMana(float value);
+        void setMana(int value, int maxValue);
 
         /**
-         * @param value Value for enemy health-bar in 0..1 range
+         * @param value for health-bar of enemy entity
+         * @param maxValue for health-bar of enemy entity
          */
-        void setEnemyHealth(float value);
+        void setEnemyHealth(int32_t value, int32_t maxValue);
 
         /**
          * @param timeStr Current time of day to be shown on the hud

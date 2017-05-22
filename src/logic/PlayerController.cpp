@@ -2517,11 +2517,11 @@ void PlayerController::onUpdateForPlayer(float deltaTime)
     UI::Hud& hud = m_World.getEngine()->getHud();
     auto& stats = getScriptInstance();
 
-    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] /
-                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                  stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
-    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
-                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
+                stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 
 }
 
