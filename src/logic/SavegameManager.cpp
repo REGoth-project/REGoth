@@ -282,17 +282,14 @@ void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegame
     info.timePlayed = gameEngine->getGameClock().getTotalSeconds();
     Engine::SavegameManager::writeSavegameInfo(index, info);
 
-    // remove all players from this world
-    json playerJson = world.exportAndRemoveNPC(world.getScriptEngine().getPlayerEntity());
+    // export player
+    json playerJson = world.exportNPC(world.getScriptEngine().getPlayerEntity());
     Engine::SavegameManager::writePlayer(index, "player", Utils::iso_8859_1_to_utf8(playerJson.dump()));
 
-    // save world
     json mainWorldjson;
-    world.exportWorld(mainWorldjson);
+    // export world, but skip the player
+    world.exportWorld(mainWorldjson, {world.getScriptEngine().getPlayerEntity()});
     Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(mainWorldjson.dump(4)));
-
-    // import player again
-    world.importVobAndTakeControl(playerJson);
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {

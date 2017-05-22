@@ -44,7 +44,7 @@ WorldInstance::~WorldInstance()
     // kick out player if he is still in this world (clears key bindings)
     auto player = getScriptEngine().getPlayerEntity();
     if (player.isValid())
-        exportAndRemoveNPC(player);
+        VobTypes::Wld_RemoveNpc(*this, player);
 
     if (m_PrintScreenMessageView && getEngine())
         getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
@@ -690,7 +690,7 @@ Daedalus::GameType WorldInstance::getBasicGameType()
     return m_pEngine->getBasicGameType();
 }
 
-void WorldInstance::exportWorld(json& j)
+void WorldInstance::exportWorld(json& j, std::set<Handle::EntityHandle> skip)
 {
     // Write initial ZEN for loading the worldmesh later
     j["zenfile"] = m_ZenFile;
@@ -709,6 +709,8 @@ void WorldInstance::exportWorld(json& j)
         // TODO: This could be done in parallel
         for (size_t i = 0; i < num; i++)
         {
+            if (skip.find(ents[i].m_ThisEntity) != skip.end())
+                continue;
             Logic::Controller* logicController = nullptr;
             Logic::VisualController* visualController = nullptr;
             if (Components::hasComponent<Components::LogicComponent>(ents[i]))
@@ -834,10 +836,7 @@ Handle::EntityHandle WorldInstance::getCamera() {
 }
 
 json WorldInstance::exportAndRemoveNPC(Handle::EntityHandle entityHandle) {
-    VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(*this, entityHandle);
-    json j;
-    exportControllers(playerVob.playerController, playerVob.visual, j);
-
+    json j = exportNPC(entityHandle);
     VobTypes::Wld_RemoveNpc(*this, entityHandle);
     return j;
 }
@@ -863,6 +862,13 @@ Handle::EntityHandle WorldInstance::importVobAndTakeControl(const json &j) {
     auto player = importSingleVob(j);
     takeControlOver(player);
     return player;
+}
+
+json WorldInstance::exportNPC(Handle::EntityHandle entityHandle) {
+    VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(*this, entityHandle);
+    json j;
+    exportControllers(playerVob.playerController, playerVob.visual, j);
+    return j;
 }
 
 

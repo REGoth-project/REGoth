@@ -279,8 +279,9 @@ namespace World
 		/**
 		 * Exports this world into a json-object
 		 * @param j json-object to write into
+		 * @param skip entities which shall be excluded from export
 		 */
-		void exportWorld(json& j);
+		void exportWorld(json& j, std::set<Handle::EntityHandle> skip = {});
 
 		/**
 		 * Exports the given controllers to a json-object
@@ -291,10 +292,9 @@ namespace World
 		void exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j);
 
 		/**
-         * Imports vobs from a json-object
-         * @param j
-         */
-		void importVobs(const json& j);
+		 * @return exported npc as json object
+		 */
+		json exportNPC(Handle::EntityHandle entityHandle);
 
 		/**
 		 * export npc (i.e. player) and remove him from world
@@ -305,6 +305,12 @@ namespace World
 		 * @return world-file this is built after
 		 */
 		const std::string& getZenFile(){ return m_ZenFile; }
+
+		/**
+         * Imports vobs from a json-object
+         * @param j
+         */
+		void importVobs(const json& j);
 
 		/**
          * Imports a single vob from a json-object
