@@ -1284,7 +1284,8 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
                     v = m_World.getVobEntityByName(message.targetVobName);
                 }
 
-                if (v.isValid())
+                // isEntityValid can be false if the npc entity was removed from this world while this message was queued
+                if (v.isValid() && m_World.isEntityValid(v))
                 {
                     Vob::VobInformation vob = Vob::asVob(m_World, v);
                     message.targetPosition = Vob::getTransform(vob).Translation();
@@ -1325,6 +1326,9 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
 
         case EventMessages::MovementMessage::ST_TurnToVob:
         {
+            if (!m_World.isEntityValid(message.targetVob))
+                return true; // case: player entity was removed from this world while this message was queued
+
             Vob::VobInformation vob = Vob::asVob(m_World, message.targetVob);
 
             // Fill position-field
@@ -2339,7 +2343,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
 
         // Teleport to position
         {
-            // need to copy since setting changing position sets the direction of the transform matrix
+            // need to copy since changing position sets the direction of the transform matrix
             auto transformMatrixCopy = getEntityTransform();
             teleportToPosition(transformMatrixCopy.Translation());
             setDirection(-1.0f * transformMatrixCopy.Forward());
