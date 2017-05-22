@@ -2339,8 +2339,10 @@ void PlayerController::importObject(const json& j, bool noTransform)
 
         // Teleport to position
         {
-            teleportToPosition(getEntityTransform().Translation());
-            setDirection(-1.0f * getEntityTransform().Forward());
+            // need to copy since setting changing position sets the direction of the transform matrix
+            auto transformMatrixCopy = getEntityTransform();
+            teleportToPosition(transformMatrixCopy.Translation());
+            setDirection(-1.0f * transformMatrixCopy.Forward());
         }
     }
 
