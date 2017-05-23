@@ -284,22 +284,51 @@ FUNC void AI_DrawWeapon(VAR C_NPC Character)
 };
 
 FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
-/// \brief      Drop an item to the ground (queued).
+/// \brief      Drop an item to the ground (direct, queued).
 /// \param      Character
 ///                 Object reference to the character.
 /// \param      ItemId
 ///                 Symbol index of a C_Item instance
 ///                 (global instance variable \b ITEM is also supported).
-/// \details    If an item with the \p ItemId is present in the inventory
-///             of the \p Character, it is unequipped (if it was active),
-///             removed from the inventory, and dropped to the ground.
+/// \details    If an item with the \p ItemId is currenly present in the
+///             inventory of the \p Character, one item is directly removed
+///             and a message is queued to drop the object to the ground.
+/// \details    The drop message handler sets the body state to BS_INVENTORY.
+///             If the current WALK state animation is active, the animation
+///             "T_STAND_2_IDROP" is started. Thereafter, the message handler
+///             is waiting until the IDROP state animation is active,
+///             removes one (more) item from the inventory,
+///             and drops the object to the ground.
+///             Finally, the IDROP_2_STAND transition animation is started
+///             (if present), followed by the current WALK state animation.
+/// \note       G2 sets the ITEM_DROPPED flag on item objects
+///             that are dropped by the player.
 /// \bug        Two items are removed but only one item is dropped
-///             (one item is removed by this message handler
-///              and a second item in the drop message handler).
+///             (one item is removed by this function
+///              and a second item by the drop message handler).
 {
 };
 
 FUNC void AI_DropMob(VAR C_NPC Character)
+/// \brief      Drop the carried object to the ground (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler checks if the \p Character is currenly
+///             carrying an object and queues a high priority message to
+///             drop the carried object to the ground.
+/// \details    The drop message handler sets the body state to BS_INVENTORY.
+///             If the current WALK state animation is active, the animation
+///             "T_STAND_2_IDROP" is started. Thereafter, the message handler
+///             is waiting until the IDROP state animation is active,
+///             removes one item from the inventory (if the object is an item),
+///             and drops the object to the ground.
+///             Finally, the IDROP_2_STAND transition animation is started
+///             (if present), followed by the current WALK state animation.
+/// \details    The overlay animation "HUMANS_CARRY<SchemeName>.MDS" is removed
+///             if a movable object is dropped.
+/// \note       G2 sets the ITEM_DROPPED flag on item objects
+///             that are dropped by the player.
+/// \sa         AI_TakeMob
 {
 };
 
