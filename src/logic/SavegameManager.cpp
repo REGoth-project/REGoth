@@ -13,11 +13,6 @@ using namespace Engine;
  */
 Engine::GameEngine* gameEngine;
 
-/**
- * last slot we loaded a world from, get's invalidated on "start new game"
- */
-int currentSlotIndex = -1;
-
 // Enures that all folders to save into the given savegame-slot exist
 void ensureSavegameFolders(int idx)
 {
@@ -66,8 +61,13 @@ void SavegameManager::clearSavegame(int idx)
     Utils::forEachFile(buildSavegamePath(idx), [](const std::string& path, const std::string& name, const std::string& ext)
     {
         // Make sure this is a REGoth-file
-        bool isRegothFile = (Utils::startsWith(name, "regoth_") || Utils::startsWith(name, "world_"))
-                            && Utils::endsWith(name, ".json");
+        bool isRegothFile = Utils::endsWith(name, ".json") &&
+                (Utils::startsWith(name, "regoth_")
+                 || Utils::startsWith(name, "world_")
+                 || Utils::startsWith(name, "player")
+                 || Utils::startsWith(name, "dialogmanager")
+                 || Utils::startsWith(name, "scriptengine"));
+
         if(!isRegothFile)
             return; // Better not touch that one
 
@@ -145,9 +145,9 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
     return o;
 }
 
-bool SavegameManager::writePlayer(int idx, const std::string& playerName, const std::string& data)
+bool SavegameManager::writePlayer(int idx, const std::string& playerName, const nlohmann::json& player)
 {
-    return writeFileInSlot(idx, playerName + ".json", data);
+    return writeFileInSlot(idx, playerName + ".json", Utils::iso_8859_1_to_utf8(player.dump()));
 }
 
 std::string SavegameManager::readPlayer(int idx, const std::string& playerName)
@@ -155,9 +155,9 @@ std::string SavegameManager::readPlayer(int idx, const std::string& playerName)
     return SavegameManager::readFileInSlot(idx, playerName + ".json");
 }
 
-bool SavegameManager::writeWorld(int idx, const std::string& worldName, const std::string& data)
+bool SavegameManager::writeWorld(int idx, const std::string& worldName, const nlohmann::json& world)
 {
-    return writeFileInSlot(idx, "world_" + worldName + ".json", data);
+    return writeFileInSlot(idx, "world_" + worldName + ".json", Utils::iso_8859_1_to_utf8(world.dump(4)));
 }
 
 std::string SavegameManager::readWorld(int idx, const std::string& worldName)
@@ -173,16 +173,6 @@ std::string SavegameManager::buildWorldPath(int idx, const std::string& worldNam
 void Engine::SavegameManager::init(Engine::GameEngine& engine)
 {
     gameEngine = &engine;
-    invalidateCurrentSlotIndex();
-}
-
-void Engine::SavegameManager::invalidateCurrentSlotIndex()
-{
-    currentSlotIndex = -1;
-}
-
-int ::Engine::SavegameManager::getCurrentSlotIndex() {
-    return currentSlotIndex;
 }
 
 std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailableSavegames()
@@ -229,20 +219,25 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     // Read general information about the saved game. Most importantly the world the player saved in
     SavegameInfo info = readSavegameInfo(index);
 
-    std::string worldPath = buildWorldPath(index, info.world);
-
+    std::string worldFileData = SavegameManager::readWorld(index, info.world);
     // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
     // if it was missing. Also, IF the player saved there, there should be a save for this.
-    if(!Utils::getFileSize(worldPath))
+    if(worldFileData.empty())
     {
-        return "Target world-file invalid: " + worldPath;
+        return "Target world-file invalid: " + buildWorldPath(index, info.world);
     }
+    json worldJson = json::parse(worldFileData);
+    // TODO catch json exception when emtpy file is parsed or parser crashes
+    json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
+    json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
 
-    gameEngine->removeAllWorlds();
-    Handle::WorldHandle worldHandle = gameEngine->addWorld(info.world + ".zen", worldPath);
+    gameEngine->resetSession();
+    gameEngine->getSession().setCurrentSlot(index);
+    // TODO import scriptEngine and DialogManager
+    Handle::WorldHandle worldHandle = gameEngine->getSession().addWorld("", worldJson, scriptEngine, dialogManager);
     if (worldHandle.isValid())
     {
-        gameEngine->setMainWorld(worldHandle);
+        gameEngine->getSession().setMainWorld(worldHandle);
         json playerJson = json::parse(readPlayer(index, "player"));
         gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
         gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
@@ -263,33 +258,7 @@ int Engine::SavegameManager::maxSlots() {
 }
 
 void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegameName) {
-    ExcludeFrameTime exclude(*gameEngine);
-    assert(index >= 0 && index < maxSlots());
-
-    if (savegameName.empty())
-        savegameName = std::string("Slot") + std::to_string(index);
-
-    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
-    Engine::SavegameManager::clearSavegame(index);
-
-    World::WorldInstance& world = gameEngine->getMainWorld().get();
-    // Write information about the current game-state
-    Engine::SavegameManager::SavegameInfo info;
-    info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
-    info.name = savegameName;
-    info.world = Utils::stripExtension(world.getZenFile());
-    info.timePlayed = gameEngine->getGameClock().getTotalSeconds();
-    Engine::SavegameManager::writeSavegameInfo(index, info);
-
-    // export player
-    json playerJson = world.exportNPC(world.getScriptEngine().getPlayerEntity());
-    Engine::SavegameManager::writePlayer(index, "player", Utils::iso_8859_1_to_utf8(playerJson.dump()));
-
-    json mainWorldjson;
-    // export world, but skip the player
-    world.exportWorld(mainWorldjson, {world.getScriptEngine().getPlayerEntity()});
-    Engine::SavegameManager::writeWorld(index, info.world, Utils::iso_8859_1_to_utf8(mainWorldjson.dump(4)));
+    assert(false); // deprecated
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {

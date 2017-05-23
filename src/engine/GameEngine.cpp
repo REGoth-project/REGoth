@@ -64,15 +64,15 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 
 //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
 //    }
-    if (!m_WorldInstances.empty())
+    if (!getSession().getWorldInstances().empty())
     {
         if(m_Paused)
         {
             getMainWorld().get().getCameraController()->onUpdate(dt);
         } else
         {
-            m_GameClock.update(dt);
-            for (auto& s : m_WorldInstances)
+            getGameClock().update(dt);
+            for (auto& s : getSession().getWorldInstances())
             {
                 // Update main-world after every other world, since the camera is in there
                 s->onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE, s->getCameraComp<Components::PositionComponent>().m_WorldMatrix);

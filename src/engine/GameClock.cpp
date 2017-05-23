@@ -7,11 +7,16 @@ using namespace Engine;
 
 GameClock::GameClock()
 {
-    m_ClockSpeedFactor = 1.0;
     m_totalTimeInDays = 0;
     m_LastFrameDeltaTime = 0;
 
-    // day/clock init only necessary for test start world (not started via main menu)
+    // reset clock speed and game speed to default value on new session
+    m_ClockSpeedFactor = 1.0;
+    m_GameEngineSpeedFactor = 1.0;
+
+    // for test purpose make the clock run 7 times faster than usual gameplay
+    // setClockSpeedFactor(7.0);
+
     resetNewGame();
 }
 

@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <json/json.hpp>
 
 namespace Engine
 {
@@ -81,10 +82,10 @@ namespace Engine
          * Writes actual player-data into the given savegame
          * @param idx Index of the savegame
          * @param playerName Name of the player which is saved. No extensions, just the name.
-         * @param data Data containing the playercontroller.
+         * @param player as json object
          * @return success
          */
-        bool writePlayer(int idx, const std::string& playerName, const std::string& data);
+        bool writePlayer(int idx, const std::string& playerName, const nlohmann::json& world);
 
         /**
          * Reads player-data for the player with the given name.
@@ -98,10 +99,10 @@ namespace Engine
          * Writes actual world-data into the given savegame
          * @param idx Index of the savegame
          * @param worldName Name of the world which is saved. No extensions, just the name.
-         * @param data Data containing the world information to be saved. 
+         * @param world as json object
          * @return success
          */
-        bool writeWorld(int idx, const std::string& worldName, const std::string& data);
+        bool writeWorld(int idx, const std::string& worldName, const nlohmann::json& world);
 
         /**
          * Reads world-data for the world with the given name.
@@ -149,8 +150,8 @@ namespace Engine
          */
         std::string buildWorldPath(int idx, const std::string& worldName);
 
-        constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + current
-        constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + current
+        constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + quicksave
+        constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + quicksave
 
         std::string gameSpecificSubFolderName();
 

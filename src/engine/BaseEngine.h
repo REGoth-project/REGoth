@@ -6,7 +6,7 @@
 #include <bx/commandline.h>
 #include <logic/SavegameManager.h>
 #include <future>
-#include "GameClock.h"
+#include "GameSession.h"
 
 namespace UI
 {
@@ -24,6 +24,7 @@ class AudioEngine;
 
 namespace Engine
 {
+	class GameSession;
 	const int MAX_NUM_WORLDS = 4;
 
 	class BaseEngine
@@ -60,31 +61,6 @@ namespace Engine
 		void setBasicGameType(Daedalus::GameType type) { m_BasicGameType = type; }
 
 		/**
-		 * @brief Adds a world based of the given file
-		 * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
-		 *		  or on disk (TODO)
-		 */
-		Handle::WorldHandle addWorld(const std::string& worldFile, const std::string& savegame = "");
-
-        /**
-         * Removes the current world and loads a new one
-         * @param worldFile Path to look for the worldfile. Can be inside a VDF-Archive
-         * @return Handle to the world
-         */
-        Handle::WorldHandle loadWorld(const std::string& worldFile, const std::string& savegame = "");
-
-        /**
-         * Removes a world and everything inside
-         * @param world World to remove
-         */
-        void removeWorld(Handle::WorldHandle world);
-
-        /**
-         * Removes all worlds and everything inside
-         */
-        void removeAllWorlds();
-
-		/**
 		 * @brief Frame update // TODO: Remove width and height
 		 */
 		void frameUpdate(double dt, uint16_t width, uint16_t m_height);
@@ -105,7 +81,18 @@ namespace Engine
         /**
          * @return Gameclock
          */
-        GameClock& getGameClock() { return m_GameClock; }
+        GameClock& getGameClock();
+
+		/**
+         * information stored in a session is cleared when loading a savegame or starting a new game
+         * @return GameSession
+         */
+		GameSession& getSession() { return *m_Session; }
+
+		/**
+         * drop all information bound to the current session
+         */
+		void resetSession();
 
         /**
          * @return Console
@@ -148,19 +135,10 @@ namespace Engine
 		 */
 		Textures::TextureAllocator& getEngineTextureAlloc(){ return m_EngineTextureAlloc; }
 
-		/**
-         * Sets the currently active world. Player and camera will be taken from this world.
-         * @param world
-         */
-		void setMainWorld(Handle::WorldHandle world);
-
         /**
          * @return data-access to the main world
          */
-        Handle::WorldHandle getMainWorld()
-        {
-            return m_MainWorld;
-        }
+        Handle::WorldHandle getMainWorld();
 
         /**
          * Saves the given world to a file, as savegame
@@ -169,25 +147,6 @@ namespace Engine
          * @return Whether the operation was successful
          */
         bool saveWorld(Handle::WorldHandle world, const std::string& file);
-
-		/**
-         * sets the speed factor for EVERYTHING the game for updating world instances
-         * i.e. world (ergo animations), in game clock (ergo sky) even the camera
-         * only for fun / debug purpose (default = 1.0)
-         * @param factor
-         */
-		void setGameEngineSpeedFactor(float factor)
-		{
-			m_GameEngineSpeedFactor = factor;
-		}
-
-		/**
-         * @return m_GameEngineSpeedFactor
-         */
-		float getGameEngineSpeedFactor() const
-		{
-			return m_GameEngineSpeedFactor;
-		}
 
 		/**
 		 * Pauses or continues the game.
@@ -220,13 +179,14 @@ namespace Engine
 
         void processAsyncActionQueue();
 
-	protected:
+        /**
+         * Called when a world was added
+         * TODO onWorld... should be protected, but currently need to call this function from GameSession
+         */
+        virtual void onWorldCreated(Handle::WorldHandle world);
+        virtual void onWorldRemoved(Handle::WorldHandle world){};
 
-		/**
-		 * Called when a world was added
-		 */
-		virtual void onWorldCreated(Handle::WorldHandle world);
-		virtual void onWorldRemoved(Handle::WorldHandle world){};
+	protected:
 
 		/**
 		 * Update-method for subclasses
@@ -240,19 +200,9 @@ namespace Engine
 		virtual void loadArchives();
 
         /**
-         *
+         * Enum with values for Gothic I and Gothic II
          */
         Daedalus::GameType m_BasicGameType;
-
-		/**
-		 * Currently active world instances
-		 */
-		std::list<std::unique_ptr<World::WorldInstance>> m_WorldInstances;
-
-        /**
-         * Main world of this engine-instance
-         */
-        Handle::WorldHandle m_MainWorld;
 
 		/**
 		 * Main VDFS-Index
@@ -260,14 +210,11 @@ namespace Engine
 		VDFS::FileIndex m_FileIndex;
 
 		/**
-		 * Registered worlds
-		 */
-		std::vector<Handle::WorldHandle> m_Worlds;
-
-        /**
-         * ingame clock
+         * Game session, stores information that should be reset on starting a new game/loading
+         * unique_ptr is used, because we can't overwrite the session itself,
+         * because it has a member variable reference
          */
-        GameClock m_GameClock;
+		std::unique_ptr<GameSession> m_Session;
 
         /**
          * ingame clock
@@ -297,11 +244,6 @@ namespace Engine
 		 * Folder where the content is
 		 */
 		std::string m_ContentBasePath;
-
-		/**
-         * Global speed factor. affects all instances (world (ergo animations), ingame clock (ergo sky))
-         */
-		float m_GameEngineSpeedFactor;
 
 		/**
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates

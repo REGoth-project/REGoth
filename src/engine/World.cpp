@@ -54,7 +54,10 @@ WorldInstance::~WorldInstance()
     delete m_AudioWorld;
 }
 
-bool WorldInstance::init(const std::string& zen, const json& j)
+bool WorldInstance::init(const std::string& zen,
+                         const json& worldJson,
+                         const json& scriptEngine,
+                         const json& dialogManger)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -322,7 +325,8 @@ bool WorldInstance::init(const std::string& zen, const json& j)
             }
         };
 
-        if(j.empty())
+        bool worldUnknownToPlayer = worldJson.empty();
+        if(worldUnknownToPlayer)
         {
             // Load vobs from zen (initial load)
             LogInfo() << "Inserting vobs from zen...";
@@ -331,7 +335,7 @@ bool WorldInstance::init(const std::string& zen, const json& j)
         {
             // Load vobs from saved json (Savegame)
             LogInfo() << "Inserting vobs from json...";
-            importVobs(j["vobs"]);
+            importVobs(worldJson["vobs"]);
         }
 
 
@@ -364,7 +368,7 @@ bool WorldInstance::init(const std::string& zen, const json& j)
         LogInfo() << "Running startup-scripts";
 
         // Init script-engine
-        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty()))
+        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
         {
             LogInfo() << "Failed to initialize script engine for zen world";
             delete m_AudioWorld;
@@ -373,11 +377,15 @@ bool WorldInstance::init(const std::string& zen, const json& j)
         }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
-        // Load values from savegame, if there is one
-        if(!j.empty())
+        // Load script engine if one is provided. Always the case except "start new game"
+        if(!scriptEngine.empty())
         {
-            m_ScriptEngine.importScriptEngine(j["scriptEngine"]);
-            m_DialogManager.importDialogManager(j["dialogManager"]);
+            m_ScriptEngine.importScriptEngine(scriptEngine);
+        }
+        // Load dialogManager if one is provided. Only after loading a savegame
+        if(!dialogManger.empty())
+        {
+            m_DialogManager.importDialogManager(dialogManger);
         }
 	}
 	else
@@ -434,15 +442,6 @@ bool WorldInstance::init(const std::string& zen, const json& j)
 
         Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
     }
-
-    // reset gamespeed to default when new world is loaded
-    m_pEngine->setGameEngineSpeedFactor(1.0);
-
-    auto& clock = m_pEngine->getGameClock();
-    // reset clockspeed to default on world init
-    clock.setClockSpeedFactor(1.0);
-    // for test purpose make the clock run 7 times faster than usual gameplay
-    clock.setClockSpeedFactor(7.0);
 
     LogInfo() << "Done loading world!";
     return true;
@@ -722,12 +721,6 @@ void WorldInstance::exportWorld(json& j, std::set<Handle::EntityHandle> skip)
             exportControllers(logicController, visualController, jvobs["controllers"][i]);
         }
     }
-
-    // Write script-values
-    m_ScriptEngine.exportScriptEngine(j["scriptEngine"]);
-
-    // Write dialog-info
-    m_DialogManager.exportDialogManager(j["dialogManager"]);
 }
 
 Handle::EntityHandle WorldInstance::importSingleVob(const json& j)

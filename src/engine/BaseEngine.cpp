@@ -43,9 +43,10 @@ BaseEngine::BaseEngine() :
     m_pFontCache = nullptr;
 
     m_BasicGameType = Daedalus::GameType::GT_Gothic2;
-    m_GameEngineSpeedFactor = 1.0;
     m_Paused = false;
     m_ExcludedFrameTime = 0;
+    // allocate and init default session
+    resetSession();
 }
 
 BaseEngine::~BaseEngine()
@@ -111,69 +112,9 @@ void BaseEngine::initEngine(int argc, char** argv)
     getRootUIView().addChild(m_pHUD);
 }
 
-Handle::WorldHandle BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
-{
-    std::string worldFile = _worldFile;
-
-    std::unique_ptr<World::WorldInstance> pWorldInstance = std::make_unique<World::WorldInstance>(*this);
-	World::WorldInstance& world = *pWorldInstance;
-
-    // Try to load a savegame
-    json savegameData;
-    if(!savegame.empty())
-    {
-        std::ifstream f(savegame);
-        std::stringstream saveData;
-        saveData << f.rdbuf();
-
-        savegameData = json::parse(saveData); // expensive operation
-        worldFile = savegameData["zenfile"];
-    }
-
-    if(!worldFile.empty())
-    {
-        std::vector<uint8_t> zenData;
-        m_FileIndex.getFileData(worldFile, zenData);
-
-        if (zenData.empty())
-        {
-            LogWarn() << "Failed to find world file: " << worldFile;
-            return Handle::WorldHandle::makeInvalidHandle();
-        }
-    }
-    if (!world.init(worldFile, savegameData)) // expensive operation
-    {
-        LogError() << "Failed to init world file: " << worldFile;
-        return Handle::WorldHandle::makeInvalidHandle();
-    }
-    onWorldCreated(world.getMyHandle());
-    m_WorldInstances.push_back(std::move(pWorldInstance));
-	m_Worlds.push_back(world.getMyHandle());
-
-	return world.getMyHandle();
-}
-
-void BaseEngine::removeWorld(Handle::WorldHandle world)
-{
-    if (m_MainWorld.isValid() && m_MainWorld == world)
-        m_MainWorld.invalidate();
-
-    m_Worlds.erase(std::remove(m_Worlds.begin(), m_Worlds.end(), world), m_Worlds.end());
-
-    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
-    {
-        if(it->get() == &world.get())
-        {
-            m_WorldInstances.erase(it);
-            break;
-        }
-    }
-    onWorldRemoved(world);
-}
-
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-	onFrameUpdate(dt * getGameEngineSpeedFactor(), width, height);
+	onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
 }
 
 void BaseEngine::loadArchives()
@@ -255,16 +196,6 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
     return m_Args;
 }
 
-Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
-{
-    return addWorld(worldFile, savegame);
-}
-
-void BaseEngine::setMainWorld(Handle::WorldHandle world)
-{
-    m_MainWorld = world;
-}
-
 bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 {
     json j;
@@ -284,22 +215,24 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 void BaseEngine::setPaused(bool paused) {
     if (paused != m_Paused)
     {
-        if (m_MainWorld.isValid())
+        if (getMainWorld().isValid())
         {
             if (paused)
-                m_MainWorld.get().getAudioWorld().pauseSounds();
+                getMainWorld().get().getAudioWorld().pauseSounds();
             else
-                m_MainWorld.get().getAudioWorld().continueSounds();
+                getMainWorld().get().getAudioWorld().continueSounds();
         }
         m_Paused = paused;
     }
 }
 
-void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction) {
+void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction)
+{
     m_SaveGameActionQueue.push(saveGameAction);
 }
 
-void BaseEngine::processSaveGameActionQueue() {
+void BaseEngine::processSaveGameActionQueue()
+{
     while (!m_SaveGameActionQueue.empty())
     {
         SavegameManager::SaveGameAction action = m_SaveGameActionQueue.front();
@@ -309,7 +242,7 @@ void BaseEngine::processSaveGameActionQueue() {
                 if (!getMainWorld().get().getDialogManager().isDialogActive())
                 {
                     // only save while not in Dialog
-                    Engine::SavegameManager::saveToSaveGameSlot(action.slot, action.savegameName);
+                    getSession().saveToSlot(action.slot, action.savegameName);
                 }
                 break;
             case SavegameManager::Load:
@@ -321,24 +254,7 @@ void BaseEngine::processSaveGameActionQueue() {
                 break;
             case SavegameManager::SwitchLevel:
                 {
-                    auto exportedPlayer = getMainWorld().get().exportAndRemoveNPC(
-                            getMainWorld().get().getScriptEngine().getPlayerEntity());
-                    removeWorld(getMainWorld());
-                    auto newWorld = addWorld(action.savegameName);
-                    setMainWorld(newWorld);
-                    auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
-                    // TODO find out start position after level change
-                    // TODO move this code out of the BaseEngine
-                    std::vector<size_t> startpoints = newWorld.get().findStartPoints();
-                    if (!startpoints.empty())
-                    {
-                        auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
-                        std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
-                        LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
-                        playerVob.playerController->teleportToWaypoint(startpoints.front());
-                        // FIXME seems like player start-points are inverted?
-                        playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
-                    }
+                    getSession().switchToWorld(action.savegameName);
                 }
                 break;
         }
@@ -368,13 +284,20 @@ void BaseEngine::processAsyncActionQueue()
     }
 }
 
-void BaseEngine::removeAllWorlds() {
-    while(!m_WorldInstances.empty())
-    {
-        Handle::WorldHandle w = m_Worlds.front();
-        removeWorld(w);
-    }
-    setMainWorld(Handle::WorldHandle::makeInvalidHandle());
+void BaseEngine::resetSession()
+{
+    // GameSession's destructor will clean up worlds
+    m_Session = std::make_unique<GameSession>(*this);
+}
+
+GameClock &BaseEngine::getGameClock()
+{
+    return getSession().getGameClock();
+}
+
+Handle::WorldHandle BaseEngine::getMainWorld()
+{
+    return getSession().getMainWorld();
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

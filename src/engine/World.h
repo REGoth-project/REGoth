@@ -79,9 +79,15 @@ namespace World
 		~WorldInstance();
 
 		/**
-		* @param zen file
+		 * @param zen filename of world
+		 * @param worldJson may be empty
+		 * @param scriptEngine may be empty
+		 * @param dialogManger shall only be non empty at first world load in each session
 		*/
-		bool init(const std::string& zen, const json& j = json());
+		bool init(const std::string& zen,
+                  const json& worldJson = json(),
+                  const json& scriptEngine = json(),
+                  const json& dialogManger = json());
 
         /**
          * Creates an entity with the given components and returns its handle

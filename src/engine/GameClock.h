@@ -111,6 +111,25 @@ namespace Engine
          */
         static void dayTimeTohm(double timeOfDay, int& hours, int& minutes);
 
+        /**
+         * additional factor for deltaTime when updating world instances. Speeds up everything
+         * i.e. world (ergo animations), in game clock (ergo sky) even the camera
+         * only for fun / debug purpose (default = 1.0)
+         * @param factor
+         */
+        void setGameEngineSpeedFactor(float factor)
+        {
+            m_GameEngineSpeedFactor = factor;
+        }
+
+        /**
+         * @return m_GameEngineSpeedFactor
+         */
+        float getGameEngineSpeedFactor() const
+        {
+            return m_GameEngineSpeedFactor;
+        }
+
         static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
         // Defines how much faster the ingame clock runs compared to the real time clock. Don't change this value
@@ -125,5 +144,8 @@ namespace Engine
 
         // last known delta t
         double m_LastFrameDeltaTime;
+
+        // Global speed factor for the engine
+        float m_GameEngineSpeedFactor;
     };
 }

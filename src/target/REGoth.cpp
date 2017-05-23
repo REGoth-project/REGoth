@@ -368,20 +368,6 @@ public:
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            static std::vector<Handle::WorldHandle> worlds;
-            static int i = 0;
-            if (i == 0)
-            {
-                worlds.push_back(m_pEngine->getMainWorld());
-                worlds.push_back(m_pEngine->loadWorld("oldmine.zen"));
-            }
-            {
-                std::swap(worlds.front(), worlds.back());
-                m_pEngine->setMainWorld(worlds.front());
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                                                        m_pEngine->getMainWorld().get().getScriptEngine().getPlayerEntity());
-            }
-            i++;
             return "Hello World!";
         });
 
@@ -433,7 +419,7 @@ public:
                 return "Missing argument. Usage: set gamespeed <factor:default=1>";
 
             float factor = std::stof(args[2]);
-            m_pEngine->setGameEngineSpeedFactor(factor);
+            m_pEngine->getGameClock().setGameEngineSpeedFactor(factor);
 
             return "Set gamespeed to " + std::to_string(factor);
         });
@@ -513,55 +499,7 @@ public:
                 return "File '" + zenFilename + "' not found.";
 
             m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
-            /*
-
-            // Export hero
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s1.getPlayerEntity());
-
-            json pex;
-            player.playerController->exportObject(pex);
-
-            // Export script-symbols
-            json scriptSymbols;
-            s1.exportScriptEngine(scriptSymbols);
-
-            json dialogMan;
-            m_pEngine->getMainWorld().get().getDialogManager().exportDialogManager(dialogMan);
-
-            // Temporary save
-            m_pEngine->getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
-
-            // Check if a savegame for this world exists
-            if(Utils::fileExists(file + ".json"))
-            {
-                m_pEngine->getConsole().submitCommand("load " + file);
-            }else
-            {
-                clearActions();
-                m_pEngine->removeWorld(m_pEngine->getMainWorld());
-                m_pEngine->addWorld(args[1]);
-            }
-
-            // Import hero again
-            auto& s2 = m_pEngine->getMainWorld().get().getScriptEngine();
-            if(s2.getPlayerEntity().isValid())
-            {
-                player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                            s2.getPlayerEntity()); // World and player changed
-                player.playerController->importObject(pex, true);
-            }else
-            {
-                LogError() << "Player not inserted into new world!";
-            }
-
-            // Import script-symbols
-            s2.importScriptEngine(scriptSymbols);
-
-            // Import dialog info
-            m_pEngine->getMainWorld().get().getDialogManager().importDialogManager(dialogMan);
-             */
-
-            return "Switching player to world: " + zenFilename;
+            return "Switching world to: " + zenFilename;
         });
 
         console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
@@ -978,9 +916,8 @@ public:
 
     int shutdown() override
     {
-		// remove (destroy) the world so that it shuts down properly
-        m_pEngine->removeAllWorlds();
-        m_pEngine->setMainWorld(Handle::WorldHandle::makeInvalidHandle());
+		// remove all worlds so that it shuts down properly
+        m_pEngine->resetSession();
 
         delete m_pEngine;
 
@@ -1114,7 +1051,7 @@ public:
 
         {
             auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
-            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
+            float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
             if(m_NoHUD)
             {
                 // draw console even if HUD is disabled

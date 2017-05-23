@@ -38,18 +38,13 @@ void Menu_Main::onCustomAction(const std::string& action)
         LogInfo() << "Starting new game...";
         getHud().popMenu();
 
-        // TODO: extract method: clearSession(): invalidates slot index, remove active world, inactive worlds...
-        Engine::SavegameManager::invalidateCurrentSlotIndex();
-        m_Engine.removeAllWorlds();
-
-        Handle::WorldHandle worldHandle = m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
+        m_Engine.resetSession();
+        Handle::WorldHandle worldHandle = m_Engine.getSession().addWorld(m_Engine.getEngineArgs().startupZEN);
         if (worldHandle.isValid())
         {
-            m_Engine.setMainWorld(worldHandle);
+            m_Engine.getSession().setMainWorld(worldHandle);
             auto player = worldHandle.get().getScriptEngine().createDefaultPlayer("PC_HERO");
             worldHandle.get().takeControlOver(player);
-            // reset the clock to the default starting time
-            m_Engine.getGameClock().resetNewGame();
         } else
         {
             LogError() << "Failed to add given startup world, world handle is invalid!";

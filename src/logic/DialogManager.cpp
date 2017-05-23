@@ -358,7 +358,9 @@ bool DialogManager::init()
         LogInfo() << "Loading OU-file from: " << ou;
 
     LogInfo() << "Creating script-side dialog-manager";
-    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), ou);
+    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(),
+                                                                            ou,
+                                                                            m_World.getEngine()->getSession().getKnownInfoMap());
 
     LogInfo() << "Adding dialog-UI to root view";
     // Add subtitle box (Hidden if there is nothing to display)
@@ -455,7 +457,7 @@ void DialogManager::exportDialogManager(json& j)
     const std::map<size_t, std::set<size_t>>& info =
             m_World.getDialogManager().getScriptDialogManager()->getKnownNPCInformation();
 
-    json& npcInfo = j["npcInfo"];
+    json& npcInfo = j["npcKnowsInfo"];
     for(const auto& p : info)
     {
         // Converting to string here, because these can get pretty high with huge gaps,
@@ -466,7 +468,7 @@ void DialogManager::exportDialogManager(json& j)
 
 void DialogManager::importDialogManager(const json& j)
 {
-    for(auto it=j["npcInfo"].begin(); it != j["npcInfo"].end(); it++)
+    for(auto it=j["npcKnowsInfo"].begin(); it != j["npcKnowsInfo"].end(); it++)
     {
         // Map of indices -> array of numbers
         int npcInstance = std::stoi(it.key());
