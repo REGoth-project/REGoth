@@ -305,7 +305,23 @@ FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 ///             that are dropped by the player.
 /// \bug        Two items are removed but only one item is dropped
 ///             (one item is removed by this function
-///              and a second item by the drop message handler).
+///             and a second item by the drop message handler).
+///             \code
+///             func void B_DropItem(var C_NPC Character, var int ItemId)
+///             {
+///             	if (Hlp_IsValidNpc(Character) && (ItemId > 0)) {
+///             		// Resolve ITEM reference
+///             		if ((ItemId == ITEM) && Hlp_IsValidItem(ITEM)) {
+///             			ItemId = Hlp_GetInstanceID(ITEM);
+///             		};
+///             		// Workaround for double removal
+///             		if (Npc_HasItems(Character, ItemId) > 1) {
+///             			CreateInvItem(Character, ItemId);
+///             		};
+///             		AI_DropItem(Character, ItemId);
+///             	};
+///             };
+///             \endcode
 {
 };
 
