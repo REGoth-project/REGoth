@@ -9,6 +9,8 @@ FUNC void AI_AimAt(VAR C_NPC Attacker, VAR C_NPC Target)
 ///                 Object reference to the character that aims at \p Target.
 /// \param      Target
 ///                 Object reference to the character that \p Attacker aims at.
+/// \warning    In G2 the game will crash if \p Attacker is not a valid
+///             character object reference.
 /// \details    The message is active as long as the \p Target is alive and
 ///             the \p Attacker still has ammunition for the ranged weapon.
 ///             Before checking for the ammunition the message handler is
@@ -25,8 +27,6 @@ FUNC void AI_AimAt(VAR C_NPC Attacker, VAR C_NPC Target)
 ///             And the \p Attacker is forced into standing state when the
 ///             aiming is finalized.
 /// \sa         AI_StopAim
-/// \warning    In G2 the game will crash if \p Attacker is not a valid
-///             character object reference.
 /// \bug        In G1 the \p Attacker is not removed from the stack
 ///             if \p Target is not a valid character object reference.
 {
@@ -197,7 +197,7 @@ FUNC void AI_ContinueRoutine(VAR C_NPC NonPlayer)
 ///             -# AI_StartState(NonPlayer, 0, FALSE, "");
 ///             .
 /// \note       In contrast to a AI_StartState call, the global instance
-///             variables OTHER and VICTIM are not saved and always NULL
+///             variables \b OTHER and \b VICTIM are not saved and always NULL
 ///             in the daily routine.
 /// \sa         AI_RemoveWeapon
 /// \sa         AI_StandUpQuick
@@ -253,16 +253,16 @@ FUNC void AI_DrawWeapon(VAR C_NPC Character)
 ///               -# "MAG" if any spell or rune is equipped
 ///               -# "FIST" if no melee weapon is equipped
 ///               -# "DAG" if a melee weapon is equipped
-///                  that has the ITEM_DAG flag
+///                  that has the \b ITEM_DAG flag
 ///               -# "1H" if a melee weapon is equipped
-///                  that has the ITEM_SWD or the ITEM_AXE flag
+///                  that has the \b ITEM_SWD or the \b ITEM_AXE flag
 ///               -# "2H" if a melee weapon is equipped
-///                  that has the ITEM_2HD_SWD or the ITEM_2HD_AXE flag
+///                  that has the \b ITEM_2HD_SWD or the \b ITEM_2HD_AXE flag
 ///               -# "BOW" if a ranged weapon is equipped
-///                  that has the ITEM_BOW flag
+///                  that has the \b ITEM_BOW flag
 ///                  and ammunition is available
 ///               -# "CBOW" if a ranged weapon is equipped
-///                  that has the ITEM_CROSSBOW flag
+///                  that has the \b ITEM_CROSSBOW flag
 ///                  and ammunition is available
 ///               .
 ///             - the animation "T_MOVE_2_<WeaponMode>MOVE" is started
@@ -293,7 +293,7 @@ FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 /// \details    If an item with the \p ItemId is currenly present in the
 ///             inventory of the \p Character, one item is directly removed
 ///             and a message is queued to drop the object to the ground.
-/// \details    The drop message handler sets the body state to BS_INVENTORY.
+/// \details    The drop message handler sets the body state to \b BS_INVENTORY.
 ///             If the current WALK state animation is active, the animation
 ///             "T_STAND_2_IDROP" is started. Thereafter, the message handler
 ///             is waiting until the IDROP state animation is active,
@@ -301,7 +301,7 @@ FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 ///             and drops the object to the ground.
 ///             Finally, the IDROP_2_STAND transition animation is started
 ///             (if present), followed by the current WALK state animation.
-/// \note       G2 sets the ITEM_DROPPED flag on item objects
+/// \note       G2 sets the \b ITEM_DROPPED flag on item objects
 ///             that are dropped by the player.
 /// \bug        Two items are removed but only one item is dropped
 ///             (one item is removed by this function
@@ -332,7 +332,7 @@ FUNC void AI_DropMob(VAR C_NPC Character)
 /// \details    The message handler checks if the \p Character is currenly
 ///             carrying an object and queues a high priority message to
 ///             drop the carried object to the ground.
-/// \details    The drop message handler sets the body state to BS_INVENTORY.
+/// \details    The drop message handler sets the body state to \b BS_INVENTORY.
 ///             If the current WALK state animation is active, the animation
 ///             "T_STAND_2_IDROP" is started. Thereafter, the message handler
 ///             is waiting until the IDROP state animation is active,
@@ -342,7 +342,7 @@ FUNC void AI_DropMob(VAR C_NPC Character)
 ///             (if present), followed by the current WALK state animation.
 /// \details    The overlay animation "HUMANS_CARRY<SchemeName>.MDS" is removed
 ///             if a movable object is dropped.
-/// \note       G2 sets the ITEM_DROPPED flag on item objects
+/// \note       G2 sets the \b ITEM_DROPPED flag on item objects
 ///             that are dropped by the player.
 /// \sa         AI_TakeMob
 {
@@ -355,23 +355,23 @@ FUNC void AI_EquipArmor(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 /// \param      ItemId
 ///                 Symbol index of a C_Item instance
 ///                 (global instance variable \b ITEM is also supported).
-///                 \warning The game will crash
-///                          if \b Character is a valid character object
-///                          and \p ItemId is an invalid symbol index.
+/// \warning    The game will crash if \p Character is a valid character object
+///             and \p ItemId is an invalid symbol index.
 /// \details    The message handler checks if
 ///             an item is found in the inventory,
 ///             can be used by the \p Character, and
-///             has the ITEM_KAT_ARMOR flag.
+///             has the \b ITEM_KAT_ARMOR flag.
 ///             If all conditions are met, the found armor is equipped or
-///             unequipped (if the found item has the ITEM_ACTIVE flag).
+///             unequipped (if the found item has the \b ITEM_ACTIVE flag).
 /// \sa         AI_EquipBestArmor
 /// \sa         AI_UnequipArmor
 /// \sa         Mdl_SetVisualBody
 /// \sa         Npc_GetEquippedArmor
 /// \sa         Npc_HasEquippedArmor
-/// \warning    The engine raises a fault if C_Item.wear is not WEAR_TORSO or
-///             WEAR_HEAD (in G2 they are flags and can be combined,
-///             but WEAR_HEAD takes precedence for the slot selection).
+/// \warning    The engine raises a fault
+///             if \b C_Item.wear is not \b WEAR_TORSO or \b WEAR_HEAD
+///             (in G2 they are flags and can be combined,
+///              but \b WEAR_HEAD takes precedence for the slot selection).
 {
 };
 
@@ -380,11 +380,12 @@ FUNC void AI_EquipBestArmor(VAR C_NPC Character)
 /// \param      Character
 ///                 Object reference to the character.
 /// \details    The message handler equips the first item in the inventory that
-///             can be used by the \p Character and has the ITEM_KAT_ARMOR flag
-///             (nothing is done if the found armor has the ITEM_ACTIVE flag).
+///             can be used by the \p Character
+///             and has the \b ITEM_KAT_ARMOR flag
+///             (nothing is done if the found item has the \b ITEM_ACTIVE flag).
 /// \note       The G2 armor items are sorted by:
-///             -# C_Item.wear
-///             -# C_Item.protection[] sum
+///             -# \b C_Item.wear
+///             -# \b C_Item.protection[] sum
 ///             -# instance name
 ///             .
 /// \sa         AI_EquipArmor
@@ -392,9 +393,10 @@ FUNC void AI_EquipBestArmor(VAR C_NPC Character)
 /// \sa         Mdl_SetVisualBody
 /// \sa         Npc_GetEquippedArmor
 /// \sa         Npc_HasEquippedArmor
-/// \warning    The engine raises a fault if C_Item.wear is not WEAR_TORSO or
-///             WEAR_HEAD (in G2 they are flags and can be combined,
-///             but WEAR_HEAD takes precedence for the slot selection).
+/// \warning    The engine raises a fault
+///             if \b C_Item.wear is not \b WEAR_TORSO or \b WEAR_HEAD
+///             (in G2 they are flags and can be combined,
+///              but \b WEAR_HEAD takes precedence for the slot selection).
 {
 };
 
@@ -592,11 +594,11 @@ FUNC void AI_StopAim(VAR C_NPC Attacker)
 /// \brief      Stop aiming with a ranged weapon (queued).
 /// \param      Attacker
 ///                 Object reference to a character that aims at a target.
+/// \warning    In G2 the game will crash if \p Attacker is not a valid
+///             character object reference.
 /// \details    Aiming is finalized and the \p Attacker is forced into standing
 ///             state.
 /// \sa         AI_AimAt
-/// \warning    In G2 the game will crash if \b Attacker is not a valid
-///             character object reference.
 {
 };
 
@@ -641,7 +643,7 @@ FUNC void AI_UnequipArmor(VAR C_NPC Character)
 /// \param      Character
 ///                 Object reference to the character.
 /// \details    The message handler unequips the active armor in the torso slot
-///             (C_Item.wear = WEAR_TORSO).
+///             (\b C_Item.wear = \b WEAR_TORSO).
 /// \sa         AI_EquipArmor
 /// \sa         AI_EquipBestArmor
 /// \sa         Mdl_SetVisualBody
