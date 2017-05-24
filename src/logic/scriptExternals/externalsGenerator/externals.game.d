@@ -349,10 +349,52 @@ FUNC void AI_DropMob(VAR C_NPC Character)
 };
 
 FUNC void AI_EquipArmor(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
+/// \brief      Equip or unequip an armor (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \param      ItemId
+///                 Symbol index of a C_Item instance
+///                 (global instance variable \b ITEM is also supported).
+///                 \warning The game will crash
+///                          if \b Character is a valid character object
+///                          and \p ItemId is an invalid symbol index.
+/// \details    The message handler checks if
+///             an item is found in the inventory,
+///             can be used by the \p Character, and
+///             has the ITEM_KAT_ARMOR flag.
+///             If all conditions are met, the found armor is equipped or
+///             unequipped (if the found item has the ITEM_ACTIVE flag).
+/// \sa         AI_EquipBestArmor
+/// \sa         AI_UnequipArmor
+/// \sa         Mdl_SetVisualBody
+/// \sa         Npc_GetEquippedArmor
+/// \sa         Npc_HasEquippedArmor
+/// \warning    The engine raises a fault if C_Item.wear is not WEAR_TORSO or
+///             WEAR_HEAD (in G2 they are flags and can be combined,
+///             but WEAR_HEAD takes precedence for the slot selection).
 {
 };
 
 FUNC void AI_EquipBestArmor(VAR C_NPC Character)
+/// \brief      Equip first armor that can be used (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler equips the first item in the inventory that
+///             can be used by the \p Character and has the ITEM_KAT_ARMOR flag
+///             (nothing is done if the found armor has the ITEM_ACTIVE flag).
+/// \note       The G2 armor items are sorted by:
+///             -# C_Item.wear
+///             -# C_Item.protection[] sum
+///             -# instance name
+///             .
+/// \sa         AI_EquipArmor
+/// \sa         AI_UnequipArmor
+/// \sa         Mdl_SetVisualBody
+/// \sa         Npc_GetEquippedArmor
+/// \sa         Npc_HasEquippedArmor
+/// \warning    The engine raises a fault if C_Item.wear is not WEAR_TORSO or
+///             WEAR_HEAD (in G2 they are flags and can be combined,
+///             but WEAR_HEAD takes precedence for the slot selection).
 {
 };
 
@@ -595,6 +637,16 @@ FUNC void AI_TurnToSound(VAR C_NPC Character)
 };
 
 FUNC void AI_UnequipArmor(VAR C_NPC Character)
+/// \brief      Unequip active torso armor (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler unequips the active armor in the torso slot
+///             (C_Item.wear = WEAR_TORSO).
+/// \sa         AI_EquipArmor
+/// \sa         AI_EquipBestArmor
+/// \sa         Mdl_SetVisualBody
+/// \sa         Npc_GetEquippedArmor
+/// \sa         Npc_HasEquippedArmor
 {
 };
 
