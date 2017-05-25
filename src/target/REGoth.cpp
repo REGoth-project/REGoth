@@ -1139,6 +1139,7 @@ int main(int argc, char** argv)
         return 0;
 
     ExampleCubes app;
+#ifdef NDEBUG
     try
     {
         ret = app.run(argc, argv);
@@ -1156,6 +1157,10 @@ int main(int argc, char** argv)
         std::cerr << "Caught unknown exception in main loop" << std::endl;
         ret = 1;
     }
+#else
+    ret = app.run(argc, argv);
+    app.shutdown();
+#endif
 
     // Write current config-values
     Cli::writeConfigFile();

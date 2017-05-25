@@ -187,10 +187,13 @@ Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile) {
         newWorldJson = retrieveInactiveWorld(worldFile);
     } else
     {
-        // try read from disk
-        std::string worldFromDisk = SavegameManager::readWorld(m_CurrentSlotIndex, Utils::stripExtension(worldFile));
-        if (!worldFromDisk.empty())
-            newWorldJson = json::parse(worldFromDisk); // we found the world on disk
+        if (m_CurrentSlotIndex != -1)
+        {
+            // try read from disk
+            std::string worldFromDisk = SavegameManager::readWorld(m_CurrentSlotIndex, Utils::stripExtension(worldFile));
+            if (!worldFromDisk.empty())
+                newWorldJson = json::parse(worldFromDisk); // we found the world on disk
+        }
     }
 
     // TODO do this asynchronous
