@@ -20,7 +20,11 @@ namespace UI
                 aliasList(aliasList),
                 anyStartsWith(false)
         {}
+
         virtual ~SuggestionBase() {};
+
+        bool operator<(const SuggestionBase& b);
+
         std::vector<std::string> aliasList;
         bool anyStartsWith;
     };

@@ -220,35 +220,19 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
 }
 
 /*
-int naturalComparator(const std::string& left, const std::string& right)
+bool naturalComparator(const std::string& left, const std::string& right)
 {
-    auto leftVec = Utils::splitAndRemoveEmpty(left, '_');
-    auto rightVe = Utils::splitAndRemoveEmpty(right, '_');
+    // TODO
+    return left < right;
 }*/
 
 using Suggestion = UI::ConsoleCommand::Suggestion;
-
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
 
     vector<string> tokens = tokenized(input);
-
     vector<vector<Suggestion>> suggestionsList;
-
-    auto suggestionCompare = [](const Suggestion& a, const Suggestion& b) -> int {
-        int anyStartsWithRelation = b->anyStartsWith - a->anyStartsWith;
-        if (anyStartsWithRelation != 0)
-            return anyStartsWithRelation;
-        auto minSize = std::min(a->aliasList.size(), b->aliasList.size());
-        for (std::size_t i = 0; i < minSize; ++i)
-        {
-            auto relation = a->aliasList[0].compare(b->aliasList[0]);
-            if (relation != 0)
-                return relation;
-        }
-        return static_cast<int>(a->aliasList.size()) - static_cast<int>(b->aliasList.size());
-    };
 
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
@@ -286,11 +270,11 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
         }
         // generate suggestions
         {
-            std::sort(matches.begin(), matches.end(), [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
-                return suggestionCompare(a, b) < 0;
-            });
             // filter out duplicates in consecutive groups
-            auto uniquePredicate = [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+            std::sort(matches.begin(), matches.end(), [](const Suggestion& a, const Suggestion& b) -> bool {
+                return *a < *b;
+            });
+            auto uniquePredicate = [](const Suggestion& a, const Suggestion& b) -> bool{
                 return a->aliasList == b->aliasList;
             };
             matches.erase(std::unique(matches.begin(), matches.end(), uniquePredicate), matches.end());
@@ -343,4 +327,10 @@ void Console::setOpen(bool open) {
         invalidateSuggestions();
 }
 
-
+bool SuggestionBase::operator<(const SuggestionBase& b) {
+    const SuggestionBase& a = *this;
+    if (a.anyStartsWith != b.anyStartsWith)
+        return !a.anyStartsWith < !b.anyStartsWith;
+    return std::lexicographical_compare(a.aliasList.begin(), a.aliasList.end(),
+                                        b.aliasList.begin(), b.aliasList.end());
+}

@@ -335,6 +335,15 @@ public:
 #endif
 
         auto& console = m_pEngine->getConsole();
+
+        // suggestion generator for an integer range. stop is not included
+        auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<UI::ConsoleCommand::Suggestion> {
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+            for (int i = start; i < stop; ++i)
+                suggestions.push_back(std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {{std::to_string(i)}}));
+            return suggestions;
+        };
+
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
@@ -385,11 +394,13 @@ public:
 
         console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the world time
-            if(args.size() != 4)
-                return "Invalid arguments. Usage: set clock [hh mm]";
+            if(args.size() < 3)
+                return "Invalid arguments. Usage: set clock <hh> [<mm>]";
 
             const int hh = std::stoi(args[2]);
-            const int mm = std::stoi(args[3]);
+            int mm = 0;
+            if (args.size() >= 4)
+                mm = std::stoi(args[3]);
 
             if(hh < 0 || hh > 23)
                 return "Invalid argument. Hours must be in range from 0 to 23";
@@ -400,7 +411,9 @@ public:
             clock.setTimeOfDay(hh, mm);
 
             return "Set clock to " + clock.getTimeOfDayFormatted();
-        });
+        })
+                .registerAutoComplete(std::bind(rangeGen, 0, 24))
+                .registerAutoComplete(std::bind(rangeGen, 0, 60));
 
         console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the time of day
@@ -484,23 +497,62 @@ public:
             return "Hero successfully imported from: hero.json";
         });
 
-        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args2) -> std::string {
-            auto args = args2;
-            if (args.size() == 1)
-                args.push_back(m_pEngine->getEngineArgs().startupZEN);
+        auto zenLevelNamesGen = [this]() -> std::vector<UI::ConsoleCommand::Suggestion> {
+            using Suggestion = UI::ConsoleCommand::Suggestion;
 
-            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
+            std::vector<std::string> g1WorldNames = {"WORLD.ZEN", "FREEMINE.ZEN", "OLDMINE.ZEN", "ORCGRAVEYARD.ZEN", "ORCTEMPEL.ZEN"};
+            std::vector<std::string> g2WorldNames = {"DRAGONISLAND.ZEN", "NEWWORLD.ZEN", "OLDWORLD.ZEN", "ADDONWORLD.ZEN"};
+            auto& worldNames = m_pEngine->getBasicGameType() == Daedalus::GameType::GT_Gothic1 ? g1WorldNames : g2WorldNames;
+            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+            for (const auto& worldName : worldNames)
+                suggestions.push_back(std::make_shared<UI::SuggestionBase>(UI::SuggestionBase{{worldName}}));
+            return suggestions;
 
-            if(args.size() < 2)
-                return "Missing argument. Usage: switchlevel <zenfile>";
+            // also works, but ugly
+            /*
+            static std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+            if (!suggestions.empty())
+                return suggestions;
 
-            std::string zenFilename = args[1];
+            for (auto& fileInfo : m_pEngine->getVDFSIndex().getKnownFiles())
+            {
+                if (Utils::endsWith(Utils::lowered(fileInfo.fileName), ".zen"))
+                {
+                    // ugly but works
+                    ZenLoad::ZenParser parser(fileInfo.fileName, m_pEngine->getVDFSIndex());
+                    parser.readHeader();
+                    ZenLoad::oCWorldData world;
+
+                    ZenLoad::ZenParser::ChunkHeader header;
+                    parser.readChunkStart(header);
+                    LogInfo() << fileInfo.fileName;
+                    assert(header.classname == "oCWorld:zCWorld");
+
+                    try
+                    {
+                        ZenLoad::oCWorld::readObjectData(world, parser, header.version);
+                        if (parser.getWorldMesh())
+                            suggestions.push_back(std::make_shared<UI::SuggestionBase>(UI::SuggestionBase{{fileInfo.fileName}}));
+                    }
+                    catch (const std::runtime_error&)
+                    {
+                    }
+                }
+            }
+            return suggestions;
+             */
+        };
+
+        console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+            const std::string& zenFilename = args.size() >= 2 ?
+                                             args[1] :
+                                             m_pEngine->getEngineArgs().startupZEN;
             if(!m_pEngine->getVDFSIndex().hasFile(zenFilename))
                 return "File '" + zenFilename + "' not found.";
 
             m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
             return "Switching world to: " + zenFilename;
-        });
+        }).registerAutoComplete(zenLevelNamesGen);
 
         console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
