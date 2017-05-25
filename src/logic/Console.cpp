@@ -1,17 +1,12 @@
-#include <bgfx/bgfx.h>
 #include <ZenLib/utils/split.h>
 #include <utils/logger.h>
 #include "Console.h"
-#include <iterator>
 #include <utils/Utils.h>
-#include <iomanip>
 #include <engine/BaseEngine.h>
 #include <GLFW/glfw3.h>
 #include <ui/Hud.h>
 
 using Logic::Console;
-using Logic::ConsoleCommand;
-using Logic::SuggestionBase;
 
 Console::Console(Engine::BaseEngine& e) :
     m_BaseEngine(e)
@@ -134,18 +129,15 @@ std::string Console::submitCommand(std::string command)
     if(args.empty())
         return "";
 
-    // bool autoCompleteCommandTokensOnly = true;
-    // autoComplete(command, autoCompleteCommandTokensOnly, true);
-
     outputAdd(">> " + command);
 
-    auto commID = determineCommand(args);
+    auto commandIterator = determineCommand(args);
 
-    if (commID != -1)
+    if (commandIterator != m_Commands.end())
     {
         std::string result;
         try {
-            result = m_Commands.at(commID).callback(args);
+            result = commandIterator->callback(args);
         } catch (const std::out_of_range& e)
         {
             result = "error: argument out of range";
@@ -161,20 +153,20 @@ std::string Console::submitCommand(std::string command)
     return "NOTFOUND";
 }
 
-ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleCommand::Callback callback)
+Logic::Console::Command& Console::registerCommand(const std::string& command, Callback callback)
 {
     auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
-    std::vector<ConsoleCommand::CandidateListGenerator> generators;
-    auto simpleGen = [](std::string token) -> std::vector<ConsoleCommand::Suggestion> {
-        ConsoleCommand::Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{token}});
+    std::vector<CandidateListGenerator> generators;
+    auto simpleGen = [](std::string token) -> std::vector<Suggestion> {
+        Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{token}});
         return {suggestion};
     };
-    for (auto tokenIt = tokens.begin(); tokenIt != tokens.end(); tokenIt++)
+    for (const auto& token : tokens)
     {
-        generators.push_back(std::bind(simpleGen, *tokenIt));
+        generators.push_back(std::bind(simpleGen, token));
     }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
-    m_Commands.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
+    m_Commands.push_back({sanitizedCommand, generators, callback, generators.size()});
     return m_Commands.back();
 }
 
@@ -183,12 +175,13 @@ void Console::outputAdd(const std::string& msg)
     m_Output.push_front(msg);
 }
 
-int Console::determineCommand(const std::vector<std::string>& tokens)
+std::list<Logic::Console::Command>::iterator Console::determineCommand(const std::vector<std::string>& tokens)
 {
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
-    for (std::size_t commID = 0; commID < m_Commands.size(); commID++)
+    size_t commandIndex = 0;
+    for (auto it = m_Commands.begin(); it != m_Commands.end(); ++it, ++commandIndex)
     {
-        auto& command = m_Commands.at(commID);
+        const auto& command = *it;
         if (command.numFixTokens > tokens.size())
             continue;
         bool allStagesMatched = true;
@@ -200,17 +193,17 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
         }
         if (allStagesMatched)
         {
-            numMatchingTokens[commID] = command.numFixTokens;
+            numMatchingTokens[commandIndex] = command.numFixTokens;
         }
     }
     auto itMaxelement = std::max_element(numMatchingTokens.begin(), numMatchingTokens.end());
-    if (*itMaxelement != 0)
+    if (itMaxelement != numMatchingTokens.end() && *itMaxelement != 0)
     {
         // case: at least one command matched with command.numFixTokens
-        auto commID = itMaxelement - numMatchingTokens.begin();
-        return static_cast<int>(commID);
+        auto commandIndex = itMaxelement - numMatchingTokens.begin();
+        return std::next(m_Commands.begin(), commandIndex);
     }
-    return -1;
+    return m_Commands.end();
 }
 
 /*
@@ -220,7 +213,6 @@ bool naturalComparator(const std::string& left, const std::string& right)
     return left < right;
 }*/
 
-using Suggestion = Logic::ConsoleCommand::Suggestion;
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
@@ -234,11 +226,11 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
         const string& token = tokens[tokenID];
         auto tokenLowered = Utils::lowered(token);
         vector<Suggestion> matches;
-        for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
+        size_t cmdID = 0;
+        for (auto commandIt = m_Commands.begin(); commandIt != m_Commands.end(); commandIt++, cmdID++)
         {
-            auto& command = m_Commands[cmdID];
-            auto& generators = command.generators;
-            std::size_t cmdEnd = limitToFixed ? command.numFixTokens : generators.size();
+            auto& generators = commandIt->generators;
+            std::size_t cmdEnd = limitToFixed ? commandIt->numFixTokens : generators.size();
             if (commandIsAlive[cmdID] && tokenID < cmdEnd)
             {
                 commandIsAlive[cmdID] = false;
@@ -321,7 +313,10 @@ void Console::setOpen(bool open) {
         invalidateSuggestions();
 }
 
-bool SuggestionBase::operator<(const SuggestionBase& b) {
+using SuggestionBase = Logic::Console::SuggestionBase;
+
+bool SuggestionBase::operator<(const SuggestionBase& b) const
+{
     const SuggestionBase& a = *this;
     if (a.anyStartsWith != b.anyStartsWith)
         return !a.anyStartsWith < !b.anyStartsWith;

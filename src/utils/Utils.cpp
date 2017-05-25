@@ -457,7 +457,7 @@ bool Utils::containsLike(const std::string& searchSpace, const std::string& part
 }
 
 
-Logic::ConsoleCommand::Suggestion Utils::findSuggestion(const std::vector<Logic::ConsoleCommand::Suggestion>& suggestions,
+Logic::Console::Suggestion Utils::findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
                                                         const std::string& name){
     for (auto& suggestion : suggestions)
     {

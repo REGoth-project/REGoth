@@ -335,12 +335,16 @@ public:
 #endif
 
         auto& console = m_pEngine->getConsole();
+        using Command = Logic::Console::Command;
+        using SuggestionBase = Logic::Console::SuggestionBase;
+        using Suggestion = Logic::Console::Suggestion;
+        using CandidateListGenerator = Logic::Console::CandidateListGenerator;
 
         // suggestion generator for an integer range. stop is not included
-        auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<Logic::ConsoleCommand::Suggestion> {
-            std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+        auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<Suggestion> {
+            std::vector<Suggestion> suggestions;
             for (int i = start; i < stop; ++i)
-                suggestions.push_back(std::make_shared<Logic::SuggestionBase>(Logic::SuggestionBase {{std::to_string(i)}}));
+                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase {{std::to_string(i)}}));
             return suggestions;
         };
 
@@ -452,12 +456,12 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
-        auto waypointNamesGen = [this]() -> std::vector<Logic::ConsoleCommand::Suggestion> {
-            std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+        auto waypointNamesGen = [this]() -> std::vector<Suggestion> {
+            std::vector<Suggestion> suggestions;
             auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
             for (auto& waypoint : waypoints)
             {
-                Logic::ConsoleCommand::Suggestion suggestion = std::make_shared<Logic::SuggestionBase>(Logic::SuggestionBase {{waypoint.name}});
+                Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{waypoint.name}});
                 suggestions.push_back(suggestion);
             }
             return suggestions;
@@ -497,20 +501,20 @@ public:
             return "Hero successfully imported from: hero.json";
         });
 
-        auto zenLevelNamesGen = [this]() -> std::vector<Logic::ConsoleCommand::Suggestion> {
-            using Suggestion = Logic::ConsoleCommand::Suggestion;
+        auto zenLevelNamesGen = [this]() -> std::vector<Suggestion> {
+            using Suggestion = Suggestion;
 
             std::vector<std::string> g1WorldNames = {"WORLD.ZEN", "FREEMINE.ZEN", "OLDMINE.ZEN", "ORCGRAVEYARD.ZEN", "ORCTEMPEL.ZEN"};
             std::vector<std::string> g2WorldNames = {"DRAGONISLAND.ZEN", "NEWWORLD.ZEN", "OLDWORLD.ZEN", "ADDONWORLD.ZEN"};
             auto& worldNames = m_pEngine->getBasicGameType() == Daedalus::GameType::GT_Gothic1 ? g1WorldNames : g2WorldNames;
-            std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+            std::vector<Suggestion> suggestions;
             for (const auto& worldName : worldNames)
-                suggestions.push_back(std::make_shared<Logic::SuggestionBase>(Logic::SuggestionBase{{worldName}}));
+                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{worldName}}));
             return suggestions;
 
             // also works, but ugly
             /*
-            static std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+            static std::vector<Suggestion> suggestions;
             if (!suggestions.empty())
                 return suggestions;
 
@@ -532,7 +536,7 @@ public:
                     {
                         ZenLoad::oCWorld::readObjectData(world, parser, header.version);
                         if (parser.getWorldMesh())
-                            suggestions.push_back(std::make_shared<Logic::SuggestionBase>(Logic::SuggestionBase{{fileInfo.fileName}}));
+                            suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{fileInfo.fileName}}));
                     }
                     catch (const std::runtime_error&)
                     {
@@ -596,12 +600,12 @@ public:
             return "Saving world to slot: " + std::to_string(index) + "...";
         });
 
-        Logic::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {
-            using Suggestion = Logic::ConsoleCommand::Suggestion;
+        CandidateListGenerator worlddNpcNamesGen = [this]() {
+            using Suggestion = Suggestion;
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+            std::vector<Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
@@ -618,7 +622,7 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                Suggestion suggestion = std::make_shared<Logic::NPCSuggestion>(group, npc);
+                Suggestion suggestion = std::make_shared<Logic::Console::NPCSuggestion>(group, npc);
                 suggestions.push_back(suggestion);
             }
             return suggestions;
@@ -635,7 +639,7 @@ public:
 
             auto suggestions = worlddNpcNamesGen();
             auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
-            auto suggestion = std::dynamic_pointer_cast<Logic::NPCSuggestion>(baseSuggestion);
+            auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
             if (suggestion != nullptr) {
                 worldInstance.takeControlOver(suggestion->npcHandle);
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
@@ -705,7 +709,7 @@ public:
                 if (!requestedName.empty())
                 {
                     auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
-                    auto suggestion = std::dynamic_pointer_cast<Logic::NPCSuggestion>(baseSuggestion);
+                    auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
                     if (suggestion != nullptr)
                         entityHandle = suggestion->npcHandle;
                 } else
@@ -775,7 +779,7 @@ public:
                 const std::string& requested = args.at(1);
                 auto suggestions = worlddNpcNamesGen();
                 auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
-                auto suggestion = std::dynamic_pointer_cast<Logic::NPCSuggestion>(baseSuggestion);
+                auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
                 if (suggestion != nullptr) {
                     npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                 } else {
@@ -856,10 +860,10 @@ public:
             return "Used " + std::to_string(dmg) + " mana";
         });
 
-        Logic::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
+        CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
             auto& datFile = se.getVM().getDATFile();
-            std::vector<Logic::ConsoleCommand::Suggestion> suggestions;
+            std::vector<Suggestion> suggestions;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
@@ -880,7 +884,7 @@ public:
                         // most of the items have description equal to name, so remove one of them
                         aliasList.pop_back();
                     }
-                    Logic::ConsoleCommand::Suggestion suggestion = std::make_shared<Logic::SuggestionBase>(Logic::SuggestionBase {aliasList});
+                    Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {aliasList});
                     suggestions.push_back(suggestion);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
@@ -903,7 +907,7 @@ public:
                 amount = std::stoi(args[2]);
 
             if (amount < 1)
-                return "invalid ammount " + std::to_string(amount);
+                return "invalid amount " + std::to_string(amount);
 
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 

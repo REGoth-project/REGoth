@@ -484,7 +484,7 @@ namespace Utils
      * @param suggestions suggestions to search in
      * @param name token to find
      */
-    Logic::ConsoleCommand::Suggestion findSuggestion(const std::vector<Logic::ConsoleCommand::Suggestion>& suggestions,
+    Logic::Console::Suggestion findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
                                                      const std::string& name);
 
     /**

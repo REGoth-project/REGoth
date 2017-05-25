@@ -13,55 +13,57 @@
 
 namespace Logic
 {
-
-    struct SuggestionBase
-    {
-        SuggestionBase(const std::vector<std::string>& aliasList) :
-                aliasList(aliasList),
-                anyStartsWith(false)
-        {}
-
-        virtual ~SuggestionBase() {};
-
-        bool operator<(const SuggestionBase& b);
-
-        std::vector<std::string> aliasList;
-        bool anyStartsWith;
-    };
-
-    struct NPCSuggestion : SuggestionBase
-    {
-        NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle) :
-            SuggestionBase(aliasList),
-            npcHandle(npcHandle)
-        {}
-        Handle::EntityHandle npcHandle;
-    };
-
-    struct ConsoleCommand
-    {
-        // Takes list of arguments as parameter, returns command result
-        using Callback = std::function<std::string(const std::vector<std::string>&)>;
-
-        using Suggestion = std::shared_ptr<SuggestionBase>;
-        // generator, which returns vector of candidates
-        using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
-
-        std::string commandName;
-        std::vector<CandidateListGenerator> generators;
-        Callback callback;
-        // number of tokens, that must match to identify this command
-        std::size_t numFixTokens;
-
-        ConsoleCommand& registerAutoComplete(CandidateListGenerator generator){
-            generators.push_back(generator);
-            return *this;
-        }
-    };
-
     class Console
     {
     public:
+
+        struct SuggestionBase
+        {
+            SuggestionBase(const std::vector<std::string>& aliasList) :
+                    aliasList(aliasList),
+                    anyStartsWith(false)
+            {}
+
+            virtual ~SuggestionBase() {};
+
+            bool operator<(const SuggestionBase& b) const;
+
+            std::vector<std::string> aliasList;
+            bool anyStartsWith;
+        };
+
+        using Suggestion = std::shared_ptr<SuggestionBase>;
+
+        // Takes list of arguments as parameter, returns command result
+        using Callback = std::function<std::string(const std::vector<std::string>&)>;
+
+        // generator, which returns vector of candidates
+        using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
+
+        struct NPCSuggestion : SuggestionBase
+        {
+            NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle) :
+                    SuggestionBase(aliasList),
+                    npcHandle(npcHandle)
+            {}
+            Handle::EntityHandle npcHandle;
+        };
+
+        struct Command
+        {
+            std::string commandName;
+            std::vector<CandidateListGenerator> generators;
+            Callback callback;
+            // number of tokens, that must match to identify this command
+            std::size_t numFixTokens;
+
+            Command& registerAutoComplete(CandidateListGenerator generator)
+            {
+                generators.push_back(generator);
+                return *this;
+            }
+        };
+
 
         Console(Engine::BaseEngine& e);
 
@@ -84,9 +86,9 @@ namespace Logic
          * Adds a command to the console
          * @param Command Command to be added.
          * @param Callback Function to be executed if the given command was typed.
-         *
+         * @return reference to the created command, which will never be invalidated (commands are stored in std::list)
          */
-        ConsoleCommand& registerCommand(const std::string& command, ConsoleCommand::Callback callback);
+        Command& registerCommand(const std::string& command, Callback callback);
 
         /**
          * Trigger autocompletion
@@ -108,7 +110,7 @@ namespace Logic
         /**
          * searches for command which, could generate the given tokens and returns its index
          */
-        int determineCommand(const std::vector<std::string>& tokens);
+        std::list<Command>::iterator determineCommand(const std::vector<std::string>& tokens);
 
         /**
          * Executes a given command
@@ -140,7 +142,7 @@ namespace Logic
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
-        const std::vector<std::vector<Logic::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+        const std::vector<std::vector<Logic::Console::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
 
     private:
 
@@ -172,12 +174,12 @@ namespace Logic
         /**
          * All registered commands
          */
-        std::vector<ConsoleCommand> m_Commands;
+        std::list<Command> m_Commands;
 
         /**
          * suggestions for each token
          */
-        std::vector<std::vector<Logic::ConsoleCommand::Suggestion>> m_SuggestionsList;
+        std::vector<std::vector<Logic::Console::Suggestion>> m_SuggestionsList;
 
         /**
          * Currently typed line
