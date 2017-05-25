@@ -4,7 +4,7 @@
 #include "ConsoleBox.h"
 #include <engine/BaseEngine.h>
 #include "zFont.h"
-#include <ui/Console.h>
+#include <logic/Console.h>
 
 UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e) :
     View(e)

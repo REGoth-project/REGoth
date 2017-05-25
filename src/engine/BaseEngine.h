@@ -98,7 +98,7 @@ namespace Engine
         /**
          * @return Console
          */
-        UI::Console& getConsole() { return m_Console; }
+        Logic::Console& getConsole() { return m_Console; }
 
         /**
          * @return Arguments passed to the engine
@@ -218,9 +218,9 @@ namespace Engine
 		std::unique_ptr<GameSession> m_Session;
 
         /**
-         * ingame clock
+         * ingame console
          */
-        UI::Console m_Console;
+        Logic::Console m_Console;
 
         /**
          * Arguments

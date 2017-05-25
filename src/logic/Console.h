@@ -11,7 +11,7 @@
 #include <memory>
 #include <ui/ConsoleBox.h>
 
-namespace UI
+namespace Logic
 {
 
     struct SuggestionBase
@@ -140,7 +140,7 @@ namespace UI
 
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
-        const std::vector<std::vector<UI::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
+        const std::vector<std::vector<Logic::ConsoleCommand::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
 
     private:
 
@@ -177,7 +177,7 @@ namespace UI
         /**
          * suggestions for each token
          */
-        std::vector<std::vector<UI::ConsoleCommand::Suggestion>> m_SuggestionsList;
+        std::vector<std::vector<Logic::ConsoleCommand::Suggestion>> m_SuggestionsList;
 
         /**
          * Currently typed line

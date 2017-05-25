@@ -1,5 +1,5 @@
 #pragma once
-#include "Console.h"
+#include <logic/Console.h>
 #include "Menu.h"
 #include "View.h"
 #include <engine/BaseEngine.h>

@@ -9,15 +9,9 @@
 #include <GLFW/glfw3.h>
 #include <ui/Hud.h>
 
-using namespace UI;
-
-/* Function keys */
-namespace Keys
-{
-    // All keys mapped to ascii-characters
-    const int PrintableBegin = 32;
-    const int PrintableEnd = 93; // Inclusive
-};
+using Logic::Console;
+using Logic::ConsoleCommand;
+using Logic::SuggestionBase;
 
 Console::Console(Engine::BaseEngine& e) :
     m_BaseEngine(e)
@@ -226,7 +220,7 @@ bool naturalComparator(const std::string& left, const std::string& right)
     return left < right;
 }*/
 
-using Suggestion = UI::ConsoleCommand::Suggestion;
+using Suggestion = Logic::ConsoleCommand::Suggestion;
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
