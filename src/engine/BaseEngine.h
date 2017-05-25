@@ -36,7 +36,8 @@ namespace Engine
 			EngineArgs() : cmdline(0, NULL) {}
 
             std::string gameBaseDirectory;
-            std::string startupZEN;
+			std::string startupZEN;
+			std::string playerScriptname;
 			std::string testVisual;
 			std::string modfile;
 			bx::CommandLine cmdline;

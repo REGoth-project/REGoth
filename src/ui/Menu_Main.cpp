@@ -43,7 +43,7 @@ void Menu_Main::onCustomAction(const std::string& action)
         if (worldHandle.isValid())
         {
             m_Engine.getSession().setMainWorld(worldHandle);
-            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer("PC_HERO");
+            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(m_Engine.getEngineArgs().playerScriptname);
             worldHandle.get().takeControlOver(player);
         } else
         {

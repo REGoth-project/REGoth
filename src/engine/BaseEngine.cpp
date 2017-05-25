@@ -32,6 +32,7 @@ namespace Flags
     Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
     Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
+    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
@@ -99,6 +100,9 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     if(Flags::emptyWorld.isSet())
         m_Args.startupZEN = "";
+
+    if(Flags::playerScriptname.isSet())
+        m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
 
     std::string snd_device;
     if(Flags::sndDevice.isSet())
