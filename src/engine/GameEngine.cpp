@@ -90,46 +90,31 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     Math::Matrix view;
     if (getMainWorld().isValid())
         view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), getMainWorld().get().getCamera());
+    else
+        view = Math::Matrix::CreateIdentity();
 
     // Set view and projection matrix for view 0.
     float farPlane = 1000.0f;
-    const bgfx::HMD* hmd = bgfx::getHMD();
-    if (NULL != hmd && 0 != (hmd->flags & BGFX_HMD_RENDERING))
+
+    float proj[16];
+    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
+
+    // Set for every view
+    for(uint8_t i=0;i<255;i++)
     {
-        float view[16];
-        if (getMainWorld().isValid())
-            bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation().v);
-        bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
+        bgfx::setViewTransform(i, view.mv, proj);
 
-        // Set view 0 default viewport.
-        //
-        // Use HMD's width/height since HMD's internal frame buffer size
-        // might be much larger than window size.
-        bgfx::setViewRect(0, 0, 0, hmd->width, hmd->height);
-    }
-    else
-    {
-        float proj[16];
-        bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
-
-        // Set for every view
-        for(uint8_t i=0;i<255;i++)
-        {
-            bgfx::setViewTransform(i, view.mv, proj);
-
-            // Set view default viewport.
-            bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
-        }
-
-        // Update the frame-config with the cameras world-matrix
-        if (getMainWorld().isValid())
-            m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
-        m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
-        m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
-        m_DefaultRenderSystem.getConfig().state.viewWidth = width;
-        m_DefaultRenderSystem.getConfig().state.viewHeight = height;
+        // Set view default viewport.
+        bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
     }
 
+    // Update the frame-config with the cameras world-matrix
+    if (getMainWorld().isValid())
+        m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
+    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
+    m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
+    m_DefaultRenderSystem.getConfig().state.viewWidth = width;
+    m_DefaultRenderSystem.getConfig().state.viewHeight = height;
 
     bgfx::touch(0);
 
