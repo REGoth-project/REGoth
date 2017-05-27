@@ -140,7 +140,7 @@ namespace Engine
          * @param index slotindex
          * @param savegameName label of the savegame. If empty string, then "Slot <index>" is used as name
          */
-        void saveToSaveGameSlot(int index, std::string savegameName);
+        void saveToSlot(int index, std::string savegameName);
 
         /**
          * Builds the path to a saved worldfile from the given slot

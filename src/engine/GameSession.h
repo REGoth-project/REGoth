@@ -47,13 +47,6 @@ namespace Engine
         bool hasInactiveWorld(const std::string& worldName);
 
         /**
-         * saves the current Session to the given slot
-         * @param index slotindex
-         * @param savegameName label of the savegame. If empty string, then "Slot <index>" is used as name
-         */
-        void saveToSlot(int index, std::string savegameName);
-
-        /**
          * @return Gameclock
          */
         GameClock& getGameClock();

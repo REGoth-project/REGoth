@@ -246,7 +246,7 @@ void BaseEngine::processSaveGameActionQueue()
                 if (!getMainWorld().get().getDialogManager().isDialogActive())
                 {
                     // only save while not in Dialog
-                    getSession().saveToSlot(action.slot, action.savegameName);
+                    SavegameManager::saveToSlot(action.slot, action.savegameName);
                 }
                 break;
             case SavegameManager::Load:

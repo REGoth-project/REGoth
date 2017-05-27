@@ -257,8 +257,57 @@ int Engine::SavegameManager::maxSlots() {
     }
 }
 
-void Engine::SavegameManager::saveToSaveGameSlot(int index, std::string savegameName) {
-    assert(false); // deprecated
+void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
+{
+    ExcludeFrameTime exclude(*gameEngine);
+    assert(index >= 0 && index < SavegameManager::maxSlots());
+
+    if (savegameName.empty())
+        savegameName = std::string("Slot") + std::to_string(index);
+
+    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
+    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
+    Engine::SavegameManager::clearSavegame(index);
+
+    World::WorldInstance& mainWorld = gameEngine->getMainWorld().get();
+    // Write information about the current game-state
+    Engine::SavegameManager::SavegameInfo info;
+    info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
+    info.name = savegameName;
+    info.world = Utils::stripExtension(mainWorld.getZenFile());
+    info.timePlayed = gameEngine->getGameClock().getTotalSeconds();
+
+    Engine::SavegameManager::writeSavegameInfo(index, info);
+
+    // export left worlds we visited in this session
+    for (auto& pair : gameEngine->getSession().getInactiveWorlds())
+    {
+        std::string worldName = Utils::stripExtension(pair.first);
+        nlohmann::json& worldJson = pair.second;
+        SavegameManager::writeWorld(index, worldName, worldJson);
+    }
+    // no need to keep them in memory anymore and they would be unnecessarily saved each time
+    gameEngine->getSession().getInactiveWorlds().clear();
+
+    // export player
+    json playerJson = mainWorld.exportNPC(mainWorld.getScriptEngine().getPlayerEntity());
+    Engine::SavegameManager::writePlayer(index, "player", playerJson);
+
+    // export mainWorld, but skip the player
+    json mainWorldjson;
+    mainWorld.exportWorld(mainWorldjson, {mainWorld.getScriptEngine().getPlayerEntity()});
+    Engine::SavegameManager::writeWorld(index, info.world, mainWorldjson);
+
+    // export dialog info
+    json dialogManager;
+    mainWorld.getDialogManager().exportDialogManager(dialogManager);
+    Engine::SavegameManager::writeFileInSlot(index, "dialogmanager.json", Utils::iso_8859_1_to_utf8(dialogManager.dump(4)));
+
+    // export script engine
+    json scriptEngine;
+    mainWorld.getScriptEngine().exportScriptEngine(scriptEngine);
+    Engine::SavegameManager::writeFileInSlot(index, "scriptengine.json", Utils::iso_8859_1_to_utf8(scriptEngine.dump(4)));
+    gameEngine->getSession().setCurrentSlot(index);
 }
 
 std::string Engine::SavegameManager::gameSpecificSubFolderName() {

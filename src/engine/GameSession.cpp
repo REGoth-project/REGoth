@@ -29,7 +29,7 @@ bool GameSession::hasInactiveWorld(const std::string &worldName)
     return m_InactiveWorlds.find(worldName) != m_InactiveWorlds.end();
 }
 
-std::map<std::string, nlohmann::json> &GameSession::getInactiveWorlds()
+std::map<std::string, nlohmann::json>& GameSession::getInactiveWorlds()
 {
     return m_InactiveWorlds;
 }
@@ -51,7 +51,8 @@ GameClock &GameSession::getGameClock()
     return m_GameClock;
 }
 
-void GameSession::removeAllWorlds() {
+void GameSession::removeAllWorlds()
+{
     while(!m_WorldInstances.empty())
     {
         Handle::WorldHandle w = m_Worlds.front();
@@ -120,59 +121,8 @@ void GameSession::removeWorld(Handle::WorldHandle world)
     m_Engine.onWorldRemoved(world);
 }
 
-void GameSession::saveToSlot(int index, std::string savegameName) {
-    ExcludeFrameTime exclude(m_Engine);
-    assert(index >= 0 && index < SavegameManager::maxSlots());
-
-    if (savegameName.empty())
-        savegameName = std::string("Slot") + std::to_string(index);
-
-    // TODO: Should be writing to a temp-directory first, before messing with the save-files already existing
-    // Clean data from old savegame, so we don't load into worlds we haven't been to yet
-    Engine::SavegameManager::clearSavegame(index);
-
-    World::WorldInstance& mainWorld = getMainWorld().get();
-    // Write information about the current game-state
-    Engine::SavegameManager::SavegameInfo info;
-    info.version = Engine::SavegameManager::SavegameInfo::LATEST_KNOWN_VERSION;
-    info.name = savegameName;
-    info.world = Utils::stripExtension(mainWorld.getZenFile());
-    info.timePlayed = getGameClock().getTotalSeconds();
-
-    Engine::SavegameManager::writeSavegameInfo(index, info);
-
-    // export left worlds we visited in this session
-    for (auto& pair : m_InactiveWorlds)
-    {
-        std::string worldName = Utils::stripExtension(pair.first);
-        nlohmann::json& worldJson = pair.second;
-        SavegameManager::writeWorld(index, worldName, worldJson);
-    }
-    // no need to keep them in memory anymore and they would be unnecessarily saved each time
-    m_InactiveWorlds.clear();
-
-    // export player
-    json playerJson = mainWorld.exportNPC(mainWorld.getScriptEngine().getPlayerEntity());
-    Engine::SavegameManager::writePlayer(index, "player", playerJson);
-
-    // export mainWorld, but skip the player
-    json mainWorldjson;
-    mainWorld.exportWorld(mainWorldjson, {mainWorld.getScriptEngine().getPlayerEntity()});
-    Engine::SavegameManager::writeWorld(index, info.world, mainWorldjson);
-
-    // export dialog info
-    json dialogManager;
-    mainWorld.getDialogManager().exportDialogManager(dialogManager);
-    Engine::SavegameManager::writeFileInSlot(index, "dialogmanager.json", Utils::iso_8859_1_to_utf8(dialogManager.dump(4)));
-
-    // export script engine
-    json scriptEngine;
-    mainWorld.getScriptEngine().exportScriptEngine(scriptEngine);
-    Engine::SavegameManager::writeFileInSlot(index, "scriptengine.json", Utils::iso_8859_1_to_utf8(scriptEngine.dump(4)));
-    m_CurrentSlotIndex = index;
-}
-
-Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile) {
+Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile)
+{
     auto oldWorld = getMainWorld();
     auto exportedPlayer = oldWorld.get().exportAndRemoveNPC(
             oldWorld.get().getScriptEngine().getPlayerEntity());
