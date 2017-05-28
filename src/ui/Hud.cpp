@@ -15,26 +15,32 @@
 #include <utils/logger.h>
 #include <components/VobClasses.h>
 #include "DialogBox.h"
+#include "LoadingScreen.h"
 #include <logic/PlayerController.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e) :
-        View(e),
-        m_Console(e)
+        View(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
 
     m_pHealthBar = new BarView(m_Engine);
     m_pManaBar = new BarView(m_Engine);
     m_pEnemyHealthBar = new BarView(m_Engine);
-    m_pClock = new TextView(m_Engine);
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
+    m_pClock = new TextView(m_Engine);
+    m_pLoadingScreen = new LoadingScreen(m_Engine);
+    m_pLoadingScreen->setHidden(true);
+    m_pConsoleBox = new ConsoleBox(m_Engine);
+    m_pConsoleBox->setHidden(true);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
-    addChild(m_pClock);
     addChild(m_pDialogBox);
+    addChild(m_pClock);
+    addChild(m_pLoadingScreen);
+    addChild(m_pConsoleBox);
 
     // Initialize status bars
     {
@@ -90,16 +96,20 @@ UI::Hud::~Hud()
     removeChild(m_pHealthBar);
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
-    removeChild(m_pClock);
     removeChild(m_pDialogBox);
+    removeChild(m_pClock);
+    removeChild(m_pLoadingScreen);
+    removeChild(m_pConsoleBox);
 
     popAllMenus();
 
-    delete m_pManaBar;
     delete m_pHealthBar;
+    delete m_pManaBar;
     delete m_pEnemyHealthBar;
-    delete m_pClock;
     delete m_pDialogBox;
+    delete m_pClock;
+    delete m_pLoadingScreen;
+    delete m_pConsoleBox;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -119,19 +129,19 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
     View::update(dt, mstate, config);
 }
 
-void UI::Hud::setHealth(float value)
+void UI::Hud::setHealth(int32_t value, int32_t maxValue)
 {
-    m_pHealthBar->setValue(value);
+    m_pHealthBar->setValue(value, maxValue);
 }
 
-void UI::Hud::setMana(float value)
+void UI::Hud::setMana(int32_t value, int32_t maxValue)
 {
-    m_pManaBar->setValue(value);
+    m_pManaBar->setValue(value, maxValue);
 }
 
-void UI::Hud::setEnemyHealth(float value)
+void UI::Hud::setEnemyHealth(int32_t value, int32_t maxValue)
 {
-    m_pEnemyHealthBar->setValue(value);
+    m_pEnemyHealthBar->setValue(value, maxValue);
 }
 
 void UI::Hud::setDateTimeDisplay(const std::string &timeStr)
@@ -141,20 +151,18 @@ void UI::Hud::setDateTimeDisplay(const std::string &timeStr)
 
 void UI::Hud::onTextInput(const std::string& text)
 {
-    if(m_Console.isOpen())
-        m_Console.onTextInput(text);
+    if(m_Engine.getConsole().isOpen())
+        m_Engine.getConsole().onTextInput(text);
     else if(!m_MenuChain.empty())
         m_MenuChain.back()->onTextInput(text);
-
 }
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-    auto& dialogManager = m_Engine.getMainWorld().get().getDialogManager();
-    if (m_Engine.getHud().getConsole().isOpen())
+    if (m_Engine.getConsole().isOpen())
     {
         if (action == IA_Close || action == IA_ToggleConsole)
-            m_Console.setOpen(false);
+            m_Engine.getConsole().setOpen(false);
         return;
     } else if(!m_MenuChain.empty())
     {
@@ -163,9 +171,9 @@ void UI::Hud::onInputAction(UI::EInputAction action)
         if (close)
             popMenu();
         return;
-    }else if(dialogManager.isDialogActive())
+    }else if(m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {
-        dialogManager.onInputAction(action);
+        m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
         return;
     }
 
@@ -177,7 +185,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             pushMenu<UI::Menu_Main>();
             return;
         case IA_ToggleConsole:
-            m_Engine.getHud().getConsole().setOpen(true);
+            m_Engine.getConsole().setOpen(true);
             return;
         case IA_ToggleStatusMenu:
         {

@@ -9,7 +9,7 @@ namespace UI
     class ConsoleBox : public View
     {
     public:
-        ConsoleBox(Engine::BaseEngine& e, Console& console);
+        ConsoleBox(Engine::BaseEngine& e);
         ~ConsoleBox();
 
         /**
@@ -34,16 +34,6 @@ namespace UI
         int getSelectionIndex() const { return m_CurrentlySelected;}
 
     protected:
-
-        struct
-        {
-            /**
-             * Lines of history + current line
-             */
-            int height;
-        } m_Config;
-
-        Console& m_Console;
 
         /**
          * Console background image

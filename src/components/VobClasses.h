@@ -83,6 +83,12 @@ namespace VobTypes
     Handle::EntityHandle Wld_InsertNpc(World::WorldInstance& world, size_t instanceSymbol, const std::string& wpName = "");
 
     /**
+     * removes npc from the given world, also removes from script engine.
+     * if the npc is the player entity, key bindings get cleared and script engine's player entity gets invalidated
+     */
+    void Wld_RemoveNpc(World::WorldInstance& world, Handle::EntityHandle npc);
+
+    /**
      * Unlinks the script-instance from the engine. If this is not done, it will result in a memory-leak.
      */
     void unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity, Daedalus::GameState::NpcHandle scriptInstance);

@@ -103,16 +103,18 @@ Additionally, for a list of possible commands, run `REGoth --help`.
  * Actions: Left CTRL for everything
  * Menus: B for status-screen
  * Console: F10
-   * Available commands:
-      * `kill`: Kill a nearby NPC
-      * `knockout`: Knockout a nearby NPC
-      * `save <name>`: Save the game
-      * `load <name>`: Load a game
+   * Available commands (square brackets mean optional argument):
+      * `tp [<teleporter:default=player>] <target>`: Teleport NPC `teleporter` (= player if none is given) to NPC `target`
+      * `goto waypoint <waypoint>`: Teleport player to `waypoint`
+      * `kill [<npc>]`: Kill `npc` or a nearby NPC if none is given
+      * `knockout [<npc>]`: Knockout `npc` or a nearby NPC if none is given
+      * `save <slotindex>`: Save the game to the given slot
+      * `load <slotindex>`: Load the game from the given slot
       * `switchlevel <zenfile>`: Switch to an other level in current session
       * `usemana <amount>`: Use mana
       * `hurtself <amount>`: Hurt yourself
-      * `timeset <x>`: Set time to 12:00. `x` doesn't matter but must be a number.
-      * `list`: Print a list of available commands
+      * `set clock <hour> [<min:default=0>]`: Set time of day to `hour`:`min`
+      * `control <npc>`: Take control over `npc`
       
 # Development
 
@@ -125,7 +127,9 @@ If you want to help out and don't know where to start, I suggest reading the [wi
 
 **Gothic 1 - Freemine:** `REGoth -g "path/to/gothic1" -w freemine.zen`
 
-**Gothic 1 - Sleeper temple:** `REGoth -g "path/to/gothic1" -w orctemple.zen`
+**Gothic 1 - Orc graveyard:** `REGoth -g "path/to/gothic1" -w orcgraveyard.zen`
+
+**Gothic 1 - Sleeper temple:** `REGoth -g "path/to/gothic1" -w orctempel.zen`
 
 **Gothic 2 - Overworld:** `REGoth -g "path/to/gothic2" -w newworld.zen`
 

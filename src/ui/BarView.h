@@ -23,6 +23,12 @@ namespace UI
          */
         void setValue(float v);
 
+        /**
+         * @param value current value
+         * @param maxValue current max Value, if 0 then m_Value will be set to 0
+         */
+        void setValue(int32_t value, int32_t maxValue);
+
         void setBackgroundImage(const Textures::Texture& texture);
         void setBarImage(const Textures::Texture& texture);
 

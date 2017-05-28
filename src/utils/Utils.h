@@ -14,7 +14,7 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
-#include <ui/Console.h>
+#include <logic/Console.h>
 
 namespace Utils
 {
@@ -484,7 +484,8 @@ namespace Utils
      * @param suggestions suggestions to search in
      * @param name token to find
      */
-    UI::ConsoleCommand::Suggestion findSuggestion(const std::vector<UI::ConsoleCommand::Suggestion>& suggestions, const std::string& name);
+    Logic::Console::Suggestion findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
+                                                     const std::string& name);
 
     /**
      * performs case insensitive euqal check

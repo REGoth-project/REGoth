@@ -64,74 +64,63 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 
 //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
 //    }
-
-    if(m_Paused)
+    if (!getSession().getWorldInstances().empty())
     {
-        getMainCamera<Components::LogicComponent>().m_pLogicController->onUpdate(dt);
-    } else
-    {
-        for (auto& s : m_WorldInstances)
+        if(m_Paused)
         {
-            // Update main-world after every other world, since the camera is in there
-            s.onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE,
-                                getMainCamera<Components::PositionComponent>().m_WorldMatrix);
+            getMainWorld().get().getCameraController()->onUpdate(dt);
+        } else
+        {
+            getGameClock().update(dt);
+            for (auto& s : getSession().getWorldInstances())
+            {
+                // Update main-world after every other world, since the camera is in there
+                s->onFrameUpdate(dt, DRAW_DISTANCE * DRAW_DISTANCE, s->getCameraComp<Components::PositionComponent>().m_WorldMatrix);
+            }
+
+            // Finally, update main camera
+            getMainWorld().get().getCameraController()->onUpdateExplicit(dt);
         }
-
-        // Finally, update main camera
-        getMainCameraController()->onUpdateExplicit(dt);
     }
-
     drawFrame(width, height);
 }
 
 void GameEngine::drawFrame(uint16_t width, uint16_t height)
 {
-    Math::Matrix view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), m_MainCamera);
+    Math::Matrix view;
+    if (getMainWorld().isValid())
+        view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), getMainWorld().get().getCamera());
+    else
+        view = Math::Matrix::CreateIdentity();
 
     // Set view and projection matrix for view 0.
     float farPlane = 1000.0f;
-    const bgfx::HMD* hmd = bgfx::getHMD();
-    if (NULL != hmd && 0 != (hmd->flags & BGFX_HMD_RENDERING))
+
+    float proj[16];
+    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
+
+    // Set for every view
+    for(uint8_t i=0;i<255;i++)
     {
-        float view[16];
-        bx::mtxQuatTranslationHMD(view, hmd->eye[0].rotation, getMainCamera<Components::PositionComponent>().m_WorldMatrix.Translation().v);
-        bgfx::setViewTransform(0, view, hmd->eye[0].projection, BGFX_VIEW_STEREO, hmd->eye[1].projection);
+        bgfx::setViewTransform(i, view.mv, proj);
 
-        // Set view 0 default viewport.
-        //
-        // Use HMD's width/height since HMD's internal frame buffer size
-        // might be much larger than window size.
-        bgfx::setViewRect(0, 0, 0, hmd->width, hmd->height);
-    }
-    else
-    {
-        float proj[16];
-        bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
-
-        // Set for every view
-        for(uint8_t i=0;i<255;i++)
-        {
-            bgfx::setViewTransform(i, view.mv, proj);
-
-            // Set view default viewport.
-            bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
-        }
-
-        // Update the frame-config with the cameras world-matrix
-        m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainCamera<Components::PositionComponent>().m_WorldMatrix;
-        m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
-        m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
-        m_DefaultRenderSystem.getConfig().state.viewWidth = width;
-        m_DefaultRenderSystem.getConfig().state.viewHeight = height;
+        // Set view default viewport.
+        bgfx::setViewRect(i, 0, 0, uint16_t(width), uint16_t(height));
     }
 
-
+    // Update the frame-config with the cameras world-matrix
+    if (getMainWorld().isValid())
+        m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
+    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
+    m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
+    m_DefaultRenderSystem.getConfig().state.viewWidth = width;
+    m_DefaultRenderSystem.getConfig().state.viewHeight = height;
 
     bgfx::touch(0);
 
-    // Draw all worlds
-    for(auto& s : m_WorldInstances)
-        Render::drawWorld(s, m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
+    // Draw only main world
+    if (getMainWorld().isValid())
+        Render::drawWorld(getMainWorld().get(), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
 }
@@ -140,49 +129,15 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 {
     BaseEngine::onWorldCreated(world);
 
-    // Needed for camera-creation
-    setMainWorld(world);
-
     if(world.isValid())
-        m_MainCamera = createMainCameraIn(m_MainWorld);
+    {
+        world.get().createCamera();
+    }
 }
 
 void GameEngine::onWorldRemoved(Handle::WorldHandle world)
 {
     BaseEngine::onWorldRemoved(world);
-
-    setMainWorld(Handle::WorldHandle::makeInvalidHandle());
 }
-
-Handle::EntityHandle GameEngine::createMainCameraIn(Handle::WorldHandle world)
-{
-    World::WorldInstance& winst = world.get();
-    // Add player-camera
-    m_MainCamera = winst.addEntity(Components::PositionComponent::MASK);
-
-	Math::Matrix lookAt = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0));
-    getMainCamera<Components::PositionComponent>().m_WorldMatrix
-            = lookAt.Invert();
-
-	getMainCamera<Components::PositionComponent>().m_WorldMatrix.Translation(Math::float3(0.0f, 50.0f, 50.0f));
-
-    Components::LogicComponent& logic = Components::Actions::initComponent<Components::LogicComponent>(
-            winst.getComponentAllocator(),
-            m_MainCamera);
-
-    Logic::CameraController* cam = new Logic::CameraController(winst, m_MainCamera);
-    logic.m_pLogicController = cam;
-
-    cam->setCameraMode(Logic::CameraController::ECameraMode::FirstPerson);
-    //cam->getCameraSettings().freeCameraSettings.moveSpeed = 5.0f;
-    //cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
-
-	return m_MainCamera;
-}
-
-
-
-
-
 
 

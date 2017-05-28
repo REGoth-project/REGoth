@@ -599,7 +599,6 @@ namespace Logic
         /**
          * refuse talk countdown
          */
-        // TODO export/import this value in json for savegames
         float m_RefuseTalkTime;
 
         /**

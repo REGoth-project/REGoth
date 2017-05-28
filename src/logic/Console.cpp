@@ -1,29 +1,18 @@
-#include <bgfx/bgfx.h>
 #include <ZenLib/utils/split.h>
 #include <utils/logger.h>
 #include "Console.h"
-#include <iterator>
 #include <utils/Utils.h>
-#include <iomanip>
 #include <engine/BaseEngine.h>
 #include <GLFW/glfw3.h>
+#include <ui/Hud.h>
 
-using namespace UI;
-
-/* Function keys */
-namespace Keys
-{
-    // All keys mapped to ascii-characters
-    const int PrintableBegin = 32;
-    const int PrintableEnd = 93; // Inclusive
-};
+using Logic::Console;
 
 Console::Console(Engine::BaseEngine& e) :
-    m_BaseEngine(e),
-    m_ConsoleBox(e, *this)
+    m_BaseEngine(e)
 {
     m_HistoryIndex = 0;
-    setOpen(false);
+    m_Open = false;
     outputAdd(" ----------- REGoth Console -----------");
 }
 
@@ -32,23 +21,24 @@ Console::~Console() {
 
 void Console::onKeyDown(int glfwKey, int mods)
 {
+    auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();
     if(glfwKey == GLFW_KEY_PAGE_DOWN)
     {
-        m_ConsoleBox.increaseSelectionIndex(1);
+        consoleBox.increaseSelectionIndex(1);
     }
     if(glfwKey == GLFW_KEY_PAGE_UP)
     {
-        m_ConsoleBox.increaseSelectionIndex(-1);
+        consoleBox.increaseSelectionIndex(-1);
     }
     if(glfwKey == GLFW_KEY_HOME)
     {
-        m_ConsoleBox.setSelectionIndex(0);
+        consoleBox.setSelectionIndex(0);
     }
     if(glfwKey == GLFW_KEY_END)
     {
         if (!m_SuggestionsList.empty())
         {
-            m_ConsoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
+            consoleBox.setSelectionIndex(m_SuggestionsList.back().size() - 1);
         }
     }
     if(glfwKey == GLFW_KEY_UP)
@@ -83,10 +73,10 @@ void Console::onKeyDown(int glfwKey, int mods)
         }
     }else if(glfwKey == GLFW_KEY_ENTER)
     {
-        if (m_ConsoleBox.getSelectionIndex() != -1)
+        if (consoleBox.getSelectionIndex() != -1)
         {
             replaceSelectedToken();
-            m_ConsoleBox.setSelectionIndex(-1);
+            consoleBox.setSelectionIndex(-1);
         } else
         {
             submitCommand(m_TypedLine);
@@ -104,17 +94,17 @@ void Console::onKeyDown(int glfwKey, int mods)
             const auto& suggestions = m_SuggestionsList.back();
             if (suggestions.size() == 1)
             {
-                m_ConsoleBox.setSelectionIndex(0);
+                consoleBox.setSelectionIndex(0);
                 replaceSelectedToken();
             } else {
-                if (m_ConsoleBox.getSelectionIndex() == -1)
+                if (consoleBox.getSelectionIndex() == -1)
                 {
                     // nothing is selected -> select first element
-                    m_ConsoleBox.setSelectionIndex(0);
+                    consoleBox.setSelectionIndex(0);
                     if (mods & GLFW_MOD_SHIFT)
-                        m_ConsoleBox.increaseSelectionIndex(-1);
+                        consoleBox.increaseSelectionIndex(-1);
                 } else {
-                    m_ConsoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
+                    consoleBox.increaseSelectionIndex(mods & GLFW_MOD_SHIFT ? -1 : 1);
                 }
             }
         }
@@ -139,18 +129,15 @@ std::string Console::submitCommand(std::string command)
     if(args.empty())
         return "";
 
-    // bool autoCompleteCommandTokensOnly = true;
-    // autoComplete(command, autoCompleteCommandTokensOnly, true);
-
     outputAdd(">> " + command);
 
-    auto commID = determineCommand(args);
+    auto commandIterator = determineCommand(args);
 
-    if (commID != -1)
+    if (commandIterator != m_Commands.end())
     {
         std::string result;
         try {
-            result = m_Commands.at(commID).callback(args);
+            result = commandIterator->callback(args);
         } catch (const std::out_of_range& e)
         {
             result = "error: argument out of range";
@@ -166,20 +153,20 @@ std::string Console::submitCommand(std::string command)
     return "NOTFOUND";
 }
 
-ConsoleCommand& Console::registerCommand(const std::string& command, ConsoleCommand::Callback callback)
+Logic::Console::Command& Console::registerCommand(const std::string& command, Callback callback)
 {
     auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
-    std::vector<ConsoleCommand::CandidateListGenerator> generators;
-    auto simpleGen = [](std::string token) -> std::vector<ConsoleCommand::Suggestion> {
-        ConsoleCommand::Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{token}});
+    std::vector<CandidateListGenerator> generators;
+    auto simpleGen = [](std::string token) -> std::vector<Suggestion> {
+        Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{token}});
         return {suggestion};
     };
-    for (auto tokenIt = tokens.begin(); tokenIt != tokens.end(); tokenIt++)
+    for (const auto& token : tokens)
     {
-        generators.push_back(std::bind(simpleGen, *tokenIt));
+        generators.push_back(std::bind(simpleGen, token));
     }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
-    m_Commands.emplace_back(ConsoleCommand{sanitizedCommand, generators, callback, generators.size()});
+    m_Commands.push_back({sanitizedCommand, generators, callback, generators.size()});
     return m_Commands.back();
 }
 
@@ -188,12 +175,13 @@ void Console::outputAdd(const std::string& msg)
     m_Output.push_front(msg);
 }
 
-int Console::determineCommand(const std::vector<std::string>& tokens)
+std::list<Logic::Console::Command>::iterator Console::determineCommand(const std::vector<std::string>& tokens)
 {
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
-    for (std::size_t commID = 0; commID < m_Commands.size(); commID++)
+    size_t commandIndex = 0;
+    for (auto it = m_Commands.begin(); it != m_Commands.end(); ++it, ++commandIndex)
     {
-        auto& command = m_Commands.at(commID);
+        const auto& command = *it;
         if (command.numFixTokens > tokens.size())
             continue;
         bool allStagesMatched = true;
@@ -205,49 +193,32 @@ int Console::determineCommand(const std::vector<std::string>& tokens)
         }
         if (allStagesMatched)
         {
-            numMatchingTokens[commID] = command.numFixTokens;
+            numMatchingTokens[commandIndex] = command.numFixTokens;
         }
     }
     auto itMaxelement = std::max_element(numMatchingTokens.begin(), numMatchingTokens.end());
-    if (*itMaxelement != 0)
+    if (itMaxelement != numMatchingTokens.end() && *itMaxelement != 0)
     {
         // case: at least one command matched with command.numFixTokens
-        auto commID = itMaxelement - numMatchingTokens.begin();
-        return static_cast<int>(commID);
+        auto commandIndex = itMaxelement - numMatchingTokens.begin();
+        return std::next(m_Commands.begin(), commandIndex);
     }
-    return -1;
+    return m_Commands.end();
 }
 
 /*
-int naturalComparator(const std::string& left, const std::string& right)
+bool naturalComparator(const std::string& left, const std::string& right)
 {
-    auto leftVec = Utils::splitAndRemoveEmpty(left, '_');
-    auto rightVe = Utils::splitAndRemoveEmpty(right, '_');
+    // TODO
+    return left < right;
 }*/
-
-using Suggestion = UI::ConsoleCommand::Suggestion;
 
 void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     using std::vector;
     using std::string;
 
     vector<string> tokens = tokenized(input);
-
     vector<vector<Suggestion>> suggestionsList;
-
-    auto suggestionCompare = [](const Suggestion& a, const Suggestion& b) -> int {
-        int anyStartsWithRelation = b->anyStartsWith - a->anyStartsWith;
-        if (anyStartsWithRelation != 0)
-            return anyStartsWithRelation;
-        auto minSize = std::min(a->aliasList.size(), b->aliasList.size());
-        for (std::size_t i = 0; i < minSize; ++i)
-        {
-            auto relation = a->aliasList[0].compare(b->aliasList[0]);
-            if (relation != 0)
-                return relation;
-        }
-        return static_cast<int>(a->aliasList.size()) - static_cast<int>(b->aliasList.size());
-    };
 
     vector<bool> commandIsAlive(m_Commands.size(), true);
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
@@ -255,11 +226,11 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
         const string& token = tokens[tokenID];
         auto tokenLowered = Utils::lowered(token);
         vector<Suggestion> matches;
-        for (std::size_t cmdID = 0; cmdID < m_Commands.size(); cmdID++)
+        size_t cmdID = 0;
+        for (auto commandIt = m_Commands.begin(); commandIt != m_Commands.end(); commandIt++, cmdID++)
         {
-            auto& command = m_Commands[cmdID];
-            auto& generators = command.generators;
-            std::size_t cmdEnd = limitToFixed ? command.numFixTokens : generators.size();
+            auto& generators = commandIt->generators;
+            std::size_t cmdEnd = limitToFixed ? commandIt->numFixTokens : generators.size();
             if (commandIsAlive[cmdID] && tokenID < cmdEnd)
             {
                 commandIsAlive[cmdID] = false;
@@ -285,11 +256,11 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
         }
         // generate suggestions
         {
-            std::sort(matches.begin(), matches.end(), [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
-                return suggestionCompare(a, b) < 0;
-            });
             // filter out duplicates in consecutive groups
-            auto uniquePredicate = [suggestionCompare](const Suggestion& a, const Suggestion& b) -> bool{
+            std::sort(matches.begin(), matches.end(), [](const Suggestion& a, const Suggestion& b) -> bool {
+                return *a < *b;
+            });
+            auto uniquePredicate = [](const Suggestion& a, const Suggestion& b) -> bool{
                 return a->aliasList == b->aliasList;
             };
             matches.erase(std::unique(matches.begin(), matches.end(), uniquePredicate), matches.end());
@@ -301,7 +272,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
 }
 
 void Console::invalidateSuggestions() {
-    m_ConsoleBox.setSelectionIndex(-1);
+    m_BaseEngine.getHud().getConsoleBox().setSelectionIndex(-1);
     m_SuggestionsList.clear();
 }
 
@@ -318,7 +289,7 @@ std::vector<std::string> Console::tokenized(const std::string &line) {
 void Console::replaceSelectedToken() {
     // default for now: only auto complete last token
     const auto& suggestions = m_SuggestionsList.back();
-    auto selectedSuggestion = suggestions.at(m_ConsoleBox.getSelectionIndex());
+    auto selectedSuggestion = suggestions.at(m_BaseEngine.getHud().getConsoleBox().getSelectionIndex());
     std::vector<std::string> tokens = tokenized(m_TypedLine);
     tokens.back() = selectedSuggestion->aliasList.at(0);
     std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");
@@ -336,4 +307,19 @@ void Console::setTypedLine(const std::string &newLine, bool triggerSuggestions) 
         generateSuggestions(m_TypedLine, false);
 }
 
+void Console::setOpen(bool open) {
+    m_Open = open;
+    if (!open)
+        invalidateSuggestions();
+}
 
+using SuggestionBase = Logic::Console::SuggestionBase;
+
+bool SuggestionBase::operator<(const SuggestionBase& b) const
+{
+    const SuggestionBase& a = *this;
+    if (a.anyStartsWith != b.anyStartsWith)
+        return !a.anyStartsWith < !b.anyStartsWith;
+    return std::lexicographical_compare(a.aliasList.begin(), a.aliasList.end(),
+                                        b.aliasList.begin(), b.aliasList.end());
+}

@@ -170,7 +170,7 @@ namespace World
 
         // TODO: pitch?
         //alSourcef(source, AL_PITCH, snd.sfx.);
-        alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameEngineSpeedFactor());
+        alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameClock().getGameEngineSpeedFactor());
         alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);
         alSource3f(s.m_Handle, AL_POSITION, 0, 0, 0);
         alSource3f(s.m_Handle, AL_VELOCITY, 0, 0, 0);
@@ -316,7 +316,7 @@ namespace World
         }
 
         m_VM = new Daedalus::DaedalusVM(datFile);
-        Daedalus::registerGothicEngineClasses(*m_VM, m_Engine.getMainWorld().get().getBasicGameType());
+        Daedalus::registerGothicEngineClasses(*m_VM);
 
         size_t count = 0;
         m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s){

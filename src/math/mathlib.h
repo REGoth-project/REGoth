@@ -124,7 +124,7 @@ namespace Math
             glm::vec3 _glmt_vector;
         };
 
-		std::string toString()
+		std::string toString() const
 		{
 			std::string out;
 			out = "[" + std::to_string(x)

@@ -1,5 +1,5 @@
 #pragma once
-#include "Console.h"
+#include <logic/Console.h>
 #include "Menu.h"
 #include "View.h"
 #include <engine/BaseEngine.h>
@@ -25,14 +25,13 @@ namespace UI
     class Menu_Settings;
     class Menu;
     class DialogBox;
+    class LoadingScreen;
 
     class Hud : public View
     {
     public:
         Hud(Engine::BaseEngine& e);
         ~Hud();
-
-
 
         /**
          * Updates/draws the UI-Views
@@ -42,19 +41,22 @@ namespace UI
         void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
 
         /**
-         * @param value Value for health-bar in 0..1 range
+         * @param value for health-bar of current player
+         * @param maxValue for health-bar of current player
          */
-        void setHealth(float value);
+        void setHealth(int32_t value, int32_t maxValue);
 
         /**
-         * @param value Value for mana-bar in 0..1 range
+         * @param value for mana-bar of current player
+         * @param maxValue for mana-bar of current player
          */
-        void setMana(float value);
+        void setMana(int value, int maxValue);
 
         /**
-         * @param value Value for enemy health-bar in 0..1 range
+         * @param value for health-bar of enemy entity
+         * @param maxValue for health-bar of enemy entity
          */
-        void setEnemyHealth(float value);
+        void setEnemyHealth(int32_t value, int32_t maxValue);
 
         /**
          * @param timeStr Current time of day to be shown on the hud
@@ -74,14 +76,19 @@ namespace UI
         void onTextInput(const std::string& text);
 
         /**
-         * @return Games console
+         * @return Console-Box
          */
-        UI::Console& getConsole(){ return m_Console; }
+        UI::ConsoleBox& getConsoleBox(){ return *m_pConsoleBox; }
 
         /**
          * @return Dialog-box
          */
         DialogBox& getDialogBox(){ return *m_pDialogBox; }
+
+        /**
+         * LoadingScreen
+         */
+        LoadingScreen& getLoadingScreen(){ return *m_pLoadingScreen; }
 
         /**
          * Controls visibility of gameplay-hud
@@ -132,20 +139,8 @@ namespace UI
         BarView* m_pEnemyHealthBar;
         TextView* m_pClock;
         DialogBox* m_pDialogBox;
-
-        /**
-         * Console
-         */
-        UI::Console m_Console;
-
-        /**
-         * Menus
-         */
-        Menu_Status* m_pStatusMenu;
-        Menu_Main* m_pMainMenu;
-        Menu_Load* m_pMenuLoad;
-        Menu_Save* m_pMenuSave;
-        Menu_Settings* m_pMenuSettings;
+        LoadingScreen* m_pLoadingScreen;
+        ConsoleBox* m_pConsoleBox;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed

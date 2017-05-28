@@ -78,7 +78,7 @@ void Menu_Save::onCustomAction(const std::string& action)
 		else
 		{
 			m_isWaitingForSaveName = false;
-            Engine::SavegameManager::saveToSaveGameSlot(index, m_SaveName);
+            Engine::SavegameManager::saveToSlot(index, m_SaveName);
             // close menus after saving
             getHud().popAllMenus();
 		}

@@ -70,6 +70,16 @@ void UI::BarView::setValue(float v)
     m_Value = v;
 }
 
+void UI::BarView::setValue(int32_t value, int32_t maxValue)
+{
+    if (maxValue != 0)
+    {
+        m_Value = value / static_cast<float>(maxValue);
+    } else {
+        m_Value = 0;
+    }
+}
+
 void UI::BarView::setBackgroundImage(const Textures::Texture& texture)
 {
     m_Background = texture;

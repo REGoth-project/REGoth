@@ -24,7 +24,7 @@
 #include <ZenLib/utils/logger.h>
 #include <json.hpp>
 #include <fstream>
-#include <ui/Console.h>
+#include <logic/Console.h>
 #include <components/VobClasses.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
@@ -35,6 +35,7 @@
 #include <logic/SavegameManager.h>
 #include <utils/cli.h>
 #include <utils/zTools.h>
+#include <ui/Menu_Main.h>
 
 using json = nlohmann::json;
 
@@ -313,23 +314,18 @@ public:
 
 		m_pEngine->initEngine(_argc, _argv);
 
-
         showSplash();
 
-        // Add startworld
-        Handle::WorldHandle w = m_pEngine->addWorld(m_pEngine->getEngineArgs().startupZEN);
-        if (!w.isValid())
-        {
-           LogError() << "Failed to add world, world handle is invalid!";
-           Platform::setQuit(true);
-           return;
-        }
+        auto& menuMain = m_pEngine->getHud().pushMenu<UI::Menu_Main>();
+        auto gameType = menuMain.determineGameType();
+        m_pEngine->setBasicGameType(gameType);
+        // Init SavegameManager
+        Engine::SavegameManager::init(*m_pEngine);
+
 		m_timeOffset = bx::getHPCounter();
 
 		ddInit();
 
-        // Init SavegameManager
-        Engine::SavegameManager::init(*m_pEngine);
 
         // Imgui.
         float fontSize = 18.0f;//18
@@ -338,7 +334,20 @@ public:
         fontSize = 23.0f;
 #endif
 
-        auto& console = m_pEngine->getHud().getConsole();
+        auto& console = m_pEngine->getConsole();
+        using Command = Logic::Console::Command;
+        using SuggestionBase = Logic::Console::SuggestionBase;
+        using Suggestion = Logic::Console::Suggestion;
+        using CandidateListGenerator = Logic::Console::CandidateListGenerator;
+
+        // suggestion generator for an integer range. stop is not included
+        auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<Suggestion> {
+            std::vector<Suggestion> suggestions;
+            for (int i = start; i < stop; ++i)
+                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase {{std::to_string(i)}}));
+            return suggestions;
+        };
+
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
@@ -347,7 +356,7 @@ public:
             return "Toggled stats";
         });
 
-        console.registerCommand("hud", [&](const std::vector<std::string>& args) -> std::string {
+        console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;
 
@@ -363,7 +372,7 @@ public:
 
             int idx = std::stoi(args[1]);
 
-            m_pEngine->getMainCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
+            m_pEngine->getMainWorld().get().getCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
 
             return "Cameramode changed to " + std::to_string(idx);
         });
@@ -389,11 +398,13 @@ public:
 
         console.registerCommand("set clock", [this](const std::vector<std::string>& args) -> std::string {
             // modifies the world time
-            if(args.size() != 4)
-                return "Invalid arguments. Usage: set clock [hh mm]";
+            if(args.size() < 3)
+                return "Invalid arguments. Usage: set clock <hh> [<mm>]";
 
             const int hh = std::stoi(args[2]);
-            const int mm = std::stoi(args[3]);
+            int mm = 0;
+            if (args.size() >= 4)
+                mm = std::stoi(args[3]);
 
             if(hh < 0 || hh > 23)
                 return "Invalid argument. Hours must be in range from 0 to 23";
@@ -404,7 +415,9 @@ public:
             clock.setTimeOfDay(hh, mm);
 
             return "Set clock to " + clock.getTimeOfDayFormatted();
-        });
+        })
+                .registerAutoComplete(std::bind(rangeGen, 0, 24))
+                .registerAutoComplete(std::bind(rangeGen, 0, 60));
 
         console.registerCommand("set clockspeed", [this](const std::vector<std::string>& args) -> std::string {
             // adds an additional speed factor for the time of day
@@ -423,7 +436,7 @@ public:
                 return "Missing argument. Usage: set gamespeed <factor:default=1>";
 
             float factor = std::stof(args[2]);
-            m_pEngine->setGameEngineSpeedFactor(factor);
+            m_pEngine->getGameClock().setGameEngineSpeedFactor(factor);
 
             return "Set gamespeed to " + std::to_string(factor);
         });
@@ -443,12 +456,12 @@ public:
             return "Hero successfully exported to: hero.json";
         });
 
-        auto waypointNamesGen = [this]() -> std::vector<UI::ConsoleCommand::Suggestion> {
-            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+        auto waypointNamesGen = [this]() -> std::vector<Suggestion> {
+            std::vector<Suggestion> suggestions;
             auto& waypoints = m_pEngine->getMainWorld().get().getWaynet().waypoints;
             for (auto& waypoint : waypoints)
             {
-                UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {{waypoint.name}});
+                Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {{waypoint.name}});
                 suggestions.push_back(suggestion);
             }
             return suggestions;
@@ -488,66 +501,62 @@ public:
             return "Hero successfully imported from: hero.json";
         });
 
+        auto zenLevelNamesGen = [this]() -> std::vector<Suggestion> {
+            using Suggestion = Suggestion;
+
+            std::vector<std::string> g1WorldNames = {"WORLD.ZEN", "FREEMINE.ZEN", "OLDMINE.ZEN", "ORCGRAVEYARD.ZEN", "ORCTEMPEL.ZEN"};
+            std::vector<std::string> g2WorldNames = {"DRAGONISLAND.ZEN", "NEWWORLD.ZEN", "OLDWORLD.ZEN", "ADDONWORLD.ZEN"};
+            auto& worldNames = m_pEngine->getBasicGameType() == Daedalus::GameType::GT_Gothic1 ? g1WorldNames : g2WorldNames;
+            std::vector<Suggestion> suggestions;
+            for (const auto& worldName : worldNames)
+                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{worldName}}));
+            return suggestions;
+
+            // also works, but ugly
+            /*
+            static std::vector<Suggestion> suggestions;
+            if (!suggestions.empty())
+                return suggestions;
+
+            for (auto& fileInfo : m_pEngine->getVDFSIndex().getKnownFiles())
+            {
+                if (Utils::endsWith(Utils::lowered(fileInfo.fileName), ".zen"))
+                {
+                    // ugly but works
+                    ZenLoad::ZenParser parser(fileInfo.fileName, m_pEngine->getVDFSIndex());
+                    parser.readHeader();
+                    ZenLoad::oCWorldData world;
+
+                    ZenLoad::ZenParser::ChunkHeader header;
+                    parser.readChunkStart(header);
+                    LogInfo() << fileInfo.fileName;
+                    assert(header.classname == "oCWorld:zCWorld");
+
+                    try
+                    {
+                        ZenLoad::oCWorld::readObjectData(world, parser, header.version);
+                        if (parser.getWorldMesh())
+                            suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{fileInfo.fileName}}));
+                    }
+                    catch (const std::runtime_error&)
+                    {
+                    }
+                }
+            }
+            return suggestions;
+             */
+        };
+
         console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {
+            const std::string& zenFilename = args.size() >= 2 ?
+                                             args[1] :
+                                             m_pEngine->getEngineArgs().startupZEN;
+            if(!m_pEngine->getVDFSIndex().hasFile(zenFilename))
+                return "File '" + zenFilename + "' not found.";
 
-            auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
-
-            if(args.size() < 2)
-                return "Missing argument. Usage: switchlevel <zenfile>";
-
-            return "Command currently broken! Try in a later release";
-
-            std::string file = args[1];
-            if(!m_pEngine->getVDFSIndex().hasFile(file))
-                return "File '" + file + "' not found.";
-
-            // Export hero
-            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s1.getPlayerEntity());
-
-            json pex;
-            player.playerController->exportObject(pex);
-
-            // Export script-symbols
-            json scriptSymbols;
-            s1.exportScriptEngine(scriptSymbols);
-
-            json dialogMan;
-            m_pEngine->getMainWorld().get().getDialogManager().exportDialogManager(dialogMan);
-
-            // Temporary save
-            m_pEngine->getHud().getConsole().submitCommand("save " + m_pEngine->getMainWorld().get().getZenFile() + ".json");
-
-            // Check if a savegame for this world exists
-            if(Utils::fileExists(file + ".json"))
-            {
-                m_pEngine->getHud().getConsole().submitCommand("load " + file);
-            }else
-            {
-                clearActions();
-                m_pEngine->removeWorld(m_pEngine->getMainWorld());
-                m_pEngine->addWorld(args[1]);
-            }
-
-            // Import hero again
-            auto& s2 = m_pEngine->getMainWorld().get().getScriptEngine();
-            if(s2.getPlayerEntity().isValid())
-            {
-                player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(),
-                                            s2.getPlayerEntity()); // World and player changed
-                player.playerController->importObject(pex, true);
-            }else
-            {
-                LogError() << "Player not inserted into new world!";
-            }
-
-            // Import script-symbols
-            s2.importScriptEngine(scriptSymbols);
-
-            // Import dialog info
-            m_pEngine->getMainWorld().get().getDialogManager().importDialogManager(dialogMan);
-
-            return "Successfully switched world to: " + file;
-        });
+            m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
+            return "Switching world to: " + zenFilename;
+        }).registerAutoComplete(zenLevelNamesGen);
 
         console.registerCommand("load", [this](const std::vector<std::string>& args) -> std::string {
 
@@ -561,17 +570,16 @@ public:
             if (!(index >= 0 && index < maxSlots)){
                 return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
-            auto error = SavegameManager::loadSaveGameSlot(index);
-            if (!error.empty()){
-                return error;
-            }
-            return "savegame successfully loaded!";
+            this->m_pEngine->queueSaveGameAction({SavegameManager::Load, index, ""});
+            return "loading savegame...";
         });
 
         console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: save <slotindex> [<savegamename>]";
+
+            using namespace Engine;
 
             int index = std::stoi(args[1]);
             int maxSlots = Engine::SavegameManager::maxSlots();
@@ -587,17 +595,17 @@ public:
                 saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
             }
 
-            Engine::SavegameManager::saveToSaveGameSlot(index, saveGameName);
+            this->m_pEngine->queueSaveGameAction({SavegameManager::Save, index, saveGameName});
 
-            return "World saved to slot: " + std::to_string(index);
+            return "Saving world to slot: " + std::to_string(index) + "...";
         });
 
-        UI::ConsoleCommand::CandidateListGenerator worlddNpcNamesGen = [this]() {
-            using Suggestion = UI::ConsoleCommand::Suggestion;
+        CandidateListGenerator worlddNpcNamesGen = [this]() {
+            using Suggestion = Suggestion;
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
-            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+            std::vector<Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
                 VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, npc);
@@ -614,11 +622,36 @@ public:
                     std::replace(npcName.begin(), npcName.end(), ' ', '_');
                     group.push_back(std::move(npcName));
                 }
-                Suggestion suggestion = std::make_shared<UI::NPCSuggestion>(group, npc);
+                Suggestion suggestion = std::make_shared<Logic::Console::NPCSuggestion>(group, npc);
                 suggestions.push_back(suggestion);
             }
             return suggestions;
         };
+
+        console.registerCommand("control", [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
+            if (args.size() < 2)
+                return "Missing argument. Usage: control <npc>";
+
+            std::string requested = args[1];
+
+            auto& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+
+            auto suggestions = worlddNpcNamesGen();
+            auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+            auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
+            if (suggestion != nullptr) {
+                worldInstance.takeControlOver(suggestion->npcHandle);
+                VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                const std::string& npcDisplayName = npcScriptObject.name[0];
+                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                std::string npnNameFull = npcDisplayName + " (" + npcDatFileName + ")";
+                return "took control over " + npnNameFull;
+            }
+            return "NPC not found in this world: " + requested;
+
+        }).registerAutoComplete(worlddNpcNamesGen);
 
         console.registerCommand("givexp", [this](const std::vector<std::string>& args) -> std::string {
             auto& s1 = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -649,9 +682,13 @@ public:
 
         auto tpCallback = [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
             if (args.size() < 2)
-                return "Missing argument(s). Usage: tp [<npc:default=PC_HERO>] <targetnpc>";
+                return "Missing argument(s). Usage: tp [<npc:default=player>] <targetnpc>";
 
-            std::string teleporterName = "PC_HERO";
+            auto& worldInstance = m_pEngine->getMainWorld().get();
+            auto& scriptEngine = worldInstance.getScriptEngine();
+            auto& datFile = scriptEngine.getVM().getDATFile();
+
+            std::string teleporterName;
             std::string targetName;
             if (args.size() >= 3)
             {
@@ -660,9 +697,6 @@ public:
             } else {
                 targetName = args[1];
             }
-            auto& worldInstance = m_pEngine->getMainWorld().get();
-            auto& scriptEngine = worldInstance.getScriptEngine();
-            auto& datFile = scriptEngine.getVM().getDATFile();
 
             auto suggestions = worlddNpcNamesGen();
 
@@ -670,18 +704,28 @@ public:
             std::vector<std::string> fullNames;
             for (auto& requestedName : {teleporterName, targetName})
             {
-                auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
-                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
                 bool success = false;
-                if (suggestion != nullptr)
+                Handle::EntityHandle entityHandle = Handle::EntityHandle::makeInvalidHandle();
+                if (!requestedName.empty())
                 {
-                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
+                    auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
+                    auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
+                    if (suggestion != nullptr)
+                        entityHandle = suggestion->npcHandle;
+                } else
+                {
+                    // case: no argument given
+                    entityHandle = scriptEngine.getPlayerEntity();
+                }
+                if (entityHandle.isValid())
+                {
+                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, entityHandle);
                     if (npcVobInfo.isValid())
                     {
                         success = true;
-                        auto& aliasList = suggestion->aliasList;
-                        std::string npcDatFileName = aliasList[0];
-                        std::string npcDisplayName = aliasList[1];
+                        Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                        const std::string& npcDisplayName = npcScriptObject.name[0];
+                        const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
                         vobInfos.push_back(npcVobInfo);
                         fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
                     }
@@ -690,8 +734,8 @@ public:
                     return "Could not find NPC " + requestedName;
             }
 
-            VobTypes::NpcVobInformation& teleporter = vobInfos.at(0);
-            VobTypes::NpcVobInformation& target = vobInfos.at(1);
+            VobTypes::NpcVobInformation teleporter = vobInfos.at(0);
+            VobTypes::NpcVobInformation target = vobInfos.at(1);
             Math::float3 targetPosition = target.position->m_WorldMatrix.Translation();
             Math::float3 targetDirection = target.playerController->getDirection();
             // keep a respectful distance of 1 to the NPC
@@ -735,7 +779,7 @@ public:
                 const std::string& requested = args.at(1);
                 auto suggestions = worlddNpcNamesGen();
                 auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
-                auto suggestion = std::dynamic_pointer_cast<UI::NPCSuggestion>(baseSuggestion);
+                auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
                 if (suggestion != nullptr) {
                     npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                 } else {
@@ -816,10 +860,10 @@ public:
             return "Used " + std::to_string(dmg) + " mana";
         });
 
-        UI::ConsoleCommand::CandidateListGenerator itemNamesGen = [this]() {
+        CandidateListGenerator itemNamesGen = [this]() {
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
             auto& datFile = se.getVM().getDATFile();
-            std::vector<UI::ConsoleCommand::Suggestion> suggestions;
+            std::vector<Suggestion> suggestions;
             {
                 Daedalus::GameState::ItemHandle dummyHandle = se.getVM().getGameState().createItem();
                 Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(dummyHandle);
@@ -840,7 +884,7 @@ public:
                         // most of the items have description equal to name, so remove one of them
                         aliasList.pop_back();
                     }
-                    UI::ConsoleCommand::Suggestion suggestion = std::make_shared<UI::SuggestionBase>(UI::SuggestionBase {aliasList});
+                    Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase {aliasList});
                     suggestions.push_back(suggestion);
                 });
                 se.getVM().getGameState().removeItem(dummyHandle);
@@ -863,7 +907,7 @@ public:
                 amount = std::stoi(args[2]);
 
             if (amount < 1)
-                return "invalid ammount " + std::to_string(amount);
+                return "invalid amount " + std::to_string(amount);
 
             auto& se = m_pEngine->getMainWorld().get().getScriptEngine();
 
@@ -928,8 +972,8 @@ public:
 
     int shutdown() override
     {
-		// remove (destroy) the world so that it shuts down properly
-        m_pEngine->removeWorld(m_pEngine->getMainWorld());
+		// remove all worlds so that it shuts down properly
+        m_pEngine->resetSession();
 
         delete m_pEngine;
 
@@ -979,8 +1023,8 @@ public:
             {
                 int mods = getModsTriggered()[i];
 
-                if(m_pEngine->getHud().getConsole().isOpen())
-                    m_pEngine->getHud().getConsole().onKeyDown(i, mods);
+                if(m_pEngine->getConsole().isOpen())
+                    m_pEngine->getConsole().onKeyDown(i, mods);
                 if (keyMap.find(i) != keyMap.end())
                 {
                     m_pEngine->getHud().onInputAction(keyMap[i]);
@@ -991,7 +1035,7 @@ public:
         // Pass text input from this frame
         m_pEngine->getHud().onTextInput(frameInputText);
 
-        bool disableBindings = m_pEngine->getHud().getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
+        bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
         if(!disableBindings)
             Engine::Input::fireBindings();
 
@@ -1039,10 +1083,7 @@ public:
 
         if(!m_NoHUD)
         {
-            uint16_t xOffset = 0;
-
-            if (m_pEngine->getHud().getConsole().isOpen())
-                xOffset = 100;
+            uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
             bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
             bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
         }
@@ -1064,45 +1105,46 @@ public:
         // Draw and process all UI-Views
         // Set render states.
 
-
-        if(!m_NoHUD)
         {
-            // TODO move this code into frameupdate? so gamespeed factor doesn't need to be applied here
-            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
-            m_pEngine->getRootUIView().update(dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
+            auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+            float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
+            if(m_NoHUD)
+            {
+                // draw console even if HUD is disabled
+                m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
+            } else
+            {
+                m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
+            }
         }
 
 
+        // debug draw
+        {
+            ddSetTransform(nullptr);
+            ddDrawAxis(0.0f, 0.0f, 0.0f);
 
-        ddSetTransform(nullptr);
-        ddDrawAxis(0.0f, 0.0f, 0.0f);
+            ddPush();
+            ddSetColor(0xff00ff00);
+            ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
+            Aabb aabb =
+                    {
+                            {  -1.0f, -1.0f, -1.0f },
+                            { 1.0f, 1.0f, 1.0f },
+                    };
+            ddDraw(aabb);
 
-        ddPush();
-        ddSetColor(0xff00ff00);
-        ddSetTransform(Math::Matrix::CreateTranslation(10,0,0).mv);
-        Aabb aabb =
-                {
-                        {  -1.0f, -1.0f, -1.0f },
-                        { 1.0f, 1.0f, 1.0f },
-                };
-        ddDraw(aabb);
+            ddSetTransform(nullptr);
+            ddSetColor(0xff0000ff);
+            ddMoveTo(0,0,0);
+            ddLineTo(10,0,0);
+            ddPop();
 
-        ddSetTransform(nullptr);
-        ddSetColor(0xff0000ff);
-        ddMoveTo(0,0,0);
-        ddLineTo(10,0,0);
-        ddPop();
-
-        ddEnd();
+            ddEnd();
+        }
 
         imguiEndFrame();
 
-        if(m_pEngine->getHud().getConsole().isOpen())
-        {
-            float gameSpeed = m_pEngine->getGameEngineSpeedFactor();
-            m_pEngine->getHud().getConsole().getConsoleBox().update(
-                    dt * gameSpeed, ms, m_pEngine->getDefaultRenderSystem().getConfig());
-        }
         if (disableBindings){
             Engine::Input::clearTriggered();
         }
@@ -1110,17 +1152,7 @@ public:
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
-        if (m_pEngine->getQuickload())
-        {
-            m_pEngine->setQuickload(false);
-
-            if (!m_pEngine->getHud().isMenuActive() && !m_pEngine->getMainWorld().get().getDialogManager().isDialogActive())
-            {
-                auto error = Engine::SavegameManager::loadSaveGameSlot(0);
-                if (!error.empty())
-                    LogWarn() << error;
-            }
-        }
+        m_pEngine->processSaveGameActionQueue();
 
         return true;
 	}
@@ -1163,6 +1195,7 @@ int main(int argc, char** argv)
         return 0;
 
     ExampleCubes app;
+#ifdef NDEBUG
     try
     {
         ret = app.run(argc, argv);
@@ -1180,6 +1213,10 @@ int main(int argc, char** argv)
         std::cerr << "Caught unknown exception in main loop" << std::endl;
         ret = 1;
     }
+#else
+    ret = app.run(argc, argv);
+    app.shutdown();
+#endif
 
     // Write current config-values
     Cli::writeConfigFile();
