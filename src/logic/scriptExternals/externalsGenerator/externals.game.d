@@ -383,7 +383,7 @@ FUNC void AI_EquipBestArmor(VAR C_NPC Character)
 ///             can be used by the \p Character
 ///             and has the \b ITEM_KAT_ARMOR flag
 ///             (nothing is done if the found item has the \b ITEM_ACTIVE flag).
-/// \note       The G2 armor items are sorted by:
+/// \note       The G2 \b INV_ARMOR items are sorted by:
 ///             -# \b C_Item.wear
 ///             -# \b C_Item.protection[] sum
 ///             -# instance name
@@ -401,11 +401,53 @@ FUNC void AI_EquipBestArmor(VAR C_NPC Character)
 };
 
 FUNC int AI_EquipBestMeleeWeapon(VAR C_NPC Character)
+/// \brief      Equip first melee weapon that can be used (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \return     Nothing (do not use the return value).
+/// \details    The message handler equips the first item in the inventory that
+///             can be used by the \p Character
+///             and has the \b ITEM_KAT_NF flag
+///             (nothing is done if the found item has the \b ITEM_ACTIVE flag).
+/// \note       The G2 INV_WEAPON items are sorted by:
+///             -# \b C_Item.mainflag
+///                (\b ITEM_KAT_NF, \b ITEM_KAT_FF, \b ITEM_KAT_MUN, ...)
+///             -# \b C_Item.damage[] sum
+///             -# instance name
+///             .
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 /// \bug        The implementation does not push a result on the stack.
 {
 };
 
 FUNC int AI_EquipBestRangedWeapon(VAR C_NPC Character)
+/// \brief      Equip first ranged weapon that can be used (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \return     Nothing (do not use the return value).
+/// \details    The message handler equips the first item in the inventory that
+///             can be used by the \p Character, has the \b ITEM_KAT_FF flag,
+///             and ammunition is available
+///             (nothing is done if the found item has the \b ITEM_ACTIVE flag).
+/// \note       The G2 INV_WEAPON items are sorted by:
+///             -# \b C_Item.mainflag
+///                (\b ITEM_KAT_NF, \b ITEM_KAT_FF, \b ITEM_KAT_MUN, ...)
+///             -# \b C_Item.damage[] sum
+///             -# instance name
+///             .
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 /// \bug        The implementation does not push a result on the stack.
 {
 };
@@ -653,6 +695,18 @@ FUNC void AI_UnequipArmor(VAR C_NPC Character)
 };
 
 FUNC void AI_UnequipWeapons(VAR C_NPC Character)
+/// \brief      Unequip active melee and ranged weapon (queued).
+/// \param      Character
+///                 Object reference to the character.
+/// \details    The message handler unequips the active melee weapon
+///             and the active ranged weapon.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 {
 };
 
@@ -1153,16 +1207,52 @@ FUNC int Npc_GetDistToWP(VAR C_NPC Origin, VAR string Name)
 };
 
 FUNC C_Item Npc_GetEquippedArmor(VAR C_NPC Character)
+/// \brief      Get active torso armor (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Object reference to the active torso armor
+///             (\b C_Item.wear = \b WEAR_TORSO) or NULL.
+/// \sa         AI_EquipArmor
+/// \sa         AI_EquipBestArmor
+/// \sa         AI_UnequipArmor
+/// \sa         Mdl_SetVisualBody
+/// \sa         Npc_HasEquippedArmor
 {
 	return NULL;
 };
 
 FUNC C_Item Npc_GetEquippedMeleeWeapon(VAR C_NPC Character)
+/// \brief      Get active melee weapon (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Object reference to the active melee weapon or NULL.
+/// \details    The sword slot is used for items that have the
+///             \b ITEM_DAG, \b ITEM_SWD or \b ITEM_AXE flag.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 {
 	return NULL;
 };
 
 FUNC C_Item Npc_GetEquippedRangedWeapon(VAR C_NPC Character)
+/// \brief      Get active ranged weapon (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Object reference to the active ranged weapon or NULL.
+/// \details    The long sword slot is used for items that have the
+///             \b ITEM_2HD_SWD or \b ITEM_2HD_AXE flag.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 {
 	return NULL;
 };
@@ -1291,21 +1381,71 @@ FUNC BOOL Npc_HasDetectedNpc(VAR C_NPC NonPlayer, VAR C_NPC Target)
 };
 
 FUNC BOOL Npc_HasEquippedArmor(VAR C_NPC Character)
+/// \brief      Check if a torso armor is equipped (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Returns TRUE if a torso armor is equipped
+///             (\b C_Item.wear = \b WEAR_TORSO).
+/// \sa         AI_EquipArmor
+/// \sa         AI_EquipBestArmor
+/// \sa         AI_UnequipArmor
+/// \sa         Mdl_SetVisualBody
+/// \sa         Npc_GetEquippedArmor
 {
 	return FALSE;
 };
 
 FUNC BOOL Npc_HasEquippedMeleeWeapon(VAR C_NPC Character)
+/// \brief      Check if a melee weapon is equipped (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Returns TRUE if a melee weapon is equipped.
+/// \details    The sword slot is used for items that have the
+///             \b ITEM_DAG, \b ITEM_SWD, or \b ITEM_AXE flag.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
+/// \sa         Npc_HasEquippedWeapon
 {
 	return FALSE;
 };
 
 FUNC BOOL Npc_HasEquippedRangedWeapon(VAR C_NPC Character)
+/// \brief      Check if a ranged weapon is equipped (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Returns TRUE if a ranged weapon is equipped.
+/// \details    The long sword slot is used for items that have the
+///             \b ITEM_2HD_SWD or \b ITEM_2HD_AXE flag.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedWeapon
 {
 	return FALSE;
 };
 
 FUNC BOOL Npc_HasEquippedWeapon(VAR C_NPC Character)
+/// \brief      Check if a melee or ranged weapon is equipped (direct).
+/// \param      Character
+///                 Reference to the character object.
+/// \return     Returns TRUE if a melee or ranged weapon is equipped.
+/// \details    The sword slots are used for items that have the
+///             \b ITEM_DAG, \b ITEM_SWD, \b ITEM_AXE,
+///             \b ITEM_2HD_SWD or \b ITEM_2HD_AXE flag.
+/// \sa         AI_EquipBestMeleeWeapon
+/// \sa         AI_EquipBestRangedWeapon
+/// \sa         AI_UnequipWeapons
+/// \sa         Npc_GetEquippedMeleeWeapon
+/// \sa         Npc_GetEquippedRangedWeapon
+/// \sa         Npc_HasEquippedMeleeWeapon
+/// \sa         Npc_HasEquippedRangedWeapon
 {
 	return FALSE;
 };
