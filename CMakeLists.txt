@@ -39,7 +39,7 @@ if(EMSCRIPTEN)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=2")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s TOTAL_MEMORY=924288000")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../content@/")
-endif()
+endif()   
 
 if(ANDROID)
     #set(BGFX_DEBUG 0)
@@ -53,40 +53,40 @@ if(ANDROID)
 
     # Fix other libraries
     set(BUILD_SQUISH_WITH_SSE2 OFF CACHE STRING "" FORCE) # No SSE2 on android
-
+    
     # Make Apk.cmake compatible
     set(ARM_TARGET ${ANDROID_ABI})
     set(ANDROID_API_LEVEL ${ANDROID_NATIVE_API_LEVEL})
-
+    
     set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-
+    
     include_directories(${ANDROID_NDK}/sources/android/native_app_glue)
     #include_directories(src/android/compat)
-
+        
     # TODO: Add a dummy file to supress a warning here
     file(GLOB ANDROID_SRC
         #${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c
         #src/android/compat/*.c
     )
-
+     
     set(ANDROID_STL gnustl_static CACHE STRING "" FORCE) # Static STL
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++") # Static libc++
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-unaligned-access") # Unaligned access not supported on ARM
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -ffor-scope -fno-rtti -pipe -ffunction-sections -fdata-sections -ffast-math -Wnon-virtual-dtor -Wreorder -Wsign-promo -fvisibility=hidden -fvisibility-inlines-hidden -Wstrict-null-sentinel -Os -funroll-all-loops -fpeel-loops -ftree-vectorize")
     set(LINKER_FLAGS "${LINKER_FLAGS} -nostartfiles, -Wl,--as-needed -Wl,--gc-sections -Wl,--no-undefined -Wl,--strip-all -Wl,-rpath-link=${ANDROID_NDK_SYSROOT}/usr/lib/ -L${ANDROID_NDK_SYSROOT}/usr/lib/")
-
+        
     add_library(android_glue SHARED ${ANDROID_SRC})
-
+        
     # Stuff all android libraries in here
     target_link_libraries(android_glue log android crystax bgfx_common EGL GLESv2)
     set_target_properties(android_glue PROPERTIES COMPILE_DEFINITIONS "ANDROID")
-
+    
     # Make sure to copy all libraries put into here
     file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/armeabi-v7a/*.so)
     #file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/x86/*.so)
     set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${LIBRARY_OUTPUT_PATH}/libandroid_glue.so")
-
+    
     include("src/android/Apk.cmake" REQUIRED)
 endif()
 
@@ -132,7 +132,7 @@ endif()
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
-    add_definitions(-DNOMINMAX)
+	add_definitions(-DNOMINMAX)
 endif()
 
 # Setup OpenMP
@@ -146,7 +146,7 @@ endif()
 
 # Setup bullet
 if(MSVC)
-    set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
+	set(USE_MSVC_RUNTIME_LIBRARY_DLL ON)
 endif()
 
 # ------------------ Config-Header ------------------
@@ -230,28 +230,28 @@ set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
 
 if (UNIX)
-    set(LIBTYPE STATIC CACHE STRING "" FORCE)
+	set(LIBTYPE STATIC CACHE STRING "" FORCE)
     if (NOT APPLE)
         set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
         set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
     endif()
 else()
-    set(LIBTYPE SHARED CACHE STRING "" FORCE)
+	set(LIBTYPE SHARED CACHE STRING "" FORCE)
 endif()
 
 if(NOT EMSCRIPTEN)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-    include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
+	add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+	include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
 
-    if (UNIX)
-        if (NOT APPLE)
-        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-        endif()
-        target_link_libraries(engine openal)
-    elseif(WIN32)
-        target_link_libraries(engine OpenAL32)
-    endif()
+	if (UNIX)
+	    if (NOT APPLE)
+		set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
+		set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
+	    endif()
+	    target_link_libraries(engine openal)
+	elseif(WIN32)
+	    target_link_libraries(engine OpenAL32)
+	endif()
 endif()
 
 # ------------------ Other ------------------
@@ -264,7 +264,7 @@ include_directories(lib/tinydir)
 include_directories(lib/json)
 
 if(NOT ANDROID)
-
+	
 
     include_directories(lib/glfw/include)
 
@@ -276,7 +276,7 @@ if(NOT ANDROID)
     endif()
 else()
 
-    # TODO: Audio
+	# TODO: Audio
     target_link_libraries(engine android_glue)
 endif()
 
