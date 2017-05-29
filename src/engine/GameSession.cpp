@@ -66,10 +66,10 @@ void GameSession::setMainWorld(Handle::WorldHandle world)
     m_MainWorld = world;
 }
 
-Handle::WorldHandle GameSession::addWorld(const std::string& _worldFile,
+std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
                                           const json& worldJson,
                                           const json& scriptEngine,
-                                          const json& dialogManger)
+                                          const json& dialogManager)
 {
     std::string worldFile = _worldFile;
 
@@ -88,14 +88,24 @@ Handle::WorldHandle GameSession::addWorld(const std::string& _worldFile,
         if (zenData.empty())
         {
             LogWarn() << "Failed to find world file: " << worldFile;
-            return Handle::WorldHandle::makeInvalidHandle();
+            return nullptr;
         }
     }
-    if (!world.init(worldFile, worldJson, scriptEngine, dialogManger)) // expensive operation
+    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager)) // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
-        return Handle::WorldHandle::makeInvalidHandle();
+        return nullptr;
     }
+    return pWorldInstance;
+}
+
+Handle::WorldHandle GameSession::registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance)
+{
+    if (pWorldInstance == nullptr)
+        return Handle::WorldHandle::makeInvalidHandle();
+
+    World::WorldInstance& world = *pWorldInstance;
+
     m_Engine.onWorldCreated(world.getMyHandle());
     m_WorldInstances.push_back(std::move(pWorldInstance));
     m_Worlds.push_back(world.getMyHandle());
@@ -147,7 +157,11 @@ Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile)
     }
 
     // TODO do this asynchronous
-    Handle::WorldHandle newWorld = addWorld(worldFile, newWorldJson, scriptEngine);
+    Handle::WorldHandle newWorld;
+    {
+        std::unique_ptr<World::WorldInstance> pNewWorld = createWorld(worldFile, newWorldJson, scriptEngine);
+        newWorld = registerWorld(std::move(pNewWorld));
+    }
 
     setMainWorld(newWorld);
     auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
@@ -173,4 +187,13 @@ void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle) {
     worldHandle.get().exportWorld(worldJson);
     addInactiveWorld(worldHandle.get().getZenFile(), std::move(worldJson));
     removeWorld(worldHandle);
+}
+
+Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
+                                          const json& worldJson,
+                                          const json& scriptEngine,
+                                          const json& dialogManager)
+{
+    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
+    return registerWorld(std::move(pWorldInstance));
 }

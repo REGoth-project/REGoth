@@ -57,7 +57,7 @@ WorldInstance::~WorldInstance()
 bool WorldInstance::init(const std::string& zen,
                          const json& worldJson,
                          const json& scriptEngine,
-                         const json& dialogManger)
+                         const json& dialogManager)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -383,9 +383,9 @@ bool WorldInstance::init(const std::string& zen,
             m_ScriptEngine.importScriptEngine(scriptEngine);
         }
         // Load dialogManager if one is provided. Only after loading a savegame
-        if(!dialogManger.empty())
+        if(!dialogManager.empty())
         {
-            m_DialogManager.importDialogManager(dialogManger);
+            m_DialogManager.importDialogManager(dialogManager);
         }
 	}
 	else

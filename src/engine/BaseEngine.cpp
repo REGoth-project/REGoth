@@ -266,25 +266,14 @@ void BaseEngine::processSaveGameActionQueue()
     }
 }
 
-void BaseEngine::processAsyncActionQueue()
+void BaseEngine::processMessageQueue()
 {
-    while (!m_AsyncActionQueue.empty())
+    while (!m_MessageQueue.empty())
     {
-        auto& action = m_AsyncActionQueue.front();
-        if (action.prolog)
-        {
-            action.prolog(*this);
-            action.prolog = nullptr;
-        }
-        bool running = action.job.valid() && action.job.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready;
-        if (running)
-        {
-            return;
-        } else
-        {
-            action.epilog(*this);
-            m_AsyncActionQueue.pop();
-        }
+        if (m_MessageQueue.front()(*this))
+            m_MessageQueue.pop();
+        else
+            break;
     }
 }
 

@@ -178,7 +178,7 @@ namespace Engine
 		 */
         void processSaveGameActionQueue();
 
-        void processAsyncActionQueue();
+        void processMessageQueue();
 
         /**
          * Called when a world was added
@@ -255,17 +255,8 @@ namespace Engine
          * save/load action queue
          */
 		std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
-        struct AsyncAction
-        {
-            AsyncAction(std::shared_future<void> job) :
-                job(job)
-            {
-            }
-            std::function<void(BaseEngine& engine)> prolog;
-            std::shared_future<void> job;
-            std::function<void(BaseEngine& engine)> epilog;
-        };
-		std::queue<AsyncAction> m_AsyncActionQueue;
+
+		std::queue<std::function<bool(BaseEngine& engine)>> m_MessageQueue;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

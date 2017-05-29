@@ -39,7 +39,11 @@ void Menu_Main::onCustomAction(const std::string& action)
         getHud().popMenu();
 
         m_Engine.resetSession();
-        Handle::WorldHandle worldHandle = m_Engine.getSession().addWorld(m_Engine.getEngineArgs().startupZEN);
+        Handle::WorldHandle worldHandle;
+        {
+            std::unique_ptr<World::WorldInstance> pWorldInstance = m_Engine.getSession().createWorld(m_Engine.getEngineArgs().startupZEN);
+            worldHandle = m_Engine.getSession().registerWorld(std::move(pWorldInstance));
+        }
         if (worldHandle.isValid())
         {
             m_Engine.getSession().setMainWorld(worldHandle);

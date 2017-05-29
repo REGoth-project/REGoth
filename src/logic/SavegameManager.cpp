@@ -233,8 +233,11 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
 
     gameEngine->resetSession();
     gameEngine->getSession().setCurrentSlot(index);
-    // TODO import scriptEngine and DialogManager
-    Handle::WorldHandle worldHandle = gameEngine->getSession().addWorld("", worldJson, scriptEngine, dialogManager);
+    Handle::WorldHandle worldHandle;
+    {
+        std::unique_ptr<World::WorldInstance> pWorldInstance = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
+        worldHandle = gameEngine->getSession().registerWorld(std::move(pWorldInstance));
+    }
     if (worldHandle.isValid())
     {
         gameEngine->getSession().setMainWorld(worldHandle);

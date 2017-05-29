@@ -74,6 +74,13 @@ namespace Engine
          */
         void setMainWorld(Handle::WorldHandle world);
 
+        std::unique_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
+                                     const json& worldJson = json(),
+                                     const json& scriptEngine = json(),
+                                     const json& dialogManager = json());
+
+        Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
+
         /**
          * @brief Adds a world. If worldJson is non empty, argument worldFile will be ignored
          * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
@@ -82,7 +89,7 @@ namespace Engine
         Handle::WorldHandle addWorld(const std::string& worldFile,
                                      const json& worldJson = json(),
                                      const json& scriptEngine = json(),
-                                     const json& dialogManger = json());
+                                     const json& dialogManager = json());
 
         /**
          * Switch to world with the given name.
