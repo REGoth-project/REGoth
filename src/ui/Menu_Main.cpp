@@ -61,8 +61,7 @@ void Menu_Main::onCustomAction(const std::string& action)
             if (status != std::future_status::ready)
                 return false;
 
-            auto bla = std::move(worldFuture.get());
-            Handle::WorldHandle worldHandle = engine.getSession().registerWorld(std::move(worldFuture.get()));
+            Handle::WorldHandle worldHandle = engine.getSession().registerWorld(worldFuture.get());
             if (worldHandle.isValid())
             {
                 engine.getSession().setMainWorld(worldHandle);
