@@ -235,7 +235,7 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     gameEngine->getSession().setCurrentSlot(index);
     Handle::WorldHandle worldHandle;
     {
-        std::unique_ptr<World::WorldInstance> pWorldInstance = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
+        std::shared_ptr<World::WorldInstance> pWorldInstance = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
         worldHandle = gameEngine->getSession().registerWorld(std::move(pWorldInstance));
     }
     if (worldHandle.isValid())

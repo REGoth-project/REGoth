@@ -112,6 +112,7 @@ View::View(Engine::BaseEngine& e) : m_Engine(e)
 
     ViewUtil::PosUvVertex::init();
 
+    // FIXME remove this / is this necessary here?
     bgfx::setViewSeq(BGFX_VIEW, true);
 }
 

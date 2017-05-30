@@ -174,11 +174,12 @@ namespace Engine
 		void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
 
 		/**
-		 * process all queued actions by FIFO
+		 * process all queued actions by FIFO, TODO: remove and use general purpose message queue
 		 */
         void processSaveGameActionQueue();
 
-        void processMessageQueue();
+		void onMessage(std::function<bool(BaseEngine& engine)>&& job);
+		void processMessageQueue();
 
         /**
          * Called when a world was added

@@ -7,6 +7,7 @@
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
+#include <ui/LoadingScreen.h>
 
 using namespace UI;
 
@@ -37,22 +38,44 @@ void Menu_Main::onCustomAction(const std::string& action)
     {
         LogInfo() << "Starting new game...";
         getHud().popMenu();
+        auto prolog = [](Engine::BaseEngine& engine) -> bool {
+            engine.getHud().getLoadingScreen().setHidden(false);
+            engine.resetSession();
+            return true;
+        };
+        prolog(m_Engine);
+        Engine::BaseEngine* pEngine = &m_Engine;
+        auto createWorld = [pEngine](){
+            return pEngine->getSession().createWorld(pEngine->getEngineArgs().startupZEN);
+        };
+        bool synchronHack = false;
+        auto mode = synchronHack ? std::launch::deferred : std::launch::async;
+        std::shared_future<std::shared_ptr<World::WorldInstance>> worldFuture = std::async(mode,
+                                                                                           createWorld);
 
-        m_Engine.resetSession();
-        Handle::WorldHandle worldHandle;
-        {
-            std::unique_ptr<World::WorldInstance> pWorldInstance = m_Engine.getSession().createWorld(m_Engine.getEngineArgs().startupZEN);
-            worldHandle = m_Engine.getSession().registerWorld(std::move(pWorldInstance));
-        }
-        if (worldHandle.isValid())
-        {
-            m_Engine.getSession().setMainWorld(worldHandle);
-            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(m_Engine.getEngineArgs().playerScriptname);
-            worldHandle.get().takeControlOver(player);
-        } else
-        {
-            LogError() << "Failed to add given startup world, world handle is invalid!";
-        }
+        auto registerWorld = [worldFuture, synchronHack](Engine::BaseEngine& engine) -> bool {
+            if (synchronHack)
+                worldFuture.wait();
+            // test if result is ready
+            auto status = worldFuture.wait_for(std::chrono::nanoseconds(0));
+            if (status != std::future_status::ready)
+                return false;
+
+            auto bla = std::move(worldFuture.get());
+            Handle::WorldHandle worldHandle = engine.getSession().registerWorld(std::move(worldFuture.get()));
+            if (worldHandle.isValid())
+            {
+                engine.getSession().setMainWorld(worldHandle);
+                auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(engine.getEngineArgs().playerScriptname);
+                worldHandle.get().takeControlOver(player);
+            } else
+            {
+                LogError() << "Failed to add given startup world, world handle is invalid!";
+            }
+            engine.getHud().getLoadingScreen().setHidden(true);
+            return true;
+        };
+        m_Engine.onMessage(registerWorld);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {

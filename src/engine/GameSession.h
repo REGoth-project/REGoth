@@ -66,7 +66,7 @@ namespace Engine
         /**
          * @return const reference to the list of unqiue pointers to loaded worlds
          */
-        const std::list<std::unique_ptr<World::WorldInstance>>& getWorldInstances() { return m_WorldInstances; }
+        const std::list<std::shared_ptr<World::WorldInstance>>& getWorldInstances() { return m_WorldInstances; }
 
         /**
          * Sets the currently active world.
@@ -74,12 +74,12 @@ namespace Engine
          */
         void setMainWorld(Handle::WorldHandle world);
 
-        std::unique_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
+        std::shared_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
                                      const json& worldJson = json(),
                                      const json& scriptEngine = json(),
                                      const json& dialogManager = json());
 
-        Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
+        Handle::WorldHandle registerWorld(std::shared_ptr<World::WorldInstance> pWorldInstance);
 
         /**
          * @brief Adds a world. If worldJson is non empty, argument worldFile will be ignored
@@ -140,7 +140,7 @@ namespace Engine
         /**
          * Currently active world instances
          */
-        std::list<std::unique_ptr<World::WorldInstance>> m_WorldInstances;
+        std::list<std::shared_ptr<World::WorldInstance>> m_WorldInstances;
 
         /**
          * Main world of this engine-instance

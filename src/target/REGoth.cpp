@@ -1152,7 +1152,9 @@ public:
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
+        // TODO migrate SaveGameActions to general purpose message queue
         m_pEngine->processSaveGameActionQueue();
+        m_pEngine->processMessageQueue();
 
         return true;
 	}

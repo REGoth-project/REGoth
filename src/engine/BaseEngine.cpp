@@ -293,4 +293,9 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
+void BaseEngine::onMessage(std::function<bool(BaseEngine &engine)> &&job)
+{
+    m_MessageQueue.push(job);
+}
+
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;
