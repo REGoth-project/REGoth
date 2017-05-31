@@ -10,10 +10,28 @@ namespace Engine
 {
     class BaseEngine;
 
-    struct AsyncAction
+    class AsyncAction
     {
-        std::function<bool(BaseEngine& engine)> job;
-        // if this is set to true, the action shall block the queue (aka not isOverlay)
-        bool blocking;
+    public:
+        using JobType = std::function<bool(BaseEngine& engine)>;
+
+        /**
+         * move constructor. useful if the function (i.e. lambda) captures some huge object
+         * @param job
+         */
+        AsyncAction(JobType&& job);
+        AsyncAction(const JobType& job);
+
+        /**
+         * execute the job
+         * @param engine
+         * @return true if the job has finished and shall be removed from the queue
+         */
+        bool run(BaseEngine& engine);
+
+    private:
+        bool m_Finished;
+
+        JobType m_Job;
     };
 }

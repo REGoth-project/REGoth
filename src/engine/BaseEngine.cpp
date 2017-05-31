@@ -18,6 +18,7 @@
 #include <ui/LoadingScreen.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include <mutex>
 
 using namespace Engine;
 
@@ -268,13 +269,20 @@ void BaseEngine::processSaveGameActionQueue()
 
 void BaseEngine::processMessageQueue()
 {
-    while (!m_MessageQueue.empty())
+    m_MessageQueueMutex.lock();
+    auto current = m_MessageQueue.begin();
+    while (current != m_MessageQueue.end())
     {
-        if (m_MessageQueue.front()(*this))
-            m_MessageQueue.pop();
+        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
+        m_MessageQueueMutex.unlock();
+        bool finished = current->run(*this);
+        m_MessageQueueMutex.lock();
+        if (finished)
+            current = m_MessageQueue.erase(current); // erase returns next iterator
         else
-            break;
+            std::advance(current, 1);
     }
+    m_MessageQueueMutex.unlock();
 }
 
 void BaseEngine::resetSession()
@@ -295,7 +303,8 @@ Handle::WorldHandle BaseEngine::getMainWorld()
 
 void BaseEngine::onMessage(std::function<bool(BaseEngine &engine)> &&job)
 {
-    m_MessageQueue.push(job);
+    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
+    m_MessageQueue.emplace_back(job);
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

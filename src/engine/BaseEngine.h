@@ -7,6 +7,7 @@
 #include <logic/SavegameManager.h>
 #include <future>
 #include "GameSession.h"
+#include "AsyncAction.h"
 
 namespace UI
 {
@@ -257,7 +258,8 @@ namespace Engine
          */
 		std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
 
-		std::queue<std::function<bool(BaseEngine& engine)>> m_MessageQueue;
+		std::list<AsyncAction> m_MessageQueue;
+		std::mutex m_MessageQueueMutex;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

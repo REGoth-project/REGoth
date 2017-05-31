@@ -48,7 +48,7 @@ void Menu_Main::onCustomAction(const std::string& action)
         auto createWorld = [pEngine](){
             return pEngine->getSession().createWorld(pEngine->getEngineArgs().startupZEN);
         };
-        bool synchronHack = false;
+        bool synchronHack = true;
         auto mode = synchronHack ? std::launch::deferred : std::launch::async;
         std::shared_future<std::shared_ptr<World::WorldInstance>> worldFuture = std::async(mode,
                                                                                            createWorld);
