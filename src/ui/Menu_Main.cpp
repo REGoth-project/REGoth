@@ -31,50 +31,64 @@ bool Menu_Main::onInputAction(EInputAction action)
     return Menu::onInputAction(action);
 }
 
-
 void Menu_Main::onCustomAction(const std::string& action)
 {
     if(action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";
         getHud().popMenu();
-        auto prolog = [](Engine::BaseEngine& engine) -> bool {
-            engine.getHud().getLoadingScreen().setHidden(false);
-            engine.resetSession();
-            return true;
-        };
-        prolog(m_Engine);
-        Engine::BaseEngine* pEngine = &m_Engine;
-        auto createWorld = [pEngine](){
-            return pEngine->getSession().createWorld(pEngine->getEngineArgs().startupZEN);
-        };
-        bool synchronHack = true;
-        auto mode = synchronHack ? std::launch::deferred : std::launch::async;
-        std::shared_future<std::shared_ptr<World::WorldInstance>> worldFuture = std::async(mode,
-                                                                                           createWorld);
 
-        auto registerWorld = [worldFuture, synchronHack](Engine::BaseEngine& engine) -> bool {
-            if (synchronHack)
-                worldFuture.wait();
-            // test if result is ready
-            auto status = worldFuture.wait_for(std::chrono::nanoseconds(0));
-            if (status != std::future_status::ready)
-                return false;
+        std::string worldName = m_Engine.getEngineArgs().startupZEN;
 
-            Handle::WorldHandle worldHandle = engine.getSession().registerWorld(worldFuture.get());
-            if (worldHandle.isValid())
+        bool synchronous = true;
+        auto policy = synchronous ? std::launch::deferred : std::launch::async;
+
+        Engine::AsyncAction::JobType<void> addWorld = [worldName](Engine::BaseEngine* engine){
+
+            Engine::AsyncAction::JobType<void> prolog = [](Engine::BaseEngine* engine) {
+                engine->getHud().getLoadingScreen().setHidden(false);
+                engine->resetSession();
+            };
+            auto prologFuture = engine->onMessage(prolog);
+            // block this thread until the prolog gets started by the main thread
+            while (prologFuture.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
+            {}
+            // block this thread until the prolog epilog finished
+            prologFuture.wait();
+
+            std::shared_ptr<World::WorldInstance> sharedWorld;
+            Engine::AsyncAction::JobType<std::shared_ptr<World::WorldInstance>> createWorld =
+                    [worldName](Engine::BaseEngine* engine) {
+                        return engine->getSession().createWorld(worldName);
+                    };
+            bool synchronous = true;
+            if (synchronous)
             {
-                engine.getSession().setMainWorld(worldHandle);
-                auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(engine.getEngineArgs().playerScriptname);
-                worldHandle.get().takeControlOver(player);
-            } else
-            {
-                LogError() << "Failed to add given startup world, world handle is invalid!";
+                auto future = engine->onMessage(createWorld);
+                while (future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
+                {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
+                sharedWorld = future.get();
             }
-            engine.getHud().getLoadingScreen().setHidden(true);
-            return true;
+            else
+                sharedWorld = createWorld(engine);
+
+            Engine::AsyncAction::JobType<void> registerWorld = [sharedWorld](Engine::BaseEngine* engine){
+                Handle::WorldHandle worldHandle = engine->getSession().registerWorld(sharedWorld);
+                if (worldHandle.isValid())
+                {
+                    engine->getSession().setMainWorld(worldHandle);
+                    auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(engine->getEngineArgs().playerScriptname);
+                    worldHandle.get().takeControlOver(player);
+                } else
+                {
+                    LogError() << "Failed to add given startup world, world handle is invalid!";
+                }
+                engine->getHud().getLoadingScreen().setHidden(true);
+            };
+            engine->onMessage(registerWorld);
+            // no need to wait for registerWorld, this thread's work is done here
         };
-        m_Engine.onMessage(registerWorld);
+        m_Engine.onMessage(addWorld, std::launch::async);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {

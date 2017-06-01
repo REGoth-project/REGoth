@@ -179,7 +179,9 @@ namespace Engine
 		 */
         void processSaveGameActionQueue();
 
-		void onMessage(std::function<bool(BaseEngine& engine)>&& job);
+		template <class T>
+		std::shared_future<T> onMessage(const std::function<T(BaseEngine* engine)>& job, std::launch policy = std::launch::deferred);
+
 		void processMessageQueue();
 
         /**

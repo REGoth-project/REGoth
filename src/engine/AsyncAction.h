@@ -10,28 +10,14 @@ namespace Engine
 {
     class BaseEngine;
 
-    class AsyncAction
+    struct AsyncAction
     {
     public:
-        using JobType = std::function<bool(BaseEngine& engine)>;
+        template <class T>
+        using JobType = std::function<T(BaseEngine* engine)>;
 
-        /**
-         * move constructor. useful if the function (i.e. lambda) captures some huge object
-         * @param job
-         */
-        AsyncAction(JobType&& job);
-        AsyncAction(const JobType& job);
-
-        /**
-         * execute the job
-         * @param engine
-         * @return true if the job has finished and shall be removed from the queue
-         */
         bool run(BaseEngine& engine);
 
-    private:
-        bool m_Finished;
-
-        JobType m_Job;
+        JobType<bool> m_Job;
     };
 }
