@@ -66,14 +66,14 @@ void GameSession::setMainWorld(Handle::WorldHandle world)
     m_MainWorld = world;
 }
 
-std::shared_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
+std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
                                           const json& worldJson,
                                           const json& scriptEngine,
                                           const json& dialogManager)
 {
     std::string worldFile = _worldFile;
 
-    std::shared_ptr<World::WorldInstance> pWorldInstance = std::make_shared<World::WorldInstance>(m_Engine);
+    std::unique_ptr<World::WorldInstance> pWorldInstance = std::make_unique<World::WorldInstance>(m_Engine);
     World::WorldInstance& world = *pWorldInstance;
 
     if (!worldJson.empty())
@@ -99,7 +99,7 @@ std::shared_ptr<World::WorldInstance> GameSession::createWorld(const std::string
     return pWorldInstance;
 }
 
-Handle::WorldHandle GameSession::registerWorld(std::shared_ptr<World::WorldInstance> pWorldInstance)
+Handle::WorldHandle GameSession::registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance)
 {
     if (pWorldInstance == nullptr)
         return Handle::WorldHandle::makeInvalidHandle();
@@ -159,7 +159,7 @@ Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile)
     // TODO do this asynchronous
     Handle::WorldHandle newWorld;
     {
-        std::shared_ptr<World::WorldInstance> pNewWorld = createWorld(worldFile, newWorldJson, scriptEngine);
+        std::unique_ptr<World::WorldInstance> pNewWorld = createWorld(worldFile, newWorldJson, scriptEngine);
         newWorld = registerWorld(std::move(pNewWorld));
     }
 
@@ -194,6 +194,6 @@ Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
                                           const json& scriptEngine,
                                           const json& dialogManager)
 {
-    std::shared_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
+    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
     return registerWorld(std::move(pWorldInstance));
 }

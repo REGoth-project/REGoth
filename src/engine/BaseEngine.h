@@ -7,7 +7,6 @@
 #include <logic/SavegameManager.h>
 #include <future>
 #include "GameSession.h"
-#include "AsyncAction.h"
 
 namespace UI
 {
@@ -26,6 +25,7 @@ class AudioEngine;
 namespace Engine
 {
 	class GameSession;
+	class AsyncAction;
 	const int MAX_NUM_WORLDS = 4;
 
 	class BaseEngine
@@ -179,8 +179,7 @@ namespace Engine
 		 */
         void processSaveGameActionQueue();
 
-		template <class T>
-		std::shared_future<T> onMessage(const std::function<T(BaseEngine* engine)>& job, std::launch policy = std::launch::deferred);
+		void onMessage(const std::function<bool(BaseEngine* engine)>& job);
 
 		void processMessageQueue();
 

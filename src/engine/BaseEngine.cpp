@@ -18,6 +18,7 @@
 #include <ui/LoadingScreen.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include "AsyncAction.h"
 
 using namespace Engine;
 
@@ -301,33 +302,10 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-namespace Engine
+void BaseEngine::onMessage(const AsyncAction::JobType<bool>& job)
 {
-    template<class T>
-    std::shared_future<T> BaseEngine::onMessage(const std::function<T(BaseEngine* engine)>& job, std::launch policy)
-    {
-        std::shared_future<T> future = std::async(policy, job, this);
-        std::function<bool(BaseEngine* engine)> waitJob = [future, policy](BaseEngine* engine) {
-            switch (policy)
-            {
-                case std::launch::deferred:
-                    future.wait();
-                    return true;
-                case std::launch::async:
-                    return future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
-            }
-        };
-        std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-        m_MessageQueue.emplace_back(AsyncAction{waitJob});
-        return future;
-    }
-
-    // explicit template instantiation for void and std::shared_ptr<World::WorldInstance>
-    template std::shared_future<std::shared_ptr<World::WorldInstance>>
-    BaseEngine::onMessage(const std::function<std::shared_ptr<World::WorldInstance>(BaseEngine* engine)>& job, std::launch policy);
-    template std::shared_future<void>
-    BaseEngine::onMessage(const std::function<void(BaseEngine* engine)>& job, std::launch policy);
+    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
+    m_MessageQueue.emplace_back(AsyncAction{job});
 }
-
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

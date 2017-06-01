@@ -8,6 +8,7 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include <ui/LoadingScreen.h>
+#include "engine/AsyncAction.h"
 
 using namespace UI;
 
@@ -33,6 +34,7 @@ bool Menu_Main::onInputAction(EInputAction action)
 
 void Menu_Main::onCustomAction(const std::string& action)
 {
+    using Engine::AsyncAction;
     if(action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";
@@ -45,35 +47,36 @@ void Menu_Main::onCustomAction(const std::string& action)
 
         Engine::AsyncAction::JobType<void> addWorld = [worldName](Engine::BaseEngine* engine){
 
-            Engine::AsyncAction::JobType<void> prolog = [](Engine::BaseEngine* engine) {
+            auto prolog = [](Engine::BaseEngine* engine) {
                 engine->getHud().getLoadingScreen().setHidden(false);
                 engine->resetSession();
             };
-            auto prologFuture = engine->onMessage(prolog);
+            auto prologFuture = AsyncAction::onMessage(prolog, engine);
             // block this thread until the prolog gets started by the main thread
             while (prologFuture.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
             {}
             // block this thread until the prolog epilog finished
             prologFuture.wait();
 
-            std::shared_ptr<World::WorldInstance> sharedWorld;
-            Engine::AsyncAction::JobType<std::shared_ptr<World::WorldInstance>> createWorld =
-                    [worldName](Engine::BaseEngine* engine) {
-                        return engine->getSession().createWorld(worldName);
-                    };
+            std::unique_ptr<World::WorldInstance> uniqueWorld;
             bool synchronous = true;
             if (synchronous)
             {
-                auto future = engine->onMessage(createWorld);
+                auto pUniqueWorld = &uniqueWorld;
+                Engine::AsyncAction::JobType<void> createWorld =
+                        [worldName, pUniqueWorld](Engine::BaseEngine* engine) {
+                            *pUniqueWorld = engine->getSession().createWorld(worldName);
+                        };
+                auto future =AsyncAction::onMessage(createWorld, engine);
                 while (future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
                 {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
-                sharedWorld = future.get();
+                future.wait();
             }
             else
-                sharedWorld = createWorld(engine);
+                uniqueWorld = engine->getSession().createWorld(worldName);
 
-            Engine::AsyncAction::JobType<void> registerWorld = [sharedWorld](Engine::BaseEngine* engine){
-                Handle::WorldHandle worldHandle = engine->getSession().registerWorld(sharedWorld);
+            auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine* engine) mutable {
+                Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
                 if (worldHandle.isValid())
                 {
                     engine->getSession().setMainWorld(worldHandle);
@@ -85,10 +88,9 @@ void Menu_Main::onCustomAction(const std::string& action)
                 }
                 engine->getHud().getLoadingScreen().setHidden(true);
             };
-            engine->onMessage(registerWorld);
-            // no need to wait for registerWorld, this thread's work is done here
+            auto registerWorldFuture = AsyncAction::onMessage(std::move(registerWorld), engine);
         };
-        m_Engine.onMessage(addWorld, std::launch::async);
+        AsyncAction::onMessage(addWorld, &m_Engine, std::launch::async);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
