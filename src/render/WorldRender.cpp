@@ -143,6 +143,12 @@ namespace Render
 
 				if((mask & Components::AnimationComponent::MASK) != 0)
 				{
+					auto& mesh = skelmeshes.getMesh(sms[i].m_StaticMeshVisual);
+
+					// Could happen if this was loaded on another thread
+					if(!skelmeshes.isLoaded(sms[i].m_StaticMeshVisual))
+						continue;
+
 					if ((mask & Components::PositionComponent::MASK) != 0)
 					{
 						// Set model matrix for rendering.
@@ -191,7 +197,6 @@ namespace Render
                     //bgfx::setUniform(config.uniforms.nodeTransforms, f, 2);
                     bgfx::setTransform(nodeMat, static_cast<uint16_t>(animHandler->getNumNodes() + 1));
 
-					auto& mesh = skelmeshes.getMesh(sms[i].m_StaticMeshVisual);
 					bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
 					bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
 										 sms[i].m_SubmeshInfo.m_StartIndex,
@@ -201,6 +206,10 @@ namespace Render
 				} else
 				{
 					auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
+
+					// Could happen if this was loaded on another thread
+					if(!mesh.loaded)
+						continue;
 
 					//if(sms[i].m_InstanceDataIndex != (uint32_t)-2)
                     if(false)

@@ -5,11 +5,12 @@
 #include <zenload/zCModelMeshLib.h>
 #include <utils/logger.h>
 #include "VertexTypes.h"
+#include <engine/BaseEngine.h>
 
 using namespace Meshes;
 
-SkeletalMeshAllocator::SkeletalMeshAllocator(const VDFS::FileIndex* vdfidx)
-    : m_pVDFSIndex(vdfidx)
+SkeletalMeshAllocator::SkeletalMeshAllocator(Engine::BaseEngine& engine)
+    : m_Engine(engine)
 {
 }
 
@@ -67,7 +68,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
        || vname.find(".MDL") != std::string::npos
        || vname.find(".MDS") != std::string::npos)
     {
-        ZenLoad::zCModelMeshLib zlib(vname, *m_pVDFSIndex, 1.0f / 100.0f);
+        ZenLoad::zCModelMeshLib zlib(vname, m_Engine.getVDFSIndex(), 1.0f / 100.0f);
 
         // Failed?
         if (!zlib.isValid())
@@ -107,10 +108,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
 
 Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const std::string & name)
 {
-    if (!m_pVDFSIndex)
-        return Handle::MeshHandle::makeInvalidHandle();
-
-    return loadMeshVDF(*m_pVDFSIndex, name);
+    return loadMeshVDF(m_Engine.getVDFSIndex(), name);
 }
 
 
@@ -119,6 +117,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     // Create mesh instance
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldSkeletalMesh& mesh = m_Allocator.getElement(h).mesh;
+    m_Allocator.getElement(h).loaded = false;
 
     // Copy vertices
     mesh.m_Vertices.resize(packed.vertices.size());
@@ -155,6 +154,25 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
 
     }
 
+    // Flush the pipeline to prevent an overflow
+    //bgfx::frame();
+    m_Engine.onMessage([=](Engine::BaseEngine* pEngine) -> bool {
+        finalizeLoad(h);
+
+        return true;
+    });
+
+    if(!name.empty())
+        m_MeshesByName[name] = h;
+
+    return h;
+}
+
+
+bool SkeletalMeshAllocator::finalizeLoad(Handle::MeshHandle h)
+{
+    WorldSkeletalMesh& mesh = m_Allocator.getElement(h).mesh;
+
     // Construct BGFX Vertex/Index-buffers
     mesh.m_VertexBufferHandle = bgfx::createVertexBuffer(
             // Static data can be passed with bgfx::makeRef
@@ -168,13 +186,6 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
             sizeof(WorldSkeletalMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0
     );
 
-    // Flush the pipeline to prevent an overflow
-    //bgfx::frame();
-
-    if(!name.empty())
-        m_MeshesByName[name] = h;
-
-    return h;
+    m_Allocator.getElement(h).loaded = true;
+    return bgfx::isValid(mesh.m_VertexBufferHandle) && bgfx::isValid(mesh.m_IndexBufferHandle);
 }
-
-

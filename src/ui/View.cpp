@@ -111,9 +111,6 @@ View::View(Engine::BaseEngine& e) : m_Engine(e)
     m_Alignment = EAlign::A_TopLeft;
 
     ViewUtil::PosUvVertex::init();
-
-    // FIXME remove this / is this necessary here?
-    bgfx::setViewSeq(BGFX_VIEW, true);
 }
 
 View::~View()

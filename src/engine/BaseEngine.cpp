@@ -39,7 +39,8 @@ namespace Flags
 
 BaseEngine::BaseEngine() :
         m_RootUIView(*this),
-        m_Console(*this)
+        m_Console(*this),
+        m_EngineTextureAlloc(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
@@ -181,9 +182,6 @@ void BaseEngine::loadArchives()
     {
     	m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
-
-    // Init global texture alloc
-    m_EngineTextureAlloc.setVDFSIndex(&m_FileIndex);
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)

@@ -42,9 +42,6 @@ void Menu_Main::onCustomAction(const std::string& action)
 
         std::string worldName = m_Engine.getEngineArgs().startupZEN;
 
-        bool synchronous = true;
-        auto policy = synchronous ? std::launch::deferred : std::launch::async;
-
         Engine::AsyncAction::JobType<void> addWorld = [worldName](Engine::BaseEngine* engine){
 
             auto prolog = [](Engine::BaseEngine* engine) {
@@ -59,7 +56,7 @@ void Menu_Main::onCustomAction(const std::string& action)
             prologFuture.wait();
 
             std::unique_ptr<World::WorldInstance> uniqueWorld;
-            bool synchronous = true;
+            bool synchronous = false;
             if (synchronous)
             {
                 auto pUniqueWorld = &uniqueWorld;

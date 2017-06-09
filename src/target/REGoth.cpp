@@ -234,8 +234,9 @@ public:
 #if BX_PLATFORM_ANDROID
 
 #else
-        Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
+        /*Textures::TextureAllocator alloc(*m_pEngine);
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
+        alloc.finalizeLoad(txh);
 
         if(!txh.isValid())
             return;
@@ -246,7 +247,7 @@ public:
         bgfx::setState(BGFX_STATE_DEFAULT);
         const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
         bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
-        renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
+        renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);*/
 #endif
 
 

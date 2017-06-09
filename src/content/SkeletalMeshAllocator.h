@@ -6,6 +6,11 @@
 #include "StaticLevelMesh.h"
 #include "GenericMeshAllocator.h"
 
+namespace Engine
+{
+    class BaseEngine;
+}
+
 namespace Meshes
 {
     typedef Meshes::SkeletalVertex WorldSkeletalMeshVertex;
@@ -15,13 +20,8 @@ namespace Meshes
     class SkeletalMeshAllocator
     {
     public:
-        SkeletalMeshAllocator(const VDFS::FileIndex* vdfidx = nullptr);
+        SkeletalMeshAllocator(Engine::BaseEngine& engine);
         virtual ~SkeletalMeshAllocator();
-
-        /**
-        * @brief Sets the VDFS-Index to use
-        */
-        void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }
 
         /**
          * @brief Loads a ZTEX-texture from the given or stored VDFS-FileIndex
@@ -32,9 +32,17 @@ namespace Meshes
         Handle::MeshHandle loadFromPacked(const ZenLoad::PackedSkeletalMesh& packed, const std::string& name = "");
 
         /**
+         * Pushes the loaded data to the GPU. Needs to run on the main-thread.
+         * @param h Data to finalize
+         * @return True if successful, false otherwise
+         */
+        bool finalizeLoad(Handle::MeshHandle h);
+
+        /**
          * @brief Returns the texture of the given handle
          */
         WorldSkeletalMesh& getMesh(Handle::MeshHandle h) { return m_Allocator.getElement(h).mesh; }
+        bool isLoaded(Handle::MeshHandle h){ return m_Allocator.getElement(h).loaded; }
         const ZenLoad::zCModelMeshLib& getMeshLib(Handle::MeshHandle h){ return m_Allocator.getElement(h).lib; }
     protected:
 
@@ -46,6 +54,7 @@ namespace Meshes
         {
             WorldSkeletalMesh mesh;
             ZenLoad::zCModelMeshLib lib;
+            bool loaded;
         };
 
         Memory::StaticReferencedAllocator<SkelMesh, Config::MAX_NUM_LEVEL_MESHES> m_Allocator;
@@ -57,9 +66,9 @@ namespace Meshes
         std::map<std::string, Handle::MeshHandle> m_MeshesByName;
 
         /**
-         * Pointer to a vdfs-index to work on (can be nullptr)
+         * Engine
          */
-        const VDFS::FileIndex* m_pVDFSIndex;
+        Engine::BaseEngine& m_Engine;
     };
 
 }

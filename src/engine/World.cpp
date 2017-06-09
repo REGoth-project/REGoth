@@ -35,7 +35,8 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
       m_PrintScreenMessageView(nullptr),
       m_BspTree(*this),
       m_PfxManager(*this),
-      m_AudioWorld(nullptr)
+      m_AudioWorld(nullptr),
+      m_Allocators(engine)
 {
 }
 
@@ -62,9 +63,6 @@ bool WorldInstance::init(const std::string& zen,
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
 
-    m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
-    m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
-    m_Allocators.m_LevelSkeletalMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
 
     // Create static-collision shape beforehand

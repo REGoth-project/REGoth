@@ -8,9 +8,9 @@
 #include "StaticLevelMesh.h"
 #include "GenericMeshAllocator.h"
 
-namespace VDFS
+namespace Engine
 {
-    class FileIndex;
+    class BaseEngine;
 }
 
 namespace Meshes
@@ -30,14 +30,21 @@ namespace Meshes
 
         // Slot where the instance-buffer for meshes of these kind is. Needs to be initialized manually.
         uint32_t instanceDataBufferIndex;
+        bool loaded;
     };
 
     class StaticMeshAllocator : public GenericMeshAllocator
     {
     public:
-        StaticMeshAllocator(const VDFS::FileIndex* vdfidx = nullptr);
+        StaticMeshAllocator(Engine::BaseEngine& engine);
         virtual ~StaticMeshAllocator();
 
+        /**
+         * Allocates a mesh-instance and returns the handle to it.
+         * @param name Name of the mesh-instance to allocate
+         * @return Handle to a clean mesh-instance
+         */
+        Handle::MeshHandle reserveHandle(const std::string& name = "");
 
         /**
          * Puts all the loaded data into the target mesh
@@ -52,6 +59,13 @@ namespace Meshes
         Handle::MeshHandle loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name = "");
 
         /**
+         * Pushes the loaded data to the GPU. Needs to run on the main-thread.
+         * @param h Data to finalize
+         * @return True if successful, false otherwise
+         */
+        bool finalizeLoad(Handle::MeshHandle h);
+
+        /**
          * @brief Returns the texture of the given handle
          */
         WorldStaticMesh& getMesh(Handle::MeshHandle h) { return m_Allocator.getElement(h); }
@@ -62,7 +76,10 @@ namespace Meshes
          */
         Memory::StaticReferencedAllocator<WorldStaticMesh, Config::MAX_NUM_LEVEL_MESHES> m_Allocator;
 
-
+        /**
+         * Engine
+         */
+        Engine::BaseEngine& m_Engine;
     };
 
 }

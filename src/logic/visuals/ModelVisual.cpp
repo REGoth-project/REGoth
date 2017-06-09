@@ -147,6 +147,15 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_MainMeshHandle.isValid())
         return false;
 
+    // Push to GPU on mainthread
+    auto mainThreadFn = [this](Engine::BaseEngine* engine) -> bool {
+
+        m_World.getSkeletalMeshAllocator().finalizeLoad(m_MainMeshHandle);
+        return true;
+    };
+
+    m_World.getEngine()->onMessage(mainThreadFn);
+
     Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(m_MainMeshHandle);
     const ZenLoad::zCModelMeshLib& zLib = m_World.getSkeletalMeshAllocator().getMeshLib(m_MainMeshHandle);
 

@@ -39,6 +39,13 @@ namespace World
 {
     struct WorldAllocators
     {
+		WorldAllocators(Engine::BaseEngine& engine)
+			: m_LevelTextureAllocator(engine),
+			  m_LevelSkeletalMeshAllocator(engine),
+			  m_LevelStaticMeshAllocator(engine)
+		{
+
+		}
 		template<typename V, typename I>
 		using MeshAllocator = Memory::StaticReferencedAllocator<
 			Meshes::WorldStaticMesh,
