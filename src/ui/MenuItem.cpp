@@ -41,7 +41,7 @@ MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::M
         // m_pBackgroundImage->setSize(Math::float2(item.dimx / 8192.0f, item.dimy / 8192.0f));
 
         Handle::TextureHandle bgr = m_Engine.getEngineTextureAlloc().loadTextureVDF(getItemScriptData().backPic);
-        m_pBackgroundImage->setImage(m_Engine.getEngineTextureAlloc().getTexture(bgr).m_TextureHandle);
+        m_pBackgroundImage->setImage(bgr);
         m_pBackgroundImage->setRelativeSize(false); // Scale like this screen
         m_pBackgroundImage->setAlignment(A_Center);
         addChild(m_pBackgroundImage);

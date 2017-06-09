@@ -6,6 +6,7 @@
 #include "BarView.h"
 #include <imgui/imgui.h>
 #include "ImageView.h"
+#include <engine/BaseEngine.h>
 
 const float INNER_OFFSET_X = (350.0f / 8192.0f);
 const float INNER_OFFSET_Y = (1100.0f / 8192.0f);
@@ -27,17 +28,20 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
     if(m_IsHidden)
         return;
 
+    Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_Background);
+    Textures::Texture& bar = m_Engine.getEngineTextureAlloc().getTexture(m_Bar);
+
     bgfx::ProgramHandle program = config.programs.imageProgram;
 
     // Un-normalize transforms
     Math::float2 absTranslation = getAbsoluteTranslation();
     Math::float2 absSize = getAbsoluteSize();
-    Math::float2 offset = getAlignOffset(m_Alignment, m_Background.m_Width * absSize.x, m_Background.m_Height * absSize.y);
+    Math::float2 offset = getAlignOffset(m_Alignment, background.m_Width * absSize.x, background.m_Height * absSize.y);
     int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
     int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
 
-    int sx = (int) (m_Background.m_Width * absSize.x + 0.5f);
-    int sy = (int) (m_Background.m_Height * absSize.y + 0.5f);
+    int sx = (int) (background.m_Width * absSize.x + 0.5f);
+    int sy = (int) (background.m_Height * absSize.y + 0.5f);
 
     px += offset.x;
     py += offset.y;
@@ -47,19 +51,19 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
 
     // Draw background
     drawTexture(BGFX_VIEW, px, py,
-                (int)(m_Background.m_Width * absSize.x + 0.5f), (int)(m_Background.m_Height * absSize.y + 0.5f),
-                config.state.viewWidth, config.state.viewHeight, m_Background.m_TextureHandle,
+                (int)(background.m_Width * absSize.x + 0.5f), (int)(background.m_Height * absSize.y + 0.5f),
+                config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle,
                 program, config.uniforms.diffuseTexture);
 
     // Draw bar
     // The bar has a little border around itself, since its texture the same size as the background texture
-    int pxBorderX = (int)((INNER_OFFSET_X * m_Background.m_Width) + 0.5f);
-    int pxBorderY = (int)((INNER_OFFSET_Y * m_Background.m_Height) + 0.5f);
+    int pxBorderX = (int)((INNER_OFFSET_X * background.m_Width) + 0.5f);
+    int pxBorderY = (int)((INNER_OFFSET_Y * background.m_Height) + 0.5f);
 
     drawTexture(BGFX_VIEW, px + pxBorderX * absSize.x, py + pxBorderY * absSize.y,
                 (int)((sx - pxBorderX * 2 * absSize.x) * m_Value + 0.5f),
                 (int)((sy - pxBorderY * 2 * absSize.y) + 0.5f),
-                config.state.viewWidth, config.state.viewHeight, m_Bar.m_TextureHandle,
+                config.state.viewWidth, config.state.viewHeight, bar.m_TextureHandle,
                 program, config.uniforms.diffuseTexture);
 
     View::update(dt, mstate, config);
@@ -80,12 +84,12 @@ void UI::BarView::setValue(int32_t value, int32_t maxValue)
     }
 }
 
-void UI::BarView::setBackgroundImage(const Textures::Texture& texture)
+void UI::BarView::setBackgroundImage(Handle::TextureHandle texture)
 {
     m_Background = texture;
 }
 
-void UI::BarView::setBarImage(const Textures::Texture& texture)
+void UI::BarView::setBarImage(Handle::TextureHandle texture)
 {
     m_Bar = texture;
 }

@@ -4,6 +4,8 @@
 
 #include <render/RenderSystem.h>
 #include "ImageView.h"
+#include <content/Texture.h>
+#include <engine/BaseEngine.h>
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
@@ -25,8 +27,9 @@ void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render:
     if(m_IsHidden)
         return;
 
+    Textures::Texture& texture = m_Engine.getEngineTextureAlloc().getTexture(m_Image);
 
-    if(bgfx::isValid(m_Image))
+    if(bgfx::isValid(texture.m_TextureHandle))
     {
         // Un-normalize transforms
         Math::float2 offset = getAlignOffset(m_Alignment, m_ImageWidth, m_ImageHeight);
@@ -52,13 +55,13 @@ void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render:
 
         bgfx::ProgramHandle program = config.programs.imageProgram;
         drawTexture(BGFX_VIEW, px, py, width, height,
-                    config.state.viewWidth, config.state.viewHeight, m_Image, program, config.uniforms.diffuseTexture);
+                    config.state.viewWidth, config.state.viewHeight, texture.m_TextureHandle, program, config.uniforms.diffuseTexture);
     }
 
     View::update(dt, mstate, config);
 }
 
-void UI::ImageView::setImage(bgfx::TextureHandle image, int32_t width, int32_t height)
+void UI::ImageView::setImage(Handle::TextureHandle image, int32_t width, int32_t height)
 {
     m_Image = image;
     m_ImageWidth = width;

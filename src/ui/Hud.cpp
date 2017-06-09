@@ -56,13 +56,13 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
         if(hBarMana.isValid() && hBarHealth.isValid() && hBarBackground.isValid())
         {
             // Images
-            m_pHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-            m_pManaBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-            m_pEnemyHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
+            m_pHealthBar->setBackgroundImage(hBarBackground);
+            m_pManaBar->setBackgroundImage(hBarBackground);
+            m_pEnemyHealthBar->setBackgroundImage(hBarBackground);
 
-            m_pHealthBar->setBarImage(alloc.getTexture(hBarHealth));
-            m_pManaBar->setBarImage(alloc.getTexture(hBarMana));
-            m_pEnemyHealthBar->setBarImage(alloc.getTexture(hBarHealth));
+            m_pHealthBar->setBarImage(hBarHealth);
+            m_pManaBar->setBarImage(hBarMana);
+            m_pEnemyHealthBar->setBarImage(hBarHealth);
 
             // Alignment
             m_pHealthBar->setAlignment(A_BottomLeft);

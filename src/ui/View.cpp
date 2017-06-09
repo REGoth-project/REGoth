@@ -151,35 +151,34 @@ void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderCo
 void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surfaceWidth, int surfaceHeight,
                        bgfx::TextureHandle texture, bgfx::ProgramHandle program, bgfx::UniformHandle texUniform)
 {
-
-
-    //extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
-    //bgfx::ProgramHandle program = imguiGetImageProgram(0);
-
-    //imguiBeginArea("Picking Render Target:", x, y, width, height);
-    //imguiImage(texture, 0, width, height);
-
-    float ortho[16];
-    bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
-    bgfx::setViewTransform(id, NULL, ortho);
-    bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
-
-    if (ViewUtil::screenQuad(x, y, width, height))
+    if(bgfx::isValid(texture))
     {
-        bgfx::setTexture(0, texUniform, texture);
-        bgfx::setState(BGFX_STATE_RGB_WRITE
-                       | BGFX_STATE_ALPHA_WRITE
-                       | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-        );
+        //extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
+        //bgfx::ProgramHandle program = imguiGetImageProgram(0);
 
-        //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
-        //);
+        //imguiBeginArea("Picking Render Target:", x, y, width, height);
+        //imguiImage(texture, 0, width, height);
 
-        //setCurrentScissor();
-        bgfx::submit(id, program);
+        float ortho[16];
+        bx::mtxOrtho(ortho, 0.0f, (float) surfaceWidth, (float) surfaceHeight, 0.0f, 0.0f, 1000.0f);
+        bgfx::setViewTransform(id, NULL, ortho);
+        bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
+
+        if (ViewUtil::screenQuad(x, y, width, height))
+        {
+            bgfx::setTexture(0, texUniform, texture);
+            bgfx::setState(BGFX_STATE_RGB_WRITE
+                           | BGFX_STATE_ALPHA_WRITE
+                           | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+            );
+
+            //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
+            //);
+
+            //setCurrentScissor();
+            bgfx::submit(id, program);
+        }
     }
-
-
 
     //imguiEndArea();
 }

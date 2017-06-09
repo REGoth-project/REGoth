@@ -8,7 +8,7 @@
 
 UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e) {
     Handle::TextureHandle bgr = e.getEngineTextureAlloc().loadTextureVDF("LOADING.TGA");
-    setImage(e.getEngineTextureAlloc().getTexture(bgr).m_TextureHandle);
+    setImage(bgr);
 }
 
 UI::LoadingScreen::~LoadingScreen() {

@@ -29,8 +29,8 @@ namespace UI
          */
         void setValue(int32_t value, int32_t maxValue);
 
-        void setBackgroundImage(const Textures::Texture& texture);
-        void setBarImage(const Textures::Texture& texture);
+        void setBackgroundImage(Handle::TextureHandle texture);
+        void setBarImage(Handle::TextureHandle texture);
 
     protected:
 
@@ -42,7 +42,7 @@ namespace UI
         /**
          * Views for rendering
          */
-        Textures::Texture m_Background;
-        Textures::Texture m_Bar;
+        Handle::TextureHandle m_Background;
+        Handle::TextureHandle m_Bar;
     };
 }
