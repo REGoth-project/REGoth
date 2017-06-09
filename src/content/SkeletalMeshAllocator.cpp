@@ -85,21 +85,6 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
         Handle::MeshHandle h = loadFromPacked(packed, name);
         m_Allocator.getElement(h).lib = zlib;
 
-		// Load failed somehow, cleanup
-		if(m_Allocator.getElement(h).mesh.m_VertexBufferHandle.idx == bgfx::invalidHandle
-			|| m_Allocator.getElement(h).mesh.m_IndexBufferHandle.idx == bgfx::invalidHandle)
-		{
-			if(m_Allocator.getElement(h).mesh.m_VertexBufferHandle.idx != bgfx::invalidHandle)
-				bgfx::destroyVertexBuffer(m_Allocator.getElement(h).mesh.m_VertexBufferHandle);
-
-			if(m_Allocator.getElement(h).mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
-				bgfx::destroyIndexBuffer(m_Allocator.getElement(h).mesh.m_IndexBufferHandle);
-
-			m_Allocator.removeObject(h);
-
-			return Handle::MeshHandle::makeInvalidHandle();
-		}
-
         return h;
     }
 
