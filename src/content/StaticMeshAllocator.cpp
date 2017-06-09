@@ -58,6 +58,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
 
 
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 
    	m_MeshesByName[name] = h;
 
