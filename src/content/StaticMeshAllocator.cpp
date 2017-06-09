@@ -60,6 +60,12 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 
+    m_Engine.onMessage([=](Engine::BaseEngine* pEngine) -> bool {
+        finalizeLoad(h);
+
+        return true;
+    });
+
    	m_MeshesByName[name] = h;
 
     return h;
@@ -131,6 +137,9 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
 
         }
     }
+    
+    mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
