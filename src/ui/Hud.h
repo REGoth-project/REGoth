@@ -140,6 +140,7 @@ namespace UI
         TextView* m_pClock;
         DialogBox* m_pDialogBox;
         LoadingScreen* m_pLoadingScreen;
+        ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
 
         /**
@@ -161,6 +162,9 @@ namespace UI
         {
             return *static_cast<T*>(m_MenuChain.back());
         }
+
+        // Hide gamplay hud since there is now at least one menu active
+        setGameplayHudVisible(false);
 
         if (m_MenuChain.empty())
         {
