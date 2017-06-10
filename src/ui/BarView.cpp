@@ -8,14 +8,12 @@
 #include "ImageView.h"
 #include <engine/BaseEngine.h>
 
-const float INNER_OFFSET_X = (350.0f / 8192.0f);
-const float INNER_OFFSET_Y = (1100.0f / 8192.0f);
-
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
 UI::BarView::BarView(Engine::BaseEngine& e) : View(e)
 {
     m_Value = 1.0f;
+    setInnerOffset(INNER_OFFSET_DEFAULT);
 }
 
 UI::BarView::~BarView()
@@ -57,8 +55,8 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
 
     // Draw bar
     // The bar has a little border around itself, since its texture the same size as the background texture
-    int pxBorderX = (int)((INNER_OFFSET_X * background.m_Width) + 0.5f);
-    int pxBorderY = (int)((INNER_OFFSET_Y * background.m_Height) + 0.5f);
+    int pxBorderX = (int)((m_InnerOffset.x * background.m_Width) + 0.5f);
+    int pxBorderY = (int)((m_InnerOffset.y * background.m_Height) + 0.5f);
 
     drawTexture(BGFX_VIEW, px + pxBorderX * absSize.x, py + pxBorderY * absSize.y,
                 (int)((sx - pxBorderX * 2 * absSize.x) * m_Value + 0.5f),
@@ -92,4 +90,9 @@ void UI::BarView::setBackgroundImage(Handle::TextureHandle texture)
 void UI::BarView::setBarImage(Handle::TextureHandle texture)
 {
     m_Bar = texture;
+}
+
+void UI::BarView::setInnerOffset(const Math::float2& offset)
+{
+    m_InnerOffset = offset;
 }

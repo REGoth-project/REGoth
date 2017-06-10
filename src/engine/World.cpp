@@ -22,8 +22,23 @@
 #include <ui/PrintScreenMessages.h>
 #include <ZenLib/zenload/zTypes.h>
 #include <ui/Hud.h>
+#include <ui/LoadingScreen.h>
 
 using namespace World;
+
+struct LoadSection
+{
+    int p1;
+    int p2;
+    std::string info;
+};
+
+const LoadSection LOAD_SECTION_LOADSCRIPTS = { 0, 10, "Loading scripts" };
+const LoadSection LOAD_SECTION_ZENFILE =     { 10, 20, "Loading worldfile" };
+const LoadSection LOAD_SECTION_WORLDMESH =   { 20, 40, "Processing worldmesh" };
+const LoadSection LOAD_SECTION_COLLISION =   { 40, 60, "Generating world collision mesh"} ;
+const LoadSection LOAD_SECTION_VOBS =        { 60, 80, "Loading objects" };
+const LoadSection LOAD_SECTION_RUNSCRIPTS =  { 80, 100, "Running startup scripts" };
 
 WorldInstance::WorldInstance(Engine::BaseEngine& engine)
 	: m_pEngine(&engine),
@@ -75,6 +90,12 @@ bool WorldInstance::init(const std::string& zen,
     m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
     getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
 
+    // Notify user
+    m_pEngine->getHud().getLoadingScreen().startSection(
+            LOAD_SECTION_LOADSCRIPTS.p1,
+            LOAD_SECTION_LOADSCRIPTS.p2,
+            LOAD_SECTION_LOADSCRIPTS.info);
+
 	// Init daedalus-vm
 	std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
 	std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
@@ -90,22 +111,43 @@ bool WorldInstance::init(const std::string& zen,
 	// Load world
     if(!zen.empty())
     {
+        // Notify user
+        m_pEngine->getHud().getLoadingScreen().startSection(
+                LOAD_SECTION_ZENFILE.p1,
+                LOAD_SECTION_ZENFILE.p2,
+                LOAD_SECTION_ZENFILE.info);
+
         // Load ZEN
         ZenLoad::ZenParser parser(zen, engine.getVDFSIndex());
 
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
+
         parser.readHeader();
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(60);
+
         ZenLoad::oCWorldData world;
 		parser.readWorld(world);
 
         ZenLoad::zCMesh *worldMesh = parser.getWorldMesh();
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
 
         LogInfo() << "Initilizing BSP-Tree...";
         m_BspTree.loadBspTree(world.bspTree);
 
         LogInfo() << "Postprocessing worldmesh...";
 
+        // Notify user
+        m_pEngine->getHud().getLoadingScreen().startSection(
+                LOAD_SECTION_WORLDMESH.p1,
+                LOAD_SECTION_WORLDMESH.p2,
+                LOAD_SECTION_WORLDMESH.info);
+
         ZenLoad::PackedMesh packedWorldMesh;
         worldMesh->packMesh(packedWorldMesh, 0.01f, false);
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         // Init worldmesh-wrapper
         m_WorldMesh.load(packedWorldMesh);
@@ -126,9 +168,13 @@ bool WorldInstance::init(const std::string& zen,
             }
         }
 
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
+
         // TODO: Put these into a compound-component or something
         std::vector<Handle::EntityHandle> ents;
         Handle::MeshHandle worldMeshHandle = getStaticMeshAllocator().loadFromPacked(packedWorldMesh, "WORLDMESH.3DS");
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
 
         /*Handle::EntityHandle eh = Vob::constructVob(*this);
         Vob::VobInformation wvob = Vob::asVob(*this, eh);
@@ -148,6 +194,12 @@ bool WorldInstance::init(const std::string& zen,
 
             ents.insert(ents.end(), subents.begin(), subents.end());
         }
+
+        // Notify user
+        m_pEngine->getHud().getLoadingScreen().startSection(
+                LOAD_SECTION_COLLISION.p1,
+                LOAD_SECTION_COLLISION.p2,
+                LOAD_SECTION_COLLISION.info);
 
         // If we haven't already, create an instancebuffer for this mesh
         //if(worldMeshData.instanceDataBufferIndex == (uint32_t)-1)
@@ -174,6 +226,8 @@ bool WorldInstance::init(const std::string& zen,
                 triangles.push_back(tri.vertices[1].Position.v);
                 triangles.push_back(tri.vertices[2].Position.v);
             }
+
+            m_pEngine->getHud().getLoadingScreen().setSectionProgress(50);
 
             // Add world-mesh collision
             Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(triangles, Physics::CollisionShape::CT_WorldMesh);
@@ -202,11 +256,17 @@ bool WorldInstance::init(const std::string& zen,
 		// TODO: Refractor. Make a map of all vobs by classes or something.
 		ZenLoad::zCVobData startPoint;
 
+        size_t numVobsLoaded = 0;
         std::function<void(const std::vector<ZenLoad::zCVobData>)> vobLoad = [&](
                 const std::vector<ZenLoad::zCVobData> &vobs) {
+
             for (const ZenLoad::zCVobData &v : vobs)
             {
                 vobLoad(v.childVobs);
+
+                // We're loading one vob here, update progressbar
+                numVobsLoaded += 1;
+                m_pEngine->getHud().getLoadingScreen().setSectionProgress((100 * (int)numVobsLoaded) / (int)world.numVobsTotal);
 
                 bool allowCollision = true; // FIXME: Hack. Items shouldn't be placed into physicsworld right now
 
@@ -323,6 +383,12 @@ bool WorldInstance::init(const std::string& zen,
             }
         };
 
+        // Notify user
+        m_pEngine->getHud().getLoadingScreen().startSection(
+                LOAD_SECTION_VOBS.p1,
+                LOAD_SECTION_VOBS.p2,
+                LOAD_SECTION_VOBS.info);
+
         bool worldUnknownToPlayer = worldJson.empty();
         if(worldUnknownToPlayer)
         {
@@ -335,8 +401,6 @@ bool WorldInstance::init(const std::string& zen,
             LogInfo() << "Inserting vobs from json...";
             importVobs(worldJson["vobs"]);
         }
-
-
 
         LogInfo() << "Done!";
 
@@ -359,9 +423,18 @@ bool WorldInstance::init(const std::string& zen,
 			Waynet::addWaypoint(m_Waynet, startWP);
 		}
 
+        // Notify user
+        m_pEngine->getHud().getLoadingScreen().startSection(
+                LOAD_SECTION_RUNSCRIPTS.p1,
+                LOAD_SECTION_RUNSCRIPTS.p2,
+                LOAD_SECTION_RUNSCRIPTS.info);
+
         LogInfo() << "Creating AudioWorld";
         // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
         m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         LogInfo() << "Running startup-scripts";
 
@@ -375,6 +448,8 @@ bool WorldInstance::init(const std::string& zen,
         }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
+
         // Load script engine if one is provided. Always the case except "start new game"
         if(!scriptEngine.empty())
         {
@@ -385,6 +460,11 @@ bool WorldInstance::init(const std::string& zen,
         {
             m_DialogManager.importDialogManager(dialogManager);
         }
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);
+
+        // Wait for a bit, so the user sees the loading-bar go to 100%
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 	else
 	{
@@ -784,12 +864,17 @@ Handle::EntityHandle WorldInstance::importSingleVob(const json& j)
 void WorldInstance::importVobs(const json& j)
 {
     // j must be an array of vobs
+    size_t numImported = 0;
+    size_t numTotal = j["controllers"].size();
     for(const json& vob : j["controllers"])
     {
         if(!vob.is_null())
         {
             importSingleVob(vob);
         }
+
+        numImported++;
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress((100 * (int)numImported) / (int)numTotal);
     }
 }
 
