@@ -32,8 +32,6 @@ bool Logic::PfxVisual::load(const std::string& visual)
 {
     VisualController::load(visual);
 
-    LogInfo() << "Loading PFX: " << visual;
-
     // Strip .PFX ending
     std::string sym = visual.substr(0, visual.find_last_of('.'));
 
