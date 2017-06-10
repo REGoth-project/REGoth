@@ -35,6 +35,7 @@ bool Menu_Main::onInputAction(EInputAction action)
 void Menu_Main::onCustomAction(const std::string& action)
 {
     using Engine::AsyncAction;
+    using Engine::ExecutionPolicy;
     if(action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";
@@ -48,7 +49,7 @@ void Menu_Main::onCustomAction(const std::string& action)
                 engine->getHud().getLoadingScreen().setHidden(false);
                 engine->resetSession();
             };
-            auto prologFuture = AsyncAction::onMessage(prolog, engine);
+            auto prologFuture = AsyncAction::executeInAnyThread(prolog, engine, ExecutionPolicy::MainThread);
             // block this thread until the prolog gets started by the main thread
             while (prologFuture.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
             {}
@@ -64,7 +65,7 @@ void Menu_Main::onCustomAction(const std::string& action)
                         [worldName, pUniqueWorld](Engine::BaseEngine* engine) {
                             *pUniqueWorld = engine->getSession().createWorld(worldName);
                         };
-                auto future =AsyncAction::onMessage(createWorld, engine);
+                auto future = AsyncAction::executeInAnyThread(createWorld, engine, ExecutionPolicy::MainThread);
                 while (future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
                 {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
                 future.wait();
@@ -77,7 +78,8 @@ void Menu_Main::onCustomAction(const std::string& action)
                 if (worldHandle.isValid())
                 {
                     engine->getSession().setMainWorld(worldHandle);
-                    auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(engine->getEngineArgs().playerScriptname);
+                    auto& se = worldHandle.get().getScriptEngine();
+                    auto player = se.createDefaultPlayer(engine->getEngineArgs().playerScriptname);
                     worldHandle.get().takeControlOver(player);
                 } else
                 {
@@ -85,9 +87,9 @@ void Menu_Main::onCustomAction(const std::string& action)
                 }
                 engine->getHud().getLoadingScreen().setHidden(true);
             };
-            auto registerWorldFuture = AsyncAction::onMessage(std::move(registerWorld), engine);
+            AsyncAction::executeInAnyThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
         };
-        AsyncAction::onMessage(addWorld, &m_Engine, std::launch::async);
+        AsyncAction::executeInAnyThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {

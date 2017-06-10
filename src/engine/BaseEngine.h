@@ -28,6 +28,12 @@ namespace Engine
 	class AsyncAction;
 	const int MAX_NUM_WORLDS = 4;
 
+    enum class ExecutionPolicy
+    {
+        MainThread,
+        NewThread
+    };
+
 	class BaseEngine
 	{
 	public:
@@ -170,6 +176,11 @@ namespace Engine
 		void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
 
 		/**
+		 * @return true if the calling thread is the main thread
+		 */
+		bool isMainThread();
+
+		/**
 		 * Insert the given action at the end of the queue
 		 */
 		void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
@@ -179,8 +190,23 @@ namespace Engine
 		 */
         void processSaveGameActionQueue();
 
-		void onMessage(const std::function<bool(BaseEngine* engine)>& job);
+		/**
+		 * Guarantees execution of the given function in the main thread
+		 * @param job function to execute in the main thread
+		 * @param forceQueueing if false AND if called from main thread: executes the job right away
+		 * 		  instead of queueing and does not acquire the lock.
+		 */
+		void executeInMainThread(const std::function<void(BaseEngine *engine)> &job, bool forceQueueing = false);
 
+		/**
+		 * Execute the given job on the main thread one time per frame update until it returns true
+		 */
+		void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine *engine)> &job,
+                                          bool forceQueueing = false);
+
+        /**
+         * executes all jobs in the queue and removes the ones, that return true
+         */
 		void processMessageQueue();
 
         /**
@@ -202,6 +228,11 @@ namespace Engine
 		 *		  Overwrite to load your own default archives
 		 */
 		virtual void loadArchives();
+
+		/**
+		 * ID of the main thread (bgfx thread)
+		 */
+		std::thread::id m_MainThreadID;
 
         /**
          * Enum with values for Gothic I and Gothic II

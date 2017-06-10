@@ -38,6 +38,7 @@ namespace Flags
 }
 
 BaseEngine::BaseEngine() :
+        m_MainThreadID(std::this_thread::get_id()),
         m_RootUIView(*this),
         m_Console(*this),
         m_EngineTextureAlloc(*this)
@@ -300,10 +301,32 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::onMessage(const AsyncAction::JobType<bool>& job)
+void BaseEngine::executeInMainThread(const AsyncAction::JobType<void> &job, bool forceQueue)
 {
+    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
+        job(engine);
+        return true;
+    };
+    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
+}
+
+void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool> &job, bool forceQueue)
+{
+    if (!forceQueue && isMainThread())
+    {
+        // execute right away
+        bool success = job(this);
+        if (success)
+            return;
+        // else job returned false -> queue the job
+    }
     std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
     m_MessageQueue.emplace_back(AsyncAction{job});
+}
+
+bool BaseEngine::isMainThread()
+{
+    return std::this_thread::get_id() == m_MainThreadID;
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

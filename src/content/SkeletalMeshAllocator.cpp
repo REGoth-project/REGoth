@@ -141,10 +141,8 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
 
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
-    m_Engine.onMessage([=](Engine::BaseEngine* pEngine) -> bool {
+    m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
         finalizeLoad(h);
-
-        return true;
     });
 
     if(!name.empty())

@@ -11,6 +11,49 @@ namespace Engine
 {
     class BaseEngine;
 
+    template <class T>
+    class SafeFuture
+    {
+    public:
+        SafeFuture(std::shared_future<T> f, BaseEngine* pBaseEngine) :
+                m_pBaseEngine(pBaseEngine),
+                m_SharedFuture(f)
+        {}
+
+        /**
+         * Safely waits for the future to be started and finished
+         * If the calling thread is the main thread, the execution will be triggered additionally
+         * It is safe call this function from any thread
+         * @return result of the future
+         */
+        const T& get()
+        {
+            wait();
+            return m_SharedFuture.get();
+        }
+
+        /**
+         * Safely waits for the future to be started and finished
+         * If the calling thread is the main thread, the execution will be triggered additionally
+         * It is safe call this function from any thread
+         */
+        void wait()
+        {
+            if (!m_pBaseEngine->isMainThread())
+            {
+                // wait until the main thread has started the execution
+                // timespan doesn't matter, since it is ignored if the status is deferred
+                while (m_SharedFuture.wait_for(std::chrono::seconds(0)) == std::future_status::deferred)
+                {}
+            }
+            m_SharedFuture.wait();
+        }
+
+    private:
+        BaseEngine* m_pBaseEngine;
+        std::shared_future<T> m_SharedFuture;
+    };
+
     struct AsyncAction
     {
     public:
@@ -21,25 +64,35 @@ namespace Engine
         using ReturnType = decltype(std::declval<Callable>()(std::declval<BaseEngine*>()));
 
         /**
-         * Like BaseEngine::onMessage, but returns a shared_future to wait for and accepts also non-copyable callables
-         * Caution when calling wait() or get() on the shared_future when using policy=std::launch::deferred.
-         * If the job wasn't started yet, wait() or get() causes execution in the caller thread.
-         * Use wait_for/wait_until instead.
-         * @tparam Callable any Callable type that accepts BaseEngine pointer. i.e. std::function<T(BaseEngine* engine)>
-         * @param job may even be non-copyable (i.e. lambda capturing a non copyable type)
+         * Executes the job in the specified thread
+         * @tparam Callable any callable type that accepts BaseEngine pointer. i.e. std::function<T(BaseEngine* engine)>
+         * @param job a callable object. Unlike BaseEngine::onMessage also accepts non-copyable objects
          * @param engine
-         * @param policy if std::launch::deferred is passed, the job is scheduled on the main thread.
-         * @return
+         * @param executionPolicy defines which thread should execute the job
+         * @param forceQueueing if false and if called from main thread the job will be executed right away
+         *        (only relevant for main thread -> main thread jobs)
+         * @return SafeFuture on which any thread may call wait() or get()
          */
         template <class Callable>
         static std::shared_future<ReturnType<Callable>>
-        onMessage(Callable job, BaseEngine* engine, std::launch policy = std::launch::deferred)
+        executeInAnyThread(Callable job, BaseEngine *engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
         {
+            std::launch policy;
+            switch (executionPolicy)
+            {
+                case ExecutionPolicy::MainThread:
+                    policy = std::launch::deferred;
+                    break;
+                case ExecutionPolicy::NewThread:
+                    policy = std::launch::async;
+                    break;
+            }
             std::shared_future<AsyncAction::ReturnType<Callable>> future = std::async(policy, std::forward<Callable>(job), engine);
-            std::function<bool(BaseEngine* engine)> waitJob = [future, policy](BaseEngine* engine) {
+            std::function<bool(BaseEngine* engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool{
                 switch (policy)
                 {
                     case std::launch::deferred:
+                        assert(engine->isMainThread());
                         future.wait();
                         return true;
                     case std::launch::async:
@@ -47,7 +100,8 @@ namespace Engine
                 }
                 return true;
             };
-            engine->onMessage(waitJob);
+            // executeInMainThreadUntilTrue makes the job stay in the queue until the future is ready
+            engine->executeInMainThreadUntilTrue(wrapperJob, forceQueueing);
             return future;
         }
 
