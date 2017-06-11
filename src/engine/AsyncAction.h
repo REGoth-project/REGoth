@@ -15,7 +15,7 @@ namespace Engine
     class SafeFuture
     {
     public:
-        SafeFuture(std::shared_future<T> f, BaseEngine* pBaseEngine) :
+        SafeFuture(BaseEngine* pBaseEngine, std::shared_future<T> f) :
                 m_pBaseEngine(pBaseEngine),
                 m_SharedFuture(f)
         {}
@@ -26,10 +26,10 @@ namespace Engine
          * It is safe call this function from any thread
          * @return result of the future
          */
-        const T& get()
+        std::shared_future<T>& getFuture()
         {
             wait();
-            return m_SharedFuture.get();
+            return m_SharedFuture;
         }
 
         /**
@@ -74,8 +74,8 @@ namespace Engine
          * @return SafeFuture on which any thread may call wait() or get()
          */
         template <class Callable>
-        static std::shared_future<ReturnType<Callable>>
-        executeInAnyThread(Callable job, BaseEngine *engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
+        static SafeFuture<ReturnType<Callable>>
+        executeInThread(Callable job, BaseEngine *engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
         {
             std::launch policy;
             switch (executionPolicy)
@@ -102,7 +102,7 @@ namespace Engine
             };
             // executeInMainThreadUntilTrue makes the job stay in the queue until the future is ready
             engine->executeInMainThreadUntilTrue(wrapperJob, forceQueueing);
-            return future;
+            return SafeFuture<ReturnType<Callable>>(engine, future);
         }
 
         bool run(BaseEngine& engine);

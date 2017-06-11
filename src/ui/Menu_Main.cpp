@@ -34,6 +34,7 @@ bool Menu_Main::onInputAction(EInputAction action)
 
 void Menu_Main::onCustomAction(const std::string& action)
 {
+    Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
     using Engine::AsyncAction;
     using Engine::ExecutionPolicy;
     if(action == "NEW_GAME")
@@ -49,12 +50,7 @@ void Menu_Main::onCustomAction(const std::string& action)
                 engine->getHud().getLoadingScreen().setHidden(false);
                 engine->resetSession();
             };
-            auto prologFuture = AsyncAction::executeInAnyThread(prolog, engine, ExecutionPolicy::MainThread);
-            // block this thread until the prolog gets started by the main thread
-            while (prologFuture.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
-            {}
-            // block this thread until the prolog epilog finished
-            prologFuture.wait();
+            AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
 
             std::unique_ptr<World::WorldInstance> uniqueWorld;
             bool synchronous = false;
@@ -65,10 +61,7 @@ void Menu_Main::onCustomAction(const std::string& action)
                         [worldName, pUniqueWorld](Engine::BaseEngine* engine) {
                             *pUniqueWorld = engine->getSession().createWorld(worldName);
                         };
-                auto future = AsyncAction::executeInAnyThread(createWorld, engine, ExecutionPolicy::MainThread);
-                while (future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::deferred)
-                {std::this_thread::sleep_for(std::chrono::milliseconds(10));}
-                future.wait();
+                AsyncAction::executeInThread(createWorld, engine, ExecutionPolicy::MainThread).wait();
             }
             else
                 uniqueWorld = engine->getSession().createWorld(worldName);
@@ -87,9 +80,9 @@ void Menu_Main::onCustomAction(const std::string& action)
                 }
                 engine->getHud().getLoadingScreen().setHidden(true);
             };
-            AsyncAction::executeInAnyThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
+            AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
         };
-        AsyncAction::executeInAnyThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
+        AsyncAction::executeInThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
