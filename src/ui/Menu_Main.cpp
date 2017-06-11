@@ -52,19 +52,7 @@ void Menu_Main::onCustomAction(const std::string& action)
             };
             AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
 
-            std::unique_ptr<World::WorldInstance> uniqueWorld;
-            bool synchronous = false;
-            if (synchronous)
-            {
-                auto pUniqueWorld = &uniqueWorld;
-                Engine::AsyncAction::JobType<void> createWorld =
-                        [worldName, pUniqueWorld](Engine::BaseEngine* engine) {
-                            *pUniqueWorld = engine->getSession().createWorld(worldName);
-                        };
-                AsyncAction::executeInThread(createWorld, engine, ExecutionPolicy::MainThread).wait();
-            }
-            else
-                uniqueWorld = engine->getSession().createWorld(worldName);
+            std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldName);
 
             auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine* engine) mutable {
                 Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
@@ -82,7 +70,11 @@ void Menu_Main::onCustomAction(const std::string& action)
             };
             AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
         };
-        AsyncAction::executeInThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
+        bool synchronous = false;
+        auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
+        // we never want to execute it right away (if it is on MainThread)
+        bool forceQueue = true;
+        AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
