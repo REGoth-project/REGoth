@@ -2652,7 +2652,7 @@ void PlayerController::traceDownNPCGround()
     }
 
     float feetPos = entityPos.y - feet;
-    if (waterMatFound && feetPos < waterSurfacePos)
+    if (waterMatFound /*&& feetPos < waterSurfacePos*/)
     {
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
         if (DEBUG_PLAYER)
