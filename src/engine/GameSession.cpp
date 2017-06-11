@@ -146,6 +146,8 @@ void GameSession::switchToWorld(const std::string &worldFile)
          * prolog
          */
         auto exportData = [&](BaseEngine* engine){
+            auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
+            engine->getHud().getLoadingScreen().setImageFromFile("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
 
             auto& session = engine->getSession();
@@ -199,6 +201,7 @@ void GameSession::switchToWorld(const std::string &worldFile)
                 playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
             }
             engine->getHud().getLoadingScreen().setHidden(true);
+            engine->getHud().getLoadingScreen().setImageFromFile();
         };
         AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
     };
@@ -219,4 +222,39 @@ Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
 {
     std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
     return registerWorld(std::move(pWorldInstance));
+}
+
+void GameSession::startNewGame(const std::string &worldFile)
+{
+    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine){
+
+        auto prolog = [](Engine::BaseEngine* engine) {
+            engine->getHud().getLoadingScreen().setHidden(false);
+            engine->resetSession();
+        };
+        AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
+
+        std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
+
+        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine* engine) mutable {
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
+            if (worldHandle.isValid())
+            {
+                engine->getSession().setMainWorld(worldHandle);
+                auto& se = worldHandle.get().getScriptEngine();
+                auto player = se.createDefaultPlayer(engine->getEngineArgs().playerScriptname);
+                worldHandle.get().takeControlOver(player);
+            } else
+            {
+                LogError() << "Failed to add given startup world, world handle is invalid!";
+            }
+            engine->getHud().getLoadingScreen().setHidden(true);
+        };
+        AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
+    };
+    bool synchronous = false;
+    auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
+    // we never want to execute it right away (if it is on MainThread)
+    bool forceQueue = true;
+    AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
 }

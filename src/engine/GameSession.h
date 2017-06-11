@@ -103,6 +103,12 @@ namespace Engine
         void switchToWorld(const std::string &worldFile);
 
         /**
+         * starts a new game
+         * @param worldFile
+         */
+        void startNewGame(const std::string &worldFile);
+
+        /**
          * @brief moves world from worldInstance list to inactive json map.
          * @param worldHandle
          */

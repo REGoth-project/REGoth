@@ -19,8 +19,7 @@ const float PROGRESS_BAR_SOFT_SPEED = 12.0f;
 UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
-    Handle::TextureHandle bgr = alloc.loadTextureVDF("LOADING.TGA");
-    setImage(bgr);
+    setImageFromFile();
     m_RelativeSize = false;
 
     m_pProgressBar = new BarView(e);
@@ -120,4 +119,12 @@ void UI::LoadingScreen::getSection(int& outStart, int& outEnd, float& outProgres
     outEnd = m_SectionEnd;
     outProgress = m_SectionProgress;
     outInfo = m_SectionInfo;
+}
+
+void UI::LoadingScreen::setImageFromFile(const std::string& imageName)
+{
+    Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
+    Handle::TextureHandle bgr = alloc.loadTextureVDF(imageName);
+    if (bgr.isValid())
+        setImage(bgr);
 }

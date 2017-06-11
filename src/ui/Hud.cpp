@@ -43,8 +43,8 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
     addChild(m_pDialogBox);
     addChild(m_pClock);
     addChild(m_pLoadingScreen);
-    addChild(m_pConsoleBox);
     addChild(m_pMenuBackground);
+    addChild(m_pConsoleBox);
 
     // Initialize status bars
     {

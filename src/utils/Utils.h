@@ -456,6 +456,16 @@ namespace Utils
     std::string lowered(const std::string& in);
 
     /**
+     * upper all characters inplace
+     */
+    void upper(std::string& in);
+
+    /**
+     *  @return uppered copy of the string
+     */
+    std::string uppered(const std::string& in);
+
+    /**
      * number of equal characters at begin
      * @param a
      * @param b

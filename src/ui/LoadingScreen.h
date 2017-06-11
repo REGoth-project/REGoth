@@ -45,6 +45,11 @@ namespace UI
          * @param p Percentage done of the current section [0..100]
          */
         void setSectionProgress(float p);
+
+        /**
+         * @param sets image to the image with the given filename
+         */
+        void setImageFromFile(const std::string& imageName = "LOADING.TGA");
     protected:
 
         /**
