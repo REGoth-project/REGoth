@@ -1377,15 +1377,15 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
         case EventMessages::MovementMessage::ST_WhirlAround:
             break;
         case EventMessages::MovementMessage::ST_Standup:
-            // Start standing up when we first see this message
-            if(!message.inUse)
+            // Start standing up when we first see this message or nothing is playing yet
+            if(!message.inUse || !getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
             {
                 standUp(false, message.targetMode != 0);
                 message.inUse = true;
             }
 
             // Go as long as the standup-animation is playing
-            return getModelVisual()->isAnimPlaying("S_RUN"); // Fixme: This needs to be set according to walkmode/weapon!
+            return m_NPCAnimationHandler.isStanding();
             break;
 
         case EventMessages::MovementMessage::ST_CanSeeNpc:
@@ -1753,6 +1753,7 @@ void PlayerController::interrupt()
     undrawWeapon(true);
 
     getEM().clear();
+    stopRoute();
 }
 
 bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
@@ -1822,26 +1823,13 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 
     setBodyState(BS_STAND);
 
-    // TODO: Check if the Character is already standing
-
-    if(startAniTransition
-       && getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
-    {
-        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
-
-        // State animation?
-        if(playingAni.substr(0, 2) == "S_")
-        {
-            // Build transition to standing
-            std::string transition = "T_" + playingAni.substr(2) + "_2_STAND";
-
-            getModelVisual()->setAnimation(transition, false);
-        }
-    }else
+    if(!startAniTransition)
     {
         // Just jump to the idle-animation
         getModelVisual()->stopAnimations();
     }
+
+    m_AIHandler.standup();
 }
 
 void PlayerController::stopRoute()

@@ -23,6 +23,12 @@ void NpcAIHandler::update(float deltaTime)
 
 }
 
+void NpcAIHandler::standup()
+{
+    m_ActiveMovementState = EMovementState::None;
+    getNpcAnimationHandler().Action_Stand(true); // Force stand
+}
+
 void NpcAIHandler::playerUpdate(float deltaTime)
 {
     if(!getController().getEM().isEmpty())

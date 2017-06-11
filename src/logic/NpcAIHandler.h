@@ -55,6 +55,11 @@ namespace Logic
         void playerUpdate(float deltaTime);
 
         /**
+         * Moves the player back to the usual-standing state
+         */
+        void standup();
+
+        /**
          * Sets up keybindings for this handler
          */
         void bindKeys();
