@@ -234,6 +234,7 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
         auto resetSession = [](BaseEngine* engine){
             gameEngine->resetSession();
         };
+        gameEngine->getHud().getLoadingScreen().setHidden(false);
         AsyncAction::executeInThread(resetSession, gameEngine, ExecutionPolicy::MainThread).wait();
 
         json worldJson = json::parse(worldFileData);

@@ -571,7 +571,9 @@ public:
             if (!(index >= 0 && index < maxSlots)){
                 return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
-            this->m_pEngine->queueSaveGameAction({SavegameManager::Load, index, ""});
+            auto error = Engine::SavegameManager::loadSaveGameSlot(index);
+            if (!error.empty())
+                return error;
             return "loading savegame...";
         });
 

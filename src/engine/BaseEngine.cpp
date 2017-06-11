@@ -249,13 +249,6 @@ void BaseEngine::processSaveGameActionQueue()
                     SavegameManager::saveToSlot(action.slot, action.savegameName);
                 }
                 break;
-            case SavegameManager::Load:
-                {
-                    auto error = Engine::SavegameManager::loadSaveGameSlot(action.slot);
-                    if (!error.empty())
-                        LogWarn() << error;
-                }
-                break;
             case SavegameManager::SwitchLevel:
                 {
                     getSession().switchToWorld(action.savegameName);

@@ -2021,9 +2021,8 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
     {
-        if(triggered){
-            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Load, 0, ""});
-        }
+        if(triggered)
+            Engine::SavegameManager::loadSaveGameSlot(0);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)

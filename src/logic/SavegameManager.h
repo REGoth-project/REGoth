@@ -160,7 +160,6 @@ namespace Engine
         enum SaveGameActionType
         {
             Save,
-            Load,
             SwitchLevel
         };
 
