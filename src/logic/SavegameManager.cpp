@@ -3,7 +3,10 @@
 #include <utils/logger.h>
 #include <json/json.hpp>
 #include <fstream>
+#include <engine/AsyncAction.h>
 #include "engine/GameEngine.h"
+#include "ui/Hud.h"
+#include "ui/LoadingScreen.h"
 
 using json = nlohmann::json;
 using namespace Engine;
@@ -226,25 +229,35 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     {
         return "Target world-file invalid: " + buildWorldPath(index, info.world);
     }
-    json worldJson = json::parse(worldFileData);
-    // TODO catch json exception when emtpy file is parsed or parser crashes
-    json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
-    json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
+    auto timePlayed = info.timePlayed;
+    auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine){
+        auto resetSession = [](BaseEngine* engine){
+            gameEngine->resetSession();
+        };
+        AsyncAction::executeInThread(resetSession, gameEngine, ExecutionPolicy::MainThread).wait();
 
-    gameEngine->resetSession();
-    gameEngine->getSession().setCurrentSlot(index);
-    Handle::WorldHandle worldHandle;
-    {
-        std::unique_ptr<World::WorldInstance> pWorldInstance = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
-        worldHandle = gameEngine->getSession().registerWorld(std::move(pWorldInstance));
-    }
-    if (worldHandle.isValid())
-    {
-        gameEngine->getSession().setMainWorld(worldHandle);
-        json playerJson = json::parse(readPlayer(index, "player"));
-        gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
-        gameEngine->getGameClock().setTotalSeconds(info.timePlayed);
-    }
+        json worldJson = json::parse(worldFileData);
+        // FIXME: exceptions thrown here might get lost (thrown in another thread)
+        // TODO: catch json exception when emtpy file is parsed or parser crashes
+        json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
+        json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
+        gameEngine->getSession().setCurrentSlot(index);
+        gameEngine->getGameClock().setTotalSeconds(timePlayed);
+        std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
+
+        auto registerWorld = [index, w = std::move(pWorld)](BaseEngine* engine) mutable {
+            Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(w));
+            if (worldHandle.isValid())
+            {
+                gameEngine->getSession().setMainWorld(worldHandle);
+                json playerJson = json::parse(readPlayer(index, "player"));
+                gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
+            }
+            gameEngine->getHud().getLoadingScreen().setHidden(true);
+        };
+        AsyncAction::executeInThread(std::move(registerWorld), gameEngine, ExecutionPolicy::MainThread);
+    };
+    AsyncAction::executeInThread(loadSave, gameEngine, ExecutionPolicy::NewThread, true);
     return "";
 }
 
