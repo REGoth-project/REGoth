@@ -26,8 +26,9 @@
 
 using namespace World;
 
-WorldInstance::WorldInstance()
-	: m_WorldMesh(*this),
+WorldInstance::WorldInstance(Engine::BaseEngine& engine)
+	: m_pEngine(&engine),
+      m_WorldMesh(*this),
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
       m_AnimationLibrary(*this),
@@ -42,6 +43,11 @@ WorldInstance::WorldInstance()
 
 WorldInstance::~WorldInstance()
 {
+    // kick out player if he is still in this world (clears key bindings)
+    auto player = getScriptEngine().getPlayerEntity();
+    if (player.isValid())
+        VobTypes::Wld_RemoveNpc(*this, player);
+
     if (m_PrintScreenMessageView && getEngine())
         getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
 
@@ -50,10 +56,13 @@ WorldInstance::~WorldInstance()
     delete m_AudioWorld;
 }
 
-bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, const json& j)
+bool WorldInstance::init(const std::string& zen,
+                         const json& worldJson,
+                         const json& scriptEngine,
+                         const json& dialogManger)
 {
-    m_pEngine = &engine;
     m_ZenFile = zen;
+    Engine::BaseEngine& engine = *m_pEngine;
 
     m_Allocators.m_LevelTextureAllocator.setVDFSIndex(&engine.getVDFSIndex());
     m_Allocators.m_LevelStaticMeshAllocator.setVDFSIndex(&engine.getVDFSIndex());
@@ -320,7 +329,8 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
             }
         };
 
-        if(j.empty())
+        bool worldUnknownToPlayer = worldJson.empty();
+        if(worldUnknownToPlayer)
         {
             // Load vobs from zen (initial load)
             LogInfo() << "Inserting vobs from zen...";
@@ -329,7 +339,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         {
             // Load vobs from saved json (Savegame)
             LogInfo() << "Inserting vobs from json...";
-            importVobs(j["vobs"]);
+            importVobs(worldJson["vobs"]);
         }
 
 
@@ -362,7 +372,7 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         LogInfo() << "Running startup-scripts";
 
         // Init script-engine
-        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), j.empty()))
+        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
         {
             LogInfo() << "Failed to initialize script engine for zen world";
             delete m_AudioWorld;
@@ -371,11 +381,15 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
 
-        // Load values from savegame, if there is one
-        if(!j.empty())
+        // Load script engine if one is provided. Always the case except "start new game"
+        if(!scriptEngine.empty())
         {
-            m_ScriptEngine.importScriptEngine(j["scriptEngine"]);
-            m_DialogManager.importDialogManager(j["dialogManager"]);
+            m_ScriptEngine.importScriptEngine(scriptEngine);
+        }
+        // Load dialogManager if one is provided. Only after loading a savegame
+        if(!dialogManger.empty())
+        {
+            m_DialogManager.importDialogManager(dialogManger);
         }
 	}
 	else
@@ -433,15 +447,6 @@ bool WorldInstance::init(Engine::BaseEngine& engine, const std::string& zen, con
         Vob::setVisual(vob, getEngine()->getEngineArgs().testVisual);
     }
 
-    // reset gamespeed to default when new world is loaded
-    m_pEngine->setGameEngineSpeedFactor(1.0);
-
-    auto& clock = m_pEngine->getGameClock();
-    // reset clockspeed to default on world init
-    clock.setClockSpeedFactor(1.0);
-    // for test purpose make the clock run 7 times faster than usual gameplay
-    clock.setClockSpeedFactor(7.0);
-
     LogInfo() << "Done loading world!";
     return true;
 }
@@ -494,10 +499,6 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
-    // Set frametime in worldinfo
-    m_WorldInfo.m_LastFrameDeltaTime = deltaTime;
-    m_pEngine->getGameClock().update(deltaTime);
-
     // Tell script engine the frame started
     m_ScriptEngine.onFrameStart();
 
@@ -592,17 +593,19 @@ std::vector<size_t> WorldInstance::findStartPoints()
 
 	// General
 
+    /*
+    // Gothic 1
+    auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
+    if(it != m_Waynet.waypointsByName.end())
+        pts.push_back((*it).second);
+    */
+
 	auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
 	if(it != m_Waynet.waypointsByName.end())
 		pts.push_back((*it).second);
 
 	if(!pts.empty())
 		return pts;
-
-    // Gothic 1
-    it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
-    if(it != m_Waynet.waypointsByName.end())
-        pts.push_back((*it).second);
 
     for(size_t i=0;i<m_Waynet.waypoints.size();i++)
     {
@@ -685,26 +688,12 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     return mp;
 }
 
-EGameType WorldInstance::getBasicGameType()
+Daedalus::GameType WorldInstance::getBasicGameType()
 {
-    std::map<std::string, EGameType> m = {{"newworld.zen", GT_Gothic2},
-                                          {"oldworld.zen", GT_Gothic2},
-                                          {"addonworld.zen", GT_Gothic2},
-                                          {"world.zen", GT_Gothic1}};
-
-    std::string lower;
-    std::transform(m_ZenFile.begin(), m_ZenFile.end(), std::back_inserter(lower), ::tolower);
-
-    if(m.find(lower) != m.end())
-        return m[lower];
-
-    LogInfo() << "ZEN unknown, defaulting to Gothic 2 skycolors";
-
-    // Default to gothic 2
-    return GT_Gothic2;
+    return m_pEngine->getBasicGameType();
 }
 
-void WorldInstance::exportWorld(json& j)
+void WorldInstance::exportWorld(json& j, std::set<Handle::EntityHandle> skip)
 {
     // Write initial ZEN for loading the worldmesh later
     j["zenfile"] = m_ZenFile;
@@ -723,39 +712,22 @@ void WorldInstance::exportWorld(json& j)
         // TODO: This could be done in parallel
         for (size_t i = 0; i < num; i++)
         {
-            // Only export if both logic and visual want to be exported
-            /*if(Components::hasComponent<Components::LogicComponent>(ents[i])
-               && logics[i].m_pLogicController && !logics[i].m_pLogicController->shouldExport())
+            if (skip.find(ents[i].m_ThisEntity) != skip.end())
                 continue;
-
-            if(Components::hasComponent<Components::VisualComponent>(ents[i])
-               && visuals[i].m_pVisualController && !visuals[i].m_pVisualController->shouldExport())
-                continue;*/
+            Logic::Controller* logicController = nullptr;
+            Logic::VisualController* visualController = nullptr;
+            if (Components::hasComponent<Components::LogicComponent>(ents[i]))
+                logicController = logics[i].m_pLogicController;
+            if (Components::hasComponent<Components::VisualComponent>(ents[i]))
+                visualController = visuals[i].m_pVisualController;
 
             // Do the actual export
-            if (Components::hasComponent<Components::LogicComponent>(ents[i]))
-            {
-                if (logics[i].m_pLogicController && logics[i].m_pLogicController->shouldExport())
-                    logics[i].m_pLogicController->exportObject(jvobs["controllers"][i]["logic"]);
-            }
-
-            if (Components::hasComponent<Components::VisualComponent>(ents[i]))
-            {
-                if (visuals[i].m_pVisualController && visuals[i].m_pVisualController->shouldExport())
-                    visuals[i].m_pVisualController->exportObject(jvobs["controllers"][i]["visual"]);
-            }
-
+            exportControllers(logicController, visualController, jvobs["controllers"][i]);
         }
     }
-
-    // Write script-values
-    m_ScriptEngine.exportScriptEngine(j["scriptEngine"]);
-
-    // Write dialog-info
-    m_DialogManager.exportDialogManager(j["dialogManager"]);
 }
 
-void WorldInstance::importSingleVob(const json& j)
+Handle::EntityHandle WorldInstance::importSingleVob(const json& j)
 {
     // This has a logic and visual controller
 
@@ -780,12 +752,10 @@ void WorldInstance::importSingleVob(const json& j)
     }else
     {
         entity = Vob::constructVob(*this);
-
-
     }
 
     if(!entity.isValid())
-        return;
+        return Handle::EntityHandle::makeInvalidHandle();
 
     if(j.find("visual") != j.end())
     {
@@ -814,6 +784,7 @@ void WorldInstance::importSingleVob(const json& j)
         if(vob.visual)
             vob.visual->importObject(j["visual"]);
     }
+    return entity;
 }
 
 void WorldInstance::importVobs(const json& j)
@@ -826,6 +797,75 @@ void WorldInstance::importVobs(const json& j)
             importSingleVob(vob);
         }
     }
+}
+
+bool WorldInstance::isEntityValid(Handle::EntityHandle e)
+{
+    return m_Allocators.m_ComponentAllocator.isHandleValid(e);
+}
+
+Handle::EntityHandle WorldInstance::createCamera() {
+    // Add player-camera
+    m_Camera = addEntity(Components::PositionComponent::MASK);
+
+    Math::Matrix lookAt = Math::Matrix::CreateLookAt(Math::float3(0,0,0), Math::float3(1,0,0), Math::float3(0,1,0));
+    getCameraComp<Components::PositionComponent>().m_WorldMatrix = lookAt.Invert();
+
+    getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation(Math::float3(0.0f, 50.0f, 50.0f));
+
+    Components::LogicComponent& logic = Components::Actions::initComponent<Components::LogicComponent>(
+            getComponentAllocator(),
+            m_Camera);
+
+    Logic::CameraController* cam = new Logic::CameraController(*this, m_Camera);
+    logic.m_pLogicController = cam;
+
+    LogInfo() << "Setting camera mode to third-person";
+    cam->setCameraMode(Logic::CameraController::ECameraMode::ThirdPerson);
+    //cam->getCameraSettings().freeCameraSettings.moveSpeed = 5.0f;
+    //cam->getCameraSettings().freeCameraSettings.turnSpeed = 3.5f;
+
+    return m_Camera;
+}
+
+Handle::EntityHandle WorldInstance::getCamera() {
+    return m_Camera;
+}
+
+json WorldInstance::exportAndRemoveNPC(Handle::EntityHandle entityHandle) {
+    json j = exportNPC(entityHandle);
+    VobTypes::Wld_RemoveNpc(*this, entityHandle);
+    return j;
+}
+
+void WorldInstance::exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j) {
+    if (logicController && logicController->shouldExport())
+        logicController->exportObject(j["logic"]);
+    if (visualController && visualController->shouldExport())
+        visualController->exportObject(j["visual"]);
+}
+
+void WorldInstance::takeControlOver(Handle::EntityHandle entityHandle) {
+    VobTypes::NpcVobInformation npcVob = VobTypes::asNpcVob(*this, entityHandle);
+
+    getScriptEngine().setPlayerEntity(entityHandle);
+    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(npcVob));
+    // reset bindings
+    Engine::Input::clearActions();
+    npcVob.playerController->setupKeyBindings();
+}
+
+Handle::EntityHandle WorldInstance::importVobAndTakeControl(const json &j) {
+    auto player = importSingleVob(j);
+    takeControlOver(player);
+    return player;
+}
+
+json WorldInstance::exportNPC(Handle::EntityHandle entityHandle) {
+    VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(*this, entityHandle);
+    json j;
+    exportControllers(playerVob.playerController, playerVob.visual, j);
+    return j;
 }
 
 

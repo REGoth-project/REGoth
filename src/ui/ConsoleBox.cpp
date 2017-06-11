@@ -4,15 +4,14 @@
 #include "ConsoleBox.h"
 #include <engine/BaseEngine.h>
 #include "zFont.h"
-#include <ui/Console.h>
+#include <logic/Console.h>
 
-UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e, UI::Console& console) :
-    View(e),
-    m_Console(console)
+UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e) :
+    View(e)
 {
-    m_Config.height = 10;
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
+    m_CurrentlySelected = -1;
 }
 
 UI::ConsoleBox::~ConsoleBox()
@@ -21,16 +20,16 @@ UI::ConsoleBox::~ConsoleBox()
 
 void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    m_IsHidden = !m_Console.isOpen();
+    m_IsHidden = !m_Engine.getConsole().isOpen();
     if (m_IsHidden)
         return;
+    View::update(dt, mstate, config);
 
     auto font = DEFAULT_FONT;
+    auto fontSelected = DEFAULT_FONT_HI;
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
     if(!fnt)
         return;
-
-    View::update(dt, mstate, config);
 
     // 13 pixel extra space to left screen edge
     const int xDistanceToEdge = 13;
@@ -40,7 +39,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         fnt->calcTextMetrics(" ", spaceWidth, dummyHeight);
         suggestionXBorderSize = spaceWidth;
     }
-    const std::size_t maxSuggestions = 15;
+    unsigned int previewBefore = 9;
+    unsigned int previewAfter = 9;
     // space between columns in pixel
     const int spaceBetweenColumns = 40;
     int consoleSizeX = config.state.viewWidth;
@@ -48,6 +48,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
     // -1, because we need space for the typed line
     const std::size_t maxNumConsoleHistoryLines = consoleSizeY / fnt->getFontHeight() - 1;
 
+    auto& console = m_Engine.getConsole();
     // Draw console
     {
         // Draw console background image
@@ -62,22 +63,45 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
         // draw console output + current line
         std::stringstream ss;
-        auto& outputList = m_Console.getOutputLines();
+        auto& outputList = console.getOutputLines();
         std::size_t numLines = std::min(outputList.size(), maxNumConsoleHistoryLines);
         std::vector<std::string> outputLines(numLines);
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
-        outputLines.push_back(m_Console.getTypedLine());
+        outputLines.push_back(console.getTypedLine());
         auto joined = Utils::join(outputLines.begin(), outputLines.end(), "\n");
         drawText(joined, xDistanceToEdge, consoleSizeY, A_BottomLeft, config, font);
     }
     // Draw suggestions
     {
-        const auto& suggestionsList = m_Console.getSuggestions();
+        const auto& suggestionsList = console.getSuggestions();
         // check if suggestions for last token are empty
         if (suggestionsList.empty() || suggestionsList.back().empty())
             return;
 
         const auto& suggestions = suggestionsList.back();
+
+        // find preview range
+        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, -1, static_cast<int>(suggestions.size() - 1));
+        int currentlySelectedRelative = m_CurrentlySelected == -1 ? 0 : m_CurrentlySelected;
+        int shownStart = currentlySelectedRelative - previewBefore;
+        // past the end index
+        int shownEnd = currentlySelectedRelative + previewAfter + 1;
+        if (shownStart < 0)
+        {
+            shownEnd += -shownStart;
+            shownStart = 0;
+        }
+        if (shownEnd > static_cast<int>(suggestions.size()))
+        {
+            shownStart -= shownEnd - suggestions.size();
+            shownEnd = suggestions.size();
+        }
+        // clamp start index
+        shownStart = std::max(shownStart, 0);
+        currentlySelectedRelative -= shownStart;
+
+
+        // fill columns
         std::size_t columnID = 0;
         std::vector<std::vector<std::string>> columns;
         std::vector<int> columnWidths;
@@ -85,24 +109,20 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         {
             bool columnEmpty = true;
             std::vector<std::string> column;
-            std::size_t row = 0;
             int columnWidth = 0;
-            for (auto& suggestionEntry : suggestions)
+            for (int row = shownStart; row < shownEnd; row++)
             {
-                if (row >= maxSuggestions)
-                    break;
-
-                if (columnID < suggestionEntry.size())
+                auto& aliasList = suggestions.at(row)->aliasList;
+                if (columnID < aliasList.size())
                 {
                     columnEmpty = false;
                     int w, h;
-                    fnt->calcTextMetrics(suggestionEntry[columnID], w, h);
+                    fnt->calcTextMetrics(aliasList[columnID], w, h);
                     columnWidth = std::max(columnWidth, w);
-                    column.push_back(suggestionEntry[columnID]);
+                    column.push_back(aliasList[columnID]);
                 } else {
                     column.push_back("");
                 }
-                row++;
             }
 
             columnID++;
@@ -122,7 +142,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_SuggestionsBackgroundTexture);
 
         // find start of token which is currently auto-completed
-        std::string strBefore = m_Console.getTypedLine();
+        std::string strBefore = console.getTypedLine();
         if (!strBefore.empty() && !isspace(strBefore.back()))
         {
             auto lastSpaceIt = std::find(strBefore.rbegin(), strBefore.rend(), ' ');
@@ -149,9 +169,28 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         int colID = 0;
         int columnOffsetX = strBeforeWidth;
         for (auto& column : columns){
+            std::vector<std::string> columnsSelected(column.size());
+            if (m_CurrentlySelected != -1)
+                std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));
             auto joined = Utils::join(column.begin(), column.end(), "\n");
             drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+            auto joinedSelected = Utils::join(columnsSelected.begin(), columnsSelected.end(), "\n");
+            drawText(joinedSelected, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, fontSelected);
             columnOffsetX += columnWidths[colID++] + spaceBetweenColumns;
         }
     }
+}
+
+void UI::ConsoleBox::increaseSelectionIndex(int amount) {
+    const auto& suggestionsList = m_Engine.getConsole().getSuggestions();
+    // check if suggestions for last token are empty
+    if (suggestionsList.empty() || suggestionsList.back().empty())
+        return;
+
+    int suggestionCount = static_cast<int>(suggestionsList.back().size());
+    m_CurrentlySelected = Utils::mod(m_CurrentlySelected + amount, suggestionCount);
+}
+
+void UI::ConsoleBox::setSelectionIndex(int newIndex) {
+    m_CurrentlySelected = newIndex;
 }

@@ -15,6 +15,9 @@
 #include <ui/Hud.h>
 #include <ui/zFont.h>
 #include <utils/cli.h>
+#include <ui/LoadingScreen.h>
+#include <components/VobClasses.h>
+#include <logic/PlayerController.h>
 
 using namespace Engine;
 
@@ -29,13 +32,22 @@ namespace Flags
     Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
     Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
+    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
-BaseEngine::BaseEngine() : m_RootUIView(*this)
+BaseEngine::BaseEngine() :
+        m_RootUIView(*this),
+        m_Console(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
+
+    m_BasicGameType = Daedalus::GameType::GT_Gothic2;
+    m_Paused = false;
+    m_ExcludedFrameTime = 0;
+    // allocate and init default session
+    resetSession();
 }
 
 BaseEngine::~BaseEngine()
@@ -89,6 +101,9 @@ void BaseEngine::initEngine(int argc, char** argv)
     if(Flags::emptyWorld.isSet())
         m_Args.startupZEN = "";
 
+    if(Flags::playerScriptname.isSet())
+        m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
+
     std::string snd_device;
     if(Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
@@ -101,67 +116,9 @@ void BaseEngine::initEngine(int argc, char** argv)
     getRootUIView().addChild(m_pHUD);
 }
 
-Handle::WorldHandle  BaseEngine::addWorld(const std::string & _worldFile, const std::string& savegame)
-{
-    std::string worldFile = _worldFile;
-
-    m_WorldInstances.emplace_back();
-
-	World::WorldInstance& world = m_WorldInstances.back();
-	onWorldCreated(world.getMyHandle());
-
-    // Try to load a savegame
-    json savegameData;
-    if(!savegame.empty())
-    {
-        std::ifstream f(savegame);
-        std::stringstream saveData;
-        saveData << f.rdbuf();
-
-        savegameData = json::parse(saveData);
-        worldFile = savegameData["zenfile"];
-    }
-
-    if(!worldFile.empty())
-    {
-        std::vector<uint8_t> zenData;
-        m_FileIndex.getFileData(worldFile, zenData);
-
-        if (zenData.empty())
-        {
-            LogWarn() << "Failed to find world file: " << worldFile;
-            return Handle::WorldHandle::makeInvalidHandle();
-        }
-    }
-
-    if (!world.init(*this, worldFile, savegameData))
-    {
-        LogError() << "Failed to init world file: " << worldFile;
-        return Handle::WorldHandle::makeInvalidHandle();
-    }
-
-	m_Worlds.push_back(world.getMyHandle());
-
-	return world.getMyHandle();
-}
-
-void BaseEngine::removeWorld(Handle::WorldHandle world)
-{
-    std::remove(m_Worlds.begin(), m_Worlds.end(), world);
-
-    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
-    {
-        if(&(*it) == &world.get())
-        {
-            m_WorldInstances.erase(it);
-            break;
-        }
-    }
-}
-
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-	onFrameUpdate(dt * getGameEngineSpeedFactor(), width, height);
+	onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
 }
 
 void BaseEngine::loadArchives()
@@ -243,26 +200,6 @@ BaseEngine::EngineArgs BaseEngine::getEngineArgs()
     return m_Args;
 }
 
-
-Handle::WorldHandle BaseEngine::loadWorld(const std::string& worldFile, const std::string& savegame)
-{
-    Engine::Input::clearActions(); // FIXME: This should be taken care of by the objects having something bound
-
-    while(!m_WorldInstances.empty())
-    {
-        Handle::WorldHandle w = m_Worlds.front();
-        removeWorld(w);
-    }
-
-    return addWorld(worldFile, savegame); 
-}
-
-void BaseEngine::setMainWorld(Handle::WorldHandle world)
-{
-    m_MainWorld = world;
-}
-
-
 bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 {
     json j;
@@ -280,16 +217,91 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 }
 
 void BaseEngine::setPaused(bool paused) {
-    if (paused != m_DisableLogic)
+    if (paused != m_Paused)
     {
-        // status changed
-        if (paused)
+        if (getMainWorld().isValid())
         {
-            m_MainWorld.get().getAudioWorld().pauseSounds();
-        } else
-        {
-            m_MainWorld.get().getAudioWorld().continueSounds();
+            if (paused)
+                getMainWorld().get().getAudioWorld().pauseSounds();
+            else
+                getMainWorld().get().getAudioWorld().continueSounds();
         }
-        m_DisableLogic = paused;
+        m_Paused = paused;
     }
 }
+
+void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction)
+{
+    m_SaveGameActionQueue.push(saveGameAction);
+}
+
+void BaseEngine::processSaveGameActionQueue()
+{
+    while (!m_SaveGameActionQueue.empty())
+    {
+        SavegameManager::SaveGameAction action = m_SaveGameActionQueue.front();
+        switch (action.type)
+        {
+            case SavegameManager::Save:
+                if (!getMainWorld().get().getDialogManager().isDialogActive())
+                {
+                    // only save while not in Dialog
+                    SavegameManager::saveToSlot(action.slot, action.savegameName);
+                }
+                break;
+            case SavegameManager::Load:
+                {
+                    auto error = Engine::SavegameManager::loadSaveGameSlot(action.slot);
+                    if (!error.empty())
+                        LogWarn() << error;
+                }
+                break;
+            case SavegameManager::SwitchLevel:
+                {
+                    getSession().switchToWorld(action.savegameName);
+                }
+                break;
+        }
+        m_SaveGameActionQueue.pop();
+    }
+}
+
+void BaseEngine::processAsyncActionQueue()
+{
+    while (!m_AsyncActionQueue.empty())
+    {
+        auto& action = m_AsyncActionQueue.front();
+        if (action.prolog)
+        {
+            action.prolog(*this);
+            action.prolog = nullptr;
+        }
+        bool running = action.job.valid() && action.job.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready;
+        if (running)
+        {
+            return;
+        } else
+        {
+            action.epilog(*this);
+            m_AsyncActionQueue.pop();
+        }
+    }
+}
+
+void BaseEngine::resetSession()
+{
+    // GameSession's destructor will clean up worlds
+    m_Session = std::make_unique<GameSession>(*this);
+}
+
+GameClock &BaseEngine::getGameClock()
+{
+    return getSession().getGameClock();
+}
+
+Handle::WorldHandle BaseEngine::getMainWorld()
+{
+    return getSession().getMainWorld();
+}
+
+size_t ExcludeFrameTime::m_ReferenceCounter = 0;

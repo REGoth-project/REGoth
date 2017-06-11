@@ -161,7 +161,13 @@ namespace Logic
 		/**
 		 * @return Time the Character already is inside this state
 		 */
-		 float getCurrentStateTime(){ return m_CurrentState.valid ? m_CurrentState.stateTime : 0.0f; }
+		float getCurrentStateTime(){ return m_CurrentState.valid ? m_CurrentState.stateTime : 0.0f; }
+
+		/**
+		 * Sets the time the Character is inside this state
+		 * @param time
+		 */
+		void setCurrentStateTime(float time);
 
 		/**
 		 * Gets the current routine function from the script instance and replaces the routine stored with the new one

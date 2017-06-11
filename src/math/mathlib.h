@@ -124,7 +124,7 @@ namespace Math
             glm::vec3 _glmt_vector;
         };
 
-		std::string toString()
+		std::string toString() const
 		{
 			std::string out;
 			out = "[" + std::to_string(x)
@@ -645,7 +645,7 @@ namespace Math
 	template<class T>
 	T clamp(T v, T lo, T hi)
 	{
-		assert(lo < hi);
+		assert(lo <= hi);
 		return (v < lo) ? lo : (hi < v) ? hi : v;
 	}
 }

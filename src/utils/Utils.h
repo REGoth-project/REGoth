@@ -14,6 +14,7 @@
 #include <memory>
 #include <chrono>
 #include <sstream>
+#include <logic/Console.h>
 #include <algorithm>
 
 namespace Utils
@@ -490,12 +491,13 @@ namespace Utils
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
     /**
-     * searches for the first group (vector<string>) wich contains name and returns the group
-     * returns empty vector if not found any
-     * @param groups groups to search in
+     * searches for the first suggestion which contains name and returns it
+     * returns nullptr if not found any
+     * @param suggestions suggestions to search in
      * @param name token to find
      */
-    std::vector<std::string> findNameInGroups(const std::vector<std::vector<std::string>>& groups, const std::string& name);
+    Logic::Console::Suggestion findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
+                                                     const std::string& name);
 
     /**
      * performs case insensitive euqal check
@@ -541,4 +543,14 @@ namespace Utils
         Profiler(const std::string& n);
         ~Profiler();
     };
+
+    /**
+     * checks if string searchSpace starts with start
+     */
+    bool startsWith(const std::string& searchSpace, const std::string& start);
+
+    /**
+     * checks if string searchSpace ends with end
+     */
+    bool endsWith(const std::string& searchSpace, const std::string& end);
 }

@@ -20,7 +20,21 @@ namespace UI
         IA_Right,
         IA_Close,
         IA_Accept,
-	IA_Backspace
+        IA_Backspace,
+        IA_0,
+        IA_1,
+        IA_2,
+        IA_3,
+        IA_4,
+        IA_5,
+        IA_6,
+        IA_7,
+        IA_8,
+        IA_9,
+        IA_HOME,
+        IA_END,
+        IA_ToggleStatusMenu,
+        IA_ToggleConsole
     };
 
     // BGFX-View to be used for rendering views

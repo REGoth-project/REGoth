@@ -23,6 +23,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
+#include <logic/SavegameManager.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -217,7 +218,6 @@ void PlayerController::continueRoutine()
 
 void PlayerController::teleportToWaypoint(size_t wp)
 {
-
     m_AIState.closestWaypoint = wp;
 
     teleportToPosition(m_World.getWaynet().waypoints[wp].position);
@@ -1302,7 +1302,8 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
                     v = m_World.getVobEntityByName(message.targetVobName);
                 }
 
-                if (v.isValid())
+                // isEntityValid can be false if the npc entity was removed from this world while this message was queued
+                if (v.isValid() && m_World.isEntityValid(v))
                 {
                     Vob::VobInformation vob = Vob::asVob(m_World, v);
                     message.targetPosition = Vob::getTransform(vob).Translation();
@@ -1343,6 +1344,9 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
 
         case EventMessages::MovementMessage::ST_TurnToVob:
         {
+            if (!m_World.isEntityValid(message.targetVob))
+                return true; // case: player entity was removed from this world while this message was queued
+
             Vob::VobInformation vob = Vob::asVob(m_World, message.targetVob);
 
             // Fill position-field
@@ -1444,7 +1448,7 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
             break;
 
         case EventMessages::StateMessage::EV_Wait:
-            message.waitTime -= static_cast<float>(m_World.getWorldInfo().m_LastFrameDeltaTime);
+            message.waitTime -= static_cast<float>(m_World.getEngine()->getGameClock().getLastDt());
             return message.waitTime < 0.0f;
             break;
 
@@ -1570,14 +1574,13 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
         case ConversationMessage::ST_Output:
         {
+            // Vatras' preach or Herold accounce
+            bool isMonolog = message.target == this->m_Entity;
             auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (message.status == ConversationMessage::Status::INIT)
             {
                 message.status = ConversationMessage::Status::PLAYING;
-                m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
-                subtitleBox.setScaling(0.0);
-                subtitleBox.setGrowDirection(+1.0f);
 
                 // Don't let the routine overwrite our animations
                 setDailyRoutine({});
@@ -1586,7 +1589,12 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 startDialogAnimation();
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name);
-                m_World.getDialogManager().setCurrentMessage(sharedMessage);
+                if (!isMonolog){
+                    m_World.getDialogManager().setCurrentMessage(sharedMessage);
+                    m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+                    subtitleBox.setScaling(0.0);
+                    subtitleBox.setGrowDirection(+1.0f);
+                }
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
@@ -1616,15 +1624,17 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 if (nextStage)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
-                    subtitleBox.setGrowDirection(-1.0f);
+                    if (!isMonolog)
+                        subtitleBox.setGrowDirection(-1.0f);
                 }
             }
 
             if (message.status == ConversationMessage::Status::FADING_OUT)
             {
-                if (subtitleBox.getScaling() == 0.0f)
+                if (isMonolog || subtitleBox.getScaling() == 0.0f)
                 {
-                    m_World.getDialogManager().stopDisplaySubtitle();
+                    if (!isMonolog)
+                        m_World.getDialogManager().stopDisplaySubtitle();
                     getModelVisual()->stopAnimations();
                     return true;
                 }
@@ -2026,40 +2036,29 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
-
     m_AIHandler.bindKeys();
 
-    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool, float triggered)
+    Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
     {
-        if(triggered > 0.0f && !m_World.getEngine()->getHud().isMenuActive()){
+        if(triggered){
+            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Save, 0, ""});
+        }
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
+    {
+        if(triggered){
+            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Load, 0, ""});
+        }
+    });
+
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)
+    {
+        if(triggered && !m_World.getEngine()->getHud().isMenuActive()){
             m_World.getEngine()->togglePaused();
         }
     });
 
-    m_AIHandler.bindKeys();
-
-    Engine::Input::RegisterAction(Engine::ActionType::OpenStatusMenu, [this](bool triggered, float) {
-
-        if(triggered && !m_World.getDialogManager().isDialogActive())
-        {
-            UI::Hud &hud = m_World.getEngine()->getHud();
-            if (!hud.isMenuActive())
-            {
-                UI::Menu_Status& statsScreen = hud.pushMenu<UI::Menu_Status>();
-
-                // Update the players status menu once
-                updateStatusScreen(statsScreen);
-            }
-            else if (hud.isTopMenu<UI::Menu_Status>())
-                hud.popMenu();
-        }
-    });
-
-    Engine::Input::RegisterAction(Engine::ActionType::OpenConsole, [this](bool triggered, float) {
-        if(triggered)
-            m_World.getEngine()->getHud().getConsole().setOpen(true);
-    });
-/*
     Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
         m_isDrawWeaponMelee = triggered;
     });
@@ -2117,7 +2116,7 @@ void PlayerController::setupKeyBindings()
     Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float) {
         m_isStrafeRight = m_isStrafeRight || triggered;
     });
-*/
+
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
         m_MoveSpeed1 = m_MoveSpeed1 || triggered;
     });
@@ -2335,7 +2334,7 @@ void PlayerController::exportPart(json& j)
     j["scriptObj"]["spawnDelay"] = scriptObj.spawnDelay;
     j["scriptObj"]["senses"] = scriptObj.senses;
     j["scriptObj"]["senses_range"] = scriptObj.senses_range;
-    j["scriptObj"]["ai"] = Utils::putArray(scriptObj.ai);
+    j["scriptObj"]["aivar"] = Utils::putArray(scriptObj.aivar);
     j["scriptObj"]["wp"] = scriptObj.wp;
     j["scriptObj"]["exp"] = scriptObj.exp;
     j["scriptObj"]["exp_next"] = scriptObj.exp_next;
@@ -2358,6 +2357,9 @@ void PlayerController::exportPart(json& j)
         }
     }
 
+    // export refusetalktime
+    j["refusetalktime"] = this->m_RefuseTalkTime;
+
     // Import state
     m_AIStateMachine.exportScriptState(j["AIState"]);
 }
@@ -2370,8 +2372,10 @@ void PlayerController::importObject(const json& j, bool noTransform)
 
         // Teleport to position
         {
-            teleportToPosition(getEntityTransform().Translation());
-            setDirection(-1.0f * getEntityTransform().Forward());
+            // need to copy since changing position sets the direction of the transform matrix
+            auto transformMatrixCopy = getEntityTransform();
+            teleportToPosition(transformMatrixCopy.Translation());
+            setDirection(-1.0f * transformMatrixCopy.Forward());
         }
     }
 
@@ -2411,7 +2415,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
         scriptObj.spawnDelay = j["scriptObj"]["spawnDelay"];
         scriptObj.senses = j["scriptObj"]["senses"];
         scriptObj.senses_range = j["scriptObj"]["senses_range"];
-        Utils::putArray(scriptObj.ai, j["scriptObj"]["ai"]);
+        Utils::putArray(scriptObj.aivar, j["scriptObj"]["aivar"]);
         scriptObj.wp = j["scriptObj"]["wp"];
         scriptObj.exp = j["scriptObj"]["exp"];
         scriptObj.exp_next = j["scriptObj"]["exp_next"];
@@ -2434,6 +2438,9 @@ void PlayerController::importObject(const json& j, bool noTransform)
             equipItem(h);
         }
     }
+
+    // import refusetalktime
+    this->setRefuseTalkTime(static_cast<float>(j["refusetalktime"]));
 
     // Import state
     m_AIStateMachine.importScriptState(j["AIState"]);
@@ -2544,11 +2551,11 @@ void PlayerController::onUpdateForPlayer(float deltaTime)
     UI::Hud& hud = m_World.getEngine()->getHud();
     auto& stats = getScriptInstance();
 
-    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] /
-                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
+    hud.setHealth(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS],
+                  stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
-    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA] /
-                  (float)stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
+    hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
+                stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 
 }
 
@@ -2556,9 +2563,7 @@ std::string PlayerController::getGuildName()
 {
     // Guilds are stored as an array in a symbol called "TXT_GUILDS"
     auto& sym = m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("TXT_GUILDS");
-    std::string* adr = sym.getStrAddr((unsigned int)getScriptInstance().guild);
-
-    return *adr;
+    return sym.getString((unsigned int)getScriptInstance().guild);
 }
 
 void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
@@ -2566,7 +2571,7 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     auto& stats = getScriptInstance();
 
     statsScreen.setAttribute(UI::Menu_Status::A_STR, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
-    statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_STRENGTH]);
+    statsScreen.setAttribute(UI::Menu_Status::A_DEX, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_DEXTERITY]);
 
     statsScreen.setAttribute(UI::Menu_Status::A_MANA, stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
                              stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);

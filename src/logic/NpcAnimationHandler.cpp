@@ -4,7 +4,7 @@
 #include <logic/PlayerController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <ZenLib/utils/logger.h>
-
+#include <engine/BaseEngine.h>
 
 using namespace Logic;
 
@@ -401,7 +401,7 @@ void NpcAnimationHandler::StartAni_Turn(float direction)
 
     // Get angles
     float turnSpeed = 1.5f; // TODO: Calculate this somehow
-    float turnRad = direction * turnSpeed * (float)m_World.getWorldInfo().m_LastFrameDeltaTime;
+    float turnRad = direction * turnSpeed * (float)m_World.getEngine()->getGameClock().getLastDt();
 
     // Apply
     getController().applyRotationY(turnRad);

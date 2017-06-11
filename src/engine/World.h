@@ -21,6 +21,8 @@
 #include <logic/PfxManager.h>
 #include "BspTree.h"
 #include <content/AnimationLibrary.h>
+#include <logic/CameraController.h>
+#include <components/Vob.h>
 
 using json = nlohmann::json;
 
@@ -71,45 +73,63 @@ namespace World
         std::vector<size_t> m_VisibleEntities;
     };
 
-	/**
-	 * Basic gametype this is. Needed for sky configuration, for example
-	 */
-	enum EGameType
-	{
-		GT_Gothic1,
-		GT_Gothic2
-	};
-
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
     public:
 
-        /**
-         * Information about the state of the world
-         */
-        struct WorldInfo
-        {
-            WorldInfo()
-            {
-                m_LastFrameDeltaTime = 0.0;
-            }
-
-            // Last deltatime-value we have gotten here
-            double m_LastFrameDeltaTime;
-		};
-
-		WorldInstance();
+		WorldInstance(Engine::BaseEngine& engine);
 		~WorldInstance();
 
 		/**
-		* @param zen file
+		 * @param zen filename of world
+		 * @param worldJson may be empty
+		 * @param scriptEngine may be empty
+		 * @param dialogManger shall only be non empty at first world load in each session
 		*/
-		bool init(Engine::BaseEngine& engine, const std::string& zen, const json& j = json());
+		bool init(const std::string& zen,
+                  const json& worldJson = json(),
+                  const json& scriptEngine = json(),
+                  const json& dialogManger = json());
 
         /**
          * Creates an entity with the given components and returns its handle
          */
         Components::ComponentAllocator::Handle addEntity(Components::ComponentMask components = 0);
+
+        /**
+         * creates camera and returns it
+         */
+        Handle::EntityHandle createCamera();
+
+        /**
+         * @return this world's camera
+         */
+        Handle::EntityHandle getCamera();
+
+        /**
+         * @return The given component of the world's camera
+         */
+        template<typename T>
+        T& getCameraComp()
+        {
+            return getComponentAllocator().getElement<T>(m_Camera);
+        }
+
+        /**
+         * @return Camera-Controller of the camera
+         */
+        Logic::CameraController* getCameraController()
+        {
+            Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
+            return dynamic_cast<Logic::CameraController*>(ptr);
+        }
+
+		/**
+		 * Checks whether the passed entity handle points to a valid location
+		 * @param e Handle to check
+		 * @return Whether that entity exists
+		 */
+		bool isEntityValid(Handle::EntityHandle e);
 
 		/**
 		 * Removes the entitiy with the given handle
@@ -151,7 +171,7 @@ namespace World
 		/**
 		 * @return Basic gametype this is. Needed for sky configuration, for example
 		 */
-		EGameType getBasicGameType();
+		Daedalus::GameType getBasicGameType();
 
         /**
          * Data access
@@ -255,11 +275,6 @@ namespace World
 		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
 
 		/**
-		 * @return Information about the state of the world
-		 */
-		WorldInfo& getWorldInfo(){ return m_WorldInfo; }
-
-		/**
 		 * @return Map of freepoints
 		 */
 		std::vector<Handle::EntityHandle> getFreepoints(const std::string& tag);
@@ -282,14 +297,27 @@ namespace World
 		/**
 		 * Exports this world into a json-object
 		 * @param j json-object to write into
+		 * @param skip entities which shall be excluded from export
 		 */
-		void exportWorld(json& j);
+		void exportWorld(json& j, std::set<Handle::EntityHandle> skip = {});
 
-        /**
-         * Imports vobs from a json-object
-         * @param j
-         */
-        void importVobs(const json& j);
+		/**
+		 * Exports the given controllers to a json-object
+		 * @param logicController may be nullptr
+		 * @param visualController may be nullptr
+		 * @param j json-object to write into
+		 */
+		void exportControllers(Logic::Controller* logicController, Logic::VisualController* visualController, json &j);
+
+		/**
+		 * @return exported npc as json object
+		 */
+		json exportNPC(Handle::EntityHandle entityHandle);
+
+		/**
+		 * export npc (i.e. player) and remove him from world
+		 */
+		json exportAndRemoveNPC(Handle::EntityHandle handle);
 
 		/**
 		 * @return world-file this is built after
@@ -297,9 +325,33 @@ namespace World
 		const std::string& getZenFile(){ return m_ZenFile; }
 
 		/**
-         * Imports a single vob from a json-object
+         * Imports vobs from a json-object
+         * @param j
          */
-		void importSingleVob(const json& j);
+		void importVobs(const json& j);
+
+		/**
+         * Imports a single vob from a json-object
+         * @return entity handle if successfull, else invalid handle
+         */
+		Handle::EntityHandle importSingleVob(const json& j);
+
+		/**
+         * import single vob from json and take control over it
+         * @return entity handle if successfull, else invalid handle
+         */
+		Handle::EntityHandle importVobAndTakeControl(const json& j);
+
+		/**
+         * take control over the given entity (camera, movement(key bindings))
+         */
+		void takeControlOver(Handle::EntityHandle entityHandle);
+
+    private:
+        /**
+         * copying a world is not allowed and results in a compile error
+         */
+        WorldInstance(const WorldInstance& other) = delete;
 
 	protected:
 
@@ -396,13 +448,13 @@ namespace World
 		UI::PrintScreenMessages* m_PrintScreenMessageView;
 
 		/**
-		 * Information about the state of the world
-		 */
-		WorldInfo m_WorldInfo;
-
-		/**
 		 * Pfx-cache
 		 */
 		Logic::PfxManager m_PfxManager;
+
+		/**
+         * Players camera entity
+         */
+		Handle::EntityHandle m_Camera;
     };
 }

@@ -57,8 +57,9 @@ namespace UI
         /**
          * To be called when one of the given actions were triggered
          * @param action Input action
+         * @return returns true if the menu should be closed after this function
          */
-        virtual void onInputAction(EInputAction action);
+        virtual bool onInputAction(EInputAction action);
 
         /**
          * To be called when there was text input since the last frame

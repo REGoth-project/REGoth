@@ -9,7 +9,7 @@ namespace UI
     class ConsoleBox : public View
     {
     public:
-        ConsoleBox(Engine::BaseEngine& e, Console& console);
+        ConsoleBox(Engine::BaseEngine& e);
         ~ConsoleBox();
 
         /**
@@ -19,17 +19,21 @@ namespace UI
          */
         void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
 
+        /**
+         * Increases the selection index by the given amount.
+         * performs periodic wrap around
+         * @param amount may be positive or negative
+         */
+        void increaseSelectionIndex(int amount);
+
+        /**
+         * sets the current selection index
+         */
+        void setSelectionIndex(int newIndex);
+
+        int getSelectionIndex() const { return m_CurrentlySelected;}
+
     protected:
-
-        struct
-        {
-            /**
-             * Lines of history + current line
-             */
-            int height;
-        } m_Config;
-
-        Console& m_Console;
 
         /**
          * Console background image
@@ -40,5 +44,10 @@ namespace UI
          * Suggestions background image
          */
         Handle::TextureHandle m_SuggestionsBackgroundTexture;
+
+        /**
+         * Index of selected entry
+         */
+        int m_CurrentlySelected;
     };
 }

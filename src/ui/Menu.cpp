@@ -95,7 +95,7 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         // Update info-text
         if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0 && m_pInfoText)
         {
-           m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]); 
+            m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]);
         }
     }
 
@@ -145,8 +145,8 @@ void UI::Menu::initializeInstance(const std::string& instance)
             Daedalus::PARSymbol& symX =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_X");
             Daedalus::PARSymbol& symY =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_Y");
 
-            infoX = symX.getIntValue() / 8192.0f;
-            infoY = symY.getIntValue() / 8192.0f;
+            infoX = symX.getInt() / 8192.0f;
+            infoY = symY.getInt() / 8192.0f;
         }
         float sX = 1.0f - infoX * 2.0f;
         float sY = 1.0f - infoY;
@@ -156,9 +156,7 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
         m_pInfoText->setTranslation(Math::float2(infoX, infoY));
         m_pInfoText->setAlignment(A_TopCenter);
-        m_pInfoText->setText("Ein neues Abenteuer beginnen");
         m_pInfoText->setFont(UI::DEFAULT_FONT);
-
     }
 }
 
@@ -219,7 +217,6 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
             m_pVM->initializeInstance(ZMemory::toBigHandle(items.back()),
                                       m_pVM->getDATFile().getSymbolIndexByName(menu.items[i]),
                                       Daedalus::IC_MenuItem);
-
         }
     }
 
@@ -258,7 +255,7 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
 }
 
 
-void UI::Menu::onInputAction(EInputAction action)
+bool UI::Menu::onInputAction(EInputAction action)
 {
     switch(action)
     {
@@ -289,11 +286,12 @@ void UI::Menu::onInputAction(EInputAction action)
             break;
 
         case IA_Close:
-            setHidden(true);
-            break;
+            return true;
+
         default:
             break;
     }
+    return false;
 }
 
 

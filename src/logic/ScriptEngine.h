@@ -40,6 +40,11 @@ namespace Logic
         void initForWorld(const std::string& world, bool firstStart = true);
 
         /**
+         * If a new game this method will create an instance of the class with the given name at some startpoint
+         */
+        Handle::EntityHandle createDefaultPlayer(const std::string& symbolName);
+
+        /**
          * Returns a list of all global symbols the game would have saved inside a savegame together
          * with their values.
          *
@@ -81,11 +86,11 @@ namespace Logic
          * Runs a complete function with the arguments given by pushing onto the stack
          * Note: Must be prepared first, using prepareRunFunction.
          * @param fname Symbol-name of the function to look up and call
+         * @param clearDataStack indicates whether the datastack should be cleared before running
          * @return value returned by the function
          */
-        int32_t runFunction(const std::string& fname);
-        int32_t runFunction(size_t addr);
-        int32_t runFunctionBySymIndex(size_t symIdx);
+        int32_t runFunction(const std::string& fname, bool clearDataStack = true);
+        int32_t runFunctionBySymIndex(size_t symIdx, bool clearDataStack = true);
 
         /**
          * Returns the current script-gamestate
@@ -114,6 +119,11 @@ namespace Logic
          * @return The entity of the NPC the player is currently playing as
          */
         Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
+
+        /**
+         * Sets the entity of the NPC the player is currently playing as
+         */
+        void setPlayerEntity(Handle::EntityHandle player){ m_PlayerEntity = player; }
 
         /**
          * Returns a list of all npcs found inside the given sphere
@@ -154,6 +164,9 @@ namespace Logic
 
         void registerMob(Handle::EntityHandle e);
         void unregisterMob(Handle::EntityHandle e);
+
+        void registerNpc(Handle::EntityHandle e);
+        void unregisterNpc(Handle::EntityHandle e);
 
         /**
          * Applies the given items effects on the given NPC or equips it. Does not delete the item or anything else.
@@ -200,6 +213,11 @@ namespace Logic
          * Called when an npc got inserted into the world
          */
         void onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::string& spawnpoint);
+
+        /**
+         * Called when an npc got removed from the world
+         */
+        void onNPCRemoved(Daedalus::GameState::NpcHandle npc);
 
         /**
          * Called after the NPC got inserted into the world. At this point, it is fully initialized and can be used.

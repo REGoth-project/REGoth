@@ -32,8 +32,7 @@ DialogManager::DialogManager(World::WorldInstance& world) :
     m_ActiveSubtitleBox = nullptr;
     m_DialogActive = false;
     m_Talking = false;
-    m_SubDialogActive = false;
-    m_CurrentDialogMessage = nullptr;
+    m_Interaction.currentDialogMessage = nullptr;
     m_ProcessInfos = false;
 }
 
@@ -78,6 +77,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
 
     clearChoices();
 
+    auto& importantKnown = m_Interaction.importantKnown;
     // Acquire all information we should be able to see right now
     for(const auto& infoHandle : infos)
     {
@@ -154,9 +154,6 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target){
 void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
                                const ZenLoad::oCMsgConversationData& msg)
 {
-    if(self == target)
-        return; // FIXME: Vatras right here
-
     LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
     // Make a new message for the talking NPC
     VobTypes::NpcVobInformation selfnpc = VobTypes::getVobFromScriptHandle(m_World, self);
@@ -234,29 +231,28 @@ Daedalus::GameState::DaedalusGameState& DialogManager::getGameState()
 void DialogManager::performChoice(size_t choice)
 {
     assert(choice < m_Interaction.choices.size());
+    auto& choiceEntry = m_Interaction.choices[choice];
 
     // Hide the options box
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
 
     // Get actual selected info-object
-    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(m_Interaction.choices[choice].info);
+    Daedalus::GameState::InfoHandle infoHandle = choiceEntry.info;
+    Daedalus::GEngineClasses::C_Info& info = getGameState().getInfo(infoHandle);
 
     // Set instances again, since they could have been changed across the frames
     getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
 
-    size_t fnSym = m_Interaction.choices[choice].functionSym;
-
-    if (m_SubDialogActive)
+    if (m_Interaction.currentInfo.isValid())
     {
-        m_Interaction.choices.erase(m_Interaction.choices.begin() + choice);
-    } else
-    {
-        clearChoices();
+        // case: we are in a subdialog
+        info.removeChoice(choice);
     }
 
     // Call the script routine attached to the choice
     m_World.getScriptEngine().prepareRunFunction();
+    size_t fnSym = choiceEntry.functionSym;
     m_World.getScriptEngine().runFunctionBySymIndex(fnSym);
 
     // We now know this information. Do this before actually triggering the dialog, since then we can update the
@@ -269,9 +265,16 @@ void DialogManager::performChoice(size_t choice)
         m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
     }
 
-    if(m_Interaction.choices.empty() && m_ProcessInfos)
+    if (info.subChoices.empty())
     {
-        // We chose "back" or haven't gotten to a sub-dialog
+        m_Interaction.currentInfo.invalidate();
+    } else {
+        m_Interaction.currentInfo = infoHandle;
+    }
+
+    if(m_ProcessInfos)
+    {
+        clearChoices();
         updateChoices(m_Interaction.target);
     }
     // TODO Don't flush yet, wait for dialog talking chain end
@@ -308,12 +311,13 @@ void DialogManager::startDialog(Daedalus::GameState::NpcHandle target)
     targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
 
     /*m_World.getScriptEngine().prepareRunFunction();
-    m_World.getScriptEngine().runFunction(getVM().getDATFile().getSymbolByName("ZS_Talk").address);*/
+    m_World.getScriptEngine().runFunction("ZS_Talk");*/
 }
 
 void DialogManager::endDialog()
 {
-    importantKnown.clear();
+    m_Interaction.currentInfo.invalidate();
+    m_Interaction.importantKnown.clear();
     m_World.getEngine()->getHud().getDialogBox().setHidden(true);
     m_World.getEngine()->getHud().setGameplayHudVisible(true);
     m_DialogActive = false;
@@ -354,7 +358,9 @@ bool DialogManager::init()
         LogInfo() << "Loading OU-file from: " << ou;
 
     LogInfo() << "Creating script-side dialog-manager";
-    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(), ou);
+    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(),
+                                                                            ou,
+                                                                            m_World.getEngine()->getSession().getKnownInfoMap());
 
     LogInfo() << "Adding dialog-UI to root view";
     // Add subtitle box (Hidden if there is nothing to display)
@@ -383,10 +389,10 @@ void DialogManager::stopDisplaySubtitle()
 
 void DialogManager::cancelTalk()
 {
-    if (m_CurrentDialogMessage)
+    if (m_Interaction.currentDialogMessage)
     {
-        m_CurrentDialogMessage->canceled = true;
-        m_CurrentDialogMessage = nullptr;
+        m_Interaction.currentDialogMessage->canceled = true;
+        m_Interaction.currentDialogMessage = nullptr;
     }
 }
 
@@ -400,27 +406,10 @@ void DialogManager::addChoice(ChoiceEntry& entry)
     m_Interaction.choices.push_back(entry);
 }
 
-int DialogManager::beforeFrontIndex(){
-    if (m_Interaction.choices.empty())
-    {
-        return 0;
-    }
-    else
-    {
-        auto& minEl = *std::min_element(m_Interaction.choices.begin(), m_Interaction.choices.end(),
-                                       ChoiceEntry::comparator);
-        return minEl.nr - 1;
-    }
-}
-
-void DialogManager::setSubDialogActive(bool flag)
-{
-    m_SubDialogActive = flag;
-}
-
 void DialogManager::sortChoices()
 {
-    std::sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
+    // stable (!) sort is needed to keep the order of the (not-numbered) sub-choices
+    std::stable_sort(m_Interaction.choices.begin(), m_Interaction.choices.end(), ChoiceEntry::comparator);
 }
 
 void DialogManager::flushChoices()
@@ -428,8 +417,7 @@ void DialogManager::flushChoices()
     // Sort by importance index
     sortChoices();
 
-    // Open dialog box
-
+    // flush to DialogBox
     m_World.getEngine()->getHud().getDialogBox().clearChoices();
     for(ChoiceEntry& e : m_Interaction.choices)
         m_World.getEngine()->getHud().getDialogBox().addChoice(e);
@@ -437,6 +425,28 @@ void DialogManager::flushChoices()
 
 void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
 {
+    auto infoHandle = m_Interaction.currentInfo;
+    if (infoHandle.isValid())
+    {
+        // case: we are in a subdialog
+        const auto& cInfo = getGameState().getInfo(infoHandle);
+        if (!cInfo.subChoices.empty())
+        {
+            const int nr = 0; // all subchoices will have the same number, stable sort won't change the order
+            const bool important = false;
+            m_Interaction.choices.clear();
+            for (const auto& subChoice : cInfo.subChoices)
+            {
+                m_Interaction.choices.push_back(ChoiceEntry{subChoice.text,
+                                                            subChoice.functionSym,
+                                                            infoHandle,
+                                                            nr,
+                                                            important});
+            }
+            flushChoices();
+            return;
+        }
+    }
     auto infos = m_ScriptDialogMananger->getInfos(target);
     onAIProcessInfos(target, infos);
 }
@@ -447,7 +457,7 @@ void DialogManager::exportDialogManager(json& j)
     const std::map<size_t, std::set<size_t>>& info =
             m_World.getDialogManager().getScriptDialogManager()->getKnownNPCInformation();
 
-    json& npcInfo = j["npcInfo"];
+    json& npcInfo = j["npcKnowsInfo"];
     for(const auto& p : info)
     {
         // Converting to string here, because these can get pretty high with huge gaps,
@@ -458,7 +468,7 @@ void DialogManager::exportDialogManager(json& j)
 
 void DialogManager::importDialogManager(const json& j)
 {
-    for(auto it=j["npcInfo"].begin(); it != j["npcInfo"].end(); it++)
+    for(auto it=j["npcKnowsInfo"].begin(); it != j["npcKnowsInfo"].end(); it++)
     {
         // Map of indices -> array of numbers
         int npcInstance = std::stoi(it.key());
@@ -466,5 +476,18 @@ void DialogManager::importDialogManager(const json& j)
         for(int info : it.value())
             m_World.getDialogManager().getScriptDialogManager()->setNpcInfoKnown((unsigned int)npcInstance, (unsigned int)info);
     }
+}
+
+void DialogManager::onInputAction(UI::EInputAction action) {
+    auto& dialogBox = m_World.getEngine()->getHud().getDialogBox();
+    if(!dialogBox.isHidden()){
+        dialogBox.onInputAction(action);
+    } else if (isTalking() && action == UI::EInputAction::IA_Close) {
+        cancelTalk();
+    }
+}
+
+void DialogManager::setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message) {
+    m_Interaction.currentDialogMessage = message;
 }
 

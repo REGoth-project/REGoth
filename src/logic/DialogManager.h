@@ -53,10 +53,16 @@ namespace Logic
         bool init();
 
         /**
-         * Updates the boxes according to the coices taken by the user
+         * Updates the boxes according to the choices taken by the user
          * @param dt time since last frame
          */
         void update(double dt);
+
+        /**
+         * To be called when one of the given actions were triggered
+         * @param action Input action
+         */
+        void onInputAction(UI::EInputAction action);
 
         /**
          * Start dialog
@@ -113,19 +119,9 @@ namespace Logic
         void addChoice(ChoiceEntry& entry);
 
         /**
-         * @return new choice number guaranteed to be smaller than all existing ones
-         */
-        int beforeFrontIndex();
-
-        /**
-         * Sets whether the DialogManager is in in the SubDialog state
-         */
-        void setSubDialogActive(bool flag);
-
-        /**
          * Sets the current Dialog Message. To be able to cancel it
          */
-        void setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message) { m_CurrentDialogMessage = message; }
+        void setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message);
 
         /**
          * Sorts registered choices depending on their sort index
@@ -216,8 +212,21 @@ namespace Logic
             Daedalus::GameState::NpcHandle player;
             Daedalus::GameState::NpcHandle target;
             std::vector<Daedalus::GameState::InfoHandle> infos;
-            std::vector<size_t> functions;
-            std::vector<std::pair<size_t, size_t>> optionsSorted;
+            /**
+             * Handle to the the current Dialogoption
+             * Used to identify which Subchoices to show or to check if there are any
+             */
+            Daedalus::GameState::InfoHandle currentInfo;
+
+            /**
+             * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
+             */
+            std::shared_ptr<EventMessages::ConversationMessage> currentDialogMessage;
+
+            /**
+             * Remember all already chosen important infos, for the current Dialog
+             */
+            std::set<Daedalus::GameState::InfoHandle> importantKnown;
         } m_Interaction;
 
         /**
@@ -239,22 +248,5 @@ namespace Logic
          * Whether a subtitlebox is currently shown
          */
         bool m_Talking;
-
-        /**
-         * Whether a hero is inside a multiple choice test.
-         * When true the queue will not be cleared and normal dialog options will not be added
-         * This state is left when the script calls the script function Info_ClearChoices
-         */
-        bool m_SubDialogActive;
-
-        /**
-         * Can be used to cancel the current Dialog Sound, when IA_Close occurs.
-         */
-        std::shared_ptr<EventMessages::ConversationMessage> m_CurrentDialogMessage;
-
-        /**
-         * Remember all already chosen important infos, for the current Dialog
-         */
-        std::set<Daedalus::GameState::InfoHandle> importantKnown;
     };
 }

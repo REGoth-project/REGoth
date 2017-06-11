@@ -25,19 +25,9 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
     return s;
 }
 
-void Menu_Main::onInputAction(EInputAction action)
+bool Menu_Main::onInputAction(EInputAction action)
 {
-    Menu::onInputAction(action);
-
-    switch(action)
-    {
-        case IA_Up:break;
-        case IA_Down:break;
-        case IA_Left:break;
-        case IA_Right:break;
-        case IA_Close: getHud().popMenu(); break;
-        case IA_Accept:break;
-    }
+    return Menu::onInputAction(action);
 }
 
 
@@ -45,12 +35,20 @@ void Menu_Main::onCustomAction(const std::string& action)
 {
     if(action == "NEW_GAME")
     {
+        LogInfo() << "Starting new game...";
         getHud().popMenu();
 
-        LogInfo() << "Starting new game...";
-        m_Engine.loadWorld(m_Engine.getEngineArgs().startupZEN);
-        // reset the clock to the default starting time
-        m_Engine.getGameClock().resetNewGame();
+        m_Engine.resetSession();
+        Handle::WorldHandle worldHandle = m_Engine.getSession().addWorld(m_Engine.getEngineArgs().startupZEN);
+        if (worldHandle.isValid())
+        {
+            m_Engine.getSession().setMainWorld(worldHandle);
+            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(m_Engine.getEngineArgs().playerScriptname);
+            worldHandle.get().takeControlOver(player);
+        } else
+        {
+            LogError() << "Failed to add given startup world, world handle is invalid!";
+        }
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {
@@ -65,4 +63,9 @@ void Menu_Main::onCustomAction(const std::string& action)
     {
         Engine::Platform::setQuit(true);
     }
+}
+
+Daedalus::GameType Menu_Main::determineGameType() {
+    bool isGothic2 = m_pVM->getDATFile().hasSymbolName("C_Menu_Item.hideOnValue");
+    return isGothic2 ? Daedalus::GameType::GT_Gothic2 : Daedalus::GameType::GT_Gothic1;
 }

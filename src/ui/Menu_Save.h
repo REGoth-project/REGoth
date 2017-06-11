@@ -26,13 +26,15 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        virtual void onInputAction(EInputAction action) override;
+        virtual bool onInputAction(EInputAction action) override;
 
         /**
          * To be called when there was text input since the last frame
          * @param text Characters input since the last frame
          */
         virtual void onTextInput(const std::string& text) override;
+
+        static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
 
     private:
 

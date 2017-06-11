@@ -62,7 +62,7 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
     Math::float2 absSize = getAbsoluteSize();
 
     int sx = Math::iround(absSize.x * config.state.viewWidth); // Span whole viewport
-    int sy = fnt->getFontHeight() * std::max(8, (int)m_Choices.size()); // Scale with number of choices
+    int sy = fnt->getFontHeight() * std::max(8, (int)m_Choices.size() + 1); // Scale with number of choices +1 for some extra space
 
 
     int px = Math::iround(absTranslation.x * config.state.viewWidth);
@@ -122,6 +122,28 @@ void DialogBox::onInputAction(EInputAction action)
         case IA_Down: m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size()); break;
         case IA_Left:break;
         case IA_Right:break;
+        case IA_0:
+            break;
+        case IA_1:
+        case IA_2:
+        case IA_3:
+        case IA_4:
+        case IA_5:
+        case IA_6:
+        case IA_7:
+        case IA_8:
+        case IA_9:
+        {
+            int index = action - IA_1;
+            m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
+        }
+            break;
+        case IA_HOME:
+            m_CurrentlySelected = 0;
+            break;
+        case IA_END:
+            m_CurrentlySelected = static_cast<int>(m_Choices.size()) - 1;
+            break;
         case IA_Close:
             // closing Dialog-Option-Box when pressing Escape
             //m_Engine.getMainWorld().get().getDialogManager().performChoice(m_Choices.size()-1);break;
@@ -131,6 +153,8 @@ void DialogBox::onInputAction(EInputAction action)
         case IA_Accept:
             if (m_CurrentlySelected != -1)
                 m_Engine.getMainWorld().get().getDialogManager().performChoice(static_cast<size_t>(m_CurrentlySelected));
+            break;
+        default:
             break;
     }
 }

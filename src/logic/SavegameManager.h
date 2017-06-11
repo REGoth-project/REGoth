@@ -1,17 +1,30 @@
 #pragma once 
 #include <vector>
 #include <string>
+#include <memory>
+#include <json/json.hpp>
 
 namespace Engine
 {
+    class GameEngine;
+
     namespace SavegameManager
     {
         /**
+         * @param GameEngine-pointer
+         */
+        void init(Engine::GameEngine& engine);
+
+        void invalidateCurrentSlotIndex();
+
+        int getCurrentSlotIndex();
+
+        /**
          * Assembles a list of all available savegame names. Every entry will correspond to an index number.
-         * Empty names mean, that there is no save currently stored.
+         * nullptr means, that there is no save currently stored.
          * @return List of available saves
          */
-        std::vector<std::string> gatherAvailableSavegames();
+        std::vector<std::shared_ptr<const std::string>> gatherAvailableSavegames();
 
         /**
          * Checks if the given savegame-slot contains valid data
@@ -66,21 +79,68 @@ namespace Engine
         SavegameInfo readSavegameInfo(int idx);
 
         /**
+         * Writes actual player-data into the given savegame
+         * @param idx Index of the savegame
+         * @param playerName Name of the player which is saved. No extensions, just the name.
+         * @param player as json object
+         * @return success
+         */
+        bool writePlayer(int idx, const std::string& playerName, const nlohmann::json& world);
+
+        /**
+         * Reads player-data for the player with the given name.
+         * @param idx Index of the savegame
+         * @param playerName Name of the player to load
+         * @return Data of the given savegame's player. Empty string if not found or no data
+         */
+        std::string readPlayer(int idx, const std::string& playerName);
+
+        /**
          * Writes actual world-data into the given savegame
          * @param idx Index of the savegame
          * @param worldName Name of the world which is saved. No extensions, just the name.
-         * @param data Data containing the world information to be saved. 
+         * @param world as json object
          * @return success
          */
-        bool writeWorld(int idx, const std::string& worldName, const std::string& data);
+        bool writeWorld(int idx, const std::string& worldName, const nlohmann::json& world);
 
         /**
          * Reads world-data for the world with the given name.
          * @param idx Index of the savegame
          * @param worldName Name of the world to load
-         * @return Data of the given savegames world. Empty string of not found or no data
+         * @return Data of the given savegames world. Empty string if not found or no data
          */
         std::string readWorld(int idx, const std::string& worldName);
+
+        /**
+         * write the file with the specified filename to the given slot
+         * @param idx slot index
+         * @param relativePath filename relative to the savegame slot folder
+         * @param file content to be saved.
+         * @return success
+         */
+        bool writeFileInSlot(int idx, const std::string& relativePath, const std::string& data);
+
+        /**
+         * reads the file with the specified filename in the given slot
+         * @param idx slot index
+         * @param relativePath filename relative to the savegame slot folder
+         */
+        std::string readFileInSlot(int idx, const std::string& relativePath);
+
+        /**
+         * loads the savegame of the specified slotindex
+         * @param index slotindex
+         * @return empty string if successful, else error message
+         */
+        std::string loadSaveGameSlot(int index);
+
+        /**
+         * saves the current world to the given slot
+         * @param index slotindex
+         * @param savegameName label of the savegame. If empty string, then "Slot <index>" is used as name
+         */
+        void saveToSlot(int index, std::string savegameName);
 
         /**
          * Builds the path to a saved worldfile from the given slot
@@ -89,5 +149,27 @@ namespace Engine
          * @return full path + filename to the given world
          */
         std::string buildWorldPath(int idx, const std::string& worldName);
+
+        constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + quicksave
+        constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + quicksave
+
+        std::string gameSpecificSubFolderName();
+
+        int maxSlots();
+
+        enum SaveGameActionType
+        {
+            Save,
+            Load,
+            SwitchLevel
+        };
+
+        struct SaveGameAction
+        {
+            SaveGameActionType type;
+            int slot;
+            // only used for Save-actions
+            std::string savegameName;
+        };
     }
 }
