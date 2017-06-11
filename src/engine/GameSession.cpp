@@ -3,9 +3,12 @@
 //
 
 #include "GameSession.h"
+#include "AsyncAction.h"
 #include <fstream>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include "ui/Hud.h"
+#include "ui/LoadingScreen.h"
 
 using namespace Engine;
 
@@ -131,55 +134,75 @@ void GameSession::removeWorld(Handle::WorldHandle world)
     m_Engine.onWorldRemoved(world);
 }
 
-Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile)
+void GameSession::switchToWorld(const std::string &worldFile)
 {
-    auto oldWorld = getMainWorld();
-    auto exportedPlayer = oldWorld.get().exportAndRemoveNPC(
-            oldWorld.get().getScriptEngine().getPlayerEntity());
-    json scriptEngine;
-    oldWorld.get().getScriptEngine().exportScriptEngine(scriptEngine);
+    auto switchToWorld_ = [worldFile](BaseEngine* engine){
 
-    putWorldToSleep(oldWorld);
+        json newWorldJson;
+        json exportedPlayer;
+        json scriptEngine;
 
-    json newWorldJson;
-    if (hasInactiveWorld(worldFile))
-    {
-        newWorldJson = retrieveInactiveWorld(worldFile);
-    } else
-    {
-        if (m_CurrentSlotIndex != -1)
-        {
-            // try read from disk
-            std::string worldFromDisk = SavegameManager::readWorld(m_CurrentSlotIndex, Utils::stripExtension(worldFile));
-            if (!worldFromDisk.empty())
-                newWorldJson = json::parse(worldFromDisk); // we found the world on disk
-        }
-    }
+        /**
+         * prolog
+         */
+        auto exportData = [&](BaseEngine* engine){
+            engine->getHud().getLoadingScreen().setHidden(false);
 
-    // TODO do this asynchronous
-    Handle::WorldHandle newWorld;
-    {
-        std::unique_ptr<World::WorldInstance> pNewWorld = createWorld(worldFile, newWorldJson, scriptEngine);
-        newWorld = registerWorld(std::move(pNewWorld));
-    }
+            auto& session = engine->getSession();
+            auto oldWorld = engine->getMainWorld();
+            auto playerEntity = oldWorld.get().getScriptEngine().getPlayerEntity();
+            exportedPlayer = oldWorld.get().exportAndRemoveNPC(playerEntity);
+            oldWorld.get().getScriptEngine().exportScriptEngine(scriptEngine);
 
-    setMainWorld(newWorld);
-    auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
+            session.putWorldToSleep(oldWorld);
 
-    // TODO find out start position after level change
-    std::vector<size_t> startpoints = newWorld.get().findStartPoints();
+            if (session.hasInactiveWorld(worldFile))
+            {
+                newWorldJson = session.retrieveInactiveWorld(worldFile);
+            } else
+            {
+                auto slotIndex = engine->getSession().getCurrentSlot();
+                if (slotIndex != -1)
+                {
+                    // try read from disk
+                    std::string worldFromDisk = SavegameManager::readWorld(slotIndex, Utils::stripExtension(worldFile));
+                    if (!worldFromDisk.empty())
+                        newWorldJson = json::parse(worldFromDisk); // we found the world on disk
+                }
+            }
+        };
+        AsyncAction::executeInThread(exportData, engine, ExecutionPolicy::MainThread).wait();
 
-    if (!startpoints.empty())
-    {
-        auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
-        std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
-        LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
-        playerVob.playerController->teleportToWaypoint(startpoints.front());
-        // FIXME seems like player start-points (zCVobStartpoint:zCVob) are inverted?
-        playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
-    }
+        /**
+         * asynchronous part
+         */
+        std::unique_ptr<World::WorldInstance> pNewWorld = engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine);
 
-    return Handle::WorldHandle();
+        /**
+         * epilog
+         */
+        auto registerWorld_ = [w = std::move(pNewWorld), exportedPlayer](BaseEngine* engine) mutable {
+            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
+            engine->getSession().setMainWorld(newWorld);
+            auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
+
+            // TODO find out start position after level change
+            std::vector<size_t> startpoints = newWorld.get().findStartPoints();
+
+            if (!startpoints.empty())
+            {
+                auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
+                std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
+                LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
+                playerVob.playerController->teleportToWaypoint(startpoints.front());
+                // FIXME seems like player start-points (zCVobStartpoint:zCVob) are inverted?
+                playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
+            }
+            engine->getHud().getLoadingScreen().setHidden(true);
+        };
+        AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
+    };
+    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread, true);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle) {

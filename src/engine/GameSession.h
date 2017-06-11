@@ -52,6 +52,7 @@ namespace Engine
         GameClock& getGameClock();
 
         void setCurrentSlot(int index) { m_CurrentSlotIndex = index; }
+        int getCurrentSlot() { return m_CurrentSlotIndex; }
 
         std::map<size_t, std::set<size_t>>& getKnownInfoMap() { return m_KnownInfos; };
 
@@ -98,9 +99,8 @@ namespace Engine
          * - world found in current save-game slot on disk
          * - else: First visit. No vobs get imported. <World>_startup script-fu will be executed
          * @param worldFile including .zen extension
-         * @return handle to the loaded world
          */
-        Handle::WorldHandle switchToWorld(const std::string &worldFile);
+        void switchToWorld(const std::string &worldFile);
 
         /**
          * @brief moves world from worldInstance list to inactive json map.

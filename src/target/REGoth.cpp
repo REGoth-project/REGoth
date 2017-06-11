@@ -503,7 +503,6 @@ public:
         });
 
         auto zenLevelNamesGen = [this]() -> std::vector<Suggestion> {
-            using Suggestion = Suggestion;
 
             std::vector<std::string> g1WorldNames = {"WORLD.ZEN", "FREEMINE.ZEN", "OLDMINE.ZEN", "ORCGRAVEYARD.ZEN", "ORCTEMPEL.ZEN"};
             std::vector<std::string> g2WorldNames = {"DRAGONISLAND.ZEN", "NEWWORLD.ZEN", "OLDWORLD.ZEN", "ADDONWORLD.ZEN"};
@@ -555,7 +554,7 @@ public:
             if(!m_pEngine->getVDFSIndex().hasFile(zenFilename))
                 return "File '" + zenFilename + "' not found.";
 
-            m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
+            m_pEngine->getSession().switchToWorld(zenFilename);
             return "Switching world to: " + zenFilename;
         }).registerAutoComplete(zenLevelNamesGen);
 
@@ -604,10 +603,10 @@ public:
         });
 
         CandidateListGenerator worlddNpcNamesGen = [this]() {
-            using Suggestion = Suggestion;
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
+
             std::vector<Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {

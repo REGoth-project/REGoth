@@ -249,11 +249,6 @@ void BaseEngine::processSaveGameActionQueue()
                     SavegameManager::saveToSlot(action.slot, action.savegameName);
                 }
                 break;
-            case SavegameManager::SwitchLevel:
-                {
-                    getSession().switchToWorld(action.savegameName);
-                }
-                break;
         }
         m_SaveGameActionQueue.pop();
     }

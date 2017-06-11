@@ -159,15 +159,13 @@ namespace Engine
 
         enum SaveGameActionType
         {
-            Save,
-            SwitchLevel
+            Save
         };
 
         struct SaveGameAction
         {
             SaveGameActionType type;
             int slot;
-            // only used for Save-actions
             std::string savegameName;
         };
     }
