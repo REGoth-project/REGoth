@@ -142,6 +142,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
     m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
+        bgfx::frame(); // quick fix: executes all pending resource creations to prevent overflow
         finalizeLoad(h);
     });
 
