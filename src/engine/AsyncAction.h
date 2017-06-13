@@ -96,7 +96,27 @@ namespace Engine
                         future.wait();
                         return true;
                     case std::launch::async:
-                        return future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
+                    {
+                        bool finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
+                        if (finished)
+                        {
+                            try
+                            {
+                                // calling .get() will rethrow any exception, that occurred in the other thread
+                                future.get();
+                            } catch (const std::exception &e)
+                            {
+                                LogError() << "Exception occurred in an other thread: " << e.what();
+                                throw; // rethrow again
+                            } catch (...)
+                            {
+                                LogError() << "Exception occurred in an other thread";
+                                throw; // rethrow again
+                            }
+
+                        }
+                        return finished;
+                    }
                 }
                 return true;
             };
