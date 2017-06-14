@@ -89,36 +89,22 @@ namespace Engine
             }
             std::shared_future<AsyncAction::ReturnType<Callable>> future = std::async(policy, std::forward<Callable>(job), engine);
             std::function<bool(BaseEngine* engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool{
+                bool finished = false;
                 switch (policy)
                 {
                     case std::launch::deferred:
                         assert(engine->isMainThread());
-                        future.wait();
-                        return true;
+                        future.wait(); // blocks until execution finished
+                        finished = true;
                     case std::launch::async:
-                    {
-                        bool finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
-                        if (finished)
-                        {
-                            try
-                            {
-                                // calling .get() will rethrow any exception, that occurred in the other thread
-                                future.get();
-                            } catch (const std::exception &e)
-                            {
-                                LogError() << "Exception occurred in an other thread: " << e.what();
-                                throw; // rethrow again
-                            } catch (...)
-                            {
-                                LogError() << "Exception occurred in an other thread";
-                                throw; // rethrow again
-                            }
-
-                        }
-                        return finished;
-                    }
+                        finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
                 }
-                return true;
+                if (finished)
+                {
+                    // calling .get() will rethrow any exception, that occurred while executing the future
+                    future.get();
+                }
+                return finished;
             };
             // executeInMainThreadUntilTrue makes the job stay in the queue until the future is ready
             engine->executeInMainThreadUntilTrue(wrapperJob, forceQueueing);
