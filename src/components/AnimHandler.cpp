@@ -222,10 +222,10 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t frameNext = reversed ? (frameNum - 1) % Math::trunc(numFrames)
                                 : (frameNum + 1) % Math::trunc(numFrames);
 
-    if(abs(frameNext - frameNum) > 1)
+    if(std::abs(frameNext - frameNum) > 1)
         frameNext = frameNum;
 
-    float frameFract = fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
+    float frameFract = std::fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
 
     const Animations::AnimationData &anim_data = m_pWorld->getAnimationLibrary().getAnimationData(anim->m_Data);
     for (size_t i = 0; i < anim_data.m_NodeIndexList.size(); i++)
