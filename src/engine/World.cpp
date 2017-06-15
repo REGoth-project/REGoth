@@ -6,7 +6,6 @@
 #include <zenload/zCMesh.h>
 #include "BaseEngine.h"
 #include "GameEngine.h"
-#include "AsyncAction.h"
 #include <content/ContentLoad.cpp>
 #include <utils/logger.h>
 #include <components/EntityActions.h>
@@ -531,10 +530,7 @@ bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
 	if(!worldName.empty())
 	{
 		LogInfo() << "Initializing scripts for world: " << worldName;
-        auto initForWorld = [=](Engine::BaseEngine* engine){
-            m_ScriptEngine.initForWorld(worldName, firstStart);
-        };
-        Engine::AsyncAction::executeInThread(initForWorld, getEngine(), Engine::ExecutionPolicy::MainThread).wait();
+		m_ScriptEngine.initForWorld(worldName, firstStart);
 	}
 
     LogInfo() << "Initialize dialog manager";
