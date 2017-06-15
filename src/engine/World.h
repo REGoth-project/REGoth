@@ -265,9 +265,9 @@ namespace World
 		}
 
 		/**
-		 * This worlds print-screen manager
+		 * HUD's print-screen manager
 		 */
-		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+		UI::PrintScreenMessages& getPrintScreenManager();
 
 		/**
 		 * @return Map of freepoints
@@ -434,11 +434,6 @@ namespace World
 		 * This worlds dialog-manager
 		 */
 		Logic::DialogManager m_DialogManager;
-
-		/**
-		 * This worlds print-screen manager
-		 */
-		UI::PrintScreenMessages* m_PrintScreenMessageView;
 
 		/**
 		 * Pfx-cache

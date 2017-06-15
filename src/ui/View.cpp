@@ -103,6 +103,7 @@ namespace ViewUtil
 
 View::View(Engine::BaseEngine& e) : m_Engine(e)
 {
+    assert(e.isMainThread());
     m_IsHidden = false;
     m_pParent = nullptr;
 

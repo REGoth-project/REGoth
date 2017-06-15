@@ -15,6 +15,7 @@
 #include <utils/logger.h>
 #include <components/VobClasses.h>
 #include "DialogBox.h"
+#include "PrintScreenMessages.h"
 #include "LoadingScreen.h"
 #include <logic/PlayerController.h>
 
@@ -28,6 +29,8 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
     m_pEnemyHealthBar = new BarView(m_Engine);
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
+    m_pPrintScreenMessageView = new PrintScreenMessages(m_Engine);
+    m_pPrintScreenMessageView->setHidden(true);
     m_pClock = new TextView(m_Engine);
     m_pLoadingScreen = new LoadingScreen(m_Engine);
     m_pLoadingScreen->setHidden(true);
@@ -41,6 +44,7 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
     addChild(m_pDialogBox);
+    addChild(m_pPrintScreenMessageView);
     addChild(m_pClock);
     addChild(m_pLoadingScreen);
     addChild(m_pMenuBackground);
@@ -108,6 +112,7 @@ UI::Hud::~Hud()
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pDialogBox);
+    removeChild(m_pPrintScreenMessageView);
     removeChild(m_pClock);
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
@@ -118,6 +123,7 @@ UI::Hud::~Hud()
     delete m_pHealthBar;
     delete m_pManaBar;
     delete m_pEnemyHealthBar;
+    delete m_pPrintScreenMessageView;
     delete m_pDialogBox;
     delete m_pClock;
     delete m_pLoadingScreen;

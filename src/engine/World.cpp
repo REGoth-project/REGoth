@@ -47,7 +47,6 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
       m_PhysicsSystem(*this),
       m_Sky(*this),
       m_DialogManager(*this),
-      m_PrintScreenMessageView(nullptr),
       m_BspTree(*this),
       m_PfxManager(*this),
       m_AudioWorld(nullptr),
@@ -61,11 +60,6 @@ WorldInstance::~WorldInstance()
     auto player = getScriptEngine().getPlayerEntity();
     if (player.isValid())
         VobTypes::Wld_RemoveNpc(*this, player);
-
-    if (m_PrintScreenMessageView && getEngine())
-        getEngine()->getRootUIView().removeChild(m_PrintScreenMessageView);
-
-    delete m_PrintScreenMessageView;
 
     delete m_AudioWorld;
 }
@@ -85,10 +79,6 @@ bool WorldInstance::init(const std::string& zen,
     m_StaticWorldMeshCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_WorldMesh);
     m_StaticWorldObjectPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldObjectCollsionShape, Math::Matrix::CreateIdentity());
     m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
-
-    // Create UI-Views
-    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_pEngine);
-    getEngine()->getRootUIView().addChild(m_PrintScreenMessageView);
 
     // Notify user
     m_pEngine->getHud().getLoadingScreen().startSection(
@@ -945,6 +935,10 @@ json WorldInstance::exportNPC(Handle::EntityHandle entityHandle) {
     json j;
     exportControllers(playerVob.playerController, playerVob.visual, j);
     return j;
+}
+
+UI::PrintScreenMessages &WorldInstance::getPrintScreenManager() {
+    return m_pEngine->getHud().getPrintScreenManager();
 }
 
 
