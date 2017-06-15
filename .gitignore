@@ -56,3 +56,6 @@ Data/
 # CScope, Ctags
 cscope.files
 tags
+
+# Visual Studio
+.vs
