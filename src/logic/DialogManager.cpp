@@ -368,8 +368,6 @@ bool DialogManager::init()
     m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
     m_ActiveSubtitleBox->setHidden(true);
 
-    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_World.getEngine());
-
     LogInfo() << "Done initializing DialogManager!";
     return true;
 }
