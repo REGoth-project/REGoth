@@ -78,6 +78,8 @@ void BaseEngine::initEngine(int argc, char** argv)
     else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
 
+    LogInfo() << "Used Game directory: " << m_Args.gameBaseDirectory;
+
     if(Flags::modFile.isSet())
         m_Args.modfile = Flags::modFile.getParam(0);
 
@@ -147,7 +149,7 @@ void BaseEngine::loadArchives()
 
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
-    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
+    LogInfo() << "Loading VDF-Archives (from " << m_Args.gameBaseDirectory + "/Data): " << vdfArchives;
     for(std::string& s : vdfArchives)
     {
         m_FileIndex.loadVDF(s);

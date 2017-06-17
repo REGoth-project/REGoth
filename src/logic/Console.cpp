@@ -3,8 +3,11 @@
 #include "Console.h"
 #include <utils/Utils.h>
 #include <engine/BaseEngine.h>
-#include <GLFW/glfw3.h>
 #include <ui/Hud.h>
+
+#ifndef ANDROID
+#include <GLFW/glfw3.h>
+#endif
 
 using Logic::Console;
 
@@ -21,6 +24,7 @@ Console::~Console() {
 
 void Console::onKeyDown(int glfwKey, int mods)
 {
+#ifndef ANDROID
     auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();
     if(glfwKey == GLFW_KEY_PAGE_DOWN)
     {
@@ -109,6 +113,7 @@ void Console::onKeyDown(int glfwKey, int mods)
             }
         }
     }
+#endif
 }
 
 void Console::onTextInput(const std::string& text)

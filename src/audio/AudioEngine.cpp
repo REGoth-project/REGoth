@@ -1,8 +1,10 @@
 #include <cstddef>
 #include <cstring>
 
+#ifdef RE_USE_SOUND
 #include <AL/al.h>
 #include <AL/alc.h>
+#endif
 
 #include <utils/logger.h>
 
@@ -13,6 +15,7 @@ namespace Audio
 
 void AudioEngine::enumerateDevices(std::vector<std::string> &enumerated)
 {
+#ifdef RE_USE_SOUND
     if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
     {
         size_t len = 0;
@@ -31,10 +34,12 @@ void AudioEngine::enumerateDevices(std::vector<std::string> &enumerated)
 
     if (enumerated.empty())
         enumerated.push_back(std::string()); // empty string is default device
+#endif
 }
 
 const char *AudioEngine::getErrorString(size_t errorCode)
 {
+#ifdef RE_USE_SOUND
     switch (errorCode)
     {
     case AL_NO_ERROR:
@@ -51,10 +56,12 @@ const char *AudioEngine::getErrorString(size_t errorCode)
         return "AL_OUT_OF_MEMORY";
     }
     return "UNKNOWN";
+#endif
 }
 
 AudioEngine::AudioEngine(const std::string &name)
 {
+#ifdef RE_USE_SOUND
     m_Device = alcOpenDevice(name.empty() ? NULL : name.c_str());
     if (!m_Device)
     {
@@ -62,12 +69,15 @@ AudioEngine::AudioEngine(const std::string &name)
                   << getErrorString(alGetError()) << ", sound disabled";
         return;
     }
+#endif
 }
 
 AudioEngine::~AudioEngine()
 {
+#ifdef RE_USE_SOUND
     if (m_Device)
         alcCloseDevice(m_Device);
+#endif
 }
 
 }

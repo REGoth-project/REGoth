@@ -45,7 +45,7 @@ void ::Utils::forEachFile(const std::string& directory, std::function<void(const
     tinydir_dir dir;
     if (tinydir_open(&dir, directory.c_str()) == -1)
     {
-        LogError() << "Failed to open directory: " << directory;
+        LogError() << "Failed to open directory: " << directory << "! errno: " << errno;
         tinydir_close(&dir);
         return;
     }
@@ -81,6 +81,8 @@ std::list<std::string> Utils::getFilesInDirectory(const std::string& directory, 
 
 
     forEachFile(directory, [&](const std::string& path, const std::string& name, const std::string& fext){
+        LogInfo() << "Found file: " << path << "/" << name << "." << fext;
+
         std::string extlower = fext;
         std::transform(extlower.begin(), extlower.end(), extlower.begin(), ::tolower);
 

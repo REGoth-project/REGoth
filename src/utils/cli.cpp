@@ -78,6 +78,8 @@ std::vector<std::string> Flag::extractFlag()
                 args.push_back(Global::commandline[j]);
             }
 
+            LogInfo() << "Args on " << m_Flag << ": " << args;
+
             if(k != m_nParams)
             {
                 std::cout << "ARGPARSE: '" << m_Flag << "'" << (m_VerboseFlag.empty() ? "" : ", ('" + m_VerboseFlag + "')") << " - wrong argument count. Expected "
@@ -228,9 +230,11 @@ const std::string& Flag::getParam(unsigned i)
 
 void ::Cli::setCommandlineArgs(int argc, char** argv)
 {
-    for(int i = 0; i < argc; i++)
+    for (int i = 0; i < argc; i++)
+    {
+        LogInfo() << "CLI-Arg: " << argv[i];
         Global::commandline.push_back(std::string(argv[i]));
-
+    }
     // Check all flags for correctness
     for(Flag* f : Global::getFlagList())
         f->extractFlag();
