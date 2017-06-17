@@ -26,7 +26,7 @@ if(EMSCRIPTEN)
 endif()
 
 if(ANDROID)
-    #set(BGFX_DEBUG 0)
+    set(BGFX_DEBUG 0)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 
@@ -201,32 +201,24 @@ set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
 set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
 
-if(NOT ANDROID)
+
+if (UNIX)
+    set(LIBTYPE STATIC CACHE STRING "" FORCE)
+else()
+    set(LIBTYPE SHARED CACHE STRING "" FORCE)
+endif()
+
+if(NOT EMSCRIPTEN)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
+    include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
+
     if (UNIX)
-        set(LIBTYPE STATIC CACHE STRING "" FORCE)
-        if (NOT APPLE)
-            set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-            set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-        endif()
-    else()
-        set(LIBTYPE SHARED CACHE STRING "" FORCE)
-    endif()
-
-    if(NOT EMSCRIPTEN)
-        add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-        include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
-
-        if (UNIX)
-            if (NOT APPLE)
-            set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-            set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-            endif()
-            target_link_libraries(engine openal)
-        elseif(WIN32)
-            target_link_libraries(engine OpenAL32)
-        endif()
+        target_link_libraries(engine openal)
+    elseif(WIN32)
+        target_link_libraries(engine OpenAL32)
     endif()
 endif()
+
 
 # ------------------ Other ------------------
 
@@ -244,14 +236,13 @@ if(NOT ANDROID)
 
     if(NOT EMSCRIPTEN)
         add_subdirectory(lib/glfw)
-        # We want audio if not on android
+
         add_definitions(-DRE_USE_SOUND)
         target_link_libraries(engine glfw)
     endif()
 else()
-
-    # TODO: Audio
     target_link_libraries(engine android_glue)
+    add_definitions(-DRE_USE_SOUND)
 endif()
 
 add_subdirectory(lib/adpcm)

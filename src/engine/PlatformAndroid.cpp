@@ -13,7 +13,7 @@
 
 #define DBG(x) __android_log_print(ANDROID_LOG_INFO, "REGOTH", x)
 
-const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "freemine.zen" };
+const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "world.zen" };
 const int NUMARGS = 5;
 
 const int ACTION_PlayerForward = 265;
