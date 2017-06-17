@@ -6,13 +6,14 @@
 #ifdef ANDROID
 
 #include "PlatformAndroid.h"
-#include <bgfx/bgfxplatform.h>
+#include <bgfx/platform.h>
 #include <android/input.h>
 #include <utils/logger.h>
+#include <utils/Utils.h>
 
 #define DBG(x) __android_log_print(ANDROID_LOG_INFO, "REGOTH", x)
 
-const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "world.zen" };
+const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "freemine.zen" };
 const int NUMARGS = 5;
 
 const int ACTION_PlayerForward = 265;
@@ -63,8 +64,7 @@ extern "C" void android_main(android_app* _app)
 
     g_App = _app;
 
-    const char* argv[] = { "android.so", "-g /sdcard/REGoth/Gothic", "-w world.zen" };
-    main(3, const_cast<char**>(argv));
+    main(NUMARGS, const_cast<char**>(ARGS));
 }
 
 PlatformAndroid::PlatformAndroid()
@@ -334,6 +334,12 @@ int32_t PlatformAndroid::run(int argc, char** argv)
 
     m_Thread.join();
 
+    return 0;
+}
+
+int PlatformAndroid::shutdown()
+{
+    Utils::destroyFileReaderWriter();
     return 0;
 }
 
