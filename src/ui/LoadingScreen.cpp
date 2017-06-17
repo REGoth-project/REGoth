@@ -19,7 +19,7 @@ const float PROGRESS_BAR_SOFT_SPEED = 12.0f;
 UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
-    setImageFromFile();
+    reset();
     m_RelativeSize = false;
 
     m_pProgressBar = new BarView(e);
@@ -104,7 +104,7 @@ void UI::LoadingScreen::startSection(int p1, int p2, const std::string& message)
 
 void UI::LoadingScreen::setSectionProgress(float p)
 {
-    std::lock_guard<std::mutex>  guard(m_SectionLock);
+    std::lock_guard<std::mutex> guard(m_SectionLock);
 
     // Don't allow going back due to the fake-progress
     if(m_SectionProgress < p)
@@ -127,4 +127,11 @@ void UI::LoadingScreen::setImageFromFile(const std::string& imageName)
     Handle::TextureHandle bgr = alloc.loadTextureVDF(imageName);
     if (bgr.isValid())
         setImage(bgr);
+}
+
+void UI::LoadingScreen::reset(const std::string& imageName)
+{
+    setImageFromFile(imageName);
+    startSection(0, 100, "");
+    setSectionProgress(0);
 }

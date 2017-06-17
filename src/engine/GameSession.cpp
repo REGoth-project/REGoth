@@ -147,7 +147,7 @@ void GameSession::switchToWorld(const std::string &worldFile)
          */
         auto exportData = [&](BaseEngine* engine){
             auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
-            engine->getHud().getLoadingScreen().setImageFromFile("LOADING_" + strippedWorldName + ".TGA");
+            engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
 
             auto& session = engine->getSession();
@@ -201,7 +201,6 @@ void GameSession::switchToWorld(const std::string &worldFile)
                 playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
             }
             engine->getHud().getLoadingScreen().setHidden(true);
-            engine->getHud().getLoadingScreen().setImageFromFile();
         };
         AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
     };
@@ -229,6 +228,7 @@ void GameSession::startNewGame(const std::string &worldFile)
     Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine){
 
         auto prolog = [](Engine::BaseEngine* engine) {
+            engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
         };

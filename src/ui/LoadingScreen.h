@@ -50,6 +50,10 @@ namespace UI
          * @param sets image to the image with the given filename
          */
         void setImageFromFile(const std::string& imageName = "LOADING.TGA");
+
+        /** resets progress and sets image to the image with the given filename
+         */
+        void reset(const std::string& imageName = "LOADING.TGA");
     protected:
 
         /**
