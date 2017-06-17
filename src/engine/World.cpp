@@ -288,6 +288,9 @@ bool WorldInstance::init(const std::string& zen,
 
                     //LogInfo() << "Vobsize (" << v.visual << "): " << (bbox.max - bbox.min).length() / 10.0f;
                     vob.position->m_DrawDistanceFactor = std::max(0.12f, std::min(1.0f, (bbox.max - bbox.min).length() / 10.0f));
+#ifdef ANDROID
+                    vob.position->m_DrawDistanceFactor *= 0.6f;
+#endif
                     //LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
 
                     Vob::setVisual(vob, v.visual);
