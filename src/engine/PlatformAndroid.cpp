@@ -10,21 +10,23 @@
 #include <android/input.h>
 #include <utils/logger.h>
 #include <utils/Utils.h>
+#include <utils/GLFW_Keys.h>
 
 #define DBG(x) __android_log_print(ANDROID_LOG_INFO, "REGOTH", x)
 
 const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "world.zen" };
 const int NUMARGS = 5;
 
-const int ACTION_PlayerForward = 265;
-const int ACTION_PlayerBackward = 264;
-const int ACTION_PlayerTurnLeft = 263;
-const int ACTION_PlayerTurnRight = 262;
-const int ACTION_PlayerStrafeLeft = 5;
-const int ACTION_PlayerStrafeRight = 6;
+const int ACTION_PlayerForward = GLFW_KEY_UP;
+const int ACTION_PlayerBackward = GLFW_KEY_DOWN;
+const int ACTION_PlayerTurnLeft = GLFW_KEY_LEFT;
+const int ACTION_PlayerTurnRight = GLFW_KEY_RIGHT;
+const int ACTION_PlayerStrafeLeft = GLFW_KEY_A;
+const int ACTION_PlayerStrafeRight = GLFW_KEY_D;
 const int ACTION_DebugMoveSpeed = 7;
 const int ACTION_DebugMoveSpeed2  = 8;
 const int ACTION_PlayerAction = 257;
+const int ACTION_Escape = GLFW_KEY_ESCAPE;
 
 namespace bgfx
 {
@@ -225,7 +227,13 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
                         }
                     }else
                     {
-                        keyEvent(ACTION_PlayerAction, 0, KEY_ACTION_PRESS, 0);
+                        if(x < getWindowWidth() / 2)
+                        {
+                            keyEvent(ACTION_PlayerAction, 0, KEY_ACTION_PRESS, 0);
+                        } else
+                        {
+                            keyEvent(ACTION_Escape, 0, KEY_ACTION_PRESS, 0);
+                        }
                     }
 
 				}
@@ -249,6 +257,7 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 
 				mouseButtonEvent(0, KEY_ACTION_RELEASE, 0);
                 keyEvent(ACTION_PlayerAction, 0, KEY_ACTION_RELEASE, 0);
+                keyEvent(ACTION_Escape, 0, KEY_ACTION_RELEASE, 0);
 			}
 			return 1;
 			break;
@@ -283,6 +292,7 @@ int32_t PlatformAndroid::run(int argc, char** argv)
     bindKey(ACTION_PlayerStrafeLeft, ActionType::PlayerStrafeLeft, true);
     bindKey(ACTION_PlayerStrafeRight, ActionType::PlayerStrafeRight, true);
     bindKey(ACTION_PlayerAction, ActionType::PlayerAction, false);
+    bindKey(ACTION_Escape, ActionType::Escape, false);
 
     // Read all pending events.
     int ident;
@@ -306,12 +316,23 @@ int32_t PlatformAndroid::run(int argc, char** argv)
                 dirPressed = ACTION_PlayerStrafeRight;
         }
 
-        keyEvent(ACTION_PlayerForward, 0, KEY_ACTION_RELEASE, 0);
-        keyEvent(ACTION_PlayerBackward, 0, KEY_ACTION_RELEASE, 0);
-        keyEvent(ACTION_PlayerTurnLeft, 0, KEY_ACTION_RELEASE, 0);
-        keyEvent(ACTION_PlayerTurnRight, 0, KEY_ACTION_RELEASE, 0);
-        keyEvent(ACTION_PlayerStrafeLeft, 0, KEY_ACTION_RELEASE, 0);
-        keyEvent(ACTION_PlayerStrafeRight, 0, KEY_ACTION_RELEASE, 0);
+        if(getKeysState()[ACTION_PlayerForward] && dirPressed != ACTION_PlayerForward)
+            keyEvent(ACTION_PlayerForward, 0, KEY_ACTION_RELEASE, 0);
+
+        if(getKeysState()[ACTION_PlayerBackward] && dirPressed != ACTION_PlayerBackward)
+            keyEvent(ACTION_PlayerBackward, 0, KEY_ACTION_RELEASE, 0);
+
+        if(getKeysState()[ACTION_PlayerTurnLeft] && dirPressed != ACTION_PlayerTurnLeft)
+            keyEvent(ACTION_PlayerTurnLeft, 0, KEY_ACTION_RELEASE, 0);
+
+        if(getKeysState()[ACTION_PlayerTurnRight] && dirPressed != ACTION_PlayerTurnRight)
+            keyEvent(ACTION_PlayerTurnRight, 0, KEY_ACTION_RELEASE, 0);
+
+        if(getKeysState()[ACTION_PlayerStrafeLeft] && dirPressed != ACTION_PlayerStrafeLeft)
+            keyEvent(ACTION_PlayerStrafeLeft, 0, KEY_ACTION_RELEASE, 0);
+
+        if(getKeysState()[ACTION_PlayerStrafeRight] && dirPressed != ACTION_PlayerStrafeRight)
+            keyEvent(ACTION_PlayerStrafeRight, 0, KEY_ACTION_RELEASE, 0);
 
         if(dirPressed > 0)
             keyEvent(dirPressed, 0, KEY_ACTION_PRESS, 0);

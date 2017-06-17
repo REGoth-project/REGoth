@@ -338,7 +338,8 @@ std::string Utils::getUserDataLocation()
 										, false );
 	if(!result) return USERDATA_FOLDER; 
     return std::string(buffer) + "/" + USERDATA_FOLDER;
- 
+#elif defined(ANDROID)
+    return "/sdcard/" + USERDATA_FOLDER;
 #elif __unix__
     struct passwd *pw = getpwuid(getuid());
 

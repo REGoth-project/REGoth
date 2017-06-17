@@ -1040,7 +1040,8 @@ public:
         bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
         if(!disableBindings)
             Engine::Input::fireBindings();
-
+        else
+            Engine::Input::clearTriggered(); // needed to have Edge-detection
 
         // Check for resize
         if(m_Width != getWindowWidth() || m_Height != getWindowHeight())
