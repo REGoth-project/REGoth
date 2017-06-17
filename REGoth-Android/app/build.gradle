@@ -38,7 +38,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path '../../../REGoth/CMakeLists.txt'
+            path '../../../CMakeLists.txt'
         }
     }
 
