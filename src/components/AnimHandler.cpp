@@ -10,6 +10,7 @@
 #include "AnimHandler.h"
 
 using namespace Components;
+using namespace ZenLoad;
 
 AnimHandler::AnimHandler()
 {
@@ -209,6 +210,12 @@ void AnimHandler::updateAnimations(double deltaTime)
     // Check if this changed something on our animation
     //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
     //    return; // Nothing to do here // TODO: Do this distance-based!
+
+    // If we have advanced one frame, we need to check for events to trigger
+    if(m_LastProcessedFrame != m_AnimationFrame)
+    {
+        triggerEvents(m_LastProcessedFrame, static_cast<size_t>(m_AnimationFrame));
+    }
 
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
 
@@ -500,4 +507,26 @@ Math::float3 AnimHandler::getRootNodeVelocityAvg()
     }
 
     return avg / (float)NUM_VELOCITY_AVERAGE_STEPS;
+}
+
+void AnimHandler::triggerEvents(size_t frameLast, size_t frameNow)
+{
+    Animations::Animation* anim = getActiveAnimationPtr();
+    if(!anim) return;
+
+    for(const ZenLoad::zCModelScriptEventSfx& sfx : anim->m_EventsSFX)
+    {
+        if(sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
+        {
+            triggerSFX(sfx);
+        }
+    }
+}
+
+void AnimHandler::triggerSFX(const ZenLoad::zCModelScriptEventSfx& sfx)
+{
+    // TODO: Some sounds can end in .wav, not sure if that is handled
+    m_pWorld->getAudioWorld().playSound(sfx.m_Name);
+
+    LogInfo() << "Triggered SFX-Event " << sfx.m_Name << " on frame " << sfx.m_Frame;
 }

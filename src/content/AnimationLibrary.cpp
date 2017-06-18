@@ -174,9 +174,20 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 anim->m_FpsRate = data.m_Header.fpsRate;
                 anim->m_FrameCount = data.m_Header.numFrames;
 
-                LogInfo() << "created animation '" << qname << "' id " << h.index;
+                //LogInfo() << "created animation '" << qname << "' id " << h.index;
             }
             break;
+
+            case ModelScriptParser::CHUNK_EVENT_SFX:
+            {
+                std::string qname = name + '-' + p.ani().m_Name;
+
+                auto h = m_World.getAnimationAllocator().getAnimation(qname);
+                anim = &m_World.getAnimationAllocator().getAnimation(h);
+                anim->m_EventsSFX.push_back(p.sfx());
+            }
+                break;
+
         case ModelScriptParser::CHUNK_ERROR:
             return false;
         }

@@ -15,6 +15,11 @@ namespace Animations
 	struct Animation;
 }
 
+namespace ZenLoad
+{
+	struct zCModelScriptEventSfx;
+}
+
 namespace Components
 {
     // TOOD: in gothic Model Scripts control everything related, rename
@@ -197,6 +202,19 @@ namespace Components
 		 */
 		void setSpeedMultiplier(float mult){ m_SpeedMultiplier = mult; }
 	private:
+
+		/**
+		 * Checks if any events happened between the last played frames
+		 * @param frameLast Animation-Frame played in the last update-cycle
+		 * @param frameNow Animation-Frame played in this update-cycle
+		 */
+		void triggerEvents(size_t frameLast, size_t frameNow);
+
+		/**
+		 * Plays the given SFX-Event
+		 * @param sfx SFX t play
+		 */
+		void triggerSFX(const ZenLoad::zCModelScriptEventSfx& sfx);
 
 		/**
 		 * @brief Animations by their name

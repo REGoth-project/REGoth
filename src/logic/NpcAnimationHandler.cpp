@@ -34,11 +34,23 @@ Animations::AnimationLibrary& NpcAnimationHandler::getAnimLib() const
     return m_World.getAnimationLibrary();
 }
 
-void NpcAnimationHandler::Action_GoForward()
+bool NpcAnimationHandler::Action_GoForward()
 {
-    // TODO: Check if there is enough space for the player
+    /*// TODO: Check if there is enough space for the player
+    Math::float3 traceFrom = getController().getEntityTransform().Translation();
+    Math::float3 traceTo = traceFrom + getController().getDirection() * 0.5f;
+    Physics::RayTestResult result = m_World.getPhysicsSystem().raytrace(traceFrom, traceTo);
+
+    if(result.hasHit)
+    {
+        return false;
+    }*/
+
+
     stopTurningAnimations();
     startAni_Forward();
+
+    return true;
 }
 
 void NpcAnimationHandler::Action_GoBackward()

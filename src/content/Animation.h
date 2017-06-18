@@ -65,7 +65,7 @@ namespace Animations
         std::string                             m_NextName;
         float                                   m_BlendIn = 0;
         float                                   m_BlendOut = 0;
-        EModelScriptAniDir                      m_Dir = EModelScriptAniDir::MSB_FORWARD;
+        ZenLoad::EModelScriptAniDir                      m_Dir = ZenLoad::EModelScriptAniDir::MSB_FORWARD;
         //Handle::AnimationHandle                 m_Alias;
         // required to look up the handle, alias can't be resolved until all animations are loaded
         // FIXME: could be removed when building an index of animations
@@ -77,5 +77,7 @@ namespace Animations
         unsigned                                m_FirstFrame = 0;
         unsigned                                m_LastFrame = 0;
         Effect                                  m_Effects[MAX_ANIM_EFFECTS];
+
+        std::vector<ZenLoad::zCModelScriptEventSfx>      m_EventsSFX;
     };
 }

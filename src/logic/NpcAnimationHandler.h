@@ -27,7 +27,7 @@ namespace Logic
         /**
          * Makes the model play the go-forward animation (with transitions)
          */
-        void Action_GoForward();
+        bool Action_GoForward();
 
         /**
          * Makes the model play the go-backward animation (with transitions)
@@ -127,8 +127,6 @@ namespace Logic
         void startAni_DrawWeapon(int part);
         void startAni_UndrawWeapon();
         void startAni_FightForward();
-
-
 
         /**
          * Starts the turning-animations and does the physical turn

@@ -103,15 +103,21 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             if(m_MovementState.isForward)
             {
                 // Forward-key still pressed, keep going
-                getNpcAnimationHandler().Action_GoForward();
-
-                // And check for turns
-                if(m_MovementState.isTurnLeft)
+                if(!getNpcAnimationHandler().Action_GoForward())
                 {
-                    getNpcAnimationHandler().Action_TurnLeft();
-                } else if(m_MovementState.isTurnRight)
+                    // No Space, go back to "standing"
+                    m_ActiveMovementState = EMovementState::None;
+                    getNpcAnimationHandler().Action_Stand();
+                }else
                 {
-                    getNpcAnimationHandler().Action_TurnRight();
+                    // And check for turns
+                    if (m_MovementState.isTurnLeft)
+                    {
+                        getNpcAnimationHandler().Action_TurnLeft();
+                    } else if (m_MovementState.isTurnRight)
+                    {
+                        getNpcAnimationHandler().Action_TurnRight();
+                    }
                 }
             }else
             {

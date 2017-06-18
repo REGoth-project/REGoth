@@ -212,24 +212,16 @@ namespace World
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name)
     {
-        auto it = m_SoundMap.find(name);
-        if(it == m_SoundMap.end())
-        {
-            // Did not find that, try to load it...
-            Handle::SfxHandle h = loadAudioVDF(name);
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
 
-            // Check if loading was successfull, if so, play it
-            if(!h.isValid())
-            {
-                return Utils::Ticket<AudioWorld>();
-            }
-
-            return playSound(h);
-        }else
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
         {
-            // No need to load it again, just play it
-            return playSound((*it).second);
+            return Utils::Ticket<AudioWorld>();
         }
+
+        return playSound(h);
     }
 
     #ifdef RE_USE_SOUND
