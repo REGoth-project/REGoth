@@ -28,7 +28,7 @@ bool WavReader::open()
 
     m_BlockSize = *reinterpret_cast<const uint16_t*>(&m_Source[32]);
 
-    uint32_t dataSize = *reinterpret_cast<const uint16_t*>(&m_Source[40]);
+    uint32_t dataSize = *reinterpret_cast<const uint32_t*>(&m_Source[40]);
 
     if (m_ADPCM)
     {
@@ -41,7 +41,7 @@ bool WavReader::open()
     {
         m_SourceOffset = 44;
 
-        // SKip any extra information at the end of the file
+        // Skip any extra information at the end of the file
         m_SourceSize = std::min(m_SourceSize, m_SourceOffset + dataSize);
 
         m_SampleCount = dataSize / m_BlockSize;
