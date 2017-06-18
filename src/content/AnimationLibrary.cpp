@@ -6,6 +6,7 @@
 #include <zenload/modelAnimationParser.h>
 #include <zenload/modelScriptParser.h>
 #include <zenload/zenParser.h>
+#include <ZenLib/zenload/zCMaterial.h>
 
 #include "content/AnimationLibrary.h"
 
@@ -162,7 +163,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 anim->m_BlendOut = p.ani().m_BlendOut;
                 anim->m_Flags = (Animation::EModelScriptAniFlags)p.ani().m_Flags;
                 anim->m_FirstFrame = p.ani().m_FirstFrame;
-                anim->m_LastFrame = p.ani().m_FirstFrame;
+                anim->m_LastFrame = p.ani().m_LastFrame;
                 anim->m_Dir = p.ani().m_Dir;
                 anim->m_Next = m_World.getAnimationAllocator().getAnimation(name + "-" + p.ani().m_Next);
 
@@ -185,6 +186,34 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 auto h = m_World.getAnimationAllocator().getAnimation(qname);
                 anim = &m_World.getAnimationAllocator().getAnimation(h);
                 anim->m_EventsSFX.push_back(p.sfx());
+
+                if(anim->m_EventsSFX.back().m_Frame == -1)
+                {
+                    anim->m_EventsSFX.back().m_Frame = anim->m_LastFrame - 1;
+                }
+
+                // Normalize to range specified in the MDS
+                anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
+
+
+            }
+                break;
+
+            case ModelScriptParser::CHUNK_EVENT_SFX_GRND:
+            {
+                std::string qname = name + '-' + p.ani().m_Name;
+
+                auto h = m_World.getAnimationAllocator().getAnimation(qname);
+                anim = &m_World.getAnimationAllocator().getAnimation(h);
+                anim->m_EventsSFXGround.push_back(p.sfx());
+
+                if(anim->m_EventsSFXGround.back().m_Frame == -1)
+                {
+                    anim->m_EventsSFXGround.back().m_Frame = anim->m_LastFrame - 1;
+                }
+
+                // Normalize to range specified in the MDS
+                anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
             }
                 break;
 

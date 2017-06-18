@@ -843,6 +843,16 @@ public:
             return "Played sound " + args[1];
         });
 
+        console.registerCommand("volume", [this](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 2)
+                return "Missing argument. Usage: volume <value>";
+
+            auto& world = m_pEngine->getMainWorld().get();
+            world.getAudioWorld().setListenerGain(std::stof(args[1]));
+
+            return "Set volume to " + args[1];
+        });
+
         console.registerCommand("hurtself", [this](const std::vector<std::string>& args) -> std::string {
             if(args.size() < 2)
                 return "Missing argument. Usage: hurtself <damage>";

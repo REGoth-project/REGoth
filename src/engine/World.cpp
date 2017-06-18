@@ -564,6 +564,11 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
             player.playerController->onUpdateByInput(deltaTime);
     }
 
+    // Update sound-listener position
+    getAudioWorld().setListenerPosition(getCameraController()->getEntityTransform().Translation());
+    //getAudioWorld().setListenerVelocity();
+    //getAudioWorld().setListenerOrientation();
+
     // Update dialogs
     m_DialogManager.update(deltaTime);
 

@@ -201,6 +201,19 @@ namespace Components
 		 * Sets the speed multiplier for all animations
 		 */
 		void setSpeedMultiplier(float mult){ m_SpeedMultiplier = mult; }
+
+		/**
+		 * Event-Callbacks
+		 */
+		void setCallbackEventSFX(std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> cb)
+		{
+			m_CallbackTriggerSFX = cb;
+		}
+
+		void setCallbackEventSFXGround(std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> cb)
+		{
+			m_CallbackTriggerSFXGround = cb;
+		}
 	private:
 
 		/**
@@ -208,13 +221,15 @@ namespace Components
 		 * @param frameLast Animation-Frame played in the last update-cycle
 		 * @param frameNow Animation-Frame played in this update-cycle
 		 */
-		void triggerEvents(size_t frameLast, size_t frameNow);
+		void triggerEvents(int frameLast, int frameNow);
+
 
 		/**
 		 * Plays the given SFX-Event
 		 * @param sfx SFX t play
 		 */
-		void triggerSFX(const ZenLoad::zCModelScriptEventSfx& sfx);
+		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFX;
+		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFXGround;
 
 		/**
 		 * @brief Animations by their name

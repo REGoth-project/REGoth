@@ -405,12 +405,12 @@ namespace Logic
         /**
          * Returns material data on which the NPC is standing
          */
-        Materials::MaterialGroup getSurfaceMaterial();
+        ZenLoad::MaterialGroup getSurfaceMaterial();
 
         /**
          * Returns material data of give triangle index
          */
-        Materials::MaterialGroup getMaterial(uint32_t triangleIdx);
+        ZenLoad::MaterialGroup getMaterial(uint32_t triangleIdx);
         /**
          * @return Item this NPC is currently interacting with
          */
@@ -466,6 +466,12 @@ namespace Logic
 	};
 
     protected:
+
+        /**
+         * Callbacks registered inside the animation-handler
+         */
+        void AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx);
+        void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
 
         virtual void exportPart(json& j) override;
 

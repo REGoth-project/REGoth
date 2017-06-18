@@ -149,6 +149,9 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
         m_NodeTransforms[i] = Math::Matrix(m_MeshLib.getNodes()[i].transformLocal.mv);
     }
 
+    // Run first events
+    triggerEvents(-1, 0);
+
     // Run first frame of the animation to get around the return to the bind-pose above causing the model to jump
     updateAnimations(0.0);
 }
@@ -177,7 +180,15 @@ void AnimHandler::updateAnimations(double deltaTime)
     float framesPerSecond = anim->m_FpsRate * m_SpeedMultiplier;
     float numFrames = anim->m_FrameCount;
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
+    m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
+
+    // If we have advanced one frame, we need to check for events to trigger
+    if(m_LastProcessedFrame != m_AnimationFrame)
+    {
+        triggerEvents(m_LastProcessedFrame, static_cast<int>(m_AnimationFrame));
+    }
+
     if (m_AnimationFrame >= numFrames)
     {
         // If there is a next animation, play this now
@@ -211,13 +222,8 @@ void AnimHandler::updateAnimations(double deltaTime)
     //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
     //    return; // Nothing to do here // TODO: Do this distance-based!
 
-    // If we have advanced one frame, we need to check for events to trigger
-    if(m_LastProcessedFrame != m_AnimationFrame)
-    {
-        triggerEvents(m_LastProcessedFrame, static_cast<size_t>(m_AnimationFrame));
-    }
 
-    m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
+
 
     // Figure out frame number
     size_t frameNum = reversed ? static_cast<size_t>(numFrames - m_AnimationFrame) - 1
@@ -509,7 +515,7 @@ Math::float3 AnimHandler::getRootNodeVelocityAvg()
     return avg / (float)NUM_VELOCITY_AVERAGE_STEPS;
 }
 
-void AnimHandler::triggerEvents(size_t frameLast, size_t frameNow)
+void AnimHandler::triggerEvents(int frameLast, int frameNow)
 {
     Animations::Animation* anim = getActiveAnimationPtr();
     if(!anim) return;
@@ -518,15 +524,17 @@ void AnimHandler::triggerEvents(size_t frameLast, size_t frameNow)
     {
         if(sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
         {
-            triggerSFX(sfx);
+            if(m_CallbackTriggerSFX)
+                m_CallbackTriggerSFX(sfx);
         }
     }
-}
 
-void AnimHandler::triggerSFX(const ZenLoad::zCModelScriptEventSfx& sfx)
-{
-    // TODO: Some sounds can end in .wav, not sure if that is handled
-    m_pWorld->getAudioWorld().playSound(sfx.m_Name);
-
-    LogInfo() << "Triggered SFX-Event " << sfx.m_Name << " on frame " << sfx.m_Frame;
+    for(const ZenLoad::zCModelScriptEventSfx& sfx : anim->m_EventsSFXGround)
+    {
+        if(sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerSFXGround)
+                m_CallbackTriggerSFXGround(sfx);
+        }
+    }
 }

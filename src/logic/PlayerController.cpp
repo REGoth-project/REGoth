@@ -667,7 +667,7 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
     if (DEBUG_PLAYER)
     {
-       LogInfo() << getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+       LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
     }
     Math::Matrix m = getEntityTransform();
 
@@ -758,13 +758,13 @@ void PlayerController::placeOnGround()
             highestHitSurface = result;
         }
         auto material = getMaterial(result.hitTriangleIndex);
-        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = Materials::UNDEFINED; // we don't want underlying worldmesh material in this case
-        if (material == Materials::WATER)
+        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF; // we don't want underlying worldmesh material in this case
+        if (material == ZenLoad::MaterialGroup::WATER)
         {
             waterHitSurface = result; // Doesn't matter if there are more water hits atm
         }
         float newDistance = 0.0f;
-        if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != Materials::WATER)
+        if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != ZenLoad::MaterialGroup::WATER)
         {
             closestHitGroundSurface = result;
             closestResult = newDistance;
@@ -802,6 +802,15 @@ void PlayerController::onVisualChanged()
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
 
     getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
+
+    // Setup callbacks
+    getModelVisual()->getAnimationHandler().setCallbackEventSFX([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+        AniEvent_SFX(sfx);
+    });
+
+    getModelVisual()->getAnimationHandler().setCallbackEventSFXGround([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+        AniEvent_SFXGround(sfx);
+    });
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
@@ -925,7 +934,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     {
         static std::string lastMovementAni = "";
         auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
-            if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
+            if (getSurfaceMaterial() == ZenLoad::MaterialGroup::WATER)
             {
                 if (m_isSwimming)
                 {
@@ -936,7 +945,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
                     model->setAnimation(groundAniType);
                 }
             }
-            else if (getSurfaceMaterial() != Materials::MaterialGroup::UNDEFINED)
+            else if (getSurfaceMaterial() != ZenLoad::MaterialGroup::UNDEF)
             {
                 model->setAnimation(groundAniType);
             }
@@ -1588,7 +1597,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name);
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation());
                 if (!isMonolog){
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
@@ -2573,16 +2582,16 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
-Materials::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
+ZenLoad::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
 {
     Math::float3 v3[3];
     uint8_t matgroup;
     // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
     m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
-    return static_cast< Materials::MaterialGroup >(matgroup);
+    return static_cast< ZenLoad::MaterialGroup >(matgroup);
 }
 
-Materials::MaterialGroup PlayerController::getSurfaceMaterial()
+ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
     {
@@ -2590,7 +2599,7 @@ Materials::MaterialGroup PlayerController::getSurfaceMaterial()
     }
     else
     {
-        return Materials::MaterialGroup::UNDEFINED;
+        return ZenLoad::MaterialGroup ::UNDEF;
     }
 }
 
@@ -2625,7 +2634,7 @@ void PlayerController::traceDownNPCGround()
             continue;
         if ((m_MoveState.ground.successful = m_MoveState.ground.successful || a.hasHit))
         {
-            if (Materials::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
+            if (ZenLoad::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
             {
                 result = a;
                 waterSurfacePos = a.hitPosition.y;
@@ -2686,5 +2695,22 @@ void PlayerController::resetKeyStates()
     m_isTurnRight = false;
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
+}
+
+void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
+{
+    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation());
+}
+
+void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
+{
+    if(m_MoveState.ground.successful)
+    {
+        // Play sound depending on ground type
+        ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
+
+        m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
+                                                       getEntityTransform().Translation());
+    }
 }
 

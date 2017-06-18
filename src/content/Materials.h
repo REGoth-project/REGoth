@@ -1,23 +1,11 @@
 #pragma once
 #include <handle/Handle.h>
 #include <handle/HandleDef.h>
+#include <ZenLib/zenload/zCMaterial.h>
 #include "Texture.h"
 
 namespace Materials
 {
-    /**
-     * Enums defining material group
-     */
-    enum MaterialGroup
-    {
-       UNDEFINED,
-       METAL,
-       STONE,
-       WOOD,
-       GROUND,
-       WATER
-    };
-
     /**
      * Base material-structure
      * Defines handle-type and other needed properties
@@ -34,6 +22,7 @@ namespace Materials
     {
         Textures::Texture::HandleType m_TextureHandle;
         std::string m_TextureName;
+        ZenLoad::MaterialGroup m_MatGroup;
         bool m_NoCollision;
     };
 };
