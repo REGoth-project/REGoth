@@ -44,6 +44,11 @@ namespace Logic
         virtual void importObject(const json& j);
     protected:
 
+        /**
+         * Handles setting when the sound should be played next, if it's using the random-delay mode
+         */
+        void setNextPlayingTimeRandomized();
+
         virtual void exportPart(json& j) override;
 
         /**
@@ -54,12 +59,12 @@ namespace Logic
         /**
          * Delay between loops (In Seconds)
          */
-        float m_SoundPlayDelay;
+        float m_SoundPlayDelay = 0.0f;
 
         /**
          * Maximum random value to be subtracted or added to the SoundPlayDelay (In Seconds)
          */
-        float m_SoundDelayRandomness;
+        float m_SoundDelayRandomness = 0.0f;
 
         /**
          * Handle to the currently played or last played sound
@@ -69,7 +74,17 @@ namespace Logic
         /**
          * Time when to play this for the next time (seconds)
          */
-        float m_SoundTimePlayNext;
+        float m_SoundTimePlayNextRandom = 0.0f;
+
+        /**
+         * Whether this sound should be looping/triggered/etc
+         */
+        ZenLoad::SoundMode m_SoundMode = ZenLoad::SoundMode::SM_ONCE;
+
+        /**
+         * How often this sound has been played
+         */
+        size_t m_NumTimesPlayed = 0;
 
     };
 }
