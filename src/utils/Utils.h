@@ -49,7 +49,7 @@ namespace Utils
     }
 
     /**
-     * @return Random number in range of -1...1
+     * @return Random number in range of 0...1
      */
     inline float frand()
     {

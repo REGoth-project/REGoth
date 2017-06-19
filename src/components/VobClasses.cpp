@@ -7,6 +7,7 @@
 #include <logic/PlayerController.h>
 #include <logic/ItemController.h>
 #include <logic/MobController.h>
+#include <logic/SoundController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
 #include "EntityActions.h"
@@ -91,6 +92,18 @@ Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world)
     return e;
 }
 
+Handle::EntityHandle VobTypes::createSound(World::WorldInstance& world)
+{
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    // Setup controller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::SoundController(world, e);
+
+    return e;
+}
+
+
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -165,6 +178,27 @@ VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Hand
     return mob;
 }
 
+VobTypes::SoundVobInformation VobTypes::asSoundVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    SoundVobInformation snd;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::SoundController)
+    {
+        // Invalidate instance and return
+        snd = {};
+        return snd;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&snd, &v, sizeof(v));
+
+    // Enter new information
+    snd.soundController = reinterpret_cast<Logic::SoundController*>(snd.logic);
+
+    return snd;
+}
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
@@ -374,6 +408,9 @@ void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle n
     world.getScriptEngine().getGameState().removeNPC(vob.playerController->getScriptHandle());
     world.removeEntity(npc);
 }
+
+
+
 
 
 

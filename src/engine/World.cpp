@@ -23,6 +23,7 @@
 #include <ZenLib/zenload/zTypes.h>
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
+#include <logic/SoundController.h>
 
 using namespace World;
 
@@ -205,6 +206,10 @@ bool WorldInstance::init(const std::string& zen,
             sm.m_InstanceDataIndex = (uint32_t)-2; // Disable instancing
         }
 
+        LogInfo() << "Creating AudioWorld";
+        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
+        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+
 		// TODO: Refractor. Make a map of all vobs by classes or something.
 		ZenLoad::zCVobData startPoint;
 
@@ -241,7 +246,16 @@ bool WorldInstance::init(const std::string& zen,
 
                     vob = Vob::asVob(*this, e);
                 }
-				else {
+				else if(v.objectClass.find("zCVobSound") != std::string::npos)
+                {
+                    e = VobTypes::createSound(*this);
+
+                    VobTypes::SoundVobInformation snd = VobTypes::asSoundVob(*this, e);
+                    snd.soundController->initFromVobDescriptor(v);
+
+                    vob = Vob::asVob(*this, e);
+                }else
+                {
 					// Normal zCVob or not implemented subclass
 					e = Vob::constructVob(*this);
 					vob = Vob::asVob(*this, e);
@@ -364,10 +378,6 @@ bool WorldInstance::init(const std::string& zen,
 			startWP.waterDepth = 0;
 			Waynet::addWaypoint(m_Waynet, startWP);
 		}
-
-        LogInfo() << "Creating AudioWorld";
-        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
         LogInfo() << "Running startup-scripts";
 
