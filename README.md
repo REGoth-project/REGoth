@@ -52,7 +52,7 @@ You will need CMake (3.1 or newer) and a C++14-capable compiler.
 Currently supported/tested are:
  - GCC (6.x)
  - MinGW
- - Visual Studio 2015
+ - Visual Studio 2015, 2017
 
 Then:
 ```sh
@@ -73,12 +73,14 @@ make -j4
 ```
 
 ### Windows
-Open the generated `REGoth.sln` in VisualStudio and build as usual.
+Starting Visual Studio 2017 you can use the integrated cmake functionality to open the cloned folder.  
+Check out the [how to build wiki page](../../wiki/how-to-build) for details on this.
 
-Alternatively, you may do this (inside the build-folder):
+For previous versions of Visual Studio, open the generated `REGoth.sln` and build as usual.  
+Alternatively, you may run this command inside of the build folder:
 ```sh
 cmake --build . --config release
-``` 
+```
 
 
 
