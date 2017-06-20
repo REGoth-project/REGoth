@@ -19,7 +19,6 @@ const float PROGRESS_BAR_SOFT_SPEED = 12.0f;
 UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
-    reset();
     m_RelativeSize = false;
 
     m_pProgressBar = new BarView(e);
@@ -48,11 +47,7 @@ UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
     m_pInfo->setTranslation(Math::float2(0.5,0.78));
     m_pInfo->setFont(DEFAULT_FONT);
 
-    m_VisibleProgress = 0;
-    m_SectionStart = 0;
-    m_SectionEnd = 0;
-    m_SectionInfo = "";
-    m_SectionProgress = 0.0f;
+    reset();
 }
 
 UI::LoadingScreen::~LoadingScreen()
@@ -123,6 +118,8 @@ void UI::LoadingScreen::getSection(int& outStart, int& outEnd, float& outProgres
 
 void UI::LoadingScreen::setImageFromFile(const std::string& imageName)
 {
+    std::lock_guard<std::mutex> guard(m_SectionLock);
+
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
     Handle::TextureHandle bgr = alloc.loadTextureVDF(imageName);
     if (bgr.isValid())
@@ -132,6 +129,5 @@ void UI::LoadingScreen::setImageFromFile(const std::string& imageName)
 void UI::LoadingScreen::reset(const std::string& imageName)
 {
     setImageFromFile(imageName);
-    startSection(0, 100, "");
-    setSectionProgress(0);
+    startSection(0, 0, "");
 }

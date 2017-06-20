@@ -47,11 +47,15 @@ namespace UI
         void setSectionProgress(float p);
 
         /**
-         * @param sets image to the image with the given filename
+         * sets image to the image with the given filename
+         * This Method is thread-save.
          */
         void setImageFromFile(const std::string& imageName = "LOADING.TGA");
 
-        /** resets progress and sets image to the image with the given filename
+        /**
+         * resets progress and sets image to the image with the given filename
+         * sets section to 0, 0 to makes sure it won't advance
+         * This Method is thread-save.
          */
         void reset(const std::string& imageName = "LOADING.TGA");
     protected:
