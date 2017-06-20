@@ -67,6 +67,11 @@ namespace Logic
         float m_SoundDelayRandomness = 0.0f;
 
         /**
+         * Maximum distance this sound can be heard from
+         */
+        float m_SoundMaxDistance = FLT_MAX;
+
+        /**
          * Handle to the currently played or last played sound
          */
         Utils::Ticket<World::AudioWorld> m_PlayedSound;

@@ -50,6 +50,10 @@ namespace World
         ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
         alListenerfv(AL_ORIENTATION, listenerOri);
 
+        // Need this for AL_MAX_DISTANCE to work
+        alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+
+
         createSounds();
     #endif
     }
@@ -156,7 +160,7 @@ namespace World
         return loadAudioVDF(m_VDFSIndex, name);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
     {
     #ifdef RE_USE_SOUND
 
@@ -176,6 +180,7 @@ namespace World
         alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);
         alSource3f(s.m_Handle, AL_POSITION, position.x, position.y, position.z);
         alSource3f(s.m_Handle, AL_VELOCITY, 0, 0, 0);
+        alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
 
         // Relative for sources directly attached to the listener
         alSourcei(s.m_Handle, AL_SOURCE_RELATIVE, relative ? AL_TRUE : AL_FALSE);
@@ -470,26 +475,12 @@ namespace World
         return playSound(h, Math::float3(0,0,0), true);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist)
     {
-        return playSound(h, position, false);
+        return playSound(h, position, false, maxDist);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name, const Math::float3& position)
-    {
-        // Check if that sound has already been loaded. If not, load it now.
-        Handle::SfxHandle h = loadAudioVDF(name);
-
-        // Check if loading was successfull, if so, play it
-        if(!h.isValid())
-        {
-            return Utils::Ticket<AudioWorld>();
-        }
-
-        return playSound(h, position, false);
-    }
-
-    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(const std::string& name, const Math::float3& position)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name, const Math::float3& position, float maxDist)
     {
         // Check if that sound has already been loaded. If not, load it now.
         Handle::SfxHandle h = loadAudioVDF(name);
@@ -500,14 +491,28 @@ namespace World
             return Utils::Ticket<AudioWorld>();
         }
 
-        return playSoundVariantRandom(h, position);
+        return playSound(h, position, false, maxDist);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position)
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist)
+    {
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
+
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
+        {
+            return Utils::Ticket<AudioWorld>();
+        }
+
+        return playSoundVariantRandom(h, position, maxDist);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist)
     {
         Sound& snd = m_Allocator.getElement(h);
 
-        return playSound(snd.variants[rand() % snd.variants.size()], position, false);
+        return playSound(snd.variants[rand() % snd.variants.size()], position, false, maxDist);
     }
 
     Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(const std::string& name)
@@ -534,6 +539,18 @@ namespace World
     void AudioWorld::setListenerGain(float gain)
     {
         alListenerf(AL_GAIN, gain);
+    }
+
+    void AudioWorld::setSoundMaxDistance(Utils::Ticket<AudioWorld> sound, float maxDist)
+    {
+        for (Source& s : m_Sources)
+        {
+            if (s.soundTicket == sound)
+            {
+                alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
+                return;
+            }
+        }
     }
 
 

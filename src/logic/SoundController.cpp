@@ -27,7 +27,7 @@ void SoundController::exportPart(json& j)
 
 void SoundController::playSound(const std::string& sound)
 {
-    m_PlayedSound = m_World.getAudioWorld().playSound(sound, getEntityTransform().Translation());
+    m_PlayedSound = m_World.getAudioWorld().playSound(sound, getEntityTransform().Translation(), m_SoundMaxDistance);
 
     m_NumTimesPlayed++;
 }
@@ -38,6 +38,7 @@ void SoundController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
     m_SoundPlayDelay = vob.zCVobSound.sndRandDelay;
     m_SoundDelayRandomness = vob.zCVobSound.sndRandDelayVar;
     m_SoundMode = vob.zCVobSound.sndType;
+    m_SoundMaxDistance = vob.zCVobSound.sndRadius / 100.0f;
 }
 
 void SoundController::onUpdate(float deltaTime)

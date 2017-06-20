@@ -84,16 +84,22 @@ namespace World
         /**
          * Plays the sound of the given handle/name
          */
-        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position, bool relative);
+        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist = FLT_MAX);
         Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h);
         Utils::Ticket<AudioWorld> playSound(const std::string& name);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h);
 
-        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position);
-        Utils::Ticket<AudioWorld> playSound(const std::string& name, const Math::float3& position);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position);
+        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+        Utils::Ticket<AudioWorld> playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+
+        /**
+         * Sets the maximum distance this sound can be heard
+         * @param maxDist Distance in meters
+         */
+        void setSoundMaxDistance(Utils::Ticket<AudioWorld> sound, float maxDist);
 
         /**
          * Stops all playing sounds
