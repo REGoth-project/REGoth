@@ -136,6 +136,32 @@ Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string &name)
     return h;
 }
 
+static void animationAddEventSFX(Animation* anim, const zCModelScriptEventSfx& sfx)
+{
+    anim->m_EventsSFX.push_back(sfx);
+
+    if(anim->m_EventsSFX.back().m_Frame == -1)
+    {
+        anim->m_EventsSFX.back().m_Frame = anim->m_LastFrame - 1;
+    }
+
+    // Normalize to range specified in the MDS
+    anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
+}
+
+static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEventSfx& sfx)
+{
+    anim->m_EventsSFXGround.push_back(sfx);
+
+    if(anim->m_EventsSFXGround.back().m_Frame == -1)
+    {
+        anim->m_EventsSFXGround.back().m_Frame = anim->m_LastFrame - 1;
+    }
+
+    // Normalize to range specified in the MDS
+    anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
+}
+
 bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScriptParser &p)
 {
     LogInfo() << "load model script " << file_name;
@@ -176,44 +202,46 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 anim->m_FrameCount = data.m_Header.numFrames;
 
                 //LogInfo() << "created animation '" << qname << "' id " << h.index;
+
+                // In case this was an ASCII-File, these will be filled. Binary files have single ones
+                // stored in chunks handled below
+                for(auto& sfx : p.sfx())
+                {
+                    animationAddEventSFX(anim, sfx);
+                }
+                p.sfx().clear();
+
+                for(auto& sfx : p.sfxGround())
+                {
+                    animationAddEventSFXGround(anim, sfx);
+                }
+                p.sfxGround().clear();
             }
             break;
 
+            // This will be only called on binary files, with exactly one sfx-entry!
             case ModelScriptParser::CHUNK_EVENT_SFX:
             {
                 std::string qname = name + '-' + p.ani().m_Name;
 
                 auto h = m_World.getAnimationAllocator().getAnimation(qname);
                 anim = &m_World.getAnimationAllocator().getAnimation(h);
-                anim->m_EventsSFX.push_back(p.sfx());
 
-                if(anim->m_EventsSFX.back().m_Frame == -1)
-                {
-                    anim->m_EventsSFX.back().m_Frame = anim->m_LastFrame - 1;
-                }
-
-                // Normalize to range specified in the MDS
-                anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
-
-
+                animationAddEventSFX(anim, p.sfx().back());
+                p.sfx().clear();
             }
                 break;
 
+            // This will be only called on binary files, with exactly one sfx-entry!
             case ModelScriptParser::CHUNK_EVENT_SFX_GRND:
             {
                 std::string qname = name + '-' + p.ani().m_Name;
 
                 auto h = m_World.getAnimationAllocator().getAnimation(qname);
                 anim = &m_World.getAnimationAllocator().getAnimation(h);
-                anim->m_EventsSFXGround.push_back(p.sfx());
 
-                if(anim->m_EventsSFXGround.back().m_Frame == -1)
-                {
-                    anim->m_EventsSFXGround.back().m_Frame = anim->m_LastFrame - 1;
-                }
-
-                // Normalize to range specified in the MDS
-                anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
+                animationAddEventSFXGround(anim, p.sfx().back());
+                p.sfxGround().clear();
             }
                 break;
 
