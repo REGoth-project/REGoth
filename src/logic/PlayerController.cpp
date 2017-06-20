@@ -583,7 +583,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         model->setNodeVisual(itemData.visual, node);
 }
 
-Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
+Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist)
 {
     // Check if we already have a weapon in our hands
     if (m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
@@ -595,11 +595,11 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
     m_EquipmentState.activeWeapon.invalidate();
 
     // Check what kind of weapon we got here
-    if (m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
+    if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
     {
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
-    } else if (m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
+    } else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
     {
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;

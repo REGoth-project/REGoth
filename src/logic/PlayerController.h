@@ -199,9 +199,10 @@ namespace Logic
 
         /**
          * Draws the weapon currently in the 1h- or 2h-slot
+         * @param fist [optional] if true, draw fists regardless of the equipped weapon
          * @return Handle to the just drawn weapon
          */
-        Daedalus::GameState::ItemHandle drawWeaponMelee();
+        Daedalus::GameState::ItemHandle drawWeaponMelee(bool forceFist = false);
 
         /**
          * Puts back any weapon that was currently drawn
