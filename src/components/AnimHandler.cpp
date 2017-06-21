@@ -67,7 +67,7 @@ bool AnimHandler::addAnimation(const std::string &name)
 
 void AnimHandler::setOverlay(const std::string& mds)
 {
-    LogInfo() << "set overlay " << mds;
+    //LogInfo() << "set overlay " << mds;
 
     if(mds.find_last_of('.') != std::string::npos)
     {
