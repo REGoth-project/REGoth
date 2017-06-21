@@ -80,5 +80,6 @@ namespace Animations
 
         std::vector<ZenLoad::zCModelScriptEventSfx>      m_EventsSFX;
         std::vector<ZenLoad::zCModelScriptEventSfx>      m_EventsSFXGround;
+        std::vector<ZenLoad::zCModelScriptEventTag>           m_EventTags;
     };
 }

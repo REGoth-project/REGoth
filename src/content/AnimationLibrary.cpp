@@ -162,6 +162,19 @@ static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEvent
     anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
 }
 
+static void animationAddEventTag(Animation* anim, const zCModelScriptEventTag& tag)
+{
+    anim->m_EventTags.push_back(tag);
+
+    if(anim->m_EventTags.back().m_Frame == -1)
+    {
+        anim->m_EventTags.back().m_Frame = anim->m_LastFrame - 1;
+    }
+
+    // Normalize to range specified in the MDS
+    anim->m_EventTags.back().m_Frame -= anim->m_FirstFrame;
+}
+
 bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScriptParser &p)
 {
     LogInfo() << "load model script " << file_name;
@@ -216,6 +229,12 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                     animationAddEventSFXGround(anim, sfx);
                 }
                 p.sfxGround().clear();
+
+                for(auto& tag : p.tag())
+                {
+                    animationAddEventTag(anim, tag);
+                }
+                p.tag().clear();
             }
             break;
 

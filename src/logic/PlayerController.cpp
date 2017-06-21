@@ -811,6 +811,10 @@ void PlayerController::onVisualChanged()
     getModelVisual()->getAnimationHandler().setCallbackEventSFXGround([this](const ZenLoad::zCModelScriptEventSfx& sfx){
         AniEvent_SFXGround(sfx);
     });
+
+    getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag){
+        AniEvent_Tag(tag);
+    });
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
@@ -2744,5 +2748,10 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
         m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
                                                        getEntityTransform().Translation());
     }
+}
+
+void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
+{
+    //if(tag.m_Tag == )
 }
 

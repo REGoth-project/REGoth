@@ -473,6 +473,7 @@ namespace Logic
          */
         void AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx);
         void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
+        void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
 
         virtual void exportPart(json& j) override;
 

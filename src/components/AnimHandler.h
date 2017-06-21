@@ -18,6 +18,7 @@ namespace Animations
 namespace ZenLoad
 {
 	struct zCModelScriptEventSfx;
+	struct zCModelScriptEventTag;
 }
 
 namespace Components
@@ -214,6 +215,11 @@ namespace Components
 		{
 			m_CallbackTriggerSFXGround = cb;
 		}
+
+		void setCallbackEventTag(std::function<void(const ZenLoad::zCModelScriptEventTag& tag)> cb)
+		{
+			m_CallbackTriggerEventTag = cb;
+		}
 	private:
 
 		/**
@@ -230,6 +236,7 @@ namespace Components
 		 */
 		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFX;
 		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFXGround;
+		std::function<void(const ZenLoad::zCModelScriptEventTag& tag)> m_CallbackTriggerEventTag;
 
 		/**
 		 * @brief Animations by their name

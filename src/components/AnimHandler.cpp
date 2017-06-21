@@ -537,4 +537,13 @@ void AnimHandler::triggerEvents(int frameLast, int frameNow)
                 m_CallbackTriggerSFXGround(sfx);
         }
     }
+
+    for(const ZenLoad::zCModelScriptEventTag& tag : anim->m_EventTags)
+    {
+        if(tag.m_Frame > frameLast && tag.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerEventTag)
+                m_CallbackTriggerEventTag(tag);
+        }
+    }
 }
