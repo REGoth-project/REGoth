@@ -2634,6 +2634,7 @@ void PlayerController::traceDownNPCGround()
        LogInfo() << "traceDownNPCGround ITERATION BEGIN";
     }
     Physics::RayTestResult result = hitall[0];
+    Physics::RayTestResult resultWater = hitall[0];
     bool waterMatFound = false;
     float closestGroundSurfacePos = std::numeric_limits< float >::max();
     float underWaterGroundPos = std::numeric_limits< float >::min();
@@ -2644,20 +2645,18 @@ void PlayerController::traceDownNPCGround()
             continue;
         if ((m_MoveState.ground.successful = m_MoveState.ground.successful || a.hasHit))
         {
+            auto diff = std::abs(entityPos.y - a.hitPosition.y);
+
             if (ZenLoad::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
             {
-                result = a;
+                resultWater = a;
                 waterSurfacePos = a.hitPosition.y;
                 waterMatFound = true; // found water material
-            }
-            else
+            }else if (closestGroundSurfacePos > diff)
             {
-                auto diff = std::abs(entityPos.y - a.hitPosition.y);
-                if (closestGroundSurfacePos > diff)
-                {
-                    closestGroundSurfacePos = diff;
-                    underWaterGroundPos = a.hitPosition.y;
-                }
+                result = a;
+                closestGroundSurfacePos = diff;
+                underWaterGroundPos = a.hitPosition.y;
             }
         }
     }
