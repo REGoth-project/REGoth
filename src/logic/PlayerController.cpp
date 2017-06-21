@@ -2490,6 +2490,9 @@ Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstan
 
 void PlayerController::die(Handle::EntityHandle attackingNPC)
 {
+    if(getBodyState() == EBodyState::BS_DEAD)
+        return;
+
     interrupt();
 
     // TODO: Drop weapons held in hand
