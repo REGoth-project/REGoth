@@ -2713,7 +2713,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
     if(Utils::toUpper(sfx.m_Name) == "WHOOSH")
     {
         Handle::EntityHandle nearestNPC;
-        float shortestDistNPC = 2.0f;
+        float shortestDistNPC = 3.0f;
         for (const Handle::EntityHandle& h : m_World.getScriptEngine().getWorldNPCs())
         {
             if (h != m_World.getScriptEngine().getPlayerEntity())
@@ -2722,7 +2722,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 
                 float dist = (Vob::getTransform(npc).Translation() -
                               getEntityTransform().Translation()).lengthSquared();
-                if (dist < shortestDistNPC)
+                if (dist < shortestDistNPC && npc.playerController->getBodyState() != EBodyState::BS_DEAD)
                 {
                     nearestNPC = h;
                     shortestDistNPC = dist;
