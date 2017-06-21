@@ -2134,6 +2134,9 @@ void PlayerController::setupKeyBindings()
             if(m_World.getDialogManager().isDialogActive())
                 return;
 
+            if(getWeaponMode() != EWeaponMode::WeaponNone)
+                return;
+
             // ----- ITEMS -----
             Handle::EntityHandle nearestItem;
             float shortestDistItem = 5.0f;
