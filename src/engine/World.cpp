@@ -61,6 +61,15 @@ WorldInstance::~WorldInstance()
     if (player.isValid())
         VobTypes::Wld_RemoveNpc(*this, player);
 
+    // Destroy all allocated components
+    auto ents = getComponentAllocator().getDataBundle();
+    Utils::for_each_in_tuple(ents.m_Data, [&](auto& v){
+        for (size_t i = 0; i<ents.m_NumElements; i++)
+        {
+            Components::Actions::destroyComponent(v);
+        }
+    });
+
     delete m_AudioWorld;
 }
 
