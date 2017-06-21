@@ -46,17 +46,17 @@ void SoundController::onUpdate(float deltaTime)
     switch(m_SoundMode)
     {
         case ZenLoad::SM_LOOPING:
-            if(!m_World.getAudioWorld().soundIsPlaying(m_PlayedSound))
+            if(!m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
             {
                 playSound(m_SoundFile);
             }
             break;
 
         case ZenLoad::SM_ONCE:
-            if(m_NumTimesPlayed == 0) // FIXME: Should probably be activated by a trigger
+            /*if(m_NumTimesPlayed == 0) // FIXME: Should probably be activated by a trigger
             {
                 playSound(m_SoundFile);
-            }
+            }*/
             break;
 
         case ZenLoad::SM_RANDOM:
@@ -69,7 +69,9 @@ void SoundController::onUpdate(float deltaTime)
             {
                 setNextPlayingTimeRandomized();
             }
-            else if (totalSeconds >= m_SoundTimePlayNextRandom && !m_World.getAudioWorld().soundIsPlaying(m_PlayedSound))
+            else if (totalSeconds >= m_SoundTimePlayNextRandom
+                     && !m_World.getAudioWorld().soundIsPlaying(m_PlayedSound)
+                     && isInHearingRange())
             {
                 playSound(m_SoundFile);
 
@@ -87,4 +89,11 @@ void SoundController::setNextPlayingTimeRandomized()
     float offset = m_SoundPlayDelay + bx::flerp(-m_SoundDelayRandomness, m_SoundDelayRandomness, Utils::frand());
 
     m_SoundTimePlayNextRandom = totalSeconds + offset;
+}
+
+bool SoundController::isInHearingRange()
+{
+    Math::float3 cam = m_World.getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation();
+
+    return (getEntityTransform().Translation() - cam).lengthSquared() < m_SoundMaxDistance * m_SoundMaxDistance;
 }

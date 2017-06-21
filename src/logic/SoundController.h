@@ -45,6 +45,11 @@ namespace Logic
     protected:
 
         /**
+         * @return True, if the current camera is close enough for the sound to be heard
+         */
+        bool isInHearingRange();
+
+        /**
          * Handles setting when the sound should be played next, if it's using the random-delay mode
          */
         void setNextPlayingTimeRandomized();
