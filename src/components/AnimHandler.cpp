@@ -125,8 +125,9 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
     if (!anim.isValid())
         return;
 
-    // Reset velocity
-    //m_AnimRootVelocity = Math::float3(0, 0, 0);
+    // Reset velocity if this is not a looping animation
+    if(m_ActiveAnimation != anim)
+        m_AnimRootVelocity = Math::float3(0, 0, 0);
 
     // find and apply given animation name
     m_ActiveAnimation = anim;
