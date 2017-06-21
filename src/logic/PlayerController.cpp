@@ -2702,6 +2702,35 @@ void PlayerController::resetKeyStates()
 
 void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 {
+    // FIXME: Workaround. "Whoosh"-sound is used as kill trigger
+    if(Utils::toUpper(sfx.m_Name) == "WHOOSH")
+    {
+        Handle::EntityHandle nearestNPC;
+        float shortestDistNPC = 2.0f;
+        for (const Handle::EntityHandle& h : m_World.getScriptEngine().getWorldNPCs())
+        {
+            if (h != m_World.getScriptEngine().getPlayerEntity())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                float dist = (Vob::getTransform(npc).Translation() -
+                              getEntityTransform().Translation()).lengthSquared();
+                if (dist < shortestDistNPC)
+                {
+                    nearestNPC = h;
+                    shortestDistNPC = dist;
+                }
+            }
+        }
+
+        VobTypes::NpcVobInformation toKill = VobTypes::asNpcVob(m_World, nearestNPC);
+        if(toKill.isValid())
+        {
+            toKill.playerController->die(m_Entity);
+        }
+    }
+
+    // Play sound specified in the event
     m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation());
 }
 
