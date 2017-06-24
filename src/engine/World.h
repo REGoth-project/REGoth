@@ -40,6 +40,13 @@ namespace World
 {
     struct WorldAllocators
     {
+		WorldAllocators(Engine::BaseEngine& engine)
+			: m_LevelTextureAllocator(engine),
+			  m_LevelSkeletalMeshAllocator(engine),
+			  m_LevelStaticMeshAllocator(engine)
+		{
+
+		}
 		template<typename V, typename I>
 		using MeshAllocator = Memory::StaticReferencedAllocator<
 			Meshes::WorldStaticMesh,
@@ -84,12 +91,12 @@ namespace World
 		 * @param zen filename of world
 		 * @param worldJson may be empty
 		 * @param scriptEngine may be empty
-		 * @param dialogManger shall only be non empty at first world load in each session
+		 * @param dialogManager may be empty
 		*/
 		bool init(const std::string& zen,
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
-                  const json& dialogManger = json());
+                  const json& dialogManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -259,20 +266,20 @@ namespace World
             return *m_AudioWorld;
 		}
 
-        Logic::PfxManager& getPfxManager()
-        {
-            return m_PfxManager;
-        }
+    Logic::PfxManager& getPfxManager()
+    {
+        return m_PfxManager;
+    }
 
-        Animations::AnimationLibrary& getAnimationLibrary()
-        {
-            return m_AnimationLibrary;
-        }
-
-        /**
-		 * This worlds print-screen manager
-		 */
-		UI::PrintScreenMessages& getPrintScreenManager() const { return *m_PrintScreenMessageView; }
+    Animations::AnimationLibrary& getAnimationLibrary()
+    {
+        return m_AnimationLibrary;
+    }
+		 
+    /**
+     * HUD's print-screen manager
+     */
+		UI::PrintScreenMessages& getPrintScreenManager();
 
 		/**
 		 * @return Map of freepoints
@@ -441,11 +448,6 @@ namespace World
 		 * This worlds dialog-manager
 		 */
 		Logic::DialogManager m_DialogManager;
-
-		/**
-		 * This worlds print-screen manager
-		 */
-		UI::PrintScreenMessages* m_PrintScreenMessageView;
 
 		/**
 		 * Pfx-cache

@@ -71,13 +71,11 @@ void Menu_Load::onCustomAction(const std::string& action)
         // Find the corresponding number
         std::string numStr = name.substr(std::string("MENUITEM_SAVE_SLOT").size());
         int idx = std::stoi(numStr);
+        // Close menu_load & menu_main before queueing loading
+        getHud().popAllMenus();
         std::string error = SavegameManager::loadSaveGameSlot(idx);
         if (!error.empty()){
             LogWarn() << error;
-            return;
         }
-
-        // Close menu_load & menu_main after loading the world
-        getHud().popAllMenus();
     }
 }

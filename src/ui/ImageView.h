@@ -1,5 +1,6 @@
 #pragma once
 #include "View.h"
+#include <handle/HandleDef.h>
 
 namespace UI
 {
@@ -19,7 +20,7 @@ namespace UI
         /**
          * Sets the text to be displayed inside the box
          */
-        void setImage(bgfx::TextureHandle image, int32_t width = 0, int32_t height = 0);
+        void setImage(Handle::TextureHandle image, int32_t width = 0, int32_t height = 0);
 
         /**
          * @param rel If set to true, images actual width and height will be ignored and it will be stretched to fit
@@ -31,7 +32,7 @@ namespace UI
         /**
          * Image to display
          */
-        bgfx::TextureHandle m_Image;
+        Handle::TextureHandle m_Image;
 
         /**
          * Width and height of the given image

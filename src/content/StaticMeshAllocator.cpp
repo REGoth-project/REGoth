@@ -5,11 +5,13 @@
 #include <zenload/zCModelMeshLib.h>
 #include <utils/logger.h>
 #include "VertexTypes.h"
+#include <engine/BaseEngine.h>
 
 using namespace Meshes;
 
-StaticMeshAllocator::StaticMeshAllocator(const VDFS::FileIndex* vdfidx)
-        : GenericMeshAllocator(vdfidx)
+StaticMeshAllocator::StaticMeshAllocator(Engine::BaseEngine& engine)
+        : GenericMeshAllocator(&engine.getVDFSIndex()),
+          m_Engine(engine)
 {
 }
 
@@ -27,6 +29,8 @@ StaticMeshAllocator::~StaticMeshAllocator()
         if(bgfx::isValid(hi))
             bgfx::destroyIndexBuffer(hi);
     }
+
+    m_EstimatedGPUBytes = 0;
 }
 
 Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name)
@@ -34,8 +38,10 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     // Create mesh instance
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldStaticMesh& mesh = m_Allocator.getElement(h);
-    auto& m = packed.subMeshes[submesh];
+    mesh.loaded = false;
+    mesh.name = name;
 
+    auto& m = packed.subMeshes[submesh];
     mesh.init();
 
     mesh.mesh.m_Vertices.resize(m.indices.size());
@@ -54,14 +60,13 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_SubmeshMaterials.back().m_MatGroup = (ZenLoad::MaterialGroup)m.material.matGroup;
     mesh.mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
 
-    // Construct BGFX Vertex/Index-buffers
-    mesh.mesh.m_VertexBufferHandle = bgfx::createVertexBuffer(
-            // Static data can be passed with bgfx::makeRef
-            bgfx::makeRef(mesh.mesh.m_Vertices.data(), mesh.mesh.m_Vertices.size() * sizeof(WorldStaticMeshVertex)),
-            WorldStaticMeshVertex::ms_decl
-    );
-
+  
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
+
+    m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
+        finalizeLoad(h);
+    });
 
    	m_MeshesByName[name] = h;
 
@@ -74,6 +79,8 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     // Create mesh instance
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldStaticMesh& mesh = m_Allocator.getElement(h);
+    mesh.loaded = false;
+    mesh.name = name;
 
     mesh.init();
 
@@ -133,6 +140,24 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
 
         }
     }
+    
+    mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
+
+    m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
+        bgfx::frame(); // Flush the pipeline to prevent an overflow
+        finalizeLoad(h);
+    });
+
+	m_MeshesByName[name] = h;
+
+    return h;
+}
+
+bool StaticMeshAllocator::finalizeLoad(Handle::MeshHandle h)
+{
+    WorldStaticMesh& mesh = m_Allocator.getElement(h);
+
     // Construct BGFX Vertex/Index-buffers
     mesh.mesh.m_VertexBufferHandle = bgfx::createVertexBuffer(
             // Static data can be passed with bgfx::makeRef
@@ -140,38 +165,30 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
             WorldStaticMeshVertex::ms_decl
     );
 
+    size_t contentBytes = mesh.mesh.m_Vertices.size() * sizeof(WorldStaticMeshVertex);
+
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
-    if(!triangles)
+    if(!mesh.mesh.m_Indices.empty())
     {
         mesh.mesh.m_IndexBufferHandle = bgfx::createIndexBuffer(
                 // Static data can be passed with bgfx::makeRef
                 bgfx::makeRef(mesh.mesh.m_Indices.data(), mesh.mesh.m_Indices.size() * sizeof(WorldStaticMeshIndex)),
                 sizeof(WorldStaticMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0
         );
+
+        contentBytes += mesh.mesh.m_Indices.size() * sizeof(WorldStaticMeshIndex);
     }
-    // Flush the pipeline to prevent an overflow
-    //bgfx::frame();
 
+    if(m_LargestContentBytes < contentBytes)
+    {
+        m_LargestContentBytes = contentBytes;
+        m_LargestContentName = m_Allocator.getElement(h).name;
+    }
 
-	// Load failed somehow, cleanup
-	if(mesh.mesh.m_VertexBufferHandle.idx == bgfx::invalidHandle)
-	{
-		/*m_Allocator.removeObject(h);
+    m_EstimatedGPUBytes += contentBytes;
 
-		if(mesh.mesh.m_VertexBufferHandle.idx != bgfx::invalidHandle)
-			bgfx::destroyVertexBuffer(mesh.mesh.m_VertexBufferHandle);
-
-		if(mesh.mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
-			bgfx::destroyIndexBuffer(mesh.mesh.m_IndexBufferHandle);
-*/
-        // FIXME: This doesn't work. But h should be removed!
-        LogWarn() << "Failed to load mesh: " << name;
-		return Handle::MeshHandle::makeInvalidHandle();
-	}
-
-	m_MeshesByName[name] = h;
-
-    return h;
+    mesh.loaded = true;
+    return bgfx::isValid(mesh.mesh.m_IndexBufferHandle) && bgfx::isValid(mesh.mesh.m_VertexBufferHandle);
 }
 
 

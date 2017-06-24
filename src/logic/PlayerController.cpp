@@ -735,8 +735,8 @@ void PlayerController::placeOnGround()
     std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
     if (hitall.empty())
         return;
-    std::sort(begin(hitall), end(hitall), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
-        return a.hitPosition.y >= b.hitPosition.y;
+    std::sort(hitall.begin(), hitall.end(), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
+        return a.hitPosition.y > b.hitPosition.y;
     });
 
     bool fellThrough = true;
@@ -2050,9 +2050,8 @@ void PlayerController::setupKeyBindings()
 
     Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
     {
-        if(triggered){
-            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Load, 0, ""});
-        }
+        if(triggered)
+            Engine::SavegameManager::loadSaveGameSlot(0);
     });
 
     Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)
@@ -2628,8 +2627,8 @@ void PlayerController::traceDownNPCGround()
     {
         return;
     }
-    std::sort(begin(hitall), end(hitall), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
-          return a.hitPosition.y >= b.hitPosition.y;
+    std::sort(hitall.begin(), hitall.end(), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
+          return a.hitPosition.y > b.hitPosition.y;
           });
     if (DEBUG_PLAYER)
     {

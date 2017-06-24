@@ -6,6 +6,11 @@
 #include <string>
 #include "memory/Config.h"
 
+namespace Engine
+{
+	class BaseEngine;
+}
+
 namespace VDFS
 {
 	class FileIndex;
@@ -20,6 +25,8 @@ namespace Textures
         THDL m_TextureHandle;
         uint32_t m_Width;
         uint32_t m_Height;
+		std::vector<uint8_t> imageData;
+		bgfx::TextureFormat::Enum textureFormat;
     };
 
     typedef _Texture<Handle::InternalTextureHandle> Texture;
@@ -27,14 +34,9 @@ namespace Textures
 	class TextureAllocator
 	{
 	public:
-		TextureAllocator(const VDFS::FileIndex* vdfidx = nullptr);
+		TextureAllocator(Engine::BaseEngine& engine);
 		virtual ~TextureAllocator();
 
-
-		/**
-		 * @brief Sets the VDFS-Index to use
-		 */
-		void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }
 
 		/**
 		 * @brief Loads a texture from the given DDS-Data
@@ -52,7 +54,20 @@ namespace Textures
 		 * @brief Returns the texture of the given handle
 		 */
 		Texture& getTexture(Handle::TextureHandle h) { return m_Allocator.getElement(h); }
+
+		/**
+		 * @return Rough estimation about how much memory the loaded textures need on the GPU in bytes
+		 */
+		size_t getEstimatedGPUMemoryConsumption() { return m_EstimatedGPUBytes; }
 	protected:
+
+		/**
+		 * Pushes the loaded data to the GPU. Needs to run on the main-thread.
+		 * @param h Data to finalize
+		 * @return True if successful, false otherwise
+		 */
+		bool finalizeLoad(Handle::TextureHandle h);
+
 		/**
 		 * @brief Textures by their set names. Note: If names are doubled, only the last loaded texture
 		 *		  can be found here
@@ -65,9 +80,14 @@ namespace Textures
 		Memory::StaticReferencedAllocator<Textures::Texture, Config::MAX_NUM_LEVEL_TEXTURES> m_Allocator;
 
 		/**
-		 * Pointer to a vdfs-index to work on (can be nullptr)
+		 * Engine
 		 */
-		const VDFS::FileIndex* m_pVDFSIndex;
+		Engine::BaseEngine& m_Engine;
+
+		/**
+         * Rough estimation about how much memory the loaded textures need on the GPU in bytes
+         */
+		size_t m_EstimatedGPUBytes = 0;
 	};
 
 }

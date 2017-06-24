@@ -122,7 +122,7 @@ void UI::Menu::initializeInstance(const std::string& instance)
     m_pBackgroundImage->setSize(Math::float2(getScriptData().dimx / 8192.0f, getScriptData().dimy / 8192.0f));
 
     Handle::TextureHandle bgr = m_Engine.getEngineTextureAlloc().loadTextureVDF(getScriptData().backPic);
-    m_pBackgroundImage->setImage(m_Engine.getEngineTextureAlloc().getTexture(bgr).m_TextureHandle);
+    m_pBackgroundImage->setImage(bgr);
     m_pBackgroundImage->setRelativeSize(false); // Scale like this screen
     addChild(m_pBackgroundImage);
 

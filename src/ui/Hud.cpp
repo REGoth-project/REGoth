@@ -15,6 +15,7 @@
 #include <utils/logger.h>
 #include <components/VobClasses.h>
 #include "DialogBox.h"
+#include "PrintScreenMessages.h"
 #include "LoadingScreen.h"
 #include <logic/PlayerController.h>
 
@@ -28,18 +29,25 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
     m_pEnemyHealthBar = new BarView(m_Engine);
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
+    m_pPrintScreenMessageView = new PrintScreenMessages(m_Engine);
+    m_pPrintScreenMessageView->setHidden(true);
     m_pClock = new TextView(m_Engine);
     m_pLoadingScreen = new LoadingScreen(m_Engine);
     m_pLoadingScreen->setHidden(true);
     m_pConsoleBox = new ConsoleBox(m_Engine);
     m_pConsoleBox->setHidden(true);
+    m_pMenuBackground = new ImageView(m_Engine);
+    m_pMenuBackground->setHidden(true);
+    m_pMenuBackground->setRelativeSize(false);
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
     addChild(m_pDialogBox);
+    addChild(m_pPrintScreenMessageView);
     addChild(m_pClock);
     addChild(m_pLoadingScreen);
+    addChild(m_pMenuBackground);
     addChild(m_pConsoleBox);
 
     // Initialize status bars
@@ -49,6 +57,11 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
         m_GameplayHudElements.push_back(m_pClock);
         m_GameplayHudElements.push_back(m_pHealthBar);
 
+        // Background shown when there is no world loaded
+        Handle::TextureHandle hBackground = alloc.loadTextureVDF("STARTSCREEN.TGA");
+        m_pMenuBackground->setImage(hBackground);
+        m_pMenuBackground->setSize(Math::float2(1,1));
+
         Handle::TextureHandle hBarBackground = alloc.loadTextureVDF("BAR_BACK.TGA");
         Handle::TextureHandle hBarHealth = alloc.loadTextureVDF("BAR_HEALTH.TGA");
         Handle::TextureHandle hBarMana = alloc.loadTextureVDF("BAR_MANA.TGA");
@@ -56,13 +69,13 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
         if(hBarMana.isValid() && hBarHealth.isValid() && hBarBackground.isValid())
         {
             // Images
-            m_pHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-            m_pManaBar->setBackgroundImage(alloc.getTexture(hBarBackground));
-            m_pEnemyHealthBar->setBackgroundImage(alloc.getTexture(hBarBackground));
+            m_pHealthBar->setBackgroundImage(hBarBackground);
+            m_pManaBar->setBackgroundImage(hBarBackground);
+            m_pEnemyHealthBar->setBackgroundImage(hBarBackground);
 
-            m_pHealthBar->setBarImage(alloc.getTexture(hBarHealth));
-            m_pManaBar->setBarImage(alloc.getTexture(hBarMana));
-            m_pEnemyHealthBar->setBarImage(alloc.getTexture(hBarHealth));
+            m_pHealthBar->setBarImage(hBarHealth);
+            m_pManaBar->setBarImage(hBarMana);
+            m_pEnemyHealthBar->setBarImage(hBarHealth);
 
             // Alignment
             m_pHealthBar->setAlignment(A_BottomLeft);
@@ -82,6 +95,8 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
 
             m_pEnemyHealthBar->setHidden(true);
         }
+
+
     }
 
     // Initialize clock
@@ -97,15 +112,18 @@ UI::Hud::~Hud()
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pDialogBox);
+    removeChild(m_pPrintScreenMessageView);
     removeChild(m_pClock);
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
+    removeChild(m_pMenuBackground);
 
     popAllMenus();
 
     delete m_pHealthBar;
     delete m_pManaBar;
     delete m_pEnemyHealthBar;
+    delete m_pPrintScreenMessageView;
     delete m_pDialogBox;
     delete m_pClock;
     delete m_pLoadingScreen;
@@ -125,6 +143,11 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
 
         m_MenuChain.back()->setHidden(false);
     }
+
+
+    // Show the background, if there is no world loaded at the moment and loading isn't active
+    const bool isWorldLoaded = m_Engine.getMainWorld().isValid();
+    m_pMenuBackground->setHidden(isWorldLoaded || !m_pLoadingScreen->isHidden());
 
     View::update(dt, mstate, config);
 }
@@ -217,6 +240,7 @@ void UI::Hud::popMenu()
     m_MenuChain.pop_back();
     if (m_MenuChain.empty())
     {
+        setGameplayHudVisible(true);
         m_Engine.setPaused(false);
     }
 }

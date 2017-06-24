@@ -7,6 +7,8 @@
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
+#include <ui/LoadingScreen.h>
+#include "engine/AsyncAction.h"
 
 using namespace UI;
 
@@ -30,25 +32,16 @@ bool Menu_Main::onInputAction(EInputAction action)
     return Menu::onInputAction(action);
 }
 
-
 void Menu_Main::onCustomAction(const std::string& action)
 {
+    Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
+    using Engine::AsyncAction;
+    using Engine::ExecutionPolicy;
     if(action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";
         getHud().popMenu();
-
-        m_Engine.resetSession();
-        Handle::WorldHandle worldHandle = m_Engine.getSession().addWorld(m_Engine.getEngineArgs().startupZEN);
-        if (worldHandle.isValid())
-        {
-            m_Engine.getSession().setMainWorld(worldHandle);
-            auto player = worldHandle.get().getScriptEngine().createDefaultPlayer(m_Engine.getEngineArgs().playerScriptname);
-            worldHandle.get().takeControlOver(player);
-        } else
-        {
-            LogError() << "Failed to add given startup world, world handle is invalid!";
-        }
+        m_Engine.getSession().startNewGame(m_Engine.getEngineArgs().startupZEN);
 
     }else if(action == "MENU_SAVEGAME_LOAD")
     {

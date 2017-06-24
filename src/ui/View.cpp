@@ -103,6 +103,7 @@ namespace ViewUtil
 
 View::View(Engine::BaseEngine& e) : m_Engine(e)
 {
+    assert(e.isMainThread());
     m_IsHidden = false;
     m_pParent = nullptr;
 
@@ -111,8 +112,6 @@ View::View(Engine::BaseEngine& e) : m_Engine(e)
     m_Alignment = EAlign::A_TopLeft;
 
     ViewUtil::PosUvVertex::init();
-
-    bgfx::setViewSeq(BGFX_VIEW, true);
 }
 
 View::~View()
@@ -123,17 +122,7 @@ View::~View()
 
 void View::removeChild(View *pView)
 {
-    // Search for the view in our vector
-    for(size_t i=0;i<m_Children.size();i++)
-    {
-        if(m_Children[i] == pView)
-        {
-            // Overwrite with last element and shorten the vector by 1
-            m_Children[i] = m_Children.back();
-            m_Children.pop_back();
-            break;
-        }
-    }
+    m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), pView), m_Children.end());
 }
 
 void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -153,35 +142,34 @@ void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderCo
 void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surfaceWidth, int surfaceHeight,
                        bgfx::TextureHandle texture, bgfx::ProgramHandle program, bgfx::UniformHandle texUniform)
 {
-
-
-    //extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
-    //bgfx::ProgramHandle program = imguiGetImageProgram(0);
-
-    //imguiBeginArea("Picking Render Target:", x, y, width, height);
-    //imguiImage(texture, 0, width, height);
-
-    float ortho[16];
-    bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
-    bgfx::setViewTransform(id, NULL, ortho);
-    bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
-
-    if (ViewUtil::screenQuad(x, y, width, height))
+    if(bgfx::isValid(texture))
     {
-        bgfx::setTexture(0, texUniform, texture);
-        bgfx::setState(BGFX_STATE_RGB_WRITE
-                       | BGFX_STATE_ALPHA_WRITE
-                       | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-        );
+        //extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
+        //bgfx::ProgramHandle program = imguiGetImageProgram(0);
 
-        //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
-        //);
+        //imguiBeginArea("Picking Render Target:", x, y, width, height);
+        //imguiImage(texture, 0, width, height);
 
-        //setCurrentScissor();
-        bgfx::submit(id, program);
+        float ortho[16];
+        bx::mtxOrtho(ortho, 0.0f, (float) surfaceWidth, (float) surfaceHeight, 0.0f, 0.0f, 1000.0f);
+        bgfx::setViewTransform(id, NULL, ortho);
+        bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
+
+        if (ViewUtil::screenQuad(x, y, width, height))
+        {
+            bgfx::setTexture(0, texUniform, texture);
+            bgfx::setState(BGFX_STATE_RGB_WRITE
+                           | BGFX_STATE_ALPHA_WRITE
+                           | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
+            );
+
+            //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
+            //);
+
+            //setCurrentScissor();
+            bgfx::submit(id, program);
+        }
     }
-
-
 
     //imguiEndArea();
 }
