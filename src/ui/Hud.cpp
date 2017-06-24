@@ -182,6 +182,9 @@ void UI::Hud::onTextInput(const std::string& text)
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
+	if (!m_pLoadingScreen->isHidden())
+		return;
+
     if (m_Engine.getConsole().isOpen())
     {
         if (action == IA_Close || action == IA_ToggleConsole)
