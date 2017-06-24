@@ -5,6 +5,7 @@
 namespace UI
 {
     static const Math::float2 INNER_OFFSET_DEFAULT = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
+    static const Math::float2 INNER_OFFSET_G1_PROGRESS = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
     static const Math::float2 INNER_OFFSET_G2_PROGRESS = { (1200.0f / 8192.0f), (1100.0f / 8192.0f) };
 
     class ImageView;

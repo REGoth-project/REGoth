@@ -36,7 +36,7 @@ struct LoadSection
 const LoadSection LOAD_SECTION_LOADSCRIPTS = { 0, 10, "Loading scripts" };
 const LoadSection LOAD_SECTION_ZENFILE =     { 10, 20, "Loading worldfile" };
 const LoadSection LOAD_SECTION_WORLDMESH =   { 20, 40, "Processing worldmesh" };
-const LoadSection LOAD_SECTION_COLLISION =   { 40, 60, "Generating world collision mesh"} ;
+const LoadSection LOAD_SECTION_COLLISION =   { 40, 60, "Generating world collision"} ;
 const LoadSection LOAD_SECTION_VOBS =        { 60, 80, "Loading objects" };
 const LoadSection LOAD_SECTION_RUNSCRIPTS =  { 80, 100, "Running startup scripts" };
 

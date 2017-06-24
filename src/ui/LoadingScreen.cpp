@@ -16,6 +16,11 @@
 const float FAKE_PROGRESS_PERCENT_PER_SECOND = 10.0f;
 const float PROGRESS_BAR_SOFT_SPEED = 12.0f;
 
+const Math::float2 BAR_POSITION_G1 = { 0.5f, 0.75f };
+const Math::float2 BAR_SIZE_G1 = { 1.5f, 0.6f };
+const Math::float2 BAR_POSITION_G2 = { 0.85f, 0.15f };
+const Math::float2 BAR_SIZE_G2 = { 0.7f, 0.6f };
+
 UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
@@ -37,12 +42,6 @@ UI::LoadingScreen::LoadingScreen(Engine::BaseEngine &e) : ImageView(e)
     m_pProgressBar->setTranslation(Math::float2(0.5,0.75));
     m_pProgressBar->setSize(Math::float2(0.8f, 0.6f));
 
-    // G2s image is a little bit different and needs some tweaking
-    if(e.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
-    {
-        m_pProgressBar->setInnerOffset(UI::INNER_OFFSET_G2_PROGRESS);
-    }
-
     m_pInfo->setAlignment(EAlign::A_Center);
     m_pInfo->setTranslation(Math::float2(0.5,0.78));
     m_pInfo->setFont(DEFAULT_FONT);
@@ -61,6 +60,26 @@ UI::LoadingScreen::~LoadingScreen()
 
 void UI::LoadingScreen::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    if(m_IsHidden)
+        return;
+
+    // G2s image is a little bit different and needs some tweaking
+    // Need to set this here, rather than in the constructor, since the constructor
+    // is ran before the engine knows what game it runs
+    if(m_Engine.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
+    {
+        m_pProgressBar->setInnerOffset(UI::INNER_OFFSET_G2_PROGRESS);
+        m_pProgressBar->setTranslation(BAR_POSITION_G2);
+        m_pProgressBar->setSize(BAR_SIZE_G2);
+        m_pInfo->setTranslation(BAR_POSITION_G2 + Math::float2(0.0f, 0.03f));
+    } else
+    {
+        m_pProgressBar->setInnerOffset(UI::INNER_OFFSET_G1_PROGRESS);
+        m_pProgressBar->setTranslation(BAR_POSITION_G1);
+        m_pProgressBar->setSize(BAR_SIZE_G1);
+        m_pInfo->setTranslation(BAR_POSITION_G1 + Math::float2(0.0f, 0.03f));
+    }
+
     int start, end;
     float p;
     std::string info;
@@ -74,9 +93,16 @@ void UI::LoadingScreen::update(double dt, Engine::Input::MouseState& mstate, Ren
 
     // Convert section progress to global progress
     float value = bx::flerp(start, end, p / 100.0f);
-    m_VisibleProgress = bx::flerp(m_VisibleProgress, value, (float)dt * PROGRESS_BAR_SOFT_SPEED);
-    m_VisibleProgress = std::min(value, m_VisibleProgress); // Faked value should never overshoot the real one
 
+    // Don't smooth if we reached 100% so we can start the game with the progress-bar being full
+    if(value <= 99.0f)
+    {
+        m_VisibleProgress = bx::flerp(m_VisibleProgress, value, (float) dt * PROGRESS_BAR_SOFT_SPEED);
+        m_VisibleProgress = std::min(value, m_VisibleProgress); // Faked value should never overshoot the real one
+    } else
+    {
+        m_VisibleProgress = 100.0f;
+    }
     m_pProgressBar->setValue(m_VisibleProgress / 100.0f);
     m_pInfo->setText(info);
 
