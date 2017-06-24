@@ -12,6 +12,7 @@
 #include <daedalus/DaedalusVM.h>
 #include <logic/ScriptEngine.h>
 #include <utils/logger.h>
+#include <stdlib.h>
 
 #include "engine/BaseEngine.h"
 
@@ -48,6 +49,10 @@ namespace World
         // check for errors
         ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
         alListenerfv(AL_ORIENTATION, listenerOri);
+
+        // Need this for AL_MAX_DISTANCE to work
+        alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+
 
         createSounds();
     #endif
@@ -139,6 +144,9 @@ namespace World
             return Handle::SfxHandle::makeInvalidHandle();
         }
 
+        // Load other versions, such as randomly played footstep variants
+        loadVariants(h);
+
         m_SoundMap[name] = h;
 
         return h;
@@ -152,7 +160,7 @@ namespace World
         return loadAudioVDF(m_VDFSIndex, name);
     }
 
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h)
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
     {
     #ifdef RE_USE_SOUND
 
@@ -168,12 +176,16 @@ namespace World
 
         LogInfo() << "play sound " << snd.sfx.file << " vol " << snd.sfx.vol;
 
-        // TODO: pitch?
-        //alSourcef(source, AL_PITCH, snd.sfx.);
         alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameClock().getGameEngineSpeedFactor());
         alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);
-        alSource3f(s.m_Handle, AL_POSITION, 0, 0, 0);
+        alSource3f(s.m_Handle, AL_POSITION, position.x, position.y, position.z);
         alSource3f(s.m_Handle, AL_VELOCITY, 0, 0, 0);
+        alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
+
+        // Relative for sources directly attached to the listener
+        alSourcei(s.m_Handle, AL_SOURCE_RELATIVE, relative ? AL_TRUE : AL_FALSE);
+
+
         // TODO: proper looping would require slicing and queueing multiple buffers
         // and setting the source to loop when the non-looping buffer was played.
         // start and end don't seem to be used, thoug?
@@ -208,28 +220,6 @@ namespace World
     #else
         return Utils::Ticket<AudioWorld>();
     #endif
-    }
-
-    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name)
-    {
-        auto it = m_SoundMap.find(name);
-        if(it == m_SoundMap.end())
-        {
-            // Did not find that, try to load it...
-            Handle::SfxHandle h = loadAudioVDF(name);
-
-            // Check if loading was successfull, if so, play it
-            if(!h.isValid())
-            {
-                return Utils::Ticket<AudioWorld>();
-            }
-
-            return playSound(h);
-        }else
-        {
-            // No need to load it again, just play it
-            return playSound((*it).second);
-        }
     }
 
     #ifdef RE_USE_SOUND
@@ -294,6 +284,7 @@ namespace World
         Sound& snd = m_Allocator.getElement(h);
         snd.sfx = sfx;
         snd.m_Handle = 0;
+        snd.name = name;
 
         m_SoundMap[name] = h;
         return h;
@@ -427,4 +418,140 @@ namespace World
         }
 #endif
     }
+
+    void AudioWorld::loadVariants(Handle::SfxHandle sfx)
+    {
+        Sound& snd = m_Allocator.getElement(sfx);
+        snd.variants.push_back(sfx); // Add self to variants
+
+        Handle::SfxHandle v;
+        int i = 1;
+
+        // Variants start at "_A1". Load sounds until one fails.
+        do{
+            v = loadAudioVDF(snd.name + "_A" + std::to_string(i));
+
+            if(v.isValid())
+            {
+                snd.variants.push_back(v);
+            }
+
+            i++;
+        }while(v.isValid());
+    }
+
+    void AudioWorld::setListenerPosition(const Math::float3& position)
+    {
+        alListener3f(AL_POSITION, position.x, position.y, position.z);
+    }
+
+    void AudioWorld::setListenerVelocity(const Math::float3& velocity)
+    {
+        alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+    }
+
+    void AudioWorld::setListenerOrientation(const Math::float3& at, const Math::float3& up)
+    {
+        float v[6] = { at.x, at.y, at.z, up.x, up.y, up.z };
+        alListenerfv(AL_ORIENTATION, v);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h)
+    {
+        return playSound(h, Math::float3(0,0,0), true);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name)
+    {
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
+
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
+        {
+            return Utils::Ticket<AudioWorld>();
+        }
+
+        return playSound(h, Math::float3(0,0,0), true);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist)
+    {
+        return playSound(h, position, false, maxDist);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name, const Math::float3& position, float maxDist)
+    {
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
+
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
+        {
+            return Utils::Ticket<AudioWorld>();
+        }
+
+        return playSound(h, position, false, maxDist);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist)
+    {
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
+
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
+        {
+            return Utils::Ticket<AudioWorld>();
+        }
+
+        return playSoundVariantRandom(h, position, maxDist);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist)
+    {
+        Sound& snd = m_Allocator.getElement(h);
+
+        return playSound(snd.variants[rand() % snd.variants.size()], position, false, maxDist);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(const std::string& name)
+    {
+        // Check if that sound has already been loaded. If not, load it now.
+        Handle::SfxHandle h = loadAudioVDF(name);
+
+        // Check if loading was successfull, if so, play it
+        if(!h.isValid())
+        {
+            return Utils::Ticket<AudioWorld>();
+        }
+
+        return playSoundVariantRandom(h);
+    }
+
+    Utils::Ticket<AudioWorld> AudioWorld::playSoundVariantRandom(Handle::SfxHandle h)
+    {
+        Sound& snd = m_Allocator.getElement(h);
+
+        return playSound(snd.variants[rand() % snd.variants.size()]);
+    }
+
+    void AudioWorld::setListenerGain(float gain)
+    {
+        alListenerf(AL_GAIN, gain);
+    }
+
+    void AudioWorld::setSoundMaxDistance(Utils::Ticket<AudioWorld> sound, float maxDist)
+    {
+        for (Source& s : m_Sources)
+        {
+            if (s.soundTicket == sound)
+            {
+                alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
+                return;
+            }
+        }
+    }
+
+
 }

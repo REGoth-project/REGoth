@@ -7,6 +7,7 @@
 #include <logic/PlayerController.h>
 #include <logic/ItemController.h>
 #include <logic/MobController.h>
+#include <logic/SoundController.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
 #include "EntityActions.h"
@@ -91,6 +92,18 @@ Handle::EntityHandle VobTypes::createMob(World::WorldInstance& world)
     return e;
 }
 
+Handle::EntityHandle VobTypes::createSound(World::WorldInstance& world)
+{
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    // Setup controller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::SoundController(world, e);
+
+    return e;
+}
+
+
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -165,6 +178,27 @@ VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Hand
     return mob;
 }
 
+VobTypes::SoundVobInformation VobTypes::asSoundVob(World::WorldInstance& world, Handle::EntityHandle e)
+{
+    Vob::VobInformation v = Vob::asVob(world, e);
+    SoundVobInformation snd;
+
+    // Check the controller
+    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::SoundController)
+    {
+        // Invalidate instance and return
+        snd = {};
+        return snd;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&snd, &v, sizeof(v));
+
+    // Enter new information
+    snd.soundController = reinterpret_cast<Logic::SoundController*>(snd.logic);
+
+    return snd;
+}
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
@@ -194,6 +228,9 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     anim.getAnimHandler().setWorld(*vob.world);
     anim.getAnimHandler().loadMeshLibFromVDF(libName, vob.world->getEngine()->getVDFSIndex());
 
+    // Meshlib changed, re-get all animation
+    vob.playerController->getNpcAnimationHandler().initAnimations();
+
     // TODO: Move to other place (MDS)
 	// Load all default animations
 	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
@@ -212,27 +249,27 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
         anim.getAnimHandler().addAnimation("T_DIALOGGESTURE_" + ns);
     }
 
-    anim.getAnimHandler().addAnimation(libName + "-S_RUNL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_WALKL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUNL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALKL.MAN");
+    anim.getAnimHandler().addAnimation("-S_RUNL");
+    anim.getAnimHandler().addAnimation("-S_WALKL");
+    anim.getAnimHandler().addAnimation("-S_FISTRUNL");
+    anim.getAnimHandler().addAnimation("-S_FISTWALKL");
 
-    anim.getAnimHandler().addAnimation(libName + "-S_RUN.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_WALK.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTRUN.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTWALK.MAN");
+    anim.getAnimHandler().addAnimation("-S_RUN");
+    anim.getAnimHandler().addAnimation("-S_WALK");
+    anim.getAnimHandler().addAnimation("-S_FISTRUN");
+    anim.getAnimHandler().addAnimation("-S_FISTWALK");
 
-    anim.getAnimHandler().addAnimation(libName + "-T_JUMPB.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFEL.MAN");
-    anim.getAnimHandler().addAnimation(libName + "-T_RUNSTRAFER.MAN");
+    anim.getAnimHandler().addAnimation("-T_JUMPB");
+    anim.getAnimHandler().addAnimation("-T_RUNSTRAFEL");
+    anim.getAnimHandler().addAnimation("-T_RUNSTRAFER");
 
     // Fist
-    anim.getAnimHandler().addAnimation(libName + "-S_FISTATTACK.MAN");
+    anim.getAnimHandler().addAnimation("-S_FISTATTACK");
 
     // 1H
-    anim.getAnimHandler().addAnimation(libName + "-S_1HATTACK.MAN");
+    anim.getAnimHandler().addAnimation("-S_1HATTACK");
 
-    anim.getAnimHandler().playAnimation("S_RUNL");
+    //anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
 void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int headTextureIdx,
@@ -371,6 +408,9 @@ void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle n
     world.getScriptEngine().getGameState().removeNPC(vob.playerController->getScriptHandle());
     world.removeEntity(npc);
 }
+
+
+
 
 
 

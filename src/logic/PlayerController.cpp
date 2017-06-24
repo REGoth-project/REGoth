@@ -62,7 +62,9 @@ PlayerController::PlayerController(World::WorldInstance& world,
                                    Daedalus::GameState::NpcHandle scriptInstance)
         : Controller(world, entity),
           m_Inventory(world, scriptInstance),
-          m_AIStateMachine(world, entity)
+          m_AIStateMachine(world, entity),
+          m_NPCAnimationHandler(world, entity),
+          m_AIHandler(world, entity)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
     m_RoutineState.routineActive = true;
@@ -126,7 +128,7 @@ void PlayerController::onUpdate(float deltaTime)
         setDailyRoutine({});
         gotoWaypoint(targetWP);
     }
-    m_NoAniRootPosHack = m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
+    m_NoAniRootPosHack = !m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
 
     if (!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
@@ -147,10 +149,10 @@ void PlayerController::onUpdate(float deltaTime)
     if (model)
     {
         // Make sure the idle-animation is running
-        if (!model->getAnimationHandler().getActiveAnimationPtr())
+        /*if (!model->getAnimationHandler().getActiveAnimationPtr())
         {
             model->setAnimation(ModelVisual::Idle);
-        }
+        }*/
 
         // Update model for this frame
         model->onFrameUpdate(deltaTime);
@@ -161,15 +163,28 @@ void PlayerController::onUpdate(float deltaTime)
         // Needs to be done here to account for changes of feet-height
         placeOnGround();
 
-        if(!m_NoAniRootPosHack
-           && m_LastAniRootPosUpdatedAniHash != getModelVisual()->getAnimationHandler().getAnimationStateHash())
+        Animations::Animation* activeAnim = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+        if(!m_NoAniRootPosHack && activeAnim)
         {
             // Apply model root-velcoity
-            Math::float3 position = getEntityTransform().Translation();
-            position += getEntityTransform().Rotate(getModelVisual()->getAnimationHandler().getRootNodeVelocity());
+            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_MOVE_MODEL)
+            {
+                // Move by translation-velocity
+                m_MoveState.position += getEntityTransform().Rotate(
+                        getModelVisual()->getAnimationHandler().getRootNodeVelocity());
+            }
+
+            //bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
 
             Math::Matrix t = getEntityTransform();
-            t.Translation(position);
+            t.Translation(m_MoveState.position);
+
+            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_ROTATE_MODEL)
+            {
+                // Rotate by rotation-velocity
+                t = t * getModelVisual()->getAnimationHandler().getRootNodeRotationVelocity();
+            }
+
             setEntityTransform(t);
 
             m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
@@ -220,7 +235,7 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
     placeOnGround();
 
     // Start with idle-animation
-    getModelVisual()->setAnimation(ModelVisual::Idle);
+    //getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
 void PlayerController::gotoWaypoint(size_t wp)
@@ -568,32 +583,28 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
         model->setNodeVisual(itemData.visual, node);
 }
 
-Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
+Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist)
 {
     // Check if we already have a weapon in our hands
     if (m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
         return m_EquipmentState.activeWeapon;
 
     ModelVisual* model = getModelVisual();
-    ModelVisual::EModelAnimType drawingAnimation = ModelVisual::EModelAnimType::Idle;
 
     // Remove anything that was active before putting something new there
     m_EquipmentState.activeWeapon.invalidate();
 
     // Check what kind of weapon we got here
-    if (m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
+    if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
     {
-        drawingAnimation = ModelVisual::EModelAnimType::Draw1h;
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
-    } else if (m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
+    } else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
     {
-        drawingAnimation = ModelVisual::EModelAnimType::Draw2h;
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
     } else
     {
-        drawingAnimation = ModelVisual::EModelAnimType::DrawFist;
         m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
     }
 
@@ -614,9 +625,6 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee()
         // TODO: Listen to ani-events for this!
         model->setNodeVisual(itemData.visual, EModelNode::Righthand);
     }
-
-    // Play drawing animation
-    model->playAnimation(drawingAnimation);
 
     // Couldn't draw anything
     return m_EquipmentState.activeWeapon;
@@ -659,7 +667,7 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
     if (DEBUG_PLAYER)
     {
-       LogInfo() << getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+       LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
     }
     Math::Matrix m = getEntityTransform();
 
@@ -735,6 +743,7 @@ void PlayerController::placeOnGround()
     bool underWater = false;
     bool aboveGround = false;
     bool shallowWater = false;
+    float fallthroughEpsilon = 0.25f; // Give a little room for animations, etc
     Physics::RayTestResult highestHitSurface = hitall[0];
     Physics::RayTestResult waterHitSurface = hitall[0];
     Physics::RayTestResult closestHitGroundSurface = hitall[0];
@@ -742,20 +751,20 @@ void PlayerController::placeOnGround()
     float closestResult = std::numeric_limits< float >::max();
     for (const auto& result : hitall)
     {
-        fellThrough = fellThrough && (result.hitPosition.y > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
+        fellThrough = fellThrough && (result.hitPosition.y - fallthroughEpsilon > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
         if (highestHitY < result.hitPosition.y)
         {
             highestHitY = result.hitPosition.y;
             highestHitSurface = result;
         }
         auto material = getMaterial(result.hitTriangleIndex);
-        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = Materials::UNDEFINED; // we don't want underlying worldmesh material in this case
-        if (material == Materials::WATER)
+        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF; // we don't want underlying worldmesh material in this case
+        if (material == ZenLoad::MaterialGroup::WATER)
         {
             waterHitSurface = result; // Doesn't matter if there are more water hits atm
         }
         float newDistance = 0.0f;
-        if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != Materials::WATER)
+        if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != ZenLoad::MaterialGroup::WATER)
         {
             closestHitGroundSurface = result;
             closestResult = newDistance;
@@ -793,6 +802,19 @@ void PlayerController::onVisualChanged()
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
 
     getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
+
+    // Setup callbacks
+    getModelVisual()->getAnimationHandler().setCallbackEventSFX([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+        AniEvent_SFX(sfx);
+    });
+
+    getModelVisual()->getAnimationHandler().setCallbackEventSFXGround([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+        AniEvent_SFXGround(sfx);
+    });
+
+    getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag){
+        AniEvent_Tag(tag);
+    });
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
@@ -825,6 +847,22 @@ void PlayerController::onUpdateByInput(float deltaTime)
 
     if(!getEM().isEmpty() || getUsedMob().isValid())
         return;
+
+    // TODO: HACK, take this out!
+    float moveMod = 1.0f;
+    if (m_MoveSpeed1)
+        moveMod *= 4.0f;
+
+    if (m_MoveSpeed2)
+        moveMod *= 16.0f;
+
+    m_MoveSpeed2 = false;
+    m_MoveSpeed1 = false;
+
+    getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
+
+    m_AIHandler.playerUpdate(deltaTime);
+    return;
 
     // FIXME: Temporary test-code
     static bool lastDraw = false;
@@ -900,7 +938,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
     {
         static std::string lastMovementAni = "";
         auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
-            if (getSurfaceMaterial() == Materials::MaterialGroup::WATER)
+            if (getSurfaceMaterial() == ZenLoad::MaterialGroup::WATER)
             {
                 if (m_isSwimming)
                 {
@@ -911,7 +949,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
                     model->setAnimation(groundAniType);
                 }
             }
-            else if (getSurfaceMaterial() != Materials::MaterialGroup::UNDEFINED)
+            else if (getSurfaceMaterial() != ZenLoad::MaterialGroup::UNDEF)
             {
                 model->setAnimation(groundAniType);
             }
@@ -920,7 +958,8 @@ void PlayerController::onUpdateByInput(float deltaTime)
                 //TODO this happens more than it should, there seems to be too much undefined materials, find out why
                 model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
-            lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
+            if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
+                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
             m_NoAniRootPosHack = true;
         };
         if (m_isStrafeLeft)
@@ -951,7 +990,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         //		{
         //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
         //		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == lastMovementAni)
+        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name == lastMovementAni)
         {
             manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
             m_NoAniRootPosHack = true;
@@ -1037,18 +1076,10 @@ void PlayerController::onUpdateByInput(float deltaTime)
         return;
 
 
-    // TODO: HACK, take this out!
-    float moveMod = 1.0f;
-    if (m_MoveSpeed1)
-        moveMod *= 4.0f;
 
-    if (m_MoveSpeed2)
-        moveMod *= 16.0f;
-
-    getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     // Apply animation-velocity
-    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityAvg() * deltaTime;
+    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityTotal() * deltaTime;
 
     float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
     m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
@@ -1359,15 +1390,15 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
         case EventMessages::MovementMessage::ST_WhirlAround:
             break;
         case EventMessages::MovementMessage::ST_Standup:
-            // Start standing up when we first see this message
-            if(!message.inUse)
+            // Start standing up when we first see this message or nothing is playing yet
+            if(!message.inUse || !getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
             {
                 standUp(false, message.targetMode != 0);
                 message.inUse = true;
             }
 
             // Go as long as the standup-animation is playing
-            return getModelVisual()->isAnimPlaying("S_RUN"); // Fixme: This needs to be set according to walkmode/weapon!
+            return m_NPCAnimationHandler.isStanding();
             break;
 
         case EventMessages::MovementMessage::ST_CanSeeNpc:
@@ -1524,7 +1555,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
         case ConversationMessage::ST_PlayAni:
         {
-            ZenLoad::zCModelAni* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
+            Animations::Animation* active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
 
             if (message.status == ConversationMessage::Status::INIT)
             {
@@ -1533,14 +1564,15 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                     LogInfo() << "PLAYER: New animation started: " << message.animation;
                 }
 
+                // In case the passed animation doesn't exist, we want to be in a defined state
+                getModelVisual()->stopAnimations();
                 getModelVisual()->setAnimation(message.animation, false);
                 active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
                 message.status = ConversationMessage::Status::PLAYING;
             }
 
             // Go as long as this animation is playing
-            bool done = !active
-                        || active->getModelAniHeader().aniName != message.animation;
+            bool done = !active || active->m_Name != message.animation;
 
             if(done && isPlayerControlled())
                 LogInfo() << "PLAYER: Done with animation: " << message.animation;
@@ -1571,7 +1603,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name);
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation());
                 if (!isMonolog){
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
@@ -1698,6 +1730,12 @@ void PlayerController::setDirection(const Math::float3& direction)
                                                   Math::float3(0, 1, 0)).Invert());
 }
 
+void PlayerController::applyRotationY(float rad)
+{
+    m_MoveState.direction = Math::Matrix::CreateRotationY(rad) * m_MoveState.direction;
+    setDirection(m_MoveState.direction);
+}
+
 bool PlayerController::isPlayerControlled()
 {
     return m_World.getScriptEngine().getPlayerEntity() == m_Entity;
@@ -1730,6 +1768,7 @@ void PlayerController::interrupt()
     undrawWeapon(true);
 
     getEM().clear();
+    stopRoute();
 }
 
 bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
@@ -1799,26 +1838,13 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 
     setBodyState(BS_STAND);
 
-    // TODO: Check if the Character is already standing
-
-    if(startAniTransition
-       && getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
-    {
-        std::string playingAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName;
-
-        // State animation?
-        if(playingAni.substr(0, 2) == "S_")
-        {
-            // Build transition to standing
-            std::string transition = "T_" + playingAni.substr(2) + "_2_STAND";
-
-            getModelVisual()->setAnimation(transition, false);
-        }
-    }else
+    if(!startAniTransition)
     {
         // Just jump to the idle-animation
         getModelVisual()->stopAnimations();
     }
+
+    m_AIHandler.standup();
 }
 
 void PlayerController::stopRoute()
@@ -1878,7 +1904,9 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
        || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
        || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
-        equipItem(item);
+        // FIXME: Hack to only allow equipping when no weapon is drawn
+        if(getWeaponMode() == EWeaponMode::WeaponNone)
+            equipItem(item);
         return false;
     }
 
@@ -2011,6 +2039,7 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
+    m_AIHandler.bindKeys();
 
     Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
     {
@@ -2110,6 +2139,9 @@ void PlayerController::setupKeyBindings()
             if(m_World.getDialogManager().isDialogActive())
                 return;
 
+            if(getWeaponMode() != EWeaponMode::WeaponNone)
+                return;
+
             // ----- ITEMS -----
             Handle::EntityHandle nearestItem;
             float shortestDistItem = 5.0f;
@@ -2184,6 +2216,9 @@ void PlayerController::setupKeyBindings()
                 // Pick it up
                 VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
                 item.itemController->pickUp(m_Entity);
+
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_Stand_2_IGet_1"));
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_IGet_2_Stand_1"));
 
                 return;
             }
@@ -2456,6 +2491,9 @@ Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstan
 
 void PlayerController::die(Handle::EntityHandle attackingNPC)
 {
+    if(getBodyState() == EBodyState::BS_DEAD)
+        return;
+
     interrupt();
 
     // TODO: Drop weapons held in hand
@@ -2555,16 +2593,16 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
-Materials::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
+ZenLoad::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
 {
     Math::float3 v3[3];
     uint8_t matgroup;
     // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
     m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
-    return static_cast< Materials::MaterialGroup >(matgroup);
+    return static_cast< ZenLoad::MaterialGroup >(matgroup);
 }
 
-Materials::MaterialGroup PlayerController::getSurfaceMaterial()
+ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
     {
@@ -2572,7 +2610,7 @@ Materials::MaterialGroup PlayerController::getSurfaceMaterial()
     }
     else
     {
-        return Materials::MaterialGroup::UNDEFINED;
+        return ZenLoad::MaterialGroup ::UNDEF;
     }
 }
 
@@ -2597,6 +2635,7 @@ void PlayerController::traceDownNPCGround()
        LogInfo() << "traceDownNPCGround ITERATION BEGIN";
     }
     Physics::RayTestResult result = hitall[0];
+    Physics::RayTestResult resultWater = hitall[0];
     bool waterMatFound = false;
     float closestGroundSurfacePos = std::numeric_limits< float >::max();
     float underWaterGroundPos = std::numeric_limits< float >::min();
@@ -2607,25 +2646,32 @@ void PlayerController::traceDownNPCGround()
             continue;
         if ((m_MoveState.ground.successful = m_MoveState.ground.successful || a.hasHit))
         {
-            if (Materials::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
+            auto diff = std::abs(entityPos.y - a.hitPosition.y);
+
+            if (ZenLoad::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
             {
-                result = a;
+                resultWater = a;
                 waterSurfacePos = a.hitPosition.y;
                 waterMatFound = true; // found water material
-            }
-            else
+            }else if (closestGroundSurfacePos > diff)
             {
-                auto diff = std::abs(entityPos.y - a.hitPosition.y);
-                if (closestGroundSurfacePos > diff)
-                {
-                    closestGroundSurfacePos = diff;
-                    underWaterGroundPos = a.hitPosition.y;
-                }
+                result = a;
+                closestGroundSurfacePos = diff;
+                underWaterGroundPos = a.hitPosition.y;
             }
         }
     }
-    float feetPos = entityPos.y - 0.8f;
-    if (waterMatFound && feetPos < waterSurfacePos)
+
+    float feet = getModelVisual()->getModelRoot().y;
+
+    // FIXME: Actually read the flying-flag of the MDS
+    if (feet == 0.0f)
+    {
+        feet = 0.9762f; // FIXME: Boundingbox of the animation or something should be used instead
+    }
+
+    float feetPos = entityPos.y - feet;
+    if (waterMatFound /*&& feetPos < waterSurfacePos*/)
     {
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
         if (DEBUG_PLAYER)
@@ -2660,3 +2706,55 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
+
+void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
+{
+    // FIXME: Workaround. "Whoosh"-sound is used as kill trigger
+    if(Utils::toUpper(sfx.m_Name) == "WHOOSH")
+    {
+        Handle::EntityHandle nearestNPC;
+        float shortestDistNPC = 3.0f;
+        for (const Handle::EntityHandle& h : m_World.getScriptEngine().getWorldNPCs())
+        {
+            if (h != m_World.getScriptEngine().getPlayerEntity())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                float dist = (Vob::getTransform(npc).Translation() -
+                              getEntityTransform().Translation()).lengthSquared();
+                if (dist < shortestDistNPC && npc.playerController->getBodyState() != EBodyState::BS_DEAD)
+                {
+                    nearestNPC = h;
+                    shortestDistNPC = dist;
+                }
+            }
+        }
+
+        VobTypes::NpcVobInformation toKill = VobTypes::asNpcVob(m_World, nearestNPC);
+        if(toKill.isValid())
+        {
+            toKill.playerController->die(m_Entity);
+        }
+    }
+
+    // Play sound specified in the event
+    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation());
+}
+
+void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
+{
+    if(m_MoveState.ground.successful)
+    {
+        // Play sound depending on ground type
+        ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
+
+        m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
+                                                       getEntityTransform().Translation());
+    }
+}
+
+void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
+{
+    //if(tag.m_Tag == )
+}
+

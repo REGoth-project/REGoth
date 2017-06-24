@@ -76,6 +76,11 @@ namespace Engine
         std::size_t getTotalSeconds();
 
         /**
+         * @return time in seconds since day 0 0:00
+         */
+        double getTotalSecondsFrac();
+
+        /**
          * sets the extra speed factor for test purposes
          */
         void setClockSpeedFactor(float factor);
@@ -89,6 +94,8 @@ namespace Engine
          * @return time in days since day 0 0:00
          */
         double getTime();
+
+
 
         /**
          * @return time of day as string in hh:mm format
@@ -130,6 +137,14 @@ namespace Engine
             return m_GameEngineSpeedFactor;
         }
 
+        /**
+         * @return Seconds since program start
+         */
+        double getTotalSecondsRealtime() const
+        {
+            return m_TotalSecondsRunning;
+        }
+
         static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
         // Defines how much faster the ingame clock runs compared to the real time clock. Don't change this value
@@ -144,6 +159,9 @@ namespace Engine
 
         // last known delta t
         double m_LastFrameDeltaTime;
+
+        // Seconds since program start
+        double m_TotalSecondsRunning;
 
         // Global speed factor for the engine
         float m_GameEngineSpeedFactor;

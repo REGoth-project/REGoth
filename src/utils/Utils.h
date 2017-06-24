@@ -15,6 +15,7 @@
 #include <chrono>
 #include <sstream>
 #include <logic/Console.h>
+#include <algorithm>
 
 namespace Utils
 {
@@ -29,6 +30,17 @@ namespace Utils
     };
 
     /**
+     * @return String given in 's' with all characters uppercase
+     */
+    inline std::string toUpper(const std::string& s)
+    {
+        std::string upp = s;
+        std::transform(upp.begin(), upp.end(), upp.begin(), ::toupper);
+
+        return upp;
+    }
+
+    /**
      * @return Random number in range of -1...1
      */
     inline float frandF2()
@@ -37,7 +49,7 @@ namespace Utils
     }
 
     /**
-     * @return Random number in range of -1...1
+     * @return Random number in range of 0...1
      */
     inline float frand()
     {

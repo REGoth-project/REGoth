@@ -57,9 +57,10 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_SubmeshMaterials.emplace_back();
     mesh.mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
     mesh.mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;
+    mesh.mesh.m_SubmeshMaterials.back().m_MatGroup = (ZenLoad::MaterialGroup)m.material.matGroup;
     mesh.mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
 
-
+  
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 

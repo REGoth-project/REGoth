@@ -1,4 +1,5 @@
 #include <cstring>
+#include <algorithm>
 
 #include <adpcm/adpcm-lib.h>
 
@@ -27,16 +28,25 @@ bool WavReader::open()
     m_Rate = *reinterpret_cast<const uint32_t*>(&m_Source[24]);
 
     m_BlockSize = *reinterpret_cast<const uint16_t*>(&m_Source[32]);
-    unsigned data_size = m_SourceSize - 60;
+
+    uint32_t dataSize = *reinterpret_cast<const uint32_t*>(&m_Source[40]);
 
     if (m_ADPCM)
     {
+        m_SourceOffset = 60;
+        unsigned data_size = m_SourceSize - m_SourceOffset;
         unsigned complete_blocks = data_size / m_BlockSize;
         unsigned samples_per_block = (m_BlockSize - m_Channels* 4) * (m_Channels ^ 3) + 1;
         m_SampleCount = complete_blocks * samples_per_block;
     } else
-        m_SampleCount = data_size / m_BlockSize;
+    {
+        m_SourceOffset = 44;
 
+        // Skip any extra information at the end of the file
+        m_SourceSize = std::min(m_SourceSize, m_SourceOffset + dataSize);
+
+        m_SampleCount = dataSize / m_BlockSize;
+    }
 
     return true;
 }

@@ -188,6 +188,8 @@ namespace Logic
 		 * @param type Animation to play
 		 */
 		void playAnimation(EModelAnimType type);
+		void playAnimation(const std::string& anim);
+		void playAnimation(Handle::AnimationHandle anim);
 
 		/**
 		 * Stops all playing animations

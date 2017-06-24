@@ -1,28 +1,31 @@
-#include <iostream>
-
-#include "World.h"
+#include <cstdlib>
 #include <bitset>
-#include <zenload/zenParser.h>
-#include <zenload/zCMesh.h>
-#include "BaseEngine.h"
-#include "GameEngine.h"
-#include <content/ContentLoad.cpp>
-#include <utils/logger.h>
-#include <components/EntityActions.h>
-#include <logic/PlayerController.h>
-#include <logic/MobController.h>
-#include <stdlib.h>
+#include <iostream>
 #include <iterator>
 
+#include <engine/BaseEngine.h>
 #include <engine/GameEngine.h>
-#include <debugdraw/debugdraw.h>
-#include <components/Vob.h>
+#include <engine/World.h>
+#include <components/EntityActions.h>
 #include <components/VobClasses.h>
+#include <components/Vob.h>
+#include <content/AnimationLibrary.h>
+#include <content/ContentLoad.cpp>
+#include <debugdraw/debugdraw.h>
+#include <engine/GameEngine.h>
 #include <entry/input.h>
-#include <ui/PrintScreenMessages.h>
-#include <ZenLib/zenload/zTypes.h>
+#include <handle/HandleDef.h>
+#include <logic/MobController.h>
+#include <logic/PlayerController.h>
 #include <ui/Hud.h>
+#include <ui/PrintScreenMessages.h>
+#include <utils/logger.h>
+#include <ZenLib/zenload/zTypes.h>
+#include <zenload/zCMesh.h>
+#include <zenload/zenParser.h>
+#include <logic/SoundController.h>
 #include <ui/LoadingScreen.h>
+
 
 using namespace World;
 
@@ -45,6 +48,7 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
       m_WorldMesh(*this),
       m_ScriptEngine(*this),
       m_PhysicsSystem(*this),
+      m_AnimationLibrary(*this),
       m_Sky(*this),
       m_DialogManager(*this),
       m_BspTree(*this),
@@ -81,7 +85,9 @@ bool WorldInstance::init(const std::string& zen,
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
 
-    m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
+    if (!m_AnimationLibrary.loadAnimations())
+        LogError() << "failed to load animations!";
+
 
     // Create static-collision shape beforehand
     m_StaticWorldObjectCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
@@ -252,6 +258,10 @@ bool WorldInstance::init(const std::string& zen,
             sm.m_InstanceDataIndex = (uint32_t)-2; // Disable instancing
         }
 
+        LogInfo() << "Creating AudioWorld";
+        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
+        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+
 		// TODO: Refractor. Make a map of all vobs by classes or something.
 		ZenLoad::zCVobData startPoint;
 
@@ -294,7 +304,16 @@ bool WorldInstance::init(const std::string& zen,
 
                     vob = Vob::asVob(*this, e);
                 }
-				else {
+				else if(v.objectClass.find("zCVobSound") != std::string::npos)
+                {
+                    e = VobTypes::createSound(*this);
+
+                    VobTypes::SoundVobInformation snd = VobTypes::asSoundVob(*this, e);
+                    snd.soundController->initFromVobDescriptor(v);
+
+                    vob = Vob::asVob(*this, e);
+                }else
+                {
 					// Normal zCVob or not implemented subclass
 					e = Vob::constructVob(*this);
 					vob = Vob::asVob(*this, e);
@@ -421,6 +440,7 @@ bool WorldInstance::init(const std::string& zen,
 			startWP.waterDepth = 0;
 			Waynet::addWaypoint(m_Waynet, startWP);
 		}
+
 
         // Notify user
         m_pEngine->getHud().getLoadingScreen().startSection(
@@ -636,6 +656,11 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         if(player.playerController)
             player.playerController->onUpdateByInput(deltaTime);
     }
+
+    // Update sound-listener position
+    getAudioWorld().setListenerPosition(getCameraController()->getEntityTransform().Translation());
+    //getAudioWorld().setListenerVelocity();
+    //getAudioWorld().setListenerOrientation();
 
     // Update dialogs
     m_DialogManager.update(deltaTime);
@@ -949,6 +974,7 @@ json WorldInstance::exportNPC(Handle::EntityHandle entityHandle) {
 UI::PrintScreenMessages &WorldInstance::getPrintScreenManager() {
     return m_pEngine->getHud().getPrintScreenManager();
 }
+
 
 
 

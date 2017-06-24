@@ -1288,6 +1288,38 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         vm.setReturn(rand() % n0);
     });
+
+    vm->registerExternalFunction("npc_settofightmode", [=](Daedalus::DaedalusVM& vm) {
+        size_t weaponSymbol = (size_t)vm.popDataValue();
+        size_t self = (size_t)vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            // Give the specified item to the npc if he doesn't already have it.
+            if(!npc.playerController->getInventory().getItemCount(weaponSymbol))
+            {
+                npc.playerController->getInventory().addItem(weaponSymbol);
+            }
+
+            // FIXME: This draws whatever the NPC has currently equipped
+            npc.playerController->drawWeaponMelee();
+        }
+    });
+
+    vm->registerExternalFunction("npc_settofistmode", [=](Daedalus::DaedalusVM& vm) {
+        uint32_t arr_self;
+        int32_t self = vm.popVar(arr_self);
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if(npc.isValid())
+        {
+            npc.playerController->drawWeaponMelee(true);
+        }
+    });
+
 }
 
 

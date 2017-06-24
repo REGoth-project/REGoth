@@ -4,13 +4,14 @@ namespace Logic
 {
     enum class EWeaponMode
     {
-        WeaponNone,
+        WeaponNone = 0,
         Weapon1h,
         Weapon2h,
         WeaponBow,
         WeaponCrossBow,
         WeaponMagic,
-        WeaponFist
+        WeaponFist,
+        NUM_WEAPON_MODES
     };
 
     enum class EWeaponDrawType

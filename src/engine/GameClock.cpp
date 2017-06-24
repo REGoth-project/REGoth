@@ -9,6 +9,7 @@ GameClock::GameClock()
 {
     m_totalTimeInDays = 0;
     m_LastFrameDeltaTime = 0;
+    m_TotalSecondsRunning = 0.0;
 
     // reset clock speed and game speed to default value on new session
     m_ClockSpeedFactor = 1.0;
@@ -31,6 +32,7 @@ void GameClock::setDay(int newDay) {
 
 void GameClock::update(double deltaRealTimeSeconds)
 {
+    m_TotalSecondsRunning += deltaRealTimeSeconds;
     m_LastFrameDeltaTime = deltaRealTimeSeconds;
     m_totalTimeInDays += totalSpeedUp() * deltaRealTimeSeconds / SECONDS_IN_A_DAY;
 }
@@ -63,6 +65,11 @@ void GameClock::setTotalSeconds(std::size_t s)
 std::size_t GameClock::getTotalSeconds()
 {
     return static_cast<std::size_t>(m_totalTimeInDays * SECONDS_IN_A_DAY);
+}
+
+double GameClock::getTotalSecondsFrac()
+{
+    return m_totalTimeInDays * SECONDS_IN_A_DAY;
 }
 
 void GameClock::setClockSpeedFactor(float factor){
@@ -105,3 +112,5 @@ void GameClock::resetNewGame() {
 double GameClock::getLastDt() {
     return m_LastFrameDeltaTime;
 }
+
+

@@ -15,8 +15,15 @@ namespace Animations
 	struct Animation;
 }
 
+namespace ZenLoad
+{
+	struct zCModelScriptEventSfx;
+	struct zCModelScriptEventTag;
+}
+
 namespace Components
 {
+    // TOOD: in gothic Model Scripts control everything related, rename
 	class AnimHandler
 	{
 	public:
@@ -49,6 +56,11 @@ namespace Components
 		 * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
 		 */
 		void playAnimation(const std::string& animName);
+
+        /**
+         * @brief Sets the currently playing animation. Restarts it, if this is currently running. Doesn't loop.
+         */
+        void playAnimation(Handle::AnimationHandle anim);
 
 		/**
 		 * @brief Sets the currently playing animation without restarting it, if it is currently running. Loops.
@@ -86,8 +98,14 @@ namespace Components
 		/**
 		 * @return Velocity of the root node in m/s
 		 */
-		Math::float3 getRootNodeVelocityAvg();
+		Math::float3 getRootNodeVelocityTotal();
 		Math::float3 getRootNodeVelocity(){ return m_AnimRootVelocity; };
+		const Math::Matrix& getRootNodeRotationVelocity(){ return m_AnimRootRotationVelocity; }
+
+		/**
+		 * @return Animation-velocity averaged over a few frames
+		 */
+		Math::float3 getRootNodeVelocityAvg();
 
 		/**
 		 * Returns the position of the node at the given frame
@@ -103,7 +121,13 @@ namespace Components
 		/**
 		 * @return the currently active animation. nullptr if none is active. Do not save this pointer, as it can change!
 		 */
-		ZenLoad::zCModelAni* getActiveAnimationPtr();
+        Animations::Animation* getActiveAnimationPtr();
+		Handle::AnimationHandle getAcitveAnimation(){ return m_ActiveAnimation; }
+
+		/**
+		 * @return Value in range 0..1 telling how far we are with playing the active animation
+		 */
+		float getActiveAnimationProgress();
 
 		/**
 		 * @return Number of nodes in this skeleton
@@ -127,6 +151,22 @@ namespace Components
 		const ZenLoad::zCModelMeshLib& getMeshLib()
 		{
 			return m_MeshLib;
+		}
+
+		/**
+		 * @return Name of the currently loaded mesh-lib
+		 */
+		const std::string& getMeshLibName()
+		{
+			return m_MeshLibName;
+		}
+
+		/**
+		 * @return Currently active overlay
+		 */
+		const std::string& getOverlay()
+		{
+			return m_ActiveOverlay;
 		}
 
 		/**
@@ -162,13 +202,47 @@ namespace Components
 		 * Sets the speed multiplier for all animations
 		 */
 		void setSpeedMultiplier(float mult){ m_SpeedMultiplier = mult; }
+
+		/**
+		 * Event-Callbacks
+		 */
+		void setCallbackEventSFX(std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> cb)
+		{
+			m_CallbackTriggerSFX = cb;
+		}
+
+		void setCallbackEventSFXGround(std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> cb)
+		{
+			m_CallbackTriggerSFXGround = cb;
+		}
+
+		void setCallbackEventTag(std::function<void(const ZenLoad::zCModelScriptEventTag& tag)> cb)
+		{
+			m_CallbackTriggerEventTag = cb;
+		}
 	private:
+
+		/**
+		 * Checks if any events happened between the last played frames
+		 * @param frameLast Animation-Frame played in the last update-cycle
+		 * @param frameNow Animation-Frame played in this update-cycle
+		 */
+		void triggerEvents(int frameLast, int frameNow);
+
+
+		/**
+		 * Plays the given SFX-Event
+		 * @param sfx SFX t play
+		 */
+		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFX;
+		std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFXGround;
+		std::function<void(const ZenLoad::zCModelScriptEventTag& tag)> m_CallbackTriggerEventTag;
 
 		/**
 		 * @brief Animations by their name
 		 */
 		std::vector<Handle::AnimationHandle> m_Animations;
-		std::unordered_map<std::string, Handle::AnimationHandle> m_AnimationsByName;
+        std::unordered_map<std::string, Handle::AnimationHandle> m_AnimationsByName;
 
 		/**
 		 * @brief Meshlib this operates on
@@ -203,8 +277,17 @@ namespace Components
 		 * @brief Root-Node-Veclocity in m/s
 		 */
 		Math::float3 m_AnimRootVelocity;
+		Math::Matrix m_AnimRootRotationVelocity;
 		size_t m_AnimRootNodeVelocityUpdatedHash; // AnimHash when this was last updated
 		Math::float3 m_AnimRootPosition;
+		Math::Matrix m_AnimRootRotation;
+
+		/**
+		 * Smoothes the model-velocity over a few frames
+		 */
+		enum{ NUM_VELOCITY_AVERAGE_STEPS = 8 };
+		Math::float3 m_AnimVelocityRingBuff[NUM_VELOCITY_AVERAGE_STEPS];
+		unsigned m_AnimVelocityRingCurrent = 0;
 
 		/**
 		 * @brief Value useful to check if there was an actual change. This value is modified every time

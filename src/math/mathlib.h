@@ -444,6 +444,8 @@ namespace Math
         float3 TranslationT() const { return float3( _14, _24, _34 ); }
         void Translation( const float3& v ) { _41 = v.x; _42 = v.y; _43 = v.z; }
 
+		Matrix Rotation() { Matrix m = *this; m.Translation(Math::float3(0,0,0)); return m; }
+
         Matrix Transpose() const {return glm::transpose(_glmMatrix); }
 
         Matrix Invert() const {return glm::inverse(_glmMatrix); }

@@ -193,7 +193,7 @@ bool ModelVisual::load(const std::string& visual)
     if(!m_VisualAttachments.empty())
     {
         // Need to get the bind-pose out
-        if(zLib.getNodes().empty()) // No nodes here mean, that this is only a mesh
+        if(zLib.getNodes().empty() && !getAnimationHandler().getActiveAnimationPtr()) // No nodes here mean, that this is only a mesh
             getAnimationHandler().setBindPose(true);
 
         for (size_t i = 0; i < zLib.getAttachments().size(); i++)
@@ -346,10 +346,7 @@ void ModelVisual::setAnimation(ModelVisual::EModelAnimType type, bool loop)
 {
 	const char* str = ANIMATION_NAMES[type];
 
-	if(getAnimationHandler().hasAnimation(str))
-	{
-		setAnimation(str, loop);
-	}
+    setAnimation(str, loop);
 }
 
 void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
@@ -362,6 +359,22 @@ void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
     {
         setAnimation(str, false); // Don't loop
     }
+}
+
+void ModelVisual::playAnimation(const std::string& anim)
+{
+    // TODO: Implement the priority stuff
+    if(getAnimationHandler().hasAnimation(anim))
+    {
+        setAnimation(anim, false); // Don't loop
+    }
+}
+
+void ModelVisual::playAnimation(Handle::AnimationHandle anim)
+{
+    Components::AnimHandler& animHandler = m_World.getEntity<Components::AnimationComponent>(m_Entity).getAnimHandler();
+
+    animHandler.playAnimation(anim);
 }
 
 const char* ModelVisual::getAnimationName(ModelVisual::EModelAnimType type)
@@ -748,6 +761,8 @@ void ModelVisual::applyOverlay(const std::string& mds)
 bool ModelVisual::isAnimPlaying(const std::string& name)
 {
     return getAnimationHandler().getActiveAnimationPtr()
-            && getAnimationHandler().getActiveAnimationPtr()->getModelAniHeader().aniName == name;
+            && getAnimationHandler().getActiveAnimationPtr()->m_Name == name;
 }
+
+
 

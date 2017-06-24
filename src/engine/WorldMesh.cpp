@@ -43,7 +43,7 @@ void WorldMesh::getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgr
     if (static_cast<size_t>(tri.submeshIndex) < m_WorldMeshData.subMeshes.size() && tri.submeshIndex >= 0)
         matgroup = m_WorldMeshData.subMeshes[tri.submeshIndex].material.matGroup;
     else
-        matgroup = Materials::MaterialGroup::UNDEFINED;
+        matgroup = (uint8_t)ZenLoad::MaterialGroup::UNDEF;
 
     for (int i = 0; i < 3; i++)
         v3[i] = Math::float3(tri.vertices[i].Position.v);

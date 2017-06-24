@@ -6,6 +6,8 @@
 #include "Inventory.h"
 #include "LogicDef.h"
 #include "NpcScriptState.h"
+#include "NpcAnimationHandler.h"
+#include "NpcAIHandler.h"
 
 namespace UI
 {
@@ -167,6 +169,12 @@ namespace Logic
         void setDirection(const Math::float3& direction);
 
         /**
+         * Applies a rotation to the NPCs Y-Axis
+         * @param rad Rotation to apply in radians
+         */
+        void applyRotationY(float rad);
+
+        /**
          * @return The direction the player is facing
          */
         Math::float3 getDirection()
@@ -191,9 +199,10 @@ namespace Logic
 
         /**
          * Draws the weapon currently in the 1h- or 2h-slot
+         * @param fist [optional] if true, draw fists regardless of the equipped weapon
          * @return Handle to the just drawn weapon
          */
-        Daedalus::GameState::ItemHandle drawWeaponMelee();
+        Daedalus::GameState::ItemHandle drawWeaponMelee(bool forceFist = false);
 
         /**
          * Puts back any weapon that was currently drawn
@@ -234,6 +243,11 @@ namespace Logic
          * @return The ModelVisual of the underlaying vob
          */
         ModelVisual* getModelVisual();
+
+        /**
+         * @return Animation handler of this NPC
+         */
+        NpcAnimationHandler& getNpcAnimationHandler(){ return m_NPCAnimationHandler; }
 
         /**
          * Places the playercontroller on the ground again. TODO: TESTING-ONLY!
@@ -392,12 +406,12 @@ namespace Logic
         /**
          * Returns material data on which the NPC is standing
          */
-        Materials::MaterialGroup getSurfaceMaterial();
+        ZenLoad::MaterialGroup getSurfaceMaterial();
 
         /**
          * Returns material data of give triangle index
          */
-        Materials::MaterialGroup getMaterial(uint32_t triangleIdx);
+        ZenLoad::MaterialGroup getMaterial(uint32_t triangleIdx);
         /**
          * @return Item this NPC is currently interacting with
          */
@@ -413,6 +427,11 @@ namespace Logic
          * Enables/Disables physics on this NPC
          */
          void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
+
+        /**
+         * @return Currently held weapon type
+         */
+        EWeaponMode getWeaponMode(){ return m_EquipmentState.weaponMode; }
 
         /**
          * @return Classes which want to get exported on save should return true here
@@ -448,6 +467,13 @@ namespace Logic
 	};
 
     protected:
+
+        /**
+         * Callbacks registered inside the animation-handler
+         */
+        void AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx);
+        void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
+        void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
 
         virtual void exportPart(json& j) override;
 
@@ -595,6 +621,15 @@ namespace Logic
          */
         NpcScriptState m_AIStateMachine;
 
+        /**
+         * Animation handler
+         */
+        NpcAnimationHandler m_NPCAnimationHandler;
+
+        /**
+         * AI/Input handler
+         */
+        NpcAIHandler m_AIHandler;
 
         /**
          * refuse talk countdown
