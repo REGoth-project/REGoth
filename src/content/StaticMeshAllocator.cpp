@@ -29,6 +29,8 @@ StaticMeshAllocator::~StaticMeshAllocator()
         if(bgfx::isValid(hi))
             bgfx::destroyIndexBuffer(hi);
     }
+
+    m_EstimatedGPUBytes = 0;
 }
 
 Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::PackedMesh& packed, size_t submesh, const std::string& name)
@@ -37,8 +39,9 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldStaticMesh& mesh = m_Allocator.getElement(h);
     mesh.loaded = false;
-    auto& m = packed.subMeshes[submesh];
+    mesh.name = name;
 
+    auto& m = packed.subMeshes[submesh];
     mesh.init();
 
     mesh.mesh.m_Vertices.resize(m.indices.size());
@@ -76,6 +79,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldStaticMesh& mesh = m_Allocator.getElement(h);
     mesh.loaded = false;
+    mesh.name = name;
 
     mesh.init();
 
@@ -160,6 +164,8 @@ bool StaticMeshAllocator::finalizeLoad(Handle::MeshHandle h)
             WorldStaticMeshVertex::ms_decl
     );
 
+    size_t contentBytes = mesh.mesh.m_Vertices.size() * sizeof(WorldStaticMeshVertex);
+
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
     if(!mesh.mesh.m_Indices.empty())
     {
@@ -168,7 +174,17 @@ bool StaticMeshAllocator::finalizeLoad(Handle::MeshHandle h)
                 bgfx::makeRef(mesh.mesh.m_Indices.data(), mesh.mesh.m_Indices.size() * sizeof(WorldStaticMeshIndex)),
                 sizeof(WorldStaticMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0
         );
+
+        contentBytes += mesh.mesh.m_Indices.size() * sizeof(WorldStaticMeshIndex);
     }
+
+    if(m_LargestContentBytes < contentBytes)
+    {
+        m_LargestContentBytes = contentBytes;
+        m_LargestContentName = m_Allocator.getElement(h).name;
+    }
+
+    m_EstimatedGPUBytes += contentBytes;
 
     mesh.loaded = true;
     return bgfx::isValid(mesh.mesh.m_IndexBufferHandle) && bgfx::isValid(mesh.mesh.m_VertexBufferHandle);

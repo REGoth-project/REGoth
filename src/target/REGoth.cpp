@@ -349,6 +349,27 @@ public:
             return suggestions;
         };
 
+        console.registerCommand("estimatedGPUMem", [this](const std::vector<std::string>& args) -> std::string {
+            World::WorldInstance& world = m_pEngine->getMainWorld().get();
+
+            std::stringstream ss;ss << "Current world GPU Memory Consumption (Rough estimate!):" << std::endl
+               << "   - Textures: " << world.getTextureAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl
+               << "   - SkeletalMeshes: " << world.getSkeletalMeshAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl
+               << "   - StaticMeshes: " << world.getStaticMeshAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl;
+
+            size_t sizeLargestSkel, sizeLargestStatic;
+            std::string nameLargestSkel, nameLargestStatic;
+            world.getSkeletalMeshAllocator().getLargestContentInformation(sizeLargestSkel, nameLargestSkel);
+            world.getStaticMeshAllocator().getLargestContentInformation(sizeLargestStatic, nameLargestStatic);
+
+            ss << std::endl
+               <<  "Largest SkeletalMesh: " << nameLargestSkel << " (" << sizeLargestSkel / 1024 << " kb)" << std::endl
+               <<  "Largest StaticMesh:   " << nameLargestStatic << " (" << sizeLargestStatic / 1024 << " kb)" << std::endl;
+
+            LogInfo() << ss.str();
+            return ss.str();
+        });
+
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
             s_Stats = !s_Stats;

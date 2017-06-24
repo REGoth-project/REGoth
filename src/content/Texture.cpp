@@ -25,6 +25,8 @@ TextureAllocator::~TextureAllocator()
 		bgfx::TextureHandle h = m_Allocator.getElements()[i].m_TextureHandle;
 		bgfx::destroyTexture(h);
 	}
+
+	m_EstimatedGPUBytes = 0;
 }
 
 Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t>& data, const std::string & name)
@@ -180,6 +182,8 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 		memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
 		bgfx::TextureHandle bth = bgfx::createTexture2D(tx.m_Width, tx.m_Height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
 
+		m_EstimatedGPUBytes += tx.imageData.size();
+
 		// Free imange
 		//stbi_image_free(out);
 
@@ -195,6 +199,8 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 		const bgfx::Memory* mem = bgfx::alloc(tx.imageData.size());
 		memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
 		bgfx::TextureHandle bth = bgfx::createTexture(mem);
+
+		m_EstimatedGPUBytes += tx.imageData.size();
 
 		// Couldn't load this one?
 		if (bth.idx == bgfx::invalidHandle)

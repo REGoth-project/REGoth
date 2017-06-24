@@ -25,16 +25,20 @@ SkeletalMeshAllocator::~SkeletalMeshAllocator()
         bgfx::IndexBufferHandle hi = m_Allocator.getElements()[i].mesh.m_IndexBufferHandle;
         bgfx::destroyIndexBuffer(hi);
     }
+
+    m_EstimatedGPUBytes = 0;
 }
 
 Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx, const std::string& name)
 {
+    std::string nameUpper = Utils::uppered(name);
+
     // Check if this was already loaded
-    auto it = m_MeshesByName.find(name);
+    auto it = m_MeshesByName.find(nameUpper);
     if (it != m_MeshesByName.end())
         return (*it).second;
 
-    std::string vname = name;
+    std::string vname = nameUpper;
     std::vector<uint8_t> data;
     std::vector<uint8_t> dds;
 
@@ -82,7 +86,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
             m.packMesh(packed, 1.0f / 100.0f);
         }
 
-        Handle::MeshHandle h = loadFromPacked(packed, name);
+        Handle::MeshHandle h = loadFromPacked(packed, nameUpper);
         m_Allocator.getElement(h).lib = zlib;
 
         return h;
@@ -96,13 +100,15 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const std::string & name)
     return loadMeshVDF(m_Engine.getVDFSIndex(), name);
 }
 
-
 Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSkeletalMesh& packed, const std::string& name)
 {
+    std::string nameUpper = Utils::uppered(name);
+
     // Create mesh instance
     Handle::MeshHandle h = m_Allocator.createObject();
     WorldSkeletalMesh& mesh = m_Allocator.getElement(h).mesh;
     m_Allocator.getElement(h).loaded = false;
+    m_Allocator.getElement(h).name = nameUpper;
 
     // Copy vertices
     mesh.m_Vertices.resize(packed.vertices.size());
@@ -143,11 +149,12 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     //bgfx::frame();
     m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
         bgfx::frame(); // quick fix: executes all pending resource creations to prevent overflow
+
         finalizeLoad(h);
     });
 
-    if(!name.empty())
-        m_MeshesByName[name] = h;
+    if(!nameUpper.empty())
+        m_MeshesByName[nameUpper] = h;
 
     return h;
 }
@@ -169,6 +176,17 @@ bool SkeletalMeshAllocator::finalizeLoad(Handle::MeshHandle h)
             bgfx::makeRef(mesh.m_Indices.data(), mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex)),
             sizeof(WorldSkeletalMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0
     );
+
+    size_t contentBytes =   mesh.m_Vertices.size() * sizeof(WorldSkeletalMeshVertex)
+                          + mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex);
+
+    if(m_LargestContentBytes < contentBytes)
+    {
+        m_LargestContentBytes = contentBytes;
+        m_LargestContentName = m_Allocator.getElement(h).name;
+    }
+
+    m_EstimatedGPUBytes += contentBytes;
 
     m_Allocator.getElement(h).loaded = true;
     return bgfx::isValid(mesh.m_VertexBufferHandle) && bgfx::isValid(mesh.m_IndexBufferHandle);

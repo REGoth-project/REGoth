@@ -55,6 +55,10 @@ namespace Textures
 		 */
 		Texture& getTexture(Handle::TextureHandle h) { return m_Allocator.getElement(h); }
 
+		/**
+		 * @return Rough estimation about how much memory the loaded textures need on the GPU in bytes
+		 */
+		size_t getEstimatedGPUMemoryConsumption() { return m_EstimatedGPUBytes; }
 	protected:
 
 		/**
@@ -79,6 +83,11 @@ namespace Textures
 		 * Engine
 		 */
 		Engine::BaseEngine& m_Engine;
+
+		/**
+         * Rough estimation about how much memory the loaded textures need on the GPU in bytes
+         */
+		size_t m_EstimatedGPUBytes = 0;
 	};
 
 }
