@@ -234,8 +234,9 @@ public:
 #if BX_PLATFORM_ANDROID
 
 #else
-        Textures::TextureAllocator alloc(&m_pEngine->getVDFSIndex());
+        /*Textures::TextureAllocator alloc(*m_pEngine);
         Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
+        alloc.finalizeLoad(txh);
 
         if(!txh.isValid())
             return;
@@ -246,7 +247,7 @@ public:
         bgfx::setState(BGFX_STATE_DEFAULT);
         const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
         bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
-        renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);
+        renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);*/
 #endif
 
 
@@ -347,6 +348,27 @@ public:
                 suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase {{std::to_string(i)}}));
             return suggestions;
         };
+
+        console.registerCommand("estimatedGPUMem", [this](const std::vector<std::string>& args) -> std::string {
+            World::WorldInstance& world = m_pEngine->getMainWorld().get();
+
+            std::stringstream ss;ss << "Current world GPU Memory Consumption (Rough estimate!):" << std::endl
+               << "   - Textures: " << world.getTextureAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl
+               << "   - SkeletalMeshes: " << world.getSkeletalMeshAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl
+               << "   - StaticMeshes: " << world.getStaticMeshAllocator().getEstimatedGPUMemoryConsumption() / 1024 / 1024 << " mb" << std::endl;
+
+            size_t sizeLargestSkel, sizeLargestStatic;
+            std::string nameLargestSkel, nameLargestStatic;
+            world.getSkeletalMeshAllocator().getLargestContentInformation(sizeLargestSkel, nameLargestSkel);
+            world.getStaticMeshAllocator().getLargestContentInformation(sizeLargestStatic, nameLargestStatic);
+
+            ss << std::endl
+               <<  "Largest SkeletalMesh: " << nameLargestSkel << " (" << sizeLargestSkel / 1024 << " kb)" << std::endl
+               <<  "Largest StaticMesh:   " << nameLargestStatic << " (" << sizeLargestStatic / 1024 << " kb)" << std::endl;
+
+            LogInfo() << ss.str();
+            return ss.str();
+        });
 
         console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
             static bool s_Stats = false;
@@ -502,7 +524,6 @@ public:
         });
 
         auto zenLevelNamesGen = [this]() -> std::vector<Suggestion> {
-            using Suggestion = Suggestion;
 
             std::vector<std::string> g1WorldNames = {"WORLD.ZEN", "FREEMINE.ZEN", "OLDMINE.ZEN", "ORCGRAVEYARD.ZEN", "ORCTEMPEL.ZEN"};
             std::vector<std::string> g2WorldNames = {"DRAGONISLAND.ZEN", "NEWWORLD.ZEN", "OLDWORLD.ZEN", "ADDONWORLD.ZEN"};
@@ -554,7 +575,7 @@ public:
             if(!m_pEngine->getVDFSIndex().hasFile(zenFilename))
                 return "File '" + zenFilename + "' not found.";
 
-            m_pEngine->queueSaveGameAction({Engine::SavegameManager::SwitchLevel, -1, zenFilename});
+            m_pEngine->getSession().switchToWorld(zenFilename);
             return "Switching world to: " + zenFilename;
         }).registerAutoComplete(zenLevelNamesGen);
 
@@ -570,7 +591,9 @@ public:
             if (!(index >= 0 && index < maxSlots)){
                 return "invalid slot index " + std::to_string(index) + ". allowed range: 0.." + std::to_string(maxSlots-1);
             }
-            this->m_pEngine->queueSaveGameAction({SavegameManager::Load, index, ""});
+            auto error = Engine::SavegameManager::loadSaveGameSlot(index);
+            if (!error.empty())
+                return error;
             return "loading savegame...";
         });
 
@@ -601,10 +624,10 @@ public:
         });
 
         CandidateListGenerator worlddNpcNamesGen = [this]() {
-            using Suggestion = Suggestion;
             auto& worldInstance = m_pEngine->getMainWorld().get();
             auto& scriptEngine = worldInstance.getScriptEngine();
             auto& datFile = scriptEngine.getVM().getDATFile();
+
             std::vector<Suggestion> suggestions;
             for(const Handle::EntityHandle& npc : scriptEngine.getWorldNPCs())
             {
@@ -1152,7 +1175,9 @@ public:
         // Advance to next frame. Rendering thread will be kicked to
         // process submitted rendering primitives.
         bgfx::frame();
+        // TODO migrate SaveGameActions to general purpose message queue
         m_pEngine->processSaveGameActionQueue();
+        m_pEngine->processMessageQueue();
 
         return true;
 	}

@@ -425,6 +425,18 @@ std::string Utils::lowered(const std::string& in)
     return copy;
 }
 
+void Utils::upper(std::string& in)
+{
+    std::transform(in.begin(), in.end(), in.begin(), ::toupper);
+}
+
+std::string Utils::uppered(const std::string& in)
+{
+    auto copy = in;
+    Utils::upper(copy);
+    return copy;
+}
+
 std::size_t Utils::commonStartLength(const std::string& a, const std::string& b)
 {
     auto minSize = std::min(a.size(), b.size());

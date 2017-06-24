@@ -13,6 +13,7 @@
 #include <ui/PrintScreenMessages.h>
 #include <ui/Hud.h>
 #include <logic/visuals/ModelVisual.h>
+#include <engine/AsyncAction.h>
 
 /**
  * File containing the dialouges
@@ -363,12 +364,14 @@ bool DialogManager::init()
                                                                             m_World.getEngine()->getSession().getKnownInfoMap());
 
     LogInfo() << "Adding dialog-UI to root view";
-    // Add subtitle box (Hidden if there is nothing to display)
-    m_ActiveSubtitleBox = new UI::SubtitleBox(*m_World.getEngine());
-    m_World.getEngine()->getRootUIView().addChild(m_ActiveSubtitleBox);
-    m_ActiveSubtitleBox->setHidden(true);
-
-    m_PrintScreenMessageView = new UI::PrintScreenMessages(*m_World.getEngine());
+    auto createSubtitleBox = [this](Engine::BaseEngine* engine){
+        // Add subtitle box (Hidden if there is nothing to display)
+        m_ActiveSubtitleBox = new UI::SubtitleBox(*engine);
+        engine->getRootUIView().addChild(m_ActiveSubtitleBox);
+        m_ActiveSubtitleBox->setHidden(true);
+    };
+    Engine::AsyncAction::executeInThread(createSubtitleBox, m_World.getEngine(), Engine::ExecutionPolicy::MainThread)
+            .wait();
 
     LogInfo() << "Done initializing DialogManager!";
     return true;

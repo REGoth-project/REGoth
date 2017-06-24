@@ -3,6 +3,7 @@
 #include <vdfs/fileIndex.h>
 #include <zenload/ztex2dds.h>
 #include <utils/logger.h>
+#include <engine/BaseEngine.h>
 
 using namespace Textures;
 
@@ -11,8 +12,8 @@ typedef unsigned char stbi_uc;
 extern "C" stbi_uc* stbi_load_from_memory(stbi_uc const* _buffer, int _len, int* _x, int* _y, int* _comp, int _req_comp);
 extern "C" void stbi_image_free(void* _ptr);
 
-TextureAllocator::TextureAllocator(const VDFS::FileIndex* vdfidx)
-	: m_pVDFSIndex(vdfidx)
+TextureAllocator::TextureAllocator(Engine::BaseEngine& engine)
+	: m_Engine(engine)
 {
 }
 
@@ -24,6 +25,8 @@ TextureAllocator::~TextureAllocator()
 		bgfx::TextureHandle h = m_Allocator.getElements()[i].m_TextureHandle;
 		bgfx::destroyTexture(h);
 	}
+
+	m_EstimatedGPUBytes = 0;
 }
 
 Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t>& data, const std::string & name)
@@ -33,20 +36,12 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
 	if (it != m_TexturesByName.end())
 		return (*it).second;
 
-	// Try to load the texture first, so we don't have to clean up if this fails
-	//TODO: Avoid the second copy here
-	const bgfx::Memory* mem = bgfx::alloc(data.size());
-	memcpy(mem->data, data.data(), data.size());
-	bgfx::TextureHandle bth = bgfx::createTexture(mem);
-
-	// Couldn't load this one?
-	if (bth.idx == bgfx::invalidHandle)
-		return Handle::TextureHandle::makeInvalidHandle();
-
 	// Make wrapper-object
 	Handle::TextureHandle h = m_Allocator.createObject();
 
-	m_Allocator.getElement(h).m_TextureHandle = bth;
+	m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::Unknown;
+	m_Allocator.getElement(h).imageData = data;
+	//m_Allocator.getElement(h).m_TextureHandle = bth;
 	m_Allocator.getElement(h).m_TextureName = name;
 
     ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(data);
@@ -78,22 +73,15 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
 
 	// Try to load the texture first, so we don't have to clean up if this fails
 	//TODO: Avoid the second copy here
-	const bgfx::Memory* mem = bgfx::alloc(data.size());
-	memcpy(mem->data, data.data(), data.size());
-	bgfx::TextureHandle bth = bgfx::createTexture2D(width, height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
-
-	// Free imange
-	//stbi_image_free(out);
-
-	// Couldn't load this one?
-	if (bth.idx == bgfx::invalidHandle)
-		return Handle::TextureHandle::makeInvalidHandle();
 
 	// Make wrapper-object
 	Handle::TextureHandle h = m_Allocator.createObject();
 
-	m_Allocator.getElement(h).m_TextureHandle = bth;
+	m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
+	//m_Allocator.getElement(h).m_TextureHandle = bth;
 	m_Allocator.getElement(h).m_TextureName = name;
+	m_Allocator.getElement(h).m_Width = width;
+	m_Allocator.getElement(h).m_Height = height;
 
 	// Add handle to name-map, if it got one
 	if(!name.empty())
@@ -161,21 +149,65 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
     }
 #endif
 
+	Handle::TextureHandle h;
 	if(asDDS)
 	{
 		// Proceed to load as usual dds-file and the input-name
-		return loadTextureDDS(dds, name);
+		h = loadTextureDDS(dds, name);
 	} else
 	{
 		ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(dds);
-		return loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
+		h = loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
 	}
+
+	m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
+		finalizeLoad(h);
+	});
+
+	return h;
 }
 
 Handle::TextureHandle TextureAllocator::loadTextureVDF(const std::string & name)
 {
-	if (!m_pVDFSIndex)
-		return Handle::TextureHandle::makeInvalidHandle();
+	return loadTextureVDF(m_Engine.getVDFSIndex(), name);
+}
 
-	return loadTextureVDF(*m_pVDFSIndex, name);
+bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
+{
+	Texture& tx = m_Allocator.getElement(h);
+
+	if(tx.textureFormat == bgfx::TextureFormat::RGBA8)
+	{
+		const bgfx::Memory* mem = bgfx::alloc(tx.imageData.size());
+		memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
+		bgfx::TextureHandle bth = bgfx::createTexture2D(tx.m_Width, tx.m_Height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
+
+		m_EstimatedGPUBytes += tx.imageData.size();
+
+		// Free imange
+		//stbi_image_free(out);
+
+		// Couldn't load this one?
+		if (bth.idx == bgfx::invalidHandle)
+			return false;
+
+		tx.m_TextureHandle = bth;
+	}else
+	{
+		// Try to load the texture first, so we don't have to clean up if this fails
+		//TODO: Avoid the second copy here
+		const bgfx::Memory* mem = bgfx::alloc(tx.imageData.size());
+		memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
+		bgfx::TextureHandle bth = bgfx::createTexture(mem);
+
+		m_EstimatedGPUBytes += tx.imageData.size();
+
+		// Couldn't load this one?
+		if (bth.idx == bgfx::invalidHandle)
+			return false;
+
+		tx.m_TextureHandle = bth;
+	}
+
+	return true;
 }

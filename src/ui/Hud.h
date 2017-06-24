@@ -86,6 +86,11 @@ namespace UI
         DialogBox& getDialogBox(){ return *m_pDialogBox; }
 
         /**
+         * @return PrintScreenManager
+         */
+        UI::PrintScreenMessages& getPrintScreenManager() { return *m_pPrintScreenMessageView; }
+
+        /**
          * LoadingScreen
          */
         LoadingScreen& getLoadingScreen(){ return *m_pLoadingScreen; }
@@ -139,7 +144,9 @@ namespace UI
         BarView* m_pEnemyHealthBar;
         TextView* m_pClock;
         DialogBox* m_pDialogBox;
+        PrintScreenMessages* m_pPrintScreenMessageView;
         LoadingScreen* m_pLoadingScreen;
+        ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
 
         /**
@@ -161,6 +168,9 @@ namespace UI
         {
             return *static_cast<T*>(m_MenuChain.back());
         }
+
+        // Hide gamplay hud since there is now at least one menu active
+        setGameplayHudVisible(false);
 
         if (m_MenuChain.empty())
         {

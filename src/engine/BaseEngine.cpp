@@ -18,6 +18,7 @@
 #include <ui/LoadingScreen.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include "AsyncAction.h"
 
 using namespace Engine;
 
@@ -37,8 +38,10 @@ namespace Flags
 }
 
 BaseEngine::BaseEngine() :
+        m_MainThreadID(std::this_thread::get_id()),
         m_RootUIView(*this),
-        m_Console(*this)
+        m_Console(*this),
+        m_EngineTextureAlloc(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
@@ -180,9 +183,6 @@ void BaseEngine::loadArchives()
     {
     	m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
-
-    // Init global texture alloc
-    m_EngineTextureAlloc.setVDFSIndex(&m_FileIndex);
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
@@ -249,43 +249,28 @@ void BaseEngine::processSaveGameActionQueue()
                     SavegameManager::saveToSlot(action.slot, action.savegameName);
                 }
                 break;
-            case SavegameManager::Load:
-                {
-                    auto error = Engine::SavegameManager::loadSaveGameSlot(action.slot);
-                    if (!error.empty())
-                        LogWarn() << error;
-                }
-                break;
-            case SavegameManager::SwitchLevel:
-                {
-                    getSession().switchToWorld(action.savegameName);
-                }
-                break;
         }
         m_SaveGameActionQueue.pop();
     }
 }
 
-void BaseEngine::processAsyncActionQueue()
+void BaseEngine::processMessageQueue()
 {
-    while (!m_AsyncActionQueue.empty())
+    m_MessageQueueMutex.lock();
+    auto current = m_MessageQueue.begin();
+    while (current != m_MessageQueue.end())
     {
-        auto& action = m_AsyncActionQueue.front();
-        if (action.prolog)
-        {
-            action.prolog(*this);
-            action.prolog = nullptr;
-        }
-        bool running = action.job.valid() && action.job.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready;
-        if (running)
-        {
-            return;
-        } else
-        {
-            action.epilog(*this);
-            m_AsyncActionQueue.pop();
-        }
+        auto& action = *current;
+        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
+        m_MessageQueueMutex.unlock();
+        bool finished = action.run(*this);
+        m_MessageQueueMutex.lock();
+        if (finished)
+            current = m_MessageQueue.erase(current); // erase returns next iterator
+        else
+            std::advance(current, 1);
     }
+    m_MessageQueueMutex.unlock();
 }
 
 void BaseEngine::resetSession()
@@ -302,6 +287,34 @@ GameClock &BaseEngine::getGameClock()
 Handle::WorldHandle BaseEngine::getMainWorld()
 {
     return getSession().getMainWorld();
+}
+
+void BaseEngine::executeInMainThread(const AsyncAction::JobType<void> &job, bool forceQueue)
+{
+    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
+        job(engine);
+        return true;
+    };
+    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
+}
+
+void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool> &job, bool forceQueue)
+{
+    if (!forceQueue && isMainThread())
+    {
+        // execute right away
+        bool success = job(this);
+        if (success)
+            return;
+        // else job returned false -> queue the job
+    }
+    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
+    m_MessageQueue.emplace_back(AsyncAction{job});
+}
+
+bool BaseEngine::isMainThread()
+{
+    return std::this_thread::get_id() == m_MainThreadID;
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

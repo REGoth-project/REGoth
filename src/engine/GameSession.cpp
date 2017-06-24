@@ -3,9 +3,12 @@
 //
 
 #include "GameSession.h"
+#include "AsyncAction.h"
 #include <fstream>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include "ui/Hud.h"
+#include "ui/LoadingScreen.h"
 
 using namespace Engine;
 
@@ -66,10 +69,10 @@ void GameSession::setMainWorld(Handle::WorldHandle world)
     m_MainWorld = world;
 }
 
-Handle::WorldHandle GameSession::addWorld(const std::string& _worldFile,
+std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
                                           const json& worldJson,
                                           const json& scriptEngine,
-                                          const json& dialogManger)
+                                          const json& dialogManager)
 {
     std::string worldFile = _worldFile;
 
@@ -88,14 +91,24 @@ Handle::WorldHandle GameSession::addWorld(const std::string& _worldFile,
         if (zenData.empty())
         {
             LogWarn() << "Failed to find world file: " << worldFile;
-            return Handle::WorldHandle::makeInvalidHandle();
+            return nullptr;
         }
     }
-    if (!world.init(worldFile, worldJson, scriptEngine, dialogManger)) // expensive operation
+    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager)) // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
-        return Handle::WorldHandle::makeInvalidHandle();
+        return nullptr;
     }
+    return pWorldInstance;
+}
+
+Handle::WorldHandle GameSession::registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance)
+{
+    if (pWorldInstance == nullptr)
+        return Handle::WorldHandle::makeInvalidHandle();
+
+    World::WorldInstance& world = *pWorldInstance;
+
     m_Engine.onWorldCreated(world.getMyHandle());
     m_WorldInstances.push_back(std::move(pWorldInstance));
     m_Worlds.push_back(world.getMyHandle());
@@ -121,51 +134,77 @@ void GameSession::removeWorld(Handle::WorldHandle world)
     m_Engine.onWorldRemoved(world);
 }
 
-Handle::WorldHandle GameSession::switchToWorld(const std::string &worldFile)
+void GameSession::switchToWorld(const std::string &worldFile)
 {
-    auto oldWorld = getMainWorld();
-    auto exportedPlayer = oldWorld.get().exportAndRemoveNPC(
-            oldWorld.get().getScriptEngine().getPlayerEntity());
-    json scriptEngine;
-    oldWorld.get().getScriptEngine().exportScriptEngine(scriptEngine);
+    auto switchToWorld_ = [worldFile](BaseEngine* engine){
 
-    putWorldToSleep(oldWorld);
+        json newWorldJson;
+        json exportedPlayer;
+        json scriptEngine;
 
-    json newWorldJson;
-    if (hasInactiveWorld(worldFile))
-    {
-        newWorldJson = retrieveInactiveWorld(worldFile);
-    } else
-    {
-        if (m_CurrentSlotIndex != -1)
-        {
-            // try read from disk
-            std::string worldFromDisk = SavegameManager::readWorld(m_CurrentSlotIndex, Utils::stripExtension(worldFile));
-            if (!worldFromDisk.empty())
-                newWorldJson = json::parse(worldFromDisk); // we found the world on disk
-        }
-    }
+        /**
+         * prolog
+         */
+        auto exportData = [&](BaseEngine* engine){
+            auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
+            engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
+            engine->getHud().getLoadingScreen().setHidden(false);
 
-    // TODO do this asynchronous
-    Handle::WorldHandle newWorld = addWorld(worldFile, newWorldJson, scriptEngine);
+            auto& session = engine->getSession();
+            auto oldWorld = engine->getMainWorld();
+            auto playerEntity = oldWorld.get().getScriptEngine().getPlayerEntity();
+            exportedPlayer = oldWorld.get().exportAndRemoveNPC(playerEntity);
+            oldWorld.get().getScriptEngine().exportScriptEngine(scriptEngine);
 
-    setMainWorld(newWorld);
-    auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
+            session.putWorldToSleep(oldWorld);
 
-    // TODO find out start position after level change
-    std::vector<size_t> startpoints = newWorld.get().findStartPoints();
+            if (session.hasInactiveWorld(worldFile))
+            {
+                newWorldJson = session.retrieveInactiveWorld(worldFile);
+            } else
+            {
+                auto slotIndex = engine->getSession().getCurrentSlot();
+                if (slotIndex != -1)
+                {
+                    // try read from disk
+                    std::string worldFromDisk = SavegameManager::readWorld(slotIndex, Utils::stripExtension(worldFile));
+                    if (!worldFromDisk.empty())
+                        newWorldJson = json::parse(worldFromDisk); // we found the world on disk
+                }
+            }
+        };
+        AsyncAction::executeInThread(exportData, engine, ExecutionPolicy::MainThread).wait();
 
-    if (!startpoints.empty())
-    {
-        auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
-        std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
-        LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
-        playerVob.playerController->teleportToWaypoint(startpoints.front());
-        // FIXME seems like player start-points (zCVobStartpoint:zCVob) are inverted?
-        playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
-    }
+        /**
+         * asynchronous part
+         */
+        std::unique_ptr<World::WorldInstance> pNewWorld = engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine);
 
-    return Handle::WorldHandle();
+        /**
+         * epilog
+         */
+        auto registerWorld_ = [w = std::move(pNewWorld), exportedPlayer](BaseEngine* engine) mutable {
+            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
+            engine->getSession().setMainWorld(newWorld);
+            auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
+
+            // TODO find out start position after level change
+            std::vector<size_t> startpoints = newWorld.get().findStartPoints();
+
+            if (!startpoints.empty())
+            {
+                auto playerVob = VobTypes::asNpcVob(newWorld.get(), playerNew);
+                std::string startpoint = newWorld.get().getWaynet().waypoints[startpoints.front()].name;
+                LogInfo() << "Teleporting player to startpoint '" << startpoint << "'";
+                playerVob.playerController->teleportToWaypoint(startpoints.front());
+                // FIXME seems like player start-points (zCVobStartpoint:zCVob) are inverted?
+                playerVob.playerController->setDirection(-1 * playerVob.playerController->getDirection());
+            }
+            engine->getHud().getLoadingScreen().setHidden(true);
+        };
+        AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
+    };
+    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread, true);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle) {
@@ -173,4 +212,49 @@ void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle) {
     worldHandle.get().exportWorld(worldJson);
     addInactiveWorld(worldHandle.get().getZenFile(), std::move(worldJson));
     removeWorld(worldHandle);
+}
+
+Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
+                                          const json& worldJson,
+                                          const json& scriptEngine,
+                                          const json& dialogManager)
+{
+    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
+    return registerWorld(std::move(pWorldInstance));
+}
+
+void GameSession::startNewGame(const std::string &worldFile)
+{
+    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine){
+
+        auto prolog = [](Engine::BaseEngine* engine) {
+            engine->getHud().getLoadingScreen().reset();
+            engine->getHud().getLoadingScreen().setHidden(false);
+            engine->resetSession();
+        };
+        AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
+
+        std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
+
+        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine* engine) mutable {
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
+            if (worldHandle.isValid())
+            {
+                engine->getSession().setMainWorld(worldHandle);
+                auto& se = worldHandle.get().getScriptEngine();
+                auto player = se.createDefaultPlayer(engine->getEngineArgs().playerScriptname);
+                worldHandle.get().takeControlOver(player);
+            } else
+            {
+                LogError() << "Failed to add given startup world, world handle is invalid!";
+            }
+            engine->getHud().getLoadingScreen().setHidden(true);
+        };
+        AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
+    };
+    bool synchronous = false;
+    auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
+    // we never want to execute it right away (if it is on MainThread)
+    bool forceQueue = true;
+    AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
 }

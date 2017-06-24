@@ -52,6 +52,7 @@ namespace Engine
         GameClock& getGameClock();
 
         void setCurrentSlot(int index) { m_CurrentSlotIndex = index; }
+        int getCurrentSlot() { return m_CurrentSlotIndex; }
 
         std::map<size_t, std::set<size_t>>& getKnownInfoMap() { return m_KnownInfos; };
 
@@ -74,6 +75,13 @@ namespace Engine
          */
         void setMainWorld(Handle::WorldHandle world);
 
+        std::unique_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
+                                     const json& worldJson = json(),
+                                     const json& scriptEngine = json(),
+                                     const json& dialogManager = json());
+
+        Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
+
         /**
          * @brief Adds a world. If worldJson is non empty, argument worldFile will be ignored
          * @param worldfile Path to look for the worldfile. Can be inside a VDF-Archive
@@ -82,7 +90,7 @@ namespace Engine
         Handle::WorldHandle addWorld(const std::string& worldFile,
                                      const json& worldJson = json(),
                                      const json& scriptEngine = json(),
-                                     const json& dialogManger = json());
+                                     const json& dialogManager = json());
 
         /**
          * Switch to world with the given name.
@@ -91,9 +99,14 @@ namespace Engine
          * - world found in current save-game slot on disk
          * - else: First visit. No vobs get imported. <World>_startup script-fu will be executed
          * @param worldFile including .zen extension
-         * @return handle to the loaded world
          */
-        Handle::WorldHandle switchToWorld(const std::string &worldFile);
+        void switchToWorld(const std::string &worldFile);
+
+        /**
+         * starts a new game
+         * @param worldFile
+         */
+        void startNewGame(const std::string &worldFile);
 
         /**
          * @brief moves world from worldInstance list to inactive json map.

@@ -25,7 +25,14 @@ class AudioEngine;
 namespace Engine
 {
 	class GameSession;
+	class AsyncAction;
 	const int MAX_NUM_WORLDS = 4;
+
+    enum class ExecutionPolicy
+    {
+        MainThread,
+        NewThread
+    };
 
 	class BaseEngine
 	{
@@ -169,16 +176,38 @@ namespace Engine
 		void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
 
 		/**
+		 * @return true if the calling thread is the main thread
+		 */
+		bool isMainThread();
+
+		/**
 		 * Insert the given action at the end of the queue
 		 */
 		void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
 
 		/**
-		 * process all queued actions by FIFO
+		 * process all queued actions by FIFO, TODO: remove and use general purpose message queue
 		 */
         void processSaveGameActionQueue();
 
-        void processAsyncActionQueue();
+		/**
+		 * Guarantees execution of the given function in the main thread
+		 * @param job function to execute in the main thread
+		 * @param forceQueueing if false AND if called from main thread: executes the job right away
+		 * 		  instead of queueing and does not acquire the lock.
+		 */
+		void executeInMainThread(const std::function<void(BaseEngine *engine)> &job, bool forceQueueing = false);
+
+		/**
+		 * Execute the given job on the main thread one time per frame update until it returns true
+		 */
+		void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine *engine)> &job,
+                                          bool forceQueueing = false);
+
+        /**
+         * executes all jobs in the queue and removes the ones, that return true
+         */
+		void processMessageQueue();
 
         /**
          * Called when a world was added
@@ -199,6 +228,11 @@ namespace Engine
 		 *		  Overwrite to load your own default archives
 		 */
 		virtual void loadArchives();
+
+		/**
+		 * ID of the main thread (bgfx thread)
+		 */
+		std::thread::id m_MainThreadID;
 
         /**
          * Enum with values for Gothic I and Gothic II
@@ -255,17 +289,9 @@ namespace Engine
          * save/load action queue
          */
 		std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
-        struct AsyncAction
-        {
-            AsyncAction(std::shared_future<void> job) :
-                job(job)
-            {
-            }
-            std::function<void(BaseEngine& engine)> prolog;
-            std::shared_future<void> job;
-            std::function<void(BaseEngine& engine)> epilog;
-        };
-		std::queue<AsyncAction> m_AsyncActionQueue;
+
+		std::list<AsyncAction> m_MessageQueue;
+		std::mutex m_MessageQueueMutex;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

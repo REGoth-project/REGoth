@@ -4,6 +4,10 @@
 
 namespace UI
 {
+    static const Math::float2 INNER_OFFSET_DEFAULT = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
+    static const Math::float2 INNER_OFFSET_G1_PROGRESS = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
+    static const Math::float2 INNER_OFFSET_G2_PROGRESS = { (1200.0f / 8192.0f), (1100.0f / 8192.0f) };
+
     class ImageView;
     class BarView : public View
     {
@@ -29,9 +33,14 @@ namespace UI
          */
         void setValue(int32_t value, int32_t maxValue);
 
-        void setBackgroundImage(const Textures::Texture& texture);
-        void setBarImage(const Textures::Texture& texture);
+        void setBackgroundImage(Handle::TextureHandle texture);
+        void setBarImage(Handle::TextureHandle texture);
 
+        /**
+         * Offset to be applied to the inner part of the bar.
+         * Defaults to the usual Health/Mana-Bars.
+         */
+        void setInnerOffset(const Math::float2& offset);
     protected:
 
         /**
@@ -42,7 +51,12 @@ namespace UI
         /**
          * Views for rendering
          */
-        Textures::Texture m_Background;
-        Textures::Texture m_Bar;
+        Handle::TextureHandle m_Background;
+        Handle::TextureHandle m_Bar;
+
+        /**
+         * Pixel-Edge-Offset for the inner part of the bar
+         */
+        Math::float2 m_InnerOffset;
     };
 }

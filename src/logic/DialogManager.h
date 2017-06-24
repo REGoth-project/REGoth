@@ -193,11 +193,6 @@ namespace Logic
         UI::SubtitleBox* m_ActiveSubtitleBox;
 
         /**
-         * View for print-screen messages
-         */
-        UI::PrintScreenMessages* m_PrintScreenMessageView;
-
-        /**
          * World this runs in
          */
         World::WorldInstance& m_World;
