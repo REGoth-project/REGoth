@@ -75,8 +75,13 @@ if(ANDROID)
 endif()
 
 
-# Fix up C++ standard
 if (CMAKE_COMPILER_IS_GNUCC)
+    # add warning flags
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing -Wall -Wextra")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type") # missing return is error
+
+    # Fix up C++ standard
     if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
         message(WARNING "Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
@@ -200,9 +205,6 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
-if (CMAKE_COMPILER_IS_GNUCC)
-    set_target_properties(engine PROPERTIES COMPILE_FLAGS "-Wno-reorder -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -fno-strict-aliasing -Wall -Wextra")
-endif()
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
 # ------------------ OpenAL ------------------

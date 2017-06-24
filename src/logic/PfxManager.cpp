@@ -38,7 +38,7 @@ bool Logic::PfxManager::loadParticleFXDAT()
     m_pVM = new Daedalus::DaedalusVM(datFile);
     Daedalus::registerGothicEngineClasses(*m_pVM);
 
-    m_DefaultEmitter = {0};
+    m_DefaultEmitter = {};
 
     return m_pVM != nullptr;
 }

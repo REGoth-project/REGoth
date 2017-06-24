@@ -220,8 +220,9 @@ std::string Flag::documentConfigText(const std::string& configText)
 
 const std::string& Flag::getParam(unsigned i)
 {
+    static const std::string emptyString = "";
     if(i >= m_ParsedArgs.size())
-        return "";
+        return emptyString;
 
     return m_ParsedArgs[i];
 }

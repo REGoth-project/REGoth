@@ -336,7 +336,6 @@ public:
 #endif
 
         auto& console = m_pEngine->getConsole();
-        using Command = Logic::Console::Command;
         using SuggestionBase = Logic::Console::SuggestionBase;
         using Suggestion = Logic::Console::Suggestion;
         using CandidateListGenerator = Logic::Console::CandidateListGenerator;
