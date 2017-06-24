@@ -161,7 +161,10 @@ bool NpcAnimationHandler::isAnimationActive(const std::string& anim)
 
 bool NpcAnimationHandler::isStanding(bool allowTurning)
 {
-    bool standing = isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk);
+    // Also report standing when playing no animation at all
+    bool standing = isAnimationActive(Handle::AnimationHandle::makeInvalidHandle())
+                    || isAnimationActive(getActiveSet().s_run)
+                    || isAnimationActive(getActiveSet().s_walk);
 
     if(allowTurning)
     {

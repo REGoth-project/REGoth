@@ -1564,6 +1564,8 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                     LogInfo() << "PLAYER: New animation started: " << message.animation;
                 }
 
+                // In case the passed animation doesn't exist, we want to be in a defined state
+                getModelVisual()->stopAnimations();
                 getModelVisual()->setAnimation(message.animation, false);
                 active = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
                 message.status = ConversationMessage::Status::PLAYING;
