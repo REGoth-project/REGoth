@@ -85,8 +85,6 @@ bool WorldInstance::init(const std::string& zen,
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
 
-    m_Allocators.m_AnimationAllocator.setVDFSIndex(&engine.getVDFSIndex());
-  
     if (!m_AnimationLibrary.loadAnimations())
         LogError() << "failed to load animations!";
 
