@@ -166,7 +166,8 @@ Logic::Console::Command& Console::registerCommand(const std::string& command, Ca
         generators.push_back(std::bind(simpleGen, token));
     }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
-    m_Commands.push_back({sanitizedCommand, generators, callback, generators.size()});
+    bool requiresWorld = true;
+    m_Commands.push_back({sanitizedCommand, generators, callback, generators.size(), requiresWorld});
     return m_Commands.back();
 }
 
@@ -177,11 +178,14 @@ void Console::outputAdd(const std::string& msg)
 
 std::list<Logic::Console::Command>::iterator Console::determineCommand(const std::vector<std::string>& tokens)
 {
+    bool worldAvailable = m_BaseEngine.getMainWorld().isValid();
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
     size_t commandIndex = 0;
     for (auto it = m_Commands.begin(); it != m_Commands.end(); ++it, ++commandIndex)
     {
         const auto& command = *it;
+        if (!worldAvailable && command.requiresWorld)
+            continue;
         if (command.numFixTokens > tokens.size())
             continue;
         bool allStagesMatched = true;
@@ -220,7 +224,14 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed) {
     vector<string> tokens = tokenized(input);
     vector<vector<Suggestion>> suggestionsList;
 
-    vector<bool> commandIsAlive(m_Commands.size(), true);
+    vector<bool> commandIsAlive;
+    for (const auto& command : m_Commands)
+    {
+        bool disabled = command.requiresWorld && !m_BaseEngine.getMainWorld().isValid();
+        commandIsAlive.push_back(!disabled);
+    }
+
+    // generate and evaluate suggestions
     for (std::size_t tokenID = 0; tokenID < tokens.size(); tokenID++)
     {
         const string& token = tokens[tokenID];

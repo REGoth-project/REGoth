@@ -239,7 +239,6 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
         AsyncAction::executeInThread(resetSession, gameEngine, ExecutionPolicy::MainThread).wait();
 
         json worldJson = json::parse(worldFileData);
-        // FIXME: exceptions thrown here might get lost (thrown in another thread)
         // TODO: catch json exception when emtpy file is parsed or parser crashes
         json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
         json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));

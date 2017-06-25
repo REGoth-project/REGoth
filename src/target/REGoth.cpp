@@ -594,7 +594,8 @@ public:
             if (!error.empty())
                 return error;
             return "loading savegame...";
-        });
+        })
+                .setRequiresWorld(false);
 
         console.registerCommand("save", [this](const std::vector<std::string>& args) -> std::string {
 

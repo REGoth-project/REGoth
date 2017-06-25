@@ -54,8 +54,18 @@ namespace Logic
             std::string commandName;
             std::vector<CandidateListGenerator> generators;
             Callback callback;
+
             // number of tokens, that must match to identify this command
             std::size_t numFixTokens;
+
+            // whether this command is disabled while no world is loaded
+            bool requiresWorld;
+
+            Command& setRequiresWorld(bool value)
+            {
+                requiresWorld = value;
+                return *this;
+            }
 
             Command& registerAutoComplete(CandidateListGenerator generator)
             {
