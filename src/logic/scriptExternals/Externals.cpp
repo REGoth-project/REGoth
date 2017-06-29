@@ -338,6 +338,17 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         LogInfo() << "DEBUG: " << s;
     });
 
+    vm->registerExternalFunction("ai_teleport", [=](Daedalus::DaedalusVM& vm) {
+        std::string waypoint = vm.popString();
+        int32_t self = vm.popVar();
+
+        const auto waypointIndex = World::Waynet::getWaypointIndex(pWorld->getWaynet(), waypoint);
+        VobTypes::NpcVobInformation npcVob = getNPCByInstance(self);
+        if(waypointIndex != World::Waynet::INVALID_WAYPOINT || npcVob.isValid())
+            npcVob.playerController->teleportToWaypoint(waypointIndex);
+
+    });
+
     vm->registerExternalFunction("ai_turntonpc", [=](Daedalus::DaedalusVM& vm){
         uint32_t arr_n1;
         int32_t target = vm.popVar(arr_n1); if(verbose) LogInfo() << "target: " << target;
