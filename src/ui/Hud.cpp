@@ -30,7 +30,6 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
     m_pPrintScreenMessageView = new PrintScreenMessages(m_Engine);
-    m_pPrintScreenMessageView->setHidden(true);
     m_pClock = new TextView(m_Engine);
     m_pLoadingScreen = new LoadingScreen(m_Engine);
     m_pLoadingScreen->setHidden(true);
