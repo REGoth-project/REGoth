@@ -5,11 +5,6 @@
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
 
-#if BX_PLATFORM_EMSCRIPTEN
-#include <emscripten.h>
-#include <html5.h>
-#endif
-
 using namespace Render;
 
 RenderSystem::RenderSystem(Engine::BaseEngine& engine) : m_Engine(engine)
@@ -46,12 +41,6 @@ void RenderSystem::init()
     m_Config.uniforms.skyCLUT = bgfx::createUniform("SKY_CLUT", bgfx::UniformType::Vec4, 256);
     m_Config.uniforms.fogColor = bgfx::createUniform("u_FogColor", bgfx::UniformType::Vec4);
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
-
-#if BX_PLATFORM_EMSCRIPTEN
-    int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(),"OES_element_index_uint");
-    assert(enabled == 1);
-    LogInfo() << "OES_element_index_uint enabled: " << enabled;
-#endif
 }
 
 uint32_t RenderSystem::requestInstanceDataBuffer()

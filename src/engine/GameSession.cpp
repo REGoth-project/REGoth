@@ -253,6 +253,11 @@ void GameSession::startNewGame(const std::string &worldFile)
         AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
     };
     bool synchronous = false;
+
+#if BX_PLATFORM_EMSCRIPTEN
+    synchronous = true; // No Threads support for JS yet
+#endif
+
     auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
     // we never want to execute it right away (if it is on MainThread)
     bool forceQueue = true;

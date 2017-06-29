@@ -78,6 +78,7 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
 	Handle::TextureHandle h = m_Allocator.createObject();
 
 	m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
+    m_Allocator.getElement(h).imageData = data;
 	//m_Allocator.getElement(h).m_TextureHandle = bth;
 	m_Allocator.getElement(h).m_TextureName = name;
 	m_Allocator.getElement(h).m_Width = width;
@@ -138,7 +139,7 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex & i
         ZenLoad::convertZTEX2DDS(ztex, dds);
     }
 
-#if ANDROID || EMSCRIPTEN
+#if EMSCRIPTEN
     if(asDDS)
     {
         LogInfo() << "Converting DDS to RGBA8 for: " << name;
@@ -184,6 +185,10 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 
 		m_EstimatedGPUBytes += tx.imageData.size();
 
+        // Don't need a copy in RAM for this anymore
+        tx.imageData.clear();
+        tx.imageData.shrink_to_fit();
+
 		// Free imange
 		//stbi_image_free(out);
 
@@ -201,6 +206,10 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 		bgfx::TextureHandle bth = bgfx::createTexture(mem);
 
 		m_EstimatedGPUBytes += tx.imageData.size();
+
+        // Don't need a copy in RAM for this anymore
+        tx.imageData.clear();
+        tx.imageData.shrink_to_fit();
 
 		// Couldn't load this one?
 		if (bth.idx == bgfx::invalidHandle)

@@ -3,7 +3,6 @@
 
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <AL/alext.h>
 
 #include <adpcm/adpcm-lib.h>
 
@@ -13,6 +12,7 @@
 #include <logic/ScriptEngine.h>
 #include <utils/logger.h>
 #include <stdlib.h>
+#include <fstream>
 
 #include "engine/BaseEngine.h"
 
@@ -552,6 +552,4 @@ namespace World
             }
         }
     }
-
-
 }
