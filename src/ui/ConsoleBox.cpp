@@ -81,7 +81,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         const auto& suggestions = suggestionsList.back();
 
         // find preview range
-        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, -1, static_cast<int>(suggestions.size() - 1));
+        m_CurrentlySelected = Math::clamp(m_CurrentlySelected, -1, static_cast<int>(suggestions.size()) - 1);
         int currentlySelectedRelative = m_CurrentlySelected == -1 ? 0 : m_CurrentlySelected;
         int shownStart = currentlySelectedRelative - previewBefore;
         // past the end index
@@ -181,16 +181,27 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
     }
 }
 
-void UI::ConsoleBox::increaseSelectionIndex(int amount) {
+void UI::ConsoleBox::increaseSelectionIndex(int amount)
+{
     const auto& suggestionsList = m_Engine.getConsole().getSuggestions();
     // check if suggestions for last token are empty
     if (suggestionsList.empty() || suggestionsList.back().empty())
         return;
 
     int suggestionCount = static_cast<int>(suggestionsList.back().size());
-    m_CurrentlySelected = Utils::mod(m_CurrentlySelected + amount, suggestionCount);
+    auto newIndex = Utils::mod(m_CurrentlySelected + amount, suggestionCount);
+    setSelectionIndex(newIndex);
 }
 
-void UI::ConsoleBox::setSelectionIndex(int newIndex) {
-    m_CurrentlySelected = newIndex;
+void UI::ConsoleBox::setSelectionIndex(int newIndex)
+{
+    const auto& suggestionsList = m_Engine.getConsole().getSuggestions();
+    // check if suggestions for last token are empty
+    if (suggestionsList.empty())
+    {
+        m_CurrentlySelected = -1;
+        return;
+    }
+    int suggestionCount = static_cast<int>(suggestionsList.back().size());
+    m_CurrentlySelected = Math::clamp(newIndex, -1, suggestionCount - 1);
 }

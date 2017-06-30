@@ -21,13 +21,14 @@ namespace UI
 
         /**
          * Increases the selection index by the given amount.
-         * performs periodic wrap around
+         * performs periodic wrap around.
          * @param amount may be positive or negative
          */
         void increaseSelectionIndex(int amount);
 
         /**
          * sets the current selection index
+         * clamps index in range [-1; size-1]
          */
         void setSelectionIndex(int newIndex);
 

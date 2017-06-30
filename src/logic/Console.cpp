@@ -298,6 +298,8 @@ std::vector<std::string> Console::tokenized(const std::string &line) {
 }
 
 void Console::replaceSelectedToken() {
+    if (m_SuggestionsList.empty() || m_SuggestionsList.back().empty())
+        return;
     // default for now: only auto complete last token
     const auto& suggestions = m_SuggestionsList.back();
     auto selectedSuggestion = suggestions.at(m_BaseEngine.getHud().getConsoleBox().getSelectionIndex());
