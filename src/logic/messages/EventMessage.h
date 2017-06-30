@@ -508,7 +508,7 @@ namespace Logic
                 ST_PlaySound,
                 ST_LookAt,
                 ST_Output,
-                ST_OutputSVM,
+                ST_OutputMonolog,
                 ST_Cutscene,
                 ST_WaitTillEnd,
                 ST_Ask,
