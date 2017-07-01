@@ -31,28 +31,24 @@ namespace Global
 }
 
 Flag::Flag(const std::string& flag,
-           const std::string& verboseFlag,
-           unsigned nparams,
-           const std::string& desc,
-           const std::vector<std::string>& defaultValues,
-           std::string configSection)
-        : m_Flag(flag),
-          m_VerboseFlag(verboseFlag),
-          m_nParams(nparams),
-          m_Desc(desc),
-          m_DefaultValues(defaultValues),
-          m_ParsedArgs(defaultValues), // Initialize with default values
-          m_ConfigSection(configSection)
+        const std::string& verboseFlag,
+        unsigned nparams,
+        const std::string& desc,
+        const std::vector<std::string>& defaultValues,
+        std::string configSection)
+    : m_Flag(flag),
+    m_VerboseFlag(verboseFlag),
+    m_nParams(nparams),
+    m_Desc(desc),
+    m_DefaultValues(defaultValues),
+    m_ParsedArgs(defaultValues), // Initialize with default values
+    m_ConfigSection(configSection)
 {
     if(!flag.empty())
-    {
         assert(flag.find_first_not_of(' ') != std::string::npos);
-    }
 
     if(!verboseFlag.empty())
-    {
         assert(verboseFlag.find_first_not_of(' ') != std::string::npos);
-    }
 
     // Add this flag to the global list
     Global::getFlagList().push_back(this);
@@ -62,33 +58,33 @@ std::vector<std::string> Flag::extractFlag()
 {
     for(size_t i = 0; i < Global::commandline.size(); i++)
     {
-        if(Global::commandline[i] == "-" + m_Flag
-           || Global::commandline[i] == "--" + m_VerboseFlag)
+        if(Global::commandline[i] != "-" + m_Flag
+                && Global::commandline[i] != "--" + m_VerboseFlag)
+            continue;
+        m_SetLocation = (int)i;
+
+        // Found it! Now check if the argumentcount is right
+        unsigned k = 0;
+        std::vector<std::string> args;
+        for(size_t j = i + 1; j<Global::commandline.size(); j++, k++)
         {
-            m_SetLocation = (int)i;
+            if(Global::commandline[j].front() == '-')
+                break;
 
-            // Found it! Now check if the argumentcount is right
-            unsigned k = 0;
-            std::vector<std::string> args;
-            for(size_t j = i + 1; j<Global::commandline.size(); j++, k++)
-            {
-                if(Global::commandline[j].front() == '-')
-                    break;
+            args.push_back(Global::commandline[j]);
+        }
 
-                args.push_back(Global::commandline[j]);
-            }
+        if(k != m_nParams)
+        {
+            std::cout << "ARGPARSE: '" << m_Flag << "'" << (m_VerboseFlag.empty() ? "" : ", ('" + m_VerboseFlag + "')") << " - wrong argument count. Expected "
+                << m_nParams << ", found " << k << std::endl;
 
-            if(k != m_nParams)
-            {
-                std::cout << "ARGPARSE: '" << m_Flag << "'" << (m_VerboseFlag.empty() ? "" : ", ('" + m_VerboseFlag + "')") << " - wrong argument count. Expected "
-                          << m_nParams << ", found " << k << std::endl;
-
-                printUsage();
-                exit(0);
-            }else
-            {
-                m_ParsedArgs = args;
-            }
+            printUsage();
+            exit(0);
+        }
+        else
+        {
+            m_ParsedArgs = args;
         }
     }
 
@@ -137,7 +133,7 @@ void Flag::readFromConfig(const json& contents)
     std::string flag = m_VerboseFlag.empty() ? m_Flag : m_VerboseFlag;
 
     if(contents.find(m_ConfigSection) == contents.end()
-       || contents[m_ConfigSection].find(flag) == contents[m_ConfigSection].end())
+            || contents[m_ConfigSection].find(flag) == contents[m_ConfigSection].end())
     {
         // It's not there, use the default
         m_ParsedArgs = m_DefaultValues;
@@ -242,9 +238,7 @@ void ::Cli::printHelp()
     std::cout << "Usage:" << std::endl;
 
     for (Flag* f : Global::getFlagList())
-    {
         f->printUsage();
-    }
 }
 
 void ::Cli::loadConfigFile()
@@ -286,8 +280,8 @@ void ::Cli::writeConfigFile()
 
     // Write that one to disk now. Ensure the userdata-folder exists first, though
     std::string userdata = Utils::getUserDataLocation();
-	if(!Utils::mkdir(userdata))
-		LogError() << "Failed to create userdata-directory at: " << userdata;
+    if(!Utils::mkdir(userdata))
+        LogError() << "Failed to create userdata-directory at: " << userdata;
 
     // Now create the file
     if(!Utils::writeFile("config.json", userdata, dumped))
