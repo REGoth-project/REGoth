@@ -26,9 +26,8 @@ class REGoth : public PLATFORM_CLASS
         Engine::GameEngine* m_pEngine;
         uint32_t m_debug;
         uint32_t m_reset;
-        int m_Width, m_Height;
+        uint32_t m_Width, m_Height;
         int64_t m_timeOffset;
-        float axis;
         int32_t m_scrollArea;
         bool m_NoHUD;
         // prevents imgui from crashing if we failed on startup and didn't init it

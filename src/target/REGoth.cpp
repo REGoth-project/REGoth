@@ -147,7 +147,6 @@ void REGoth::init(int _argc, char** _argv)
 {
     std::cout << "Running REGoth Engine" << std::endl;
 
-    axis = 0;
     m_debug = BGFX_DEBUG_TEXT;
 #if BX_PLATFORM_ANDROID
     m_reset = 0;
@@ -162,7 +161,7 @@ void REGoth::init(int _argc, char** _argv)
     m_NoHUD = false;
 
     bgfx::init();
-    bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height, m_reset);
+    bgfx::reset(m_Width, m_Height, m_reset);
 
     // Enable debug text.
     bgfx::setDebug(m_debug);
@@ -920,9 +919,7 @@ bool REGoth::update()
         if(m_pEngine->getConsole().isOpen())
             m_pEngine->getConsole().onKeyDown(i, mods);
         if (keyMap.find(i) != keyMap.end())
-        {
             m_pEngine->getHud().onInputAction(keyMap[i]);
-        }
     }
 
     // Pass text input from this frame
@@ -939,7 +936,7 @@ bool REGoth::update()
         m_Height = getWindowHeight();
 
         // Notify bgfx about framebuffer resize
-        bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height);
+        bgfx::reset(m_Width, m_Height);
     }
     int64_t excludedFrameTime = m_pEngine->getExludedFrameTime();
     m_pEngine->resetExludedFrameTime();

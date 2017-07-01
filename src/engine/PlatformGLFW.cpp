@@ -306,8 +306,8 @@ void PlatformGLFW::GLFWwindowSizeEvent(GLFWwindow *window, int width, int height
 {
     Input::windowSizeEvent(width, height);
 
-    m_WindowHeight = height;
-    m_WindowWidth = width;
+    m_WindowHeight = static_cast<uint32_t>(height);
+    m_WindowWidth = static_cast<uint32_t>(width);
 }
 
 std::string PlatformGLFW::getActualKeyName(int key)

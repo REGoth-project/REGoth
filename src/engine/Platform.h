@@ -18,8 +18,8 @@ namespace Engine
          * Accessors to windows height/width
          * @return height/width
          */
-        static int getWindowWidth(){ return m_WindowWidth; }
-        static int getWindowHeight(){ return m_WindowHeight; }
+        static uint32_t getWindowWidth(){ return m_WindowWidth; }
+        static uint32_t getWindowHeight(){ return m_WindowHeight; }
 
         static bool getQuit(){ return m_Quit; }
         static void setQuit(bool quit){ m_Quit = quit; }
@@ -33,6 +33,6 @@ namespace Engine
         /**
          * Size of the current window
          */
-        static int m_WindowWidth, m_WindowHeight;
+        static uint32_t m_WindowWidth, m_WindowHeight;
     };
 }
