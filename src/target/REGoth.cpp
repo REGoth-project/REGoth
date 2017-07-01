@@ -116,7 +116,32 @@ struct PosColorTexCoord0Vertex
 
 bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
 
-
+// TODO: Keymap should be loaded from config
+std::map<int, UI::EInputAction> keyMap = {
+    {GLFW_KEY_UP,     UI::IA_Up},
+    {GLFW_KEY_DOWN,   UI::IA_Down},
+    {GLFW_KEY_LEFT,   UI::IA_Left},
+    {GLFW_KEY_RIGHT,  UI::IA_Right},
+    {GLFW_KEY_ENTER,  UI::IA_Accept},
+    {GLFW_KEY_ESCAPE, UI::IA_Close},
+    {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
+    {GLFW_KEY_0, UI::IA_0},
+    {GLFW_KEY_1, UI::IA_1},
+    {GLFW_KEY_2, UI::IA_2},
+    {GLFW_KEY_3, UI::IA_3},
+    {GLFW_KEY_4, UI::IA_4},
+    {GLFW_KEY_5, UI::IA_5},
+    {GLFW_KEY_6, UI::IA_6},
+    {GLFW_KEY_7, UI::IA_7},
+    {GLFW_KEY_8, UI::IA_8},
+    {GLFW_KEY_9, UI::IA_9},
+    {GLFW_KEY_HOME, UI::IA_HOME},
+    {GLFW_KEY_END, UI::IA_END},
+    {GLFW_KEY_PAGE_UP, UI::IA_Up},
+    {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
+    {GLFW_KEY_B, UI::IA_ToggleStatusMenu},
+    {GLFW_KEY_F10, UI::IA_ToggleConsole}
+};
 
 void REGoth::renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
 {
@@ -1002,30 +1027,6 @@ int REGoth::shutdown()
 
 bool REGoth::update()
 {
-    std::map<int, UI::EInputAction> keyMap = {{GLFW_KEY_UP,     UI::IA_Up},
-        {GLFW_KEY_DOWN,   UI::IA_Down},
-        {GLFW_KEY_LEFT,   UI::IA_Left},
-        {GLFW_KEY_RIGHT,  UI::IA_Right},
-        {GLFW_KEY_ENTER,  UI::IA_Accept},
-        {GLFW_KEY_ESCAPE, UI::IA_Close},
-        {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
-        {GLFW_KEY_0, UI::IA_0},
-        {GLFW_KEY_1, UI::IA_1},
-        {GLFW_KEY_2, UI::IA_2},
-        {GLFW_KEY_3, UI::IA_3},
-        {GLFW_KEY_4, UI::IA_4},
-        {GLFW_KEY_5, UI::IA_5},
-        {GLFW_KEY_6, UI::IA_6},
-        {GLFW_KEY_7, UI::IA_7},
-        {GLFW_KEY_8, UI::IA_8},
-        {GLFW_KEY_9, UI::IA_9},
-        {GLFW_KEY_HOME, UI::IA_HOME},
-        {GLFW_KEY_END, UI::IA_END},
-        {GLFW_KEY_PAGE_UP, UI::IA_Up},
-        {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
-        {GLFW_KEY_B, UI::IA_ToggleStatusMenu},
-        {GLFW_KEY_F10, UI::IA_ToggleConsole}};
-
     std::string frameInputText = getFrameTextInput();
     for (int i = 0; i < NUM_KEYS; i++) {
         if (!getKeysTriggered()[i]) // If key has been pushed the first time or repeatedly

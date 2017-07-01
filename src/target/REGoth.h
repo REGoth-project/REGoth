@@ -3,7 +3,6 @@
 #include <utils/bgfx_lib.h>
 #include <engine/World.h>
 #include <engine/GameEngine.h>
-
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
 #define PLATFORM_CLASS Engine::PlatformAndroid
@@ -21,8 +20,7 @@ class REGoth : public PLATFORM_CLASS
         void drawLog();
         void showSplash();
         void init(int _argc, char** _argv) BX_OVERRIDE;
-        int shutdown() override;
-
+        int shutdown() BX_OVERRIDE;
         bool update() BX_OVERRIDE;
 
         Engine::GameEngine* m_pEngine;
