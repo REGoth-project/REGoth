@@ -104,7 +104,6 @@ static const uint16_t s_cubeIndices[36] =
     6, 3, 7,
 };
 
-
 struct PosColorTexCoord0Vertex
 {
     float m_x;
@@ -140,64 +139,64 @@ class REGoth : public PLATFORM_CLASS
             bgfx::TransientVertexBuffer tvb;
             bgfx::TransientIndexBuffer tib;
 
-            if (bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6) )
-            {
-                PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
+            if (!bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6))
+                return;
 
-                float zz = 1.0f;
+            PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
 
-                const float minx = _x;
-                const float maxx = _x + _width;
-                const float miny = _y;
-                const float maxy = _y + _height;
+            float zz = 1.0f;
 
-                float minu = 0.0f;
-                float minv = 0.0f;
-                float maxu =  _width;
-                float maxv =  _height;
+            const float minx = _x;
+            const float maxx = _x + _width;
+            const float miny = _y;
+            const float maxy = _y + _height;
 
-                vertex[0].m_x = minx;
-                vertex[0].m_y = miny;
-                vertex[0].m_z = zz;
-                vertex[0].m_abgr = 0xffffffff;
-                vertex[0].m_u = minu;
-                vertex[0].m_v = minv;
+            float minu = 0.0f;
+            float minv = 0.0f;
+            float maxu =  _width;
+            float maxv =  _height;
 
-                vertex[1].m_x = maxx;
-                vertex[1].m_y = miny;
-                vertex[1].m_z = zz;
-                vertex[1].m_abgr = 0xffffffff;
-                vertex[1].m_u = maxu;
-                vertex[1].m_v = minv;
+            vertex[0].m_x = minx;
+            vertex[0].m_y = miny;
+            vertex[0].m_z = zz;
+            vertex[0].m_abgr = 0xffffffff;
+            vertex[0].m_u = minu;
+            vertex[0].m_v = minv;
 
-                vertex[2].m_x = maxx;
-                vertex[2].m_y = maxy;
-                vertex[2].m_z = zz;
-                vertex[2].m_abgr = 0xffffffff;
-                vertex[2].m_u = maxu;
-                vertex[2].m_v = maxv;
+            vertex[1].m_x = maxx;
+            vertex[1].m_y = miny;
+            vertex[1].m_z = zz;
+            vertex[1].m_abgr = 0xffffffff;
+            vertex[1].m_u = maxu;
+            vertex[1].m_v = minv;
 
-                vertex[3].m_x = minx;
-                vertex[3].m_y = maxy;
-                vertex[3].m_z = zz;
-                vertex[3].m_abgr = 0xffffffff;
-                vertex[3].m_u = minu;
-                vertex[3].m_v = maxv;
+            vertex[2].m_x = maxx;
+            vertex[2].m_y = maxy;
+            vertex[2].m_z = zz;
+            vertex[2].m_abgr = 0xffffffff;
+            vertex[2].m_u = maxu;
+            vertex[2].m_v = maxv;
 
-                uint16_t* indices = (uint16_t*)tib.data;
+            vertex[3].m_x = minx;
+            vertex[3].m_y = maxy;
+            vertex[3].m_z = zz;
+            vertex[3].m_abgr = 0xffffffff;
+            vertex[3].m_u = minu;
+            vertex[3].m_v = maxv;
 
-                indices[0] = 0;
-                indices[1] = 2;
-                indices[2] = 1;
-                indices[3] = 0;
-                indices[4] = 3;
-                indices[5] = 2;
+            uint16_t* indices = (uint16_t*)tib.data;
+
+            indices[0] = 0;
+            indices[1] = 2;
+            indices[2] = 1;
+            indices[3] = 0;
+            indices[4] = 3;
+            indices[5] = 2;
 
 
-                bgfx::setIndexBuffer(&tib);
-                bgfx::setVertexBuffer(&tvb);
-                bgfx::submit(_view, _program);
-            }
+            bgfx::setIndexBuffer(&tib);
+            bgfx::setVertexBuffer(&tvb);
+            bgfx::submit(_view, _program);
         }
 
         void drawLog()
@@ -205,7 +204,7 @@ class REGoth : public PLATFORM_CLASS
             const std::list<std::string>& logs = Utils::Log::getLastLogLines();
             auto it = logs.begin();
 
-            for(int i=49; i>=0 && it != logs.end() ;i++)
+            for(int i=49; i>=0 && it != logs.end(); i++)
             {
                 bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
 
@@ -221,13 +220,10 @@ class REGoth : public PLATFORM_CLASS
             bx::mtxIdentity(view);
             bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
 
-
-
             bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 
             // Set view and projection matrix for view 0.
             bgfx::setViewTransform(1, NULL, proj);
-
 
             bgfx::touch(0);
 
@@ -259,8 +255,6 @@ class REGoth : public PLATFORM_CLASS
         {
             std::cout << "Running REGoth Engine" << std::endl;
 
-            //Args args(_argc, _argv);
-
             axis = 0;
             m_debug = BGFX_DEBUG_TEXT;
 #if BX_PLATFORM_ANDROID
@@ -268,17 +262,13 @@ class REGoth : public PLATFORM_CLASS
 #else
             m_reset = BGFX_RESET_MAXANISOTROPY | BGFX_RESET_MSAA_X8;
             if (Flags::vsync.isSet())
-            {
                 m_reset |= BGFX_RESET_VSYNC;
-            }
 #endif
 
             m_Width = getWindowWidth();
             m_Height = getWindowHeight();
             m_NoHUD = false;
 
-
-            //bgfx::init(args.m_type, args.m_pciId);
             bgfx::init();
             bgfx::reset((uint32_t)m_Width, (uint32_t)m_Height, m_reset);
 
@@ -328,7 +318,7 @@ class REGoth : public PLATFORM_CLASS
             ddInit();
 
             // Imgui.
-            float fontSize = 18.0f;//18
+            auto fontSize = 18.0f;
 
 #ifdef ANDROID
             fontSize = 23.0f;
@@ -789,12 +779,9 @@ class REGoth : public PLATFORM_CLASS
                     nearNPCs.erase(scriptEngine.getPlayerEntity());
 
                     if(nearNPCs.empty())
-                    {
                         return "No NPCs in range!";
-                    } else {
-                        // Chose one at random
-                        npcVobInfo = VobTypes::asNpcVob(worldInstance, *nearNPCs.begin());
-                    }
+                    // Chose one at random
+                    npcVobInfo = VobTypes::asNpcVob(worldInstance, *nearNPCs.begin());
                 }
                 else
                 {
@@ -802,11 +789,9 @@ class REGoth : public PLATFORM_CLASS
                     auto suggestions = worlddNpcNamesGen();
                     auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
                     auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
-                    if (suggestion != nullptr) {
-                        npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
-                    } else {
+                    if (suggestion == nullptr)
                         return "NPC not found in this world: " + requested;
-                    }
+                    npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                 }
 
                 if(!npcVobInfo.isValid())
@@ -956,35 +941,33 @@ class REGoth : public PLATFORM_CLASS
                 std::size_t index = 0;
                 auto suggestions = itemNamesGen();
                 auto suggestion = Utils::findSuggestion(suggestions, itemName);
-                if (suggestion != nullptr)
-                {
-                    auto& aliasList = suggestion->aliasList;
-                    auto& parScriptName = aliasList[0];
-                    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
-                    std::string description;
-                    if (give)
-                    {
-                        auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
-                        Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                        description = cItem.description;
-                    } else {
-                        auto handle = player.playerController->getInventory().getItem(parScriptName);
-                        if (handle.isValid())
-                        {
-                            Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
-                            description =  cItem.description;
-                            amount = std::min(static_cast<uint32_t>(amount), cItem.amount);
-                            player.playerController->getInventory().removeItem(parScriptName, amount);
-                        } else {
-                            return "error: could not remove item. item " + parScriptName + " is not in inventory";
-                        }
-                    }
-                    std::string action = give ? "added to" : "removed from";
-                    return std::string("Item(s) " + action + " the inventory: ")
-                        + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
+                if (suggestion == nullptr)
+                    return "Item not found!";
 
+                auto& aliasList = suggestion->aliasList;
+                auto& parScriptName = aliasList[0];
+                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), se.getPlayerEntity());
+                std::string description;
+                if (give)
+                {
+                    auto handle = player.playerController->getInventory().addItem(parScriptName, amount);
+                    Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                    description = cItem.description;
+                } else
+                {
+                    auto handle = player.playerController->getInventory().getItem(parScriptName);
+                    if (!handle.isValid())
+                        return "error: could not remove item. item " + parScriptName + " is not in inventory";
+
+                    Daedalus::GEngineClasses::C_Item& cItem = se.getVM().getGameState().getItem(handle);
+                    description =  cItem.description;
+                    amount = std::min(static_cast<uint32_t>(amount), cItem.amount);
+                    player.playerController->getInventory().removeItem(parScriptName, amount);
                 }
-                return "Item not found!";
+                std::string action = give ? "added to" : "removed from";
+                return std::string("Item(s) " + action + " the inventory: ")
+                    + std::to_string(amount) + " x " + description + " (" + parScriptName + ")";
+
             };
 
             auto giveitemCallback = [giveOrRemoveItemCallback](const std::vector<std::string>& args) -> std::string {
@@ -1061,16 +1044,16 @@ class REGoth : public PLATFORM_CLASS
 
             std::string frameInputText = getFrameTextInput();
             for (int i = 0; i < NUM_KEYS; i++) {
-                if (getKeysTriggered()[i]) // If key has been pushed the first time or repeatedly
-                {
-                    int mods = getModsTriggered()[i];
+                if (!getKeysTriggered()[i]) // If key has been pushed the first time or repeatedly
+                    continue;
 
-                    if(m_pEngine->getConsole().isOpen())
-                        m_pEngine->getConsole().onKeyDown(i, mods);
-                    if (keyMap.find(i) != keyMap.end())
-                    {
-                        m_pEngine->getHud().onInputAction(keyMap[i]);
-                    }
+                int mods = getModsTriggered()[i];
+
+                if(m_pEngine->getConsole().isOpen())
+                    m_pEngine->getConsole().onKeyDown(i, mods);
+                if (keyMap.find(i) != keyMap.end())
+                {
+                    m_pEngine->getHud().onInputAction(keyMap[i]);
                 }
             }
 
@@ -1080,7 +1063,6 @@ class REGoth : public PLATFORM_CLASS
             bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
             if(!disableBindings)
                 Engine::Input::fireBindings();
-
 
             // Check for resize
             if(m_Width != getWindowWidth() || m_Height != getWindowHeight())
@@ -1134,9 +1116,6 @@ class REGoth : public PLATFORM_CLASS
             // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
             //bgfx::touch(0);
 
-
-
-
             // Set render states.
             //bgfx::setState(BGFX_STATE_DEFAULT);
             //bgfx::setTexture(0, m_texUniform, m_texHandle);
@@ -1146,7 +1125,6 @@ class REGoth : public PLATFORM_CLASS
             m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
             // Draw and process all UI-Views
             // Set render states.
-
             {
                 auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
                 float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
