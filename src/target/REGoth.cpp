@@ -215,6 +215,15 @@ void REGoth::init(int _argc, char** _argv)
     fontSize = 23.0f;
 #endif
 
+    initConsole();
+
+    imguiCreate(nullptr, 0, fontSize);
+    m_ImgUiCreated = true;
+    m_scrollArea = 0;
+}
+
+void REGoth::initConsole()
+{
     auto& console = m_pEngine->getConsole();
     using SuggestionBase = Logic::Console::SuggestionBase;
     using Suggestion = Logic::Console::Suggestion;
@@ -875,15 +884,6 @@ void REGoth::init(int _argc, char** _argv)
 
     console.registerCommand("giveitem", giveitemCallback).registerAutoComplete(itemNamesGen);
     console.registerCommand("removeitem", removeitemCallback).registerAutoComplete(itemNamesGen);
-
-    imguiCreate(nullptr, 0, fontSize);
-    m_ImgUiCreated = true;
-
-    /*UI::Menu* m = new UI::Menu(*m_pEngine);
-      m_pEngine->getRootUIView().addChild(m);
-      m->initializeInstance("MENU_STATUS");*/
-
-    m_scrollArea = 0;
 }
 
 int REGoth::shutdown()

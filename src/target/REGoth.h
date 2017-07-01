@@ -17,6 +17,7 @@ class REGoth : public PLATFORM_CLASS
 {
     public:
         void init(int _argc, char** _argv) BX_OVERRIDE;
+        void initConsole();
         int shutdown() BX_OVERRIDE;
         bool update() BX_OVERRIDE;
         void drawLog();
