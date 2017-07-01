@@ -16,12 +16,12 @@
 class REGoth : public PLATFORM_CLASS
 {
     public:
-        void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height);
-        void drawLog();
-        void showSplash();
         void init(int _argc, char** _argv) BX_OVERRIDE;
         int shutdown() BX_OVERRIDE;
         bool update() BX_OVERRIDE;
+        void drawLog();
+        void showSplash();
+        void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height);
 
         Engine::GameEngine* m_pEngine;
         uint32_t m_debug;

@@ -143,123 +143,6 @@ std::map<int, UI::EInputAction> keyMap = {
     {GLFW_KEY_F10, UI::IA_ToggleConsole}
 };
 
-void REGoth::renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
-{
-    bgfx::TransientVertexBuffer tvb;
-    bgfx::TransientIndexBuffer tib;
-
-    if (!bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6))
-        return;
-
-    PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
-
-    float zz = 1.0f;
-
-    const float minx = _x;
-    const float maxx = _x + _width;
-    const float miny = _y;
-    const float maxy = _y + _height;
-
-    float minu = 0.0f;
-    float minv = 0.0f;
-    float maxu =  _width;
-    float maxv =  _height;
-
-    vertex[0].m_x = minx;
-    vertex[0].m_y = miny;
-    vertex[0].m_z = zz;
-    vertex[0].m_abgr = 0xffffffff;
-    vertex[0].m_u = minu;
-    vertex[0].m_v = minv;
-
-    vertex[1].m_x = maxx;
-    vertex[1].m_y = miny;
-    vertex[1].m_z = zz;
-    vertex[1].m_abgr = 0xffffffff;
-    vertex[1].m_u = maxu;
-    vertex[1].m_v = minv;
-
-    vertex[2].m_x = maxx;
-    vertex[2].m_y = maxy;
-    vertex[2].m_z = zz;
-    vertex[2].m_abgr = 0xffffffff;
-    vertex[2].m_u = maxu;
-    vertex[2].m_v = maxv;
-
-    vertex[3].m_x = minx;
-    vertex[3].m_y = maxy;
-    vertex[3].m_z = zz;
-    vertex[3].m_abgr = 0xffffffff;
-    vertex[3].m_u = minu;
-    vertex[3].m_v = maxv;
-
-    uint16_t* indices = (uint16_t*)tib.data;
-
-    indices[0] = 0;
-    indices[1] = 2;
-    indices[2] = 1;
-    indices[3] = 0;
-    indices[4] = 3;
-    indices[5] = 2;
-
-
-    bgfx::setIndexBuffer(&tib);
-    bgfx::setVertexBuffer(&tvb);
-    bgfx::submit(_view, _program);
-}
-
-void REGoth::drawLog()
-{
-    const std::list<std::string>& logs = Utils::Log::getLastLogLines();
-    auto it = logs.begin();
-
-    for(int i=49; i>=0 && it != logs.end(); i++)
-    {
-        bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
-
-        it++;
-    }
-}
-
-void REGoth::showSplash()
-{
-    float view[16];
-    float proj[16];
-
-    bx::mtxIdentity(view);
-    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
-
-    bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
-
-    // Set view and projection matrix for view 0.
-    bgfx::setViewTransform(1, NULL, proj);
-
-    bgfx::touch(0);
-
-#if BX_PLATFORM_ANDROID
-
-#else
-    /*Textures::TextureAllocator alloc(*m_pEngine);
-      Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
-      alloc.finalizeLoad(txh);
-
-      if(!txh.isValid())
-      return;
-
-      Textures::Texture& texture = alloc.getTexture(txh);
-      bgfx::frame();
-
-      bgfx::setState(BGFX_STATE_DEFAULT);
-      const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
-      bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
-      renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);*/
-#endif
-
-
-    bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
-    bgfx::frame();
-}
-
 void REGoth::init(int _argc, char** _argv)
 {
     std::cout << "Running REGoth Engine" << std::endl;
@@ -1162,6 +1045,123 @@ bool REGoth::update()
     m_pEngine->processMessageQueue();
 
     return true;
+}
+
+void REGoth::drawLog()
+{
+    const std::list<std::string>& logs = Utils::Log::getLastLogLines();
+    auto it = logs.begin();
+
+    for(int i=49; i>=0 && it != logs.end(); i++)
+    {
+        bgfx::dbgTextPrintf(0, i + 1, 0x4f, (*it).c_str());
+
+        it++;
+    }
+}
+
+void REGoth::showSplash()
+{
+    float view[16];
+    float proj[16];
+
+    bx::mtxIdentity(view);
+    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
+
+    bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
+
+    // Set view and projection matrix for view 0.
+    bgfx::setViewTransform(1, NULL, proj);
+
+    bgfx::touch(0);
+
+#if BX_PLATFORM_ANDROID
+
+#else
+    /*Textures::TextureAllocator alloc(*m_pEngine);
+      Handle::TextureHandle txh = alloc.loadTextureVDF("STARTSCREEN.TGA");
+      alloc.finalizeLoad(txh);
+
+      if(!txh.isValid())
+      return;
+
+      Textures::Texture& texture = alloc.getTexture(txh);
+      bgfx::frame();
+
+      bgfx::setState(BGFX_STATE_DEFAULT);
+      const Render::RenderConfig& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+      bgfx::setTexture(0, cfg.uniforms.diffuseTexture, texture.m_TextureHandle);
+      renderScreenSpaceQuad(1, cfg.programs.fullscreenQuadProgram, 0.0f, 0.0f, 1280.0f, 720.0f);*/
+#endif
+
+
+    bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
+    bgfx::frame();
+}
+
+void REGoth::renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
+{
+    bgfx::TransientVertexBuffer tvb;
+    bgfx::TransientIndexBuffer tib;
+
+    if (!bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6))
+        return;
+
+    PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
+
+    float zz = 1.0f;
+
+    const float minx = _x;
+    const float maxx = _x + _width;
+    const float miny = _y;
+    const float maxy = _y + _height;
+
+    float minu = 0.0f;
+    float minv = 0.0f;
+    float maxu =  _width;
+    float maxv =  _height;
+
+    vertex[0].m_x = minx;
+    vertex[0].m_y = miny;
+    vertex[0].m_z = zz;
+    vertex[0].m_abgr = 0xffffffff;
+    vertex[0].m_u = minu;
+    vertex[0].m_v = minv;
+
+    vertex[1].m_x = maxx;
+    vertex[1].m_y = miny;
+    vertex[1].m_z = zz;
+    vertex[1].m_abgr = 0xffffffff;
+    vertex[1].m_u = maxu;
+    vertex[1].m_v = minv;
+
+    vertex[2].m_x = maxx;
+    vertex[2].m_y = maxy;
+    vertex[2].m_z = zz;
+    vertex[2].m_abgr = 0xffffffff;
+    vertex[2].m_u = maxu;
+    vertex[2].m_v = maxv;
+
+    vertex[3].m_x = minx;
+    vertex[3].m_y = maxy;
+    vertex[3].m_z = zz;
+    vertex[3].m_abgr = 0xffffffff;
+    vertex[3].m_u = minu;
+    vertex[3].m_v = maxv;
+
+    uint16_t* indices = (uint16_t*)tib.data;
+
+    indices[0] = 0;
+    indices[1] = 2;
+    indices[2] = 1;
+    indices[3] = 0;
+    indices[4] = 3;
+    indices[5] = 2;
+
+
+    bgfx::setIndexBuffer(&tib);
+    bgfx::setVertexBuffer(&tvb);
+    bgfx::submit(_view, _program);
 }
 
 //Usage of Platform:
