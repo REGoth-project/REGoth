@@ -6,7 +6,7 @@
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
 #define PLATFORM_CLASS Engine::PlatformAndroid
-#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN || BX_PLATFORM_BSD
 #include "engine/PlatformGLFW.h"
 #define PLATFORM_CLASS Engine::PlatformGLFW
 #else
