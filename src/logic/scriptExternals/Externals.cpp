@@ -958,16 +958,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 		int32_t n = vm.popVar();
 		
 		VobTypes::NpcVobInformation npc = getNPCByInstance(n);
-		if (npc.isValid())
-		{
-			// TODO: Add true guild field to C_NPC
-			npc.playerController->getScriptInstance().guild = guild;
-			vm.setReturn(guild);
-		}
-		else
-		{
-			vm.setReturn(0);
-		}
+
+		npc.playerController->getScriptInstance().guild = guild;
+		vm.setReturn(0);
 	});
 
     vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
