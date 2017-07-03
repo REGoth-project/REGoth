@@ -937,6 +937,21 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+	vm->registerExternalFunction("npc_gettrueguild", [=](Daedalus::DaedalusVM& vm) {
+		int32_t n = vm.popVar();
+
+		VobTypes::NpcVobInformation npc = getNPCByInstance(n);
+
+		if (npc.isValid())
+		{
+			vm.setReturn(npc.playerController->getScriptInstance().guild);
+		}
+		else
+		{
+			vm.setReturn(0);
+		}
+	});
+
     vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
         uint32_t func = vm.popVar();
         std::string text = vm.popString();
