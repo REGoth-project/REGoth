@@ -10,6 +10,9 @@ set(BGFX_DEBUG 1)
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 
+# clang-format
+include(cmake/clang-format.cmake)
+
 if(EMSCRIPTEN)
 
     # cmake -DCMAKE_TOOLCHAIN_FILE="/usr/lib/emscripten/cmake/Modules/Platform/Emscripten.cmake" ..
