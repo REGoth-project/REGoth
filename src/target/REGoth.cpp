@@ -275,7 +275,7 @@ public:
 
         m_Width = getWindowWidth();
         m_Height = getWindowHeight();
-        m_NoHUD = false;
+        m_HUDMode = 2;
 
 
 //		bgfx::init(args.m_type, args.m_pciId);
@@ -404,10 +404,11 @@ public:
         });
 
         console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
-            static bool s_Stats = false;
-            s_Stats = !s_Stats;
 
-            m_NoHUD = !m_NoHUD;
+            if(args.size() < 2)
+                return "Missing argument. Usage: hud <mode> | (0=None, 1=Gameplay, 2=Full)";
+
+            m_HUDMode = std::min(2, std::stoi(args[1]));
 
             return "Toggled hud";
         });
@@ -1150,7 +1151,7 @@ public:
         // Use debug font to print information about this example.
         bgfx::dbgTextClear();
 
-        if(!m_NoHUD)
+        if(m_HUDMode >= 2)
         {
             uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
             bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
@@ -1177,11 +1178,11 @@ public:
         {
             auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
             float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
-            if(m_NoHUD)
+            if(m_HUDMode == 0)
             {
                 // draw console even if HUD is disabled
                 m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
-            } else
+            } else if(m_HUDMode >= 1)
             {
                 m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
             }
@@ -1235,7 +1236,7 @@ public:
     int64_t m_timeOffset;
     float axis;
     int32_t m_scrollArea;
-    bool m_NoHUD;
+    int m_HUDMode;
     // prevents imgui from crashing if we failed on startup and didn't init it
     bool m_ImgUiCreated = false;
 };
