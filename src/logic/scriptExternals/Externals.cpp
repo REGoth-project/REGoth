@@ -944,6 +944,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
 		if (npc.isValid())
 		{
+			// TODO: Add true guild field to C_NPC
 			vm.setReturn(npc.playerController->getScriptInstance().guild);
 		}
 		else
