@@ -258,30 +258,30 @@ void REGoth::initConsole()
             return ss.str();
         });
 
-    console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
-        if(args.size() < 2)
-            return "Missing argument. Usage: kf <idx>";
+        console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 2)
+                return "Missing argument. Usage: kf <idx>";
 
-        m_pEngine->getMainCameraController()->storeKeyframe(atoi(args[1].c_str()));
-        return "Saved keyframe";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->storeKeyframe(atoi(args[1].c_str()));
+            return "Saved keyframe";
+        });
 
     console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
         if(args.size() < 2)
             return "Missing argument. Usage: kf <idx>";
 
-        m_pEngine->getMainCameraController()->clearKeyframes();
-        return "Cleared keyframe";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
+            return "Cleared keyframe";
+        });
 
     console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
 
         if(args.size() < 2)
             return "Missing argument. Usage: pkf <duration>";
 
-        m_pEngine->getMainCameraController()->playKeyframes(atof(args[1].c_str()));
-        return "Playing keyed animation";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
+            return "Playing keyed animation";
+        });
 
 
     console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {

@@ -30,15 +30,18 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.floatingCameraSettings.pitch = 0.0f;
 
     // Init viewer
-    m_CameraSettings.viewerCameraSettings.lookAt = Math::float3(0,0,0);
+    m_CameraSettings.viewerCameraSettings.lookAt = Math::float3(0, 0, 0);
     m_CameraSettings.viewerCameraSettings.yaw = 0.0f;
     m_CameraSettings.viewerCameraSettings.pitch = 0.0f;
     m_CameraSettings.viewerCameraSettings.zoom = 30.0f;
 
-    m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0,0,0);
+    m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
 
     m_KeyframeDuration = 1.0f;
+}
 
+void Logic::CameraController::setupKeybinds()
+{
     // FirstPerson action
     {
         using namespace Engine;

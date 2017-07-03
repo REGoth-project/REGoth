@@ -132,6 +132,11 @@ namespace Logic
         }
 
         /**
+         * Registers all inputs inside the engine
+         */
+        void setupKeybinds();
+
+        /**
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
