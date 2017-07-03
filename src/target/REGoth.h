@@ -30,7 +30,7 @@ class REGoth : public PLATFORM_CLASS
         uint32_t m_Width, m_Height;
         int64_t m_timeOffset;
         int32_t m_scrollArea;
-        bool m_NoHUD;
+        int m_HUDMode;
         // prevents imgui from crashing if we failed on startup and didn't init it
         bool m_ImgUiCreated = false;
 };
