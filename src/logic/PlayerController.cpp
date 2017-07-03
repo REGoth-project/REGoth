@@ -32,6 +32,11 @@ using namespace Logic;
 using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
 
 /**
+ * Radius the sound of the voicelines and other sounds of the NPCs(in meters)
+ */
+const float NPC_SOUND_RADIUS = 14;
+
+/**
  * Standard node-names
  */
 namespace BodyNodes
@@ -1607,7 +1612,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation());
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation(), NPC_SOUND_RADIUS);
                 if (!isMonolog){
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
@@ -2739,7 +2744,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
     }
 
     // Play sound specified in the event
-    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation());
+    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), NPC_SOUND_RADIUS);
 }
 
 void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
@@ -2750,7 +2755,8 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
         ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
 
         m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
-                                                       getEntityTransform().Translation());
+                                                       getEntityTransform().Translation(),
+                                                       NPC_SOUND_RADIUS);
     }
 }
 
