@@ -1547,6 +1547,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 {
     using EventMessages::ConversationMessage;
     auto& message = *sharedMessage;
+    bool isMonolog = false;
     switch (static_cast<ConversationMessage::ConversationSubType>(message.subType))
     {
 
@@ -1587,10 +1588,13 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
         case ConversationMessage::ST_LookAt:
             break;
 
+        case ConversationMessage::ST_OutputMonolog:
+            // case: AI_OutputSVM which are not scheduled in Dialog
+            // Vatras' preach or Herold's announcement, smalltalk, ALARM...
+            isMonolog = true;
+            // fall through
         case ConversationMessage::ST_Output:
         {
-            // Vatras' preach or Herold accounce
-            bool isMonolog = message.target == this->m_Entity;
             auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
             // TODO: Rework this, when the animation-system is nicer. Need a cutscene system!
             if (message.status == ConversationMessage::Status::INIT)
@@ -1615,7 +1619,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             if (message.status == ConversationMessage::Status::PLAYING)
             {
 
-                bool nextStage;
+                bool playingFinished;
             #ifdef RE_USE_SOUND
                 if (message.canceled)
                 {
@@ -1627,16 +1631,16 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 if (autoPlay)
                 {
                     bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
-                    nextStage = !isPlaying;
+                    playingFinished = !isPlaying;
                 } else
                 {
-                    nextStage = message.canceled;
+                    playingFinished = message.canceled;
                 }
             #else
                 // when sound is disabled, message must be skipped manually
-                nextStage = message.canceled;
+                playingFinished = message.canceled;
             #endif
-                if (nextStage)
+                if (playingFinished)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
                     if (!isMonolog)
@@ -1657,10 +1661,6 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             return false;
         }
             break;
-
-        case ConversationMessage::ST_OutputSVM:
-            break;
-
         case ConversationMessage::ST_Cutscene:
             break;
         case ConversationMessage::ST_WaitTillEnd:

@@ -164,31 +164,43 @@ void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::Ga
         LogWarn() << "AI_Output: Self not found/invalid!";
         return;
     }
+    bool isDialogMessage = isDialogActive() &&
+            ((m_Interaction.target == self && m_Interaction.player == target)
+            || (m_Interaction.target == target && m_Interaction.player == self));
 
     if(target.isValid())
         LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
-        return;
-        //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
+    {
+        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
+        if (isDialogMessage)
+        {
+            LogError() << "Error: conversation target is invalid";
+            assert(false);
+            return;
+        }
+    }
 
     EventMessages::ConversationMessage conv;
-    // TODO: content of msg.subType useful?
-    conv.subType = EventMessages::ConversationMessage::ST_Output;
+    conv.subType = isDialogMessage ? EventMessages::ConversationMessage::ST_Output : EventMessages::ConversationMessage::ST_OutputMonolog;
     conv.name = msg.name;
     conv.text = msg.text;
 
     // Push the actual conversation-message
     auto sharedConvMessage = selfnpc.playerController->getEM().onMessage(conv);
 
-    // Make both wait for this ai_output to complete.
-    selfnpc.playerController->getEM().waitForMessage(sharedConvMessage);
-    if(target.isValid())
+    if (isDialogMessage)
     {
-        VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
-        if (targetnpc.isValid())
+        // Make both wait for this ai_output to complete.
+        selfnpc.playerController->getEM().waitForMessage(sharedConvMessage);
+        if(target.isValid())
         {
-            sharedConvMessage->target = targetnpc.entity;
-            targetnpc.playerController->getEM().waitForMessage(sharedConvMessage);
+            VobTypes::NpcVobInformation targetnpc = VobTypes::getVobFromScriptHandle(m_World, target);
+            if (targetnpc.isValid())
+            {
+                sharedConvMessage->target = targetnpc.entity;
+                targetnpc.playerController->getEM().waitForMessage(sharedConvMessage);
+            }
         }
     }
 }

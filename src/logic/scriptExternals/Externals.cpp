@@ -925,6 +925,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if(npc.isValid())
         {
+            vm.setReturn(1);
             // Find fp with given name
             // TODO
             /*Handle::EntityHandle fp = (*pWorld->getFreepoints().find(fpname)).second;
@@ -1148,6 +1149,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         auto& dialogManager = pWorld->getDialogManager();
         auto& message = dialogManager.getScriptDialogManager()->getMessageLib().getMessageByName(outputname);
         dialogManager.onAIOutput(hself, htarget, message);
+    });
+
+    vm->registerExternalFunction("ai_outputsvm", [=](Daedalus::DaedalusVM& vm) {
+        std::string svmname = vm.popString();
+        int32_t target = vm.popVar();
+        int32_t self = vm.popVar();
+        LogInfo() << "ai_outputsvm: " << svmname;
+
+        NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
+        NpcHandle htarget = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(target).instanceDataHandle);
+        Daedalus::GEngineClasses::C_Npc& cSelf = vm.getGameState().getNpc(hself);
+
+        std::string messageName = "SVM_" + std::to_string(cSelf.voice) + "_" + svmname.substr(1);
+
+        auto& dialogManager = pWorld->getDialogManager();
+        auto& message = dialogManager.getScriptDialogManager()->getMessageLib().getMessageByName(messageName);
+        dialogManager.onAIOutput(hself, htarget, message);
+
     });
 
     vm->registerExternalFunction("AI_ProcessInfos", [=](Daedalus::DaedalusVM& vm){
