@@ -98,7 +98,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Forward:
-            if (m_MovementState.isForward)
+            if(m_MovementState.isForward)
             {
                 // Forward-key still pressed, keep going
                 if (!getNpcAnimationHandler().Action_GoForward())
@@ -129,7 +129,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Backward:
-            if (m_MovementState.isBackward)
+            if(m_MovementState.isBackward)
             {
                 // Backward-key still pressed, keep going
                 getNpcAnimationHandler().Action_GoBackward();
