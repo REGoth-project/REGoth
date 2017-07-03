@@ -51,7 +51,12 @@ bool Logic::PfxVisual::load(const std::string& visual)
 
     // Init particle-systems dynamic vertex-buffer
     // Needs to happen on the mainthread
-    getPfxComponent().m_ParticleVB.idx = bgfx::invalidHandle;
+    auto job = [this](Engine::BaseEngine* engine){
+        getPfxComponent().m_ParticleVB = bgfx::createDynamicVertexBuffer(6,
+                                                                         Meshes::WorldStaticMeshVertex::ms_decl, // FIXME: May want to use a smaller one
+                                                                         BGFX_BUFFER_ALLOW_RESIZE);
+    };
+    m_World.getEngine()->executeInMainThread(job);
 
     getPfxComponent().m_Texture = m_World.getTextureAllocator().loadTextureVDF(m_Emitter.visName);
 
