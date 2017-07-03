@@ -369,14 +369,11 @@ public:
             return ss.str();
         });
 
-        auto& console = m_pEngine->getHud().getConsole();
-
-
         console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
             if(args.size() < 2)
                 return "Missing argument. Usage: kf <idx>";
 
-            m_pEngine->getMainCameraController()->storeKeyframe(atoi(args[1].c_str()));
+            m_pEngine->getMainWorld().get().getCameraController()->storeKeyframe(atoi(args[1].c_str()));
             return "Saved keyframe";
         });
 
@@ -384,7 +381,7 @@ public:
             if(args.size() < 2)
                 return "Missing argument. Usage: kf <idx>";
 
-            m_pEngine->getMainCameraController()->clearKeyframes();
+            m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
             return "Cleared keyframe";
         });
 
@@ -393,7 +390,7 @@ public:
             if(args.size() < 2)
                 return "Missing argument. Usage: pkf <duration>";
 
-            m_pEngine->getMainCameraController()->playKeyframes(atof(args[1].c_str()));
+            m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
             return "Playing keyed animation";
         });
 
