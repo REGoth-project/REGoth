@@ -1964,8 +1964,9 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 
 void PlayerController::setupKeyBindings()
 {
-    // Engine::Input::clearActions();
+    Engine::Input::clearActions();
     m_AIHandler.bindKeys();
+    m_World.getCameraController()->setupKeybinds();
 
     Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float) {
         if (triggered)

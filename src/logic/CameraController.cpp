@@ -38,7 +38,10 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
 
     m_KeyframeDuration = 1.0f;
+}
 
+void Logic::CameraController::setupKeybinds()
+{
     // FirstPerson action
     {
         using namespace Engine;
