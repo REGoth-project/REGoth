@@ -158,7 +158,7 @@ void REGoth::init(int _argc, char** _argv)
 
     m_Width = getWindowWidth();
     m_Height = getWindowHeight();
-    m_NoHUD = false;
+    m_HUDMode = 2;
 
     bgfx::init();
     bgfx::reset(m_Width, m_Height, m_reset);
@@ -293,10 +293,11 @@ void REGoth::initConsole()
         });
 
     console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
-            static bool s_Stats = false;
-            s_Stats = !s_Stats;
 
-            m_NoHUD = !m_NoHUD;
+            if(args.size() < 2)
+                return "Missing argument. Usage: hud <mode> | (0=None, 1=Gameplay, 2=Full)";
+
+            m_HUDMode = std::min(2, std::stoi(args[1]));
 
             return "Toggled hud";
             });
@@ -996,12 +997,12 @@ bool REGoth::update()
     // Use debug font to print information about this example.
     bgfx::dbgTextClear();
 
-    if(!m_NoHUD)
-    {
-        uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
-        bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-        bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
-    }
+        if(m_HUDMode >= 2)
+        {
+            uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
+            bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+            bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+        }
 
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
@@ -1013,21 +1014,22 @@ bool REGoth::update()
 
     ddBegin(0);
 
-    m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
-    // Draw and process all UI-Views
-    // Set render states.
-    {
-        auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
-        float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
-        if(m_NoHUD)
+        m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
+        // Draw and process all UI-Views
+        // Set render states.
+
         {
-            // draw console even if HUD is disabled
-            m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
-        } else
-        {
-            m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
+            auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+            float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
+            if(m_HUDMode == 0)
+            {
+                // draw console even if HUD is disabled
+                m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
+            } else if(m_HUDMode >= 1)
+            {
+                m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
+            }
         }
-    }
 
 
     // debug draw
