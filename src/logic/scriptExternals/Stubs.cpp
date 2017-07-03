@@ -680,14 +680,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         vm.setReturn(0);
     });
 
-    vm.registerExternalFunction("npc_settrueguild", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "npc_settrueguild";
-        int guildid = vm.popDataValue(); if(verbose) LogInfo() << "guildid: " << guildid;
-        uint32_t arr_npc;
-        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
-        vm.setReturn(0);
-    });
-
     vm.registerExternalFunction("npc_startitemreactmodules", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_startitemreactmodules";
         uint32_t arr_item;
