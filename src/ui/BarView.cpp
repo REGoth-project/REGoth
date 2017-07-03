@@ -2,11 +2,11 @@
 // Created by desktop on 16.12.16.
 //
 
-#include <content/Texture.h>
 #include "BarView.h"
+#include <content/Texture.h>
+#include <engine/BaseEngine.h>
 #include <imgui/imgui.h>
 #include "ImageView.h"
-#include <engine/BaseEngine.h>
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
@@ -18,12 +18,11 @@ UI::BarView::BarView(Engine::BaseEngine& e) : View(e)
 
 UI::BarView::~BarView()
 {
-
 }
 
 void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     Textures::Texture& background = m_Engine.getEngineTextureAlloc().getTexture(m_Background);
@@ -35,11 +34,11 @@ void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::R
     Math::float2 absTranslation = getAbsoluteTranslation();
     Math::float2 absSize = getAbsoluteSize();
     Math::float2 offset = getAlignOffset(m_Alignment, background.m_Width * absSize.x, background.m_Height * absSize.y);
-    int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
-    int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
+    int px = (int)(absTranslation.x * config.state.viewWidth + 0.5f);
+    int py = (int)(absTranslation.y * config.state.viewHeight + 0.5f);
 
-    int sx = (int) (background.m_Width * absSize.x + 0.5f);
-    int sy = (int) (background.m_Height * absSize.y + 0.5f);
+    int sx = (int)(background.m_Width * absSize.x + 0.5f);
+    int sy = (int)(background.m_Height * absSize.y + 0.5f);
 
     px += offset.x;
     py += offset.y;
@@ -77,7 +76,9 @@ void UI::BarView::setValue(int32_t value, int32_t maxValue)
     if (maxValue != 0)
     {
         m_Value = value / static_cast<float>(maxValue);
-    } else {
+    }
+    else
+    {
         m_Value = 0;
     }
 }

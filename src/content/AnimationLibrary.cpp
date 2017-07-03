@@ -1,12 +1,12 @@
-#include <algorithm>
+#include <ZenLib/zenload/zCMaterial.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
-#include <vdfs/fileIndex.h>
 #include <utils/logger.h>
+#include <vdfs/fileIndex.h>
 #include <zenload/modelAnimationParser.h>
 #include <zenload/modelScriptParser.h>
 #include <zenload/zenParser.h>
-#include <ZenLib/zenload/zCMaterial.h>
+#include <algorithm>
 
 #include "content/AnimationLibrary.h"
 
@@ -16,7 +16,6 @@ using namespace ZenLoad;
 
 namespace Animations
 {
-
 AnimationLibrary::AnimationLibrary(World::WorldInstance &world)
     : m_World(world)
 {
@@ -46,7 +45,7 @@ AnimationData &AnimationLibrary::getAnimationData(Handle::AnimationDataHandle h)
 bool AnimationLibrary::loadAnimations()
 {
     // both .MDS and .MSB, where .MDS has precedence
-    std::map<std::string, bool> msb_loaded; // true = is MDS
+    std::map<std::string, bool> msb_loaded;  // true = is MDS
 
     std::string ext_mds = ".MDS";
     std::string ext_msb = ".MSB";
@@ -62,15 +61,14 @@ bool AnimationLibrary::loadAnimations()
         {
             ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
             ModelScriptTextParser p(zen);
-            p.setStrict(false); // TODO: should be configurable
+            p.setStrict(false);  // TODO: should be configurable
             if (!loadModelScript(fn, p))
-                ; //return false;
+                ;  //return false;
 
             // MDS always overwrites
             msb_loaded[n] = true;
-
-        } else
-        if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
+        }
+        else if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
         {
             auto it = msb_loaded.find(n);
             if (it != msb_loaded.end() && it->second == true)
@@ -82,12 +80,12 @@ bool AnimationLibrary::loadAnimations()
             ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
             ModelScriptBinParser p(zen);
             if (!loadModelScript(fn, p))
-                ; //return false;
+                ;  //return false;
 
             msb_loaded[n] = false;
-        } else
+        }
+        else
             continue;
-
     }
 
     return true;
@@ -102,7 +100,7 @@ Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string &name)
     if (h.isValid())
         return h;
 
-    const VDFS::FileIndex& idx = m_World.getEngine()->getVDFSIndex();
+    const VDFS::FileIndex &idx = m_World.getEngine()->getVDFSIndex();
     if (!idx.hasFile(file_name))
     {
         LogError() << "MAN file " << file_name << " does not exist";
@@ -121,26 +119,26 @@ Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string &name)
     {
         switch (type)
         {
-        case ModelAnimationParser::CHUNK_HEADER:
-            data.m_Header = p.getHeader();
-            break;
-        case ModelAnimationParser::CHUNK_RAWDATA:
-            data.m_NodeIndexList = p.getNodeIndex();
-            data.m_Samples = p.getSamples();
-            break;
-        case ModelAnimationParser::CHUNK_ERROR:
-            return Handle::AnimationDataHandle::makeInvalidHandle();
+            case ModelAnimationParser::CHUNK_HEADER:
+                data.m_Header = p.getHeader();
+                break;
+            case ModelAnimationParser::CHUNK_RAWDATA:
+                data.m_NodeIndexList = p.getNodeIndex();
+                data.m_Samples = p.getSamples();
+                break;
+            case ModelAnimationParser::CHUNK_ERROR:
+                return Handle::AnimationDataHandle::makeInvalidHandle();
         }
     }
 
     return h;
 }
 
-static void animationAddEventSFX(Animation* anim, const zCModelScriptEventSfx& sfx)
+static void animationAddEventSFX(Animation *anim, const zCModelScriptEventSfx &sfx)
 {
     anim->m_EventsSFX.push_back(sfx);
 
-    if(anim->m_EventsSFX.back().m_Frame == -1)
+    if (anim->m_EventsSFX.back().m_Frame == -1)
     {
         anim->m_EventsSFX.back().m_Frame = anim->m_LastFrame - 1;
     }
@@ -149,11 +147,11 @@ static void animationAddEventSFX(Animation* anim, const zCModelScriptEventSfx& s
     anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
 }
 
-static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEventSfx& sfx)
+static void animationAddEventSFXGround(Animation *anim, const zCModelScriptEventSfx &sfx)
 {
     anim->m_EventsSFXGround.push_back(sfx);
 
-    if(anim->m_EventsSFXGround.back().m_Frame == -1)
+    if (anim->m_EventsSFXGround.back().m_Frame == -1)
     {
         anim->m_EventsSFXGround.back().m_Frame = anim->m_LastFrame - 1;
     }
@@ -162,11 +160,11 @@ static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEvent
     anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
 }
 
-static void animationAddEventTag(Animation* anim, const zCModelScriptEventTag& tag)
+static void animationAddEventTag(Animation *anim, const zCModelScriptEventTag &tag)
 {
     anim->m_EventTags.push_back(tag);
 
-    if(anim->m_EventTags.back().m_Frame == -1)
+    if (anim->m_EventTags.back().m_Frame == -1)
     {
         anim->m_EventTags.back().m_Frame = anim->m_LastFrame - 1;
     }
@@ -189,7 +187,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
     {
         switch (type)
         {
-        case ModelScriptParser::CHUNK_ANI:
+            case ModelScriptParser::CHUNK_ANI:
             {
                 std::string qname = name + '-' + p.ani().m_Name;
 
@@ -218,19 +216,19 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
 
                 // In case this was an ASCII-File, these will be filled. Binary files have single ones
                 // stored in chunks handled below
-                for(auto& sfx : p.sfx())
+                for (auto &sfx : p.sfx())
                 {
                     animationAddEventSFX(anim, sfx);
                 }
                 p.sfx().clear();
 
-                for(auto& sfx : p.sfxGround())
+                for (auto &sfx : p.sfxGround())
                 {
                     animationAddEventSFXGround(anim, sfx);
                 }
                 p.sfxGround().clear();
 
-                for(auto& tag : p.tag())
+                for (auto &tag : p.tag())
                 {
                     animationAddEventTag(anim, tag);
                 }
@@ -249,7 +247,7 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 animationAddEventSFX(anim, p.sfx().back());
                 p.sfx().clear();
             }
-                break;
+            break;
 
             // This will be only called on binary files, with exactly one sfx-entry!
             case ModelScriptParser::CHUNK_EVENT_SFX_GRND:
@@ -262,10 +260,10 @@ bool AnimationLibrary::loadModelScript(const std::string &file_name, ModelScript
                 animationAddEventSFXGround(anim, p.sfx().back());
                 p.sfxGround().clear();
             }
-                break;
+            break;
 
-        case ModelScriptParser::CHUNK_ERROR:
-            return false;
+            case ModelScriptParser::CHUNK_ERROR:
+                return false;
         }
     }
 
@@ -283,7 +281,8 @@ std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, con
     if (uoverlay.find(umesh_lib) != 0)
     {
         qname = umesh_lib + '_' + uoverlay + '-' + uname;
-    } else
+    }
+    else
         qname = umesh_lib + '-' + uname;
 
     //LogInfo() << "qname '" << qname << "' '" << umesh_lib << "' '" << uoverlay << "' '" << uname << "'";
@@ -291,4 +290,4 @@ std::string AnimationLibrary::makeQualifiedName(const std::string &mesh_lib, con
     return qname;
 }
 
-} // namespace Animations
+}  // namespace Animations

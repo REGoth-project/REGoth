@@ -2,11 +2,11 @@
 
 namespace Logic
 {
-    enum class EVisualType
-    {
-        Base,
-        Model,
-        StaticMesh,
-        Pfx
-    };
+enum class EVisualType
+{
+    Base,
+    Model,
+    StaticMesh,
+    Pfx
+};
 }

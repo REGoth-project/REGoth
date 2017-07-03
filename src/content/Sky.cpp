@@ -2,35 +2,34 @@
 // Created by desktop on 07.08.16.
 //
 
-#include <cstdint>
-#include <utils/Utils.h>
+#include "Sky.h"
+#include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <entry/input.h>
-#include <utils/logger.h>
-#include "Sky.h"
-#include "engine/Input.h"
-#include <iostream>
-#include <engine/BaseEngine.h>
+#include <utils/Utils.h>
 #include <utils/cli.h>
+#include <utils/logger.h>
+#include <cstdint>
+#include <iostream>
+#include "engine/Input.h"
 
 using namespace Content;
 
-const float TIME_KEY_0	= 0.00f;
-const float TIME_KEY_1	= 0.25f;
-const float TIME_KEY_2	= 0.30f;
-const float TIME_KEY_3	= 0.35f;
-const float TIME_KEY_4	= 0.50f;
-const float TIME_KEY_5	= 0.65f;
-const float TIME_KEY_6	= 0.70f;
-const float TIME_KEY_7	= 0.75f;
+const float TIME_KEY_0 = 0.00f;
+const float TIME_KEY_1 = 0.25f;
+const float TIME_KEY_2 = 0.30f;
+const float TIME_KEY_3 = 0.35f;
+const float TIME_KEY_4 = 0.50f;
+const float TIME_KEY_5 = 0.65f;
+const float TIME_KEY_6 = 0.70f;
+const float TIME_KEY_7 = 0.75f;
 
 namespace Flags
 {
-    Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: auto, g1, g2", {"auto"}, "Game");
+Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: auto, g1, g2", {"auto"}, "Game");
 }
 
-Sky::Sky(World::WorldInstance& world) :
-    m_World(world)
+Sky::Sky(World::WorldInstance& world) : m_World(world)
 {
     m_MasterState.time = 0.5f;
     m_FarPlane = FLT_MAX;
@@ -42,22 +41,21 @@ Sky::~Sky()
 {
 }
 
-
 void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1, Math::float4* pLut)
 {
     Math::float3 delta = col1 - col0;
 
     // Put base color into upper half
-    uint32_t ic[] = { Utils::round<uint32_t>(255.0f * col0.x) << 16,
-                      Utils::round<uint32_t>(255.0f * col0.y) << 16,
-                      Utils::round<uint32_t>(255.0f * col0.z) << 16};
+    uint32_t ic[] = {Utils::round<uint32_t>(255.0f * col0.x) << 16,
+                     Utils::round<uint32_t>(255.0f * col0.y) << 16,
+                     Utils::round<uint32_t>(255.0f * col0.z) << 16};
 
     // Inflate color-delta to the lower 16-bits
     uint32_t idelta[] = {Utils::round<uint32_t>(delta.x * 65535),
                          Utils::round<uint32_t>(delta.y * 65535),
                          Utils::round<uint32_t>(delta.z * 65535)};
 
-    for(int i=0; i<256; i++)
+    for (int i = 0; i < 256; i++)
     {
         // Magic?
         ic[0] += idelta[0];
@@ -88,10 +86,10 @@ void Sky::interpolate()
     size_t si0 = ESPT_NUM_PRESETS - 1, si1 = 0;
 
     // Find the two states we're interpolating
-    for(size_t i=0; i<ESkyPresetType::ESPT_NUM_PRESETS; i++)
+    for (size_t i = 0; i < ESkyPresetType::ESPT_NUM_PRESETS; i++)
     {
         // Interpolate between the current and the next
-        if(m_MasterState.time < m_SkyStates[i].time)
+        if (m_MasterState.time < m_SkyStates[i].time)
         {
             si0 = (i - 1) % ESkyPresetType::ESPT_NUM_PRESETS;
             si1 = (si0 + 1) % ESkyPresetType::ESPT_NUM_PRESETS;
@@ -128,28 +126,28 @@ void Sky::interpolate()
     // FIXME: Multiply fogColor with 0.8 when using dome!
 
     // Calculate LUT based on our interpolated colors
-    calculateLUT_ZenGin(Math::float3(0,0,0), m_MasterState.baseColor, m_LUT);
+    calculateLUT_ZenGin(Math::float3(0, 0, 0), m_MasterState.baseColor, m_LUT);
 
     // TODO: Fix up the textures here
 }
 
-void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState &s, Textures::TextureAllocator& texAlloc)
+void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState& s, Textures::TextureAllocator& texAlloc)
 {
-    Math::float3 skyColor_g1 = Math::float3(114, 93, 82) / 255.0f; // G1
-    Math::float3 skyColor_g2 = Math::float3(120, 140, 180) / 255.0f; // G2
+    Math::float3 skyColor_g1 = Math::float3(114, 93, 82) / 255.0f;    // G1
+    Math::float3 skyColor_g2 = Math::float3(120, 140, 180) / 255.0f;  // G2
 
     Math::float3 skyColor = skyColor_g2;
 
-    if(Flags::skyType.isSet())
+    if (Flags::skyType.isSet())
     {
-        if (Flags::skyType.getParam(0).empty()
-            || Flags::skyType.getParam(0) == "auto")
+        if (Flags::skyType.getParam(0).empty() || Flags::skyType.getParam(0) == "auto")
         {
             if (world.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
                 skyColor = skyColor_g2;
             else
                 skyColor = skyColor_g1;
-        } else
+        }
+        else
         {
             if (Flags::skyType.getParam(0) == "g1")
                 skyColor = skyColor_g1;
@@ -160,176 +158,177 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
         }
     }
 
-    switch(type)
+    switch (type)
     {
         case ESkyPresetType::ESPT_Day0:
             s.time = TIME_KEY_7;
 
-            s.baseColor = Math::float3(255,250,235) / 255.0f;
+            s.baseColor = Math::float3(255, 250, 235) / 255.0f;
             s.fogColor = skyColor;
-            s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
+            s.domeColorUpper = Math::float3(255, 255, 255) / 255.0f;
 
             s.fogDistance = 0.2f;
             s.sunEnabled = true;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
             s.layers[0].textureAlpha = 0.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 1.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Day1:
             s.time = TIME_KEY_0;
 
-            s.baseColor = Math::float3(255,250,235) / 255.0f;
+            s.baseColor = Math::float3(255, 250, 235) / 255.0f;
             s.fogColor = skyColor;
-            s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
+            s.domeColorUpper = Math::float3(255, 255, 255) / 255.0f;
 
             s.fogDistance = 0.05f;
             s.sunEnabled = true;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
             s.layers[0].textureAlpha = 215.0f / 255.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 1.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Day2:
             s.time = TIME_KEY_1;
 
-            s.baseColor = Math::float3(255,250,235) / 255.0f;
+            s.baseColor = Math::float3(255, 250, 235) / 255.0f;
             s.fogColor = skyColor;
-            s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
+            s.domeColorUpper = Math::float3(255, 255, 255) / 255.0f;
 
             s.fogDistance = 0.05f;
             s.sunEnabled = true;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
             s.layers[0].textureAlpha = 0.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 1.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Evening:
             s.time = TIME_KEY_2;
 
-            s.baseColor = Math::float3(255,185,170) / 255.0f;
-            s.fogColor = Math::float3(170,70,50) / 255.0f;
-            s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
+            s.baseColor = Math::float3(255, 185, 170) / 255.0f;
+            s.fogColor = Math::float3(170, 70, 50) / 255.0f;
+            s.domeColorUpper = Math::float3(255, 255, 255) / 255.0f;
 
             s.fogDistance = 0.2f;
             s.sunEnabled = true;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
             s.layers[0].textureAlpha = 0.5f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 1.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
             s.layers[1].textureAlpha = 0.5f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Night0:
             s.time = TIME_KEY_3;
 
-            s.baseColor = Math::float3(105,105,195) / 255.0f;
-            s.fogColor = Math::float3(20,20,60) / 255.0f;
-            s.domeColorUpper = Math::float3(55,55,155) / 255.0f;
+            s.baseColor = Math::float3(105, 105, 195) / 255.0f;
+            s.fogColor = Math::float3(20, 20, 60) / 255.0f;
+            s.domeColorUpper = Math::float3(55, 55, 155) / 255.0f;
 
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 4.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
             s.layers[1].textureAlpha = 0.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Night1:
             s.time = TIME_KEY_4;
 
-            s.baseColor = Math::float3(40,60,210) / 255.0f;
-            s.fogColor = Math::float3(5,5,20) / 255.0f;
-            s.domeColorUpper = Math::float3(55,55,155) / 255.0f;
+            s.baseColor = Math::float3(40, 60, 210) / 255.0f;
+            s.fogColor = Math::float3(5, 5, 20) / 255.0f;
+            s.domeColorUpper = Math::float3(55, 55, 155) / 255.0f;
 
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 4.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
             s.layers[1].textureAlpha = 215.0f / 255.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Night2:
             s.time = TIME_KEY_5;
 
-            s.baseColor = Math::float3(40,60,210) / 255.0f;
-            s.fogColor = Math::float3(5,5,20) / 255.0f;
-            s.domeColorUpper = Math::float3(55,55,155) / 255.0f;
+            s.baseColor = Math::float3(40, 60, 210) / 255.0f;
+            s.fogColor = Math::float3(5, 5, 20) / 255.0f;
+            s.domeColorUpper = Math::float3(55, 55, 155) / 255.0f;
 
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 4.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
             s.layers[1].textureAlpha = 0.0f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
         case ESkyPresetType::ESPT_Dawn:
             s.time = TIME_KEY_6;
 
-            s.baseColor = Math::float3(190,160,255) / 255.0f;
-            s.fogColor = Math::float3(80,60,105) / 255.0f;
-            s.domeColorUpper = Math::float3(255,255,255) / 255.0f;
+            s.baseColor = Math::float3(190, 160, 255) / 255.0f;
+            s.fogColor = Math::float3(80, 60, 105) / 255.0f;
+            s.domeColorUpper = Math::float3(255, 255, 255) / 255.0f;
 
             s.fogDistance = 0.5f;
             s.sunEnabled = true;
 
             s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
             s.layers[0].textureAlpha = 0.5f;
-            s.layers[0].textureSpeed = Math::float2(0,0);
+            s.layers[0].textureSpeed = Math::float2(0, 0);
             s.layers[0].textureScale = 1.0f;
             s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
             s.layers[1].textureAlpha = 0.5f;
-            s.layers[1].textureSpeed = Math::float2(0,0);
+            s.layers[1].textureSpeed = Math::float2(0, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
-        default: break;
+        default:
+            break;
     }
 }
 
 void Sky::fillSkyStates()
 {
     // Fill all sky-states, in order
-    for(int i=0;i < ESkyPresetType::ESPT_NUM_PRESETS; i++)
+    for (int i = 0; i < ESkyPresetType::ESPT_NUM_PRESETS; i++)
     {
         initSkyState(m_World, static_cast<ESkyPresetType>(i), m_SkyStates[i], m_World.getTextureAllocator());
     }
@@ -348,8 +347,8 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
 
     // Skale fog back depending on how high the camera is
     float fogScale = fogMaxY - fogMinY != 0 ? (cameraWorld.y - fogMinY) / (fogMaxY - fogMinY) : 0;
-    fogScale = std::min(1.0f, std::max(0.0f, fogScale)); // Clamp to 0..1
-    fogScale = std::max(m_MasterState.fogDistance, fogScale); // Fog should be at least our set distance
+    fogScale = std::min(1.0f, std::max(0.0f, fogScale));       // Clamp to 0..1
+    fogScale = std::max(m_MasterState.fogDistance, fogScale);  // Fog should be at least our set distance
 
     _far = fogMidrange + (1.0f - fogScale) * fogMidDelta;
 
@@ -368,7 +367,7 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
 
     // Compute intensity based on the ZenGins color-base
     Math::float3 base = Math::float3(0.299f, 0.587f, 0.114f);
-    Math::float3 baseColor = Math::float3(m_MasterState.fogColor.x, m_MasterState.fogColor.x, m_MasterState.fogColor.x); // Yup, all red.
+    Math::float3 baseColor = Math::float3(m_MasterState.fogColor.x, m_MasterState.fogColor.x, m_MasterState.fogColor.x);  // Yup, all red.
 
     // Calculate intensity
     float intensityValue = std::min(baseColor.dot(base), 120.0f / 255.0f);

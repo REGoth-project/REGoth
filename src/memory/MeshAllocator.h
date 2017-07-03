@@ -2,12 +2,11 @@
 
 namespace Meshes
 {
-	class MeshAllocator
-	{
-	public:
-		MeshAllocator() {}
-
-	private:
-		Meshes::StaticMeshDynSize
-	};
+class MeshAllocator
+{
+public:
+    MeshAllocator() {}
+private:
+    Meshes::StaticMeshDynSize
+};
 }

@@ -1,47 +1,46 @@
-#include "audio/AudioEngine.h"
 #include "BaseEngine.h"
-#include <vdfs/fileIndex.h>
-#include <zenload/zenParser.h>
-#include <zenload/zCMesh.h>
-#include <components/EntityActions.h>
-#include <utils/bgfx_lib.h>
-#include "World.h"
-#include <render/WorldRender.h>
-#include <utils/logger.h>
 #include <bx/commandline.h>
-#include <zenload/zCModelPrototype.h>
+#include <components/EntityActions.h>
 #include <components/Vob.h>
-#include <fstream>
-#include <ui/Hud.h>
-#include <ui/zFont.h>
-#include <utils/cli.h>
-#include <ui/LoadingScreen.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include <render/WorldRender.h>
+#include <ui/Hud.h>
+#include <ui/LoadingScreen.h>
+#include <ui/zFont.h>
+#include <utils/bgfx_lib.h>
+#include <utils/cli.h>
+#include <utils/logger.h>
+#include <vdfs/fileIndex.h>
+#include <zenload/zCMesh.h>
+#include <zenload/zCModelPrototype.h>
+#include <zenload/zenParser.h>
+#include <fstream>
 #include "AsyncAction.h"
+#include "World.h"
+#include "audio/AudioEngine.h"
 
 using namespace Engine;
 
 namespace Flags
 {
-    Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
-    Cli::Flag g1Directory("", "g1-path", 1, "Game data to use when the -g1 flag is specified on the commandline", {"."}, "Data");
-    Cli::Flag g2Directory("", "g2-path", 1, "Game data to use when the -g2 flag is specified on the commandline", {"."}, "Data");
-    Cli::Flag startG1("g1", "start-g1", 0, "Uses the path stored in the 'g1-path' config setting as game data path");
-    Cli::Flag startG2("g2", "start-g2", 0, "Uses the path stored in the 'g2-path' config setting as game data path");
+Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
+Cli::Flag g1Directory("", "g1-path", 1, "Game data to use when the -g1 flag is specified on the commandline", {"."}, "Data");
+Cli::Flag g2Directory("", "g2-path", 1, "Game data to use when the -g2 flag is specified on the commandline", {"."}, "Data");
+Cli::Flag startG1("g1", "start-g1", 0, "Uses the path stored in the 'g1-path' config setting as game data path");
+Cli::Flag startG2("g2", "start-g2", 0, "Uses the path stored in the 'g2-path' config setting as game data path");
 
-    Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
-    Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
-    Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
-    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
-    Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
+Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
+Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
+Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
+Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
+Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
-BaseEngine::BaseEngine() :
-        m_MainThreadID(std::this_thread::get_id()),
-        m_RootUIView(*this),
-        m_Console(*this),
-        m_EngineTextureAlloc(*this)
+BaseEngine::BaseEngine() : m_MainThreadID(std::this_thread::get_id()),
+                           m_RootUIView(*this),
+                           m_Console(*this),
+                           m_EngineTextureAlloc(*this)
 {
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
@@ -71,44 +70,42 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_Args.gameBaseDirectory = ".";
     //m_Args.startupZEN = "addonworld.zen";
 
-
-    if(Flags::startG1.isSet())
+    if (Flags::startG1.isSet())
         m_Args.gameBaseDirectory = Flags::g1Directory.getParam(0);
-    else if(Flags::startG2.isSet())
+    else if (Flags::startG2.isSet())
         m_Args.gameBaseDirectory = Flags::g2Directory.getParam(0);
-    else if(Flags::gameDirectory.isSet())
+    else if (Flags::gameDirectory.isSet())
         m_Args.gameBaseDirectory = Flags::gameDirectory.getParam(0);
     else
         LogInfo() << "No game-root specified! Using the current working-directory as game root. Use the '-g' flag to specify this!";
 
-    if(Flags::modFile.isSet())
+    if (Flags::modFile.isSet())
         m_Args.modfile = Flags::modFile.getParam(0);
 
-    if(Flags::world.isSet())
+    if (Flags::world.isSet())
         m_Args.startupZEN = Flags::world.getParam(0);
-
 
     loadArchives();
 
-    if(m_Args.startupZEN.empty() || !m_FileIndex.hasFile(m_Args.startupZEN))
+    if (m_Args.startupZEN.empty() || !m_FileIndex.hasFile(m_Args.startupZEN))
     {
         // Try Gothic 1
-        if(m_FileIndex.hasFile("world.zen"))
+        if (m_FileIndex.hasFile("world.zen"))
             m_Args.startupZEN = "world.zen";
-        else if(m_FileIndex.hasFile("newworld.zen"))
+        else if (m_FileIndex.hasFile("newworld.zen"))
             m_Args.startupZEN = "newworld.zen";
         else
             LogWarn() << "Unknown game files, could not find world.zen or newworld.zen!";
     }
 
-    if(Flags::emptyWorld.isSet())
+    if (Flags::emptyWorld.isSet())
         m_Args.startupZEN = "";
 
-    if(Flags::playerScriptname.isSet())
+    if (Flags::playerScriptname.isSet())
         m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
 
     std::string snd_device;
-    if(Flags::sndDevice.isSet())
+    if (Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
 
     m_AudioEngine = new Audio::AudioEngine(snd_device);
@@ -121,20 +118,20 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-	onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
+    onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
 }
 
 void BaseEngine::loadArchives()
 {
-	//m_FileIndex.loadVDF("vdf/Worlds_Addon.vdf");
-	//m_FileIndex.loadVDF("vdf/Textures.vdf");
-	//m_FileIndex.loadVDF("vdf/Textures_Addon.vdf");
-	//m_FileIndex.loadVDF("vdf/Meshes_Addon.vdf");
-	//m_FileIndex.loadVDF("vdf/Meshes.vdf");
-	//m_FileIndex.loadVDF("vdf/Anims.vdf");
-	//m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
+    //m_FileIndex.loadVDF("vdf/Worlds_Addon.vdf");
+    //m_FileIndex.loadVDF("vdf/Textures.vdf");
+    //m_FileIndex.loadVDF("vdf/Textures_Addon.vdf");
+    //m_FileIndex.loadVDF("vdf/Meshes_Addon.vdf");
+    //m_FileIndex.loadVDF("vdf/Meshes.vdf");
+    //m_FileIndex.loadVDF("vdf/Anims.vdf");
+    //m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
 
-	/*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
+    /*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
 	m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
 	m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
 	m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
@@ -151,7 +148,7 @@ void BaseEngine::loadArchives()
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
     LogInfo() << "Loading VDF-Archives: " << vdfArchives;
-    for(std::string& s : vdfArchives)
+    for (std::string& s : vdfArchives)
     {
         m_FileIndex.loadVDF(s);
     }
@@ -160,39 +157,37 @@ void BaseEngine::loadArchives()
     std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
 
     LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
-    for(std::string& s : vdfArchivesDisabled)
+    for (std::string& s : vdfArchivesDisabled)
     {
         m_FileIndex.loadVDF(s);
     }
 
-
-	// Load mod archives with higher priority
+    // Load mod archives with higher priority
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
 
-    if(!modArchives.empty())
+    if (!modArchives.empty())
     {
         LogInfo() << "Loading MOD-Archives: " << modArchives;
-        for (std::string &s : modArchives)
+        for (std::string& s : modArchives)
         {
             m_FileIndex.loadVDF(s, 1);
         }
     }
 
     // Load explicit modfile with even higher priority
-    if(!m_Args.modfile.empty())
+    if (!m_Args.modfile.empty())
     {
-    	m_FileIndex.loadVDF(m_Args.modfile, 2);
+        m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
 {
-
 }
 
 World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
 {
-	return h.get();
+    return h.get();
 }
 
 BaseEngine::EngineArgs BaseEngine::getEngineArgs()
@@ -207,7 +202,7 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
 
     // Save
     std::ofstream f(file);
-    if(!f.is_open())
+    if (!f.is_open())
         return false;
 
     f << Utils::iso_8859_1_to_utf8(j.dump(4));
@@ -216,7 +211,8 @@ bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
     return true;
 }
 
-void BaseEngine::setPaused(bool paused) {
+void BaseEngine::setPaused(bool paused)
+{
     if (paused != m_Paused)
     {
         if (getMainWorld().isValid())
@@ -266,7 +262,7 @@ void BaseEngine::processMessageQueue()
         bool finished = action.run(*this);
         m_MessageQueueMutex.lock();
         if (finished)
-            current = m_MessageQueue.erase(current); // erase returns next iterator
+            current = m_MessageQueue.erase(current);  // erase returns next iterator
         else
             std::advance(current, 1);
     }
@@ -279,7 +275,7 @@ void BaseEngine::resetSession()
     m_Session = std::make_unique<GameSession>(*this);
 }
 
-GameClock &BaseEngine::getGameClock()
+GameClock& BaseEngine::getGameClock()
 {
     return getSession().getGameClock();
 }
@@ -289,7 +285,7 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(const AsyncAction::JobType<void> &job, bool forceQueue)
+void BaseEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
 {
     auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
         job(engine);
@@ -298,7 +294,7 @@ void BaseEngine::executeInMainThread(const AsyncAction::JobType<void> &job, bool
     executeInMainThreadUntilTrue(wrappedJob, forceQueue);
 }
 
-void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool> &job, bool forceQueue)
+void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
 {
     if (!forceQueue && isMainThread())
     {

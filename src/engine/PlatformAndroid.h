@@ -2,8 +2,8 @@
 
 #ifdef ANDROID
 
-#include "Platform.h"
 #include <future>
+#include "Platform.h"
 
 #include <android/input.h>
 #include <android/log.h>
@@ -13,27 +13,26 @@
 
 namespace Engine
 {
-    class PlatformAndroid : public Platform
-    {
-    public:
-        PlatformAndroid();
+class PlatformAndroid : public Platform
+{
+public:
+    PlatformAndroid();
 
-        int32_t run(int argc, char** argv) override;
+    int32_t run(int argc, char** argv) override;
 
-    private:
+private:
+    void onAppCmd(struct android_app* app, int32_t cmd);
+    int onInputEvent(struct android_app* app, AInputEvent* event);
 
-        void onAppCmd(struct android_app* app, int32_t cmd);
-        int onInputEvent(struct android_app* app, AInputEvent* event);
+    android_app* m_App;
+    ANativeWindow* m_Window;
+    std::thread m_Thread;
 
-        android_app* m_App;
-        ANativeWindow* m_Window;
-        std::thread m_Thread;
-
-        /**
+    /**
 		 * @brief Virtual onscreen-thumbstick
 		 */
-        Math::float2 m_ThumbstickPosition[2];
-    };
+    Math::float2 m_ThumbstickPosition[2];
+};
 }
 
 #endif

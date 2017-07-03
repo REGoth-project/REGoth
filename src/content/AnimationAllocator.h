@@ -1,95 +1,87 @@
 #pragma once
 
-#include <handle/HandleDef.h>
-#include <map>
-#include <vector>
-#include <string>
 #include <content/Animation.h>
-#include <memory/Config.h>
 #include <handle/Handle.h>
+#include <handle/HandleDef.h>
+#include <memory/Config.h>
+#include <map>
+#include <string>
+#include <vector>
 #include "zenload/zCModelAni.h"
-#include "zenload/zCModelScript.h"
 #include "zenload/zCModelMeshLib.h"
+#include "zenload/zCModelScript.h"
 
 namespace VDFS
 {
-    class FileIndex;
+class FileIndex;
 }
 
 namespace World
 {
-    class WorldInstance;
+class WorldInstance;
 }
 
 namespace ZenLoad
 {
-    class zCModelMeshLib;
+class zCModelMeshLib;
 }
 
 namespace Animations
 {
-    class AnimationAllocator
-    {
-    public:
+class AnimationAllocator
+{
+public:
+    Handle::AnimationHandle allocate(const std::string &name);
 
-        Handle::AnimationHandle allocate(const std::string &name);
+    Handle::AnimationHandle getAnimation(const std::string &name) const;
 
-        Handle::AnimationHandle getAnimation(const std::string &name) const;
+    Animation &getAnimation(Handle::AnimationHandle h) { return m_Allocator.getElement(h); }
+private:
+    Memory::StaticReferencedAllocator<Animation, Config::MAX_NUM_LEVEL_ANIMATIONS> m_Allocator;
 
-        Animation& getAnimation(Handle::AnimationHandle h) { return m_Allocator.getElement(h); }
+    std::map<std::string, Handle::AnimationHandle> m_AnimationsByName;
+};
 
-    private:
+inline Handle::AnimationHandle AnimationAllocator::allocate(const std::string &name)
+{
+    std::string uname = name;
+    std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
 
-        Memory::StaticReferencedAllocator<Animation, Config::MAX_NUM_LEVEL_ANIMATIONS> m_Allocator;
+    auto h = m_Allocator.createObject();
+    m_AnimationsByName[uname] = h;
+    return h;
+}
 
-        std::map<std::string, Handle::AnimationHandle> m_AnimationsByName;
-    };
+inline Handle::AnimationHandle AnimationAllocator::getAnimation(const std::string &name) const
+{
+    auto it = m_AnimationsByName.find(name);
+    return (it != m_AnimationsByName.end()) ? it->second : Handle::AnimationHandle();
+}
 
-    inline Handle::AnimationHandle AnimationAllocator::allocate(const std::string &name)
-    {
-        std::string uname = name;
-        std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
+class AnimationDataAllocator
+{
+public:
+    Handle::AnimationDataHandle allocate(const std::string &name);
 
-        auto h = m_Allocator.createObject();
-        m_AnimationsByName[uname] = h;
-        return h;
-    }
+    AnimationData &getAnimationData(Handle::AnimationDataHandle h) { return m_Allocator.getElement(h); }
+    Handle::AnimationDataHandle getAnimationData(const std::string &name);
 
-    inline Handle::AnimationHandle AnimationAllocator::getAnimation(const std::string &name) const
-    {
-        auto it = m_AnimationsByName.find(name);
-        return (it != m_AnimationsByName.end()) ? it->second : Handle::AnimationHandle();
-    }
+protected:
+    std::map<std::string, Handle::AnimationDataHandle> m_AnimationDataByName;
 
+    Memory::StaticReferencedAllocator<AnimationData, Config::MAX_NUM_LEVEL_ANIMATION_DATAS> m_Allocator;
+};
 
-    class AnimationDataAllocator
-    {
-    public:
+inline Handle::AnimationDataHandle AnimationDataAllocator::allocate(const std::string &name)
+{
+    auto h = m_Allocator.createObject();
+    m_AnimationDataByName[name] = h;
+    return h;
+}
 
-        Handle::AnimationDataHandle allocate(const std::string &name);
-
-        AnimationData& getAnimationData(Handle::AnimationDataHandle h) { return m_Allocator.getElement(h); }
-
-        Handle::AnimationDataHandle getAnimationData(const std::string &name);
-
-    protected:
-
-        std::map<std::string, Handle::AnimationDataHandle> m_AnimationDataByName;
-
-        Memory::StaticReferencedAllocator<AnimationData, Config::MAX_NUM_LEVEL_ANIMATION_DATAS> m_Allocator;
-    };
-
-    inline Handle::AnimationDataHandle AnimationDataAllocator::allocate(const std::string &name)
-    {
-        auto h = m_Allocator.createObject();
-        m_AnimationDataByName[name] = h;
-        return h;
-    }
-
-    inline Handle::AnimationDataHandle AnimationDataAllocator::getAnimationData(const std::string &name)
-    {
-        auto it = m_AnimationDataByName.find(name);
-        return (it != m_AnimationDataByName.end()) ? it->second : Handle::AnimationDataHandle();
-    }
-
+inline Handle::AnimationDataHandle AnimationDataAllocator::getAnimationData(const std::string &name)
+{
+    auto it = m_AnimationDataByName.find(name);
+    return (it != m_AnimationDataByName.end()) ? it->second : Handle::AnimationDataHandle();
+}
 }

@@ -14,7 +14,6 @@ Bed::Bed(World::WorldInstance& world, const Handle::EntityHandle& entity) : MobC
 
 Bed::~Bed()
 {
-
 }
 
 std::string Bed::getSchemeName()
@@ -24,7 +23,7 @@ std::string Bed::getSchemeName()
 
 void Bed::onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos)
 {
-    if(pos)
+    if (pos)
     {
         // Get side the npc is entering the bed from
         m_EnteringBackside = pos->nodeName.find("FRONT") == std::string::npos;

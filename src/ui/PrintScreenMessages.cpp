@@ -2,11 +2,11 @@
 // Created by desktop on 20.08.16.
 //
 
-#include <render/RenderSystem.h>
 #include "PrintScreenMessages.h"
+#include <engine/BaseEngine.h>
+#include <render/RenderSystem.h>
 #include "View.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
 
 using namespace UI;
 
@@ -22,25 +22,24 @@ PrintScreenMessages::PrintScreenMessages(Engine::BaseEngine& e) : View(e)
 
 PrintScreenMessages::~PrintScreenMessages()
 {
-
 }
 
 void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     View::update(dt, mstate, config);
 
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(DEFAULT_FONT);
 
-    if(!fnt)
+    if (!fnt)
         return;
 
     // Do printscreen messages
     m_TimeToPopMessage -= dt;
 
-    if(m_TimeToPopMessage < 0)
+    if (m_TimeToPopMessage < 0)
     {
         // Let older messages rise
         printMessage("");
@@ -48,10 +47,10 @@ void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, R
     }
 
     // Draw printscreen messages
-    int y = -fnt->getFontHeight() * 3; // Start over the centered timed messages
-    for(std::string& s : m_PrintMessages)
+    int y = -fnt->getFontHeight() * 3;  // Start over the centered timed messages
+    for (std::string& s : m_PrintMessages)
     {
-        if(!s.empty())
+        if (!s.empty())
             drawText(s,
                      config.state.viewWidth / 2,
                      (config.state.viewHeight / 2) + y,
@@ -67,7 +66,7 @@ void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, R
 
 void PrintScreenMessages::printMessage(const std::string& message)
 {
-    if(m_PrintMessages.size() >= MAX_NUM_MESSAGES)
+    if (m_PrintMessages.size() >= MAX_NUM_MESSAGES)
         m_PrintMessages.pop_back();
 
     m_PrintMessages.push_front(message);
@@ -77,19 +76,19 @@ void PrintScreenMessages::printMessage(const std::string& message)
 
 void PrintScreenMessages::drawTimedMessages(double dt, Render::RenderConfig& config)
 {
-    for(TimedMessage& msg : m_TimedMessages)
+    for (TimedMessage& msg : m_TimedMessages)
     {
         uint16_t width = static_cast<uint16_t>((config.state.viewWidth));
         uint16_t height = static_cast<uint16_t>((config.state.viewHeight));
         uint16_t posx, posy;
 
         // Center
-        if(msg.x < 0)
+        if (msg.x < 0)
             posx = static_cast<uint16_t>((width / 2));
         else
             posx = static_cast<uint16_t>(width * msg.x);
 
-        if(msg.y < 0)
+        if (msg.y < 0)
             posy = static_cast<uint16_t>(height / 2);
         else
             posy = static_cast<uint16_t>(height * msg.y);
@@ -97,19 +96,19 @@ void PrintScreenMessages::drawTimedMessages(double dt, Render::RenderConfig& con
         drawText(msg.message,
                  posx,
                  posy,
-                 A_Center, // FIXME: This doesn't have to be centered all the time, right?
+                 A_Center,  // FIXME: This doesn't have to be centered all the time, right?
                  config);
 
         msg.timeLeft -= dt;
     }
 
     // Remove outtimed message
-    for(auto it=m_TimedMessages.begin();it!=m_TimedMessages.end();)
+    for (auto it = m_TimedMessages.begin(); it != m_TimedMessages.end();)
     {
-        if((*it).timeLeft < 0)
+        if ((*it).timeLeft < 0)
             it = m_TimedMessages.erase(it);
-		else 
-			it++;
+        else
+            it++;
     }
 };
 
