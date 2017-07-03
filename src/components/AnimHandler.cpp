@@ -22,9 +22,9 @@ AnimHandler::AnimHandler()
     m_pWorld = nullptr;
     m_AnimationFrame = 0.0f;
 
-    for(unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
+    for (unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
     {
-        m_AnimVelocityRingBuff[i] = Math::float3(0,0,0);
+        m_AnimVelocityRingBuff[i] = Math::float3(0, 0, 0);
     }
 }
 
@@ -34,7 +34,6 @@ AnimHandler::AnimHandler()
 void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 {
     m_MeshLib = meshLib;
-
 
     m_NodeTransforms.resize(m_MeshLib.getNodes().size());
     m_ObjectSpaceNodeTransforms.resize(m_MeshLib.getNodes().size());
@@ -52,11 +51,11 @@ void AnimHandler::setMeshLib(const ZenLoad::zCModelMeshLib &meshLib)
 
 bool AnimHandler::addAnimation(const std::string &name)
 {
-    if(!m_MeshLib.isValid())
+    if (!m_MeshLib.isValid())
         return false;
 
     Handle::AnimationHandle h = m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, name);
-    if(!h.isValid())
+    if (!h.isValid())
         return false;
 
     m_Animations.push_back(h);
@@ -65,29 +64,30 @@ bool AnimHandler::addAnimation(const std::string &name)
     return true;
 }
 
-void AnimHandler::setOverlay(const std::string& mds)
+void AnimHandler::setOverlay(const std::string &mds)
 {
     //LogInfo() << "set overlay " << mds;
 
-    if(mds.find_last_of('.') != std::string::npos)
+    if (mds.find_last_of('.') != std::string::npos)
     {
         m_ActiveOverlay = mds.substr(0, mds.find_last_of('.'));
-    }else
+    }
+    else
     {
         m_ActiveOverlay = mds;
     }
 
-    if(mds.empty())
+    if (mds.empty())
         m_ActiveOverlay = m_MeshLibName;
 
     // Try to switch loaded animations
-    for(auto& a : m_AnimationsByName)
+    for (auto &a : m_AnimationsByName)
     {
         std::string name = getAnimation(a.second).m_Name;
         Handle::AnimationHandle h = m_pWorld->getAnimationLibrary().getAnimation(m_MeshLibName, m_ActiveOverlay, name);
 
         // Update with overlay variant
-        if(h.isValid())
+        if (h.isValid())
             a.second = h;
     }
 }
@@ -107,10 +107,11 @@ void AnimHandler::playAnimation(const std::string &animName)
         {
             m_NodeTransforms[i] = Math::Matrix(m_MeshLib.getNodes()[i].transformLocal.mv);
         }
-    } else
+    }
+    else
     {
         // If we currently don't have this animation, try to load it
-        if(!hasAnimation(animName))
+        if (!hasAnimation(animName))
         {
             if (!addAnimation(animName))
                 return;
@@ -126,20 +127,20 @@ void AnimHandler::playAnimation(Handle::AnimationHandle anim)
         return;
 
     // Reset velocity if this is not a looping animation
-    if(m_ActiveAnimation != anim)
+    if (m_ActiveAnimation != anim)
         m_AnimRootVelocity = Math::float3(0, 0, 0);
 
     // find and apply given animation name
     m_ActiveAnimation = anim;
 
     Animations::Animation *animPtr = getActiveAnimationPtr();
-    if(!animPtr || !animPtr->m_Data.isValid())
+    if (!animPtr || !animPtr->m_Data.isValid())
         return;
 
     //LogInfo() << "Playing ani: " << animPtr->m_Name;
 
     // If reversed, we need to start at the last frame
-    m_AnimationFrame = 0;//static_cast<float>(animPtr->m_FirstFrame);
+    m_AnimationFrame = 0;  //static_cast<float>(animPtr->m_FirstFrame);
     m_LoopActiveAnimation = false;
     m_LastProcessedFrame = (size_t)-1;
 
@@ -173,7 +174,7 @@ void AnimHandler::setAnimation(const std::string &animName)
 void AnimHandler::updateAnimations(double deltaTime)
 {
     Animations::Animation *anim = getActiveAnimationPtr();
-    if(!anim || !anim->m_Data.isValid())
+    if (!anim || !anim->m_Data.isValid())
         return;
 
     // Increase current timeline-position
@@ -185,7 +186,7 @@ void AnimHandler::updateAnimations(double deltaTime)
     m_AnimationFrame += deltaTime * framesPerSecond;
 
     // If we have advanced one frame, we need to check for events to trigger
-    if(m_LastProcessedFrame != m_AnimationFrame)
+    if (m_LastProcessedFrame != m_AnimationFrame)
     {
         triggerEvents(m_LastProcessedFrame, static_cast<int>(m_AnimationFrame));
     }
@@ -195,26 +196,26 @@ void AnimHandler::updateAnimations(double deltaTime)
         // If there is a next animation, play this now
         Handle::AnimationHandle next = anim->m_Next;
 
-        if(next.isValid())
+        if (next.isValid())
         {
             //if(anim->m_NextName != "S_RUN" && anim->m_NextName  != "S_RUNL")
             //    LogInfo() << "Setting next Ani: " << anim->m_NextName;
 
             playAnimation(next);
             return;
-        }else
+        }
+        else
         {
             // Try to play it by name
             playAnimation(anim->m_NextName);
             return;
-
         }
 
-        if(m_LoopActiveAnimation)
+        if (m_LoopActiveAnimation)
             m_AnimationFrame = 0.0f;
         else
         {
-            stopAnimation(); // Animation done and not looping
+            stopAnimation();  // Animation done and not looping
             return;
         }
     }
@@ -222,9 +223,6 @@ void AnimHandler::updateAnimations(double deltaTime)
     // Check if this changed something on our animation
     //if (m_LastProcessedFrame == static_cast<size_t>(m_AnimationFrame))
     //    return; // Nothing to do here // TODO: Do this distance-based!
-
-
-
 
     // Figure out frame number
     size_t frameNum = reversed ? static_cast<size_t>(numFrames - m_AnimationFrame) - 1
@@ -236,15 +234,14 @@ void AnimHandler::updateAnimations(double deltaTime)
     size_t frameNext = reversed ? (frameNum - 1) % Math::trunc(numFrames)
                                 : (frameNum + 1) % Math::trunc(numFrames);
 
-    if(std::abs(static_cast<ptrdiff_t>(frameNext - frameNum)) > 1)
+    if (std::abs(static_cast<ptrdiff_t>(frameNext - frameNum)) > 1)
         frameNext = frameNum;
 
-    float frameFract = std::fmod(m_AnimationFrame, 1.0f); // Get fraction of this frame we are currently at
+    float frameFract = std::fmod(m_AnimationFrame, 1.0f);  // Get fraction of this frame we are currently at
 
     const Animations::AnimationData &anim_data = m_pWorld->getAnimationLibrary().getAnimationData(anim->m_Data);
     for (size_t i = 0; i < anim_data.m_NodeIndexList.size(); i++)
     {
-
         size_t numAnimationNodes = anim_data.m_NodeIndexList.size();
         uint32_t nodeIdx = anim_data.m_NodeIndexList[i];
 
@@ -268,19 +265,19 @@ void AnimHandler::updateAnimations(double deltaTime)
         trans.Translation(interpPosition);
 
         // Update velocities
-        if(nodeIdx == 0 && (reversed ? frameNext < frameNum : frameNext > frameNum) ) // Last frame resets the animation back, we don't want any hickups here
+        if (nodeIdx == 0 && (reversed ? frameNext < frameNum : frameNext > frameNum))  // Last frame resets the animation back, we don't want any hickups here
         {
-            if(!reversed && frameNum == 0) // FIXME: This won't work for reversed animations
+            if (!reversed && frameNum == 0)  // FIXME: This won't work for reversed animations
             {
                 m_AnimRootPosition = Math::float3(sample.position.v);
                 m_AnimRootRotation = rotation;
-            }else
+            }
+            else
             {
                 // Only set the velocity on the second frame onwards, since we don't know the travel distance
                 // until the next frame yet
                 m_AnimRootVelocity = interpPosition - m_AnimRootPosition;
             }
-
 
             // Update averaging ringbuffer
             m_AnimVelocityRingBuff[m_AnimVelocityRingCurrent] = m_AnimRootVelocity;
@@ -288,8 +285,6 @@ void AnimHandler::updateAnimations(double deltaTime)
 
             m_AnimRootRotationVelocity = rotation * m_AnimRootRotation.Invert();
         }
-
-
 
         m_NodeTransforms[nodeIdx] = trans;
     }
@@ -307,7 +302,7 @@ void AnimHandler::updateAnimations(double deltaTime)
 
         if (m_MeshLib.getNodes()[i].parentValid())
             m_ObjectSpaceNodeTransforms[i] =
-                    m_ObjectSpaceNodeTransforms[m_MeshLib.getNodes()[i].parentIndex] * m_NodeTransforms[i];
+                m_ObjectSpaceNodeTransforms[m_MeshLib.getNodes()[i].parentIndex] * m_NodeTransforms[i];
         else
             m_ObjectSpaceNodeTransforms[i] = m_NodeTransforms[i];
     }
@@ -329,32 +324,29 @@ void AnimHandler::updateAnimations(double deltaTime)
         m_AnimRootNodeVelocityUpdatedHash = m_AnimationStateHash;
 
     }*/
-
-
 }
 
 Math::float3 AnimHandler::getRootNodePositionAt(size_t frame)
 {
     Animations::Animation *anim = getActiveAnimationPtr();
-    if(!anim)
-        return Math::float3(0,0,0);
+    if (!anim)
+        return Math::float3(0, 0, 0);
 
     Animations::AnimationData &anim_data = m_pWorld->getAnimationLibrary().getAnimationData(anim->m_Data);
     size_t numAnimationNodes = anim_data.m_NodeIndexList.size();
 
-    if(frame == (size_t)-1)
+    if (frame == (size_t)-1)
         frame = anim->m_FrameCount - 1;
 
     // Root node is always node 0
     return Math::float3(anim_data.m_Samples[numAnimationNodes * frame].position.v);
 }
 
-
 Math::float3 AnimHandler::getRootNodeVelocityTotal()
 {
     Animations::Animation *anim = getActiveAnimationPtr();
-    if(!anim)
-        return Math::float3(0,0,0);
+    if (!anim)
+        return Math::float3(0, 0, 0);
 
     // Get length of the animation in seconds
     Animations::AnimationData &anim_data = m_pWorld->getAnimationLibrary().getAnimationData(anim->m_Data);
@@ -364,7 +356,7 @@ Math::float3 AnimHandler::getRootNodeVelocityTotal()
     Math::float3 start = getRootNodePositionAt(0);
     Math::float3 end = getRootNodePositionAt(numFrames - 1);
 
-    return (end - start) / length ;
+    return (end - start) / length;
 }
 
 /**
@@ -381,8 +373,8 @@ void AnimHandler::debugDrawSkeleton(const Math::Matrix &transform)
         Math::float3 p2 = transform * t2;
 
         ddSetTransform((transform * m_ObjectSpaceNodeTransforms[i]).v);
-        ddDrawAxis(0,0,0, 0.04f);
-        ddDrawAxis(0,0,0, -0.04f);
+        ddDrawAxis(0, 0, 0, 0.04f);
+        ddDrawAxis(0, 0, 0, -0.04f);
 
         if (n.parentValid())
         {
@@ -406,7 +398,7 @@ void AnimHandler::updateSkeletalMeshInfo(Math::Matrix *target, size_t numMatrice
     memcpy(target, m_ObjectSpaceNodeTransforms.data(),
            std::min(m_NodeTransforms.size(), numMatrices) * sizeof(Math::Matrix));
 
-    if(m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
+    if (m_MeshLibName == "CHESTSMALL_OCCRATESMALL")
         LogInfo() << "Updating: " << m_MeshLibName;
 
     //static float s_test = 0;
@@ -430,14 +422,14 @@ bool AnimHandler::loadMeshLibFromVDF(const std::string &file, VDFS::FileIndex &i
     ZenLoad::zCModelMeshLib lib;
 
     // Load heirachy
-    if(idx.hasFile(file + ".MDH"))
+    if (idx.hasFile(file + ".MDH"))
         lib = ZenLoad::zCModelMeshLib(file + ".MDH", idx, 1.0f / 100.0f);
-    else if(idx.hasFile(file + ".MDL")) // Some mobs have .MDL
+    else if (idx.hasFile(file + ".MDL"))  // Some mobs have .MDL
         lib = ZenLoad::zCModelMeshLib(file + ".MDL", idx, 1.0f / 100.0f);
-    else if(idx.hasFile(file + ".MDM")) // Some mobs have .MDL
+    else if (idx.hasFile(file + ".MDM"))  // Some mobs have .MDL
         lib = ZenLoad::zCModelMeshLib(file + ".MDM", idx, 1.0f / 100.0f);
 
-    if(!lib.isValid())
+    if (!lib.isValid())
         LogWarn() << "Could not load MeshLib for Visual: " << file;
 
     setMeshLib(lib);
@@ -478,7 +470,7 @@ void AnimHandler::setBindPose(bool force)
 
             if (m_MeshLib.getNodes()[i].parentValid())
                 m_ObjectSpaceNodeTransforms[i] =
-                        m_ObjectSpaceNodeTransforms[m_MeshLib.getNodes()[i].parentIndex] * m_NodeTransforms[i];
+                    m_ObjectSpaceNodeTransforms[m_MeshLib.getNodes()[i].parentIndex] * m_NodeTransforms[i];
             else
                 m_ObjectSpaceNodeTransforms[i] = m_NodeTransforms[i];
         }
@@ -497,8 +489,8 @@ Math::float3 AnimHandler::getRootNodePosition()
 
 float AnimHandler::getActiveAnimationProgress()
 {
-    Animations::Animation* anim = getActiveAnimationPtr();
-    if(!anim || !anim->m_Data.isValid())
+    Animations::Animation *anim = getActiveAnimationPtr();
+    if (!anim || !anim->m_Data.isValid())
         return 0.0f;
 
     return m_AnimationFrame / (float)anim->m_FrameCount;
@@ -506,9 +498,9 @@ float AnimHandler::getActiveAnimationProgress()
 
 Math::float3 AnimHandler::getRootNodeVelocityAvg()
 {
-    Math::float3 avg(0,0,0);
+    Math::float3 avg(0, 0, 0);
 
-    for(unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
+    for (unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
     {
         avg += m_AnimVelocityRingBuff[i];
     }
@@ -518,32 +510,32 @@ Math::float3 AnimHandler::getRootNodeVelocityAvg()
 
 void AnimHandler::triggerEvents(int frameLast, int frameNow)
 {
-    Animations::Animation* anim = getActiveAnimationPtr();
-    if(!anim) return;
+    Animations::Animation *anim = getActiveAnimationPtr();
+    if (!anim) return;
 
-    for(const ZenLoad::zCModelScriptEventSfx& sfx : anim->m_EventsSFX)
+    for (const ZenLoad::zCModelScriptEventSfx &sfx : anim->m_EventsSFX)
     {
-        if(sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
+        if (sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
         {
-            if(m_CallbackTriggerSFX)
+            if (m_CallbackTriggerSFX)
                 m_CallbackTriggerSFX(sfx);
         }
     }
 
-    for(const ZenLoad::zCModelScriptEventSfx& sfx : anim->m_EventsSFXGround)
+    for (const ZenLoad::zCModelScriptEventSfx &sfx : anim->m_EventsSFXGround)
     {
-        if(sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
+        if (sfx.m_Frame > frameLast && sfx.m_Frame <= frameNow)
         {
-            if(m_CallbackTriggerSFXGround)
+            if (m_CallbackTriggerSFXGround)
                 m_CallbackTriggerSFXGround(sfx);
         }
     }
 
-    for(const ZenLoad::zCModelScriptEventTag& tag : anim->m_EventTags)
+    for (const ZenLoad::zCModelScriptEventTag &tag : anim->m_EventTags)
     {
-        if(tag.m_Frame > frameLast && tag.m_Frame <= frameNow)
+        if (tag.m_Frame > frameLast && tag.m_Frame <= frameNow)
         {
-            if(m_CallbackTriggerEventTag)
+            if (m_CallbackTriggerEventTag)
                 m_CallbackTriggerEventTag(tag);
         }
     }

@@ -3,15 +3,15 @@
 //
 
 #include "GameEngine.h"
-#include <render/WorldRender.h>
+#include <bx/commandline.h>
 #include <common.h>
-#include <entry/input.h>
 #include <components/EntityActions.h>
+#include <components/Vob.h>
+#include <entry/input.h>
 #include <logic/CameraController.h>
 #include <render/RenderSystem.h>
-#include <bx/commandline.h>
+#include <render/WorldRender.h>
 #include <utils/logger.h>
-#include <components/Vob.h>
 
 using namespace Engine;
 
@@ -23,7 +23,6 @@ GameEngine::GameEngine() : m_DefaultRenderSystem(*this)
 
 GameEngine::~GameEngine()
 {
-
 }
 
 void GameEngine::initEngine(int argc, char** argv)
@@ -37,16 +36,16 @@ void GameEngine::initEngine(int argc, char** argv)
     m_DefaultRenderSystem.init();
 
     // Load a test-visual
-    if(cmdLine.hasArg('v'))
+    if (cmdLine.hasArg('v'))
     {
         value = cmdLine.findOption('v');
 
-        if(value)
+        if (value)
         {
             m_Args.testVisual = value;
 
-			if(m_Args.testVisual.find(".MDM") != std::string::npos)
-				m_Args.testVisual += "S";
+            if (m_Args.testVisual.find(".MDM") != std::string::npos)
+                m_Args.testVisual += "S";
         }
     }
 }
@@ -54,22 +53,23 @@ void GameEngine::initEngine(int argc, char** argv)
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
 {
     // Debug only
-//    static bool lastLogicDisableKeyState = false;
-//    static bool disableLogic = false;
+    //    static bool lastLogicDisableKeyState = false;
+    //    static bool disableLogic = false;
 
-//    if(inputGetKeyState(entry::Key::Key2) != lastLogicDisableKeyState)
-//    {
-//        if(!lastLogicDisableKeyState)
-//            disableLogic = !disableLogic;
+    //    if(inputGetKeyState(entry::Key::Key2) != lastLogicDisableKeyState)
+    //    {
+    //        if(!lastLogicDisableKeyState)
+    //            disableLogic = !disableLogic;
 
-//        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
-//    }
+    //        lastLogicDisableKeyState = inputGetKeyState(entry::Key::Key2);
+    //    }
     if (!getSession().getWorldInstances().empty())
     {
-        if(m_Paused)
+        if (m_Paused)
         {
             getMainWorld().get().getCameraController()->onUpdate(dt);
-        } else
+        }
+        else
         {
             getGameClock().update(dt);
             for (auto& s : getSession().getWorldInstances())
@@ -100,7 +100,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
 
     // Set for every view
-    for(uint8_t i=0;i<255;i++)
+    for (uint8_t i = 0; i < 255; i++)
     {
         bgfx::setViewTransform(i, view.mv, proj);
 
@@ -111,7 +111,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     // Update the frame-config with the cameras world-matrix
     if (getMainWorld().isValid())
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
-    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE; // TODO: Config for these kind of variables
+    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE;  // TODO: Config for these kind of variables
     m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
     m_DefaultRenderSystem.getConfig().state.viewWidth = width;
     m_DefaultRenderSystem.getConfig().state.viewHeight = height;
@@ -129,7 +129,7 @@ void GameEngine::onWorldCreated(Handle::WorldHandle world)
 {
     BaseEngine::onWorldCreated(world);
 
-    if(world.isValid())
+    if (world.isValid())
     {
         world.get().createCamera();
     }
@@ -139,5 +139,3 @@ void GameEngine::onWorldRemoved(Handle::WorldHandle world)
 {
     BaseEngine::onWorldRemoved(world);
 }
-
-

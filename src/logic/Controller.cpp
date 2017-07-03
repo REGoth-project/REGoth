@@ -3,8 +3,8 @@
 //
 
 #include "Controller.h"
-#include <engine/World.h>
 #include <components/Vob.h>
+#include <engine/World.h>
 #include <json.hpp>
 
 using json = nlohmann::json;
@@ -14,12 +14,11 @@ Logic::Controller::Controller(World::WorldInstance& world, Handle::EntityHandle 
       m_World(world),
       m_EventManager(world, entity)
 {
-
 }
 
 void Logic::Controller::setEntityTransform(const Math::Matrix& transform)
 {
-    Vob::VobInformation vob = Vob::asVob(m_World,m_Entity);
+    Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
     Vob::setTransform(vob, transform);
 }
 
@@ -30,7 +29,6 @@ Math::Matrix& Logic::Controller::getEntityTransform()
 
 void Logic::Controller::onUpdate(float deltaTime)
 {
-
 }
 
 void Logic::Controller::exportObject(json& j)
@@ -46,10 +44,10 @@ void Logic::Controller::exportPart(json& j)
 
     float values[16];
 
-    for(int i=0;i<16;i++)
+    for (int i = 0; i < 16; i++)
         values[i] = getEntityTransform().mv[i];
 
-    for(int i=0;i<16;i++)
+    for (int i = 0; i < 16; i++)
         j["transform"].push_back(values[i]);
 
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
@@ -65,12 +63,11 @@ void Logic::Controller::importObject(const json& j)
     auto& jtrans = j["transform"];
 
     // Parse transform from json
-    for(int i=0;i<16;i++)
-        if(!jtrans[i].is_null())
+    for (int i = 0; i < 16; i++)
+        if (!jtrans[i].is_null())
             transform.mv[i] = jtrans[i];
 
     setEntityTransform(transform);
-
 
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
     vob.object->m_EnableCollision = j["collision"];

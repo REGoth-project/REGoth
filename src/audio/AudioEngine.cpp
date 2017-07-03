@@ -10,7 +10,6 @@
 
 namespace Audio
 {
-
 void AudioEngine::enumerateDevices(std::vector<std::string> &enumerated)
 {
     if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
@@ -30,25 +29,25 @@ void AudioEngine::enumerateDevices(std::vector<std::string> &enumerated)
     }
 
     if (enumerated.empty())
-        enumerated.push_back(std::string()); // empty string is default device
+        enumerated.push_back(std::string());  // empty string is default device
 }
 
 const char *AudioEngine::getErrorString(size_t errorCode)
 {
     switch (errorCode)
     {
-    case AL_NO_ERROR:
-        return "AL_NO_ERROR";
-    case AL_INVALID_NAME:
-        return "AL_INVALID_NAME";
-    case AL_INVALID_ENUM:
-        return "AL_INVALID_ENUM";
-    case AL_INVALID_VALUE:
-        return "AL_INVALID_VALUE";
-    case AL_INVALID_OPERATION:
-        return "AL_INVALID_OPERATION";
-    case AL_OUT_OF_MEMORY:
-        return "AL_OUT_OF_MEMORY";
+        case AL_NO_ERROR:
+            return "AL_NO_ERROR";
+        case AL_INVALID_NAME:
+            return "AL_INVALID_NAME";
+        case AL_INVALID_ENUM:
+            return "AL_INVALID_ENUM";
+        case AL_INVALID_VALUE:
+            return "AL_INVALID_VALUE";
+        case AL_INVALID_OPERATION:
+            return "AL_INVALID_OPERATION";
+        case AL_OUT_OF_MEMORY:
+            return "AL_OUT_OF_MEMORY";
     }
     return "UNKNOWN";
 }
@@ -69,5 +68,4 @@ AudioEngine::~AudioEngine()
     if (m_Device)
         alcCloseDevice(m_Device);
 }
-
 }

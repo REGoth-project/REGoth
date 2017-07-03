@@ -2,16 +2,16 @@
 
 namespace Daedalus
 {
-    class DaedalusVM;
+class DaedalusVM;
 }
 
 namespace Logic
 {
-    namespace ScriptExternals
-    {
-        /**
+namespace ScriptExternals
+{
+/**
          * Registers stubs for most known script externals
          */
-        void registerStubs(Daedalus::DaedalusVM& vm, bool verbose = false);
-    }
+void registerStubs(Daedalus::DaedalusVM& vm, bool verbose = false);
+}
 }

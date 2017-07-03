@@ -3,27 +3,27 @@
 //
 
 #include "PlayerController.h"
-#include <engine/Waynet.h>
-#include <components/Entities.h>
-#include <engine/World.h>
-#include <debugdraw/debugdraw.h>
-#include <render/WorldRender.h>
-#include <components/Vob.h>
-#include <utils/logger.h>
-#include <entry/input.h>
-#include <components/VobClasses.h>
-#include "visuals/ModelVisual.h"
-#include "MobController.h"
-#include <engine/BaseEngine.h>
-#include <stdlib.h>
 #include <audio/AudioEngine.h>
+#include <components/Entities.h>
+#include <components/Vob.h>
+#include <components/VobClasses.h>
+#include <debugdraw/debugdraw.h>
+#include <engine/BaseEngine.h>
 #include <engine/Input.h>
-#include "ItemController.h"
-#include <json.hpp>
+#include <engine/Waynet.h>
+#include <engine/World.h>
+#include <entry/input.h>
+#include <logic/SavegameManager.h>
+#include <render/WorldRender.h>
+#include <stdlib.h>
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
-#include <logic/SavegameManager.h>
+#include <utils/logger.h>
+#include <json.hpp>
+#include "ItemController.h"
+#include "MobController.h"
+#include "visuals/ModelVisual.h"
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -36,35 +36,38 @@ using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
  */
 namespace BodyNodes
 {
-    const char* NPC_NODE_RIGHTHAND = "ZS_RIGHTHAND";
-    const char* NPC_NODE_LEFTHAND = "ZS_LEFTHAND";
-    const char* NPC_NODE_SWORD = "ZS_SWORD";
-    const char* NPC_NODE_LONGSWORD = "ZS_LONGSWORD";
-    const char* NPC_NODE_BOW = "ZS_BOW";
-    const char* NPC_NODE_CROSSBOW = "ZS_CROSSBOW";
-    const char* NPC_NODE_SHIELD = "ZS_SHIELD";
-    const char* NPC_NODE_HELMET = "ZS_HELMET";
-    const char* NPC_NODE_JAWS = "ZS_JAWS";
-    const char* NPC_NODE_TORSO = "ZS_TORSO";
+const char* NPC_NODE_RIGHTHAND = "ZS_RIGHTHAND";
+const char* NPC_NODE_LEFTHAND = "ZS_LEFTHAND";
+const char* NPC_NODE_SWORD = "ZS_SWORD";
+const char* NPC_NODE_LONGSWORD = "ZS_LONGSWORD";
+const char* NPC_NODE_BOW = "ZS_BOW";
+const char* NPC_NODE_CROSSBOW = "ZS_CROSSBOW";
+const char* NPC_NODE_SHIELD = "ZS_SHIELD";
+const char* NPC_NODE_HELMET = "ZS_HELMET";
+const char* NPC_NODE_JAWS = "ZS_JAWS";
+const char* NPC_NODE_TORSO = "ZS_TORSO";
 }
 
-#define SINGLE_ACTION_KEY(key, fn) { \
-    static bool last = false; \
-    if(inputGetKeyState(key) && !last)\
-        last = true; \
-    else if(!inputGetKeyState(key) && last){\
-        last = false;\
-        fn();\
-    } }
+#define SINGLE_ACTION_KEY(key, fn)               \
+    {                                            \
+        static bool last = false;                \
+        if (inputGetKeyState(key) && !last)      \
+            last = true;                         \
+        else if (!inputGetKeyState(key) && last) \
+        {                                        \
+            last = false;                        \
+            fn();                                \
+        }                                        \
+    }
 
 PlayerController::PlayerController(World::WorldInstance& world,
                                    Handle::EntityHandle entity,
                                    Daedalus::GameState::NpcHandle scriptInstance)
-        : Controller(world, entity),
-          m_Inventory(world, scriptInstance),
-          m_AIStateMachine(world, entity),
-          m_NPCAnimationHandler(world, entity),
-          m_AIHandler(world, entity)
+    : Controller(world, entity),
+      m_Inventory(world, scriptInstance),
+      m_AIStateMachine(world, entity),
+      m_NPCAnimationHandler(world, entity),
+      m_AIHandler(world, entity)
 {
     m_RoutineState.routineTarget = static_cast<size_t>(-1);
     m_RoutineState.routineActive = true;
@@ -120,7 +123,7 @@ void PlayerController::onUpdate(float deltaTime)
     if (m_RoutineState.entityTarget.isValid())
     {
         Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
-                .m_WorldMatrix.Translation();
+                                     .m_WorldMatrix.Translation();
 
         // FIXME: Doing this every frame is too often
         size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
@@ -128,7 +131,7 @@ void PlayerController::onUpdate(float deltaTime)
         setDailyRoutine({});
         gotoWaypoint(targetWP);
     }
-    m_NoAniRootPosHack = !m_MoveState.currentPath.empty(); // NPCs are already moved in travelPath
+    m_NoAniRootPosHack = !m_MoveState.currentPath.empty();  // NPCs are already moved in travelPath
 
     if (!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
     {
@@ -164,14 +167,14 @@ void PlayerController::onUpdate(float deltaTime)
         placeOnGround();
 
         Animations::Animation* activeAnim = getModelVisual()->getAnimationHandler().getActiveAnimationPtr();
-        if(!m_NoAniRootPosHack && activeAnim)
+        if (!m_NoAniRootPosHack && activeAnim)
         {
             // Apply model root-velcoity
-            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_MOVE_MODEL)
+            if (activeAnim->m_Flags & Animations::Animation::MSB_FLAG_MOVE_MODEL)
             {
                 // Move by translation-velocity
                 m_MoveState.position += getEntityTransform().Rotate(
-                        getModelVisual()->getAnimationHandler().getRootNodeVelocity());
+                    getModelVisual()->getAnimationHandler().getRootNodeVelocity());
             }
 
             //bgfx::dbgTextPrintf(0,5, 0x2, "Vel: %s", getModelVisual()->getAnimationHandler().getRootNodeVelocity().toString().c_str());
@@ -179,7 +182,7 @@ void PlayerController::onUpdate(float deltaTime)
             Math::Matrix t = getEntityTransform();
             t.Translation(m_MoveState.position);
 
-            if(activeAnim->m_Flags & Animations::Animation::MSB_FLAG_ROTATE_MODEL)
+            if (activeAnim->m_Flags & Animations::Animation::MSB_FLAG_ROTATE_MODEL)
             {
                 // Rotate by rotation-velocity
                 t = t * getModelVisual()->getAnimationHandler().getRootNodeRotationVelocity();
@@ -192,7 +195,7 @@ void PlayerController::onUpdate(float deltaTime)
     }
 
     // Run extra stuff if this is the controlled character
-    if(isPlayerControlled())
+    if (isPlayerControlled())
     {
         onUpdateForPlayer(deltaTime);
     }
@@ -205,7 +208,7 @@ void PlayerController::continueRoutine()
 
     // Start next route
     if (m_RoutineState.routineTarget == static_cast<size_t>(-1))
-        m_RoutineState.routineTarget = 0; // Start routing. Could let the integer overflow do this, but this is better.
+        m_RoutineState.routineTarget = 0;  // Start routing. Could let the integer overflow do this, but this is better.
     else
         m_RoutineState.routineTarget++;
 
@@ -250,8 +253,8 @@ void PlayerController::gotoWaypoint(size_t wp)
         m_AIState.closestWaypoint = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
                                                                          getEntityTransform().Translation());
 
-    if(m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
-        m_AIState.closestWaypoint = wp; // Something bad happened...
+    if (m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
+        m_AIState.closestWaypoint = wp;  // Something bad happened...
 
     m_AIState.targetWaypoint = wp;
 
@@ -301,14 +304,14 @@ bool PlayerController::travelPath(float deltaTime)
         // Move
         setEntityTransform(Math::Matrix::CreateLookAt(currentPosition + direction,
                                                       currentPosition + direction * 2,
-                                                      Math::float3(0, 1, 0)).Invert());
-
+                                                      Math::float3(0, 1, 0))
+                               .Invert());
     }
 
     // Set run animation
     getModelVisual()->setAnimation(ModelVisual::Run);
 
-    if (differenceXZ.lengthSquared() < 0.5f) // TODO: Find a nice setting for this
+    if (differenceXZ.lengthSquared() < 0.5f)  // TODO: Find a nice setting for this
     {
         //if(abs(currentPosition.y - targetPosition.y) < 2.0f)
         {
@@ -367,15 +370,15 @@ void PlayerController::onDebugDraw()
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
         Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
 
-        if(!getInventory().getItems().empty())
+        if (!getInventory().getItems().empty())
         {
             // Print inventory
             const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
             Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
-            uint16_t idx=27;
+            uint16_t idx = 27;
             bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
-            for(Daedalus::GameState::ItemHandle i : items)
+            for (Daedalus::GameState::ItemHandle i : items)
             {
                 Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
@@ -384,19 +387,21 @@ void PlayerController::onDebugDraw()
                     if (!idata.description.empty())
                     {
                         displayName = idata.description;
-                    } else if (!idata.name.empty())
+                    }
+                    else if (!idata.name.empty())
                     {
                         displayName = idata.name;
-                    } else {
+                    }
+                    else
+                    {
                         displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
                     }
                 }
 
-                if(idata.amount > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]" , displayName.c_str(), idata.amount);
+                if (idata.amount > 1)
+                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]", displayName.c_str(), idata.amount);
                 else
                     bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
-
             }
         }
     }
@@ -410,8 +415,8 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
 
     EModelNode node = EModelNode::None;
 
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
-        return; // Can't equip
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
+        return;  // Can't equip
 
     // TODO: Don't forget if an item is already unequipped before executing stat changing script-code!
 
@@ -424,50 +429,57 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
 
         // Take off 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
     {
         node = EModelNode::Longsword;
 
         // Take off 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
     {
         node = EModelNode::Crossbow;
 
         // Take off crossbow
         m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
     {
         node = EModelNode::Bow;
 
         // Take off bow
         m_EquipmentState.equippedItems.equippedBow.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
     {
         node = EModelNode::Sword;
 
         // Take off 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
     {
         node = EModelNode::Sword;
 
         // Take off 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
     {
         node = EModelNode::None;
 
         // Take off amulet
         m_EquipmentState.equippedItems.equippedAmulet.invalidate();
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
     {
         node = EModelNode::None;
 
         // Take off ring
         m_EquipmentState.equippedItems.equippedRings.erase(item);
-    } else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0
-               || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    }
+    else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0 || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
         node = EModelNode::None;
 
@@ -480,15 +492,14 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
         model->setNodeVisual("", node);
 }
 
-
 void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 {
     // Get item
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
     ModelVisual* model = getModelVisual();
 
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
-        return; // Can't equip
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
+        return;  // Can't equip
 
     EModelNode node = EModelNode::None;
 
@@ -507,7 +518,8 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
     {
         node = EModelNode::Longsword;
 
@@ -517,7 +529,8 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our 2h weapon
         m_EquipmentState.equippedItems.equippedWeapon2h = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
     {
         node = EModelNode::Crossbow;
 
@@ -527,7 +540,8 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our crossbow
         m_EquipmentState.equippedItems.equippedCrossBow = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
     {
         node = EModelNode::Bow;
 
@@ -537,7 +551,8 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our bow
         m_EquipmentState.equippedItems.equippedBow = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
     {
         node = EModelNode::Sword;
 
@@ -547,7 +562,8 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
     {
         node = EModelNode::Sword;
 
@@ -557,20 +573,22 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
         // Put on our 1h weapon
         m_EquipmentState.equippedItems.equippedWeapon1h = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
     {
         node = EModelNode::None;
 
         // Put on our amulet
         m_EquipmentState.equippedItems.equippedAmulet = item;
-    } else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
     {
         node = EModelNode::None;
 
         // Put on our ring
         m_EquipmentState.equippedItems.equippedRings.insert(item);
-    } else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0
-               || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    }
+    else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0 || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
         node = EModelNode::None;
 
@@ -599,11 +617,13 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist
     {
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
-    } else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
+    }
+    else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
     {
         m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
         m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
-    } else
+    }
+    else
     {
         m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
     }
@@ -613,7 +633,7 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist
     {
         // Get actual data of the weapon we are going to draw
         Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(
-                m_EquipmentState.activeWeapon);
+            m_EquipmentState.activeWeapon);
 
         // Clear the possible on-body-visuals first
         model->setNodeVisual("", EModelNode::Lefthand);
@@ -652,7 +672,6 @@ void PlayerController::undrawWeapon(bool force)
         // Remove active weapon
         m_EquipmentState.activeWeapon.invalidate();
     }
-
 }
 
 ModelVisual* PlayerController::getModelVisual()
@@ -667,7 +686,7 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
     if (DEBUG_PLAYER)
     {
-       LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+        LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
     }
     Math::Matrix m = getEntityTransform();
 
@@ -676,7 +695,7 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
     // FIXME: Actually read the flying-flag of the MDS
     if (feet == 0.0f)
     {
-        feet = 0.9762f; // FIXME: Boundingbox of the animation or something should be used instead
+        feet = 0.9762f;  // FIXME: Boundingbox of the animation or something should be used instead
     }
 
     m_MoveState.position = hit.hitPosition + Math::float3(0.0f, feet, 0.0f);
@@ -732,7 +751,7 @@ void PlayerController::placeOnGround()
     Math::float3 to = entityPosition + Math::float3(0.0f, -100.0f, 0.0f);
     Math::float3 from = entityPosition + Math::float3(0.0f, 30.0f, 0.0f);
 
-    std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
+    std::vector<Physics::RayTestResult> hitall = m_World.getPhysicsSystem().raytraceAll(from, to);
     if (hitall.empty())
         return;
     std::sort(hitall.begin(), hitall.end(), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
@@ -743,25 +762,25 @@ void PlayerController::placeOnGround()
     bool underWater = false;
     bool aboveGround = false;
     bool shallowWater = false;
-    float fallthroughEpsilon = 0.25f; // Give a little room for animations, etc
+    float fallthroughEpsilon = 0.25f;  // Give a little room for animations, etc
     Physics::RayTestResult highestHitSurface = hitall[0];
     Physics::RayTestResult waterHitSurface = hitall[0];
     Physics::RayTestResult closestHitGroundSurface = hitall[0];
-    float highestHitY = std::numeric_limits< float >::min();
-    float closestResult = std::numeric_limits< float >::max();
+    float highestHitY = std::numeric_limits<float>::min();
+    float closestResult = std::numeric_limits<float>::max();
     for (const auto& result : hitall)
     {
-        fellThrough = fellThrough && (result.hitPosition.y - fallthroughEpsilon > entityPosition.y); // for all results NPC's Y coordinate lower than result position Y coordinate
+        fellThrough = fellThrough && (result.hitPosition.y - fallthroughEpsilon > entityPosition.y);  // for all results NPC's Y coordinate lower than result position Y coordinate
         if (highestHitY < result.hitPosition.y)
         {
             highestHitY = result.hitPosition.y;
             highestHitSurface = result;
         }
         auto material = getMaterial(result.hitTriangleIndex);
-        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF; // we don't want underlying worldmesh material in this case
+        if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF;  // we don't want underlying worldmesh material in this case
         if (material == ZenLoad::MaterialGroup::WATER)
         {
-            waterHitSurface = result; // Doesn't matter if there are more water hits atm
+            waterHitSurface = result;  // Doesn't matter if there are more water hits atm
         }
         float newDistance = 0.0f;
         if ((newDistance = (std::abs(entityPosition.y - result.hitPosition.y))) < closestResult && material != ZenLoad::MaterialGroup::WATER)
@@ -801,42 +820,41 @@ void PlayerController::onVisualChanged()
     getModelVisual()->getCollisionBBox(m_NPCProperties.collisionBBox);
     m_NPCProperties.modelRoot = getModelVisual()->getModelRoot();
 
-    getModelVisual()->setTransient(true); // Don't export this from here. Will be rebuilt after loading anyways.
+    getModelVisual()->setTransient(true);  // Don't export this from here. Will be rebuilt after loading anyways.
 
     // Setup callbacks
-    getModelVisual()->getAnimationHandler().setCallbackEventSFX([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+    getModelVisual()->getAnimationHandler().setCallbackEventSFX([this](const ZenLoad::zCModelScriptEventSfx& sfx) {
         AniEvent_SFX(sfx);
     });
 
-    getModelVisual()->getAnimationHandler().setCallbackEventSFXGround([this](const ZenLoad::zCModelScriptEventSfx& sfx){
+    getModelVisual()->getAnimationHandler().setCallbackEventSFXGround([this](const ZenLoad::zCModelScriptEventSfx& sfx) {
         AniEvent_SFXGround(sfx);
     });
 
-    getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag){
+    getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag) {
         AniEvent_Tag(tag);
     });
 }
 
 void PlayerController::onUpdateByInput(float deltaTime)
 {
-
     ModelVisual* model = getModelVisual();
 
     if (!model)
         return;
 
-    if(m_World.getDialogManager().isDialogActive())
+    if (m_World.getDialogManager().isDialogActive())
         return;
 
-    if(m_World.getEngine()->getHud().isMenuActive())
-	resetKeyStates();
+    if (m_World.getEngine()->getHud().isMenuActive())
+        resetKeyStates();
 
     // Stand up if wounded and forward is pressed
-    if(getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
+    if (getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
     {
         // Only stand up if the unconscious-state has ended (aka. is not valid anymore)
         // Otherwise, the player would fall down immediately
-        if(m_isForward && m_AIStateMachine.isStateActive())
+        if (m_isForward && m_AIStateMachine.isStateActive())
         {
             // FIXME: End UNCONSCIOUS-state here
 
@@ -845,7 +863,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
         }
     }
 
-    if(!getEM().isEmpty() || getUsedMob().isValid())
+    if (!getEM().isEmpty() || getUsedMob().isValid())
         return;
 
     // TODO: HACK, take this out!
@@ -956,7 +974,7 @@ void PlayerController::onUpdateByInput(float deltaTime)
             else
             {
                 //TODO this happens more than it should, there seems to be too much undefined materials, find out why
-                model->setAnimation(groundAniType); // Ground animation is the default, we don't want the NPCs to start swimming in soil
+                model->setAnimation(groundAniType);  // Ground animation is the default, we don't want the NPCs to start swimming in soil
             }
             if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
                 lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
@@ -1054,17 +1072,17 @@ void PlayerController::onUpdateByInput(float deltaTime)
     //		}
     //	}
 
-
     float yaw = 0.0f;
     const float turnSpeed = 2.5f;
 
-    if(!m_AIState.usedMob.isValid())
+    if (!m_AIState.usedMob.isValid())
     {
         if (m_isTurnLeft)
         {
             yaw += turnSpeed * deltaTime;
             m_NoAniRootPosHack = true;
-        } else if (m_isTurnRight)
+        }
+        else if (m_isTurnRight)
         {
             yaw -= turnSpeed * deltaTime;
             m_NoAniRootPosHack = true;
@@ -1072,11 +1090,8 @@ void PlayerController::onUpdateByInput(float deltaTime)
     }
 
     // No direction key pressed
-    if(!m_NoAniRootPosHack)
+    if (!m_NoAniRootPosHack)
         return;
-
-
-
 
     // Apply animation-velocity
     Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityTotal() * deltaTime;
@@ -1119,7 +1134,7 @@ void PlayerController::attackFront()
         case EWeaponMode::WeaponFist:
             type = ModelVisual::EModelAnimType::AttackFist;
             break;
-            //case EWeaponMode::WeaponMagic: type = ModelVisual::EModelAnimType::AttackMagic; break; // TODO: Magic
+        //case EWeaponMode::WeaponMagic: type = ModelVisual::EModelAnimType::AttackMagic; break; // TODO: Magic
         default:
             break;
     }
@@ -1241,8 +1256,7 @@ bool PlayerController::EV_Weapon(std::shared_ptr<EventMessages::WeaponMessage> m
     return false;
 }
 
-bool
-PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sharedMessage, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sharedMessage, Handle::EntityHandle sourceVob)
 {
     auto& message = *sharedMessage;
     switch (static_cast<EventMessages::MovementMessage::MovementSubType>(message.subType))
@@ -1258,7 +1272,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
                                                                                     m_Entity);
 
                 if (fp.empty())
-                    return true; // End message on invalid freepoint
+                    return true;  // End message on invalid freepoint
 
                 Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(fp.front());
                 message.targetPosition = pos.m_WorldMatrix.Translation();
@@ -1283,7 +1297,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
 
             return false;
         }
-            break;
+        break;
 
         case EventMessages::MovementMessage::ST_GotoVob:
         {
@@ -1305,12 +1319,13 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
                 }
 
                 return false;
-            } else
+            }
+            else
             {
                 // This must be an actual vob
                 Handle::EntityHandle v = message.targetVob;
 
-                if(!v.isValid())
+                if (!v.isValid())
                 {
                     v = m_World.getVobEntityByName(message.targetVobName);
                 }
@@ -1322,7 +1337,9 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
                     message.targetPosition = Vob::getTransform(vob).Translation();
 
                     // Fall through to ST_GotoPos
-                }else{
+                }
+                else
+                {
                     return true;
                 }
             }
@@ -1348,7 +1365,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
 
             return false;
         }
-            break;
+        break;
 
         case EventMessages::MovementMessage::ST_GoRoute:
             break;
@@ -1358,7 +1375,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
         case EventMessages::MovementMessage::ST_TurnToVob:
         {
             if (!m_World.isEntityValid(message.targetVob))
-                return true; // case: player entity was removed from this world while this message was queued
+                return true;  // case: player entity was removed from this world while this message was queued
 
             Vob::VobInformation vob = Vob::asVob(m_World, message.targetVob);
 
@@ -1371,7 +1388,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
         case EventMessages::MovementMessage::ST_TurnToPos:
         {
             Math::float3 dir = (message.targetPosition - getEntityTransform().Translation());
-            dir.y = 0.0f; // Don't let the NPC face upwards/downwards
+            dir.y = 0.0f;  // Don't let the NPC face upwards/downwards
             dir.normalize();
 
             // Just snap to the direction for now
@@ -1379,7 +1396,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
             setDirection(dir);
             return true;
         }
-            break;
+        break;
 
         case EventMessages::MovementMessage::ST_TurnAway:
             break;
@@ -1391,7 +1408,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
             break;
         case EventMessages::MovementMessage::ST_Standup:
             // Start standing up when we first see this message or nothing is playing yet
-            if(!message.inUse || !getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
+            if (!message.inUse || !getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
             {
                 standUp(false, message.targetMode != 0);
                 message.inUse = true;
@@ -1402,7 +1419,7 @@ PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessage> sh
             break;
 
         case EventMessages::MovementMessage::ST_CanSeeNpc:
-            break; // Unused
+            break;  // Unused
         case EventMessages::MovementMessage::ST_Strafe:
             break;
         case EventMessages::MovementMessage::ST_Dodge:
@@ -1451,7 +1468,8 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
             if (message.functionSymbol != 0)
             {
                 m_AIStateMachine.startAIState(message.functionSymbol, true, message.isRoutineState, message.isPrgState);
-            } else
+            }
+            else
             {
                 // Start daily routine
                 m_AIStateMachine.startRoutineState();
@@ -1479,33 +1497,37 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
     return false;
 }
 
-bool
-PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMessage> sharedMessage, Handle::EntityHandle sourceVob)
+bool PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMessage> sharedMessage, Handle::EntityHandle sourceVob)
 {
     auto& message = *sharedMessage;
     switch (static_cast<EventMessages::ManipulateMessage::ManipulateSubType>(message.subType))
     {
-        case EventMessages::ManipulateMessage::ST_TakeVob:break;
-        case EventMessages::ManipulateMessage::ST_DropVob:break;
-        case EventMessages::ManipulateMessage::ST_ThrowVob:break;
-        case EventMessages::ManipulateMessage::ST_Exchange:break;
-        case EventMessages::ManipulateMessage::ST_UseMob:break;
+        case EventMessages::ManipulateMessage::ST_TakeVob:
+            break;
+        case EventMessages::ManipulateMessage::ST_DropVob:
+            break;
+        case EventMessages::ManipulateMessage::ST_ThrowVob:
+            break;
+        case EventMessages::ManipulateMessage::ST_Exchange:
+            break;
+        case EventMessages::ManipulateMessage::ST_UseMob:
+            break;
 
         case EventMessages::ManipulateMessage::ST_UseItem:
         {
-            if(!message.targetItem.isValid())
+            if (!message.targetItem.isValid())
             {
                 // We need a name now
-                if(message.symIdx == static_cast<size_t>(-1))
+                if (message.symIdx == static_cast<size_t>(-1))
                     return true;
 
                 // Try to find this in our inventory
                 Daedalus::GameState::ItemHandle h = m_Inventory.getItem(message.symIdx);
 
-                if(h.isValid())
+                if (h.isValid())
                     message.targetItem = h;
                 else
-                    return true; // Could not find that item
+                    return true;  // Could not find that item
             }
 
             // Get item data
@@ -1514,30 +1536,42 @@ PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMessage
 
             return true;
         }
-            break;
+        break;
 
-        case EventMessages::ManipulateMessage::ST_InsertInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_RemoveInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_CreateInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_DestroyInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_PlaceInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_ExchangeInteractItem:break;
-        case EventMessages::ManipulateMessage::ST_UseMobWithItem:break;
+        case EventMessages::ManipulateMessage::ST_InsertInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_RemoveInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_CreateInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_DestroyInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_PlaceInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_ExchangeInteractItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_UseMobWithItem:
+            break;
 
         case EventMessages::ManipulateMessage::ST_CallScript:
 
-            if(message.symIdx != static_cast<size_t>(-1))
+            if (message.symIdx != static_cast<size_t>(-1))
             {
                 m_World.getScriptEngine().prepareRunFunction();
                 m_World.getScriptEngine().runFunctionBySymIndex(message.symIdx);
             }
             return false;
 
-        case EventMessages::ManipulateMessage::ST_EquipItem:break;
-        case EventMessages::ManipulateMessage::ST_UseItemToState:break;
-        case EventMessages::ManipulateMessage::ST_TakeMob:break;
-        case EventMessages::ManipulateMessage::ST_DropMob:break;
-        case EventMessages::ManipulateMessage::ST_ManipMax:break;
+        case EventMessages::ManipulateMessage::ST_EquipItem:
+            break;
+        case EventMessages::ManipulateMessage::ST_UseItemToState:
+            break;
+        case EventMessages::ManipulateMessage::ST_TakeMob:
+            break;
+        case EventMessages::ManipulateMessage::ST_DropMob:
+            break;
+        case EventMessages::ManipulateMessage::ST_ManipMax:
+            break;
     }
     return false;
 }
@@ -1550,7 +1584,6 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
     bool isMonolog = false;
     switch (static_cast<ConversationMessage::ConversationSubType>(message.subType))
     {
-
         case ConversationMessage::ST_PlayAniSound:
             break;
 
@@ -1560,7 +1593,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
             if (message.status == ConversationMessage::Status::INIT)
             {
-                if(isPlayerControlled())
+                if (isPlayerControlled())
                 {
                     LogInfo() << "PLAYER: New animation started: " << message.animation;
                 }
@@ -1575,12 +1608,12 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             // Go as long as this animation is playing
             bool done = !active || active->m_Name != message.animation;
 
-            if(done && isPlayerControlled())
+            if (done && isPlayerControlled())
                 LogInfo() << "PLAYER: Done with animation: " << message.animation;
 
             return done;
         }
-            break;
+        break;
 
         case ConversationMessage::ST_PlaySound:
             break;
@@ -1592,7 +1625,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             // case: AI_OutputSVM which are not scheduled in Dialog
             // Vatras' preach or Herold's announcement, smalltalk, ALARM...
             isMonolog = true;
-            // fall through
+        // fall through
         case ConversationMessage::ST_Output:
         {
             auto& subtitleBox = m_World.getDialogManager().getSubtitleBox();
@@ -1608,7 +1641,8 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 startDialogAnimation();
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation());
-                if (!isMonolog){
+                if (!isMonolog)
+                {
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
                     subtitleBox.setScaling(0.0);
@@ -1618,9 +1652,8 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
 
             if (message.status == ConversationMessage::Status::PLAYING)
             {
-
                 bool playingFinished;
-            #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
                 if (message.canceled)
                 {
                     m_World.getAudioWorld().stopSound(message.soundTicket);
@@ -1632,14 +1665,15 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 {
                     bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
                     playingFinished = !isPlaying;
-                } else
+                }
+                else
                 {
                     playingFinished = message.canceled;
                 }
-            #else
+#else
                 // when sound is disabled, message must be skipped manually
                 playingFinished = message.canceled;
-            #endif
+#endif
                 if (playingFinished)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
@@ -1660,7 +1694,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             }
             return false;
         }
-            break;
+        break;
         case ConversationMessage::ST_Cutscene:
             break;
         case ConversationMessage::ST_WaitTillEnd:
@@ -1721,13 +1755,14 @@ void PlayerController::setDirection(const Math::float3& direction)
     // This is a hack present in the original game. If the charakter is sitting and one of the following animations
     // are played, the direction should be reversed
     Math::float3 d = m_MoveState.direction;
-    if(getModelVisual()->isAnimPlaying("S_BENCH_S1") || getModelVisual()->isAnimPlaying("S_THRONE_S1"))
+    if (getModelVisual()->isAnimPlaying("S_BENCH_S1") || getModelVisual()->isAnimPlaying("S_THRONE_S1"))
         d *= -1.0f;
 
     // Set direction
     setEntityTransform(Math::Matrix::CreateLookAt(m_MoveState.position,
                                                   m_MoveState.position + d,
-                                                  Math::float3(0, 1, 0)).Invert());
+                                                  Math::float3(0, 1, 0))
+                           .Invert());
 }
 
 void PlayerController::applyRotationY(float rad)
@@ -1747,7 +1782,7 @@ void PlayerController::startDialogAnimation()
     if (!getModelVisual())
         return;
 
-    const int NUM_DIALOG_ANIMATIONS = 20; // This is hardcoded in the game
+    const int NUM_DIALOG_ANIMATIONS = 20;  // This is hardcoded in the game
     size_t num = (rand() % NUM_DIALOG_ANIMATIONS) + 1;
 
     std::string ns = std::to_string(num);
@@ -1773,28 +1808,27 @@ void PlayerController::interrupt()
 
 bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
 {
-    const float MAX_ANGLE = 0.5f * Math::PI; // 90 degrees
+    const float MAX_ANGLE = 0.5f * Math::PI;  // 90 degrees
 
     Components::PositionComponent& otherPos = m_World.getEntity<Components::PositionComponent>(entity);
 
     // Trace from the top of our BBox (eyes)
-    Math::float3 start = getEntityTransform().Translation()
-                         + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
+    Math::float3 start = getEntityTransform().Translation() + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
 
     Math::float3 end = otherPos.m_WorldMatrix.Translation();
 
     // Check senses_range first
     float len2 = (end - start).length();
 
-    unsigned int sensesRange = static_cast<unsigned int >(getScriptInstance().senses_range);
+    unsigned int sensesRange = static_cast<unsigned int>(getScriptInstance().senses_range);
     if (static_cast<uint32_t>(len2) > sensesRange * sensesRange)
         return false;
 
     // Do the raytest to the other object
     Physics::RayTestResult res = m_World.getPhysicsSystem().raytrace(
-            start,
-            end,
-            Physics::CollisionShape::CT_WorldMesh); // FIXME: Should trace everything except the two objects in question!
+        start,
+        end,
+        Physics::CollisionShape::CT_WorldMesh);  // FIXME: Should trace everything except the two objects in question!
 
     if (!res.hasHit)
     {
@@ -1811,19 +1845,16 @@ bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
 bool PlayerController::freeLineOfSight(const Math::float3& target)
 {
     // Trace from the top of our BBox (eyes)
-    Math::float3 start = getEntityTransform().Translation()
-                         + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
-
+    Math::float3 start = getEntityTransform().Translation() + Math::float3(0.0f, m_NPCProperties.collisionBBox[1].y, 0.0f);
 
     // Do the raytest to the other object
     Physics::RayTestResult res = m_World.getPhysicsSystem().raytrace(
-            start,
-            target,
-            Physics::CollisionShape::CT_WorldMesh); // FIXME: Should trace everything except the two objects in question!
+        start,
+        target,
+        Physics::CollisionShape::CT_WorldMesh);  // FIXME: Should trace everything except the two objects in question!
 
     return !res.hasHit;
 }
-
 
 float PlayerController::getAngleTo(const Math::float3& pos)
 {
@@ -1838,7 +1869,7 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 
     setBodyState(BS_STAND);
 
-    if(!startAniTransition)
+    if (!startAniTransition)
     {
         // Just jump to the idle-animation
         getModelVisual()->stopAnimations();
@@ -1862,7 +1893,7 @@ void PlayerController::setRoutineFunc(size_t symRoutine)
 
 void PlayerController::changeRoutine(const std::string& routineName)
 {
-    if(routineName.empty())
+    if (routineName.empty())
     {
         setRoutineFunc(0);
         return;
@@ -1883,35 +1914,31 @@ bool PlayerController::isNpcReady()
     return true;
 }
 
-
 bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
 {
-    if(!canUse(item))
+    if (!canUse(item))
         return false;
 
     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
 
     // Food?
-    if((data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
+    if ((data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
     {
         // Nutrition doesn't seem to be used anywhere...
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
     }
 
     // Weapon?
-    if((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0
-       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0
-       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
-       || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
         // FIXME: Hack to only allow equipping when no weapon is drawn
-        if(getWeaponMode() == EWeaponMode::WeaponNone)
+        if (getWeaponMode() == EWeaponMode::WeaponNone)
             equipItem(item);
         return false;
     }
 
     // Call script function to be executed on use
-    if(data.on_state[0])
+    if (data.on_state[0])
     {
         m_World.getScriptEngine().setInstanceNPC("self", getScriptHandle());
         m_World.getScriptEngine().prepareRunFunction();
@@ -1925,7 +1952,7 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
 
 bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
 {
-    if(!item.isValid())
+    if (!item.isValid())
         return false;
 
     // TODO: Check talents
@@ -1935,15 +1962,15 @@ bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
     ScriptEngine& s = m_World.getScriptEngine();
 
-    for(int i=0; i < Daedalus::GEngineClasses::C_Item::COND_ATR_MAX; i++)
+    for (int i = 0; i < Daedalus::GEngineClasses::C_Item::COND_ATR_MAX; i++)
     {
         // Why is 0 not allowed? That's how gothic is doing it though, as it seems...
-        if(data.cond_atr[i] > 0)
+        if (data.cond_atr[i] > 0)
         {
             assert(data.cond_atr[i] < Daedalus::GEngineClasses::C_Npc::EATR_MAX);
 
             // Check for enough strength, etc.
-            if(npc.attribute[data.cond_atr[i]] < data.cond_value[i])
+            if (npc.attribute[data.cond_atr[i]] < data.cond_value[i])
             {
                 // Display messages, if this is the player and do debug-output
                 s.setInstanceNPC("self", getScriptHandle());
@@ -1968,22 +1995,22 @@ void PlayerController::setAttribute(Daedalus::GEngineClasses::C_Npc::EAttributes
 {
     Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
 
-    if((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
+    if ((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
         return;
 
     // Apply change
     npc.attribute[atr] = value;
 
     // Clamp to 0
-    if(npc.attribute[atr] < 0)
+    if (npc.attribute[atr] < 0)
         npc.attribute[atr] = 0;
 
     // Clamp to max
-    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
         npc.attribute[atr] = std::min(npc.attribute[atr],
                                       npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
-    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
         npc.attribute[atr] = std::min(npc.attribute[atr],
                                       npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 }
@@ -1993,16 +2020,14 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
     Daedalus::GEngineClasses::C_Npc& npc = getScriptInstance();
     // TODO: Godmode right here
 
-    if(!change)
-        return; // Nothing to do here...
+    if (!change)
+        return;  // Nothing to do here...
 
-    if((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
-        return; // Invalid value set from script?
+    if ((uint32_t)atr > Daedalus::GEngineClasses::C_Npc::EATR_MAX)
+        return;  // Invalid value set from script?
 
     // Check for immortality
-    if( atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS
-        && npc.flags & Daedalus::GEngineClasses::C_Npc::EFLAG_IMMORTAL
-        && change != -999) // Yep, this is in the game!
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS && npc.flags & Daedalus::GEngineClasses::C_Npc::EFLAG_IMMORTAL && change != -999)  // Yep, this is in the game!
     {
         return;
     }
@@ -2011,52 +2036,50 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
     npc.attribute[atr] += change;
 
     // Clamp to 0
-    if(npc.attribute[atr] < 0)
+    if (npc.attribute[atr] < 0)
         npc.attribute[atr] = 0;
 
     // Clamp to max
-    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
         npc.attribute[atr] = std::min(npc.attribute[atr],
                                       npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTSMAX]);
 
-    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_MANA)
         npc.attribute[atr] = std::min(npc.attribute[atr],
                                       npc.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
 
     // TODO: Switch animation overlay (wounded, etc)
 
     // Check for death
-    if(atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
+    if (atr == Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS)
     {
-        if(npc.attribute[atr] == 0)
+        if (npc.attribute[atr] == 0)
             die(m_Entity);
         //else if(npc.attribute[atr] == 1)
         // TODO: Drop unconscious
     }
 }
 
-
 void PlayerController::setupKeyBindings()
 {
     // Engine::Input::clearActions();
     m_AIHandler.bindKeys();
 
-    Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float)
-    {
-        if(triggered){
+    Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float) {
+        if (triggered)
+        {
             m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Save, 0, ""});
         }
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float)
-    {
-        if(triggered)
+    Engine::Input::RegisterAction(Engine::ActionType::Quickload, [this](bool triggered, float) {
+        if (triggered)
             Engine::SavegameManager::loadSaveGameSlot(0);
     });
 
-    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float)
-    {
-        if(triggered && !m_World.getEngine()->getHud().isMenuActive()){
+    Engine::Input::RegisterAction(Engine::ActionType::PauseGame, [this](bool triggered, float) {
+        if (triggered && !m_World.getEngine()->getHud().isMenuActive())
+        {
             m_World.getEngine()->togglePaused();
         }
     });
@@ -2066,9 +2089,8 @@ void PlayerController::setupKeyBindings()
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerForward, [this](bool triggered, float) {
 
-
         // Increment state, if currently using a mob
-        if(getUsedMob().isValid() && triggered)
+        if (getUsedMob().isValid() && triggered)
         {
             if (getEM().isEmpty())
             {
@@ -2080,16 +2102,16 @@ void PlayerController::setupKeyBindings()
                     mob.mobController->useMobIncState(m_Entity, MobController::D_Forward);
                 }
             }
-        }else
+        }
+        else
         {
             m_isForward = m_isForward || triggered;
         }
     });
     Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float) {
 
-
         // Increment state, if currently using a mob
-        if(getUsedMob().isValid() && triggered)
+        if (getUsedMob().isValid() && triggered)
         {
             if (getEM().isEmpty())
             {
@@ -2101,7 +2123,8 @@ void PlayerController::setupKeyBindings()
                     mob.mobController->useMobIncState(m_Entity, MobController::D_Backward);
                 }
             }
-        }else
+        }
+        else
         {
             m_isBackward = m_isBackward || triggered;
         }
@@ -2136,22 +2159,23 @@ void PlayerController::setupKeyBindings()
         {
             s_triggered = true;
 
-            if(m_World.getDialogManager().isDialogActive())
+            if (m_World.getDialogManager().isDialogActive())
                 return;
 
-            if(getWeaponMode() != EWeaponMode::WeaponNone)
+            if (getWeaponMode() != EWeaponMode::WeaponNone)
                 return;
 
             // ----- ITEMS -----
             Handle::EntityHandle nearestItem;
             float shortestDistItem = 5.0f;
             const std::set<Handle::EntityHandle>& items = m_World.getScriptEngine().getWorldItems();
-            for(Handle::EntityHandle h : items)
+            for (Handle::EntityHandle h : items)
             {
                 Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
 
                 float dist = (m.Translation() -
-                              getEntityTransform().Translation()).lengthSquared();
+                              getEntityTransform().Translation())
+                                 .lengthSquared();
                 if (dist < shortestDistItem && dist < 10.0f * 10.0f)
                 {
                     nearestItem = h;
@@ -2160,7 +2184,7 @@ void PlayerController::setupKeyBindings()
             }
 
             std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(
-                    getEntityTransform().Translation(), 5.0f);
+                getEntityTransform().Translation(), 5.0f);
 
             // Talk to the nearest NPC other than the current player, of course
             Handle::EntityHandle nearestNPC;
@@ -2172,7 +2196,8 @@ void PlayerController::setupKeyBindings()
                     VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
 
                     float dist = (Vob::getTransform(npc).Translation() -
-                                  getEntityTransform().Translation()).lengthSquared();
+                                  getEntityTransform().Translation())
+                                     .lengthSquared();
                     if (dist < shortestDistNPC)
                     {
                         nearestNPC = h;
@@ -2191,7 +2216,8 @@ void PlayerController::setupKeyBindings()
                 VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
 
                 float dist = (Vob::getTransform(vob).Translation() -
-                              getEntityTransform().Translation()).lengthSquared();
+                              getEntityTransform().Translation())
+                                 .lengthSquared();
 
                 if (dist < shortestDistMob)
                 {
@@ -2202,16 +2228,16 @@ void PlayerController::setupKeyBindings()
 
             int nearest = 0;
 
-            if(shortestDistItem < shortestDistMob && shortestDistItem < shortestDistNPC)
+            if (shortestDistItem < shortestDistMob && shortestDistItem < shortestDistNPC)
                 nearest = 1;
 
-            if(shortestDistMob < shortestDistItem && shortestDistMob < shortestDistNPC)
+            if (shortestDistMob < shortestDistItem && shortestDistMob < shortestDistNPC)
                 nearest = 3;
 
-            if(shortestDistNPC < shortestDistItem && shortestDistNPC < shortestDistMob)
+            if (shortestDistNPC < shortestDistItem && shortestDistNPC < shortestDistMob)
                 nearest = 2;
 
-            if(nearest == 1 && nearestItem.isValid())
+            if (nearest == 1 && nearestItem.isValid())
             {
                 // Pick it up
                 VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
@@ -2225,22 +2251,20 @@ void PlayerController::setupKeyBindings()
 
             // ----- TALKING ----
 
-
-
             if (nearest == 2 && nearestNPC.isValid())
             {
                 VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
 
-                if(npc.playerController->getBodyState() == BS_STAND)
+                if (npc.playerController->getBodyState() == BS_STAND)
                 {
                     Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
                     m_World.getDialogManager().startDialog(shnpc);
-                }else if(npc.playerController->getBodyState() == BS_UNCONSCIOUS
-                        || npc.playerController->getBodyState() == BS_DEAD)
+                }
+                else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
                 {
                     // Take all his items
                     auto& inv = npc.playerController->getInventory();
-                    for(auto h : inv.getItems())
+                    for (auto h : inv.getItems())
                     {
                         unsigned int cnt = inv.getItemCount(h);
                         size_t itm = inv.getItem(h).instanceSymbol;
@@ -2272,7 +2296,7 @@ void PlayerController::setupKeyBindings()
                 vob.playerController->teleportToWaypoint(targetWP);*/
 
             // Use item last picked up
-            if(!getInventory().getItems().empty())
+            if (!getInventory().getItems().empty())
             {
                 Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
                 if (lastItem.isValid())
@@ -2281,19 +2305,15 @@ void PlayerController::setupKeyBindings()
                         getInventory().removeItem(lastItem);
                 }
             }
-
-
         }
     });
-
-
 }
 
 void PlayerController::giveItem(const std::string& instanceName, unsigned int count)
 {
     size_t symIdx = m_World.getScriptEngine().getSymbolIndexByName(instanceName);
 
-    if(symIdx == static_cast<size_t>(-1))
+    if (symIdx == static_cast<size_t>(-1))
     {
         LogWarn() << "Unknown item instance: " << instanceName;
         return;
@@ -2351,12 +2371,11 @@ void PlayerController::exportPart(json& j)
     // Export equipped items
     {
         j["equipped"] = json::array();
-        for(auto item : m_EquipmentState.equippedItemsAll)
+        for (auto item : m_EquipmentState.equippedItemsAll)
         {
             // Write instance of the equipped item
             Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
-            std::string instanceName = m_World.getScriptEngine().getVM()
-                    .getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+            std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
 
             j["equipped"].push_back(instanceName);
         }
@@ -2371,7 +2390,7 @@ void PlayerController::exportPart(json& j)
 
 void PlayerController::importObject(const json& j, bool noTransform)
 {
-    if(!noTransform)
+    if (!noTransform)
     {
         Controller::importObject(j);
 
@@ -2434,11 +2453,11 @@ void PlayerController::importObject(const json& j, bool noTransform)
     {
         Inventory& inv = m_Inventory;
 
-        for(const std::string& sym : j["equipped"])
+        for (const std::string& sym : j["equipped"])
         {
             Daedalus::GameState::ItemHandle h = inv.getItem(sym);
 
-            assert(h.isValid()); // Item to equip MUST be inside the inventory
+            assert(h.isValid());  // Item to equip MUST be inside the inventory
 
             equipItem(h);
         }
@@ -2451,10 +2470,9 @@ void PlayerController::importObject(const json& j, bool noTransform)
     m_AIStateMachine.importScriptState(j["AIState"]);
 
     // Check for death
-    if(getScriptInstance().attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] == 0)
+    if (getScriptInstance().attribute[Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS] == 0)
         die(Handle::EntityHandle::makeInvalidHandle());
 }
-
 
 void PlayerController::importObject(const json& j)
 {
@@ -2462,9 +2480,7 @@ void PlayerController::importObject(const json& j)
 
     // Teleport to last waypoint
     //teleportToWaypoint(j["scriptObj"]["wp"]);
-
 }
-
 
 Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
 {
@@ -2477,7 +2493,7 @@ Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstan
     // Create npc
     Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
 
-    if(!e.isValid())
+    if (!e.isValid())
         return Handle::EntityHandle::makeInvalidHandle();
 
     VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(world, e);
@@ -2485,13 +2501,12 @@ Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstan
     // Load controller-values
     npc.playerController->importObject(j);
 
-
     return e;
 }
 
 void PlayerController::die(Handle::EntityHandle attackingNPC)
 {
-    if(getBodyState() == EBodyState::BS_DEAD)
+    if (getBodyState() == EBodyState::BS_DEAD)
         return;
 
     interrupt();
@@ -2500,17 +2515,18 @@ void PlayerController::die(Handle::EntityHandle attackingNPC)
 
     setBodyState(EBodyState::BS_DEAD);
 
-    if(!m_AIStateMachine.isInState(NPC_PRGAISTATE_DEAD))
+    if (!m_AIStateMachine.isInState(NPC_PRGAISTATE_DEAD))
     {
         Daedalus::GameState::NpcHandle oldOther = m_World.getScriptEngine().getNPCFromSymbol("other");
 
-        if(attackingNPC.isValid())
+        if (attackingNPC.isValid())
         {
             VobTypes::NpcVobInformation attacker = VobTypes::asNpcVob(m_World, attackingNPC);
             m_World.getScriptEngine().setInstanceNPC("other", VobTypes::getScriptHandle(attacker));
-        }else
+        }
+        else
         {
-            m_World.getScriptEngine().setInstanceNPC("other",Daedalus::GameState::NpcHandle());
+            m_World.getScriptEngine().setInstanceNPC("other", Daedalus::GameState::NpcHandle());
         }
 
         m_AIStateMachine.startAIState(Logic::NPC_PRGAISTATE_DEAD, false, false, true);
@@ -2532,19 +2548,18 @@ void PlayerController::checkUnconscious()
     // Gothic is just brute-force checking here if any of these animations are being played
     // If so, we already put the character onto the ground
     const std::string woundedAnims[] = {
-            "T_STAND_2_WOUNDEDB",
-            "T_STAND_2_WOUNDED",
-            "S_WOUNDEDB",
-            "S_WOUNDED",
-            "T_WOUNDEDB_2_DEADB",
-            "T_WOUNDED_2_DEAD",
-            "T_WOUNDED_TRY",
-            "T_WOUNDEDB_TRY"
-    };
+        "T_STAND_2_WOUNDEDB",
+        "T_STAND_2_WOUNDED",
+        "S_WOUNDEDB",
+        "S_WOUNDED",
+        "T_WOUNDEDB_2_DEADB",
+        "T_WOUNDED_2_DEAD",
+        "T_WOUNDED_TRY",
+        "T_WOUNDEDB_TRY"};
 
-    for(size_t i=0; i < Utils::arraySize(woundedAnims);i++)
+    for (size_t i = 0; i < Utils::arraySize(woundedAnims); i++)
     {
-        if(getModelVisual()->isAnimPlaying(woundedAnims[i]))
+        if (getModelVisual()->isAnimPlaying(woundedAnims[i]))
             return;
     }
 
@@ -2564,7 +2579,6 @@ void PlayerController::onUpdateForPlayer(float deltaTime)
 
     hud.setMana(stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANA],
                 stats.attribute[Daedalus::GEngineClasses::C_Npc::EATR_MANAMAX]);
-
 }
 
 std::string PlayerController::getGuildName()
@@ -2599,7 +2613,7 @@ ZenLoad::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
     uint8_t matgroup;
     // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
     m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
-    return static_cast< ZenLoad::MaterialGroup >(matgroup);
+    return static_cast<ZenLoad::MaterialGroup>(matgroup);
 }
 
 ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
@@ -2610,35 +2624,35 @@ ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
     }
     else
     {
-        return ZenLoad::MaterialGroup ::UNDEF;
+        return ZenLoad::MaterialGroup::UNDEF;
     }
 }
 
 void PlayerController::traceDownNPCGround()
 {
-    m_MoveState.ground.successful = false; // initial condition defaulted to false
+    m_MoveState.ground.successful = false;  // initial condition defaulted to false
     Math::float3 to = getEntityTransform().Translation();
     Math::float3 from = to;
     Math::float3 entityPos = to;
     to.y = -1000.0f;
     from.y = 10000.0f;
-    std::vector< Physics::RayTestResult > hitall = m_World.getPhysicsSystem().raytraceAll(from, to, Physics::CollisionShape::CT_WorldMesh);
+    std::vector<Physics::RayTestResult> hitall = m_World.getPhysicsSystem().raytraceAll(from, to, Physics::CollisionShape::CT_WorldMesh);
     if (hitall.empty())
     {
         return;
     }
     std::sort(hitall.begin(), hitall.end(), [](const Physics::RayTestResult& a, const Physics::RayTestResult& b) {
-          return a.hitPosition.y > b.hitPosition.y;
-          });
+        return a.hitPosition.y > b.hitPosition.y;
+    });
     if (DEBUG_PLAYER)
     {
-       LogInfo() << "traceDownNPCGround ITERATION BEGIN";
+        LogInfo() << "traceDownNPCGround ITERATION BEGIN";
     }
     Physics::RayTestResult result = hitall[0];
     Physics::RayTestResult resultWater = hitall[0];
     bool waterMatFound = false;
-    float closestGroundSurfacePos = std::numeric_limits< float >::max();
-    float underWaterGroundPos = std::numeric_limits< float >::min();
+    float closestGroundSurfacePos = std::numeric_limits<float>::max();
+    float underWaterGroundPos = std::numeric_limits<float>::min();
     float waterSurfacePos = 0;
     for (const auto& a : hitall)
     {
@@ -2652,8 +2666,9 @@ void PlayerController::traceDownNPCGround()
             {
                 resultWater = a;
                 waterSurfacePos = a.hitPosition.y;
-                waterMatFound = true; // found water material
-            }else if (closestGroundSurfacePos > diff)
+                waterMatFound = true;  // found water material
+            }
+            else if (closestGroundSurfacePos > diff)
             {
                 result = a;
                 closestGroundSurfacePos = diff;
@@ -2667,7 +2682,7 @@ void PlayerController::traceDownNPCGround()
     // FIXME: Actually read the flying-flag of the MDS
     if (feet == 0.0f)
     {
-        feet = 0.9762f; // FIXME: Boundingbox of the animation or something should be used instead
+        feet = 0.9762f;  // FIXME: Boundingbox of the animation or something should be used instead
     }
 
     float feetPos = entityPos.y - feet;
@@ -2676,7 +2691,7 @@ void PlayerController::traceDownNPCGround()
         m_MoveState.ground.waterDepth = std::abs(waterSurfacePos - underWaterGroundPos);
         if (DEBUG_PLAYER)
         {
-           LogInfo() << "Water depth: " << m_MoveState.ground.waterDepth;
+            LogInfo() << "Water depth: " << m_MoveState.ground.waterDepth;
         }
     }
     else
@@ -2710,7 +2725,7 @@ void PlayerController::resetKeyStates()
 void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 {
     // FIXME: Workaround. "Whoosh"-sound is used as kill trigger
-    if(Utils::toUpper(sfx.m_Name) == "WHOOSH")
+    if (Utils::toUpper(sfx.m_Name) == "WHOOSH")
     {
         Handle::EntityHandle nearestNPC;
         float shortestDistNPC = 3.0f;
@@ -2721,7 +2736,8 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
                 VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
 
                 float dist = (Vob::getTransform(npc).Translation() -
-                              getEntityTransform().Translation()).lengthSquared();
+                              getEntityTransform().Translation())
+                                 .lengthSquared();
                 if (dist < shortestDistNPC && npc.playerController->getBodyState() != EBodyState::BS_DEAD)
                 {
                     nearestNPC = h;
@@ -2731,7 +2747,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
 
         VobTypes::NpcVobInformation toKill = VobTypes::asNpcVob(m_World, nearestNPC);
-        if(toKill.isValid())
+        if (toKill.isValid())
         {
             toKill.playerController->die(m_Entity);
         }
@@ -2743,7 +2759,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 
 void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
 {
-    if(m_MoveState.ground.successful)
+    if (m_MoveState.ground.successful)
     {
         // Play sound depending on ground type
         ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
@@ -2757,4 +2773,3 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 {
     //if(tag.m_Tag == )
 }
-
