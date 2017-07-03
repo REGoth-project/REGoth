@@ -8,9 +8,7 @@
 #include <components/EntityActions.h>
 #include <debugdraw/debugdraw.h>
 #include <engine/BaseEngine.h>
-#include <engine/World.h>
-#include <logic/PfxManager.h>
-#include <stdlib.h>
+#include <engine/AsyncAction.h>
 
 Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle entity)
     : VisualController(world, entity),
@@ -53,7 +51,7 @@ bool Logic::PfxVisual::load(const std::string& visual)
                                                                          Meshes::WorldStaticMeshVertex::ms_decl,  // FIXME: May want to use a smaller one
                                                                          BGFX_BUFFER_ALLOW_RESIZE);
     };
-    m_World.getEngine()->executeInMainThread(job);
+    Engine::AsyncAction::executeInThread(job, m_World.getEngine(), Engine::ExecutionPolicy::MainThread).wait();
 
     getPfxComponent().m_Texture = m_World.getTextureAllocator().loadTextureVDF(m_Emitter.visName);
 
