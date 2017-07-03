@@ -157,9 +157,9 @@ void REGoth::init(int _argc, char** _argv)
         m_reset |= BGFX_RESET_VSYNC;
 #endif
 
-        m_Width = getWindowWidth();
-        m_Height = getWindowHeight();
-        m_HUDMode = 2;
+    m_Width = getWindowWidth();
+    m_Height = getWindowHeight();
+    m_HUDMode = 2;
 
     bgfx::init();
     bgfx::reset(m_Width, m_Height, m_reset);
@@ -294,7 +294,7 @@ void REGoth::initConsole()
         return "Toggled stats";
         });
 
-        console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
+    console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
 
             if(args.size() < 2)
                 return "Missing argument. Usage: hud <mode> | (0=None, 1=Gameplay, 2=Full)";
