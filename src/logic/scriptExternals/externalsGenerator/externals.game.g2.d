@@ -124,7 +124,7 @@ FUNC void AI_StopFX(VAR C_NPC Origin, VAR C_VFX_NAME VfxName)
 };
 
 FUNC void Doc_SetLevelCoords(VAR DOC_HANDLE Map, VAR int Left, VAR int Top, VAR int Right, VAR int Bottom)
-/// \brief      Sets the level coordinates of a map document.
+/// \brief      Sets the level coordinates of a map document (direct).
 /// \param      Map
 ///                 Handle to a map document.
 /// \param      Left
@@ -144,7 +144,7 @@ FUNC void Doc_SetLevelCoords(VAR DOC_HANDLE Map, VAR int Left, VAR int Top, VAR 
 };
 
 FUNC void ExitSession()
-/// \brief      Closes the current game session.
+/// \brief      Closes the current game session (direct).
 /// \details    The main menu is opened and the game cannot be continued.
 /// \note       The function is only available in G2.
 {
@@ -181,7 +181,7 @@ FUNC BOOL Game_InitEngIntl()
 };
 
 FUNC void Npc_ClearInventory(VAR C_NPC Character)
-/// \brief      Removes all items, expect equipped and mission items.
+/// \brief      Removes all items, expect equipped and mission items (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \details    \b SELF, \b OTHER, and \b VICTIM are retained.
@@ -190,7 +190,7 @@ FUNC void Npc_ClearInventory(VAR C_NPC Character)
 };
 
 FUNC BOOL Npc_GetActiveSpellIsScroll(VAR C_NPC Character)
-/// \brief      Detects if a magic scroll is drawn.
+/// \brief      Detects if a magic scroll is drawn (direct).
 /// \param      Character
 ///                Reference to the character object.
 /// \return     Returns TRUE if the character is in fight mode FMODE_MAGIC
@@ -204,7 +204,7 @@ FUNC BOOL Npc_GetActiveSpellIsScroll(VAR C_NPC Character)
 };
 
 FUNC int Npc_GetHeightToItem(VAR C_NPC Origin, VAR C_ITEM Target)
-/// \brief      Calculates the vertical distance to an item.
+/// \brief      Calculates the vertical distance to an item (direct).
 /// \param      Origin
 ///                 Reference to the character object.
 /// \param      Target
@@ -218,7 +218,7 @@ FUNC int Npc_GetHeightToItem(VAR C_NPC Origin, VAR C_ITEM Target)
 };
 
 FUNC int Npc_GetHeightToNpc(VAR C_NPC Origin, VAR C_NPC Target)
-/// \brief      Calculates the vertical distance to a character.
+/// \brief      Calculates the vertical distance to a character (direct).
 /// \param      Origin
 ///                 Reference to the character object.
 /// \param      Target
@@ -231,7 +231,7 @@ FUNC int Npc_GetHeightToNpc(VAR C_NPC Origin, VAR C_NPC Target)
 };
 
 FUNC int Npc_GetLastHitSpellCat(VAR C_NPC Target)
-/// \brief      Last spell category of a visual effect target.
+/// \brief      Last spell category of a visual effect target (direct).
 /// \return     Returns the last spell category (SPELL_*) or -1.
 /// \details    On initialization a visual effect saves the active spell
 ///             category of the origin at the \p Target. This feature is
@@ -245,7 +245,7 @@ FUNC int Npc_GetLastHitSpellCat(VAR C_NPC Target)
 };
 
 FUNC int Npc_GetLastHitSpellID(VAR C_NPC Target)
-/// \brief      Last spell instance of a visual effect target.
+/// \brief      Last spell instance of a visual effect target (direct).
 /// \return     Returns the last spell instance (SPL_*) or -1.
 /// \details    On initialization a visual effect saves the active spell
 ///             instance of the origin at the \p Target. This feature is
@@ -259,7 +259,7 @@ FUNC int Npc_GetLastHitSpellID(VAR C_NPC Target)
 };
 
 FUNC C_NPC Npc_GetLookAtTarget(VAR C_NPC Character)
-/// \brief      Retrieves the current animation target.
+/// \brief      Retrieves the current animation target (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns the target object or NULL.
@@ -269,7 +269,7 @@ FUNC C_NPC Npc_GetLookAtTarget(VAR C_NPC Character)
 };
 
 FUNC int Npc_GetPortalGuild(VAR C_NPC Character)
-/// \brief      Retrieves the guild of the current room.
+/// \brief      Retrieves the guild of the current room (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns the owner guild of the current portal room or -1.
@@ -281,7 +281,7 @@ FUNC int Npc_GetPortalGuild(VAR C_NPC Character)
 };
 
 FUNC C_NPC Npc_GetPortalOwner(VAR C_NPC Character)
-/// \brief      Retrieves the owner of the current room.
+/// \brief      Retrieves the owner of the current room (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns the owner object of the current portal room or NULL.
@@ -294,7 +294,7 @@ FUNC C_NPC Npc_GetPortalOwner(VAR C_NPC Character)
 };
 
 FUNC int Npc_IsDrawingSpell(VAR C_NPC Character)
-/// \brief      Returns the spell that a character is readying.
+/// \brief      Returns the spell that a character is readying (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns the spell instance (SPL_*) of the first message
@@ -306,7 +306,7 @@ FUNC int Npc_IsDrawingSpell(VAR C_NPC Character)
 };
 
 FUNC BOOL Npc_IsDrawingWeapon(VAR C_NPC Character)
-/// \brief      Detects if a character is drawing a weapon or spell.
+/// \brief      Detects if a character is drawing a weapon or spell (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns TRUE if the \b Character's queue contains
@@ -317,7 +317,8 @@ FUNC BOOL Npc_IsDrawingWeapon(VAR C_NPC Character)
 };
 
 FUNC BOOL Npc_IsInPlayersRoom(VAR C_NPC Character)
-/// \brief      Detects if a character is in the same room as the player.
+/// \brief      Detects if a character is in the same room as the player
+///             (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \return     Returns TRUE if both are in the same (or no) portal room.
@@ -327,7 +328,7 @@ FUNC BOOL Npc_IsInPlayersRoom(VAR C_NPC Character)
 };
 
 FUNC void Npc_StopAni(VAR C_NPC Character, VAR string AniName)
-/// \brief      Stops and dequeues an animation.
+/// \brief      Stops and dequeues an animation (direct).
 /// \param      Character
 ///                 Reference to the character object
 ///                 where the animation is playing and/or queued.
@@ -344,7 +345,7 @@ FUNC void Npc_StopAni(VAR C_NPC Character, VAR string AniName)
 };
 
 FUNC BOOL PlayVideoEx(VAR string FileName, VAR BOOL ScreenBlend, VAR BOOL SessionExit)
-/// \brief      Extended version of PlayVideo().
+/// \brief      Extended version of PlayVideo (direct).
 /// \param      FileName
 ///                 Video filename relative to DIR_VIDEO (System\\Paths.d).
 /// \param      ScreenBlend
@@ -375,7 +376,7 @@ FUNC BOOL PlayVideoEx(VAR string FileName, VAR BOOL ScreenBlend, VAR BOOL Sessio
 };
 
 FUNC BOOL Wld_DetectNpcExAtt(VAR C_NPC NonPlayer, VAR C_NPC_ID NpcId, VAR func AIState, VAR int Guild, VAR BOOL DetectPlayer, VAR int Attitude)
-/// \brief      Finds the nearest perceived character by attitude.
+/// \brief      Finds the nearest perceived character by attitude (direct).
 /// \param      NonPlayer
 ///                 Reference to a character object with a perception list
 ///                 (not the player character).
@@ -407,7 +408,7 @@ FUNC BOOL Wld_DetectNpcExAtt(VAR C_NPC NonPlayer, VAR C_NPC_ID NpcId, VAR func A
 };
 
 FUNC BOOL Wld_IsRaining()
-/// \brief      Determines if it's currently raining or snowing.
+/// \brief      Determines if it's currently raining or snowing (direct).
 /// \return     Returns TRUE if the outdoor sky controller is active and
 ///             the current precipitation intensity is greater than 30%.
 /// \note       The function is only available in G2.
@@ -416,7 +417,7 @@ FUNC BOOL Wld_IsRaining()
 };
 
 FUNC void Wld_StopEffect(VAR C_VFX_NAME VfxName)
-/// \brief      Stops all visual effects with a specified name.
+/// \brief      Stops all visual effects with a specified name (direct).
 /// \param      VfxName
 ///                 Name of the visual effect.
 /// \note       The comparison is case sensitive

@@ -1189,7 +1189,7 @@ FUNC int Npc_GetDistToPlayer(VAR C_NPC Target)
 };
 
 FUNC int Npc_GetDistToWP(VAR C_NPC Origin, VAR string Name)
-/// \brief      Calculate the distance to a waypoint.
+/// \brief      Calculate the distance to a waypoint (direct).
 /// \param      Origin
 ///                 Reference to the character object.
 /// \param      Name
@@ -1273,7 +1273,7 @@ FUNC int Npc_GetInvItemBySlot(VAR C_NPC Character, VAR int Category, VAR int Slo
 };
 
 FUNC string Npc_GetNearestWP(VAR C_NPC Origin)
-/// \brief      Returns the name of the nearest waypoint.
+/// \brief      Returns the name of the nearest waypoint (direct).
 /// \param      Origin
 ///                 Reference to the character object.
 /// \return     Returns the name of the nearest waypoint or an empty string
@@ -1308,7 +1308,7 @@ FUNC BOOL Npc_GetNextTarget(VAR C_NPC Character)
 };
 
 FUNC string Npc_GetNextWP(VAR C_NPC Origin)
-/// \brief      Returns the name of the second nearest waypoint.
+/// \brief      Returns the name of the second nearest waypoint (direct).
 /// \param      Origin
 ///                 Reference to the character object.
 /// \return     Returns the name of the second nearest waypoint
@@ -1546,7 +1546,7 @@ FUNC BOOL Npc_IsNextTargetAvailable(VAR C_NPC Character)
 };
 
 FUNC BOOL Npc_IsOnFP(VAR C_NPC Character, VAR string NamePart)
-/// \brief      Check if \p Character is near a used spot.
+/// \brief      Check if \p Character is near a used spot (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \param      NamePart
@@ -1920,7 +1920,7 @@ FUNC void Wld_InsertObject(VAR string MobVisualName, VAR string SpawnPoint)
 };
 
 FUNC BOOL Wld_IsFPAvailable(VAR C_NPC Character, VAR string NamePart)
-/// \brief      Check if nearest spot is available.
+/// \brief      Check if nearest spot is available (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \param      NamePart
@@ -1950,7 +1950,7 @@ FUNC BOOL Wld_IsMobAvailable(VAR C_NPC Character, VAR string SchemeName)
 };
 
 FUNC BOOL Wld_IsNextFPAvailable(VAR C_NPC Character, VAR string NamePart)
-/// \brief      Check if any spot is available.
+/// \brief      Check if any spot is available (direct).
 /// \param      Character
 ///                 Reference to the character object.
 /// \param      NamePart
