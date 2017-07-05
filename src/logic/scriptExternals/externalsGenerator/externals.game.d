@@ -290,7 +290,7 @@ FUNC void AI_DropItem(VAR C_NPC Character, VAR C_ITEM_ID ItemId)
 /// \param      ItemId
 ///                 Symbol index of a C_Item instance
 ///                 (global instance variable \b ITEM is also supported).
-/// \details    If an item with the \p ItemId is currenly present in the
+/// \details    If an item with the \p ItemId is currently present in the
 ///             inventory of the \p Character, one item is directly removed
 ///             and a message is queued to drop the object to the ground.
 /// \details    The drop message handler sets the body state to \b BS_INVENTORY.
@@ -329,7 +329,7 @@ FUNC void AI_DropMob(VAR C_NPC Character)
 /// \brief      Drop the carried object to the ground (queued).
 /// \param      Character
 ///                 Object reference to the character.
-/// \details    The message handler checks if the \p Character is currenly
+/// \details    The message handler checks if the \p Character is currently
 ///             carrying an object and queues a high priority message to
 ///             drop the carried object to the ground.
 /// \details    The drop message handler sets the body state to \b BS_INVENTORY.
@@ -1775,7 +1775,28 @@ FUNC BOOL PrintScreen(VAR string Text, VAR int PosX, VAR int PosY, VAR string Fo
 	return FALSE;
 };
 
-FUNC void Rtn_Exchange(VAR string OldRoutineName, VAR string NewRoutineName)
+FUNC void Rtn_Exchange(VAR string OldRoutineNamePart, VAR string NewRoutineName)
+/// \brief      Exchange daily routine for all non-player characters (direct).
+/// \param      OldRoutineNamePart
+///                 Substring that has to be present in the function name of the
+///                 current daily routine (always converted to upper case).
+/// \param      NewRoutineName
+///                 Base name of the new daily routine to enable for all
+///                 matching characters (always converted to upper case).
+/// \details    The function iterates over all character objects in the game
+///             world and calls \ref Npc_ExchangeRoutine(npc, \p NewRoutineName)
+///             for every character object that:
+///             - is not the player character,
+///             - currently has a daily routine, and
+///             - the daily routine function name includes \p OldRoutineNamePart
+///             .
+/// \note       Since the substring check is based on the function name of the
+///             daily routine, an \p OldRoutineNamePart of "RTN[_]" will change
+///             the daily routine of all non-player characters in the game world
+///             that currently have a daily routine.
+/// \sa         AI_ContinueRoutine
+/// \sa         Npc_ExchangeRoutine
+/// \sa         Npc_IsInRoutine
 {
 };
 
