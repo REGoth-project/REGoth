@@ -1127,6 +1127,44 @@ FUNC BOOL Npc_DeleteNews(VAR C_NPC Character, VAR int NewsId)
 };
 
 FUNC void Npc_ExchangeRoutine(VAR C_NPC Character, VAR string RoutineName)
+/// \brief      Exchange daily routine (direct).
+/// \param      Character
+///                 Object reference to the character.
+/// \param      RoutineName
+///                 Base name of the new daily routine to enable
+///                 (always converted to upper case).
+/// \details    If the \p Character is valid and a parser symbol with the name
+///             "RTN_" + \p RoutineName + "_" + \b C_NPC.id is found:
+///             -# all daily routine entries for the \p Character are removed
+///             -# the active entry in the routine manager is updated
+///             -# \b C_NPC.daily_routine is set for the \p Character
+///             -# the global instance variable \b SELF is set to \p Character
+///             -# \b C_NPC.daily_routine of the \p Character is called
+///             -# the daily routine waybox list for the \p Character is created
+///             -# the current daily routine entry is searched and enabled
+///             .
+/// \warning    The game only checks if a parser symbol with the daily routine
+///             function name exists, but does not verify the symbol type.
+/// \details    The daily routine function is expected to use \ref TA and
+///             \ref TA_Min to add daily routine entries for the \p Character.
+/// \todo       Document the routine manager timer issues (at least 2 entries).
+/// \details    If the daily routine function did not add any entries and the
+///             current state is a daily routine (or the current and next state
+///             are both invalid), the message queue for the \p Character is
+///             cleared, the \p Character is interrupted, and the current/last
+///             AI state is started (\b C_NPC.start_aistate).
+/// \todo       Document current daily routine entry activation.
+/// \note       The global instance variables \b SELF, \b OTHER, and \b VICTIM
+///             are saved and restored during the function call.
+/// \todo       Document the routine manager waybox list (TOGGLE WAYBOXES).
+/// \sa         AI_ContinueRoutine
+/// \sa         AI_StartState
+/// \sa         Npc_IsInRoutine
+/// \sa         Rtn_Exchange
+/// \sa         TA
+/// \sa         TA_BeginOverlay
+/// \sa         TA_EndOverlay
+/// \sa         TA_Min
 {
 };
 
@@ -1778,8 +1816,8 @@ FUNC BOOL PrintScreen(VAR string Text, VAR int PosX, VAR int PosY, VAR string Fo
 FUNC void Rtn_Exchange(VAR string OldRoutineNamePart, VAR string NewRoutineName)
 /// \brief      Exchange daily routine for all non-player characters (direct).
 /// \param      OldRoutineNamePart
-///                 Substring that has to be present in the function name of the
-///                 current daily routine (always converted to upper case).
+///                 Substring that has to be present in the function name
+///                 of the daily routine (always converted to upper case).
 /// \param      NewRoutineName
 ///                 Base name of the new daily routine to enable for all
 ///                 matching characters (always converted to upper case).
@@ -1788,12 +1826,11 @@ FUNC void Rtn_Exchange(VAR string OldRoutineNamePart, VAR string NewRoutineName)
 ///             for every character object that:
 ///             - is not the player character,
 ///             - currently has a daily routine, and
-///             - the daily routine function name includes \p OldRoutineNamePart
+///             - the daily routine function name contains \p OldRoutineNamePart
 ///             .
 /// \note       Since the substring check is based on the function name of the
-///             daily routine, an \p OldRoutineNamePart of "RTN[_]" will change
-///             the daily routine of all non-player characters in the game world
-///             that currently have a daily routine.
+///             daily routine, an \p OldRoutineNamePart of "RTN" or "_" will
+///             exchange the daily routine of all matching characters.
 /// \sa         AI_ContinueRoutine
 /// \sa         Npc_ExchangeRoutine
 /// \sa         Npc_IsInRoutine
