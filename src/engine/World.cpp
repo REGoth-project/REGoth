@@ -492,9 +492,9 @@ bool WorldInstance::init(const std::string& zen,
 		std::vector<std::string> zenFiles;
 		for(auto& f : files)
 		{
-			if(f.fileName.find(".ZEN") != std::string::npos)
+			if(f.find(".ZEN") != std::string::npos)
 			{
-				zenFiles.push_back(f.fileName);
+				zenFiles.push_back(f);
 			}
 		}
 
