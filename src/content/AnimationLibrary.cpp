@@ -51,9 +51,9 @@ bool AnimationLibrary::loadAnimations()
     std::string ext_mds = ".MDS";
     std::string ext_msb = ".MSB";
 
-    for (std::string fn : m_World.getEngine()->getVDFSIndex().getKnownFiles())
+    for (auto& fn : m_World.getEngine()->getVDFSIndex().getKnownFiles())
     {
-        std::transform(fn.begin(), fn.end(), fn.begin(), ::toupper);
+        fn = Utils::uppered(fn);
 
         std::string n = fn.substr(0, fn.length() - 4);
 
