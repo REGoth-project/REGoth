@@ -1126,37 +1126,53 @@ FUNC BOOL Npc_DeleteNews(VAR C_NPC Character, VAR int NewsId)
 	return FALSE;
 };
 
-FUNC void Npc_ExchangeRoutine(VAR C_NPC Character, VAR string RoutineName)
+FUNC void Npc_ExchangeRoutine(VAR C_NPC NonPlayer, VAR string RoutineName)
 /// \brief      Exchange daily routine (direct).
-/// \param      Character
+/// \param      NonPlayer
 ///                 Object reference to the character.
 /// \param      RoutineName
 ///                 Base name of the new daily routine to enable
 ///                 (always converted to upper case).
-/// \details    If the \p Character is valid and a parser symbol with the name
+/// \details    If the \p NonPlayer is valid and a parser symbol with the name
 ///             "RTN_" + \p RoutineName + "_" + \b C_NPC.id is found:
-///             -# all daily routine entries for the \p Character are removed
+///             -# all daily routine entries for the \p NonPlayer are removed
 ///             -# the active entry in the routine manager is updated
-///             -# \b C_NPC.daily_routine is set for the \p Character
-///             -# the global instance variable \b SELF is set to \p Character
-///             -# \b C_NPC.daily_routine of the \p Character is called
-///             -# the daily routine waybox list for the \p Character is created
+///             -# \b C_NPC.daily_routine is set for the \p NonPlayer
+///             -# the global instance variable \b SELF is set to \p NonPlayer
+///             -# \b C_NPC.daily_routine of the \p NonPlayer is called
+///             -# the daily routine waybox list for the \p NonPlayer is created
 ///             -# the current daily routine entry is searched and enabled
+///             -# the active entry in the routine manager is updated again
 ///             .
 /// \warning    The game only checks if a parser symbol with the daily routine
 ///             function name exists, but does not verify the symbol type.
 /// \details    The daily routine function is expected to use \ref TA and
-///             \ref TA_Min to add daily routine entries for the \p Character.
-/// \todo       Document the routine manager timer issues (at least 2 entries).
+///             \ref TA_Min to add daily routine entries for the \p NonPlayer.
 /// \details    If the daily routine function did not add any entries and the
-///             current state is a daily routine (or the current and next state
-///             are both invalid), the message queue for the \p Character is
-///             cleared, the \p Character is interrupted, and the current/last
-///             AI state is started (\b C_NPC.start_aistate).
-/// \todo       Document current daily routine entry activation.
+///             current state is caused by a daily routine (or the current and
+///             next state are both invalid), the message queue for the
+///             \p NonPlayer is cleared, the \p NonPlayer is interrupted, and
+///             the current/last AI state is started (\b C_NPC.start_aistate).
+/// \details    If a daily routine entry is found for the current world time
+///             (step 7) and the current state is caused by a daily routine
+///             (or the current and next state are both invalid)
+///             and the message queue is empty
+///             (or only contains overlay messages):
+///             -# the message queue for the \p NonPlayer is cleared
+///             -# the \p NonPlayer is interrupted
+///             -# the found entry is enabled
+///                (includes setting \b C_NPC.wp)
+///             -# and if the message queue is still empty
+///                (or only contains overlay messages)
+///                the AI state for the entry is started
+///             .
+///             The last condition is important, because interrupting the
+///             \p NonPlayer
+///             (hit animation, spell, object interaction, interact item,
+///             higher animation layers, talk, voices, trade, weapon mode)
+///             might leave non-overlay messages in the queue.
 /// \note       The global instance variables \b SELF, \b OTHER, and \b VICTIM
 ///             are saved and restored during the function call.
-/// \todo       Document the routine manager waybox list (TOGGLE WAYBOXES).
 /// \sa         AI_ContinueRoutine
 /// \sa         AI_StartState
 /// \sa         Npc_IsInRoutine
