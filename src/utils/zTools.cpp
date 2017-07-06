@@ -26,7 +26,7 @@ void unpackVdf()
     // Print how many files we loaded
     std::cout << "Loaded " << idx.getKnownFiles().size() << " files into fileIndex!" << std::endl;
 
-    for(auto& f : idx.getKnownFiles())
+    for(auto f : idx.getKnownFiles())
     {
         // Print some information about the file
         std::cout << "File: " << target << "/" << f << " " << std::endl;
