@@ -509,6 +509,7 @@ namespace Logic
                 ST_LookAt,
                 ST_Output,
                 ST_OutputMonolog,
+                ST_OutputEnd,
                 ST_Cutscene,
                 ST_WaitTillEnd,
                 ST_Ask,

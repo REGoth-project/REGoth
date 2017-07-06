@@ -1174,7 +1174,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
 
-        pWorld->getDialogManager().updateChoices(hself);
+        auto player = VobTypes::asNpcVob(engine->getMainWorld().get(), engine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+        pWorld->getDialogManager().startDialog(hself, player.playerController->getScriptHandle());
     });
 
 

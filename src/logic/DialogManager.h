@@ -53,8 +53,7 @@ namespace Logic
         bool init();
 
         /**
-         * Updates the boxes according to the choices taken by the user
-         * @param dt time since last frame
+         * Currently no-op
          */
         void update(double dt);
 
@@ -65,9 +64,14 @@ namespace Logic
         void onInputAction(UI::EInputAction action);
 
         /**
+         * calls B_AssessTalk
+         */
+        void assessTalk(Daedalus::GameState::NpcHandle target);
+
+        /**
          * Start dialog
          */
-        void startDialog(Daedalus::GameState::NpcHandle target);
+        void startDialog(Daedalus::GameState::NpcHandle npc, Daedalus::GameState::NpcHandle player);
 
         /**
          * exit the dialog
@@ -113,12 +117,6 @@ namespace Logic
         void clearChoices();
 
         /**
-         * Adds a single choice to the box
-         * @param entry Choice entry.
-         */
-        void addChoice(ChoiceEntry& entry);
-
-        /**
          * Sets the current Dialog Message. To be able to cancel it
          */
         void setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message);
@@ -154,7 +152,7 @@ namespace Logic
 
         /**
          * Performs a choice selected by the user
-         * @param choice Choice index to perform (m_Interaction.infos)
+         * @param index of the choice to perform
          */
         void performChoice(size_t choice);
 
@@ -186,6 +184,8 @@ namespace Logic
          * @param infos List of choices the player has to select
          */
         void onAIProcessInfos(Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos);
+
+        std::vector<ChoiceEntry> evaluateConditions(std::vector<Daedalus::GameState::InfoHandle> infos, bool important);
 
         /**
          * Currently active subtitle box
@@ -222,6 +222,9 @@ namespace Logic
              * Remember all already chosen important infos, for the current Dialog
              */
             std::set<Daedalus::GameState::InfoHandle> importantKnown;
+
+            bool autoPlayImportant;
+
         } m_Interaction;
 
         /**
