@@ -1574,12 +1574,32 @@ FUNC BOOL Npc_IsInFightMode(VAR C_NPC Character, VAR int WeaponMode)
 	return FALSE;
 };
 
-FUNC BOOL Npc_IsInRoutine(VAR C_NPC Character, VAR func Routine)
+FUNC BOOL Npc_IsInRoutine(VAR C_NPC NonPlayer, VAR func AIState)
 {
 	return FALSE;
 };
 
-FUNC BOOL Npc_IsInState(VAR C_NPC Character, VAR func AIState)
+FUNC BOOL Npc_IsInState(VAR C_NPC NonPlayer, VAR func AIState)
+/// \brief      Check if an AI state is active (direct).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      AIState
+///                 Base function of the AI state.
+/// \return     Returns TRUE if the current or next state is \p AIState.
+/// \details    The function first checks if the current state is valid
+///             and compares the active state function with \p AIState.
+///             If the current state is invalid, the next state is tested.
+/// \details    \p AIState is compared with the base function of the state.
+///             Therefore the function also returns TRUE if \p AIState is
+///             \b ZS_Dead and the \p NonPlayer is currently in
+///             \b ZS_Dead_Loop or \b ZS_Dead_End.
+/// \note       Some AI states are started by the engine and
+///             can be tested with the thair internal numbers:
+///             \arg \c -2 \b ZS_Answer
+///             \arg \c -3 \b ZS_Dead
+///             \arg \c -4 \b ZS_Unconscious
+///             \arg \c -5 \b ZS_FadeAway
+///             \arg \c -6 \b ZS_Follow
 {
 	return FALSE;
 };
