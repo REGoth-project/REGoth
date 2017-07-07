@@ -100,7 +100,7 @@ std::vector<ChoiceEntry> DialogManager::evaluateConditions(Daedalus::GameState::
             entry.info = infoHandle;
             entry.important = static_cast<bool>(info.important);
 
-            if(info.important)
+            if(entry.important)
             {
                 entry.text = "<important>";
             }
@@ -280,7 +280,15 @@ void DialogManager::assessTalk(Daedalus::GameState::NpcHandle target)
 
     LogInfo() << "Trying to talk to : " << VobTypes::getScriptObject(targetVob).name[0];
 
-    // TODO gothic1: check for monster without infos
+    // TODO use guild constants enum
+    const auto GIL_SEPERATOR_HUM = getVM().getDATFile().getSymbolByName("GIL_SEPERATOR_HUM").getInt();
+
+    // Exit-Condition for monsters without infos (missing in gothic1 B_AssessTalk)
+    if (getVM().getGameState().getNpc(target).guild > GIL_SEPERATOR_HUM)
+    {
+        if (!checkInfo(target, false) && !checkInfo(target, true))
+            return;
+    }
 
     getVM().setInstance("self", ZMemory::toBigHandle(targetVob.playerController->getScriptHandle()), Daedalus::IC_Npc);
     getVM().setInstance("other", ZMemory::toBigHandle(playerVob.playerController->getScriptHandle()), Daedalus::IC_Npc);
