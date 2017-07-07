@@ -49,27 +49,39 @@ DialogManager::~DialogManager()
     m_ActiveSubtitleBox = nullptr;
 }
 
-std::vector<ChoiceEntry> DialogManager::evaluateConditions(std::vector<Daedalus::GameState::InfoHandle> infos, bool important)
+bool DialogManager::checkInfo(Daedalus::GameState::NpcHandle target, bool important)
+{
+    VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
+    auto infos = m_ScriptDialogMananger->getInfos(target);
+    auto list = evaluateConditions(playerVob.playerController->getScriptHandle(), target, infos, important, 1);
+    return !list.empty();
+}
+
+std::vector<ChoiceEntry> DialogManager::evaluateConditions(Daedalus::GameState::NpcHandle player,
+                                                           Daedalus::GameState::NpcHandle target,
+                                                           const std::vector<Daedalus::GameState::InfoHandle>& infos,
+                                                           bool important, size_t maxInfos)
 {
     // conditions need global self/other
-    getVM().setInstance("self", ZMemory::toBigHandle(m_Interaction.target), Daedalus::IC_Npc);
-    getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
+    getVM().setInstance("self", ZMemory::toBigHandle(target), Daedalus::IC_Npc);
+    getVM().setInstance("other", ZMemory::toBigHandle(player), Daedalus::IC_Npc);
 
     std::vector<ChoiceEntry> entries;
     // Acquire all information we should be able to see right now
     for(const auto& infoHandle : infos)
     {
+        if (entries.size() == maxInfos)
+            break;
+
         const Daedalus::GEngineClasses::C_Info& info = getVM().getGameState().getInfo(infoHandle);
         if (info.important != important)
             continue;
 
-        bool npcKnowsInfo = m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(m_Interaction.player).instanceSymbol,
+        bool npcKnowsInfo = m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(player).instanceSymbol,
                                                                     getGameState().getInfo(infoHandle).instanceSymbol);
         // no need check for permanent. npc never knows permanent info
         if(npcKnowsInfo)
-        {
             continue;
-        }
 
         // Test if we should be able to see this info
         int32_t valid = 0;
@@ -98,25 +110,14 @@ std::vector<ChoiceEntry> DialogManager::evaluateConditions(std::vector<Daedalus:
     return entries;
 }
 
-void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
-                                     std::vector<Daedalus::GameState::InfoHandle> infos)
+void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle target)
 {
-    // i.e. monsters have no infos
-    if(infos.empty())
-    {
-        m_ProcessInfos = false;
-        return;
-    }
-
-    // Set information about the current interaction
-    m_Interaction.infos = infos;
-
-    m_DialogActive = true;
+    auto infos = m_ScriptDialogMananger->getInfos(target);
 
     // auto choose all important infos at the beginning of the dialog
     if (m_Interaction.autoPlayImportant)
     {
-        m_Interaction.choices = evaluateConditions(infos, m_Interaction.autoPlayImportant);
+        m_Interaction.choices = evaluateConditions(m_Interaction.player, m_Interaction.target, infos, true);
         flushChoices(); // necessary for calling performChoice programmatically
         for (size_t i = 0; i < m_Interaction.choices.size(); ++i)
         {
@@ -131,7 +132,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle self,
     }
     // case: no unknown important left
     m_Interaction.autoPlayImportant = false;
-    m_Interaction.choices = evaluateConditions(infos, false);
+    m_Interaction.choices = evaluateConditions(m_Interaction.player, m_Interaction.target, infos, false);
     flushChoices();
 }
 
@@ -270,7 +271,6 @@ void DialogManager::performChoice(size_t choice)
 
 void DialogManager::assessTalk(Daedalus::GameState::NpcHandle target)
 {
-    // TODO call B_AssessTalk instead
     if(m_DialogActive)
         return;
 
@@ -280,17 +280,13 @@ void DialogManager::assessTalk(Daedalus::GameState::NpcHandle target)
 
     LogInfo() << "Trying to talk to : " << VobTypes::getScriptObject(targetVob).name[0];
 
-    targetVob.playerController->standUp();
+    // TODO gothic1: check for monster without infos
 
-    EventMessages::StateMessage msg;
-    msg.subType = EventMessages::StateMessage::EV_StartState;
-    msg.functionSymbol = m_World.getScriptEngine().getSymbolIndexByName("ZS_TALK");
+    getVM().setInstance("self", ZMemory::toBigHandle(targetVob.playerController->getScriptHandle()), Daedalus::IC_Npc);
+    getVM().setInstance("other", ZMemory::toBigHandle(playerVob.playerController->getScriptHandle()), Daedalus::IC_Npc);
 
-    // Set other/victim // TODO: Refactor
-    msg.other = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("OTHER").instanceDataHandle);
-    msg.victim = ZMemory::handleCast<Daedalus::GameState::NpcHandle>(m_World.getScriptEngine().getVM().getDATFile().getSymbolByName("VICTIM").instanceDataHandle);
+    m_World.getScriptEngine().runFunction("B_AssessTalk");
 
-    targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
 }
 
 void DialogManager::endDialog()
@@ -424,8 +420,7 @@ void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
     }
     else
     {
-        auto infos = m_ScriptDialogMananger->getInfos(target);
-        onAIProcessInfos(target, infos);
+        onAIProcessInfos(target);
     }
 }
 

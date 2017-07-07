@@ -191,14 +191,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         vm.setReturn(0);
     });
 
-    vm.registerExternalFunction("npc_checkinfo", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "npc_checkinfo";
-        int important = vm.popDataValue(); if(verbose) LogInfo() << "important: " << important;
-        uint32_t arr_npc;
-        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
-        vm.setReturn(0);
-    });
-
     vm.registerExternalFunction("npc_checkoffermission", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_checkoffermission";
         int important = vm.popDataValue(); if(verbose) LogInfo() << "important: " << important;
@@ -257,7 +249,7 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         int32_t other = vm.popVar(arr_other); if(verbose) LogInfo() << "other: " << other;
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
-        vm.setReturn(0);
+        vm.setReturn(vm.getDATFile().getSymbolByName("ATT_NEUTRAL").getInt());
     });
 
     vm.registerExternalFunction("npc_getbodystate", [=](Daedalus::DaedalusVM& vm) {
@@ -280,7 +272,7 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         int32_t npc2 = vm.popVar(arr_npc2); if(verbose) LogInfo() << "npc2: " << npc2;
         uint32_t arr_npc1;
         int32_t npc1 = vm.popVar(arr_npc1); if(verbose) LogInfo() << "npc1: " << npc1;
-        vm.setReturn(0);
+        vm.setReturn(vm.getDATFile().getSymbolByName("ATT_NEUTRAL").getInt());
     });
 
     vm.registerExternalFunction("npc_getheighttoitem", [=](Daedalus::DaedalusVM& vm) {
@@ -337,7 +329,7 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         int32_t other = vm.popVar(arr_other); if(verbose) LogInfo() << "other: " << other;
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self); if(verbose) LogInfo() << "self: " << self;
-        vm.setReturn(0);
+        vm.setReturn(vm.getDATFile().getSymbolByName("ATT_NEUTRAL").getInt());
     });
 
     vm.registerExternalFunction("npc_getportalguild", [=](Daedalus::DaedalusVM& vm) {
@@ -838,7 +830,7 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         if(verbose) LogInfo() << "wld_getguildattitude";
         int guild2 = vm.popDataValue(); if(verbose) LogInfo() << "guild2: " << guild2;
         int guild1 = vm.popDataValue(); if(verbose) LogInfo() << "guild1: " << guild1;
-        vm.setReturn(0);
+        vm.setReturn(vm.getDATFile().getSymbolByName("ATT_NEUTRAL").getInt());
     });
 
     vm.registerExternalFunction("wld_getmobstate", [=](Daedalus::DaedalusVM& vm) {

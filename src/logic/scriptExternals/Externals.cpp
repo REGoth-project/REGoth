@@ -970,6 +970,15 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         pWorld->getDialogManager().queueDialogEndEvent(hself);
     });
 
+    vm->registerExternalFunction("npc_checkinfo", [=](Daedalus::DaedalusVM& vm) {
+        int important = vm.popDataValue();
+        int32_t npc = vm.popVar();
+        NpcHandle npcHandle = ZMemory::handleCast<NpcHandle>
+                (vm.getDATFile().getSymbolByIndex(npc).instanceDataHandle);
+        bool hasInfos = pWorld->getDialogManager().checkInfo(npcHandle, important);
+        vm.setReturn(hasInfos);
+    });
+
 	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
 		std::string spawnpoint = vm.popString();
 		uint32_t npcinstance = vm.popDataValue();
@@ -1122,6 +1131,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "wld_getday";
         vm.setReturn(pWorld->getEngine()->getGameClock().getDay());
+    });
+
+    vm->registerExternalFunction("wld_getguildattitude", [=](Daedalus::DaedalusVM& vm) {
+        int victim = vm.popDataValue();
+        int attacker = vm.popDataValue();
+        const size_t numGuilds = 16;
+        // attacker is row index, victim is column index
+        // TODO use copy of GIL_ATTITUDES Matrix instead
+        auto attitude = vm.getDATFile().getSymbolByName("GIL_ATTITUDES").getInt(attacker * numGuilds + victim);
+        vm.setReturn(attitude);
     });
 
     vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
