@@ -945,12 +945,12 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
 		if (npc.isValid())
 		{
-			// TODO: Add true guild field to C_NPC
+			// TODO: Add true guild field to C_NPC and use it instead
 			vm.setReturn(npc.playerController->getScriptInstance().guild);
 		}
 		else
 		{
-			vm.setReturn(0);
+            vm.setReturn(vm.getDATFile().getSymbolByName("GIL_NONE").getInt());
 		}
 	});
 
