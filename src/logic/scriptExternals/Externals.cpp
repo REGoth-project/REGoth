@@ -1134,12 +1134,12 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("wld_getguildattitude", [=](Daedalus::DaedalusVM& vm) {
-        int victim = vm.popDataValue();
-        int attacker = vm.popDataValue();
-        const size_t numGuilds = 16;
-        // attacker is row index, victim is column index
+        int32_t victimGuild = vm.popDataValue();
+        int32_t aggressorGuild = vm.popDataValue();
+        const uint32_t numGuilds = 16;
+        // aggressorGuild is the row index, victimGuild is the column index
         // TODO use copy of GIL_ATTITUDES Matrix instead
-        auto attitude = vm.getDATFile().getSymbolByName("GIL_ATTITUDES").getInt(attacker * numGuilds + victim);
+        auto attitude = vm.getDATFile().getSymbolByName("GIL_ATTITUDES").getInt(aggressorGuild * numGuilds + victimGuild);
         vm.setReturn(attitude);
     });
 
