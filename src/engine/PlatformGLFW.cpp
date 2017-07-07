@@ -2,7 +2,7 @@
 
 
 #include <bx/platform.h>
-#if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN
+#if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN || BX_PLATFORM_BSD
 #include "PlatformGLFW.h"
 #include "utils/Utils.h"
 #include <thread>
