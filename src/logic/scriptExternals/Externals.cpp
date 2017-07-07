@@ -938,6 +938,32 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+	vm->registerExternalFunction("npc_gettrueguild", [=](Daedalus::DaedalusVM& vm) {
+		int32_t n = vm.popVar();
+
+		VobTypes::NpcVobInformation npc = getNPCByInstance(n);
+
+		if (npc.isValid())
+		{
+			// TODO: Add true guild field to C_NPC
+			vm.setReturn(npc.playerController->getScriptInstance().guild);
+		}
+		else
+		{
+			vm.setReturn(0);
+		}
+	});
+
+	vm->registerExternalFunction("npc_settrueguild", [=](Daedalus::DaedalusVM& vm) {
+		int32_t guild = vm.popDataValue();
+		int32_t n = vm.popVar();
+		
+		VobTypes::NpcVobInformation npc = getNPCByInstance(n);
+
+		npc.playerController->getScriptInstance().guild = guild;
+		vm.setReturn(0);
+	});
+
     vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm){
         uint32_t func = vm.popVar();
         std::string text = vm.popString();

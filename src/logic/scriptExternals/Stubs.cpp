@@ -371,13 +371,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
         vm.setReturn(0);
     });
 
-    vm.registerExternalFunction("npc_gettrueguild", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "npc_gettrueguild";
-        uint32_t arr_npc;
-        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
-        vm.setReturn(0);
-    });
-
     vm.registerExternalFunction("npc_giveinfo", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_giveinfo";
         int important = vm.popDataValue(); if(verbose) LogInfo() << "important: " << important;
@@ -682,14 +675,6 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
     vm.registerExternalFunction("npc_setactivespellinfo", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_setactivespellinfo";
         int i1 = vm.popDataValue(); if(verbose) LogInfo() << "i1: " << i1;
-        uint32_t arr_npc;
-        int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
-        vm.setReturn(0);
-    });
-
-    vm.registerExternalFunction("npc_settrueguild", [=](Daedalus::DaedalusVM& vm) {
-        if(verbose) LogInfo() << "npc_settrueguild";
-        int guildid = vm.popDataValue(); if(verbose) LogInfo() << "guildid: " << guildid;
         uint32_t arr_npc;
         int32_t npc = vm.popVar(arr_npc); if(verbose) LogInfo() << "npc: " << npc;
         vm.setReturn(0);
