@@ -24,6 +24,7 @@ const char* OU_FILE_2 = "/_work/data/Scripts/content/CUTSCENE/OU.DAT";
 
 using namespace Logic;
 using ChoiceEntry = DialogManager::ChoiceEntry;
+using Daedalus::GameState::NpcHandle;
 
 DialogManager::DialogManager(World::WorldInstance& world) :
     m_World(world)
@@ -49,7 +50,7 @@ DialogManager::~DialogManager()
     m_ActiveSubtitleBox = nullptr;
 }
 
-bool DialogManager::checkInfo(Daedalus::GameState::NpcHandle target, bool important)
+bool DialogManager::checkInfo(NpcHandle target, bool important)
 {
     VobTypes::NpcVobInformation playerVob = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
     auto infos = m_ScriptDialogMananger->getInfos(target);
@@ -57,8 +58,8 @@ bool DialogManager::checkInfo(Daedalus::GameState::NpcHandle target, bool import
     return !list.empty();
 }
 
-std::vector<ChoiceEntry> DialogManager::evaluateConditions(Daedalus::GameState::NpcHandle player,
-                                                           Daedalus::GameState::NpcHandle target,
+std::vector<ChoiceEntry> DialogManager::evaluateConditions(NpcHandle player,
+                                                           NpcHandle target,
                                                            const std::vector<Daedalus::GameState::InfoHandle>& infos,
                                                            bool important, size_t maxInfos)
 {
@@ -110,7 +111,7 @@ std::vector<ChoiceEntry> DialogManager::evaluateConditions(Daedalus::GameState::
     return entries;
 }
 
-void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle target)
+void DialogManager::onAIProcessInfos(NpcHandle target)
 {
     auto infos = m_ScriptDialogMananger->getInfos(target);
 
@@ -136,7 +137,7 @@ void DialogManager::onAIProcessInfos(Daedalus::GameState::NpcHandle target)
     flushChoices();
 }
 
-void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target)
+void DialogManager::queueDialogEndEvent(NpcHandle target)
 {
     // Push the actual conversation-message
     EventMessages::ConversationMessage endDialogMessage;
@@ -150,8 +151,7 @@ void DialogManager::queueDialogEndEvent(Daedalus::GameState::NpcHandle target)
         queueVob.playerController->getEM().onMessage(endDialogMessage);
 }
 
-void DialogManager::onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target,
-                               const ZenLoad::oCMsgConversationData& msg)
+void DialogManager::onAIOutput(NpcHandle self, NpcHandle target, const ZenLoad::oCMsgConversationData& msg)
 {
     LogInfo() << getGameState().getNpc(self).name[0] << ": " << msg.text;
     // Make a new message for the talking NPC
@@ -269,7 +269,7 @@ void DialogManager::performChoice(size_t choice)
     }
 }
 
-void DialogManager::assessTalk(Daedalus::GameState::NpcHandle target)
+void DialogManager::assessTalk(NpcHandle target)
 {
     if(m_DialogActive)
         return;
@@ -405,7 +405,7 @@ void DialogManager::flushChoices()
         m_World.getEngine()->getHud().getDialogBox().addChoice(e);
 }
 
-void DialogManager::updateChoices(Daedalus::GameState::NpcHandle target)
+void DialogManager::updateChoices(NpcHandle target)
 {
     if (!m_ProcessInfos)
         return;
@@ -472,7 +472,7 @@ void DialogManager::setCurrentMessage(std::shared_ptr<EventMessages::Conversatio
     m_Interaction.currentDialogMessage = message;
 }
 
-void DialogManager::startDialog(Daedalus::GameState::NpcHandle npc, Daedalus::GameState::NpcHandle player)
+void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
 {
     LogInfo() << "Started talking with: " << getGameState().getNpc(npc).name[0];
     m_Interaction.importantKnown.clear();
