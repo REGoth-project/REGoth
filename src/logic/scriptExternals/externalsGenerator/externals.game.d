@@ -1616,6 +1616,12 @@ FUNC BOOL Npc_IsInState(VAR C_NPC NonPlayer, VAR func AIState)
 ///             \arg \c -4 \b ZS_Unconscious
 ///             \arg \c -5 \b ZS_FadeAway
 ///             \arg \c -6 \b ZS_Follow
+/// \sa         AI_ContinueRoutine
+/// \sa         AI_StartState
+/// \sa         Npc_ExchangeRoutine
+/// \sa         Npc_IsInRoutine
+/// \sa         Npc_WasInState
+/// \sa         Rtn_Exchange
 {
 	return FALSE;
 };
@@ -1815,7 +1821,26 @@ FUNC BOOL Npc_StartItemReactModules(VAR C_NPC Taker, VAR C_NPC Giver, VAR C_Item
 	return FALSE;
 };
 
-FUNC BOOL Npc_WasInState(VAR C_NPC Character, VAR func AIState)
+FUNC BOOL Npc_WasInState(VAR C_NPC NonPlayer, VAR func AIState)
+/// \brief      Check the last active AI state (direct).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      AIState
+///                 Base function of the AI state.
+/// \return     Returns TRUE if the last active state was \p AIState.
+/// \details    The last active AI state is only saved when the current
+///             AI state ends and the next AI state is enabled and activated
+///             (this does not happen for daily routine state changes).
+/// \details    \p AIState is compared with the base function of the state.
+///             Therefore the function also returns TRUE if \p AIState is
+///             \b ZS_Sleep and the \p NonPlayer was previously in
+///             \b ZS_Sleep_Loop or \b ZS_Sleep_End.
+/// \sa         AI_ContinueRoutine
+/// \sa         AI_StartState
+/// \sa         Npc_ExchangeRoutine
+/// \sa         Npc_IsInRoutine
+/// \sa         Npc_IsInState
+/// \sa         Rtn_Exchange
 {
 	return FALSE;
 };
