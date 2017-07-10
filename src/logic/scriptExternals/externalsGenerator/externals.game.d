@@ -1575,6 +1575,22 @@ FUNC BOOL Npc_IsInFightMode(VAR C_NPC Character, VAR int WeaponMode)
 };
 
 FUNC BOOL Npc_IsInRoutine(VAR C_NPC NonPlayer, VAR func AIState)
+/// \brief      Check for a daily routine AI state (direct).
+/// \param      NonPlayer
+///                 Object reference to the character.
+/// \param      AIState
+///                 Base function of the AI state.
+/// \return     Returns TRUE if the daily routine state is \p AIState.
+/// \details    The function checks if a daily routine entry is enabled,
+///             and compares the associated state function with \p AIState.
+/// \details    But it is neither checked if the daily routine entry is active,
+///             nor if the \p NonPlayer is currently in the associated state
+///             (e.g. \b TA_Sleep associates the daily routine entry with
+///             \b ZS_GotoBed, which in turn starts \b ZS_Sleep, and therefore
+///             Npc_IsInRoutine(\p NonPlayer, \b ZS_Sleep) returns FALSE
+///             even if \b ZS_Sleep has been indirectly caused by the routine).
+/// \sa         Npc_ExchangeRoutine
+/// \sa         Rtn_Exchange
 {
 	return FALSE;
 };
