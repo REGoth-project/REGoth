@@ -69,6 +69,7 @@ void BaseEngine::initEngine(int argc, char** argv)
     LogInfo() << "Initializing...";
 
     m_Args.gameBaseDirectory = ".";
+    m_FileIndex.Init(argv[0]);
     //m_Args.startupZEN = "addonworld.zen";
 
 

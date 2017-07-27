@@ -26,15 +26,15 @@ void unpackVdf()
     // Print how many files we loaded
     std::cout << "Loaded " << idx.getKnownFiles().size() << " files into fileIndex!" << std::endl;
 
-    for(auto& f : idx.getKnownFiles())
+    for(const auto& f : idx.getKnownFiles())
     {
         // Print some information about the file
-        std::cout << "File: " << "(" << f.fileSize << " bytes) "<< target << "/" << f.fileName << " " << std::endl;
+        std::cout << "File: " << target << "/" << f << " " << std::endl;
 
         std::vector<uint8_t> data;
         idx.getFileData(f, data);
 
-        if(!Utils::writeFile(f.fileName, target, data))
+        if(!Utils::writeFile(f, target, data))
             std::cout << " - Failed to write file!" << std::endl;
     }
 }

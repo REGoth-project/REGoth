@@ -488,13 +488,12 @@ bool WorldInstance::init(const std::string& zen,
 	else
 	{
 		// Dump a list of possible zens
-		auto& files = m_pEngine->getVDFSIndex().getKnownFiles();
 		std::vector<std::string> zenFiles;
-		for(auto& f : files)
+		for(const auto& f : m_pEngine->getVDFSIndex().getKnownFiles())
 		{
-			if(f.fileName.find(".ZEN") != std::string::npos)
+			if(f.find(".ZEN") != std::string::npos)
 			{
-				zenFiles.push_back(f.fileName);
+				zenFiles.push_back(f);
 			}
 		}
 
