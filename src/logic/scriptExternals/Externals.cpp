@@ -996,6 +996,15 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         pWorld->getDialogManager().queueDialogEndEvent(hself);
     });
 
+    vm->registerExternalFunction("npc_checkinfo", [=](Daedalus::DaedalusVM& vm) {
+        int important = vm.popDataValue();
+        int32_t npc = vm.popVar();
+        NpcHandle npcHandle = ZMemory::handleCast<NpcHandle>
+                (vm.getDATFile().getSymbolByIndex(npc).instanceDataHandle);
+        bool hasInfos = pWorld->getDialogManager().checkInfo(npcHandle, important);
+        vm.setReturn(hasInfos);
+    });
+
 	vm->registerExternalFunction("wld_insertnpc", [=](Daedalus::DaedalusVM& vm){
 		std::string spawnpoint = vm.popString();
 		uint32_t npcinstance = vm.popDataValue();
@@ -1150,6 +1159,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         vm.setReturn(pWorld->getEngine()->getGameClock().getDay());
     });
 
+    vm->registerExternalFunction("wld_getguildattitude", [=](Daedalus::DaedalusVM& vm) {
+        int32_t victimGuild = vm.popDataValue();
+        int32_t aggressorGuild = vm.popDataValue();
+        const uint32_t numGuilds = 16;
+        // aggressorGuild is the row index, victimGuild is the column index
+        // TODO use copy of GIL_ATTITUDES Matrix instead
+        auto attitude = vm.getDATFile().getSymbolByName("GIL_ATTITUDES").getInt(aggressorGuild * numGuilds + victimGuild);
+        vm.setReturn(attitude);
+    });
+
     vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
         if(verbose) LogInfo() << "npc_hasequippedmeleeweapon";
         int32_t self = vm.popVar();
@@ -1200,7 +1219,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
 
-        pWorld->getDialogManager().updateChoices(hself);
+        auto player = VobTypes::asNpcVob(engine->getMainWorld().get(), engine->getMainWorld().get().getScriptEngine().getPlayerEntity());
+        pWorld->getDialogManager().startDialog(hself, player.playerController->getScriptHandle());
     });
 
 

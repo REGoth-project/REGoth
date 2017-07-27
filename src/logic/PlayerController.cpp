@@ -1661,6 +1661,9 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             return false;
         }
             break;
+        case ConversationMessage::ST_OutputEnd:
+            m_World.getDialogManager().updateChoices(getScriptHandle());
+            return true;
         case ConversationMessage::ST_Cutscene:
             break;
         case ConversationMessage::ST_WaitTillEnd:
@@ -2234,7 +2237,7 @@ void PlayerController::setupKeyBindings()
                 if(npc.playerController->getBodyState() == BS_STAND)
                 {
                     Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
-                    m_World.getDialogManager().startDialog(shnpc);
+                    m_World.getDialogManager().assessTalk(shnpc);
                 }else if(npc.playerController->getBodyState() == BS_UNCONSCIOUS
                         || npc.playerController->getBodyState() == BS_DEAD)
                 {

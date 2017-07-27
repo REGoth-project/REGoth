@@ -4,6 +4,7 @@
 #include <daedalus/DaedalusDialogManager.h>
 #include <json.hpp>
 #include <logic/messages/EventMessage.h>
+#include <limits>
 
 using json = nlohmann::json;
 
@@ -53,8 +54,7 @@ namespace Logic
         bool init();
 
         /**
-         * Updates the boxes according to the choices taken by the user
-         * @param dt time since last frame
+         * Currently no-op
          */
         void update(double dt);
 
@@ -65,9 +65,14 @@ namespace Logic
         void onInputAction(UI::EInputAction action);
 
         /**
+         * calls B_AssessTalk
+         */
+        void assessTalk(Daedalus::GameState::NpcHandle target);
+
+        /**
          * Start dialog
          */
-        void startDialog(Daedalus::GameState::NpcHandle target);
+        void startDialog(Daedalus::GameState::NpcHandle npc, Daedalus::GameState::NpcHandle player);
 
         /**
          * exit the dialog
@@ -113,12 +118,6 @@ namespace Logic
         void clearChoices();
 
         /**
-         * Adds a single choice to the box
-         * @param entry Choice entry.
-         */
-        void addChoice(ChoiceEntry& entry);
-
-        /**
          * Sets the current Dialog Message. To be able to cancel it
          */
         void setCurrentMessage(std::shared_ptr<EventMessages::ConversationMessage> message);
@@ -154,7 +153,7 @@ namespace Logic
 
         /**
          * Performs a choice selected by the user
-         * @param choice Choice index to perform (m_Interaction.infos)
+         * @param index of the choice to perform
          */
         void performChoice(size_t choice);
 
@@ -171,6 +170,13 @@ namespace Logic
          */
         void onAIOutput(Daedalus::GameState::NpcHandle self, Daedalus::GameState::NpcHandle target, const ZenLoad::oCMsgConversationData& msg);
 
+        /**
+         * evaluates all C_Info conditions and returns whether any important/non-important infos are available
+         * @param target
+         * @param important the type to check for
+         */
+        bool checkInfo(Daedalus::GameState::NpcHandle target, bool important);
+
     protected:
 
         /**
@@ -185,7 +191,12 @@ namespace Logic
          * @param self NPC who started the interaction
          * @param infos List of choices the player has to select
          */
-        void onAIProcessInfos(Daedalus::GameState::NpcHandle self, std::vector<Daedalus::GameState::InfoHandle> infos);
+        void onAIProcessInfos(Daedalus::GameState::NpcHandle self);
+
+        std::vector<ChoiceEntry> evaluateConditions(Daedalus::GameState::NpcHandle player,
+                                                    Daedalus::GameState::NpcHandle target,
+                                                    const std::vector<Daedalus::GameState::InfoHandle>& infos,
+                                                    bool important, size_t maxInfos = std::numeric_limits<size_t>::max());
 
         /**
          * Currently active subtitle box
@@ -206,7 +217,6 @@ namespace Logic
 
             Daedalus::GameState::NpcHandle player;
             Daedalus::GameState::NpcHandle target;
-            std::vector<Daedalus::GameState::InfoHandle> infos;
             /**
              * Handle to the the current Dialogoption
              * Used to identify which Subchoices to show or to check if there are any
@@ -222,6 +232,9 @@ namespace Logic
              * Remember all already chosen important infos, for the current Dialog
              */
             std::set<Daedalus::GameState::InfoHandle> importantKnown;
+
+            bool autoPlayImportant;
+
         } m_Interaction;
 
         /**
