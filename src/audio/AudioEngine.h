@@ -9,7 +9,6 @@ typedef struct ALCdevice_struct ALCdevice;
 
 namespace Audio
 {
-
     class AudioWorld;
 
     /** The AudioEngine represents the target OS sound system.
@@ -20,7 +19,6 @@ namespace Audio
     class AudioEngine final
     {
     public:
-
         /** Initializes the AudioEngine.
          *
          * The @p device param specifies the device to use and can be determined
@@ -31,7 +29,7 @@ namespace Audio
          * @see AudioEngine::enumerateDevices()
          *
          */
-        AudioEngine(const std::string &device_name=std::string());
+        AudioEngine(const std::string &device_name = std::string());
 
         /** Deinitializes the AudioEngine.
          */
@@ -42,7 +40,6 @@ namespace Audio
          * @return The OpenAL device or nullptr when initialization has failed.
          */
         ALCdevice *getDevice() const { return m_Device; }
-
         /** Enumerates the audio devices available on the current machine.
          *
          * Note that not all OpenAL implementations support enumeration. In this case you'll
@@ -64,8 +61,6 @@ namespace Audio
         static const char *getErrorString(size_t errorCode);
 
     private:
-
         ALCdevice *m_Device = nullptr;
     };
-
 }

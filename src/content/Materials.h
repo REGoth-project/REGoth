@@ -12,7 +12,6 @@ namespace Materials
      */
     struct Material : public Handle::HandleTypeDescriptor<Handle::MaterialHandle>
     {
-
     };
 
     /**

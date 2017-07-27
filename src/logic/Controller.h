@@ -1,14 +1,12 @@
 #pragma once
-#include <json.hpp> // I am not sure about this. Pretty big header inside a header that is inclueded often.
-                    // But sadly you cant easily forward-declare nlohmann::json...
+#include <json.hpp>  // I am not sure about this. Pretty big header inside a header that is inclueded often.
+                     // But sadly you cant easily forward-declare nlohmann::json...
 using json = nlohmann::json;
 
 #include <handle/HandleDef.h>
 #include <components/Entities.h>
 #include "messages/EventManager.h"
 #include "ControllerTypes.h"
-
-
 
 namespace World
 {
@@ -35,8 +33,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::Controller; };
-
+        virtual EControllerType getControllerType() { return EControllerType::Controller; };
         /**
          * Called when the models visual changed
          */
@@ -50,13 +47,11 @@ namespace Logic
         /**
          * Called at rendertime
          */
-        virtual void onDebugDraw(){}
-
+        virtual void onDebugDraw() {}
         /**
          * Called when this vob recieved a message
          */
-        virtual void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle()){}
-
+        virtual void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle()) {}
         /**
          * Sets the transform of the underlaying entity
          */
@@ -75,8 +70,7 @@ namespace Logic
         /**
          * @return Event manager for this logic-controller
          */
-        EventManager& getEM(){ return m_EventManager; }
-
+        EventManager& getEM() { return m_EventManager; }
         /**
          * Exports this object as json-string. Includes the whole dependency-tree.
          */
@@ -87,10 +81,8 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport(){ return false; }
-
+        virtual bool shouldExport() { return false; }
     protected:
-
         /**
          * Exports this class only, ignores the base-classes values, but must call the function *BEFORE* writing values
          */

@@ -19,8 +19,8 @@
 #include "LoadingScreen.h"
 #include <logic/PlayerController.h>
 
-UI::Hud::Hud(Engine::BaseEngine& e) :
-        View(e)
+UI::Hud::Hud(Engine::BaseEngine& e)
+    : View(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
 
@@ -59,13 +59,13 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
         // Background shown when there is no world loaded
         Handle::TextureHandle hBackground = alloc.loadTextureVDF("STARTSCREEN.TGA");
         m_pMenuBackground->setImage(hBackground);
-        m_pMenuBackground->setSize(Math::float2(1,1));
+        m_pMenuBackground->setSize(Math::float2(1, 1));
 
         Handle::TextureHandle hBarBackground = alloc.loadTextureVDF("BAR_BACK.TGA");
         Handle::TextureHandle hBarHealth = alloc.loadTextureVDF("BAR_HEALTH.TGA");
         Handle::TextureHandle hBarMana = alloc.loadTextureVDF("BAR_MANA.TGA");
 
-        if(hBarMana.isValid() && hBarHealth.isValid() && hBarBackground.isValid())
+        if (hBarMana.isValid() && hBarHealth.isValid() && hBarBackground.isValid())
         {
             // Images
             m_pHealthBar->setBackgroundImage(hBarBackground);
@@ -94,8 +94,6 @@ UI::Hud::Hud(Engine::BaseEngine& e) :
 
             m_pEnemyHealthBar->setHidden(true);
         }
-
-
     }
 
     // Initialize clock
@@ -135,14 +133,13 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
     cleanMenus();
 
     // Only draw last menu in the menu-chain
-    if(!m_MenuChain.empty())
+    if (!m_MenuChain.empty())
     {
-        for(Menu* m : m_MenuChain)
+        for (Menu* m : m_MenuChain)
             m->setHidden(true);
 
         m_MenuChain.back()->setHidden(false);
     }
-
 
     // Show the background, if there is no world loaded at the moment and loading isn't active
     const bool isWorldLoaded = m_Engine.getMainWorld().isValid();
@@ -166,37 +163,39 @@ void UI::Hud::setEnemyHealth(int32_t value, int32_t maxValue)
     m_pEnemyHealthBar->setValue(value, maxValue);
 }
 
-void UI::Hud::setDateTimeDisplay(const std::string &timeStr)
+void UI::Hud::setDateTimeDisplay(const std::string& timeStr)
 {
     m_pClock->setText(timeStr);
 }
 
 void UI::Hud::onTextInput(const std::string& text)
 {
-    if(m_Engine.getConsole().isOpen())
+    if (m_Engine.getConsole().isOpen())
         m_Engine.getConsole().onTextInput(text);
-    else if(!m_MenuChain.empty())
+    else if (!m_MenuChain.empty())
         m_MenuChain.back()->onTextInput(text);
 }
 
 void UI::Hud::onInputAction(UI::EInputAction action)
 {
-	if (!m_pLoadingScreen->isHidden())
-		return;
+    if (!m_pLoadingScreen->isHidden())
+        return;
 
     if (m_Engine.getConsole().isOpen())
     {
         if (action == IA_Close || action == IA_ToggleConsole)
             m_Engine.getConsole().setOpen(false);
         return;
-    } else if(!m_MenuChain.empty())
+    }
+    else if (!m_MenuChain.empty())
     {
         // Notify last menu in chain
         bool close = m_MenuChain.back()->onInputAction(action);
         if (close)
             popMenu();
         return;
-    }else if(m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
+    }
+    else if (m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {
         m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
         return;
@@ -229,7 +228,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
 
 void UI::Hud::setGameplayHudVisible(bool value)
 {
-    for(View* v : m_GameplayHudElements)
+    for (View* v : m_GameplayHudElements)
         v->setHidden(!value);
 }
 
@@ -249,15 +248,14 @@ void UI::Hud::popMenu()
 
 void UI::Hud::cleanMenus()
 {
-    for(Menu* m : m_MenusToDelete)
+    for (Menu* m : m_MenusToDelete)
         delete m;
 
     m_MenusToDelete.clear();
 }
 
-void UI::Hud::popAllMenus() {
-    while(!m_MenuChain.empty())
+void UI::Hud::popAllMenus()
+{
+    while (!m_MenuChain.empty())
         popMenu();
 }
-
-

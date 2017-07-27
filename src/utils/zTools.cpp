@@ -6,9 +6,10 @@
 
 namespace Flags
 {
-    Cli::Flag unpackVdf("", "unpack-vdf", 2, " [vdf-archive, target-folder] "
-            "Unpacks the given vdf-archive to the target-folder. "
-            "Directory structure is not preserved.");
+    Cli::Flag unpackVdf("", "unpack-vdf", 2,
+                        " [vdf-archive, target-folder] "
+                        "Unpacks the given vdf-archive to the target-folder. "
+                        "Directory structure is not preserved.");
 }
 
 void unpackVdf()
@@ -26,7 +27,7 @@ void unpackVdf()
     // Print how many files we loaded
     std::cout << "Loaded " << idx.getKnownFiles().size() << " files into fileIndex!" << std::endl;
 
-    for(const auto& f : idx.getKnownFiles())
+    for (const auto& f : idx.getKnownFiles())
     {
         // Print some information about the file
         std::cout << "File: " << target << "/" << f << " " << std::endl;
@@ -34,14 +35,14 @@ void unpackVdf()
         std::vector<uint8_t> data;
         idx.getFileData(f, data);
 
-        if(!Utils::writeFile(f, target, data))
+        if (!Utils::writeFile(f, target, data))
             std::cout << " - Failed to write file!" << std::endl;
     }
 }
 
 bool ::zTools::tryRunTools()
 {
-    if(Flags::unpackVdf.isSet())
+    if (Flags::unpackVdf.isSet())
     {
         unpackVdf();
         return true;

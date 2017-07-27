@@ -16,7 +16,10 @@ namespace World
     class BspTree
     {
     public:
-        enum { INVALID_NODE = -1 };
+        enum
+        {
+            INVALID_NODE = -1
+        };
 
         struct BspNode
         {
@@ -42,9 +45,9 @@ namespace World
              */
             bool isLeaf() { return front == INVALID_NODE && back == INVALID_NODE; }
         };
-        
+
         BspTree(WorldInstance& world);
-    
+
         /**
          * Copies the BSP-Tree from a loaded .zen-file
          * @param data BSP data
@@ -71,8 +74,8 @@ namespace World
          * Debug-rendering
          */
         void debugDraw();
-    private:
 
+    private:
         /**
          * Nodes stored in this tree. First one is the root-node
          */

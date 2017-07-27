@@ -8,11 +8,11 @@ using namespace Logic;
 
 NpcAIHandler::~NpcAIHandler()
 {
-
 }
 
 NpcAIHandler::NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hostVob)
-        : m_World(world), m_HostVob(hostVob)
+    : m_World(world)
+    , m_HostVob(hostVob)
 {
     unbindKeys();
     m_ActiveMovementState = EMovementState::None;
@@ -20,18 +20,17 @@ NpcAIHandler::NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hos
 
 void NpcAIHandler::update(float deltaTime)
 {
-
 }
 
 void NpcAIHandler::standup()
 {
     m_ActiveMovementState = EMovementState::None;
-    getNpcAnimationHandler().Action_Stand(true); // Force stand
+    getNpcAnimationHandler().Action_Stand(true);  // Force stand
 }
 
 void NpcAIHandler::playerUpdate(float deltaTime)
 {
-    if(!getController().getEM().isEmpty())
+    if (!getController().getEM().isEmpty())
     {
         // While something else is playing, don't allow any movement state to be active
         m_ActiveMovementState = EMovementState::None;
@@ -40,58 +39,61 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         return;
     }
 
-    if(m_MovementState.isAction)
+    if (m_MovementState.isAction)
         bgfx::dbgTextPrintf(0, 6, 0x4, "Action");
 
-    switch(m_ActiveMovementState)
+    switch (m_ActiveMovementState)
     {
         case EMovementState::None:
 
             // Check for turns
-            if(m_MovementState.isTurnLeft)
+            if (m_MovementState.isTurnLeft)
             {
                 getNpcAnimationHandler().Action_TurnLeft();
-            } else if(m_MovementState.isTurnRight)
+            }
+            else if (m_MovementState.isTurnRight)
             {
                 getNpcAnimationHandler().Action_TurnRight();
             }
 
             getNpcAnimationHandler().Action_Stand(false, m_MovementState.isTurnLeft || m_MovementState.isTurnRight);
 
-
             // Only allow changing states when the character is standing (ie. not playing transition animations)
-            if(getNpcAnimationHandler().isStanding(true))
+            if (getNpcAnimationHandler().isStanding(true))
             {
-                if(m_MovementState.isLastWeaponKey)
+                if (m_MovementState.isLastWeaponKey)
                 {
-                    if(getController().getWeaponMode() == EWeaponMode::WeaponNone){
-
+                    if (getController().getWeaponMode() == EWeaponMode::WeaponNone)
+                    {
                         getController().drawWeaponMelee();
                         m_ActiveMovementState = EMovementState::DrawWeapon;
-                    }else
+                    }
+                    else
                     {
                         getController().undrawWeapon();
                         m_ActiveMovementState = EMovementState::UndrawWeapon;
                     }
-
-
-                }else if (m_MovementState.isForward)
+                }
+                else if (m_MovementState.isForward)
                 {
-                    if(m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone)
+                    if (m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone)
                     {
                         m_ActiveMovementState = EMovementState::FightForward;
-                    }else
+                    }
+                    else
                     {
                         m_ActiveMovementState = EMovementState::Forward;
                     }
-
-                }else if (m_MovementState.isBackward)
+                }
+                else if (m_MovementState.isBackward)
                 {
                     m_ActiveMovementState = EMovementState::Backward;
-                }else if (m_MovementState.isStrafeLeft)
+                }
+                else if (m_MovementState.isStrafeLeft)
                 {
                     m_ActiveMovementState = EMovementState::StrafeLeft;
-                }else if (m_MovementState.isStrafeRight)
+                }
+                else if (m_MovementState.isStrafeRight)
                 {
                     m_ActiveMovementState = EMovementState::StrafeRight;
                 }
@@ -100,49 +102,54 @@ void NpcAIHandler::playerUpdate(float deltaTime)
 
         case EMovementState::Forward:
             bgfx::dbgTextPrintf(0, 5, 0x4, "Forward");
-            if(m_MovementState.isForward)
+            if (m_MovementState.isForward)
             {
                 // Forward-key still pressed, keep going
-                if(!getNpcAnimationHandler().Action_GoForward())
+                if (!getNpcAnimationHandler().Action_GoForward())
                 {
                     // No Space, go back to "standing"
                     m_ActiveMovementState = EMovementState::None;
                     getNpcAnimationHandler().Action_Stand();
-                }else
+                }
+                else
                 {
                     // And check for turns
                     if (m_MovementState.isTurnLeft)
                     {
                         getNpcAnimationHandler().Action_TurnLeft();
-                    } else if (m_MovementState.isTurnRight)
+                    }
+                    else if (m_MovementState.isTurnRight)
                     {
                         getNpcAnimationHandler().Action_TurnRight();
                     }
                 }
-            }else
+            }
+            else
             {
                 // Forward-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
-                getNpcAnimationHandler().Action_Stand(); // FIXME: Shouldn't need to force stand here (and in the other states)
+                getNpcAnimationHandler().Action_Stand();  // FIXME: Shouldn't need to force stand here (and in the other states)
             }
             break;
 
         case EMovementState::Backward:
             bgfx::dbgTextPrintf(0, 5, 0x4, "Backward");
-            if(m_MovementState.isBackward)
+            if (m_MovementState.isBackward)
             {
                 // Backward-key still pressed, keep going
                 getNpcAnimationHandler().Action_GoBackward();
 
                 // And check for turns
-                if(m_MovementState.isTurnLeft)
+                if (m_MovementState.isTurnLeft)
                 {
                     getNpcAnimationHandler().Action_TurnLeft();
-                } else if(m_MovementState.isTurnRight)
+                }
+                else if (m_MovementState.isTurnRight)
                 {
                     getNpcAnimationHandler().Action_TurnRight();
                 }
-            }else
+            }
+            else
             {
                 // Backward-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
@@ -151,20 +158,22 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::StrafeLeft:
-            if(m_MovementState.isStrafeLeft)
+            if (m_MovementState.isStrafeLeft)
             {
                 // Strafe-key still pressed, keep going
                 getNpcAnimationHandler().Action_StrafeLeft();
 
                 // And check for turns
-                if(m_MovementState.isTurnLeft)
+                if (m_MovementState.isTurnLeft)
                 {
                     getNpcAnimationHandler().Action_TurnLeft();
-                } else if(m_MovementState.isTurnRight)
+                }
+                else if (m_MovementState.isTurnRight)
                 {
                     getNpcAnimationHandler().Action_TurnRight();
                 }
-            }else
+            }
+            else
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
@@ -173,20 +182,22 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::StrafeRight:
-            if(m_MovementState.isStrafeRight)
+            if (m_MovementState.isStrafeRight)
             {
                 // Strafe-key still pressed, keep going
                 getNpcAnimationHandler().Action_StrafeRight();
 
                 // And check for turns
-                if(m_MovementState.isTurnLeft)
+                if (m_MovementState.isTurnLeft)
                 {
                     getNpcAnimationHandler().Action_TurnLeft();
-                } else if(m_MovementState.isTurnRight)
+                }
+                else if (m_MovementState.isTurnRight)
                 {
                     getNpcAnimationHandler().Action_TurnRight();
                 }
-            }else
+            }
+            else
             {
                 // Strafe-key not pressed anymore, go back to "standing"
                 m_ActiveMovementState = EMovementState::None;
@@ -197,7 +208,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         case EMovementState::DrawWeapon:
             getNpcAnimationHandler().Action_DrawWeapon(0);
 
-            if(getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
+            if (getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
             {
                 // Wait until the drawing-animation is over, then go to standing state
                 m_ActiveMovementState = EMovementState::None;
@@ -207,7 +218,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         case EMovementState::UndrawWeapon:
             getNpcAnimationHandler().Action_UndrawWeapon();
 
-            if(getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
+            if (getNpcAnimationHandler().isStanding(true) && !m_MovementState.isLastWeaponKey)
             {
                 // Wait until the undrawing-animation is over, then go to standing state
                 m_ActiveMovementState = EMovementState::None;
@@ -218,16 +229,17 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::FightForward:
-            if(m_MovementState.isForward && m_MovementState.isAction)
+            if (m_MovementState.isForward && m_MovementState.isAction)
             {
                 getNpcAnimationHandler().Action_FightForward();
-            } else
+            }
+            else
             {
                 // FIXME: Find out when the animation actually ended
                 getNpcAnimationHandler().Action_Stand(true);
             }
 
-            if(getNpcAnimationHandler().isStanding(true))
+            if (getNpcAnimationHandler().isStanding(true))
             {
                 m_ActiveMovementState = EMovementState::None;
             }
@@ -240,7 +252,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
      * TODO: There is still a problem when you switch directions frame-perfect from forward to backward
      * You will then walk forward while holding the back-key.
      */
-/*
+    /*
     if(m_MovementState.isForward && !m_MovementState.isBackward)
     {
         getNpcAnimationHandler().Action_GoForward();
@@ -324,14 +336,14 @@ void NpcAIHandler::bindKeys()
 
 void NpcAIHandler::unbindKeys()
 {
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerForward,           m_MovementState.actionForward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerBackward,          m_MovementState.actionBackward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeLeft,        m_MovementState.actionStrafeLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeRight,       m_MovementState.actionStrafeRight);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnLeft,          m_MovementState.actionTurnLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnRight,         m_MovementState.actionTurnRight);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerDrawWeaponMelee,   m_MovementState.actionLastWeapon);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerAction,   m_MovementState.actionAction);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerForward, m_MovementState.actionForward);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerBackward, m_MovementState.actionBackward);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeLeft, m_MovementState.actionStrafeLeft);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeRight, m_MovementState.actionStrafeRight);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnLeft, m_MovementState.actionTurnLeft);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnRight, m_MovementState.actionTurnRight);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerDrawWeaponMelee, m_MovementState.actionLastWeapon);
+    Engine::Input::RemoveAction(Engine::ActionType::PlayerAction, m_MovementState.actionAction);
 
     // Zero out everything
     m_MovementState = {};
@@ -351,16 +363,13 @@ void NpcAIHandler::resetKeyStates()
     //MoveSpeed2 = false;
 }
 
-
 PlayerController& NpcAIHandler::getController() const
 {
-    return *reinterpret_cast<Logic::PlayerController*>(m_World.getEntity<Components::LogicComponent>(m_HostVob).m_pLogicController);;
+    return *reinterpret_cast<Logic::PlayerController*>(m_World.getEntity<Components::LogicComponent>(m_HostVob).m_pLogicController);
+    ;
 }
 
 NpcAnimationHandler& NpcAIHandler::getNpcAnimationHandler() const
 {
     return getController().getNpcAnimationHandler();
 }
-
-
-

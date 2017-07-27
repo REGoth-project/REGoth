@@ -33,55 +33,50 @@ namespace Logic
     class MobCore
     {
     public:
-        MobCore(World::WorldInstance& world, Handle::EntityHandle entity) : m_Entity(entity), m_World(world)
+        MobCore(World::WorldInstance& world, Handle::EntityHandle entity)
+            : m_Entity(entity)
+            , m_World(world)
         {
             m_StateNum = 0;
         }
-        virtual ~MobCore(){}
-
+        virtual ~MobCore() {}
         /**
          * Sets the base animation-scheme to use
          * @param name New scheme
          */
-        void setSchemeName(const std::string& name){ m_Scheme = name; }
-
+        void setSchemeName(const std::string& name) { m_Scheme = name; }
         /**
          * Called when this mob was activated
          * @param npc NPC who activated the mob
          */
-        virtual void startInteraction(Handle::EntityHandle npc){}
-
+        virtual void startInteraction(Handle::EntityHandle npc) {}
         /**
          *
          * @param npc
          * @param from Current state
          * @param to State to go to
          */
-        virtual void onBeginStateChange(Handle::EntityHandle npc, int from, int to){}
-
+        virtual void onBeginStateChange(Handle::EntityHandle npc, int from, int to) {}
         /**
          *
          * @param npc
          * @param from Current state
          * @param to State to go to
          */
-        virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to){ m_StateNum = to; }
-
+        virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to) { m_StateNum = to; }
         /**
          * Current animation-scheme to use.
          * Example:
          *  Animations for front and backside of a bed
          * @return Current animation sceme name
          */
-        virtual std::string getSchemeName(){ return m_Scheme; }
-
+        virtual std::string getSchemeName() { return m_Scheme; }
         /**
          * Called right after the MobController found a new position for a new npc asking to use this mob
          * @param npc NPC asking
          * @param pos Position found
          */
-        virtual void onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos){}
-
+        virtual void onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos) {}
         /**
          * @return Pointer to the mob-controller of this very core
          */
@@ -90,15 +85,14 @@ namespace Logic
         /**
          * @return State this mob is currently in
          */
-        int getState(){ return m_StateNum; }
-
+        int getState() { return m_StateNum; }
         /**
          * Saves this cores settings to the given JSON-object
          */
         virtual void exportCore(json& j);
         virtual void importCore(const json& j);
-    protected:
 
+    protected:
         Handle::EntityHandle m_Entity;
         World::WorldInstance& m_World;
 
@@ -137,7 +131,13 @@ namespace Logic
          * @param npc NPC interacting with this/To interact with this
          * @param direction Direction of the state-transition to go. Ie. from sitting on a chest to open it.
          */
-        enum EDirection{ D_Forward, D_Backward, D_Left, D_Right };
+        enum EDirection
+        {
+            D_Forward,
+            D_Backward,
+            D_Left,
+            D_Right
+        };
         void useMobIncState(Handle::EntityHandle npc, EDirection direction);
 
         /**
@@ -148,8 +148,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::MobController; }
-
+        virtual EControllerType getControllerType() { return EControllerType::MobController; }
         /**
          * Initializes this mob from a vob-descriptor loaded by zenlib
          */
@@ -206,31 +205,26 @@ namespace Logic
         /**
          * @return Focus name the player sees
          */
-        const std::string& getFocusName(){ return m_FocusName; }
-
+        const std::string& getFocusName() { return m_FocusName; }
         /**
          * @return Main animation scheme name prefix
          */
-        const std::string& getMainSchemeName(){ return m_MainSchemeName; }
-
-	/**
+        const std::string& getMainSchemeName() { return m_MainSchemeName; }
+        /**
          * @return If camera position should be locked by CameraController
          */
-	bool isCameraLocked(){ return m_lockCamera; }
-
+        bool isCameraLocked() { return m_lockCamera; }
         /**
          * @return Access to the internal core. Handle with care.
          */
-        MobCore* getCore(){ return m_MobCore; }
-
+        MobCore* getCore() { return m_MobCore; }
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport(){ return true; }
-
+        virtual bool shouldExport() { return true; }
         virtual void importObject(const json& j);
-    protected:
 
+    protected:
         virtual void exportPart(json& j) override;
 
         /**
@@ -294,7 +288,7 @@ namespace Logic
         // Main sceme name
         std::string m_MainSchemeName;
 
-	// lock camera position during usage
-	bool m_lockCamera;
+        // lock camera position during usage
+        bool m_lockCamera;
     };
 }

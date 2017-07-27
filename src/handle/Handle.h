@@ -16,7 +16,7 @@ namespace Handle
      * Simple handle wrapping a pointer
      * @tparam T Type to wrap
      */
-    template<typename T>
+    template <typename T>
     struct PtrHandle
     {
         PtrHandle()

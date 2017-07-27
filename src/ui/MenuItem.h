@@ -31,12 +31,12 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * @return Whether this item is selectable
          */
-        bool isSelectable(){ return (getItemScriptData().flags & Daedalus::GEngineClasses::C_Menu_Item::IT_SELECTABLE) != 0; }
+        bool isSelectable() { return (getItemScriptData().flags & Daedalus::GEngineClasses::C_Menu_Item::IT_SELECTABLE) != 0; }
         /**
          * @return Script-data of this item
          */
@@ -46,6 +46,7 @@ namespace UI
          * @returns the on-select action of this item (ie. Accept-key was pressed -> close view)
          */
         Daedalus::GEngineClasses::MenuConstants::ESelEvent getSelectionEvent(int i);
+
     protected:
         /**
          * Reference to the menu owning this
@@ -80,7 +81,7 @@ namespace UI
              * @param dt time since last frame
              * @param mstate mouse-state
              */
-            void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+            void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
         };
     }
 }

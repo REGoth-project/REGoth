@@ -75,39 +75,36 @@ namespace UI
          *       All children have to be removed from this, before this can be deleted, to ensure no memory leaks.
          * @param view View to add
          */
-        void addChild(View *pView);
+        void addChild(View* pView);
 
         /**
          * Removes a subview from this view
          * @param pView View to remove
          */
-        void removeChild(View *pView);
+        void removeChild(View* pView);
 
         /**
          * Updates/draws the UI-Views
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        virtual void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config);
+        virtual void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config);
 
         /**
          * Set/get hidden
          */
-        bool isHidden(){ return m_IsHidden; }
-        void setHidden(bool v){ m_IsHidden = v; }
-
+        bool isHidden() { return m_IsHidden; }
+        void setHidden(bool v) { m_IsHidden = v; }
         /**
          * Transforms in normalized coords
          */
-        void setTranslation(const Math::float2& translation){ m_Translation = translation; }
-        void setSize(const Math::float2& size){ m_Size = size; }
-
+        void setTranslation(const Math::float2& translation) { m_Translation = translation; }
+        void setSize(const Math::float2& size) { m_Size = size; }
         /**
          * Sets how this view should be aligned to it's translation
          * @param alignment The alignment
          */
-        void setAlignment(EAlign alignment){ m_Alignment = alignment; }
-
+        void setAlignment(EAlign alignment) { m_Alignment = alignment; }
         /**
          * Draws a texture on screen somewhere
          * Note: Uses alpha-blending
@@ -139,18 +136,17 @@ namespace UI
          * @param px
          * @param py
          */
-        void drawText(const std::string& txt, int px, int py, EAlign alignment, Render::RenderConfig &config, const std::string& font = DEFAULT_FONT);
-    protected:
+        void drawText(const std::string& txt, int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font = DEFAULT_FONT);
 
+    protected:
         /**
          * @param pParent Parent of this view
          */
-        void setParent(View* pParent){ m_pParent = pParent; };
-
+        void setParent(View* pParent) { m_pParent = pParent; };
         /**
          * Sub-views drawn on top of this one
          */
-        std::vector<View *> m_Children;
+        std::vector<View*> m_Children;
         View* m_pParent;
 
         /**
@@ -168,6 +164,6 @@ namespace UI
         /**
          * Engine
          */
-         Engine::BaseEngine& m_Engine;
+        Engine::BaseEngine& m_Engine;
     };
 }

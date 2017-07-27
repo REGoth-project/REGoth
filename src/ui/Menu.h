@@ -14,8 +14,6 @@ namespace Daedalus
 
 namespace UI
 {
-
-
     class MenuItem;
     class ImageView;
     class TextView;
@@ -31,7 +29,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Initializes this menu from script. Also loads the MENU.DAT, if not already done.
@@ -73,7 +71,6 @@ namespace UI
         Hud& getHud();
 
     protected:
-
         /**
          * Performs the select-action on the given item
          * @param item Item to perform the action on
@@ -122,7 +119,6 @@ namespace UI
          * This menus background
          */
         ImageView* m_pBackgroundImage;
-        TextView* m_pInfoText; 
+        TextView* m_pInfoText;
     };
 }
-

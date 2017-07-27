@@ -6,18 +6,17 @@
 
 namespace Meshes
 {
-
     /**
      * Basic information every mesh needs.
      * Contains vertices, indices and handles to the VB/IB
      */
-    template<typename V, typename I, typename VHDL, typename IHDL>
+    template <typename V, typename I, typename VHDL, typename IHDL>
     struct StaticMeshInfo
     {
         // Global information
         std::vector<V> m_Vertices;
-        std::vector<I> m_Indices;  
-        
+        std::vector<I> m_Indices;
+
         VHDL m_VertexBufferHandle;
         IHDL m_IndexBufferHandle;
     };
@@ -40,14 +39,17 @@ namespace Meshes
     * @param IHDL Indexbuffer handle typename
     * @param NMSH Number of submeshes stored here.
     */
-    template<typename V, typename I, typename MHDL, typename VHDL, typename IHDL, int NMSH>
-    struct StaticMeshFixedSize : public StaticMeshInfo<V,I, VHDL, IHDL>
+    template <typename V, typename I, typename MHDL, typename VHDL, typename IHDL, int NMSH>
+    struct StaticMeshFixedSize : public StaticMeshInfo<V, I, VHDL, IHDL>
     {
         // Submesh-Information
         SubmeshVxInfo m_SubmeshStarts[NMSH];
         MHDL m_SubmeshMaterials[NMSH];
-        
-        enum { NUM_MESHES = NMSH };
+
+        enum
+        {
+            NUM_MESHES = NMSH
+        };
     };
 
     /**
@@ -58,20 +60,20 @@ namespace Meshes
      * @param VHDL Vertexbuffer handle typename
      * @param IHDL Indexbuffer handle typename
      */
-    template<typename V, typename I, typename MHDL, typename VHDL, typename IHDL>
-    struct StaticMeshDynSize : public StaticMeshInfo<V,I, VHDL, IHDL>
+    template <typename V, typename I, typename MHDL, typename VHDL, typename IHDL>
+    struct StaticMeshDynSize : public StaticMeshInfo<V, I, VHDL, IHDL>
     {
         // Submesh information
         std::vector<SubmeshVxInfo> m_SubmeshStarts;
         std::vector<Materials::TexturedMaterial> m_SubmeshMaterials;
-        std::vector<std::string> m_SubmeshMaterialNames; // TODO: Remove this and only use handles
+        std::vector<std::string> m_SubmeshMaterialNames;  // TODO: Remove this and only use handles
     };
 
     /**
      * Removes all data from a StaticMeshDynSize-Instance
      */
-    template<typename V, typename I, typename MHDL, typename VHDL, typename IHDL>
-    void clearStaticMeshDynSize(StaticMeshDynSize<V,I,MHDL,VHDL,IHDL>& target)
+    template <typename V, typename I, typename MHDL, typename VHDL, typename IHDL>
+    void clearStaticMeshDynSize(StaticMeshDynSize<V, I, MHDL, VHDL, IHDL>& target)
     {
         target.m_SubmeshMaterials.clear();
         target.m_SubmeshStarts.clear();

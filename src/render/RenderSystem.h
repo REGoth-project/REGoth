@@ -21,7 +21,7 @@ namespace Render
             bgfx::ProgramHandle fullscreenQuadProgram;
             bgfx::ProgramHandle imageProgram;
             bgfx::ProgramHandle particle_textured;
-        }programs;
+        } programs;
 
         struct
         {
@@ -32,7 +32,7 @@ namespace Render
             bgfx::UniformHandle fogColor;
             bgfx::UniformHandle fogNearFar;
             bgfx::UniformHandle s_TexColor;
-        }uniforms;
+        } uniforms;
 
         struct
         {
@@ -41,13 +41,12 @@ namespace Render
             float farPlane;
             uint32_t viewWidth;
             uint32_t viewHeight;
-        }state;
+        } state;
     };
 
     class RenderSystem
     {
     public:
-
         RenderSystem(Engine::BaseEngine& engine);
         virtual ~RenderSystem();
 
@@ -59,8 +58,7 @@ namespace Render
         /**
          * @return The generated config of this system
          */
-        RenderConfig& getConfig(){ return m_Config; }
-
+        RenderConfig& getConfig() { return m_Config; }
         /**
          * @return Free value to use as instance-data-buffer. This gives you a place to store
          *         bgfx::InstanceDataBuffers by index. Note that only the spot is reserved.
@@ -85,7 +83,6 @@ namespace Render
         }
 
     protected:
-
         /**
          * Generated config of this system
          */

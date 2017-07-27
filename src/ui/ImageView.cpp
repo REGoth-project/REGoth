@@ -9,34 +9,33 @@
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
-UI::ImageView::ImageView(Engine::BaseEngine& e) : View(e)
+UI::ImageView::ImageView(Engine::BaseEngine& e)
+    : View(e)
 {
     m_RelativeSize = true;
     m_ImageHeight = 0;
     m_ImageWidth = 0;
-
 }
 
 UI::ImageView::~ImageView()
 {
-
 }
 
 void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     Textures::Texture& texture = m_Engine.getEngineTextureAlloc().getTexture(m_Image);
 
-    if(bgfx::isValid(texture.m_TextureHandle))
+    if (bgfx::isValid(texture.m_TextureHandle))
     {
         // Un-normalize transforms
         Math::float2 offset = getAlignOffset(m_Alignment, m_ImageWidth, m_ImageHeight);
         Math::float2 absTranslation = getAbsoluteTranslation();
         Math::float2 absSize = getAbsoluteSize();
-        int px = (int) (absTranslation.x * config.state.viewWidth + 0.5f);
-        int py = (int) (absTranslation.y * config.state.viewHeight + 0.5f);
+        int px = (int)(absTranslation.x * config.state.viewWidth + 0.5f);
+        int py = (int)(absTranslation.y * config.state.viewHeight + 0.5f);
 
         px += offset.x;
         py += offset.y;
@@ -46,12 +45,12 @@ void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render:
 
         if (m_RelativeSize)
         {
-            absSize.x *= m_ImageWidth / (float) config.state.viewWidth;
-            absSize.y *= m_ImageHeight / (float) config.state.viewHeight;
+            absSize.x *= m_ImageWidth / (float)config.state.viewWidth;
+            absSize.y *= m_ImageHeight / (float)config.state.viewHeight;
         }
 
-        width = (int) (absSize.x * config.state.viewWidth + 0.5f);
-        height = (int) (absSize.y * config.state.viewHeight + 0.5f);
+        width = (int)(absSize.x * config.state.viewWidth + 0.5f);
+        height = (int)(absSize.y * config.state.viewHeight + 0.5f);
 
         bgfx::ProgramHandle program = config.programs.imageProgram;
         drawTexture(BGFX_VIEW, px, py, width, height,

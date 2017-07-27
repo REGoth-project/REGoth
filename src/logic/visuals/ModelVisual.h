@@ -6,7 +6,7 @@ namespace Logic
 {
     enum class EModelNode
     {
-		None,
+        None,
         Righthand,
         Lefthand,
         Sword,
@@ -22,97 +22,96 @@ namespace Logic
     class ModelVisual : public VisualController
     {
     public:
-
         enum EModelAnimType
         {
-			// Normal
-			Walk,
-			Run,
-			Idle,
-			Backpedal,
-			StrafeLeft,
-			StrafeRight,
-			Jump,
-			TurnLeft,
-			TurnRight,
+            // Normal
+            Walk,
+            Run,
+            Idle,
+            Backpedal,
+            StrafeLeft,
+            StrafeRight,
+            Jump,
+            TurnLeft,
+            TurnRight,
 
-			// 1h
-			Walk1h,
-			Run1h,
-			Idle1h,
-			Backpedal1h,
-			StrafeLeft1h,
-			StrafeRight1h,
-			Attack1h,
-			Attack1h_L,
-			Attack1h_R,
-			Attack1h_Move,
-			Attack1h_Finish,
-			Parade1h,
-			Parade1h_Back,
-			Draw1h,
+            // 1h
+            Walk1h,
+            Run1h,
+            Idle1h,
+            Backpedal1h,
+            StrafeLeft1h,
+            StrafeRight1h,
+            Attack1h,
+            Attack1h_L,
+            Attack1h_R,
+            Attack1h_Move,
+            Attack1h_Finish,
+            Parade1h,
+            Parade1h_Back,
+            Draw1h,
 
-			// 2h
-			Walk2h,
-			Run2h,
-			Idle2h,
-			Backpedal2h,
-			StrafeLeft2h,
-			StrafeRight2h,
-			Attack2h,
-			Attack2h_L,
-			Attack2h_R,
-			Attack2h_Move,
-			Attack2h_Finish,
-			Parade2h,
-			Parade2h_Back,
-			Draw2h,
+            // 2h
+            Walk2h,
+            Run2h,
+            Idle2h,
+            Backpedal2h,
+            StrafeLeft2h,
+            StrafeRight2h,
+            Attack2h,
+            Attack2h_L,
+            Attack2h_R,
+            Attack2h_Move,
+            Attack2h_Finish,
+            Parade2h,
+            Parade2h_Back,
+            Draw2h,
 
-			// Bow
-			WalkBow,
-			RunBow,
-			IdleBow,
-			BackpedalBow,
-			StrafeLeftBow,
-			StrafeRightBow,
-			AttackBow,
-			DrawBow,
+            // Bow
+            WalkBow,
+            RunBow,
+            IdleBow,
+            BackpedalBow,
+            StrafeLeftBow,
+            StrafeRightBow,
+            AttackBow,
+            DrawBow,
 
-			// Cbow
-			WalkCBow,
-			RunCBow,
-			IdleCBow,
-			BackpedalCBow,
-			StrafeLeftCBow,
-			StrafeRightCBow,
-			AttackCBow,
-			DrawCBow,
+            // Cbow
+            WalkCBow,
+            RunCBow,
+            IdleCBow,
+            BackpedalCBow,
+            StrafeLeftCBow,
+            StrafeRightCBow,
+            AttackCBow,
+            DrawCBow,
 
-			// Fist
-			WalkFist,
-			RunFist,
-			IdleFist,
-			BackpedalFist,
-			StrafeLeftFist,
-			StrafeRightFist,
-			AttackFist,
-			ParadeFist,
-			ParadeFist_Back,
-			DrawFist,
+            // Fist
+            WalkFist,
+            RunFist,
+            IdleFist,
+            BackpedalFist,
+            StrafeLeftFist,
+            StrafeRightFist,
+            AttackFist,
+            ParadeFist,
+            ParadeFist_Back,
+            DrawFist,
 
-         // Swimming
-         Swim,
-         SwimB,
-         SwimF,
-         SwimTurnLeft,
-         SwimTurnRight,
-         SwimToDive,
-         SwimToHang, // No idea what that is, can't remember it from the original game
-         Wade,
-         // Transitions
-			// TODO: Transitions, Running attacks, weapon walking, sneaking, backwards walking, attack while running, magic, other
+            // Swimming
+            Swim,
+            SwimB,
+            SwimF,
+            SwimTurnLeft,
+            SwimTurnRight,
+            SwimToDive,
+            SwimToHang,  // No idea what that is, can't remember it from the original game
+            Wade,
+            // Transitions
+            // TODO: Transitions, Running attacks, weapon walking, sneaking, backwards walking, attack while running, magic, other
 
-			NUM_ANIMATIONS
+            NUM_ANIMATIONS
         };
 
         struct BodyState
@@ -140,11 +139,10 @@ namespace Logic
         ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity);
         virtual ~ModelVisual();
 
-		/**
+        /**
          * @return Classtype of this visual
          */
-		virtual EVisualType getVisualType(){ return EVisualType::Model; }
-
+        virtual EVisualType getVisualType() { return EVisualType::Model; }
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
@@ -158,7 +156,7 @@ namespace Logic
          * Note: Will do an implicit setBodyState!
          * @param head File of the mesh to use as head
          */
-        void setHeadMesh(const std::string& head, int headTextureIdx=0, int teethTextureIdx=0);
+        void setHeadMesh(const std::string& head, int headTextureIdx = 0, int teethTextureIdx = 0);
 
         /**
          * Attaches a visual to the given node
@@ -176,31 +174,30 @@ namespace Logic
         /**
          * @brief Sets the closest animation to the specified type. A goblin uses FistWalk instead of Run, for example.
          */
-		void setAnimation(EModelAnimType type, bool loop = true);
+        void setAnimation(EModelAnimType type, bool loop = true);
 
-		/**
+        /**
 		 * @brief Applys the given animation overlay
 		 */
-		void applyOverlay(const std::string& mds);
+        void applyOverlay(const std::string& mds);
 
-		/**
+        /**
 		 * Plays the given animation exactly one time. Has more priority than setAnimation.
 		 * @param type Animation to play
 		 */
-		void playAnimation(EModelAnimType type);
-		void playAnimation(const std::string& anim);
-		void playAnimation(Handle::AnimationHandle anim);
+        void playAnimation(EModelAnimType type);
+        void playAnimation(const std::string& anim);
+        void playAnimation(Handle::AnimationHandle anim);
 
-		/**
+        /**
 		 * Stops all playing animations
 		 */
-		void stopAnimations();
+        void stopAnimations();
 
-		/**
+        /**
 		 * @return Current name of the given animation type (Reacts to overlays)
 		 */
-		static const char* getAnimationName(EModelAnimType type);
-
+        static const char* getAnimationName(EModelAnimType type);
 
         /**
          * @brief Updates the attachments transforms using the given object-space transforms
@@ -233,8 +230,7 @@ namespace Logic
         /**
          * @return Visuals this body uses other than the main one (Head, armor, etc)
          */
-        const BodyState& getBodyState(){ return m_BodyState; }
-
+        const BodyState& getBodyState() { return m_BodyState; }
         /**
          * Sets a body-state
          */
@@ -255,17 +251,17 @@ namespace Logic
          */
         virtual void setShadowValue(float shadow);
 
-		/**
+        /**
          * @return Skeleton-information for the currently set mesh
          */
-		const ZenLoad::zCModelMeshLib& getMeshLib();
+        const ZenLoad::zCModelMeshLib& getMeshLib();
 
-		/**
+        /**
 		 * @return Whether an animation with the given name is playing
 		 */
-		 bool isAnimPlaying(const std::string& name);
-    protected:
+        bool isAnimPlaying(const std::string& name);
 
+    protected:
         /**
          * Replaces the current body mesh of this model from the current body-state
          */
@@ -276,10 +272,10 @@ namespace Logic
          */
         void updateHeadMesh();
 
-		/**
+        /**
 		 * Attaches the attachments in m_AttachmentVisualsByNode again
 		 */
-		void updateAttachmentVisuals();
+        void updateAttachmentVisuals();
 
         /**
          * Rebuilds the main entity list from everything found inside the PartEntityLists
@@ -300,7 +296,7 @@ namespace Logic
             std::vector<Handle::EntityHandle> headMeshEntities;
             std::vector<Handle::EntityHandle> dynamicAttachments;
             Handle::EntityHandle headEntity;
-        }m_PartEntities;
+        } m_PartEntities;
 
         /**
          * Visuals attached to the models nodes. First vector: Index <-> node
@@ -322,9 +318,9 @@ namespace Logic
          */
         size_t m_LastKnownAnimationState;
 
-		/**
+        /**
 		 * State of the attachments of the nodes. [Node-name, visual]
 		 */
-		std::map<std::string, std::string> m_AttachmentVisualsByNode;
+        std::map<std::string, std::string> m_AttachmentVisualsByNode;
     };
 }

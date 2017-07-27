@@ -15,7 +15,6 @@ namespace Logic
     class NpcAnimationHandler
     {
     public:
-
         NpcAnimationHandler(World::WorldInstance& world, Handle::EntityHandle hostVob);
         ~NpcAnimationHandler();
 
@@ -112,8 +111,8 @@ namespace Logic
          * @return String used for naming animations from the given type (ie. 1H, 2H, CBOW)
          */
         std::string getWeaponAniTag(EWeaponMode weapon);
-    protected:
 
+    protected:
         /**
          * Starts playing the animation for going in a certain direction
          */
@@ -184,7 +183,6 @@ namespace Logic
 
             /* ---- Jump while running ---- */
             Handle::AnimationHandle t_runl_2_jump, t_runr_2_jump, t_jump_2_runl;
-
         };
 
         /**
@@ -213,13 +211,9 @@ namespace Logic
          */
         Handle::EntityHandle m_HostVob;
 
-
-
         /**
          * Animations based on which type of weapon the model is holding
          */
         AnimationSet m_Anims[(int)EWeaponMode::NUM_WEAPON_MODES];
     };
 }
-
-

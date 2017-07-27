@@ -6,8 +6,8 @@
 #include "zFont.h"
 #include <logic/Console.h>
 
-UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e) :
-    View(e)
+UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e)
+    : View(e)
 {
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
@@ -28,7 +28,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
     auto font = DEFAULT_FONT;
     auto fontSelected = DEFAULT_FONT_HI;
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
-    if(!fnt)
+    if (!fnt)
         return;
 
     // 13 pixel extra space to left screen edge
@@ -100,7 +100,6 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         shownStart = std::max(shownStart, 0);
         currentlySelectedRelative -= shownStart;
 
-
         // fill columns
         std::size_t columnID = 0;
         std::vector<std::vector<std::string>> columns;
@@ -120,7 +119,9 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
                     fnt->calcTextMetrics(aliasList[columnID], w, h);
                     columnWidth = std::max(columnWidth, w);
                     column.push_back(aliasList[columnID]);
-                } else {
+                }
+                else
+                {
                     column.push_back("");
                 }
             }
@@ -148,7 +149,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
             auto lastSpaceIt = std::find(strBefore.rbegin(), strBefore.rend(), ' ');
             if (lastSpaceIt == strBefore.rend())
                 strBefore.clear();
-            else{
+            else
+            {
                 auto numNonSpacesAtEnd = lastSpaceIt - strBefore.rbegin();
                 strBefore.erase(strBefore.end() - numNonSpacesAtEnd, strBefore.end());
             }
@@ -168,7 +170,8 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
         int colID = 0;
         int columnOffsetX = strBeforeWidth;
-        for (auto& column : columns){
+        for (auto& column : columns)
+        {
             std::vector<std::string> columnsSelected(column.size());
             if (m_CurrentlySelected != -1)
                 std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));

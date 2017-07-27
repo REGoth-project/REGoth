@@ -19,7 +19,6 @@
 
 namespace Utils
 {
-
     void initializeFileReaderWriter();
     void destroyFileReaderWriter();
 
@@ -64,22 +63,22 @@ namespace Utils
      * @param up Up direction and length
      */
     inline void billboardQuad(Math::float3& target0,
-                       Math::float3& target1,
-                       Math::float3& target2,
-                       Math::float3& target3,
-                       Math::float3& target4,
-                       Math::float3& target5,
-                       const Math::float3& center,
-                       const Math::float3& right,
-                       const Math::float3& up)
+                              Math::float3& target1,
+                              Math::float3& target2,
+                              Math::float3& target3,
+                              Math::float3& target4,
+                              Math::float3& target5,
+                              const Math::float3& center,
+                              const Math::float3& right,
+                              const Math::float3& up)
     {
-        target0 = center + up - right; // Top/left
-        target1 = center + up + right; // Top/Right
-        target2 = center - up - right; // Bottom/Left
+        target0 = center + up - right;  // Top/left
+        target1 = center + up + right;  // Top/Right
+        target2 = center - up - right;  // Bottom/Left
 
-        target3 = center - up - right; // Bottom/left
-        target4 = center + up + right; // Top/Right
-        target5 = center - up + right; // Bottom/Right
+        target3 = center - up - right;  // Bottom/left
+        target4 = center + up + right;  // Top/Right
+        target5 = center - up + right;  // Bottom/Right
     }
 
     /**
@@ -107,28 +106,35 @@ namespace Utils
      * @param plane Plane to check against
      * @return Side the box is one. 1=front, 2=back, 3=split
      */
-    enum EPlaneSide { PLANE_BEHIND=1, PLANE_INFRONT=2, PLANE_SPANNING=3 };
+    enum EPlaneSide
+    {
+        PLANE_BEHIND = 1,
+        PLANE_INFRONT = 2,
+        PLANE_SPANNING = 3
+    };
     inline EPlaneSide bboxClassifyToPlane(const BBox3D& bbox, const Math::float4& plane)
     {
-        const Math::float3* const minMax[2] = { &(bbox.min), &(bbox.max) };
-        int	ix = ( plane.x >= 0 ) ?  1 : 0;
-        int	iy = ( plane.y >= 0 ) ?  1 : 0;
-        int	iz = ( plane.z >= 0 ) ?  1 : 0;
+        const Math::float3* const minMax[2] = {&(bbox.min), &(bbox.max)};
+        int ix = (plane.x >= 0) ? 1 : 0;
+        int iy = (plane.y >= 0) ? 1 : 0;
+        int iz = (plane.z >= 0) ? 1 : 0;
 
         float decision;
-        decision  = minMax[ix]->x * plane.x;
+        decision = minMax[ix]->x * plane.x;
         decision += minMax[iy]->y * plane.y;
         decision += minMax[iz]->z * plane.z;
 
-        if( decision < plane.w) {
+        if (decision < plane.w)
+        {
             // BBox ist komplett links(out) der Plane => nur einen Sohn pruefen
             return PLANE_BEHIND;
         };
 
-        decision  = minMax[1 - ix]->x * plane.x;
+        decision = minMax[1 - ix]->x * plane.x;
         decision += minMax[1 - iy]->y * plane.y;
         decision += minMax[1 - iz]->z * plane.z;
-        if( decision < plane.w) {
+        if (decision < plane.w)
+        {
             // BBox wird durch die Plane gesplittet => beide Soehne pruefen
             return PLANE_SPANNING;
         };
@@ -144,20 +150,30 @@ namespace Utils
         float dist;
         Math::float3 corners[2];
 
-        for(int i=0;i<3;i++)
+        for (int i = 0; i < 3; i++)
         {
-            if(plane.v[i] < 0.0f)
+            if (plane.v[i] < 0.0f)
             {
                 corners[0].v[i] = bbox.min.v[i];
                 corners[1].v[i] = bbox.max.v[i];
-            }else{
+            }
+            else
+            {
                 corners[1].v[i] = bbox.min.v[i];
                 corners[0].v[i] = bbox.max.v[i];
             }
         }
 
-        dist = Math::float3(plane.v).dot(corners[0]) - plane.w; if(dist < 0.0f) { return PLANE_BEHIND; }
-        dist = Math::float3(plane.v).dot(corners[1]) - plane.w; if(dist < 0.0f) { return PLANE_SPANNING; }
+        dist = Math::float3(plane.v).dot(corners[0]) - plane.w;
+        if (dist < 0.0f)
+        {
+            return PLANE_BEHIND;
+        }
+        dist = Math::float3(plane.v).dot(corners[1]) - plane.w;
+        if (dist < 0.0f)
+        {
+            return PLANE_SPANNING;
+        }
 
         return PLANE_INFRONT;
     }
@@ -166,10 +182,10 @@ namespace Utils
      * Modulo-operation which works for negative numbers as well
      * @return a mod b
      */
-    template<typename T>
+    template <typename T>
     T mod(T a, T b)
     {
-        return (a%b+b)%b;
+        return (a % b + b) % b;
     }
 
     /**
@@ -177,16 +193,18 @@ namespace Utils
      * @param str ISO-8859-1 string
      * @return UTF-8 encoded version of the input-string
      */
-    inline std::string iso_8859_1_to_utf8(const std::string &str)
+    inline std::string iso_8859_1_to_utf8(const std::string& str)
     {
         std::string strOut;
         for (auto it = str.begin(); it != str.end(); ++it)
         {
             uint8_t ch = (uint8_t)*it;
-            if (ch < 0x80) {
+            if (ch < 0x80)
+            {
                 strOut.push_back(ch);
             }
-            else {
+            else
+            {
                 strOut.push_back((char)(0xc0 | ch >> 6));
                 strOut.push_back((char)(0x80 | (ch & 0x3f)));
             }
@@ -194,7 +212,7 @@ namespace Utils
         return strOut;
     }
 
-    inline std::string utf8_to_iso8859_1(const char * in)
+    inline std::string utf8_to_iso8859_1(const char* in)
     {
         std::string out;
         if (in == NULL)
@@ -232,21 +250,26 @@ namespace Utils
 
     namespace _putArrayInternal
     {
-        template<int... Is>
-        struct seq { };
+        template <int... Is>
+        struct seq
+        {
+        };
 
-        template<int N, int... Is>
-        struct gen_seq : gen_seq<N - 1, N - 1, Is...> { };
+        template <int N, int... Is>
+        struct gen_seq : gen_seq<N - 1, N - 1, Is...>
+        {
+        };
 
-        template<int... Is>
-        struct gen_seq<0, Is...> : seq<Is...> { };
+        template <int... Is>
+        struct gen_seq<0, Is...> : seq<Is...>
+        {
+        };
 
-        template<typename A, int... Is>
+        template <typename A, int... Is>
         static std::array<A, sizeof...(Is)> assign(A array[], seq<Is...>)
         {
             return {array[Is]...};
         }
-
     }
 
     /**
@@ -254,7 +277,7 @@ namespace Utils
      * @param target Target to put the array into
      * @param array Array to get the data from
      */
-    template<typename A, size_t SIZE>
+    template <typename A, size_t SIZE>
     constexpr std::array<A, SIZE> putArray(A (&array)[SIZE])
     {
         return _putArrayInternal::assign(array, _putArrayInternal::gen_seq<SIZE>());
@@ -265,10 +288,10 @@ namespace Utils
      * @param array Standard C array (target)
      * @param source Any type indexable using []
      */
-    template<typename A, size_t SIZE, typename T>
+    template <typename A, size_t SIZE, typename T>
     void putArray(A (&array)[SIZE], const T& source)
     {
-        for(size_t i=0; i < SIZE; i++)
+        for (size_t i = 0; i < SIZE; i++)
         {
             array[i] = source[i];
         }
@@ -279,7 +302,7 @@ namespace Utils
      * @param array Array to get the size from
      * @return Size of the passed static array
      */
-    template<typename A, size_t SIZE>
+    template <typename A, size_t SIZE>
     size_t arraySize(const A (&array)[SIZE])
     {
         return SIZE;
@@ -290,7 +313,7 @@ namespace Utils
      * @param f Float to round
      * @return f rounded to the nearest integer
      */
-    template<typename T>
+    template <typename T>
     T round(float f)
     {
         return static_cast<T>(f + 0.5f);
@@ -299,16 +322,17 @@ namespace Utils
     /**
      * @return The current timestamp since some time in milliseconds
      */
-    static long long currentTimestamp() {
+    static long long currentTimestamp()
+    {
 #ifndef _MSC_VER
         struct timeval te;
-        gettimeofday(&te, nullptr); // get current time
-        long long milliseconds = te.tv_sec*1000LL + te.tv_usec/1000; // caculate milliseconds
+        gettimeofday(&te, nullptr);                                       // get current time
+        long long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;  // caculate milliseconds
 
         return milliseconds;
 #else
         // TODO: Implement? BGFX has this...
-		return 0;
+        return 0;
 #endif
     }
 
@@ -318,7 +342,13 @@ namespace Utils
     class StopWatch
     {
     public:
-        StopWatch () : m_begin(0), m_end(0), m_delayTimeStamp(0), m_stopped(true) {}
+        StopWatch()
+            : m_begin(0)
+            , m_end(0)
+            , m_delayTimeStamp(0)
+            , m_stopped(true)
+        {
+        }
         /**
          * Start checkpoint
          */
@@ -351,7 +381,7 @@ namespace Utils
      * @param fn function to call for each file. Arguments: full path, filename, ext
      * @param recursive recursive search
      */
-    void forEachFile(const std::string& directory, std::function<void(const std::string&,const std::string&,const std::string&)> fn, bool recursive = true);
+    void forEachFile(const std::string& directory, std::function<void(const std::string&, const std::string&, const std::string&)> fn, bool recursive = true);
 
     /**
      * Returns a list with paths to all files found inside the given directory
@@ -439,8 +469,8 @@ namespace Utils
     class Ticket
     {
     public:
-        Ticket() :
-            m_ID(new char)
+        Ticket()
+            : m_ID(new char)
         {
         }
 
@@ -453,6 +483,7 @@ namespace Utils
         {
             return !(*this == other);
         }
+
     protected:
         std::shared_ptr<char> m_ID;
     };
@@ -507,7 +538,7 @@ namespace Utils
      * @param name token to find
      */
     Logic::Console::Suggestion findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
-                                                     const std::string& name);
+                                              const std::string& name);
 
     /**
      * performs case insensitive euqal check
@@ -523,8 +554,9 @@ namespace Utils
      * @param delim
      * @return concatenated string
      */
-    template<class Iterator>
-    std::string join(Iterator begin, Iterator end, const std::string& delim){
+    template <class Iterator>
+    std::string join(Iterator begin, Iterator end, const std::string& delim)
+    {
         std::stringstream ss;
         for (auto it = begin; it != end; it++)
         {
@@ -541,7 +573,7 @@ namespace Utils
      * @param delim
      * @return vector of tokens
      */
-    std::vector<std::string> splitAndRemoveEmpty(const std::string &s, const char delim);
+    std::vector<std::string> splitAndRemoveEmpty(const std::string& s, const char delim);
 
     /**
      * small class for easy to use time measurement

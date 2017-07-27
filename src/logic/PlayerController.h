@@ -23,16 +23,16 @@ namespace Logic
      */
     namespace PlayerScriptInfo
     {
-        const char* const PLAYER_MOB_MISSING_KEY				=	"PLAYER_MOB_MISSING_KEY";
-        const char* const PLAYER_MOB_MISSING_LOCKPICK			=	"PLAYER_MOB_MISSING_LOCKPICK";
-        const char* const PLAYER_MOB_MISSING_KEY_OR_LOCKPICK	=	"PLAYER_MOB_MISSING_KEY_OR_LOCKPICK";
-        const char* const PLAYER_MOB_NEVER_OPEN				    =	"PLAYER_MOB_NEVER_OPEN";
-        const char* const PLAYER_MOB_TOO_FAR_AWAY				=	"PLAYER_MOB_TOO_FAR_AWAY";
-        const char* const PLAYER_MOB_WRONG_SIDE				    =	"PLAYER_MOB_WRONG_SIDE";
-        const char* const PLAYER_MOB_MISSING_ITEM				=	"PLAYER_MOB_MISSING_ITEM";
-        const char* const PLAYER_MOB_ANOTHER_IS_USING			=	"PLAYER_MOB_ANOTHER_IS_USING";
-        const char* const PLAYER_PLUNDER_IS_EMPTY				=	"PLAYER_PLUNDER_IS_EMPTY";
-        const char* const PLAYER_RANGED_NO_AMMO				    =	"PLAYER_RANGED_NO_AMMO";
+        const char* const PLAYER_MOB_MISSING_KEY = "PLAYER_MOB_MISSING_KEY";
+        const char* const PLAYER_MOB_MISSING_LOCKPICK = "PLAYER_MOB_MISSING_LOCKPICK";
+        const char* const PLAYER_MOB_MISSING_KEY_OR_LOCKPICK = "PLAYER_MOB_MISSING_KEY_OR_LOCKPICK";
+        const char* const PLAYER_MOB_NEVER_OPEN = "PLAYER_MOB_NEVER_OPEN";
+        const char* const PLAYER_MOB_TOO_FAR_AWAY = "PLAYER_MOB_TOO_FAR_AWAY";
+        const char* const PLAYER_MOB_WRONG_SIDE = "PLAYER_MOB_WRONG_SIDE";
+        const char* const PLAYER_MOB_MISSING_ITEM = "PLAYER_MOB_MISSING_ITEM";
+        const char* const PLAYER_MOB_ANOTHER_IS_USING = "PLAYER_MOB_ANOTHER_IS_USING";
+        const char* const PLAYER_PLUNDER_IS_EMPTY = "PLAYER_PLUNDER_IS_EMPTY";
+        const char* const PLAYER_RANGED_NO_AMMO = "PLAYER_RANGED_NO_AMMO";
     }
 
     /**
@@ -77,7 +77,6 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
-
         /**
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
@@ -88,7 +87,6 @@ namespace Logic
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
         virtual EControllerType getControllerType() override { return EControllerType::PlayerController; }
-
         /**
          * Sets the daily routine for this.
          * TODO: Add timing for these // TODO: Done, now remove this
@@ -96,12 +94,15 @@ namespace Logic
          * @param wps List of waypoints the NPC should visit, in order
          */
         void setDailyRoutine(const std::vector<size_t>& wps)
-        { m_RoutineState.routineWaypoints = wps; }
+        {
+            m_RoutineState.routineWaypoints = wps;
+        }
         void addRoutineWaypoint(size_t wp)
-        { m_RoutineState.routineWaypoints.push_back(wp); }
+        {
+            m_RoutineState.routineWaypoints.push_back(wp);
+        }
 
-        void setFollowTarget(Handle::EntityHandle e){ m_RoutineState.entityTarget = e; }
-
+        void setFollowTarget(Handle::EntityHandle e) { m_RoutineState.entityTarget = e; }
         /**
          * Called when the models visual changed
          */
@@ -247,8 +248,7 @@ namespace Logic
         /**
          * @return Animation handler of this NPC
          */
-        NpcAnimationHandler& getNpcAnimationHandler(){ return m_NPCAnimationHandler; }
-
+        NpcAnimationHandler& getNpcAnimationHandler() { return m_NPCAnimationHandler; }
         /**
          * Places the playercontroller on the ground again. TODO: TESTING-ONLY!
          */
@@ -318,9 +318,8 @@ namespace Logic
          * Sets the body-state of this character
          * @param state State to set
          */
-        void setBodyState(EBodyState state){ m_AIState.bodyState = state; }
-        EBodyState getBodyState(){ return m_AIState.bodyState; }
-
+        void setBodyState(EBodyState state) { m_AIState.bodyState = state; }
+        EBodyState getBodyState() { return m_AIState.bodyState; }
         /**
          * Traces from this position to the position of the entity and checks if something is between them
          * or if the entity is out of range
@@ -371,28 +370,23 @@ namespace Logic
          * @return True, if m_RefuseTalkTime has not reached 0 yet
          */
         bool isRefusingTalk() { return m_RefuseTalkTime > 0; }
-
         /**
          * set timer for certain dialog options to be disabled
          * @param time in seconds
          */
         void setRefuseTalkTime(float time) { m_RefuseTalkTime = time; }
-
         /**
          * @return The ai-state machine of this NPC
          */
-        NpcScriptState& getAIStateMachine(){ return m_AIStateMachine; }
-
+        NpcScriptState& getAIStateMachine() { return m_AIStateMachine; }
         /**
          * @return Waypoint closest to the NPC
          */
         size_t getClosestWaypoint() { return m_AIState.closestWaypoint; }
-
         /**
          * @return Waypoint the NPC is currently going to
          */
-        size_t getTargetWaypoint(){ return m_AIState.targetWaypoint; }
-
+        size_t getTargetWaypoint() { return m_AIState.targetWaypoint; }
         /**
          * Sets up the bindings for this playercontroller // TODO: REMOVE THIS AND DO IT OUTSIDE OF THE PLAYERCONTROLLER
          */
@@ -415,29 +409,24 @@ namespace Logic
         /**
          * @return Item this NPC is currently interacting with
          */
-        Daedalus::GameState::ItemHandle getInteractItem(){ return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
-
+        Daedalus::GameState::ItemHandle getInteractItem() { return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
         /**
          * Sets the mob this playercontroller is currently using
          */
-         void setUsedMob(Handle::EntityHandle mob){ m_AIState.usedMob = mob; }
-        Handle::EntityHandle getUsedMob(){ return m_AIState.usedMob; }
-
+        void setUsedMob(Handle::EntityHandle mob) { m_AIState.usedMob = mob; }
+        Handle::EntityHandle getUsedMob() { return m_AIState.usedMob; }
         /**
          * Enables/Disables physics on this NPC
          */
-         void setPhysicsEnabled(bool value){ m_NPCProperties.enablePhysics = value; }
-
+        void setPhysicsEnabled(bool value) { m_NPCProperties.enablePhysics = value; }
         /**
          * @return Currently held weapon type
          */
-        EWeaponMode getWeaponMode(){ return m_EquipmentState.weaponMode; }
-
+        EWeaponMode getWeaponMode() { return m_EquipmentState.weaponMode; }
         /**
          * @return Classes which want to get exported on save should return true here
          */
         virtual bool shouldExport() override { return true; }
-
         /**
          * Does the logic for importing an NPC/PC
          * Actually adds the NPC to the world
@@ -458,16 +447,15 @@ namespace Logic
          */
         void importObject(const json& j, bool noTransform);
 
-	/**
+        /**
 	 * Check if this NPC has equipped any melee weapon
 	 */
-	bool hasEquippedMeleeWeapon() const {
-	    return m_EquipmentState.equippedItems.equippedWeapon1h.isValid()
-		|| m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
-	};
+        bool hasEquippedMeleeWeapon() const
+        {
+            return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
+        };
 
     protected:
-
         /**
          * Callbacks registered inside the animation-handler
          */
@@ -519,7 +507,7 @@ namespace Logic
              * Target of where the NPC should keep trying to go to
              */
             Handle::EntityHandle entityTarget;
-        }m_RoutineState;
+        } m_RoutineState;
 
         struct
         {
@@ -534,7 +522,7 @@ namespace Logic
 
             // Current body state
             EBodyState bodyState;
-        }m_AIState;
+        } m_AIState;
 
         struct
         {
@@ -559,13 +547,13 @@ namespace Logic
             // Surface data obtained from raytracing the ground below NPC
             struct
             {
-                bool successful; // false if for some reason raytrace failed to hit the ground during last run
+                bool successful;  // false if for some reason raytrace failed to hit the ground during last run
                 uint32_t triangleIndex;
                 Math::float3 trianglePosition;
                 float waterDepth;
             } ground;
 
-        }m_MoveState;
+        } m_MoveState;
 
         struct
         {
@@ -580,13 +568,13 @@ namespace Logic
 
             // Whether this NPC should be put on ground every frame
             bool enablePhysics;
-        }m_NPCProperties;
+        } m_NPCProperties;
 
         struct
         {
             // Handle to the npc data on script-side
             Daedalus::GameState::NpcHandle npcHandle;
-        }m_ScriptState;
+        } m_ScriptState;
 
         struct
         {
@@ -608,8 +596,8 @@ namespace Logic
                 Daedalus::GameState::ItemHandle equippedCrossBow;
                 Daedalus::GameState::ItemHandle equippedBelt;
                 Daedalus::GameState::ItemHandle equippedAmulet;
-            }equippedItems;
-        }m_EquipmentState;
+            } equippedItems;
+        } m_EquipmentState;
 
         /**
          * This players inventory
@@ -649,7 +637,7 @@ namespace Logic
         bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
 
-	void resetKeyStates();
+        void resetKeyStates();
 
         // FIXME: Hack for as long as animation-flags are not implemented
         // Turns of modifying the root postion from the animation

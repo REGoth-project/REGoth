@@ -15,41 +15,32 @@ typedef struct ALCcontext_struct ALCcontext;
 
 namespace Audio
 {
-
     class AudioEngine;
-
 }
 
 namespace Engine
 {
-
     class BaseEngine;
-
 }
 
 namespace Daedalus
 {
-
     class DaedalusVM;
 
     namespace GEngineClasses
     {
         struct C_SFX;
     }
-
 }
 
 namespace Logic
 {
-
     class ScriptEngine;
-
 }
 
 namespace World
 {
-
-/** The audio world class.
+    /** The audio world class.
  *
  * Each world has it's own AudioWorld which manages an OpenAL context.
  *
@@ -59,7 +50,6 @@ namespace World
         friend class Audio::AudioEngine;
 
     public:
-
         AudioWorld(Engine::BaseEngine& engine, Audio::AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx);
 
         virtual ~AudioWorld();
@@ -128,7 +118,6 @@ namespace World
         void continueSounds();
 
     private:
-
         Engine::BaseEngine& m_Engine;
 
         /**
@@ -149,7 +138,7 @@ namespace World
         struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>
         {
             Daedalus::GEngineClasses::C_SFX sfx;
-            std::vector<Handle::SfxHandle> variants; // Instances ending with "_Ax"
+            std::vector<Handle::SfxHandle> variants;  // Instances ending with "_Ax"
             unsigned m_Handle = 0;
             std::string name;
         };

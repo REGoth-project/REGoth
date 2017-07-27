@@ -4,9 +4,9 @@
 
 namespace UI
 {
-    static const Math::float2 INNER_OFFSET_DEFAULT = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
-    static const Math::float2 INNER_OFFSET_G1_PROGRESS = { (350.0f / 8192.0f), (1100.0f / 8192.0f) };
-    static const Math::float2 INNER_OFFSET_G2_PROGRESS = { (1200.0f / 8192.0f), (1100.0f / 8192.0f) };
+    static const Math::float2 INNER_OFFSET_DEFAULT = {(350.0f / 8192.0f), (1100.0f / 8192.0f)};
+    static const Math::float2 INNER_OFFSET_G1_PROGRESS = {(350.0f / 8192.0f), (1100.0f / 8192.0f)};
+    static const Math::float2 INNER_OFFSET_G2_PROGRESS = {(1200.0f / 8192.0f), (1100.0f / 8192.0f)};
 
     class ImageView;
     class BarView : public View
@@ -20,7 +20,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * @param v Value in range of 0..1
@@ -41,8 +41,8 @@ namespace UI
          * Defaults to the usual Health/Mana-Bars.
          */
         void setInnerOffset(const Math::float2& offset);
-    protected:
 
+    protected:
         /**
          * Progress-value of this bar (range 0..1)
          */

@@ -95,8 +95,6 @@ namespace Engine
          */
         double getTime();
 
-
-
         /**
          * @return time of day as string in hh:mm format
          */

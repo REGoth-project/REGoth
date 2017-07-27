@@ -1,33 +1,29 @@
 
 
-
 #include <bx/platform.h>
 #if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN || BX_PLATFORM_BSD
 #include "PlatformGLFW.h"
 #include "utils/Utils.h"
 #include <thread>
 
-
 #if defined(_glfw3_h_)
 // If GLFW/glfw3.h is included before bgfx/platform.h we can enable GLFW3
 // window interop convenience code.
 
-#	if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
-#		define GLFW_EXPOSE_NATIVE_X11
-#		define GLFW_EXPOSE_NATIVE_GLX
-#	elif BX_PLATFORM_OSX
-#		define GLFW_EXPOSE_NATIVE_COCOA
-#		define GLFW_EXPOSE_NATIVE_NSGL
-#	elif BX_PLATFORM_WINDOWS
-#		define GLFW_EXPOSE_NATIVE_WIN32
-#		define GLFW_EXPOSE_NATIVE_WGL
-#	endif //
-#	include <GLFW/glfw3native.h>
+#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+#define GLFW_EXPOSE_NATIVE_X11
+#define GLFW_EXPOSE_NATIVE_GLX
+#elif BX_PLATFORM_OSX
+#define GLFW_EXPOSE_NATIVE_COCOA
+#define GLFW_EXPOSE_NATIVE_NSGL
+#elif BX_PLATFORM_WINDOWS
+#define GLFW_EXPOSE_NATIVE_WIN32
+#define GLFW_EXPOSE_NATIVE_WGL
+#endif  //
+#include <GLFW/glfw3native.h>
 #endif
 #include <bgfx/platform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
-
-
 
 //#include <bx/bx.h>
 //#include <bgfx/bgfx.h>
@@ -57,35 +53,32 @@
 
 using namespace Engine;
 
-
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
 Platform* g_Platform = nullptr;
 
-
 inline void glfwSetWindow(GLFWwindow* _window)
 {
     bgfx::PlatformData pd;
-#	if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
+#if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
     pd.ndt = glfwGetX11Display();
-    pd.nwh = (void*) (uintptr_t) glfwGetGLXWindow(_window);
+    pd.nwh = (void*)(uintptr_t)glfwGetGLXWindow(_window);
     pd.context = glfwGetGLXContext(_window);
-#	elif BX_PLATFORM_OSX
-    pd.ndt          = NULL;
-    pd.nwh          = glfwGetCocoaWindow(_window);
-    pd.context      = glfwGetNSGLContext(_window);
-#	elif BX_PLATFORM_WINDOWS
-    pd.ndt          = NULL;
-    pd.nwh          = glfwGetWin32Window(_window);
-    pd.context      = NULL;
-#	endif // BX_PLATFORM_WINDOWS
+#elif BX_PLATFORM_OSX
+    pd.ndt = NULL;
+    pd.nwh = glfwGetCocoaWindow(_window);
+    pd.context = glfwGetNSGLContext(_window);
+#elif BX_PLATFORM_WINDOWS
+    pd.ndt = NULL;
+    pd.nwh = glfwGetWin32Window(_window);
+    pd.context = NULL;
+#endif  // BX_PLATFORM_WINDOWS
     pd.backBuffer = NULL;
     pd.backBufferDS = NULL;
     setPlatformData(pd);
 }
-
 
 int32_t PlatformGLFW::run(int argc, char** argv)
 {
@@ -101,12 +94,12 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bx::CommandLine cmd(argc, (const char**)argv);
 
     bool fullscreen = false;
-    if(cmd.hasArg('f'))
+    if (cmd.hasArg('f'))
     {
         fullscreen = true;
 
         // Get native resolution
-        const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+        const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         width = mode->width;
         height = mode->height;
     }
@@ -146,10 +139,10 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 
     // TODO read bindings from file
 
-//    bindKey(GLFW_KEY_W, ActionType::DebugSkySpeed, false);
+    //    bindKey(GLFW_KEY_W, ActionType::DebugSkySpeed, false);
 
     // Camera Switch Keys
-    
+
     std::cout << "Binding keys..." << std::endl;
 
     bindKey(GLFW_KEY_F1, ActionType::CameraFirstPerson, false);
@@ -230,28 +223,26 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
 
-
-
-//    // special keys test
-//    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);
-//    bindKey(GLFW_KEY_RIGHT_SHIFT, ActionType::PlayerBackward, true);
-//    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerTurnLeft, true);
-//    bindKey(GLFW_KEY_RIGHT_CONTROL, ActionType::PlayerTurnRight, true);
-//    bindKey(GLFW_KEY_LEFT_ALT, ActionType::PlayerStrafeLeft, true);
-//    bindKey(GLFW_KEY_RIGHT_ALT, ActionType::PlayerStrafeRight, true);
+    //    // special keys test
+    //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);
+    //    bindKey(GLFW_KEY_RIGHT_SHIFT, ActionType::PlayerBackward, true);
+    //    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerTurnLeft, true);
+    //    bindKey(GLFW_KEY_RIGHT_CONTROL, ActionType::PlayerTurnRight, true);
+    //    bindKey(GLFW_KEY_LEFT_ALT, ActionType::PlayerStrafeLeft, true);
+    //    bindKey(GLFW_KEY_RIGHT_ALT, ActionType::PlayerStrafeRight, true);
 
     std::cout << "Starting logic-thread" << std::endl;
 
     // Start logic thread
     std::promise<int32_t> returnValue;
 
-    mainLoop(std::move(returnValue), argc, argv); // Not actually the mainloop. TODO: Rename method
+    mainLoop(std::move(returnValue), argc, argv);  // Not actually the mainloop. TODO: Rename method
 
 #ifdef __EMSCRIPTEN__
-    
+
     g_Platform = this;
     std::cout << "Running emscripten main-loop" << std::endl;
-    emscripten_set_main_loop([](){ g_Platform->update();}, 0, 1);
+    emscripten_set_main_loop([]() { g_Platform->update(); }, 0, 1);
 #else
     /* Loop until the user closes the window */
     while (true)
@@ -279,30 +270,30 @@ int PlatformGLFW::shutdown()
 {
     Utils::destroyFileReaderWriter();
     glfwTerminate();
-    return 0; 
+    return 0;
 }
 
-void PlatformGLFW::GLFWkeyEvent(GLFWwindow *window, int key, int scancode, int action, int mods)
+void PlatformGLFW::GLFWkeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     Input::keyEvent(key, scancode, action, mods);
 }
 
-void PlatformGLFW::GLFWmouseButtonEvent(GLFWwindow *window, int button, int action, int mods)
+void PlatformGLFW::GLFWmouseButtonEvent(GLFWwindow* window, int button, int action, int mods)
 {
     Input::mouseButtonEvent(button, action, mods);
 }
 
-void PlatformGLFW::GLFWmouseMoveEvent(GLFWwindow *window, double xPos, double yPos)
+void PlatformGLFW::GLFWmouseMoveEvent(GLFWwindow* window, double xPos, double yPos)
 {
     Input::mouseMoveEvent(xPos, yPos);
 }
 
-void PlatformGLFW::GLFWscrollEvent(GLFWwindow *window, double xOffset, double yOffset)
+void PlatformGLFW::GLFWscrollEvent(GLFWwindow* window, double xOffset, double yOffset)
 {
     Input::scrollEvent(xOffset, yOffset);
 }
 
-void PlatformGLFW::GLFWwindowSizeEvent(GLFWwindow *window, int width, int height)
+void PlatformGLFW::GLFWwindowSizeEvent(GLFWwindow* window, int width, int height)
 {
     Input::windowSizeEvent(width, height);
 
