@@ -1,0 +1,8 @@
+#!/bin/bash
+
+CXX_CHANGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep -Ee "\.(c|cpp|h)$" | paste -sd ' ')
+CLANG_FORMAT_BIN=$(command -v clang-format)
+
+if [ $CLANG_FORMAT_BIN ] && [[ $CXX_CHANGED_FILES ]]; then
+    eval $CLANG_FORMAT_BIN -i -style=file "${CXX_CHANGED_FILES}"
+fi
