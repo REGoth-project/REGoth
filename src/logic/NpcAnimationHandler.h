@@ -2,6 +2,7 @@
 #include <handle/HandleDef.h>
 #include <content/Animation.h>
 #include <content/AnimationLibrary.h>
+#include <components/AnimHandler.h>
 #include "LogicDef.h"
 
 namespace World

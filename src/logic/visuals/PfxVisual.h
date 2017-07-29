@@ -1,6 +1,7 @@
 #pragma once
 
 #include <content/StaticMeshAllocator.h>
+#include <logic/PfxManager.h>
 #include "../VisualController.h"
 
 namespace Logic

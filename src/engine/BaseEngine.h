@@ -6,7 +6,10 @@
 #include <bx/commandline.h>
 #include <logic/SavegameManager.h>
 #include <future>
-#include "GameSession.h"
+#include <engine/GameSession.h>
+#include <engine/GameClock.h>
+#include <engine/World.h>
+
 
 namespace UI
 {

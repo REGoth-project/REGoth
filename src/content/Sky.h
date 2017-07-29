@@ -1,6 +1,7 @@
 #pragma once
 
 #include <handle/HandleDef.h>
+#include <math/mathlib.h>
 #include "Texture.h"
 
 namespace World
