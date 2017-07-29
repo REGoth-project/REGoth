@@ -12,5 +12,14 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: false
 SortIncludes: false
 PointerAlignment: Left
 NamespaceIndentation: All
+SortIncludes: true
+
+IncludeCategories:
+  - Regex:           '<[^./]+>' # c++ stl includes
+    Priority:        1
+  - Regex:           '(<|")[^/]+(>|")' # includes without path
+    Priority:        2
+  - Regex:           '(<|").+(>|")' # includes with path
+    Priority:        3
 ...
 
