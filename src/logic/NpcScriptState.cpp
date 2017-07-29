@@ -1,10 +1,10 @@
 #include "NpcScriptState.h"
-#include <components/Vob.h>
-#include <ZenLib/utils/logger.h>
-#include <components/VobClasses.h>
 #include "PlayerController.h"
-#include <logic/visuals/ModelVisual.h>
+#include <ZenLib/utils/logger.h>
+#include <components/Vob.h>
+#include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
+#include <logic/visuals/ModelVisual.h>
 
 using namespace Logic;
 
@@ -12,32 +12,29 @@ using namespace Logic;
  * Valid script-states an NPC can be in
  */
 static const std::string s_EnabledPlayerStates[] = {
-        "ZS_ASSESSMAGIC",
-        "ZS_ASSESSSTOPMAGIC",
-        "ZS_MAGICFREEZE",
-        "ZS_WHIRLWIND",
-        "ZS_SHORTZAPPED",
-        "ZS_ZAPPED",
-        "ZS_PYRO",
-        "ZS_MAGICSLEEP"
-};
+    "ZS_ASSESSMAGIC",
+    "ZS_ASSESSSTOPMAGIC",
+    "ZS_MAGICFREEZE",
+    "ZS_WHIRLWIND",
+    "ZS_SHORTZAPPED",
+    "ZS_ZAPPED",
+    "ZS_PYRO",
+    "ZS_MAGICSLEEP"};
 
 /**
  * Names for the program-managed states
  */
 static const std::string s_PRGStates[] = {
-        "INVALID_PRG",
-        "ZS_ANSWER",
-        "ZS_DEAD",
-        "ZS_UNCONSCIOUS",
-        "ZS_FADEAWAY",
-        "ZS_FOLLOW"
-};
+    "INVALID_PRG",
+    "ZS_ANSWER",
+    "ZS_DEAD",
+    "ZS_UNCONSCIOUS",
+    "ZS_FADEAWAY",
+    "ZS_FOLLOW"};
 
-
-NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob) :
-    m_World(world),
-    m_HostVob(hostVob)
+NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob)
+    : m_World(world)
+    , m_HostVob(hostVob)
 {
     m_Routine.startNewRoutine = true;
     m_Routine.hasRoutine = false;
@@ -46,9 +43,7 @@ NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle
 
 NpcScriptState::~NpcScriptState()
 {
-
 }
-
 
 bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool isRoutineState, bool isPrgState)
 {
@@ -61,12 +56,13 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     m_StateVictim = s.getNPCFromSymbol("victim");
     m_StateItem = s.getItemFromSymbol("item");
 
-    if(!isPrgState)
+    if (!isPrgState)
     {
         // Usual script-state. Find the symbols
         m_NextState.name = dat.getSymbolByIndex(symIdx).name;
         m_NextState.prgState = NPC_PRGAISTATE_INVALID;
-    } else
+    }
+    else
     {
         assert(symIdx < NUM_PRGNPC_AISTATE);
 
@@ -80,7 +76,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     //LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
     // Check if this is just a usual action (ZS = German "Zustand" = State, B = German "Befehl" = Instruction)
-    if(m_NextState.name.substr(0, 3) != "ZS_")
+    if (m_NextState.name.substr(0, 3) != "ZS_")
     {
         // Disable routine-flag for this, since scripts could let the npc assess something
         bool oldIsRoutineState = m_CurrentState.isRoutineState;
@@ -101,26 +97,26 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
     m_NextState.symEnd = 0;
     m_NextState.symLoop = 0;
 
-    if(dat.hasSymbolName(m_NextState.name + "_END"))
+    if (dat.hasSymbolName(m_NextState.name + "_END"))
         m_NextState.symEnd = dat.getSymbolIndexByName(m_NextState.name + "_END");
 
-    if(dat.hasSymbolName(m_NextState.name + "_LOOP"))
+    if (dat.hasSymbolName(m_NextState.name + "_LOOP"))
         m_NextState.symLoop = dat.getSymbolIndexByName(m_NextState.name + "_LOOP");
-
 
     m_NextState.valid = true;
 
-    if(endOldState)
+    if (endOldState)
     {
         m_CurrentState.phase = NpcAIState::EPhase::End;
-    } else
+    }
+    else
     {
         // Just interrupt the state
         m_CurrentState.phase = NpcAIState::EPhase::Interrupt;
         m_CurrentState.valid = false;
 
         // If this is not a player, or the player is valid to perform this state...
-        if(!vob.playerController->isPlayerControlled() || canPlayerUseAIState(m_NextState))
+        if (!vob.playerController->isPlayerControlled() || canPlayerUseAIState(m_NextState))
         {
             vob.playerController->getModelVisual()->stopAnimations();
             vob.playerController->interrupt();
@@ -128,31 +124,31 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
         }
     }
 
-	return doAIState(0.0);
+    return doAIState(0.0);
 }
 
-bool Logic::NpcScriptState::startAIState(const std::string & name, bool endOldState, bool isRoutineState)
+bool Logic::NpcScriptState::startAIState(const std::string& name, bool endOldState, bool isRoutineState)
 {
     // Get script symbol index
     size_t idx = m_World.getScriptEngine().getVM().getDATFile().getSymbolIndexByName(name);
 
-	return startAIState(idx, endOldState, isRoutineState);
+    return startAIState(idx, endOldState, isRoutineState);
 }
 
 bool NpcScriptState::canPlayerUseAIState(const NpcAIState& state)
 {
-    if(state.valid)
+    if (state.valid)
     {
-        if(state.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
+        if (state.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
         {
             // States that are allowed for every NPC at any time
-            return (state.prgState == EPrgStates::NPC_PRGAISTATE_DEAD
-                    || state.prgState == EPrgStates::NPC_PRGAISTATE_UNCONSCIOUS);
-        } else
+            return (state.prgState == EPrgStates::NPC_PRGAISTATE_DEAD || state.prgState == EPrgStates::NPC_PRGAISTATE_UNCONSCIOUS);
+        }
+        else
         {
-            for(const std::string& s : s_EnabledPlayerStates)
+            for (const std::string& s : s_EnabledPlayerStates)
             {
-                if(state.name == s)
+                if (state.name == s)
                     return true;
             }
         }
@@ -168,23 +164,23 @@ bool NpcScriptState::doAIState(float deltaTime)
     Daedalus::DATFile& dat = s.getVM().getDATFile();
 
     // Increase time this state is already running
-    if(m_CurrentState.valid && m_CurrentState.phase == NpcAIState::EPhase::Loop)
+    if (m_CurrentState.valid && m_CurrentState.phase == NpcAIState::EPhase::Loop)
         m_CurrentState.stateTime += deltaTime;
 
     std::string name = vob.playerController->getScriptInstance().name[0];
 
-    if(m_Routine.hasRoutine && isInRoutine())
+    if (m_Routine.hasRoutine && isInRoutine())
     {
         int h, m;
         m_World.getEngine()->getGameClock().getTimeOfDay(h, m);
 
-        if(!m_Routine.routine[m_Routine.routineActiveIdx].timeInRange(h, m))
+        if (!m_Routine.routine[m_Routine.routineActiveIdx].timeInRange(h, m))
         {
             // Find next
-            size_t i=0;
-            for(RoutineEntry& e : m_Routine.routine)
+            size_t i = 0;
+            for (RoutineEntry& e : m_Routine.routine)
             {
-                if(e.timeInRange(h, m) && i != m_Routine.routineActiveIdx)
+                if (e.timeInRange(h, m) && i != m_Routine.routineActiveIdx)
                 {
                     m_Routine.routineActiveIdx = i;
                     m_Routine.startNewRoutine = true;
@@ -197,19 +193,16 @@ bool NpcScriptState::doAIState(float deltaTime)
     }
 
     // Only do states if we do not have messages pending
-    if(vob.playerController->getEM().isEmpty())
+    if (vob.playerController->getEM().isEmpty())
     {
         // Check for routine first
-        if(m_Routine.startNewRoutine
-           && m_Routine.hasRoutine
-           && isInRoutine()
-           && !vob.playerController->isPlayerControlled())
+        if (m_Routine.startNewRoutine && m_Routine.hasRoutine && isInRoutine() && !vob.playerController->isPlayerControlled())
             startRoutineState();
 
-        if(!m_CurrentState.valid)
+        if (!m_CurrentState.valid)
         {
             // Can we move to the next state?
-            if(m_NextState.valid)
+            if (m_NextState.valid)
             {
                 // Remember the last state we were in
                 m_LastStateSymIndex = m_CurrentState.symIndex;
@@ -219,7 +212,8 @@ bool NpcScriptState::doAIState(float deltaTime)
                 m_CurrentState.stateTime = 0.0f;
 
                 m_NextState.valid = false;
-            } else
+            }
+            else
             {
                 //LogInfo() << "No active state for NPC: " << VobTypes::getScriptObject(vob).name[0];
                 startRoutineState();
@@ -227,10 +221,10 @@ bool NpcScriptState::doAIState(float deltaTime)
         }
 
         // If this is the player, only allow states the player is allowed to have
-        if(vob.playerController->isPlayerControlled() && !canPlayerUseAIState(m_CurrentState))
+        if (vob.playerController->isPlayerControlled() && !canPlayerUseAIState(m_CurrentState))
             return false;
 
-        if(m_CurrentState.valid)
+        if (m_CurrentState.valid)
         {
             // Prepare state function call
             auto& inst = VobTypes::getScriptObject(vob);
@@ -241,13 +235,13 @@ bool NpcScriptState::doAIState(float deltaTime)
             s.setInstanceNPC("VICTIM", m_StateVictim);
             s.setInstanceItem("ITEM", m_StateItem);
 
-            if(m_CurrentState.phase == NpcAIState::EPhase::Uninitialized)
+            if (m_CurrentState.phase == NpcAIState::EPhase::Uninitialized)
             {
                 // TODO: Set perception-time to 5000
 
                 //LogInfo() << "AISTATE-INIT: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
-                if(m_CurrentState.symIndex > 0)
+                if (m_CurrentState.symIndex > 0)
                 {
                     // Call setup-function
                     s.prepareRunFunction();
@@ -256,45 +250,49 @@ bool NpcScriptState::doAIState(float deltaTime)
 
                 // Now do the looping function every frame
                 m_CurrentState.phase = NpcAIState::EPhase::Loop;
-            }else if(m_CurrentState.phase == NpcAIState::EPhase::Loop)
+            }
+            else if (m_CurrentState.phase == NpcAIState::EPhase::Loop)
             {
                 bool end = true;
 
                 //LogInfo() << "AISTATE-LOOP: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 // Call looping-function
-                if(m_CurrentState.symLoop > 0)
+                if (m_CurrentState.symLoop > 0)
                 {
                     s.prepareRunFunction();
                     end = s.runFunctionBySymIndex(m_CurrentState.symLoop) != 0;
                 }
 
                 // Run a program based state
-                if(m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
+                if (m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
                 {
                     // Only CheckUnconscious() is called here. There is also a state for following, but it doesn't do anything here
-                    switch(m_CurrentState.prgState)
+                    switch (m_CurrentState.prgState)
                     {
                         //case NPC_PRGAISTATE_ANSWER:break;
                         //case NPC_PRGAISTATE_DEAD:break;
-                        case NPC_PRGAISTATE_UNCONSCIOUS: vob.playerController->checkUnconscious(); break;
+                        case NPC_PRGAISTATE_UNCONSCIOUS:
+                            vob.playerController->checkUnconscious();
+                            break;
                         //case NPC_PRGAISTATE_FADEAWAY:break;
                         //case NPC_PRGAISTATE_FOLLOW:break;
-                        default: /* TODO handle all missing states  */break;
-                        //    LogWarn() << "Invalid PRG state";
+                        default: /* TODO handle all missing states  */
+                            break;
+                            //    LogWarn() << "Invalid PRG state";
                     }
                 }
 
                 // Check if we're done and remove the state in the next frame
-                if(end)
+                if (end)
                     m_CurrentState.phase = NpcAIState::EPhase::End;
-
-            }else if(m_CurrentState.phase == NpcAIState::EPhase::End)
+            }
+            else if (m_CurrentState.phase == NpcAIState::EPhase::End)
             {
                 //LogInfo() << "AISTATE-END: " << m_CurrentState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
                 // Call end-function
-                if(m_CurrentState.symEnd > 0)
+                if (m_CurrentState.symEnd > 0)
                 {
                     s.prepareRunFunction();
                     s.runFunctionBySymIndex(m_CurrentState.symEnd);
@@ -315,7 +313,7 @@ bool NpcScriptState::startRoutineState(bool force)
     VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
 
     // Just say "yes" for the player, as he never has any routine
-    if(npc.playerController->isPlayerControlled())
+    if (npc.playerController->isPlayerControlled())
         return true;
 
     // Turn off, so we don't recurse
@@ -330,8 +328,7 @@ bool NpcScriptState::startRoutineState(bool force)
 
 bool NpcScriptState::isInRoutine()
 {
-    return (m_CurrentState.valid && m_CurrentState.isRoutineState)
-            || (!m_CurrentState.valid && !m_NextState.valid);
+    return (m_CurrentState.valid && m_CurrentState.isRoutineState) || (!m_CurrentState.valid && !m_NextState.valid);
 }
 
 bool NpcScriptState::activateRoutineState(bool force)
@@ -339,40 +336,41 @@ bool NpcScriptState::activateRoutineState(bool force)
     VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
 
     // Player can't have routines
-    if(npc.playerController->isPlayerControlled())
+    if (npc.playerController->isPlayerControlled())
         return false;
 
     // Check for death, etc
-    if(!npc.playerController->isNpcReady())
+    if (!npc.playerController->isNpcReady())
         return false;
 
-    if(m_Routine.hasRoutine)
+    if (m_Routine.hasRoutine)
     {
         // No routine present?
-        if(m_Routine.routine.empty())
+        if (m_Routine.routine.empty())
             return false;
 
-        if(!force)
+        if (!force)
         {
-            if(!npc.playerController->getEM().isEmpty())
-                return false; // EM not empty, don't start routine yet!
+            if (!npc.playerController->getEM().isEmpty())
+                return false;  // EM not empty, don't start routine yet!
 
             // Check if the routine is already running
-            if(getCurrentStateSym() == m_Routine.routine[m_Routine.routineActiveIdx].symFunc)
+            if (getCurrentStateSym() == m_Routine.routine[m_Routine.routineActiveIdx].symFunc)
                 return true;
 
-            if(!isInRoutine())
-                return false; // Currently in other state...
+            if (!isInRoutine())
+                return false;  // Currently in other state...
         }
 
         // Set current waypoint of script instance
         npc.playerController->getScriptInstance().wp = m_Routine.routine[m_Routine.routineActiveIdx].waypoint;
 
         return startAIState(m_Routine.routine[m_Routine.routineActiveIdx].symFunc, true, true);
-    }else if(isNpcStateDriven())
+    }
+    else if (isNpcStateDriven())
     {
         //return false;
-        if(force)
+        if (force)
         {
             // Make it look like we don't have anything running now
             m_NextState.valid = false;
@@ -380,7 +378,7 @@ bool NpcScriptState::activateRoutineState(bool force)
         }
 
         // Don't make a new state if we already have something running
-        if(m_CurrentState.valid || m_NextState.valid)
+        if (m_CurrentState.valid || m_NextState.valid)
             return false;
 
         return startAIState(VobTypes::getScriptObject(npc).start_aistate, true);
@@ -393,17 +391,17 @@ void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEn
                                    const std::string& waypoint)
 {
     // FIXME: HACK, let the npc teleport to the first entry of the routine
-    if(!m_Routine.hasRoutine)
+    if (!m_Routine.hasRoutine)
     {
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_HostVob);
 
-		World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(), waypoint);
+        World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(), waypoint);
 
-		if(wp != World::Waynet::INVALID_WAYPOINT)
-			npc.playerController->teleportToWaypoint(wp);
+        if (wp != World::Waynet::INVALID_WAYPOINT)
+            npc.playerController->teleportToWaypoint(wp);
     }
 
-    m_Routine.hasRoutine = true; // At least one routine-target present
+    m_Routine.hasRoutine = true;  // At least one routine-target present
 
     // Make new routine entry
     RoutineEntry entry;
@@ -416,8 +414,6 @@ void NpcScriptState::insertRoutine(int hoursStart, int minutesStart, int hoursEn
     entry.isOverlay = false;
 
     m_Routine.routine.push_back(entry);
-
-
 }
 
 bool NpcScriptState::isNpcStateDriven()
@@ -429,9 +425,9 @@ bool NpcScriptState::isNpcStateDriven()
 
 size_t NpcScriptState::getCurrentStateSym()
 {
-    if(m_CurrentState.valid)
+    if (m_CurrentState.valid)
     {
-        if(m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
+        if (m_CurrentState.prgState != EPrgStates::NPC_PRGAISTATE_INVALID)
             return static_cast<size_t>(m_CurrentState.prgState);
 
         return m_CurrentState.symIndex;
@@ -451,7 +447,7 @@ void NpcScriptState::reinitRoutine()
     m_Routine.routine.clear();
     m_Routine.routineActiveIdx = 0;
 
-    if(newSymFn != 0)
+    if (newSymFn != 0)
     {
         s.prepareRunFunction();
         s.runFunctionBySymIndex(newSymFn);
@@ -467,18 +463,15 @@ bool NpcScriptState::isInState(size_t stateMain)
 {
     if (m_CurrentState.valid)
     {
-        return m_CurrentState.symIndex == stateMain
-               || (m_CurrentState.prgState != NPC_PRGAISTATE_INVALID && m_CurrentState.prgState == stateMain);
-    } else if (m_NextState.valid)
+        return m_CurrentState.symIndex == stateMain || (m_CurrentState.prgState != NPC_PRGAISTATE_INVALID && m_CurrentState.prgState == stateMain);
+    }
+    else if (m_NextState.valid)
     {
-        return m_NextState.symIndex == stateMain
-               || (m_NextState.prgState != NPC_PRGAISTATE_INVALID && m_NextState.prgState == stateMain);
+        return m_NextState.symIndex == stateMain || (m_NextState.prgState != NPC_PRGAISTATE_INVALID && m_NextState.prgState == stateMain);
     }
 
     return false;
 }
-
-
 
 void NpcScriptState::importState(NpcAIState& state, const json& j) const
 {
@@ -520,16 +513,16 @@ void NpcScriptState::exportScriptState(json& j)
 
     // Export routine
     j["routines"] = json::array();
-    for(const RoutineEntry& r : m_Routine.routine)
+    for (const RoutineEntry& r : m_Routine.routine)
     {
         json jr;
-        jr["hoursStart"] =      r.hoursStart;
-        jr["minutesStart"] =    r.minutesStart;
-        jr["hoursEnd"] =        r.hoursEnd;
-        jr["minutesEnd"] =      r.minutesEnd;
-        jr["symFunc"] =         r.symFunc;
-        jr["waypoint"] =        r.waypoint;
-        jr["isOverlay"] =       r.isOverlay;
+        jr["hoursStart"] = r.hoursStart;
+        jr["minutesStart"] = r.minutesStart;
+        jr["hoursEnd"] = r.hoursEnd;
+        jr["minutesEnd"] = r.minutesEnd;
+        jr["symFunc"] = r.symFunc;
+        jr["waypoint"] = r.waypoint;
+        jr["isOverlay"] = r.isOverlay;
 
         j["routines"].push_back(jr);
     }
@@ -544,7 +537,7 @@ void NpcScriptState::importScriptState(const json& j)
     m_LastStateSymIndex = j["lastStateSymIndex"];
 
     m_Routine.routine.clear();
-    for(const json& jr : j["routines"])
+    for (const json& jr : j["routines"])
     {
         RoutineEntry r;
         r.hoursStart = jr["hoursStart"];
@@ -571,8 +564,8 @@ void NpcScriptState::clearRoutine()
     m_Routine.routine.clear();
 }
 
-void NpcScriptState::setCurrentStateTime(float time) {
+void NpcScriptState::setCurrentStateTime(float time)
+{
     if (m_CurrentState.valid)
         m_CurrentState.stateTime = time;
 }
-

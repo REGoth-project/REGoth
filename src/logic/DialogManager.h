@@ -1,10 +1,10 @@
 #pragma once
 
-#include <daedalus/DaedalusGameState.h>
-#include <daedalus/DaedalusDialogManager.h>
-#include <json.hpp>
-#include <logic/messages/EventMessage.h>
 #include <limits>
+#include <json.hpp>
+#include <daedalus/DaedalusDialogManager.h>
+#include <daedalus/DaedalusGameState.h>
+#include <logic/messages/EventMessage.h>
 
 using json = nlohmann::json;
 
@@ -21,7 +21,6 @@ namespace UI
 
 namespace Logic
 {
-
     class DialogManager
     {
     public:
@@ -45,7 +44,7 @@ namespace Logic
             // Indicates whether choice should be auto played
             bool important;
 
-            static bool comparator(const ChoiceEntry& a, const ChoiceEntry& b){ return a.nr < b.nr; };
+            static bool comparator(const ChoiceEntry& a, const ChoiceEntry& b) { return a.nr < b.nr; };
         };
 
         /**
@@ -101,17 +100,14 @@ namespace Logic
          * @return Whether a dialog is currently active
          */
         bool isDialogActive() { return m_DialogActive; }
-
         /**
          * @return Whether a someone is currently talking
          */
         bool isTalking() { return m_Talking; }
-
         /**
          * @return The NPC the hero is talking to
          */
-        Daedalus::GameState::NpcHandle getTarget() {return m_Interaction.target; }
-
+        Daedalus::GameState::NpcHandle getTarget() { return m_Interaction.target; }
         /**
          * Removes all choices currently in the dialogbox
          */
@@ -146,8 +142,7 @@ namespace Logic
         void queueDialogEndEvent(Daedalus::GameState::NpcHandle target);
 
         // TODO: Probably move this into script-engine
-        Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager(){ return m_ScriptDialogMananger; }
-
+        Daedalus::GameState::DaedalusDialogManager* getScriptDialogManager() { return m_ScriptDialogMananger; }
         void exportDialogManager(json& h);
         void importDialogManager(const json& j);
 
@@ -161,7 +156,6 @@ namespace Logic
          * @return the subtitle box
          */
         UI::SubtitleBox& getSubtitleBox() { return *m_ActiveSubtitleBox; }
-
         /**
          * Called when an NPC is about to say something
          * @param self NPC talking
@@ -178,7 +172,6 @@ namespace Logic
         bool checkInfo(Daedalus::GameState::NpcHandle target, bool important);
 
     protected:
-
         /**
          * @return Daedalus script-VM
          */

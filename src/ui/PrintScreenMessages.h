@@ -1,9 +1,9 @@
 #pragma once
 
-#include <common.h>
-#include <render/RenderSystem.h>
 #include <list>
 #include "View.h"
+#include <common.h>
+#include <render/RenderSystem.h>
 
 namespace UI
 {
@@ -18,7 +18,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Prints a message to the screen
@@ -33,8 +33,8 @@ namespace UI
          * @param time Time to stay in seconds
          */
         void printMessageTimed(float percx, float percy, const std::string& message, double time);
-    protected:
 
+    protected:
         /**
          * Draws all timed messages
          */
@@ -43,7 +43,10 @@ namespace UI
         /**
          * Messages displayed on-screen for some time
          */
-        enum {MAX_NUM_MESSAGES = 5};
+        enum
+        {
+            MAX_NUM_MESSAGES = 5
+        };
         std::list<std::string> m_PrintMessages;
         double m_TimeToPopMessage;
 

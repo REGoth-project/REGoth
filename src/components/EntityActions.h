@@ -5,7 +5,6 @@
 
 namespace Components
 {
-
     namespace Actions
     {
         /**
@@ -13,13 +12,13 @@ namespace Components
          * @param alloc Allocator to lookup the handle
          * @param h Handle of the component to modify
          */
-        template<typename T>
+        template <typename T>
         inline T& initComponent(Components::ComponentAllocator& alloc,
                                 Handle::EntityHandle h)
         {
-			auto& c = alloc.getElement<Components::EntityComponent>(h);
-			if((c.m_ComponentMask & T::MASK) == 0)
-				T::init(alloc.getElement<T>(h));
+            auto& c = alloc.getElement<Components::EntityComponent>(h);
+            if ((c.m_ComponentMask & T::MASK) == 0)
+                T::init(alloc.getElement<T>(h));
 
             c.m_ComponentMask |= T::MASK;
             return alloc.getElement<T>(h);
@@ -38,7 +37,7 @@ namespace Components
             inline void frustumVisibilityCheck(const BBoxComponent* bxs, const size_t* checkIdx, const size_t numCheckIdx, size_t* outIndices, size_t& numVisible)
             {
                 size_t nv = 0;
-                for(size_t i=0;i<numCheckIdx;i++)
+                for (size_t i = 0; i < numCheckIdx; i++)
                 {
                     size_t c = checkIdx[i];
 
@@ -61,21 +60,21 @@ namespace Components
             }
         }
 
-		namespace StaticMesh
-		{
-			/**
+        namespace StaticMesh
+        {
+            /**
 			 * @brief Initializes a static-mesh component using the given mesh-data and entity handle
 			 * @param alloc Allocator to lookup the handle
 			 * @param h Handle of the component to modify
 			 * @param msh Mesh handle to set
 			 */
             inline void initComponent(Components::ComponentAllocator& alloc,
-				Handle::EntityHandle h, 
-				Handle::MeshHandle msh)
-			{
-				alloc.getElement<Components::StaticMeshComponent>(h).m_StaticMeshVisual = msh;
-			}
-		}
+                                      Handle::EntityHandle h,
+                                      Handle::MeshHandle msh)
+            {
+                alloc.getElement<Components::StaticMeshComponent>(h).m_StaticMeshVisual = msh;
+            }
+        }
 
         namespace Position
         {
@@ -86,7 +85,7 @@ namespace Components
              * @return computed view-matrix from the given entity
              */
             inline Math::Matrix makeViewMatrixFrom(Components::ComponentAllocator& alloc,
-                                    Handle::EntityHandle e)
+                                                   Handle::EntityHandle e)
             {
                 assert(alloc.getElement<Components::EntityComponent>(e).m_ComponentMask & Components::PositionComponent::MASK);
                 return alloc.getElement<Components::PositionComponent>(e).m_WorldMatrix.Invert();
@@ -99,8 +98,8 @@ namespace Components
              * @param view View-Matrix to convert
              */
             inline void setTransformFromView(Components::ComponentAllocator& alloc,
-                                      Handle::EntityHandle e,
-                                      const Math::Matrix& view)
+                                             Handle::EntityHandle e,
+                                             const Math::Matrix& view)
             {
                 assert(alloc.getElement<Components::EntityComponent>(e).m_ComponentMask & Components::PositionComponent::MASK);
                 alloc.getElement<Components::PositionComponent>(e).m_WorldMatrix = view.Invert();
@@ -132,7 +131,7 @@ namespace Components
                 /*if(c.m_RigidBody.getMotionState())
                     c.m_RigidBody.getMotionState()->getOpenGLMatrix(m.mv);
                 else
-                    m = Math::Matrix::CreateIdentity();*/ // TODO: Reimplement
+                    m = Math::Matrix::CreateIdentity();*/  // TODO: Reimplement
 
                 return m;
             }
@@ -146,53 +145,52 @@ namespace Components
             {
                 /*Math::Matrix m = Math::Matrix::CreateTranslation(position);
 
-                c.m_RigidBody.setBodyTransform(m);*/ // TODO: Reimplement
+                c.m_RigidBody.setBodyTransform(m);*/  // TODO: Reimplement
             }
         }
 
         /**
          * Cleans created resources from the components
          */
-        template<typename T>
+        template <typename T>
         inline void destroyComponent(T& c)
         {
             // Dummy function for components which don't need this kind of functionality
         }
 
-        template<>
+        template <>
         inline void destroyComponent<LogicComponent>(LogicComponent& c)
         {
             Logic::destroyLogicComponent(c);
         }
 
-        template<>
+        template <>
         inline void destroyComponent<VisualComponent>(VisualComponent& c)
         {
             Logic::destroyVisualComponent(c);
         }
 
-        template<>
+        template <>
         inline void destroyComponent<AnimationComponent>(AnimationComponent& c)
         {
             Animation::destroyAnimationComponent(c);
         }
 
-        template<>
+        template <>
         inline void destroyComponent<PfxComponent>(PfxComponent& c)
         {
             Logic::destroyPfxComponent(c);
         }
 
-        template<typename F>
+        template <typename F>
         inline void forAllComponents(Components::ComponentAllocator& alloc,
                                      Handle::EntityHandle e,
                                      F f)
         {
             std::tuple<ALL_COMPONENTS> t;
-            Utils::for_each_in_tuple(t, [&](auto& v){
-               f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
+            Utils::for_each_in_tuple(t, [&](auto& v) {
+                f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
             });
         }
-
     }
 }

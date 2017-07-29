@@ -15,20 +15,18 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Sets the string to display here. Can contain newlines!
          * @param text Text to display
          */
-        void setText(const std::string& text){ m_Text = text; }
-
+        void setText(const std::string& text) { m_Text = text; }
         /**
          * @param font Sets the font to use.
          */
-        void setFont(const std::string& font){ m_Font = font; }
+        void setFont(const std::string& font) { m_Font = font; }
     protected:
-
         /**
          * String to display
          */
@@ -38,6 +36,5 @@ namespace UI
          * Font to use
          */
         std::string m_Font;
-
     };
 }

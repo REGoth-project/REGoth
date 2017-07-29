@@ -2,14 +2,14 @@
 
 #ifdef ANDROID
 
-#include "Platform.h"
 #include <future>
+#include "Platform.h"
 
+#include <android_native_app_glue.h>
 #include <android/input.h>
 #include <android/log.h>
 #include <android/looper.h>
 #include <android/window.h>
-#include <android_native_app_glue.h>
 
 namespace Engine
 {
@@ -21,7 +21,6 @@ namespace Engine
         int32_t run(int argc, char** argv) override;
 
     private:
-
         void onAppCmd(struct android_app* app, int32_t cmd);
         int onInputEvent(struct android_app* app, AInputEvent* event);
 

@@ -15,5 +15,3 @@ namespace zTools
      */
     bool tryRunTools();
 }
-
-

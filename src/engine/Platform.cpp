@@ -1,12 +1,10 @@
 #include "Platform.h"
-#include "utils/Utils.h"
 #include <thread>
+#include "utils/Utils.h"
 
-#include <bx/platform.h>
-#include <bgfx/platform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
-
-
+#include <bgfx/platform.h>
+#include <bx/platform.h>
 
 //#include <bx/bx.h>
 //#include <bgfx/bgfx.h>

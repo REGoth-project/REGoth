@@ -1,12 +1,12 @@
 #include "SavegameManager.h"
-#include <utils/Utils.h>
-#include <utils/logger.h>
-#include <json/json.hpp>
 #include <fstream>
-#include <engine/AsyncAction.h>
 #include "engine/GameEngine.h"
 #include "ui/Hud.h"
 #include "ui/LoadingScreen.h"
+#include <engine/AsyncAction.h>
+#include <json/json.hpp>
+#include <utils/Utils.h>
+#include <utils/logger.h>
 
 using json = nlohmann::json;
 using namespace Engine;
@@ -21,16 +21,16 @@ void ensureSavegameFolders(int idx)
 {
     std::string userdata = Utils::getUserDataLocation();
 
-	if(!Utils::mkdir(userdata))
-		LogError() << "Failed to create userdata-directory at: " << userdata;
+    if (!Utils::mkdir(userdata))
+        LogError() << "Failed to create userdata-directory at: " << userdata;
 
     std::string gameType = "/" + SavegameManager::gameSpecificSubFolderName();
 
     if (!Utils::mkdir(userdata + gameType))
         LogError() << "Failed to create gametype-directory at: " << userdata + gameType;
 
-    if(!Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
-		LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
+    if (!Utils::mkdir(SavegameManager::buildSavegamePath(idx)))
+        LogError() << "Failed to create savegame-directory at: " << SavegameManager::buildSavegamePath(idx);
 }
 
 std::string SavegameManager::buildSavegamePath(int idx)
@@ -43,11 +43,11 @@ std::vector<std::string> SavegameManager::getSavegameWorlds(int idx)
 {
     std::vector<std::string> worlds;
 
-    Utils::forEachFile(buildSavegamePath(idx), [&](const std::string& path, const std::string& name, const std::string& ext){
+    Utils::forEachFile(buildSavegamePath(idx), [&](const std::string& path, const std::string& name, const std::string& ext) {
 
         // Check if file is empty
-        if(Utils::getFileSize(path + "/" + name) == 0)
-            return; // Empty, don't bother
+        if (Utils::getFileSize(path + "/" + name) == 0)
+            return;  // Empty, don't bother
 
         // Valid worldfile
         worlds.push_back(name);
@@ -58,25 +58,20 @@ std::vector<std::string> SavegameManager::getSavegameWorlds(int idx)
 
 void SavegameManager::clearSavegame(int idx)
 {
-    if(!isSavegameAvailable(idx))
-        return; // Don't touch any files if we don't have to...
+    if (!isSavegameAvailable(idx))
+        return;  // Don't touch any files if we don't have to...
 
-    Utils::forEachFile(buildSavegamePath(idx), [](const std::string& path, const std::string& name, const std::string& ext)
-    {
+    Utils::forEachFile(buildSavegamePath(idx), [](const std::string& path, const std::string& name, const std::string& ext) {
         // Make sure this is a REGoth-file
         bool isRegothFile = Utils::endsWith(name, ".json") &&
-                (Utils::startsWith(name, "regoth_")
-                 || Utils::startsWith(name, "world_")
-                 || Utils::startsWith(name, "player")
-                 || Utils::startsWith(name, "dialogmanager")
-                 || Utils::startsWith(name, "scriptengine"));
+                            (Utils::startsWith(name, "regoth_") || Utils::startsWith(name, "world_") || Utils::startsWith(name, "player") || Utils::startsWith(name, "dialogmanager") || Utils::startsWith(name, "scriptengine"));
 
-        if(!isRegothFile)
-            return; // Better not touch that one
+        if (!isRegothFile)
+            return;  // Better not touch that one
 
         // Empty the file
         FILE* f = fopen(path.c_str(), "w");
-        if(!f)
+        if (!f)
         {
             LogWarn() << "Failed to clear file: " << path;
             return;
@@ -84,7 +79,8 @@ void SavegameManager::clearSavegame(int idx)
 
         fclose(f);
 
-    }, false); // For the love of god, dont recurse in case something really goes wrong!
+    },
+                       false);  // For the love of god, dont recurse in case something really goes wrong!
 }
 
 bool SavegameManager::isSavegameAvailable(int idx)
@@ -109,7 +105,7 @@ bool SavegameManager::writeSavegameInfo(int idx, const SavegameInfo& info)
     // Save
     std::ofstream f(infoFile);
 
-    if(!f.is_open())
+    if (!f.is_open())
     {
         LogWarn() << "Failed to save data! Could not open file: " << buildSavegamePath(idx) + "/regoth_save.json";
         return false;
@@ -120,18 +116,18 @@ bool SavegameManager::writeSavegameInfo(int idx, const SavegameInfo& info)
 
     return true;
 }
-        
+
 Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
 {
     std::string info = buildSavegamePath(idx) + "/regoth_save.json";
 
-    if(!Utils::getFileSize(info))
+    if (!Utils::getFileSize(info))
         return SavegameInfo();
 
     LogInfo() << "Reading savegame-info: " << info;
 
     std::string infoContents = Utils::readFileContents(info);
-    json j = json::parse(infoContents); 
+    json j = json::parse(infoContents);
 
     unsigned int version = 0;
     // check can be removed if backwards compability with save games without version number is not needed anymore
@@ -165,12 +161,12 @@ bool SavegameManager::writeWorld(int idx, const std::string& worldName, const nl
 
 std::string SavegameManager::readWorld(int idx, const std::string& worldName)
 {
-    return SavegameManager::readFileInSlot(idx,  "world_" + worldName + ".json");
+    return SavegameManager::readFileInSlot(idx, "world_" + worldName + ".json");
 }
-        
+
 std::string SavegameManager::buildWorldPath(int idx, const std::string& worldName)
 {
-   return buildSavegamePath(idx) + "/world_" + worldName + ".json";
+    return buildSavegamePath(idx) + "/world_" + worldName + ".json";
 }
 
 void Engine::SavegameManager::init(Engine::GameEngine& engine)
@@ -191,7 +187,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
         {
             SavegameInfo info = readSavegameInfo(i);
             names[i] = std::make_shared<const std::string>(info.name);
-        } 
+        }
     }
     // for log purpose only
     {
@@ -209,12 +205,13 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
     return names;
 }
 
-std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
+std::string Engine::SavegameManager::loadSaveGameSlot(int index)
+{
     ExcludeFrameTime exclude(*gameEngine);
     // Lock to number of savegames
     assert(index >= 0 && index < maxSlots());
 
-    if(!isSavegameAvailable(index))
+    if (!isSavegameAvailable(index))
     {
         return "Savegame at slot " + std::to_string(index) + " not available!";
     }
@@ -225,13 +222,13 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     std::string worldFileData = SavegameManager::readWorld(index, info.world);
     // Sanity check, if we really got a safe for this world. Otherwise we would end up in the fresh version
     // if it was missing. Also, IF the player saved there, there should be a save for this.
-    if(worldFileData.empty())
+    if (worldFileData.empty())
     {
         return "Target world-file invalid: " + buildWorldPath(index, info.world);
     }
     auto timePlayed = info.timePlayed;
-    auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine){
-        auto resetSession = [](BaseEngine* engine){
+    auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine) {
+        auto resetSession = [](BaseEngine* engine) {
             gameEngine->resetSession();
             gameEngine->getHud().getLoadingScreen().reset();
             gameEngine->getHud().getLoadingScreen().setHidden(false);
@@ -246,7 +243,8 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
         gameEngine->getGameClock().setTotalSeconds(timePlayed);
         std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
 
-        auto registerWorld = [index, w = std::move(pWorld)](BaseEngine* engine) mutable {
+        auto registerWorld = [ index, w = std::move(pWorld) ](BaseEngine * engine) mutable
+        {
             Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(w));
             if (worldHandle.isValid())
             {
@@ -262,8 +260,9 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index) {
     return "";
 }
 
-int Engine::SavegameManager::maxSlots() {
-    switch(gameEngine->getBasicGameType())
+int Engine::SavegameManager::maxSlots()
+{
+    switch (gameEngine->getBasicGameType())
     {
         case Daedalus::GameType::GT_Gothic1:
             return G1_MAX_SLOTS;
@@ -327,31 +326,34 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
     gameEngine->getSession().setCurrentSlot(index);
 }
 
-std::string Engine::SavegameManager::gameSpecificSubFolderName() {
+std::string Engine::SavegameManager::gameSpecificSubFolderName()
+{
     if (gameEngine->getBasicGameType() == Daedalus::GameType::GT_Gothic1)
-        return  "Gothic";
+        return "Gothic";
     else
-        return  "Gothic 2";
+        return "Gothic 2";
 }
 
-std::string Engine::SavegameManager::readFileInSlot(int idx, const std::string &relativePath) {
+std::string Engine::SavegameManager::readFileInSlot(int idx, const std::string& relativePath)
+{
     std::string file = buildSavegamePath(idx) + "/" + relativePath;
 
-    if(!Utils::getFileSize(file))
-        return ""; // Not found or empty
+    if (!Utils::getFileSize(file))
+        return "";  // Not found or empty
 
     LogInfo() << "Reading save-file: " << file;
     return Utils::readFileContents(file);
 }
 
-bool Engine::SavegameManager::writeFileInSlot(int idx, const std::string& relativePath, const std::string& data) {
+bool Engine::SavegameManager::writeFileInSlot(int idx, const std::string& relativePath, const std::string& data)
+{
     std::string file = buildSavegamePath(idx) + "/" + relativePath;
     ensureSavegameFolders(idx);
 
     LogInfo() << "Writing save-file: " << file;
 
     std::ofstream f(file);
-    if(!f.is_open())
+    if (!f.is_open())
     {
         LogWarn() << "Failed to save data! Could not open file: " + file;
         return false;
@@ -361,4 +363,3 @@ bool Engine::SavegameManager::writeFileInSlot(int idx, const std::string& relati
 
     return true;
 }
-

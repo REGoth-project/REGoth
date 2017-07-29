@@ -2,17 +2,16 @@
 // Created by desktop on 19.06.17.
 //
 
-#include <ZenLib/zenload/zTypes.h>
 #include "SoundController.h"
-#include <engine/World.h>
+#include <ZenLib/zenload/zTypes.h>
 #include <engine/BaseEngine.h>
+#include <engine/World.h>
 
 using namespace Logic;
 
 SoundController::SoundController(World::WorldInstance& world, Handle::EntityHandle entity)
-        : Controller(world, entity)
+    : Controller(world, entity)
 {
-
 }
 
 void SoundController::importObject(const json& j)
@@ -43,10 +42,10 @@ void SoundController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 
 void SoundController::onUpdate(float deltaTime)
 {
-    switch(m_SoundMode)
+    switch (m_SoundMode)
     {
         case ZenLoad::SM_LOOPING:
-            if(!m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
+            if (!m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
             {
                 playSound(m_SoundFile);
             }
@@ -61,17 +60,15 @@ void SoundController::onUpdate(float deltaTime)
 
         case ZenLoad::SM_RANDOM:
             // Loop this sound after some time
-            float totalSeconds = (float) m_World.getEngine()->getGameClock().getTotalSecondsRealtime();
+            float totalSeconds = (float)m_World.getEngine()->getGameClock().getTotalSecondsRealtime();
 
             // If that is the first time playing, just calculate the random amount without playing the sound.
             // This will keep sound vobs from all starting at the same time
-            if(m_NumTimesPlayed == 0)
+            if (m_NumTimesPlayed == 0)
             {
                 setNextPlayingTimeRandomized();
             }
-            else if (totalSeconds >= m_SoundTimePlayNextRandom
-                     && !m_World.getAudioWorld().soundIsPlaying(m_PlayedSound)
-                     && isInHearingRange())
+            else if (totalSeconds >= m_SoundTimePlayNextRandom && !m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
             {
                 playSound(m_SoundFile);
 
@@ -85,7 +82,7 @@ void SoundController::onUpdate(float deltaTime)
 void SoundController::setNextPlayingTimeRandomized()
 {
     // See when we need to play this sound the next time
-    float totalSeconds = (float) m_World.getEngine()->getGameClock().getTotalSecondsRealtime();
+    float totalSeconds = (float)m_World.getEngine()->getGameClock().getTotalSecondsRealtime();
     float offset = m_SoundPlayDelay + bx::flerp(-m_SoundDelayRandomness, m_SoundDelayRandomness, Utils::frand());
 
     m_SoundTimePlayNextRandom = totalSeconds + offset;

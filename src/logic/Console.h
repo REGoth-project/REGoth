@@ -3,12 +3,12 @@
 //
 
 #pragma once
-#include <string>
-#include <list>
-#include <vector>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
+#include <string>
+#include <vector>
 #include <ui/ConsoleBox.h>
 
 namespace Logic
@@ -16,15 +16,15 @@ namespace Logic
     class Console
     {
     public:
-
         struct SuggestionBase
         {
-            SuggestionBase(const std::vector<std::string>& aliasList) :
-                    aliasList(aliasList),
-                    anyStartsWith(false)
-            {}
+            SuggestionBase(const std::vector<std::string>& aliasList)
+                : aliasList(aliasList)
+                , anyStartsWith(false)
+            {
+            }
 
-            virtual ~SuggestionBase() {};
+            virtual ~SuggestionBase(){};
 
             bool operator<(const SuggestionBase& b) const;
 
@@ -42,10 +42,11 @@ namespace Logic
 
         struct NPCSuggestion : SuggestionBase
         {
-            NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle) :
-                    SuggestionBase(aliasList),
-                    npcHandle(npcHandle)
-            {}
+            NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle)
+                : SuggestionBase(aliasList)
+                , npcHandle(npcHandle)
+            {
+            }
             Handle::EntityHandle npcHandle;
         };
 
@@ -73,7 +74,6 @@ namespace Logic
                 return *this;
             }
         };
-
 
         Console(Engine::BaseEngine& e);
 
@@ -146,16 +146,13 @@ namespace Logic
         /**
          * @return Whether the console is currently shown
          */
-        bool isOpen(){ return m_Open; }
+        bool isOpen() { return m_Open; }
         void setOpen(bool open);
-        void toggleOpen(){ setOpen(!isOpen()); }
-
+        void toggleOpen() { setOpen(!isOpen()); }
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
         const std::vector<std::vector<Logic::Console::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
-
     private:
-
         /**
          * clears the suggestion list and sets the current selection index to 0
          */
@@ -204,4 +201,3 @@ namespace Logic
         Engine::BaseEngine& m_BaseEngine;
     };
 }
-

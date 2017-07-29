@@ -1,9 +1,9 @@
 #pragma once
 
-#include <handle/HandleDef.h>
 #include <list>
 #include <memory>
 #include "EventMessage.h"
+#include <handle/HandleDef.h>
 
 namespace World
 {
@@ -15,10 +15,11 @@ namespace Logic
     class EventManager
     {
         using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
+
     public:
         EventManager(World::WorldInstance& world, Handle::EntityHandle hostVob);
 
-        template<typename T>
+        template <typename T>
         std::shared_ptr<T> onMessage(const T& msg, Handle::EntityHandle sourceVob = Handle::EntityHandle::makeInvalidHandle())
         {
             // Copy over the data from the given message
@@ -70,8 +71,8 @@ namespace Logic
          * @return
          */
         std::string exportObject();
-    protected:
 
+    protected:
         /**
          * Handles an incomming message. This will decide whether or not to immediately execute the message or
          * whether it should wait in the queue. Immediate messages will be flagged as to-delete after execution

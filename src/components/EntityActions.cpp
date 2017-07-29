@@ -14,7 +14,7 @@ void ::Components::Actions::Logic::destroyVisualComponent(VisualComponent& c)
 
 void ::Components::Actions::Logic::destroyPfxComponent(Components::PfxComponent& c)
 {
-    if(bgfx::isValid(c.m_ParticleVB))
+    if (bgfx::isValid(c.m_ParticleVB))
         bgfx::destroyDynamicVertexBuffer(c.m_ParticleVB);
 }
 
@@ -22,7 +22,3 @@ void ::Components::Actions::Animation::destroyAnimationComponent(AnimationCompon
 {
     delete c.m_AnimHandler;
 }
-
-
-
-

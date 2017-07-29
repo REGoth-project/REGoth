@@ -8,7 +8,7 @@ namespace Shader
     {
         if (bx::open(_reader, _filePath))
         {
-            uint32_t size = (uint32_t) bx::getSize(_reader);
+            uint32_t size = (uint32_t)bx::getSize(_reader);
             const bgfx::Memory* mem = bgfx::alloc(size + 1);
             bx::read(_reader, mem->data, size);
             bx::close(_reader);
@@ -76,6 +76,6 @@ namespace Shader
 
     bgfx::ProgramHandle loadProgram(const char* basePath, const char* _vsName, const char* _fsName)
     {
-        return loadProgram(entry::getFileReader(),basePath, _vsName, _fsName);
+        return loadProgram(entry::getFileReader(), basePath, _vsName, _fsName);
     }
 }
