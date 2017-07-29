@@ -153,8 +153,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             // TODO: Implement DamageDescriptor!
         };
 
@@ -188,8 +186,6 @@ namespace Logic
              * Export as JSON-String
              */
             virtual std::string exportPart();
-
-
 
             /**
              * Type of weapon to go to
@@ -246,13 +242,11 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             /**
              * Route the NPC has to go if this is a ST_GoRoute.
              * If empty, targetPos is used.
              */
-            std::vector <World::Waynet::WaypointIndex> route;
+            std::vector<World::Waynet::WaypointIndex> route;
 
             /**
              * Vob we are going to if this is a ST_GotoVob
@@ -306,8 +300,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             /**
              * How far we are in our combo
              */
@@ -349,8 +341,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             // TODO: We have no actual object for these right now, as they are explicitly in the inventory.
             // TODO: Use the itemhandle here or something
         };
@@ -365,7 +355,7 @@ namespace Logic
                 EV_SetTime,
                 EV_ApplyTimedOverlay,
                 EV_StateMax
-            }ConversationMessage;
+            } ConversationMessage;
 
             StateMessage()
             {
@@ -378,8 +368,6 @@ namespace Logic
              * Export as JSON-String
              */
             virtual std::string exportPart();
-
-
 
             /**
              * Symbol to the Setupfunction for this state (ZS_...)
@@ -405,7 +393,7 @@ namespace Logic
             /**
              * Whether this is a program-managed state. List of states in NpcScriptState.h
              */
-             bool isPrgState;
+            bool isPrgState;
 
             /**
              * If this is a wait-message, this is how long we should wait
@@ -458,8 +446,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             /**
              * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
              * Alternatively, you can set "targetItem" to a valid handle.
@@ -481,7 +467,6 @@ namespace Logic
              */
             bool flag;
 
-
             /**
              * Y-coord of the the pickup animation?
              */
@@ -490,12 +475,12 @@ namespace Logic
             /**
              * State to go to when using the item
              */
-            int	targetState;
+            int targetState;
 
             /**
              * Animation to play, for example on pickup
              */
-            std::string	animation;
+            std::string animation;
         };
 
         struct ConversationMessage : public NpcMessage
@@ -535,7 +520,7 @@ namespace Logic
 
             enum class Status
             {
-                INIT, // never seen by PlayerController yet
+                INIT,  // never seen by PlayerController yet
                 PLAYING,
                 FADING_OUT
             };
@@ -644,8 +629,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             // TODO: Implement
         };
 
@@ -673,8 +656,6 @@ namespace Logic
              */
             virtual std::string exportPart();
 
-
-
             // NPC this message is from
             Handle::EntityHandle npc;
 
@@ -686,8 +667,6 @@ namespace Logic
 
             // Whether to play an animation
             bool playAnimation;
-
-
         };
     }
 }

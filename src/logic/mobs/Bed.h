@@ -19,14 +19,8 @@ namespace Logic
             void onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos) override;
 
         private:
-
             // Used to set the sceme to either front or back
             bool m_EnteringBackside;
         };
-
     }
 }
-
-
-
-

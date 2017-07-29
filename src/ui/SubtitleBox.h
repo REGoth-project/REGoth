@@ -22,7 +22,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Sets the text to be displayed inside the box
@@ -30,13 +30,9 @@ namespace UI
         void setText(const std::string& speaker, const std::string& text);
 
         void setGrowDirection(float direction) { m_growDirection = direction; }
-
         void setScaling(float scaling) { m_Scaling = scaling; }
-
         float getScaling() { return m_Scaling; }
-
     protected:
-
         struct Text
         {
             /**
@@ -48,7 +44,7 @@ namespace UI
              * Text of the person speaking
              */
             std::string speaker;
-        }m_Text;
+        } m_Text;
 
         /**
          * Current state of the scroll-area

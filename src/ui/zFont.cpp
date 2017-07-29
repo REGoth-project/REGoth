@@ -13,11 +13,10 @@ constexpr unsigned int DISTANCE_BETWEEN_GLYPHS = 1;
 namespace FontUtil
 {
     void appendGlyph(std::vector<Meshes::PositionUVVertex2D>& vxStream,
-                    int32_t _x, int32_t _y, int32_t _width, int32_t _height,
-                    const Math::float2 uvMin = Math::float2(0.0f, 0.0f),
-                    const Math::float2 uvMax = Math::float2(1.0f, 1.0f))
+                     int32_t _x, int32_t _y, int32_t _width, int32_t _height,
+                     const Math::float2 uvMin = Math::float2(0.0f, 0.0f),
+                     const Math::float2 uvMax = Math::float2(1.0f, 1.0f))
     {
-
         const float widthf = float(_width);
         const float heightf = float(_height);
 
@@ -69,17 +68,17 @@ namespace FontUtil
         vertex[5].Position.y = miny;
         vertex[5].TexCoord.x = minu;
         vertex[5].TexCoord.y = minv;
-
     }
 }
 
-UI::zFont::zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo) : m_Engine(e), m_Font(fontInfo)
+UI::zFont::zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo)
+    : m_Engine(e)
+    , m_Font(fontInfo)
 {
     LogInfo() << "Loading font file: " << fontInfo.fontName;
 
     // Load the fonts texture
     m_FontTexture = m_Engine.getEngineTextureAlloc().loadTextureVDF(fontInfo.fontName);
-
 }
 
 UI::zFont::~zFont()
@@ -104,18 +103,19 @@ void UI::zFont::appendGlyph(UI::zFont::GlyphStream& glyphStream, unsigned char c
 {
     // Look up information about that glyph
     Glyph g;
-    if(!getGlyphOf(c, g))
+    if (!getGlyphOf(c, g))
     {
         LogWarn() << "Failed to look up glyph Nr. " << (int)c;
         return;
     }
 
-    if(c == '\n')
+    if (c == '\n')
     {
         // Just return to beginning of the line and move one line down
         glyphStream.xPos = glyphStream.xReturn;
         glyphStream.yPos += m_Font.fontHeight;
-    } else
+    }
+    else
     {
         // Append at current xPos
         FontUtil::appendGlyph(glyphStream.vxStream, glyphStream.xPos, glyphStream.yPos, g.width, m_Font.fontHeight, g.uvTopLeft,
@@ -128,7 +128,7 @@ void UI::zFont::appendGlyph(UI::zFont::GlyphStream& glyphStream, unsigned char c
 
 bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
 {
-    if(glyphStream.vxStream.empty())
+    if (glyphStream.vxStream.empty())
         return false;
 
     if (bgfx::getAvailTransientVertexBuffer((uint32_t)glyphStream.vxStream.size(), Meshes::PositionUVVertex2D::ms_decl))
@@ -136,7 +136,7 @@ bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
         bgfx::TransientVertexBuffer vb;
         bgfx::allocTransientVertexBuffer(&vb, (uint32_t)glyphStream.vxStream.size(), Meshes::PositionUVVertex2D::ms_decl);
 
-        Meshes::PositionUVVertex* vertex = (Meshes::PositionUVVertex*) vb.data;
+        Meshes::PositionUVVertex* vertex = (Meshes::PositionUVVertex*)vb.data;
 
         memcpy(vertex, glyphStream.vxStream.data(), sizeof(Meshes::PositionUVVertex2D) * glyphStream.vxStream.size());
 
@@ -154,13 +154,14 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
     int yPos = 0;
     int xMax = 0;
     int yMax = 0;
-    for(unsigned i=0;i<txt.size();i++)
+    for (unsigned i = 0; i < txt.size(); i++)
     {
-        if(txt[i] == '\n')
+        if (txt[i] == '\n')
         {
             xPos = 0;
             yPos += m_Font.fontHeight;
-        }else
+        }
+        else
         {
             Glyph g;
             getGlyphOf((unsigned char)txt[i], g);
@@ -173,7 +174,7 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
     }
 
     width = xMax;
-    height = yMax + m_Font.fontHeight; // Dont forget the last line (yMax is only the top-line)
+    height = yMax + m_Font.fontHeight;  // Dont forget the last line (yMax is only the top-line)
 }
 
 std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxWidth) const
@@ -182,19 +183,19 @@ std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxW
     int w = 0;
     unsigned int lastSpace = 0;
     bool spaceFound = false;
-    for(unsigned i=0;i<text.size();i++)
+    for (unsigned i = 0; i < text.size(); i++)
     {
         Glyph g;
         getGlyphOf((unsigned char)text[i], g);
 
-        if(text[i] == ' ')
+        if (text[i] == ' ')
         {
             spaceFound = true;
             lastSpace = i;
         }
 
         w += g.width + DISTANCE_BETWEEN_GLYPHS;
-        if(w > maxWidth && spaceFound)
+        if (w > maxWidth && spaceFound)
         {
             spaceFound = false;
             w = 0;
@@ -218,9 +219,9 @@ std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxW
     return lines;
 }
 
-UI::zFontCache::zFontCache(Engine::BaseEngine& e) : m_Engine(e)
+UI::zFontCache::zFontCache(Engine::BaseEngine& e)
+    : m_Engine(e)
 {
-
 }
 
 const UI::zFont* UI::zFontCache::getFont(const std::string& font)
@@ -228,10 +229,10 @@ const UI::zFont* UI::zFontCache::getFont(const std::string& font)
     std::string extLessfont = Utils::stripExtension(font);
 
     auto it = m_Fonts.find(extLessfont);
-    if(it != m_Fonts.end())
+    if (it != m_Fonts.end())
         return &it->second;
 
-    if(!m_Engine.getVDFSIndex().hasFile(extLessfont + ".FNT"))
+    if (!m_Engine.getVDFSIndex().hasFile(extLessfont + ".FNT"))
     {
         LogError() << "Failed to find font: " << font << ".FNT";
 
@@ -245,5 +246,3 @@ const UI::zFont* UI::zFontCache::getFont(const std::string& font)
 
     return &it2.first->second;
 }
-
-

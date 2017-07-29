@@ -20,7 +20,6 @@ namespace Meshes
     class GenericMeshAllocator
     {
     public:
-
         GenericMeshAllocator(const VDFS::FileIndex* vdfidx = nullptr);
         virtual ~GenericMeshAllocator();
 
@@ -28,7 +27,6 @@ namespace Meshes
         * @brief Sets the VDFS-Index to use
         */
         void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }
-
         /**
          * @brief Loads a ZTEX-texture from the given or stored VDFS-FileIndex
          */
@@ -42,6 +40,7 @@ namespace Meshes
          * @return Handle to the mesh from this allocator
          */
         virtual Handle::MeshHandle loadFromPacked(const ZenLoad::PackedMesh& packed, const std::string& name = "") = 0;
+
     protected:
         /**
          * @brief Textures by their set names. Note: If names are doubled, only the last loaded texture

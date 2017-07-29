@@ -8,7 +8,7 @@ namespace UI
     public:
         Menu_Save(Engine::BaseEngine& e);
         ~Menu_Save();
-    
+
         /**
          * Creates an instance of this class and appends it to the root UI-View
          * @return Instance of the class. Don't forget to delete!
@@ -18,7 +18,7 @@ namespace UI
         /**
          * Gathers all available savegames and writes their names to the slot-labels
          */
-        void gatherAvailableSavegames();   
+        void gatherAvailableSavegames();
 
         void onCustomAction(const std::string& action);
 
@@ -37,17 +37,16 @@ namespace UI
         static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
 
     private:
-
         /**
          * Performs the select-action on the given item
          * @param item Item to perform the action on
          */
         virtual void performSelectAction(Daedalus::GameState::MenuItemHandle item) override;
 
-	bool m_isWaitingForSaveName = false;
+        bool m_isWaitingForSaveName = false;
 
-	std::string m_SaveName;	
+        std::string m_SaveName;
 
-	std::string m_MenuItemSaveSlot;
+        std::string m_MenuItemSaveSlot;
     };
 }

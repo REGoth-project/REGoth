@@ -100,8 +100,7 @@ namespace Logic
         /**
          * Returns the underlaying VM for some internal work
          */
-        Daedalus::DaedalusVM& getVM(){return *m_pVM; }
-
+        Daedalus::DaedalusVM& getVM() { return *m_pVM; }
         /**
          * Returns the symbol-index of the given symbol-name
          * @return Symbol-index, -1 of not found
@@ -118,13 +117,11 @@ namespace Logic
         /**
          * @return The entity of the NPC the player is currently playing as
          */
-        Handle::EntityHandle getPlayerEntity(){ return m_PlayerEntity; }
-
+        Handle::EntityHandle getPlayerEntity() { return m_PlayerEntity; }
         /**
          * Sets the entity of the NPC the player is currently playing as
          */
-        void setPlayerEntity(Handle::EntityHandle player){ m_PlayerEntity = player; }
-
+        void setPlayerEntity(Handle::EntityHandle player) { m_PlayerEntity = player; }
         /**
          * Returns a list of all npcs found inside the given sphere
          * @param center Center of the search-sphere
@@ -136,8 +133,7 @@ namespace Logic
         /**
          * @return List of all registered NPCs in the world
          */
-        const std::set<Handle::EntityHandle>& getWorldNPCs(){ return m_WorldNPCs; }
-
+        const std::set<Handle::EntityHandle>& getWorldNPCs() { return m_WorldNPCs; }
         /**
          * Searches the current world for NPCs with the given display-name or DATFile-name
          * Comparison is case insensitive
@@ -179,18 +175,15 @@ namespace Logic
         /**
          * @return All items found inside the World
          */
-        const std::set<Handle::EntityHandle>& getWorldItems(){ return m_WorldItems; }
-
+        const std::set<Handle::EntityHandle>& getWorldItems() { return m_WorldItems; }
         /**
          * @return All mobs found inside the World
          */
-        const std::set<Handle::EntityHandle>& getWorldMobs(){ return m_WorldMobs; }
-
+        const std::set<Handle::EntityHandle>& getWorldMobs() { return m_WorldMobs; }
         /**
          * @return Profile data for this frame. (Time by function-symbol)
          */
-        const std::map<size_t, double>& getProfilingData(){ return m_TimeByFunctionSymbol[m_ProfilingDataFrame]; };
-
+        const std::map<size_t, double>& getProfilingData() { return m_TimeByFunctionSymbol[m_ProfilingDataFrame]; };
         /**
          * Resets profiling data for the current frame
          */
@@ -202,7 +195,6 @@ namespace Logic
         void onLogEntryAdded(const std::string& topic, const std::string& entry);
 
     protected:
-
         /**
          * Starts/stops profiling on the given function-symbol
          */

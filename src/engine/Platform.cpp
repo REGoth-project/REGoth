@@ -6,8 +6,6 @@
 #include <bgfx/platform.h>
 #include <bgfx-cmake/bx/include/bx/commandline.h>
 
-
-
 //#include <bx/bx.h>
 //#include <bgfx/bgfx.h>
 //#include <bx/string.h>

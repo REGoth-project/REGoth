@@ -31,15 +31,12 @@ namespace Animations
     class AnimationAllocator
     {
     public:
-
         Handle::AnimationHandle allocate(const std::string &name);
 
         Handle::AnimationHandle getAnimation(const std::string &name) const;
 
-        Animation& getAnimation(Handle::AnimationHandle h) { return m_Allocator.getElement(h); }
-
+        Animation &getAnimation(Handle::AnimationHandle h) { return m_Allocator.getElement(h); }
     private:
-
         Memory::StaticReferencedAllocator<Animation, Config::MAX_NUM_LEVEL_ANIMATIONS> m_Allocator;
 
         std::map<std::string, Handle::AnimationHandle> m_AnimationsByName;
@@ -61,19 +58,15 @@ namespace Animations
         return (it != m_AnimationsByName.end()) ? it->second : Handle::AnimationHandle();
     }
 
-
     class AnimationDataAllocator
     {
     public:
-
         Handle::AnimationDataHandle allocate(const std::string &name);
 
-        AnimationData& getAnimationData(Handle::AnimationDataHandle h) { return m_Allocator.getElement(h); }
-
+        AnimationData &getAnimationData(Handle::AnimationDataHandle h) { return m_Allocator.getElement(h); }
         Handle::AnimationDataHandle getAnimationData(const std::string &name);
 
     protected:
-
         std::map<std::string, Handle::AnimationDataHandle> m_AnimationDataByName;
 
         Memory::StaticReferencedAllocator<AnimationData, Config::MAX_NUM_LEVEL_ANIMATION_DATAS> m_Allocator;
@@ -91,5 +84,4 @@ namespace Animations
         auto it = m_AnimationDataByName.find(name);
         return (it != m_AnimationDataByName.end()) ? it->second : Handle::AnimationDataHandle();
     }
-
 }

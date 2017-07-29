@@ -10,12 +10,11 @@ namespace Memory
      * Class wrapping different allocators into one. If an object is requested, all allocators
      * will create one. That means, that the handle given is valid on all of them.
      */
-    template<int NUM_ALLOC, typename HT, typename... S>
+    template <int NUM_ALLOC, typename HT, typename... S>
     class AllocatorBundle
     {
     public:
-
-		typedef HT Handle;
+        typedef HT Handle;
 
         /**
          * Structure to hold direct pointers to all of the datasets
@@ -26,15 +25,13 @@ namespace Memory
             size_t m_NumElements;
         };
 
-        AllocatorBundle() :
-            m_NumObtainedObjects(0)
+        AllocatorBundle()
+            : m_NumObtainedObjects(0)
         {
-
         }
 
         ~AllocatorBundle()
         {
-
         }
 
         /**
@@ -44,7 +41,7 @@ namespace Memory
         {
             Handle h;
             h.index = Handle::INVALID_HANDLE;
-            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc){
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc) {
                 h = alloc.createObject();
             });
 
@@ -59,8 +56,8 @@ namespace Memory
         bool isHandleValid(const Handle& h)
         {
             bool invalid = false;
-            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc){
-                if(!alloc.isHandleValid(h))
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc) {
+                if (!alloc.isHandleValid(h))
                     invalid = true;
             });
 
@@ -70,7 +67,7 @@ namespace Memory
         /**
          * @return the actual element to the handle h
          */
-        template<typename T>
+        template <typename T>
         T& getElement(const Handle& h)
         {
             return std::get<StaticReferencedAllocator<T, NUM_ALLOC>>(m_Allocators).getElement(h);
@@ -81,7 +78,7 @@ namespace Memory
          */
         void removeObject(const Handle& h)
         {
-            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc){
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc) {
                 alloc.removeObject(h);
             });
 
@@ -91,7 +88,7 @@ namespace Memory
         /**
          * Sets a callback to what should happen when an object of type T got deleted
          */
-        template<typename T>
+        template <typename T>
         void setOnRemoveCallback(const std::function<void(T&)> onRemoved)
         {
             getAllocator<T>().setOnRemoveCallback(onRemoved);
@@ -100,7 +97,7 @@ namespace Memory
         /**
          * Returns the array of elements created for the given type
          */
-        template<typename T>
+        template <typename T>
         T* getElements()
         {
             return getAllocator<T>().getElements();
@@ -125,11 +122,12 @@ namespace Memory
 
             return db;
         }
+
     protected:
         /**
          * @return Allocator of the given type
          */
-        template<typename T>
+        template <typename T>
         auto& getAllocator()
         {
             return std::get<StaticReferencedAllocator<T, NUM_ALLOC>>(m_Allocators);

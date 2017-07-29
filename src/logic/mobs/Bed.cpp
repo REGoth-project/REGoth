@@ -7,14 +7,14 @@
 using namespace Logic;
 using namespace MobCores;
 
-Bed::Bed(World::WorldInstance& world, const Handle::EntityHandle& entity) : MobCore(world, entity)
+Bed::Bed(World::WorldInstance& world, const Handle::EntityHandle& entity)
+    : MobCore(world, entity)
 {
     m_EnteringBackside = false;
 }
 
 Bed::~Bed()
 {
-
 }
 
 std::string Bed::getSchemeName()
@@ -24,7 +24,7 @@ std::string Bed::getSchemeName()
 
 void Bed::onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos)
 {
-    if(pos)
+    if (pos)
     {
         // Get side the npc is entering the bed from
         m_EnteringBackside = pos->nodeName.find("FRONT") == std::string::npos;

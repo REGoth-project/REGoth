@@ -24,12 +24,11 @@ using namespace Audio;
 
 namespace World
 {
-
-    AudioWorld::AudioWorld(Engine::BaseEngine &engine, AudioEngine &audio_engine, const VDFS::FileIndex &vdfidx) :
-        m_Engine(engine),
-        m_VDFSIndex(vdfidx)
+    AudioWorld::AudioWorld(Engine::BaseEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
+        : m_Engine(engine)
+        , m_VDFSIndex(vdfidx)
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
         if (!audio_engine.getDevice())
             return;
 
@@ -47,40 +46,39 @@ namespace World
         // check for errors
         alListener3f(AL_VELOCITY, 0, 0, 0);
         // check for errors
-        ALfloat listenerOri[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f };
+        ALfloat listenerOri[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f};
         alListenerfv(AL_ORIENTATION, listenerOri);
 
         // Need this for AL_MAX_DISTANCE to work
         alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 
-
         createSounds();
-    #endif
+#endif
     }
 
     AudioWorld::~AudioWorld()
     {
-    #ifdef RE_USE_SOUND
-        for (int i=0; i<Config::MAX_NUM_LEVEL_AUDIO_FILES; i++)
+#ifdef RE_USE_SOUND
+        for (int i = 0; i < Config::MAX_NUM_LEVEL_AUDIO_FILES; i++)
         {
-            Sound &snd = m_Allocator.getElements()[i];
+            Sound& snd = m_Allocator.getElements()[i];
             if (snd.m_Handle != 0)
                 alDeleteBuffers(1, &snd.m_Handle);
         }
 
-        for (Source &src : m_Sources)
+        for (Source& src : m_Sources)
             alDeleteSources(1, &src.m_Handle);
 
         if (m_Context)
             alcDestroyContext(m_Context);
 
         delete m_VM;
-    #endif
+#endif
     }
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
         if (!m_Context)
             return Handle::SfxHandle::makeInvalidHandle();
 
@@ -88,7 +86,7 @@ namespace World
         std::transform(ucname.begin(), ucname.end(), ucname.begin(), ::toupper);
 
         // m_SoundMap contains all the sounds with C_SFX script definitions
-        Sound *snd = nullptr;
+        Sound* snd = nullptr;
         Handle::SfxHandle h = m_SoundMap[ucname];
         if (!h.isValid())
         {
@@ -98,10 +96,11 @@ namespace World
             h = allocateSound(ucname, sfx);
             snd = &m_Allocator.getElement(h);
             m_SoundMap[ucname] = h;
-        } else
+        }
+        else
         {
             snd = &m_Allocator.getElement(h);
-            if (snd->m_Handle) // already loaded
+            if (snd->m_Handle)  // already loaded
                 return h;
         }
 
@@ -109,7 +108,7 @@ namespace World
         std::vector<uint8_t> data;
         idx.getFileData(snd->sfx.file, data);
 
-        if(data.empty())
+        if (data.empty())
             return Handle::SfxHandle::makeInvalidHandle();
 
         WavReader wav(&data[0], data.size());
@@ -150,9 +149,9 @@ namespace World
         m_SoundMap[name] = h;
 
         return h;
-    #else
+#else
         return Handle::SfxHandle::makeInvalidHandle();
-    #endif
+#endif
     }
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const std::string& name)
@@ -162,7 +161,7 @@ namespace World
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
 
         if (!m_Context)
             return Utils::Ticket<AudioWorld>();
@@ -184,7 +183,6 @@ namespace World
 
         // Relative for sources directly attached to the listener
         alSourcei(s.m_Handle, AL_SOURCE_RELATIVE, relative ? AL_TRUE : AL_FALSE);
-
 
         // TODO: proper looping would require slicing and queueing multiple buffers
         // and setting the source to loop when the non-looping buffer was played.
@@ -217,12 +215,12 @@ namespace World
             return Utils::Ticket<AudioWorld>();
         }
         return s.soundTicket;
-    #else
+#else
         return Utils::Ticket<AudioWorld>();
-    #endif
+#endif
     }
 
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
     AudioWorld::Source AudioWorld::getFreeSource()
     {
         if (!m_Context)
@@ -271,11 +269,11 @@ namespace World
 
         // Nothing to re-use available, make a new entry
         m_Sources.emplace_back();
-		m_Sources.back().m_Handle = source;
+        m_Sources.back().m_Handle = source;
         return m_Sources.back();
     }
 
-    Handle::SfxHandle AudioWorld::allocateSound(const std::string &name, const Daedalus::GEngineClasses::C_SFX &sfx)
+    Handle::SfxHandle AudioWorld::allocateSound(const std::string& name, const Daedalus::GEngineClasses::C_SFX& sfx)
     {
         /*LogInfo() << "alloc sound " << name << " file " << sfx.file << " vol: " << sfx.vol
                   << " loop: " << sfx.loop << " loop start: " << sfx.loopStartOffset << " loop end: " << sfx.loopEndOffset;
@@ -290,7 +288,7 @@ namespace World
         return h;
     }
 
-    void AudioWorld::createSound(const std::string &name, const Daedalus::GEngineClasses::C_SFX &sfx)
+    void AudioWorld::createSound(const std::string& name, const Daedalus::GEngineClasses::C_SFX& sfx)
     {
         allocateSound(name, sfx);
     }
@@ -300,7 +298,7 @@ namespace World
         std::string datPath = "/_work/data/Scripts/_compiled/SFX.DAT";
         std::string datFile = Utils::getCaseSensitivePath(datPath, m_Engine.getEngineArgs().gameBaseDirectory);
 
-        if(!Utils::fileExists(datFile))
+        if (!Utils::fileExists(datFile))
         {
             LogError() << "Failed to find SFX.DAT at: " << datFile;
             return;
@@ -310,7 +308,7 @@ namespace World
         Daedalus::registerGothicEngineClasses(*m_VM);
 
         size_t count = 0;
-        m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s){
+        m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s) {
 
             Daedalus::GameState::SfxHandle h = m_VM->getGameState().createSfx();
             Daedalus::GEngineClasses::C_SFX& sfx = m_VM->getGameState().getSfx(h);
@@ -324,11 +322,11 @@ namespace World
         LogInfo() << "created " << count << " sounds";
     }
 
-    #endif
+#endif
 
     void AudioWorld::stopSounds()
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
         if (!m_Context)
             return;
 
@@ -336,12 +334,12 @@ namespace World
 
         for (Source& s : m_Sources)
             alSourceStop(s.m_Handle);
-    #endif
+#endif
     }
 
     void AudioWorld::stopSound(Utils::Ticket<AudioWorld> ticket)
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
         if (!m_Context)
             return;
 
@@ -355,12 +353,12 @@ namespace World
                 return;
             }
         }
-    #endif
+#endif
     }
 
     bool AudioWorld::soundIsPlaying(Utils::Ticket<AudioWorld> ticket)
     {
-    #ifdef RE_USE_SOUND
+#ifdef RE_USE_SOUND
         if (!m_Context)
             return false;
 
@@ -376,12 +374,13 @@ namespace World
             }
         }
         return false;
-    #else
+#else
         return false;
-    #endif
+#endif
     }
 
-    void AudioWorld::pauseSounds() {
+    void AudioWorld::pauseSounds()
+    {
 #ifdef RE_USE_SOUND
         if (!m_Context)
             return;
@@ -400,7 +399,8 @@ namespace World
 #endif
     }
 
-    void AudioWorld::continueSounds() {
+    void AudioWorld::continueSounds()
+    {
 #ifdef RE_USE_SOUND
         if (!m_Context)
             return;
@@ -422,22 +422,23 @@ namespace World
     void AudioWorld::loadVariants(Handle::SfxHandle sfx)
     {
         Sound& snd = m_Allocator.getElement(sfx);
-        snd.variants.push_back(sfx); // Add self to variants
+        snd.variants.push_back(sfx);  // Add self to variants
 
         Handle::SfxHandle v;
         int i = 1;
 
         // Variants start at "_A1". Load sounds until one fails.
-        do{
+        do
+        {
             v = loadAudioVDF(snd.name + "_A" + std::to_string(i));
 
-            if(v.isValid())
+            if (v.isValid())
             {
                 snd.variants.push_back(v);
             }
 
             i++;
-        }while(v.isValid());
+        } while (v.isValid());
     }
 
     void AudioWorld::setListenerPosition(const Math::float3& position)
@@ -452,13 +453,13 @@ namespace World
 
     void AudioWorld::setListenerOrientation(const Math::float3& at, const Math::float3& up)
     {
-        float v[6] = { at.x, at.y, at.z, up.x, up.y, up.z };
+        float v[6] = {at.x, at.y, at.z, up.x, up.y, up.z};
         alListenerfv(AL_ORIENTATION, v);
     }
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h)
     {
-        return playSound(h, Math::float3(0,0,0), true);
+        return playSound(h, Math::float3(0, 0, 0), true);
     }
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(const std::string& name)
@@ -467,12 +468,12 @@ namespace World
         Handle::SfxHandle h = loadAudioVDF(name);
 
         // Check if loading was successfull, if so, play it
-        if(!h.isValid())
+        if (!h.isValid())
         {
             return Utils::Ticket<AudioWorld>();
         }
 
-        return playSound(h, Math::float3(0,0,0), true);
+        return playSound(h, Math::float3(0, 0, 0), true);
     }
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist)
@@ -486,7 +487,7 @@ namespace World
         Handle::SfxHandle h = loadAudioVDF(name);
 
         // Check if loading was successfull, if so, play it
-        if(!h.isValid())
+        if (!h.isValid())
         {
             return Utils::Ticket<AudioWorld>();
         }
@@ -500,7 +501,7 @@ namespace World
         Handle::SfxHandle h = loadAudioVDF(name);
 
         // Check if loading was successfull, if so, play it
-        if(!h.isValid())
+        if (!h.isValid())
         {
             return Utils::Ticket<AudioWorld>();
         }
@@ -521,7 +522,7 @@ namespace World
         Handle::SfxHandle h = loadAudioVDF(name);
 
         // Check if loading was successfull, if so, play it
-        if(!h.isValid())
+        if (!h.isValid())
         {
             return Utils::Ticket<AudioWorld>();
         }
@@ -552,6 +553,4 @@ namespace World
             }
         }
     }
-
-
 }

@@ -7,7 +7,8 @@
 
 using namespace UI;
 
-Menu_Load::Menu_Load(Engine::BaseEngine& e) : Menu(e)
+Menu_Load::Menu_Load(Engine::BaseEngine& e)
+    : Menu(e)
 {
 }
 
@@ -33,21 +34,22 @@ void Menu_Load::gatherAvailableSavegames()
     auto names = SavegameManager::gatherAvailableSavegames();
 
     // gothic 1: Slot 1-15. gothic 2: Slot 1-20 + Slot0 (quicksave)
-    for(unsigned i=0;i<names.size();i++)
+    for (unsigned i = 0; i < names.size(); i++)
     {
         std::string sym = "MENUITEM_LOAD_SLOT" + std::to_string(i);
         bool slotSymbolFound = m_pVM->getDATFile().hasSymbolName(sym);
         if (!slotSymbolFound && i == 0)
-            continue; // Gothic 1 does not have a quicksave slot in the load-menu
+            continue;  // Gothic 1 does not have a quicksave slot in the load-menu
 
         assert(slotSymbolFound);
         std::string displayName;
-        if(names[i] != nullptr)
+        if (names[i] != nullptr)
         {
             // Toggle selectable depending on whether we actually have a slot here
             getItemScriptData(sym).flags |= C_Menu_Item::IT_SELECTABLE;
             displayName = *names[i];
-        }else 
+        }
+        else
         {
             getItemScriptData(sym).flags &= ~C_Menu_Item::IT_SELECTABLE;
             displayName = Menu_Load::EMPTY_SLOT_DISPLAYNAME;
@@ -60,7 +62,7 @@ void Menu_Load::gatherAvailableSavegames()
 
 void Menu_Load::onCustomAction(const std::string& action)
 {
-    if(action == "SAVEGAME_LOAD")
+    if (action == "SAVEGAME_LOAD")
     {
         using namespace Engine;
 
@@ -74,7 +76,8 @@ void Menu_Load::onCustomAction(const std::string& action)
         // Close menu_load & menu_main before queueing loading
         getHud().popAllMenus();
         std::string error = SavegameManager::loadSaveGameSlot(idx);
-        if (!error.empty()){
+        if (!error.empty())
+        {
             LogWarn() << error;
         }
     }

@@ -62,7 +62,6 @@ namespace VobTypes
     Handle::EntityHandle initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance);
     Handle::EntityHandle initItemFromScript(World::WorldInstance& world, size_t scriptInstance);
 
-
     /**
      * Creates a sound-object
      * @param world World to create object in
@@ -122,14 +121,14 @@ namespace VobTypes
      * @param headTextureIdx Index of the texture to use for the head
      * @param teethTextureIdx Index of the texture to use for the teeth
      */
-    void NPC_SetHeadMesh(NpcVobInformation& vob, const std::string& visual, int headTextureIdx=0, int teethTextureIdx=0);
+    void NPC_SetHeadMesh(NpcVobInformation& vob, const std::string& visual, int headTextureIdx = 0, int teethTextureIdx = 0);
 
     /**
      * Sets the visual on the given NPCs model, without changing the body-state, like the headmesh
      * @param vob NPC to operate on
      * @param visual Visual to load and set
      */
-    void NPC_SetBodyMesh(NpcVobInformation &vob, const std::string &visual, int bodyTexIdx=-1, int skinColorIdx=-1);
+    void NPC_SetBodyMesh(NpcVobInformation& vob, const std::string& visual, int bodyTexIdx = -1, int skinColorIdx = -1);
 
     /**
      * Equips the given weapon to the NPC
@@ -174,12 +173,12 @@ namespace VobTypes
      */
     Daedalus::GEngineClasses::C_Npc& getScriptObject(NpcVobInformation& vob);
 
-	/**
+    /**
 	 * Returns the script handle for the given npc 
 	 * @param vob Npc to get the info from
 	 * @return Script-side handle of this npc
 	 */
-	Daedalus::GameState::NpcHandle getScriptHandle(VobTypes::NpcVobInformation& vob);
+    Daedalus::GameState::NpcHandle getScriptHandle(VobTypes::NpcVobInformation& vob);
 
     /**
      * @return The engine entity handle of the given script instance of an npc

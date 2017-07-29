@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 #include <vector>
 #include <string>
 #include <memory>
@@ -54,14 +54,15 @@ namespace Engine
 
         struct SavegameInfo
         {
-            SavegameInfo() :
-                version(0)
-            {}
+            SavegameInfo()
+                : version(0)
+            {
+            }
             unsigned int version;
-            std::string name; // Name to be displayed in the menus
-            std::string world; // World the player is currently in. (Name only, no ".zen" or other extensions)
-            std::size_t timePlayed; // Time played in seconds
-            static constexpr unsigned int LATEST_KNOWN_VERSION = 1; // latest version. check where needed. increment when needed.
+            std::string name;                                        // Name to be displayed in the menus
+            std::string world;                                       // World the player is currently in. (Name only, no ".zen" or other extensions)
+            std::size_t timePlayed;                                  // Time played in seconds
+            static constexpr unsigned int LATEST_KNOWN_VERSION = 1;  // latest version. check where needed. increment when needed.
         };
 
         /**
@@ -150,8 +151,8 @@ namespace Engine
          */
         std::string buildWorldPath(int idx, const std::string& worldName);
 
-        constexpr int G1_MAX_SLOTS = 15 + 1; // 15 usual slots + quicksave
-        constexpr int G2_MAX_SLOTS = 20 + 1; // 20 usual slots + quicksave
+        constexpr int G1_MAX_SLOTS = 15 + 1;  // 15 usual slots + quicksave
+        constexpr int G2_MAX_SLOTS = 20 + 1;  // 20 usual slots + quicksave
 
         std::string gameSpecificSubFolderName();
 

@@ -74,8 +74,8 @@ namespace Logic
          * @return This controllers animation handler
          */
         NpcAnimationHandler& getNpcAnimationHandler() const;
-    private:
 
+    private:
         /**
          * Resets the players input. Used after input was processed...
          */
@@ -105,7 +105,7 @@ namespace Logic
             Engine::Action* actionStrafeRight = nullptr;
             Engine::Action* actionLastWeapon = nullptr;
             Engine::Action* actionAction = nullptr;
-        }m_MovementState;
+        } m_MovementState;
 
         /**
          * World this resides in
@@ -123,5 +123,3 @@ namespace Logic
         EMovementState m_ActiveMovementState;
     };
 }
-
-

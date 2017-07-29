@@ -15,10 +15,11 @@ namespace Engine
     class SafeFuture
     {
     public:
-        SafeFuture(BaseEngine* pBaseEngine, std::shared_future<T> f) :
-                m_pBaseEngine(pBaseEngine),
-                m_SharedFuture(f)
-        {}
+        SafeFuture(BaseEngine* pBaseEngine, std::shared_future<T> f)
+            : m_pBaseEngine(pBaseEngine)
+            , m_SharedFuture(f)
+        {
+        }
 
         /**
          * Safely waits for the future to be started and finished
@@ -44,7 +45,8 @@ namespace Engine
                 // wait until the main thread has started the execution
                 // timespan doesn't matter, since it is ignored if the status is deferred
                 while (m_SharedFuture.wait_for(std::chrono::seconds(0)) == std::future_status::deferred)
-                {}
+                {
+                }
             }
             m_SharedFuture.wait();
         }
@@ -75,7 +77,7 @@ namespace Engine
          */
         template <class Callable>
         static SafeFuture<ReturnType<Callable>>
-        executeInThread(Callable job, BaseEngine *engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
+        executeInThread(Callable job, BaseEngine* engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
         {
             std::launch policy;
             switch (executionPolicy)
@@ -88,13 +90,13 @@ namespace Engine
                     break;
             }
             std::shared_future<AsyncAction::ReturnType<Callable>> future = std::async(policy, std::forward<Callable>(job), engine);
-            std::function<bool(BaseEngine* engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool{
+            std::function<bool(BaseEngine * engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool {
                 bool finished = false;
                 switch (policy)
                 {
                     case std::launch::deferred:
                         assert(engine->isMainThread());
-                        future.wait(); // blocks until execution finished
+                        future.wait();  // blocks until execution finished
                         finished = true;
                     case std::launch::async:
                         finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;

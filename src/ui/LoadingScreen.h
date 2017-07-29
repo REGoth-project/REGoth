@@ -58,8 +58,8 @@ namespace UI
          * This Method is thread-save.
          */
         void reset(const std::string& imageName = "LOADING.TGA");
-    protected:
 
+    protected:
         /**
          * Thread-save access to the sections.
          */
@@ -90,4 +90,3 @@ namespace UI
         std::mutex m_SectionLock;
     };
 }
-

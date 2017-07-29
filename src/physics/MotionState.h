@@ -9,7 +9,7 @@ namespace Physics
     class MotionState : public btDefaultMotionState
     {
     public:
-        MotionState(const Math::Matrix& transform = Math::Matrix::CreateIdentity());
+        MotionState(const Math::Matrix &transform = Math::Matrix::CreateIdentity());
 
         Math::float3 getPosition();
         Math::float4 getRotationQuat();
@@ -18,6 +18,7 @@ namespace Physics
         virtual void getWorldTransform(btTransform &centerOfMassWorldTrans) const;
         virtual void setWorldTransform(const btTransform &centerOfMassWorldTrans);
         void setWorldTransform(const Math::Matrix &centerOfMassWorldTrans);
+
     private:
     };
 }

@@ -11,7 +11,8 @@
 #include <engine/BaseEngine.h>
 #include "zFont.h"
 
-UI::SubtitleBox::SubtitleBox(Engine::BaseEngine& e) : View(e)
+UI::SubtitleBox::SubtitleBox(Engine::BaseEngine& e)
+    : View(e)
 {
     m_Scaling = 1;
     m_growDirection = 0;
@@ -23,7 +24,6 @@ UI::SubtitleBox::SubtitleBox(Engine::BaseEngine& e) : View(e)
 
 UI::SubtitleBox::~SubtitleBox()
 {
-
 }
 
 void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -33,11 +33,10 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
 
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(DEFAULT_FONT);
 
-    if(!fnt)
+    if (!fnt)
         return;
 
     View::update(dt, mstate, config);
-
 
     // Draw our choices
     /*const int height = config.state.viewHeight / 10;
@@ -62,11 +61,11 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
     int wrapAroundWidth = Math::iround(0.95f * sxMax);
     std::vector<std::string> lines = fnt->layoutText(m_Text.text, wrapAroundWidth);
     auto fontHeight = fnt->getFontHeight();
-    int linesOfText = static_cast<int>(lines.size()) + 1; // +1 for speaker
+    int linesOfText = static_cast<int>(lines.size()) + 1;  // +1 for speaker
     // render the Box as if there were at least 4 lines of text
     // so that the size won't change as often, but is still adjusted for very long texts (mods?)
     linesOfText = std::max(linesOfText, 4);
-    float syMax = fontHeight * (linesOfText + 2); // +2 for some extra space
+    float syMax = fontHeight * (linesOfText + 2);  // +2 for some extra space
 
     Math::float2 maxSize = {sxMax, syMax};
     Math::float2 posMax = {pxMax, pyMax};
@@ -91,8 +90,8 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
         int centerx = Math::iround(center.x);
         int centery = Math::iround(center.y);
         // split so that each line is not longer than wrapAroundWidth pixel
-        const char * speakerFont = DEFAULT_FONT_HI;
-        const char * dialogTextFont = DEFAULT_FONT;
+        const char* speakerFont = DEFAULT_FONT_HI;
+        const char* dialogTextFont = DEFAULT_FONT;
         // TODO read alignment from config
         SubtitleBox::TextAlignment alignment = SubtitleBox::TextAlignment::center;
         switch (alignment)
@@ -112,7 +111,8 @@ void UI::SubtitleBox::update(double dt, Engine::Input::MouseState& mstate, Rende
                 std::stringstream ss;
                 for (const auto& line : lines)
                 {
-                    ss << '\n' << line;
+                    ss << '\n'
+                       << line;
                 }
                 drawText(m_Text.speaker + std::string(lines.size(), '\n'), centerx, centery, A_Center, config, speakerFont);
                 drawText(ss.str(), centerx, centery, A_Center, config, dialogTextFont);

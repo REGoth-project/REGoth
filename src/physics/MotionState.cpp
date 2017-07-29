@@ -1,7 +1,7 @@
 #include "MotionState.h"
 
 // Workaround for initializer-list
-static btTransform getFromFloat(const Math::Matrix& transform)
+static btTransform getFromFloat(const Math::Matrix &transform)
 {
     btTransform t;
     t.setFromOpenGLMatrix(transform.mv);
@@ -9,8 +9,8 @@ static btTransform getFromFloat(const Math::Matrix& transform)
     return t;
 }
 
-Physics::MotionState::MotionState(const Math::Matrix& transform) :
-        btDefaultMotionState(getFromFloat(transform))
+Physics::MotionState::MotionState(const Math::Matrix &transform)
+    : btDefaultMotionState(getFromFloat(transform))
 {
 }
 

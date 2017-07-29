@@ -30,11 +30,13 @@ namespace Content
     class Sky
     {
     public:
-
         /**
          * There is one sky and one clouds-layer
          */
-        enum { NUM_SKY_LAYERS = 2 };
+        enum
+        {
+            NUM_SKY_LAYERS = 2
+        };
         struct SkyLayerData
         {
             // This layers texture
@@ -53,21 +55,21 @@ namespace Content
         {
             // Time when this state becomes active
             // time in days since last 12:00
-            float			time;
+            float time;
 
             // Color values
-            Math::float3	baseColor;
-            Math::float3	fogColor;
-            Math::float3	domeColorUpper;
+            Math::float3 baseColor;
+            Math::float3 fogColor;
+            Math::float3 domeColorUpper;
 
             // Base-fog distance modifier
-            float			fogDistance;
+            float fogDistance;
 
             // Whether the sun should be active. If false, the moon is.
-            bool			sunEnabled;
+            bool sunEnabled;
 
             // Information about the cloud and sky layers
-            SkyLayerData	layers[NUM_SKY_LAYERS];
+            SkyLayerData layers[NUM_SKY_LAYERS];
         };
 
         Sky(World::WorldInstance& world);
@@ -96,12 +98,10 @@ namespace Content
          * @return Pointer to the LUT
          */
         const Math::float4* getLUTPtr() const { return m_LUT; }
-
         /**
          * @return current interpolated sky-state
          */
         const SkyState& getMasterState() const { return m_MasterState; }
-
         /**
          * Calculates the near- and farplanes for the fog
          * @param cameraWorld current cameras world position
@@ -113,16 +113,15 @@ namespace Content
         /**
          * Sets the farplane, needed to do the fog-calculation
          */
-        void setFarPlane(float farPlane){ m_FarPlane = farPlane; }
+        void setFarPlane(float farPlane) { m_FarPlane = farPlane; }
     private:
-
         /**
          * LUT-Calculation how the original engine does it
          * @param col0 Not sure, was set to (0,0,0) in the original
          * @param col1 Main sky color?
          * @param pLut Pointer to an array of 256 Math::float4 values
          */
-        void calculateLUT_ZenGin(const Math::float3 &col0, const Math::float3 &col1, Math::float4 *pLut);
+        void calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1, Math::float4* pLut);
 
         /**
          * Array containing the currently calculated lighting values

@@ -9,46 +9,41 @@
 
 namespace ZenLoad
 {
-
-class ModelScriptParser;
-
+    class ModelScriptParser;
 }
 
 namespace Animations
 {
+    class AnimationLibrary final
+    {
+    public:
+        AnimationLibrary(World::WorldInstance &world);
 
-class AnimationLibrary final
-{
-public:
+        Animation &getAnimation(Handle::AnimationHandle h);
 
-    AnimationLibrary(World::WorldInstance &world);
+        Handle::AnimationHandle getAnimation(const std::string &qname);
 
-    Animation& getAnimation(Handle::AnimationHandle h);
+        Handle::AnimationHandle getAnimation(const std::string &mesh_lib, const std::string &overlay, const std::string &name);
 
-    Handle::AnimationHandle getAnimation(const std::string &qname);
+        AnimationData &getAnimationData(Handle::AnimationDataHandle h);
 
-    Handle::AnimationHandle getAnimation(const std::string &mesh_lib, const std::string &overlay, const std::string &name);
+        Handle::AnimationHandle getAnimationData(const std::string &name);
 
-    AnimationData& getAnimationData(Handle::AnimationDataHandle h);
+        bool loadAnimations();
 
-    Handle::AnimationHandle getAnimationData(const std::string &name);
+        static std::string makeQualifiedName(const std::string &mesh_lib, const std::string &overlay, const std::string &name);
 
-    bool loadAnimations();
+    private:
+        World::WorldInstance &m_World;
 
-    static std::string makeQualifiedName(const std::string &mesh_lib, const std::string &overlay, const std::string &name);
+        bool loadMDS(const std::string &file_name);
 
-private:
+        bool loadModelScript(const std::string &file_name, ZenLoad::ModelScriptParser &mds);
 
-    World::WorldInstance &m_World;
+        Handle::AnimationDataHandle loadMAN(const std::string &name);
 
-    bool loadMDS(const std::string &file_name);
+        // resolves referenced handles (aliases, next anis)
+        void resolve();
+    };
 
-    bool loadModelScript(const std::string &file_name, ZenLoad::ModelScriptParser &mds);
-
-    Handle::AnimationDataHandle loadMAN(const std::string &name);
-
-    // resolves referenced handles (aliases, next anis)
-    void resolve();
-};
-
-} // namespace Animations
+}  // namespace Animations

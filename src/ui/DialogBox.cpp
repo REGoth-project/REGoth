@@ -11,7 +11,8 @@
 
 using namespace UI;
 
-DialogBox::DialogBox(Engine::BaseEngine& e) : View(e)
+DialogBox::DialogBox(Engine::BaseEngine& e)
+    : View(e)
 {
     m_ScrollArea = 0;
     m_CurrentlySelected = 0;
@@ -23,12 +24,11 @@ DialogBox::DialogBox(Engine::BaseEngine& e) : View(e)
 
 DialogBox::~DialogBox()
 {
-
 }
 
 void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     View::update(dt, mstate, config);
@@ -54,16 +54,15 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
 
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(DEFAULT_FONT);
 
-    if(!fnt)
+    if (!fnt)
         return;
 
     // Un-normalize transforms
     Math::float2 absTranslation = getAbsoluteTranslation();
     Math::float2 absSize = getAbsoluteSize();
 
-    int sx = Math::iround(absSize.x * config.state.viewWidth); // Span whole viewport
-    int sy = fnt->getFontHeight() * std::max(8, (int)m_Choices.size() + 1); // Scale with number of choices +1 for some extra space
-
+    int sx = Math::iround(absSize.x * config.state.viewWidth);               // Span whole viewport
+    int sy = fnt->getFontHeight() * std::max(8, (int)m_Choices.size() + 1);  // Scale with number of choices +1 for some extra space
 
     int px = Math::iround(absTranslation.x * config.state.viewWidth);
     int py = config.state.viewHeight - sy;
@@ -77,7 +76,6 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
         drawTexture(BGFX_VIEW, px, py, sx, sy,
                     config.state.viewWidth, config.state.viewHeight, background.m_TextureHandle, program,
                     config.uniforms.diffuseTexture);
-
     }
 
     // Draw text
@@ -85,20 +83,20 @@ void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::Ren
         float margin = 0.01f;
         int pMarginx = Math::iround(absSize.x * margin * config.state.viewWidth);
         int pMarginy = Math::iround(absSize.x * margin * config.state.viewHeight);
-        for(unsigned i=0;i<m_Choices.size();i++)
+        for (unsigned i = 0; i < m_Choices.size(); i++)
         {
             drawText(m_Choices[i].text,
                      px + pMarginx, py + fnt->getFontHeight() * i + pMarginy,
                      A_TopLeft,
                      config,
-                     static_cast<unsigned>(m_CurrentlySelected) == i ? DEFAULT_FONT_HI : DEFAULT_FONT); // Highlight, if selected
+                     static_cast<unsigned>(m_CurrentlySelected) == i ? DEFAULT_FONT_HI : DEFAULT_FONT);  // Highlight, if selected
         }
     }
 }
 
 size_t DialogBox::addChoice(Logic::DialogManager::ChoiceEntry& entry)
 {
-    if(m_CurrentlySelected == -1)
+    if (m_CurrentlySelected == -1)
         m_CurrentlySelected = 0;
 
     m_Choices.push_back(entry);
@@ -113,15 +111,21 @@ void DialogBox::clearChoices()
 
 void DialogBox::onInputAction(EInputAction action)
 {
-    if(m_Choices.empty())
+    if (m_Choices.empty())
         return;
 
-    switch(action)
+    switch (action)
     {
-        case IA_Up: m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size()); break;
-        case IA_Down: m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size()); break;
-        case IA_Left:break;
-        case IA_Right:break;
+        case IA_Up:
+            m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size());
+            break;
+        case IA_Down:
+            m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size());
+            break;
+        case IA_Left:
+            break;
+        case IA_Right:
+            break;
         case IA_0:
             break;
         case IA_1:
@@ -137,7 +141,7 @@ void DialogBox::onInputAction(EInputAction action)
             int index = action - IA_1;
             m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
         }
-            break;
+        break;
         case IA_HOME:
             m_CurrentlySelected = 0;
             break;
@@ -158,4 +162,3 @@ void DialogBox::onInputAction(EInputAction action)
             break;
     }
 }
-

@@ -45,32 +45,30 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
     // Check if this isn't the compiled version
     if (vname.find("-C") == std::string::npos)
     {
-        if(vname.find("ASC") != std::string::npos)
+        if (vname.find("ASC") != std::string::npos)
         {
             // Strip the ".ASC"
             vname = vname.substr(0, vname.size() - 4);
 
             // Add "compiled"-extension
             vname += ".MDL";
-        } else if(vname.find("MDS") != std::string::npos)
+        }
+        else if (vname.find("MDS") != std::string::npos)
         {
             // Strip the ".MDS"
             vname = vname.substr(0, vname.size() - 4);
 
             // Add "compiled"-extension
             vname += ".MDL";
-        } else if(vname.find(".MDM") != std::string::npos)
+        }
+        else if (vname.find(".MDM") != std::string::npos)
         {
-
         }
     }
 
-
     ZenLoad::PackedSkeletalMesh packed;
 
-    if(vname.find(".MDM") != std::string::npos
-       || vname.find(".MDL") != std::string::npos
-       || vname.find(".MDS") != std::string::npos)
+    if (vname.find(".MDM") != std::string::npos || vname.find(".MDL") != std::string::npos || vname.find(".MDS") != std::string::npos)
     {
         ZenLoad::zCModelMeshLib zlib(vname, m_Engine.getVDFSIndex(), 1.0f / 100.0f);
 
@@ -81,7 +79,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
         ZenLoad::PackedSkeletalMesh sp;
         zlib.packMesh(sp, 1.0f / 100.0f);
 
-        for(auto& m : zlib.getMeshes())
+        for (auto& m : zlib.getMeshes())
         {
             m.packMesh(packed, 1.0f / 100.0f);
         }
@@ -95,7 +93,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx
     return Handle::MeshHandle::makeInvalidHandle();
 }
 
-Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const std::string & name)
+Handle::MeshHandle SkeletalMeshAllocator::loadMeshVDF(const std::string& name)
 {
     return loadMeshVDF(m_Engine.getVDFSIndex(), name);
 }
@@ -122,7 +120,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
 
         mesh.m_Vertices[i].Color = 0xFFFFFFFF;
 
-        for(size_t j=0;j<4;j++)
+        for (size_t j = 0; j < 4; j++)
             mesh.m_Vertices[i].localPositions[j] = Math::float3(packed.vertices[i].LocalPositions[j].x,
                                                                 packed.vertices[i].LocalPositions[j].y,
                                                                 packed.vertices[i].LocalPositions[j].z);
@@ -133,8 +131,8 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     {
         auto& m = packed.subMeshes[i];
 
-        mesh.m_SubmeshStarts.push_back({ static_cast<WorldSkeletalMeshIndex>(mesh.m_Indices.size()),
-                                         static_cast<WorldSkeletalMeshIndex>(m.indices.size()) });
+        mesh.m_SubmeshStarts.push_back({static_cast<WorldSkeletalMeshIndex>(mesh.m_Indices.size()),
+                                        static_cast<WorldSkeletalMeshIndex>(m.indices.size())});
 
         mesh.m_Indices.insert(mesh.m_Indices.end(), m.indices.begin(), m.indices.end());
 
@@ -142,23 +140,21 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
         mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
         mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet != 0;
         mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
-
     }
 
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine *pEngine) {
-        bgfx::frame(); // quick fix: executes all pending resource creations to prevent overflow
+    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+        bgfx::frame();  // quick fix: executes all pending resource creations to prevent overflow
 
         finalizeLoad(h);
     });
 
-    if(!nameUpper.empty())
+    if (!nameUpper.empty())
         m_MeshesByName[nameUpper] = h;
 
     return h;
 }
-
 
 bool SkeletalMeshAllocator::finalizeLoad(Handle::MeshHandle h)
 {
@@ -166,21 +162,18 @@ bool SkeletalMeshAllocator::finalizeLoad(Handle::MeshHandle h)
 
     // Construct BGFX Vertex/Index-buffers
     mesh.m_VertexBufferHandle = bgfx::createVertexBuffer(
-            // Static data can be passed with bgfx::makeRef
-            bgfx::makeRef(mesh.m_Vertices.data(), mesh.m_Vertices.size() * sizeof(WorldSkeletalMeshVertex)),
-            WorldSkeletalMeshVertex::ms_decl
-    );
+        // Static data can be passed with bgfx::makeRef
+        bgfx::makeRef(mesh.m_Vertices.data(), mesh.m_Vertices.size() * sizeof(WorldSkeletalMeshVertex)),
+        WorldSkeletalMeshVertex::ms_decl);
 
     mesh.m_IndexBufferHandle = bgfx::createIndexBuffer(
-            // Static data can be passed with bgfx::makeRef
-            bgfx::makeRef(mesh.m_Indices.data(), mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex)),
-            sizeof(WorldSkeletalMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0
-    );
+        // Static data can be passed with bgfx::makeRef
+        bgfx::makeRef(mesh.m_Indices.data(), mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex)),
+        sizeof(WorldSkeletalMeshIndex) == 4 ? BGFX_BUFFER_INDEX32 : 0);
 
-    size_t contentBytes =   mesh.m_Vertices.size() * sizeof(WorldSkeletalMeshVertex)
-                          + mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex);
+    size_t contentBytes = mesh.m_Vertices.size() * sizeof(WorldSkeletalMeshVertex) + mesh.m_Indices.size() * sizeof(WorldSkeletalMeshIndex);
 
-    if(m_LargestContentBytes < contentBytes)
+    if (m_LargestContentBytes < contentBytes)
     {
         m_LargestContentBytes = contentBytes;
         m_LargestContentName = m_Allocator.getElement(h).name;
