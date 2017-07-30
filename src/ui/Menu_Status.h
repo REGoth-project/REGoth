@@ -7,7 +7,6 @@
 #include <memory>
 #include "Menu.h"
 
-
 namespace UI
 {
     class Menu_Status : public Menu
@@ -15,7 +14,6 @@ namespace UI
         Menu_Status(Engine::BaseEngine& e);
 
     public:
-
         enum EAttribute
         {
             // Note: Numbers correspond to item-names, like: MENU_ITEM_ATTRIBUTE_1 for STR
@@ -31,7 +29,7 @@ namespace UI
          * @param value Current value
          * @param max Max value (Ignored for STR and DEX)
          */
-        void setAttribute(EAttribute type, int value, int max=0);
+        void setAttribute(EAttribute type, int value, int max = 0);
 
         /**
          * Setters
@@ -53,8 +51,8 @@ namespace UI
          * @return Instance of the class. Don't forget to delete!
          */
         static Menu_Status* create(Engine::BaseEngine& e);
-    public:
 
+    public:
     protected:
     };
 }

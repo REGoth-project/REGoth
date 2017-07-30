@@ -1,7 +1,7 @@
 #pragma once
 
-#include <handle/HandleDef.h>
 #include "View.h"
+#include <handle/HandleDef.h>
 
 namespace UI
 {
@@ -9,7 +9,7 @@ namespace UI
     class ConsoleBox : public View
     {
     public:
-        ConsoleBox(Engine::BaseEngine& e);
+        ConsoleBox(Engine::BaseEngine &e);
         ~ConsoleBox();
 
         /**
@@ -32,10 +32,8 @@ namespace UI
          */
         void setSelectionIndex(int newIndex);
 
-        int getSelectionIndex() const { return m_CurrentlySelected;}
-
+        int getSelectionIndex() const { return m_CurrentlySelected; }
     protected:
-
         /**
          * Console background image
          */

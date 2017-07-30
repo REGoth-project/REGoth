@@ -1,7 +1,7 @@
 #pragma once
-#include <handle/HandleDef.h>
-#include <daedalus/DaedalusGameState.h>
 #include <json.hpp>
+#include <daedalus/DaedalusGameState.h>
+#include <handle/HandleDef.h>
 
 using json = nlohmann::json;
 
@@ -31,8 +31,8 @@ namespace Logic
          * @param symName Instance to remove
          * @return True, if the item was successfully removed, false if not found
          */
-		bool removeItem(const std::string& symName, unsigned int count = 1);
-		bool removeItem(size_t symIndex, unsigned int count = 1);
+        bool removeItem(const std::string& symName, unsigned int count = 1);
+        bool removeItem(size_t symIndex, unsigned int count = 1);
         bool removeItem(Daedalus::GameState::ItemHandle item, unsigned int count = 1);
 
         /**
@@ -54,7 +54,7 @@ namespace Logic
          */
         Daedalus::GEngineClasses::C_Item& getItem(Daedalus::GameState::ItemHandle item);
 
-		/**
+        /**
 		 * @return Count of how many items of the given type are in this inventory
 		 */
         unsigned int getItemCount(size_t symIndex);
@@ -77,8 +77,8 @@ namespace Logic
          * @param j pairs of instance-name and count
          */
         void importInventory(const json& j);
-    protected:
 
+    protected:
         /**
          * NPC this inventory belongs to
          */

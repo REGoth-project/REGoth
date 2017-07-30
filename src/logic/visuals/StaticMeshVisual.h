@@ -1,7 +1,7 @@
 #pragma once
 #include "../VisualController.h"
-#include <handle/HandleDef.h>
 #include <content/StaticMeshAllocator.h>
+#include <handle/HandleDef.h>
 
 namespace Logic
 {
@@ -18,8 +18,7 @@ namespace Logic
         /**
          * @return Classtype of this visual
          */
-        virtual EVisualType getVisualType(){ return EVisualType::StaticMesh; }
-
+        virtual EVisualType getVisualType() { return EVisualType::StaticMesh; }
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
@@ -50,8 +49,7 @@ namespace Logic
         /**
          * @return Mesh this visual displays
          */
-        Handle::MeshHandle getMesh(){ return m_MeshHandle; }
-
+        Handle::MeshHandle getMesh() { return m_MeshHandle; }
         /**
          * Sets the textures animation from on the given submesh
          * @param submeshIndex Submesh to use
@@ -68,8 +66,8 @@ namespace Logic
          * Sets the shadow-value from the worldmesh for this visual-controller
          */
         virtual void setShadowValue(float shadow);
-    protected:
 
+    protected:
         /**
          * Mesh this is using
          */

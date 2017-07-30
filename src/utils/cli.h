@@ -73,8 +73,8 @@ namespace Cli
          * @param configText Dumped json-text
          */
         std::string documentConfigText(const std::string& configText);
-    private:
 
+    private:
         std::string m_Flag;
         std::string m_VerboseFlag;
         std::string m_Desc;

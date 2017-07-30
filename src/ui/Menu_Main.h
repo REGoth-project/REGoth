@@ -8,7 +8,6 @@
 #include <memory>
 #include "Menu.h"
 
-
 namespace UI
 {
     class Menu_Main : public Menu
@@ -16,7 +15,6 @@ namespace UI
         Menu_Main(Engine::BaseEngine& e);
 
     public:
-
         /**
          * To be called when one of the given actions were triggered
          * @param action Input action
@@ -35,6 +33,7 @@ namespace UI
         Daedalus::GameType determineGameType();
 
         virtual void onCustomAction(const std::string& action) override;
+
     protected:
     };
 }

@@ -1,21 +1,19 @@
 #include "Inventory.h"
-#include "ScriptEngine.h"
-#include <engine/BaseEngine.h>
-#include <components/VobClasses.h>
 #include "PlayerController.h"
+#include "ScriptEngine.h"
+#include <components/VobClasses.h>
+#include <engine/BaseEngine.h>
 
 using namespace Logic;
 
 Inventory::Inventory(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
-    : m_World(world),
-      m_NPC(npc)
+    : m_World(world)
+    , m_NPC(npc)
 {
-
 }
 
 Inventory::~Inventory()
 {
-
 }
 
 Daedalus::GameState::ItemHandle Inventory::addItem(size_t sym, unsigned int count)
@@ -57,11 +55,11 @@ bool Inventory::removeItem(Daedalus::GameState::ItemHandle item, unsigned int co
     // Get script-engine
     Logic::ScriptEngine& vm = m_World.getScriptEngine();
 
-    if(!item.isValid())
+    if (!item.isValid())
         return false;
 
     // Unequip if this is currently equipped
-    if(getItemCount(item) - count == 0)
+    if (getItemCount(item) - count == 0)
     {
         Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, m_NPC);
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, e);
@@ -80,11 +78,11 @@ Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
     Logic::ScriptEngine& vm = m_World.getScriptEngine();
     const std::list<Daedalus::GameState::ItemHandle>& items = getItems();
 
-    for(Daedalus::GameState::ItemHandle h : items)
+    for (Daedalus::GameState::ItemHandle h : items)
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(h);
 
-        if(data.instanceSymbol == symIndex)
+        if (data.instanceSymbol == symIndex)
             return h;
     }
 
@@ -107,16 +105,16 @@ Daedalus::GEngineClasses::C_Item& Inventory::getItem(Daedalus::GameState::ItemHa
 
 unsigned int Inventory::getItemCount(size_t symIndex)
 {
-	Daedalus::GameState::ItemHandle item = getItem(symIndex);
+    Daedalus::GameState::ItemHandle item = getItem(symIndex);
 
-	return getItemCount(item);
+    return getItemCount(item);
 }
 
 unsigned int Inventory::getItemCount(Daedalus::GameState::ItemHandle item)
 {
     Logic::ScriptEngine& vm = m_World.getScriptEngine();
 
-    if(item.isValid())
+    if (item.isValid())
         return vm.getGameState().getItem(item).amount;
 
     return 0;
@@ -127,7 +125,7 @@ void Inventory::exportInventory(json& j)
     // Get script-engine
     Logic::ScriptEngine& vm = m_World.getScriptEngine();
 
-    for(auto item : getItems())
+    for (auto item : getItems())
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
         std::string instanceName = vm.getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
@@ -156,7 +154,7 @@ void Inventory::clear()
     auto items = getItems();
 
     // Remove all items
-    for(auto item : items)
+    for (auto item : items)
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
 
@@ -165,6 +163,3 @@ void Inventory::clear()
 
     assert(getItems().empty());
 }
-
-
-

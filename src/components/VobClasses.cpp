@@ -3,16 +3,16 @@
 //
 
 #include "VobClasses.h"
-#include <engine/World.h>
-#include <logic/PlayerController.h>
-#include <logic/ItemController.h>
-#include <logic/MobController.h>
-#include <logic/SoundController.h>
-#include <logic/visuals/ModelVisual.h>
-#include <utils/logger.h>
 #include "EntityActions.h"
 #include <engine/BaseEngine.h>
+#include <engine/World.h>
+#include <logic/ItemController.h>
+#include <logic/MobController.h>
+#include <logic/PlayerController.h>
+#include <logic/SoundController.h>
 #include <logic/mobs/Container.h>
+#include <logic/visuals/ModelVisual.h>
+#include <utils/logger.h>
 
 Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -31,8 +31,7 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
     world.getScriptEngine().getGameState().getNpc(scriptInstance).userPtr = userData;
 
     Components::PositionComponent& pos = world.getEntity<Components::PositionComponent>(e);
-    pos.m_DrawDistanceFactor = 0.25f; // TODO: Config entry for this...
-
+    pos.m_DrawDistanceFactor = 0.25f;  // TODO: Config entry for this...
 
     // Setup the playercontroller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
@@ -44,9 +43,9 @@ Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Da
 
     // FIXME: Debug, remove this
     Components::BBoxComponent& bbox = world.getEntity<Components::BBoxComponent>(e);
-    bbox.m_DebugColor = 0;//0xFFFFFFFF;
-    bbox.m_BBox3D.min = Math::float3(-1,-1,-1);
-    bbox.m_BBox3D.max = Math::float3(1,1,1);
+    bbox.m_DebugColor = 0;  //0xFFFFFFFF;
+    bbox.m_BBox3D.min = Math::float3(-1, -1, -1);
+    bbox.m_BBox3D.max = Math::float3(1, 1, 1);
 
     return e;
 }
@@ -65,9 +64,9 @@ Handle::EntityHandle VobTypes::initItemFromScript(World::WorldInstance& world, s
     // Kill script-object
     world.getScriptEngine().getGameState().removeItem(h);
 
-	// Setup itemcontroller
-	Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
-	logic.m_pLogicController = new Logic::ItemController(world, e, scriptInstance);
+    // Setup itemcontroller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::ItemController(world, e, scriptInstance);
 
     Vob::VobInformation vob = Vob::asVob(world, e);
     Vob::setVisual(vob, visual);
@@ -103,7 +102,6 @@ Handle::EntityHandle VobTypes::createSound(World::WorldInstance& world)
     return e;
 }
 
-
 void ::VobTypes::unlinkNPCFromScriptInstance(World::WorldInstance& world, Handle::EntityHandle entity,
                                              Daedalus::GameState::NpcHandle scriptInstance)
 {
@@ -121,7 +119,7 @@ VobTypes::NpcVobInformation VobTypes::asNpcVob(World::WorldInstance& world, Hand
     *reinterpret_cast<Vob::VobInformation*>(&v) = Vob::asVob(world, e);
 
     // Check the controller
-    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::PlayerController)
+    if (v.logic && v.logic->getControllerType() != Logic::EControllerType::PlayerController)
     {
         // Invalidate instance and return
         v = {};
@@ -140,7 +138,7 @@ VobTypes::ItemVobInformation VobTypes::asItemVob(World::WorldInstance& world, Ha
     ItemVobInformation item;
 
     // Check the controller
-    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::ItemController)
+    if (v.logic && v.logic->getControllerType() != Logic::EControllerType::ItemController)
     {
         // Invalidate instance and return
         item = {};
@@ -162,7 +160,7 @@ VobTypes::MobVobInformation VobTypes::asMobVob(World::WorldInstance& world, Hand
     MobVobInformation mob;
 
     // Check the controller
-    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::MobController)
+    if (v.logic && v.logic->getControllerType() != Logic::EControllerType::MobController)
     {
         // Invalidate instance and return
         mob = {};
@@ -184,7 +182,7 @@ VobTypes::SoundVobInformation VobTypes::asSoundVob(World::WorldInstance& world, 
     SoundVobInformation snd;
 
     // Check the controller
-    if(v.logic && v.logic->getControllerType() != Logic::EControllerType::SoundController)
+    if (v.logic && v.logic->getControllerType() != Logic::EControllerType::SoundController)
     {
         // Invalidate instance and return
         snd = {};
@@ -202,12 +200,12 @@ VobTypes::SoundVobInformation VobTypes::asSoundVob(World::WorldInstance& world, 
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)
 {
-    if(!npc.isValid())
+    if (!npc.isValid())
         return Handle::EntityHandle::makeInvalidHandle();
 
     void* userptr = world.getScriptEngine().getGameState().getNpc(npc).userPtr;
 
-    if(!userptr)
+    if (!userptr)
         return Handle::EntityHandle::makeInvalidHandle();
 
     assert(world.getMyHandle() == reinterpret_cast<ScriptInstanceUserData*>(userptr)->world);
@@ -232,18 +230,18 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     vob.playerController->getNpcAnimationHandler().initAnimations();
 
     // TODO: Move to other place (MDS)
-	// Load all default animations
-	for(int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
-	{
-		const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
-
-		anim.getAnimHandler().addAnimation(name);
-	}
-
-    for(int i=0;i<20;i++)
+    // Load all default animations
+    for (int i = 0; i < Logic::ModelVisual::NUM_ANIMATIONS; i++)
     {
-        std::string ns = std::to_string(i+1);
-        if(ns.size() == 1)
+        const char* name = Logic::ModelVisual::getAnimationName(static_cast<Logic::ModelVisual::EModelAnimType>(i));
+
+        anim.getAnimHandler().addAnimation(name);
+    }
+
+    for (int i = 0; i < 20; i++)
+    {
+        std::string ns = std::to_string(i + 1);
+        if (ns.size() == 1)
             ns = "0" + ns;
 
         anim.getAnimHandler().addAnimation("T_DIALOGGESTURE_" + ns);
@@ -272,50 +270,50 @@ void ::VobTypes::NPC_SetModelVisual(VobTypes::NpcVobInformation& vob, const std:
     //anim.getAnimHandler().playAnimation("S_RUNL");
 }
 
-void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int headTextureIdx,
+void ::VobTypes::NPC_SetHeadMesh(VobTypes::NpcVobInformation& vob, const std::string& visual, int headTextureIdx,
                                  int teethTextureIdx)
 {
     Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
 
     // TODO: Use head/teeth texture indices
-    model->setHeadMesh(visual,headTextureIdx,teethTextureIdx);
+    model->setHeadMesh(visual, headTextureIdx, teethTextureIdx);
 }
 
-void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation &vob, const std::string &visual, int bodyTexIdx, int skinColorIdx)
+void ::VobTypes::NPC_SetBodyMesh(VobTypes::NpcVobInformation& vob, const std::string& visual, int bodyTexIdx, int skinColorIdx)
 {
     Logic::ModelVisual* model = reinterpret_cast<Logic::ModelVisual*>(vob.visual);
     Logic::ModelVisual::BodyState state = model->getBodyState();
 
     state.bodyVisual = visual;
 
-    if(state.bodyVisual.find_first_of('.') == std::string::npos)
+    if (state.bodyVisual.find_first_of('.') == std::string::npos)
         state.bodyVisual += ".MDM";
 
-    if(bodyTexIdx != -1)
+    if (bodyTexIdx != -1)
         state.bodyTextureIdx = static_cast<int>(bodyTexIdx);
     //else
     //    state.bodyTextureIdx = 0; // Need to reset these to 0, otherwise the skin-texture would stay in some cases
 
-    if(skinColorIdx != -1) // Leave skin color as it is when only equipping an armor
+    if (skinColorIdx != -1)  // Leave skin color as it is when only equipping an armor
         state.bodySkinColorIdx = static_cast<int>(skinColorIdx);
 
     model->setBodyState(state);
 
-    if(vob.logic)
+    if (vob.logic)
         vob.logic->onVisualChanged();
 }
 
-void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation &vob, Daedalus::GameState::ItemHandle weapon)
+void ::VobTypes::NPC_EquipWeapon(VobTypes::NpcVobInformation& vob, Daedalus::GameState::ItemHandle weapon)
 {
     vob.playerController->equipItem(weapon);
 }
 
-Daedalus::GameState::NpcHandle VobTypes::getScriptHandle(VobTypes::NpcVobInformation &vob)
+Daedalus::GameState::NpcHandle VobTypes::getScriptHandle(VobTypes::NpcVobInformation& vob)
 {
-	return vob.playerController->getScriptHandle();
+    return vob.playerController->getScriptHandle();
 }
 
-Daedalus::GEngineClasses::C_Npc &::VobTypes::getScriptObject(VobTypes::NpcVobInformation &vob)
+Daedalus::GEngineClasses::C_Npc& ::VobTypes::getScriptObject(VobTypes::NpcVobInformation& vob)
 {
     return vob.world->getScriptEngine().getGameState().getNpc(vob.playerController->getScriptHandle());
 }
@@ -329,7 +327,7 @@ Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, size_t
     return getEntityFromScriptInstance(world, npc);
 }
 
-Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string &instanceName, const std::string &wpName)
+Handle::EntityHandle VobTypes::Wld_InsertNpc(World::WorldInstance& world, const std::string& instanceName, const std::string& wpName)
 {
     // Use script-engine to insert the NPC
     Daedalus::GameState::NpcHandle npc = world.getScriptEngine().getGameState().insertNPC(instanceName, wpName);
@@ -343,7 +341,7 @@ Daedalus::GameState::ItemHandle VobTypes::NPC_DrawMeleeWeapon(VobTypes::NpcVobIn
     return npc.playerController->drawWeaponMelee();
 }
 
-void ::VobTypes::NPC_UndrawWeapon(VobTypes::NpcVobInformation &npc)
+void ::VobTypes::NPC_UndrawWeapon(VobTypes::NpcVobInformation& npc)
 {
     npc.playerController->undrawWeapon();
 }
@@ -372,7 +370,7 @@ int ::VobTypes::MOB_GetItemCount(VobTypes::MobVobInformation mob, const std::str
 {
     Logic::MobCores::Container* core = dynamic_cast<Logic::MobCores::Container*>(mob.mobController->getCore());
 
-    if(core)
+    if (core)
         return (int)core->getNumItemsOf(instance);
 
     return 0;
@@ -380,22 +378,23 @@ int ::VobTypes::MOB_GetItemCount(VobTypes::MobVobInformation mob, const std::str
 
 Handle::EntityHandle VobTypes::MOB_GetByName(World::WorldInstance& world, const std::string& name)
 {
-    for(Handle::EntityHandle e : world.getScriptEngine().getWorldMobs())
+    for (Handle::EntityHandle e : world.getScriptEngine().getWorldMobs())
     {
         MobVobInformation mob = VobTypes::asMobVob(world, e);
 
-        if(mob.isValid() && mob.mobController->getFocusName() == name)
+        if (mob.isValid() && mob.mobController->getFocusName() == name)
             return e;
     }
 
     return Handle::EntityHandle::makeInvalidHandle();
 }
 
-void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle npc) {
+void VobTypes::Wld_RemoveNpc(World::WorldInstance& world, Handle::EntityHandle npc)
+{
     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, npc);
 
     // if npc is the current controlled entity clear up bindings, "hero" and invalidate player entity
-    if(npc == world.getScriptEngine().getPlayerEntity())
+    if (npc == world.getScriptEngine().getPlayerEntity())
     {
         // clear key bindings
         Engine::Input::clearActions();
@@ -408,13 +407,3 @@ void VobTypes::Wld_RemoveNpc(World::WorldInstance &world, Handle::EntityHandle n
     world.getScriptEngine().getGameState().removeNPC(vob.playerController->getScriptHandle());
     world.removeEntity(npc);
 }
-
-
-
-
-
-
-
-
-
-

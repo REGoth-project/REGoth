@@ -32,12 +32,6 @@ namespace Logic
             virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to);
 
         private:
-
         };
-
     }
 }
-
-
-
-

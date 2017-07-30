@@ -3,16 +3,17 @@
 //
 
 #include "PfxManager.h"
-#include <daedalus/DaedalusVM.h>
-#include <utils/Utils.h>
-#include <engine/BaseEngine.h>
-#include <ZenLib/utils/logger.h>
-#include <engine/World.h>
 #include <map>
+#include <ZenLib/utils/logger.h>
+#include <daedalus/DaedalusVM.h>
+#include <engine/BaseEngine.h>
+#include <engine/World.h>
+#include <utils/Utils.h>
 
-Logic::PfxManager::PfxManager(World::WorldInstance& world) : m_pVM(nullptr), m_World(world)
+Logic::PfxManager::PfxManager(World::WorldInstance& world)
+    : m_pVM(nullptr)
+    , m_World(world)
 {
-
 }
 
 Logic::PfxManager::~PfxManager()
@@ -22,13 +23,13 @@ Logic::PfxManager::~PfxManager()
 
 bool Logic::PfxManager::loadParticleFXDAT()
 {
-    if(m_pVM)
-        return true; // Nothing to do, already loaded
+    if (m_pVM)
+        return true;  // Nothing to do, already loaded
 
     std::string datPath = "/_work/data/Scripts/_compiled/PARTICLEFX.DAT";
     std::string datFile = Utils::getCaseSensitivePath(datPath, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
 
-    if(!Utils::fileExists(datFile))
+    if (!Utils::fileExists(datFile))
     {
         LogError() << "Failed to find PARTICLEFX.DAT at: " << datFile;
         return false;
@@ -45,7 +46,7 @@ bool Logic::PfxManager::loadParticleFXDAT()
 
 bool Logic::PfxManager::hasPFX(const std::string& name)
 {
-    if(!loadParticleFXDAT())
+    if (!loadParticleFXDAT())
         return false;
 
     return m_pVM->getDATFile().hasSymbolName(name);
@@ -53,14 +54,14 @@ bool Logic::PfxManager::hasPFX(const std::string& name)
 
 const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::string& name)
 {
-    if(!loadParticleFXDAT())
+    if (!loadParticleFXDAT())
         return m_DefaultEmitter;
 
     size_t symIdx = m_pVM->getDATFile().getSymbolIndexByName(name);
 
     // Check for cache
     auto it = m_PfxCache.find(symIdx);
-    if(it != m_PfxCache.end())
+    if (it != m_PfxCache.end())
         return (*it).second;
 
     using namespace Daedalus::GEngineClasses;
@@ -72,69 +73,68 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
                               m_pVM->getDATFile().getSymbolIndexByName(name),
                               Daedalus::IC_Pfx);
 
-
     // Add to cache
     Emitter& e = m_PfxCache[symIdx];
     C_ParticleFX& fx = m_pVM->getGameState().getPfx(h);
 
-    auto parseFloatList = [](const std::string& s){
+    auto parseFloatList = [](const std::string& s) {
         std::vector<std::string> l = Utils::split(s, ' ');
 
         std::vector<float> lf(l.size());
-        std::transform(l.begin(), l.end(), lf.begin(), [](const std::string& p){ return std::stof(p); });
+        std::transform(l.begin(), l.end(), lf.begin(), [](const std::string& p) { return std::stof(p); });
 
         return lf;
     };
 
-    auto parseFloat3 = [](const std::string& s){
+    auto parseFloat3 = [](const std::string& s) {
 
-        if(s == "=") // Seems to be a special case
-            return Math::float3(0,0,0);
+        if (s == "=")  // Seems to be a special case
+            return Math::float3(0, 0, 0);
 
         std::vector<std::string> l = Utils::split(s, ' ');
-        if(l.size() == 3)
+        if (l.size() == 3)
             return Math::float3(std::stof(l[0]), std::stof(l[1]), std::stof(l[2]));
-        else if(l.size() == 2)
+        else if (l.size() == 2)
             return Math::float3(std::stof(l[0]), std::stof(l[1]), 0);
-        else if(l.size() == 1)
-            return Math::float3(std::stof(l[0]), 0,0);
+        else if (l.size() == 1)
+            return Math::float3(std::stof(l[0]), 0, 0);
 
-        return Math::float3(0,0,0);
+        return Math::float3(0, 0, 0);
     };
 
-    auto parseFloat2 = [](const std::string& s){
+    auto parseFloat2 = [](const std::string& s) {
         std::vector<std::string> l = Utils::split(s, ' ');
         return Math::float2(std::stof(l[0]), std::stof(l[1]));
     };
 
     // FIXME: Some of them are lowercase...
-    std::map<std::string, EmitterShape> lut_EmitterShape = {{"POINT",ES_POINT},
-                                                            {"LINE",ES_LINE},
-                                                            {"BOX",ES_BOX},
-                                                            {"CIRCLE",ES_CIRCLE},
-                                                            {"SPHERE",ES_SPHERE},
-                                                            {"MESH",ES_MESH}};
+    std::map<std::string, EmitterShape> lut_EmitterShape = {{"POINT", ES_POINT},
+                                                            {"LINE", ES_LINE},
+                                                            {"BOX", ES_BOX},
+                                                            {"CIRCLE", ES_CIRCLE},
+                                                            {"SPHERE", ES_SPHERE},
+                                                            {"MESH", ES_MESH}};
 
-    std::map<std::string, EmitterFOR> lut_EmitterFOR  =  {{"WORLD",EFOR_WORLD},
-                                                          {"OBJECT",EFOR_OBJECT}};
+    std::map<std::string, EmitterFOR> lut_EmitterFOR = {{"WORLD", EFOR_WORLD},
+                                                        {"OBJECT", EFOR_OBJECT}};
 
-    std::map<std::string, EmitterDirMode> lut_EmitterDirMode = {  {"NONE",EDM_NONE},
-                                                                  {"DIR",EDM_DIR},
-                                                                  {"TARGET",EDM_TARGET},
-                                                                  {"MESH",EDM_MESH}};
+    std::map<std::string, EmitterDirMode> lut_EmitterDirMode = {{"NONE", EDM_NONE},
+                                                                {"DIR", EDM_DIR},
+                                                                {"TARGET", EDM_TARGET},
+                                                                {"MESH", EDM_MESH}};
 
-    std::map<std::string, EmitterVisOrient> lut_EmitterVisOrient = {  {"NONE",EVO_NONE},
-                                                                      {"VELO",EVO_VELO_ALIGNED},
-                                                                      {"VELO3D",EVO_VOB_XZPLANE}};
+    std::map<std::string, EmitterVisOrient> lut_EmitterVisOrient = {{"NONE", EVO_NONE},
+                                                                    {"VELO", EVO_VELO_ALIGNED},
+                                                                    {"VELO3D", EVO_VOB_XZPLANE}};
 
-    std::map<std::string, EmitterDistribType> lut_EmitterDistribType = {  {"RAND",EDT_RAND},
-                                                                          {"WALK",EDT_WALK},
-                                                                          {"UNIFORM",EDT_UNIFORM}};
+    std::map<std::string, EmitterDistribType> lut_EmitterDistribType = {{"RAND", EDT_RAND},
+                                                                        {"WALK", EDT_WALK},
+                                                                        {"UNIFORM", EDT_UNIFORM}};
 
-    std::map<std::string, EmitterBlendMode> lut_EmitterBlendMode =   {  {"NONE",EBM_None},
-                                                                        {"BLEND",EBM_Blend},
-                                                                        {"ADD",EBM_Add},
-                                                                        {"MUL",EBM_Mul}};
+    std::map<std::string, EmitterBlendMode> lut_EmitterBlendMode = {{"NONE", EBM_None},
+                                                                    {"BLEND", EBM_Blend},
+                                                                    {"ADD", EBM_Add},
+                                                                    {"MUL", EBM_Mul}};
 
     e.ppsValue = fx.ppsValue;
     e.ppsScaleKeys = parseFloatList(fx.ppsScaleKeys_S);
@@ -164,11 +164,11 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
     e.dirAngleHeadVar = fx.dirAngleHeadVar;
     e.dirAngleElev = fx.dirAngleElev;
     e.dirAngleElevVar = fx.dirAngleElevVar;
-    e.velAvg = fx.velAvg * 0.01f * 1000.0f; // cm/ms -> m/s
-    e.velVar = fx.velVar * 0.01f; // cm/ms -> m/s
-    e.lspPartAvg = fx.lspPartAvg / 1000.0f; // ms -> s
-    e.lspPartVar = fx.lspPartVar / 1000.0f; // ms -> s
-    e.flyGravity = parseFloat3(fx.flyGravity_S) * 0.01f * 1000.0f; // cm/ms -> m/s;
+    e.velAvg = fx.velAvg * 0.01f * 1000.0f;                         // cm/ms -> m/s
+    e.velVar = fx.velVar * 0.01f;                                   // cm/ms -> m/s
+    e.lspPartAvg = fx.lspPartAvg / 1000.0f;                         // ms -> s
+    e.lspPartVar = fx.lspPartVar / 1000.0f;                         // ms -> s
+    e.flyGravity = parseFloat3(fx.flyGravity_S) * 0.01f * 1000.0f;  // cm/ms -> m/s;
     e.flyCollDet = (EmitterCollDetType)fx.flyCollDet_B;
     e.visName = fx.visName_S;
     e.visOrientation = lut_EmitterVisOrient[fx.visOrientation_S];
@@ -181,7 +181,7 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
     e.visSizeEndScale = fx.visSizeEndScale;
     e.visAlphaFunc = lut_EmitterBlendMode[fx.visAlphaFunc_S];
     e.visAlphaStart = fx.visAlphaStart / 255.0f;
-    e.visAlphaEnd = std::max(0.0f, fx.visAlphaEnd / 255.0f); // Seems to be negative sometimes...
+    e.visAlphaEnd = std::max(0.0f, fx.visAlphaEnd / 255.0f);  // Seems to be negative sometimes...
     e.trlFadeSpeed = fx.trlFadeSpeed;
     e.trlTexture = fx.trlTexture_S;
     e.trlWidth = fx.trlWidth;
@@ -190,7 +190,7 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
     e.mrkSize = fx.mrkSize;
 
     // We don't support single triange-rendering. Thus, need to scale this up to match quad-rendering
-    if(e.visTexIsQuadPoly)
+    if (e.visTexIsQuadPoly)
         e.visSizeStart *= 2.0f;
 
     float sin_h = sin(e.dirAngleHead),
@@ -212,7 +212,8 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
             head[0] = Math::DegToRad(e.dirAngleHead) + Math::DegToRad(e.dirAngleHeadVar);
             head[1] = Math::DegToRad(e.dirAngleHead) - Math::DegToRad(e.dirAngleHeadVar);
             headNum = 2;
-        } else
+        }
+        else
         {
             head[0] = Math::DegToRad(e.dirAngleHead);
             headNum = 1;
@@ -223,7 +224,8 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
             elev[0] = Math::DegToRad(e.dirAngleElev) + Math::DegToRad(e.dirAngleElevVar);
             elev[1] = Math::DegToRad(e.dirAngleElev) - Math::DegToRad(e.dirAngleElevVar);
             elevNum = 2;
-        } else
+        }
+        else
         {
             elev[0] = Math::DegToRad(e.dirAngleElev);
             elevNum = 1;

@@ -7,14 +7,13 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
-
         enum class ECameraMode
         {
             Free = 0,
             Static = 1,
             FirstPerson = 2,
             ThirdPerson = 3,
-            Viewer // name is open to change
+            Viewer  // name is open to change
         };
 
         struct CameraSettings
@@ -91,8 +90,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::CameraController; }
-
+        virtual EControllerType getControllerType() { return EControllerType::CameraController; }
         /**
          * Called on game-tick
          */
@@ -134,8 +132,8 @@ namespace Logic
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
-    protected:
 
+    protected:
         /**
          * Transforms the given yaw/pitch into the corresponding direction vectors
          * @return pair of (forward, right)
@@ -176,9 +174,9 @@ namespace Logic
          */
         float m_moveSpeedMultiplier;
 
-	/**
+        /**
          * Direction to use during locked camera while using mobs
          */
-	Math::float3 m_savedPdir;
+        Math::float3 m_savedPdir;
     };
 }
