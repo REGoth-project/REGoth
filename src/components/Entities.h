@@ -1,31 +1,31 @@
 #pragma once
-#include <utils/Utils.h>
-#include <math/mathlib.h>
-#include <handle/Handle.h>
-#include <handle/HandleDef.h>
+#include "AnimHandler.h"
 #include <content/StaticLevelMesh.h>
 #include <content/VertexTypes.h>
+#include <engine/WorldTypes.h>
+#include <handle/Handle.h>
+#include <handle/HandleDef.h>
+#include <math/mathlib.h>
 #include <memory/AllocatorBundle.h>
 #include <memory/Config.h>
-#include <engine/WorldTypes.h>
-#include "AnimHandler.h"
+#include <utils/Utils.h>
 
 /**
  * List of all available components
  */
-#define ALL_COMPONENTS   EntityComponent,\
-                         LogicComponent,\
-                         PositionComponent,\
-                         NBBoxComponent,\
-                         BBoxComponent,\
-                         StaticMeshComponent,\
-                         CompoundComponent,\
-                         ObjectComponent,\
-                         VisualComponent,\
-                         AnimationComponent,\
-                         PhysicsComponent,\
-                         SpotComponent,\
-                         PfxComponent
+#define ALL_COMPONENTS EntityComponent,     \
+                       LogicComponent,      \
+                       PositionComponent,   \
+                       NBBoxComponent,      \
+                       BBoxComponent,       \
+                       StaticMeshComponent, \
+                       CompoundComponent,   \
+                       ObjectComponent,     \
+                       VisualComponent,     \
+                       AnimationComponent,  \
+                       PhysicsComponent,    \
+                       SpotComponent,       \
+                       PfxComponent
 
 namespace Logic
 {
@@ -37,10 +37,10 @@ namespace Components
 {
     typedef uint32_t ComponentMask;
 
-	struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
-	{
+    struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
+    {
         ~Component(){};
-	};
+    };
 
     /**
      * Component which can be expected to be valid on all entities.
@@ -59,15 +59,16 @@ namespace Components
 
         static void init(EntityComponent& c)
         {
-
         }
     };
 
     struct PositionComponent : public Component
     {
-        enum { MASK = 1 << 1 };
+        enum
+        {
+            MASK = 1 << 1
+        };
         Math::Matrix m_WorldMatrix;
-
 
         /*+
          * Factor to apply to global drawing distance before applying the check
@@ -87,7 +88,10 @@ namespace Components
      */
     struct NBBoxComponent : public Component
     {
-        enum { MASK = 1 << 2 };
+        enum
+        {
+            MASK = 1 << 2
+        };
 
         std::vector<Utils::BBox3D> m_BBox3D;
 
@@ -101,15 +105,18 @@ namespace Components
      */
     struct BBoxComponent : public Component
     {
-        enum { MASK = 1 << 3 };
+        enum
+        {
+            MASK = 1 << 3
+        };
 
         Utils::BBox3D m_BBox3D;
         uint32_t m_DebugColor;
 
         static void init(BBoxComponent& c)
         {
-            c.m_BBox3D.min = Math::float3(0,0,0);
-            c.m_BBox3D.max = Math::float3(0,0,0);
+            c.m_BBox3D.min = Math::float3(0, 0, 0);
+            c.m_BBox3D.max = Math::float3(0, 0, 0);
             c.m_DebugColor = 0;
         }
     };
@@ -119,7 +126,10 @@ namespace Components
      */
     struct StaticMeshComponent : public Component
     {
-        enum { MASK = 1 << 4 };
+        enum
+        {
+            MASK = 1 << 4
+        };
 
         /**
          * Handle to the mesh to render.
@@ -127,9 +137,9 @@ namespace Components
          * TODO: Maybe give an enum or something to help to find the allocator
          */
         Handle::MeshHandle m_StaticMeshVisual;
-		Meshes::SubmeshVxInfo m_SubmeshInfo;
+        Meshes::SubmeshVxInfo m_SubmeshInfo;
         uint32_t m_SubmeshIdx;
-		Handle::TextureHandle m_Texture; // TODO: Put this into a material container!
+        Handle::TextureHandle m_Texture;  // TODO: Put this into a material container!
         uint32_t m_Color;
 
         /**
@@ -154,7 +164,10 @@ namespace Components
      */
     struct LogicComponent : public Component
     {
-        enum { MASK = 1 << 5 };
+        enum
+        {
+            MASK = 1 << 5
+        };
 
         /**
          * This is a pointer to the logic-controller of the world this lives in.
@@ -172,7 +185,10 @@ namespace Components
 
     struct VisualComponent : public Component
     {
-        enum { MASK = 1 << 6 };
+        enum
+        {
+            MASK = 1 << 6
+        };
 
         /**
          * This is a pointer to the visual-controller of the world this lives in.
@@ -190,7 +206,10 @@ namespace Components
 
     struct CompoundComponent : public Component
     {
-        enum { MASK = 1 << 7 };
+        enum
+        {
+            MASK = 1 << 7
+        };
 
         /**
          * Entities belonging to this one.
@@ -211,7 +230,10 @@ namespace Components
 
     struct ObjectComponent : public Component
     {
-        enum { MASK = 1 << 8 };
+        enum
+        {
+            MASK = 1 << 8
+        };
 
         enum EObjectType
         {
@@ -236,7 +258,6 @@ namespace Components
          */
         bool m_EnableCollision;
 
-
         static void init(ObjectComponent& c)
         {
             c.m_Type = Other;
@@ -249,7 +270,10 @@ namespace Components
 	 */
     struct AnimationComponent : public Component
     {
-        enum { MASK = 1 << 9 };
+        enum
+        {
+            MASK = 1 << 9
+        };
 
         /**
          * Storage for animations of this model
@@ -262,8 +286,7 @@ namespace Components
          */
         Handle::EntityHandle m_ParentAnimHandler;
 
-        AnimHandler& getAnimHandler(){ return *m_AnimHandler; }
-
+        AnimHandler& getAnimHandler() { return *m_AnimHandler; }
         static void init(AnimationComponent& c)
         {
             c.m_AnimHandler = new AnimHandler;
@@ -275,7 +298,10 @@ namespace Components
      */
     struct PhysicsComponent : public Component
     {
-        enum { MASK = 1 << 10 };
+        enum
+        {
+            MASK = 1 << 10
+        };
 
         /**
          * The rigid-Body of this component
@@ -295,7 +321,10 @@ namespace Components
 
     struct SpotComponent : public Component
     {
-        enum { MASK = 1 << 11 };
+        enum
+        {
+            MASK = 1 << 11
+        };
 
         /**
          * Entity currently on this spot
@@ -315,7 +344,10 @@ namespace Components
 
     struct PfxComponent : public Component
     {
-        enum { MASK = 1 << 12 };
+        enum
+        {
+            MASK = 1 << 12
+        };
 
         /**
          * Single particle
@@ -332,7 +364,7 @@ namespace Components
             Math::float2 sizeVel;
             Math::float3 color;
             Math::float3 colorVel;
-            uint32_t particleColorU8; // Actual color for this frame
+            uint32_t particleColorU8;  // Actual color for this frame
         };
 
         bgfx::DynamicVertexBufferHandle m_ParticleVB;
@@ -351,7 +383,7 @@ namespace Components
     /**
      * Adds a component to the given Entity-Component
      */
-    template<typename T>
+    template <typename T>
     void addComponent(EntityComponent& e)
     {
         // See "EntityComponent" for further information
@@ -361,7 +393,7 @@ namespace Components
     /**
      * Removes a component from the given Entity-Component
      */
-    template<typename T>
+    template <typename T>
     void removeComponent(EntityComponent& e)
     {
         // See "EntityComponent" for further information
@@ -371,7 +403,7 @@ namespace Components
     /**
      * Checks if the given component is present in the entity
      */
-    template<typename T>
+    template <typename T>
     bool hasComponent(const EntityComponent& e)
     {
         // See "EntityComponent" for further information

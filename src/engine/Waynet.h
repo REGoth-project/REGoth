@@ -1,9 +1,9 @@
 #pragma once
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
-#include <zenload/zTypes.h>
 #include <math/mathlib.h>
+#include <zenload/zTypes.h>
 
 namespace World
 {
@@ -14,7 +14,10 @@ namespace World
          */
 
         typedef size_t WaypointIndex;
-        enum : WaypointIndex { INVALID_WAYPOINT = static_cast<WaypointIndex>(-1) };
+        enum : WaypointIndex
+        {
+            INVALID_WAYPOINT = static_cast<WaypointIndex>(-1)
+        };
 
         struct Waypoint
         {
@@ -28,7 +31,7 @@ namespace World
             /**
              * Indices to all edges of this waypoint
              */
-            std::vector <WaypointIndex> edges;
+            std::vector<WaypointIndex> edges;
         };
 
         struct WaynetInstance
@@ -36,18 +39,18 @@ namespace World
             /**
              * Memory of all known waypoints
              */
-            std::vector <Waypoint> waypoints;
+            std::vector<Waypoint> waypoints;
 
             /**
              * Map of waypoint names to their indices in the waypoints-vector
              */
-            std::map <std::string, WaypointIndex> waypointsByName;
+            std::map<std::string, WaypointIndex> waypointsByName;
         };
 
-		/**
+        /**
 		 * @brief Adds a named waypoint to the given waynet instance
 		 */
-		void addWaypoint(WaynetInstance& waynet, const Waypoint& wp);
+        void addWaypoint(WaynetInstance& waynet, const Waypoint& wp);
 
         /**
          * @brief Creates a waynet from the given loaded zen-world
@@ -96,7 +99,7 @@ namespace World
         {
             auto it = waynet.waypointsByName.find(wp);
 
-            if(it == waynet.waypointsByName.end())
+            if (it == waynet.waypointsByName.end())
                 return INVALID_WAYPOINT;
 
             return (*it).second;

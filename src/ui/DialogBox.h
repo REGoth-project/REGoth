@@ -1,8 +1,8 @@
-#include "View.h"
-#include <string>
 #include <functional>
-#include <logic/DialogManager.h>
+#include <string>
+#include "View.h"
 #include <handle/HandleDef.h>
+#include <logic/DialogManager.h>
 
 // HACK: Work around windows.h messing this up with its define
 #ifdef DialogBox
@@ -23,7 +23,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Adds a single choice
@@ -35,14 +35,12 @@ namespace UI
         /**
          * @return List of choices registered
          */
-        const std::vector<Logic::DialogManager::ChoiceEntry>& getChoices(){ return m_Choices; }
-
+        const std::vector<Logic::DialogManager::ChoiceEntry>& getChoices() { return m_Choices; }
         /**
          * @return currently selected choice
          */
-        int getCurrentlySelected(){ return m_CurrentlySelected; }
-        void setCurrentlySelected(int s){m_CurrentlySelected = std::min(s, ((int)m_Choices.size()) - 1);}
-
+        int getCurrentlySelected() { return m_CurrentlySelected; }
+        void setCurrentlySelected(int s) { m_CurrentlySelected = std::min(s, ((int)m_Choices.size()) - 1); }
         /**
          * Removes all choices registered here
          */
@@ -53,8 +51,8 @@ namespace UI
          * @param action Input action
          */
         void onInputAction(EInputAction action);
-    private:
 
+    private:
         /**
          * Choices presented to the player
          */

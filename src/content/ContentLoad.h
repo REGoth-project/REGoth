@@ -1,9 +1,9 @@
 #pragma once
-#include <handle/HandleDef.h>
 #include <string>
 #include <vector>
-#include <components/Entities.h>
 #include "StaticLevelMesh.h"
+#include <components/Entities.h>
+#include <handle/HandleDef.h>
 
 namespace World
 {
@@ -43,19 +43,17 @@ namespace Content
      *                       of that entity
      * @return vector of the created entities
      */
-    template<typename V, typename I>
+    template <typename V, typename I>
     std::vector<Handle::EntityHandle> entitifyMesh(World::WorldInstance& world,
                                                    Handle::MeshHandle mh,
-                                                   LevelMesh::StaticLevelMesh<V,I>& mesh,
-                                                    Handle::EntityHandle compoundTarget
-                                                        = Handle::EntityHandle::makeInvalidHandle())
+                                                   LevelMesh::StaticLevelMesh<V, I>& mesh,
+                                                   Handle::EntityHandle compoundTarget = Handle::EntityHandle::makeInvalidHandle())
     {
         std::vector<Handle::EntityHandle> r;
 
         // Create entities for each submesh
         for (size_t i = 0, end = mesh.m_SubmeshStarts.size(); i < end; i++)
         {
-
             Handle::EntityHandle entity = Wrap::createEntity(world, Components::StaticMeshComponent::MASK);
             Components::StaticMeshComponent& sm = Wrap::getStaticMeshComponent(world, entity);
 
@@ -69,7 +67,7 @@ namespace Content
         }
 
         // Add to compound
-        if(compoundTarget.isValid())
+        if (compoundTarget.isValid())
         {
             Components::CompoundComponent& cc = Wrap::getCompoundComponent(world, compoundTarget);
             cc.m_Attachments.insert(cc.m_Attachments.end(), r.begin(), r.end());

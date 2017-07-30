@@ -1,8 +1,8 @@
 #pragma once
-#include <daedalus/DaedalusGameState.h>
 #include <set>
 #include "Controller.h"
 #include "LogicDef.h"
+#include <daedalus/DaedalusGameState.h>
 
 namespace Logic
 {
@@ -29,8 +29,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType(){ return EControllerType::SoundController; }
-
+        virtual EControllerType getControllerType() { return EControllerType::SoundController; }
         /**
          * Plays the given soundfile applying the settings of this controller
          */
@@ -39,11 +38,10 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport(){ return false; } // TODO: Implement saving/loading
-
+        virtual bool shouldExport() { return false; }  // TODO: Implement saving/loading
         virtual void importObject(const json& j);
-    protected:
 
+    protected:
         /**
          * @return True, if the current camera is close enough for the sound to be heard
          */
@@ -95,9 +93,5 @@ namespace Logic
          * How often this sound has been played
          */
         size_t m_NumTimesPlayed = 0;
-
     };
 }
-
-
-

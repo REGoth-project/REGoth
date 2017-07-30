@@ -2,7 +2,8 @@
 
 using namespace UI;
 
-Menu_Settings::Menu_Settings(Engine::BaseEngine& e) : Menu(e)
+Menu_Settings::Menu_Settings(Engine::BaseEngine& e)
+    : Menu(e)
 {
 }
 

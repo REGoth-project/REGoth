@@ -1,5 +1,5 @@
-#include <cstring>
 #include <algorithm>
+#include <cstring>
 
 #include <adpcm/adpcm-lib.h>
 
@@ -7,12 +7,11 @@
 
 #include "WavReader.h"
 
-WavReader::WavReader(const void *data, unsigned size)
-    : m_Source(reinterpret_cast<const uint8_t*>(data)),
-      m_SourceSize(size),
-      m_SourceOffset(60)
+WavReader::WavReader(const void* data, unsigned size)
+    : m_Source(reinterpret_cast<const uint8_t*>(data))
+    , m_SourceSize(size)
+    , m_SourceOffset(60)
 {
-
 }
 
 bool WavReader::open()
@@ -36,9 +35,10 @@ bool WavReader::open()
         m_SourceOffset = 60;
         unsigned data_size = m_SourceSize - m_SourceOffset;
         unsigned complete_blocks = data_size / m_BlockSize;
-        unsigned samples_per_block = (m_BlockSize - m_Channels* 4) * (m_Channels ^ 3) + 1;
+        unsigned samples_per_block = (m_BlockSize - m_Channels * 4) * (m_Channels ^ 3) + 1;
         m_SampleCount = complete_blocks * samples_per_block;
-    } else
+    }
+    else
     {
         m_SourceOffset = 44;
 
@@ -81,11 +81,13 @@ int WavReader::decodeADPCM(unsigned max_samples)
         sample_count = max_samples;
 
     unsigned sample = 0;
-    while (sample < sample_count) {
+    while (sample < sample_count)
+    {
         unsigned this_block_adpcm_samples = samples_per_block;
         int this_block_pcm_samples = samples_per_block;
 
-        if (this_block_adpcm_samples > sample_count) {
+        if (this_block_adpcm_samples > sample_count)
+        {
             this_block_adpcm_samples = ((sample_count + 6) & ~7) + 1;
             this_block_pcm_samples = sample_count;
         }

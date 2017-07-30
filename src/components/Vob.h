@@ -25,10 +25,10 @@ namespace Vob
         World::WorldInstance* world;
         Handle::EntityHandle entity;
 
-		bool isValid()
-		{
-			return entity.isValid();
-		}
+        bool isValid()
+        {
+            return entity.isValid();
+        }
     };
 
     /**

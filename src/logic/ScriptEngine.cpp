@@ -1,16 +1,16 @@
 #include "ScriptEngine.h"
 #include "PlayerController.h"
+#include <ZenLib/daedalus/DATFile.h>
+#include <components/VobClasses.h>
+#include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusVM.h>
-#include <utils/logger.h>
+#include <engine/GameEngine.h>
+#include <engine/World.h>
+#include <handle/HandleDef.h>
 #include <logic/scriptExternals/Externals.h>
 #include <logic/scriptExternals/Stubs.h>
-#include <daedalus/DaedalusGameState.h>
-#include <handle/HandleDef.h>
-#include <components/VobClasses.h>
-#include <engine/World.h>
-#include <engine/GameEngine.h>
 #include <ui/PrintScreenMessages.h>
-#include <ZenLib/daedalus/DATFile.h>
+#include <utils/logger.h>
 
 using namespace Logic;
 
@@ -31,7 +31,7 @@ ScriptEngine::~ScriptEngine()
 
 bool ScriptEngine::loadDAT(const std::string& file)
 {
-    delete m_pVM; // FIXME: Should support merging DATS?
+    delete m_pVM;  // FIXME: Should support merging DATS?
 
     LogInfo() << "Loading Daedalus compiled script file: " << file;
 
@@ -45,10 +45,10 @@ bool ScriptEngine::loadDAT(const std::string& file)
 
     // Register our externals
     Daedalus::GameState::DaedalusGameState::GameExternals ext;
-    ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint){ onNPCInserted(npc, spawnpoint); };
-    ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCInitialized(npc); };
-    ext.wld_removenpc = [this](Daedalus::GameState::NpcHandle npc){ onNPCRemoved(npc); };
-    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc){ onInventoryItemInserted(item, npc); };
+    ext.wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc, std::string spawnpoint) { onNPCInserted(npc, spawnpoint); };
+    ext.post_wld_insertnpc = [this](Daedalus::GameState::NpcHandle npc) { onNPCInitialized(npc); };
+    ext.wld_removenpc = [this](Daedalus::GameState::NpcHandle npc) { onNPCRemoved(npc); };
+    ext.createinvitem = [this](Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc) { onInventoryItemInserted(item, npc); };
 
     m_pVM->getGameState().setGameExternals(ext);
 
@@ -131,10 +131,9 @@ void ScriptEngine::setInstanceItem(const std::string& target, Daedalus::GameStat
     m_pVM->setInstance(target, ZMemory::toBigHandle(item), Daedalus::EInstanceClass::IC_Item);
 }
 
-
 void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
 {
-    if(!m_World.getEngine()->getEngineArgs().cmdline.hasArg('c'))
+    if (!m_World.getEngine()->getEngineArgs().cmdline.hasArg('c'))
     {
         if (firstStart && m_pVM->getDATFile().hasSymbolName("startup_" + world))
         {
@@ -151,7 +150,9 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
             runFunction("init_" + world);
             LogInfo() << "Done!";
         }
-    }else {
+    }
+    else
+    {
         VobTypes::Wld_InsertNpc(m_World, "PC_THIEF", "WP_INTRO_FALL3");
     }
 }
@@ -166,7 +167,7 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
 
     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
-    if(vob.isValid() && !spawnpoint.empty())
+    if (vob.isValid() && !spawnpoint.empty())
     {
         if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
             vob.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
@@ -196,23 +197,23 @@ void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item,
 
     // Equip
     // TODO: Implement this properly
-    
-    Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
-    if(!e.isValid())
-	return; // FIXME: Happens on windows, wtf?
 
-    if((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
+    Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+    if (!e.isValid())
+        return;  // FIXME: Happens on windows, wtf?
+
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
     {
         //LogInfo() << "Equiping armor... " << itemData.visual_change;
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
-        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size()-4) + ".MDM";
+        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
 
         // Only switch the body-armor
         VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
-    if((itemData.mainflag & (Daedalus::GEngineClasses::C_Item::ITM_CAT_NF | Daedalus::GEngineClasses::C_Item::ITM_CAT_FF)) != 0)
+    if ((itemData.mainflag & (Daedalus::GEngineClasses::C_Item::ITM_CAT_NF | Daedalus::GEngineClasses::C_Item::ITM_CAT_FF)) != 0)
     {
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
         VobTypes::NPC_EquipWeapon(vob, item);
@@ -227,28 +228,27 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
     //LogInfo() << "Initializing daily routine for: " << npcData.name[0] << ", hdl: " << npc.index;
     //LogInfo() << "Self: " << getSymbolIndexByName("self");
 
+    if (npcData.daily_routine != 0)
+    {
+        prepareRunFunction();
 
-	if(npcData.daily_routine != 0)
-	{
-		prepareRunFunction();
+        m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
+        m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
 
-		m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
-		m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
-
-		runFunctionBySymIndex(npcData.daily_routine);
-	}
+        runFunctionBySymIndex(npcData.daily_routine);
+    }
 }
 
-std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3 &center, float radius)
+std::set<Handle::EntityHandle> ScriptEngine::getNPCsInRadius(const Math::float3& center, float radius)
 {
     std::set<Handle::EntityHandle> outSet;
     float radSq = radius * radius;
 
-    for(const Handle::EntityHandle& e : m_WorldNPCs)
+    for (const Handle::EntityHandle& e : m_WorldNPCs)
     {
         Math::float3 translation = m_World.getEntity<Components::PositionComponent>(e).m_WorldMatrix.Translation();
 
-        if((center - translation).lengthSquared() < radSq)
+        if ((center - translation).lengthSquared() < radSq)
             outSet.insert(e);
     }
 
@@ -259,7 +259,7 @@ Handle::EntityHandle ScriptEngine::findWorldNPC(const std::string& name)
 {
     auto& datFile = getVM().getDATFile();
 
-    for(const Handle::EntityHandle& npc : getWorldNPCs())
+    for (const Handle::EntityHandle& npc : getWorldNPCs())
     {
         VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(m_World, npc);
         if (!npcVobInfo.isValid())
@@ -296,7 +296,7 @@ Daedalus::GameState::NpcHandle ScriptEngine::getNPCFromSymbol(const std::string&
 {
     Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
 
-    if(sym.instanceDataClass != Daedalus::IC_Npc)
+    if (sym.instanceDataClass != Daedalus::IC_Npc)
         return Daedalus::GameState::NpcHandle();
 
     return ZMemory::handleCast<Daedalus::GameState::NpcHandle>(sym.instanceDataHandle);
@@ -306,7 +306,7 @@ Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::strin
 {
     Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
 
-    if(sym.instanceDataClass != Daedalus::IC_Item)
+    if (sym.instanceDataClass != Daedalus::IC_Item)
         return Daedalus::GameState::ItemHandle();
 
     return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
@@ -332,15 +332,13 @@ void ScriptEngine::unregisterMob(Handle::EntityHandle e)
     m_WorldMobs.erase(e);
 }
 
-
 bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::EntityHandle hnpc)
 {
     // Get item data
     Daedalus::GEngineClasses::C_Item& data = getGameState().getItem(hitem);
 
     // Check if we can even use this item
-    if(!data.on_state[0]
-        && !data.on_equip)
+    if (!data.on_state[0] && !data.on_equip)
     {
         // Nothing to use here
         return false;
@@ -352,13 +350,13 @@ bool ScriptEngine::useItemOn(Daedalus::GameState::ItemHandle hitem, Handle::Enti
     EventMessages::ManipulateMessage msg;
     msg.targetItem = hitem;
 
-    if(data.on_state[0])
+    if (data.on_state[0])
         msg.subType = EventMessages::ManipulateMessage::ST_UseItem;
     else
         msg.subType = EventMessages::ManipulateMessage::ST_EquipItem;
 
     npc.playerController->getEM().onMessage(msg);
-	return true;
+    return true;
 }
 
 void ScriptEngine::startProfiling(size_t fnSym)
@@ -371,9 +369,9 @@ void ScriptEngine::startProfiling(size_t fnSym)
 
 void ScriptEngine::stopProfiling(size_t fnSym)
 {
-    const double freq = double(bx::getHPFrequency() );
+    const double freq = double(bx::getHPFrequency());
 
-    if(m_TimeByFunctionSymbol[m_ProfilingDataFrame].find(fnSym) == m_TimeByFunctionSymbol[m_ProfilingDataFrame].end())
+    if (m_TimeByFunctionSymbol[m_ProfilingDataFrame].find(fnSym) == m_TimeByFunctionSymbol[m_ProfilingDataFrame].end())
         m_TimeByFunctionSymbol[m_ProfilingDataFrame][fnSym] = 0.0;
 
     // Make delta-time
@@ -382,10 +380,9 @@ void ScriptEngine::stopProfiling(size_t fnSym)
     m_TimeStartStack.pop();
 }
 
-
 void ScriptEngine::resetProfilingData()
 {
-    while(!m_TimeStartStack.empty())
+    while (!m_TimeStartStack.empty())
         m_TimeStartStack.pop();
 
     m_TimeByFunctionSymbol[m_ProfilingDataFrame].clear();
@@ -408,11 +405,11 @@ void ScriptEngine::onFrameEnd()
     std::map<size_t, double> combined;
 
     volatile double sum = 0.0;
-    for(int i=0;i<10;i++)
+    for (int i = 0; i < 10; i++)
     {
         for (auto& p : m_TimeByFunctionSymbol[i])
         {
-            if(combined.find(p.first) == combined.end())
+            if (combined.find(p.first) == combined.end())
                 combined[p.first] = 0;
 
             combined[p.first] += p.second / 10;
@@ -426,12 +423,12 @@ void ScriptEngine::onFrameEnd()
     }
 
     // Sort descending
-    std::sort(calls.begin(), calls.end(), [](const std::pair<size_t, double>& a, const std::pair<size_t, double>& b){
+    std::sort(calls.begin(), calls.end(), [](const std::pair<size_t, double>& a, const std::pair<size_t, double>& b) {
         return a.second > b.second;
     });
 
     bgfx::dbgTextPrintf(60, 0, 0x0f, "Script profiling [ms] (Total: %.3f):", sum * 1000.0);
-    for(int i=0;i<std::min(5, (int)calls.size()); i++)
+    for (int i = 0; i < std::min(5, (int)calls.size()); i++)
     {
         std::string name = getVM().getDATFile().getSymbolByIndex(calls[i].first).name;
         bgfx::dbgTextPrintf(60, 1 + i, 0x0f, "  %s: %.3f", name.c_str(), calls[i].second * 1000.0);
@@ -448,18 +445,16 @@ void ScriptEngine::exportScriptEngine(json& j)
 
     json& symbols = j["globals"];
 
-    for(auto& sym : dat.getSymTable().symbols)
+    for (auto& sym : dat.getSymTable().symbols)
     {
         // Only flat integers
-        if(sym.properties.elemProps.flags == 0
-           && sym.properties.elemProps.type == Daedalus::EParType_Int)
+        if (sym.properties.elemProps.flags == 0 && sym.properties.elemProps.type == Daedalus::EParType_Int)
         {
             // Write arrays in order
-            for(int32_t i: sym.intData)
+            for (int32_t i : sym.intData)
                 symbols.push_back({sym.name, i});
         }
     }
-
 }
 
 void ScriptEngine::importScriptEngine(const json& j)
@@ -469,17 +464,16 @@ void ScriptEngine::importScriptEngine(const json& j)
     // j["globals"]: Array of 2 elements. [0]=SymbolName, [1]=Value
 
     // Clear any value already inside
-    for(const json& p : j["globals"])
+    for (const json& p : j["globals"])
     {
         dat.getSymbolByName(p[0]).intData.clear();
     }
 
     // Assign imported values
-    for(const json& p : j["globals"])
+    for (const json& p : j["globals"])
     {
         dat.getSymbolByName(p[0]).intData.push_back(p[1]);
     }
-
 }
 
 Handle::EntityHandle ScriptEngine::createDefaultPlayer(const std::string& symbolname)
@@ -521,29 +515,3 @@ void ScriptEngine::unregisterNpc(Handle::EntityHandle e)
 {
     m_WorldNPCs.erase(e);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

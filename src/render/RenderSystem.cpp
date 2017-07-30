@@ -1,9 +1,9 @@
-#include <zenload/zTypes.h>
 #include "RenderSystem.h"
 #include "bgfx_utils.h"
 #include "utils/Utils.h"
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
+#include <zenload/zTypes.h>
 
 #if BX_PLATFORM_EMSCRIPTEN
 #include <emscripten.h>
@@ -12,9 +12,9 @@
 
 using namespace Render;
 
-RenderSystem::RenderSystem(Engine::BaseEngine& engine) : m_Engine(engine)
+RenderSystem::RenderSystem(Engine::BaseEngine& engine)
+    : m_Engine(engine)
 {
-
 }
 
 RenderSystem::~RenderSystem()
@@ -48,7 +48,7 @@ void RenderSystem::init()
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
 
 #if BX_PLATFORM_EMSCRIPTEN
-    int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(),"OES_element_index_uint");
+    int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(), "OES_element_index_uint");
     assert(enabled == 1);
     LogInfo() << "OES_element_index_uint enabled: " << enabled;
 #endif
@@ -57,7 +57,7 @@ void RenderSystem::init()
 uint32_t RenderSystem::requestInstanceDataBuffer()
 {
     // Check for a free spot
-    if(!m_FreeInstanceDataBuffers.empty())
+    if (!m_FreeInstanceDataBuffers.empty())
     {
         uint32_t p = m_FreeInstanceDataBuffers.back();
         m_FreeInstanceDataBuffers.pop_back();
@@ -86,10 +86,9 @@ void RenderSystem::unregisterInstanceDataBuffer(uint32_t idx)
     m_FreeInstanceDataBuffers.push_back(idx);
 }
 
-
 void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1.0f, float _height = 1.0f)
 {
-    if (bgfx::getAvailTransientVertexBuffer(3, Meshes::WorldStaticMeshVertex::ms_decl) )
+    if (bgfx::getAvailTransientVertexBuffer(3, Meshes::WorldStaticMeshVertex::ms_decl))
     {
         const bgfx::Caps* caps = bgfx::getCaps();
         const bgfx::RendererType::Enum renderer = bgfx::getRendererType();
@@ -100,14 +99,14 @@ void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1
         Meshes::WorldStaticMeshVertex* vertex = (Meshes::WorldStaticMeshVertex*)vb.data;
 
         const float minx = -_width;
-        const float maxx =  _width;
+        const float maxx = _width;
         const float miny = 0.0f;
-        const float maxy = _height*2.0f;
+        const float maxy = _height * 2.0f;
 
-        const float texelHalfW = _texelHalf/_textureWidth;
-        const float texelHalfH = _texelHalf/_textureHeight;
+        const float texelHalfW = _texelHalf / _textureWidth;
+        const float texelHalfH = _texelHalf / _textureHeight;
         const float minu = -1.0f + texelHalfW;
-        const float maxu =  1.0f + texelHalfH;
+        const float maxu = 1.0f + texelHalfH;
 
         const float zz = 0.0f;
 

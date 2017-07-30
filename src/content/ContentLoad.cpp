@@ -11,7 +11,7 @@ Handle::EntityHandle Content::Wrap::createEntity(World::WorldInstance& world, Co
 }
 
 Components::StaticMeshComponent& Content::Wrap::getStaticMeshComponent(World::WorldInstance& world,
-                                                                     Handle::EntityHandle e)
+                                                                       Handle::EntityHandle e)
 {
     return world.getEntity<Components::StaticMeshComponent>(e);
 }

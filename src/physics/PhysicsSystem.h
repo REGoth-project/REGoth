@@ -49,8 +49,6 @@ namespace Physics
         }
     };
 
-
-
     struct RayTestResult
     {
         /**
@@ -93,6 +91,7 @@ namespace Physics
     class PhysicsSystem
     {
         friend class RigidBody;
+
     public:
         PhysicsSystem(World::WorldInstance& world, float gravity = -9.1f);
         ~PhysicsSystem();
@@ -117,15 +116,14 @@ namespace Physics
         /**
          * @return the Dynamics world
          */
-        btDiscreteDynamicsWorld* getDynamicsWorld(){ return m_pDynamicsWorld; }
-
+        btDiscreteDynamicsWorld* getDynamicsWorld() { return m_pDynamicsWorld; }
         /**
          * Creates a new collisionshape from the given mesh
          * @param mesh Mesh to use as base
          * @return Static collision-shape using this mesh
          */
-        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh& mesh, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string &name = "");
-        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const std::vector<Math::float3> triangles, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string &name = "");
+        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh& mesh, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
+        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const std::vector<Math::float3> triangles, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
 
         /**
          * Creates a box-like collision-shape
@@ -203,7 +201,6 @@ namespace Physics
         }
 
     private:
-
         /**
          * Adds an internal rigid-body to the system
          */
@@ -232,7 +229,7 @@ namespace Physics
         btCollisionDispatcher* m_pDispatcher;
         btSequentialImpulseConstraintSolver* m_pSolver;
         btDiscreteDynamicsWorld* m_pDynamicsWorld;
-		btSortedOverlappingPairCache* m_pPairCache;
+        btSortedOverlappingPairCache* m_pPairCache;
 
         /**
          * World this is for

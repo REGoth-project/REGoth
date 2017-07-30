@@ -1,8 +1,8 @@
 #pragma once
+#include "Texture.h"
+#include <ZenLib/zenload/zCMaterial.h>
 #include <handle/Handle.h>
 #include <handle/HandleDef.h>
-#include <ZenLib/zenload/zCMaterial.h>
-#include "Texture.h"
 
 namespace Materials
 {
@@ -12,7 +12,6 @@ namespace Materials
      */
     struct Material : public Handle::HandleTypeDescriptor<Handle::MaterialHandle>
     {
-
     };
 
     /**

@@ -9,9 +9,9 @@ namespace Animations
     // represents shared keyframe data (the contents of the .MAN files)
     struct AnimationData : public Handle::HandleTypeDescriptor<Handle::AnimationDataHandle>
     {
-        ZenLoad::zCModelAniHeader               m_Header;
-        std::vector<ZenLoad::zCModelAniSample>  m_Samples;
-        std::vector<uint32_t>                   m_NodeIndexList;
+        ZenLoad::zCModelAniHeader m_Header;
+        std::vector<ZenLoad::zCModelAniSample> m_Samples;
+        std::vector<uint32_t> m_NodeIndexList;
     };
 
     enum EEffectType
@@ -22,12 +22,12 @@ namespace Animations
 
     struct Effect
     {
-        EEffectType                             type;
+        EEffectType type;
     };
 
     enum
     {
-        MAX_ANIM_EFFECTS                        = 4
+        MAX_ANIM_EFFECTS = 4
     };
 
     // run-time rep of an animation, combines base + overlay animations and contains all
@@ -56,30 +56,30 @@ namespace Animations
         // different  values pulled here for quick access and normalization
 
         // PERF: make this a fixed length string and make sure that no temps are created on compare
-        std::string                             m_Name;
-        Handle::AnimationDataHandle             m_Data;
-        uint32_t                                m_Layer = 0;
-        Handle::AnimationHandle                 m_Next;
+        std::string m_Name;
+        Handle::AnimationDataHandle m_Data;
+        uint32_t m_Layer = 0;
+        Handle::AnimationHandle m_Next;
         // required to look up the handle, next can't be resolved until all animations are loaded
         // FIXME: could be removed when building an index of animations
-        std::string                             m_NextName;
-        float                                   m_BlendIn = 0;
-        float                                   m_BlendOut = 0;
-        ZenLoad::EModelScriptAniDir                      m_Dir = ZenLoad::EModelScriptAniDir::MSB_FORWARD;
+        std::string m_NextName;
+        float m_BlendIn = 0;
+        float m_BlendOut = 0;
+        ZenLoad::EModelScriptAniDir m_Dir = ZenLoad::EModelScriptAniDir::MSB_FORWARD;
         //Handle::AnimationHandle                 m_Alias;
         // required to look up the handle, alias can't be resolved until all animations are loaded
         // FIXME: could be removed when building an index of animations
         //std::string                             m_AliasName;
-        EModelScriptAniFlags                    m_Flags = MSB_FLAG_NONE;
-        float                                   m_FpsRate = 0.0f;
+        EModelScriptAniFlags m_Flags = MSB_FLAG_NONE;
+        float m_FpsRate = 0.0f;
         // TODO: obsolete
-        unsigned                                m_FrameCount = 0;
-        unsigned                                m_FirstFrame = 0;
-        unsigned                                m_LastFrame = 0;
-        Effect                                  m_Effects[MAX_ANIM_EFFECTS];
+        unsigned m_FrameCount = 0;
+        unsigned m_FirstFrame = 0;
+        unsigned m_LastFrame = 0;
+        Effect m_Effects[MAX_ANIM_EFFECTS];
 
-        std::vector<ZenLoad::zCModelScriptEventSfx>      m_EventsSFX;
-        std::vector<ZenLoad::zCModelScriptEventSfx>      m_EventsSFXGround;
-        std::vector<ZenLoad::zCModelScriptEventTag>           m_EventTags;
+        std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFX;
+        std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFXGround;
+        std::vector<ZenLoad::zCModelScriptEventTag> m_EventTags;
     };
 }

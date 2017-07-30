@@ -1,7 +1,7 @@
 #include "GameClock.h"
 #include <cmath>
-#include <math/mathlib.h>
 #include <ZenLib/utils/logger.h>
+#include <math/mathlib.h>
 
 using namespace Engine;
 
@@ -26,7 +26,8 @@ int GameClock::getDay() const
     return lround(floor(m_totalTimeInDays));
 }
 
-void GameClock::setDay(int newDay) {
+void GameClock::setDay(int newDay)
+{
     m_totalTimeInDays += newDay - getDay();
 }
 
@@ -72,7 +73,8 @@ double GameClock::getTotalSecondsFrac()
     return m_totalTimeInDays * SECONDS_IN_A_DAY;
 }
 
-void GameClock::setClockSpeedFactor(float factor){
+void GameClock::setClockSpeedFactor(float factor)
+{
     m_ClockSpeedFactor = factor;
 }
 
@@ -81,7 +83,8 @@ float GameClock::totalSpeedUp() const
     return GAMETIME_REALTIME_RATIO * m_ClockSpeedFactor;
 }
 
-double GameClock::getTime(){
+double GameClock::getTime()
+{
     return m_totalTimeInDays;
 }
 
@@ -103,14 +106,14 @@ void GameClock::dayTimeTohm(double timeOfDay, int& hours, int& minutes)
     minutes = static_cast<int>((timeOfDay * 24 - hours) * 60);
 }
 
-void GameClock::resetNewGame() {
+void GameClock::resetNewGame()
+{
     m_totalTimeInDays = 0;
     setDay(0);
     setTimeOfDay(8, 0);
 }
 
-double GameClock::getLastDt() {
+double GameClock::getLastDt()
+{
     return m_LastFrameDeltaTime;
 }
-
-
