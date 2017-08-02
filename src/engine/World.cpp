@@ -653,8 +653,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     // Update sound-listener position
     getAudioWorld().setListenerPosition(getCameraController()->getEntityTransform().Translation());
-    //getAudioWorld().setListenerVelocity();
-    //getAudioWorld().setListenerOrientation();
+    //getAudioWorld().setListenerVelocity(); // don't need this for now, no need for the Doppler effect
+    const auto& camMatrix = getCameraController()->getEntityTransform();
+    getAudioWorld().setListenerOrientation(camMatrix.Forward(), camMatrix.Up());
 
     // Update dialogs
     m_DialogManager.update(deltaTime);
