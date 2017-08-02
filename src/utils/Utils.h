@@ -496,7 +496,7 @@ namespace Utils
     /**
      *  @return lowered copy of the string
      */
-    std::string lowered(const std::string& in);
+    std::string lowered(std::string str);
 
     /**
      * upper all characters inplace
@@ -506,7 +506,7 @@ namespace Utils
     /**
      *  @return uppered copy of the string
      */
-    std::string uppered(const std::string& in);
+    std::string uppered(std::string str);
 
     /**
      * number of equal characters at begin
@@ -514,14 +514,14 @@ namespace Utils
      * @param b
      * @return number of equal characters at begin
      */
-    std::size_t commonStartLength(const std::string& a, const std::string& b);
+    std::size_t commonPrefixLength(const std::string& a, const std::string& b);
 
     /**
      * removes all non alphanumeric characters and lowers the case
      * @param in old string
      * @return new string
      */
-    std::string strippedAndLowered(const std::string& in);
+    std::string strippedAndLowered(std::string str);
 
     /**
      * checks whether searchSpace contains part. ignores case, removes non alpha numeric characters first

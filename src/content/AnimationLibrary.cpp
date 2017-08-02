@@ -50,11 +50,10 @@ namespace Animations
         std::string ext_mds = ".MDS";
         std::string ext_msb = ".MSB";
 
-        for (auto& fn : m_World.getEngine()->getVDFSIndex().getKnownFiles())
+        for (auto fn : m_World.getEngine()->getVDFSIndex().getKnownFiles())
         {
-            fn = Utils::uppered(fn);
-
-            std::string n = fn.substr(0, fn.length() - 4);
+            Utils::upper(fn);
+            auto withoutExt = fn.substr(0, fn.find_last_of('.'));
 
             if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.rbegin()))
             {
@@ -65,11 +64,11 @@ namespace Animations
                     ;  //return false;
 
                 // MDS always overwrites
-                msb_loaded[n] = true;
+                msb_loaded[withoutExt] = true;
             }
             else if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
             {
-                auto it = msb_loaded.find(n);
+                auto it = msb_loaded.find(withoutExt);
                 if (it != msb_loaded.end() && it->second == true)
                 {
                     // an MDS was loaded before
@@ -81,7 +80,7 @@ namespace Animations
                 if (!loadModelScript(fn, p))
                     ;  //return false;
 
-                msb_loaded[n] = false;
+                msb_loaded[withoutExt] = false;
             }
             else
                 continue;

@@ -409,11 +409,10 @@ void Utils::lower(std::string& in)
     std::transform(in.begin(), in.end(), in.begin(), ::tolower);
 }
 
-std::string Utils::lowered(const std::string& in)
+std::string Utils::lowered(std::string str)
 {
-    auto copy = in;
-    Utils::lower(copy);
-    return copy;
+    Utils::lower(str);
+    return str;
 }
 
 void Utils::upper(std::string& in)
@@ -421,38 +420,24 @@ void Utils::upper(std::string& in)
     std::transform(in.begin(), in.end(), in.begin(), ::toupper);
 }
 
-std::string Utils::uppered(const std::string& in)
+std::string Utils::uppered(std::string str)
 {
-    auto copy = in;
-    Utils::upper(copy);
-    return copy;
+    Utils::upper(str);
+    return str;
 }
 
-std::size_t Utils::commonStartLength(const std::string& a, const std::string& b)
+std::size_t Utils::commonPrefixLength(const std::string& a, const std::string& b)
 {
-    auto minSize = std::min(a.size(), b.size());
-    std::size_t common = 0;
-    for (std::size_t i = 0; i < minSize; i++)
-    {
-        if (a[i] == b[i])
-        {
-            common++;
-        }
-        else
-        {
-            break;
-        }
-    }
-    return common;
+    auto pair = std::mismatch(a.begin(), a.end(), b.begin(), b.end());
+    return pair.first - a.begin();
 }
 
-std::string Utils::strippedAndLowered(const std::string& in)
+std::string Utils::strippedAndLowered(std::string str)
 {
-    std::function<bool(char)> isNotAlNum = [](char c) { return std::isalnum(c) == 0; };
-    std::string out = in;
-    lower(out);
-    out.erase(std::remove_if(out.begin(), out.end(), isNotAlNum), out.end());
-    return out;
+    auto isNotAlNum = [](char c) { return std::isalnum(c) == 0; };
+    lower(str);
+    str.erase(std::remove_if(str.begin(), str.end(), isNotAlNum), str.end());
+    return str;
 }
 
 bool Utils::containsLike(const std::string& searchSpace, const std::string& part)
