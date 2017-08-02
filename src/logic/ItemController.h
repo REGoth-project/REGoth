@@ -10,9 +10,9 @@ namespace Logic
     {
     public:
         /**
-		 * @param world World of the underlaying entity
-		 * @param entity Entity owning this controller
-		 */
+         * @param world World of the underlaying entity
+         * @param entity Entity owning this controller
+         */
         ItemController(World::WorldInstance& world, Handle::EntityHandle entity, size_t scriptInstance);
 
         /**
@@ -20,14 +20,14 @@ namespace Logic
          */
         virtual EControllerType getControllerType() { return EControllerType::ItemController; }
         /**
-		 * Removes this item from the world and adds it to the given NPCs inventory
-		 * @param npc NPC to give the item to
-		 */
+         * Removes this item from the world and adds it to the given NPCs inventory
+         * @param npc NPC to give the item to
+         */
         void pickUp(Handle::EntityHandle npc);
 
         /**
-		 * @return Classes which want to get exported on save should return true here
-		 */
+         * @return Classes which want to get exported on save should return true here
+         */
         virtual bool shouldExport() { return true; }
         virtual void importObject(const json& j);
 

@@ -12,10 +12,10 @@ namespace Audio
     class AudioWorld;
 
     /** The AudioEngine represents the target OS sound system.
-      *
-      * The engine class matches the OpenAL device level.
-      *
-      */
+     *
+     * The engine class matches the OpenAL device level.
+     *
+     */
     class AudioEngine final
     {
     public:

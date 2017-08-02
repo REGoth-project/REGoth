@@ -266,8 +266,8 @@ namespace Components
     };
 
     /**
-	 * Handles current animations for the entity. Stores the results inside the instance-data-
-	 */
+     * Handles current animations for the entity. Stores the results inside the instance-data-
+     */
     struct AnimationComponent : public Component
     {
         enum

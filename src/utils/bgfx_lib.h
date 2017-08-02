@@ -5,8 +5,8 @@
 namespace BgfxUtils
 {
     /**
-	 * @brief Initializes the given StaticLevelMeshes vertex- and index-buffers
-	 */
+     * @brief Initializes the given StaticLevelMeshes vertex- and index-buffers
+     */
     template <typename V, typename I>
     void finalizeStaticLevelMesh(LevelMesh::StaticLevelMesh<V, I>& msh)
     {

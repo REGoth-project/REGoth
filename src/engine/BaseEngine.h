@@ -56,8 +56,8 @@ namespace Engine
         virtual ~BaseEngine();
 
         /**
-		 * @brief Initializes the Engine
-		 */
+         * @brief Initializes the Engine
+         */
         virtual void initEngine(int argc, char** argv);
 
         /**
@@ -69,20 +69,20 @@ namespace Engine
          */
         void setBasicGameType(Daedalus::GameType type) { m_BasicGameType = type; }
         /**
-		 * @brief Frame update // TODO: Remove width and height
-		 */
+         * @brief Frame update // TODO: Remove width and height
+         */
         void frameUpdate(double dt, uint16_t width, uint16_t m_height);
 
         /**
-		 * @return Main VDF-Archive
-		 */
+         * @return Main VDF-Archive
+         */
         VDFS::FileIndex& getVDFSIndex() { return m_FileIndex; }
         /**
-		 * Returns the world-instance of the given handle.
-		 * Note: Do not save this pointer somewhere! It may change!
-		 * @param h Handle to look up
-		 * @return Data of the world-instance
-		 */
+         * Returns the world-instance of the given handle.
+         * Note: Do not save this pointer somewhere! It may change!
+         * @param h Handle to look up
+         * @return Data of the world-instance
+         */
         World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
 
         /**
@@ -110,28 +110,28 @@ namespace Engine
         EngineArgs getEngineArgs();
 
         /**
-		 * @return Base-level UI-View. Parent of all other views.
-		 */
+         * @return Base-level UI-View. Parent of all other views.
+         */
         UI::View& getRootUIView() { return m_RootUIView; }
         /**
-		 * // TODO: Move to GameEngine, or pass GameEngine to world!
-		 * @return HUD
-		 */
+         * // TODO: Move to GameEngine, or pass GameEngine to world!
+         * @return HUD
+         */
         UI::Hud& getHud() { return *m_pHUD; }
         UI::zFontCache& getFontCache() { return *m_pFontCache; }
         Audio::AudioEngine& getAudioEngine() { return *m_AudioEngine; }
         /**
-		 * Sets the path the engine is looking for files
-		 * @param path New path
-		 */
+         * Sets the path the engine is looking for files
+         * @param path New path
+         */
         void setContentBasePath(const std::string& path) { m_ContentBasePath = path; }
         /*+
          * @return The path where the engine is looking for content files
          */
         const std::string& getContentBasePath() { return m_ContentBasePath; }
         /**
-		 * @return Allocator for always present textures
-		 */
+         * @return Allocator for always present textures
+         */
         Textures::TextureAllocator& getEngineTextureAlloc() { return m_EngineTextureAlloc; }
         /**
          * @return data-access to the main world
@@ -147,47 +147,47 @@ namespace Engine
         bool saveWorld(Handle::WorldHandle world, const std::string& file);
 
         /**
-		 * Pauses or continues the game.
-		 * @param paused
-		 */
+         * Pauses or continues the game.
+         * @param paused
+         */
         void setPaused(bool paused);
 
         /**
-		 * Pauses or continues the game. Depending on the current state
-		 */
+         * Pauses or continues the game. Depending on the current state
+         */
         void togglePaused() { setPaused(!m_Paused); }
         /**
-		 * increase the time, which the current frame should not treat as elapsed
-		 */
+         * increase the time, which the current frame should not treat as elapsed
+         */
         void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
         int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
         void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
         /**
-		 * @return true if the calling thread is the main thread
-		 */
+         * @return true if the calling thread is the main thread
+         */
         bool isMainThread();
 
         /**
-		 * Insert the given action at the end of the queue
-		 */
+         * Insert the given action at the end of the queue
+         */
         void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
 
         /**
-		 * process all queued actions by FIFO, TODO: remove and use general purpose message queue
-		 */
+         * process all queued actions by FIFO, TODO: remove and use general purpose message queue
+         */
         void processSaveGameActionQueue();
 
         /**
-		 * Guarantees execution of the given function in the main thread
-		 * @param job function to execute in the main thread
-		 * @param forceQueueing if false AND if called from main thread: executes the job right away
-		 * 		  instead of queueing and does not acquire the lock.
-		 */
+         * Guarantees execution of the given function in the main thread
+         * @param job function to execute in the main thread
+         * @param forceQueueing if false AND if called from main thread: executes the job right away
+         * 		  instead of queueing and does not acquire the lock.
+         */
         void executeInMainThread(const std::function<void(BaseEngine* engine)>& job, bool forceQueueing = false);
 
         /**
-		 * Execute the given job on the main thread one time per frame update until it returns true
-		 */
+         * Execute the given job on the main thread one time per frame update until it returns true
+         */
         void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine* engine)>& job,
                                           bool forceQueueing = false);
 
@@ -205,19 +205,19 @@ namespace Engine
 
     protected:
         /**
-		 * Update-method for subclasses
-		 */
+         * Update-method for subclasses
+         */
         virtual void onFrameUpdate(double dt, uint16_t width, uint16_t height) = 0;
 
         /**
-		 * @brief Called to load archives into the main VDFS-Index
-		 *		  Overwrite to load your own default archives
-		 */
+         * @brief Called to load archives into the main VDFS-Index
+         *		  Overwrite to load your own default archives
+         */
         virtual void loadArchives();
 
         /**
-		 * ID of the main thread (bgfx thread)
-		 */
+         * ID of the main thread (bgfx thread)
+         */
         std::thread::id m_MainThreadID;
 
         /**
@@ -226,8 +226,8 @@ namespace Engine
         Daedalus::GameType m_BasicGameType;
 
         /**
-		 * Main VDFS-Index
-		 */
+         * Main VDFS-Index
+         */
         VDFS::FileIndex m_FileIndex;
 
         /**
@@ -250,20 +250,20 @@ namespace Engine
         Audio::AudioEngine* m_AudioEngine = nullptr;
 
         /**
-		 * Base UI-View
-		 */
+         * Base UI-View
+         */
         UI::View m_RootUIView;
         UI::Hud* m_pHUD;
         UI::zFontCache* m_pFontCache;
 
         /**
-		 * Allocator for always present textures
-		 */
+         * Allocator for always present textures
+         */
         Textures::TextureAllocator m_EngineTextureAlloc;
 
         /**
-		 * Folder where the content is
-		 */
+         * Folder where the content is
+         */
         std::string m_ContentBasePath;
 
         /**

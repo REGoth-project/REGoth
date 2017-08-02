@@ -41,10 +41,10 @@ namespace Logic
 namespace World
 {
     /** The audio world class.
- *
- * Each world has it's own AudioWorld which manages an OpenAL context.
- *
- */
+     *
+     * Each world has it's own AudioWorld which manages an OpenAL context.
+     *
+     */
     class AudioWorld
     {
         friend class Audio::AudioEngine;

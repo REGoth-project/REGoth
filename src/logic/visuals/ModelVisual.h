@@ -177,26 +177,26 @@ namespace Logic
         void setAnimation(EModelAnimType type, bool loop = true);
 
         /**
-		 * @brief Applys the given animation overlay
-		 */
+         * @brief Applys the given animation overlay
+         */
         void applyOverlay(const std::string& mds);
 
         /**
-		 * Plays the given animation exactly one time. Has more priority than setAnimation.
-		 * @param type Animation to play
-		 */
+         * Plays the given animation exactly one time. Has more priority than setAnimation.
+         * @param type Animation to play
+         */
         void playAnimation(EModelAnimType type);
         void playAnimation(const std::string& anim);
         void playAnimation(Handle::AnimationHandle anim);
 
         /**
-		 * Stops all playing animations
-		 */
+         * Stops all playing animations
+         */
         void stopAnimations();
 
         /**
-		 * @return Current name of the given animation type (Reacts to overlays)
-		 */
+         * @return Current name of the given animation type (Reacts to overlays)
+         */
         static const char* getAnimationName(EModelAnimType type);
 
         /**
@@ -257,8 +257,8 @@ namespace Logic
         const ZenLoad::zCModelMeshLib& getMeshLib();
 
         /**
-		 * @return Whether an animation with the given name is playing
-		 */
+         * @return Whether an animation with the given name is playing
+         */
         bool isAnimPlaying(const std::string& name);
 
     protected:
@@ -273,8 +273,8 @@ namespace Logic
         void updateHeadMesh();
 
         /**
-		 * Attaches the attachments in m_AttachmentVisualsByNode again
-		 */
+         * Attaches the attachments in m_AttachmentVisualsByNode again
+         */
         void updateAttachmentVisuals();
 
         /**
@@ -319,8 +319,8 @@ namespace Logic
         size_t m_LastKnownAnimationState;
 
         /**
-		 * State of the attachments of the nodes. [Node-name, visual]
-		 */
+         * State of the attachments of the nodes. [Node-name, visual]
+         */
         std::map<std::string, std::string> m_AttachmentVisualsByNode;
     };
 }

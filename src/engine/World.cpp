@@ -185,7 +185,7 @@ bool WorldInstance::init(const std::string& zen,
         wvob.position->m_DrawDistanceFactor = 0.0f;
         Vob::setVisual(wvob, "WORLDMESH.3DS");
         Vob::setTransform(wvob, Math::Matrix::CreateIdentity());
-*/
+         */
 
         Meshes::WorldStaticMesh& worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
 
@@ -689,7 +689,7 @@ std::vector<size_t> WorldInstance::findStartPoints()
     auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
     if(it != m_Waynet.waypointsByName.end())
         pts.push_back((*it).second);
-    */
+     */
 
     auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
     if (it != m_Waynet.waypointsByName.end())
@@ -772,7 +772,7 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
         if(fp.first.substr(0, tag.size()) == tag)
             mp.push_back(fp.second);
     }
-	*/
+     */
 
     return mp;
 }

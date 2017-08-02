@@ -48,8 +48,8 @@ namespace World
         };
 
         /**
-		 * @brief Adds a named waypoint to the given waynet instance
-		 */
+         * @brief Adds a named waypoint to the given waynet instance
+         */
         void addWaypoint(WaynetInstance& waynet, const Waypoint& wp);
 
         /**

@@ -159,8 +159,8 @@ namespace Math
         };
 
         /**
-		 * @brief Converts the given ABGR8-Color to float4
-		 */
+         * @brief Converts the given ABGR8-Color to float4
+         */
         void fromABGR8(uint32_t abgr)
         {
             unsigned char a = static_cast<unsigned char>((abgr >> 24) & 0xFF);
@@ -188,8 +188,8 @@ namespace Math
         }
 
         /**
-		* @brief Converts the stored color to ABGR8
-		*/
+         * @brief Converts the stored color to ABGR8
+         */
         uint32_t toABGR8() const
         {
             unsigned char b[] = {static_cast<unsigned char>(w * 255.0f),
@@ -201,8 +201,8 @@ namespace Math
         }
 
         /**
-		* @brief Converts the stored color to ARGB8
-		*/
+         * @brief Converts the stored color to ARGB8
+         */
         uint32_t toARGB8() const
         {
             unsigned char b[] = {static_cast<unsigned char>(w * 255.0f),
@@ -214,8 +214,8 @@ namespace Math
         }
 
         /**
-		* @brief Converts the stored color to RGBA8
-		*/
+         * @brief Converts the stored color to RGBA8
+         */
         uint32_t toRGBA8() const
         {
             unsigned char b[] = {static_cast<unsigned char>(x * 255.0f),
@@ -673,8 +673,8 @@ namespace Math
     }
 
     /**
-	 * @brief Shortcut to full mat4-vec3 transformation
-	 */
+     * @brief Shortcut to full mat4-vec3 transformation
+     */
     inline float3 operator*(const Matrix& m, const float3& v)
     {
         float4 r;
@@ -690,10 +690,10 @@ namespace Math
     }
 
     /** 
-	* @brief Compute barycentric coordinates (u, v, w) for
-	*		  point p with respect to triangle (a, b, c)
-	*		  (Transcribed from Christer Ericson's Real-Time Collision Detection)
-	*/
+     * @brief Compute barycentric coordinates (u, v, w) for
+     *		  point p with respect to triangle (a, b, c)
+     *		  (Transcribed from Christer Ericson's Real-Time Collision Detection)
+     */
 
     static void barycentric(const float3& p, const float3& a, const float3& b, const float3& c, float& u, float& v, float& w)
     {

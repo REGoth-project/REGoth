@@ -93,8 +93,8 @@ void AnimHandler::setOverlay(const std::string& mds)
 }
 
 /**
-* @brief Sets the currently playing animation
-*/
+ * @brief Sets the currently playing animation
+ */
 void AnimHandler::playAnimation(const std::string& animName)
 {
     if (animName.empty())
@@ -169,8 +169,8 @@ void AnimHandler::setAnimation(const std::string& animName)
 }
 
 /**
-* @brief Updates the currently playing animations
-*/
+ * @brief Updates the currently playing animations
+ */
 void AnimHandler::updateAnimations(double deltaTime)
 {
     Animations::Animation* anim = getActiveAnimationPtr();
@@ -360,8 +360,8 @@ Math::float3 AnimHandler::getRootNodeVelocityTotal()
 }
 
 /**
-* @brief Draws the skeleton of the animation
-*/
+ * @brief Draws the skeleton of the animation
+ */
 void AnimHandler::debugDrawSkeleton(const Math::Matrix& transform)
 {
     ddPush();
@@ -391,8 +391,8 @@ void AnimHandler::debugDrawSkeleton(const Math::Matrix& transform)
 }
 
 /**
-* @brief Updates the given skeletalmesh-info
-*/
+ * @brief Updates the given skeletalmesh-info
+ */
 void AnimHandler::updateSkeletalMeshInfo(Math::Matrix* target, size_t numMatrices)
 {
     memcpy(target, m_ObjectSpaceNodeTransforms.data(),

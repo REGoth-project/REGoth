@@ -28,8 +28,8 @@ namespace Engine
         int getDay() const;
 
         /**
-        * @param newDay day to be set to
-        */
+         * @param newDay day to be set to
+         */
         void setDay(int newDay);
 
         /**

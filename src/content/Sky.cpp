@@ -68,7 +68,7 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
                           + (((ic[1] >> 16) << 16) &    0x00FF0000) // g
                           + (((ic[2] >> 16) << 8) &     0x0000FF00)  // b
                           + 0xFF;                                 // a
-                          */
+         */
 
         pLut[i].x = (ic[0] >> 16) / 255.0f;
         pLut[i].y = (ic[1] >> 16) / 255.0f;

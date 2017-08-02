@@ -13,8 +13,8 @@ namespace Engine
         ~GameEngine();
 
         /**
-		 * @brief Initializes the Engine
-		 */
+         * @brief Initializes the Engine
+         */
         virtual void initEngine(int argc, char** argv) override;
 
         /**
@@ -27,14 +27,14 @@ namespace Engine
 
     protected:
         /**
-		 * Called when a world was added
-		 */
+         * Called when a world was added
+         */
         virtual void onWorldCreated(Handle::WorldHandle world) override;
         virtual void onWorldRemoved(Handle::WorldHandle world) override;
 
         /**
-		 * Update-method for subclasses
-		 */
+         * Update-method for subclasses
+         */
         void onFrameUpdate(double dt, uint16_t width, uint16_t height) override;
 
         /**

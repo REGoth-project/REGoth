@@ -4,8 +4,8 @@
 namespace Memory
 {
     /**
- * List supporting finding, obtaining and returning free list elements in O(1) time
- */
+     * List supporting finding, obtaining and returning free list elements in O(1) time
+     */
     template <typename T>
     class FreeList
     {

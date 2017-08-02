@@ -4,13 +4,13 @@
 namespace Utils
 {
     /**
-	* @brief tuple-foreach. Based on http://stackoverflow.com/a/16387374
-	*/
+     * @brief tuple-foreach. Based on http://stackoverflow.com/a/16387374
+     */
     namespace tf
     {
         /**
-		* @brief generate a compile-time list of values from 0 to N
-		*/
+         * @brief generate a compile-time list of values from 0 to N
+         */
         template <int... Is>
         struct seq
         {
@@ -43,8 +43,8 @@ namespace Utils
     }
 
     /**
-	* @brief Calls lambda-function f for each element in the tuple t
-	*/
+     * @brief Calls lambda-function f for each element in the tuple t
+     */
     template <typename... Ts, typename F>
     void for_each_in_tuple(std::tuple<Ts...>& t, F f)
     {
@@ -53,8 +53,8 @@ namespace Utils
     }
 
     /**
-	* Example:
-	* auto t = std::make_tuple(1, 2, "test", 4.0f);
-	* for_each_in_tuple(t, [](auto& v){v += 1;});
-	*/
+     * Example:
+     * auto t = std::make_tuple(1, 2, "test", 4.0f);
+     * for_each_in_tuple(t, [](auto& v){v += 1;});
+     */
 }

@@ -18,8 +18,8 @@ namespace Memory
     };
 
     /**
-	 * Note: Dif is only used to ensure type-safety! 
-	 */
+     * Note: Dif is only used to ensure type-safety! 
+     */
     template <int N1, int N2, int dif = 0>
     struct GenericHandle
     {

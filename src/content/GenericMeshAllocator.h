@@ -24,8 +24,8 @@ namespace Meshes
         virtual ~GenericMeshAllocator();
 
         /**
-        * @brief Sets the VDFS-Index to use
-        */
+         * @brief Sets the VDFS-Index to use
+         */
         void setVDFSIndex(const VDFS::FileIndex* vdfidx) { m_pVDFSIndex = vdfidx; }
         /**
          * @brief Loads a ZTEX-texture from the given or stored VDFS-FileIndex
