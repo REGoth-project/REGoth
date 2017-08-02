@@ -9,8 +9,8 @@ static btTransform getFromFloat(const Math::Matrix& transform)
     return t;
 }
 
-Physics::MotionState::MotionState(const Math::Matrix& transform) :
-        btDefaultMotionState(getFromFloat(transform))
+Physics::MotionState::MotionState(const Math::Matrix& transform)
+    : btDefaultMotionState(getFromFloat(transform))
 {
 }
 
@@ -30,26 +30,26 @@ Math::float4 Physics::MotionState::getRotationQuat()
     return Math::float4(rotation.x(), rotation.y(), rotation.z(), rotation.w());
 }
 
-void Physics::MotionState::getOpenGLMatrix(float *m)
+void Physics::MotionState::getOpenGLMatrix(float* m)
 {
     btTransform trans;
     getWorldTransform(trans);
     trans.getOpenGLMatrix(m);
 }
 
-void Physics::MotionState::getWorldTransform(btTransform &centerOfMassWorldTrans) const
+void Physics::MotionState::getWorldTransform(btTransform& centerOfMassWorldTrans) const
 {
     //std::shared_lock<std::shared_timed_mutex> shared(m_Mutex, std::defer_lock);
     btDefaultMotionState::getWorldTransform(centerOfMassWorldTrans);
 }
 
-void Physics::MotionState::setWorldTransform(const btTransform &centerOfMassWorldTrans)
+void Physics::MotionState::setWorldTransform(const btTransform& centerOfMassWorldTrans)
 {
     //std::unique_lock<std::shared_timed_mutex> exclusive(m_Mutex, std::defer_lock);
     btDefaultMotionState::setWorldTransform(centerOfMassWorldTrans);
 }
 
-void Physics::MotionState::setWorldTransform(const Math::Matrix &centerOfMassWorldTrans)
+void Physics::MotionState::setWorldTransform(const Math::Matrix& centerOfMassWorldTrans)
 {
     btTransform t;
     t.setFromOpenGLMatrix(centerOfMassWorldTrans.mv);

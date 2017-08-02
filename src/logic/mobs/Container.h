@@ -59,22 +59,12 @@ namespace Logic
             /**
              * @return
              */
-            const std::vector<Item>& getContents(){ return m_Contents; }
+            const std::vector<Item>& getContents() { return m_Contents; }
         private:
-
-
-
             /**
              * Items stored inside this container
              */
             std::vector<Item> m_Contents;
         };
-
     }
 }
-
-
-
-
-
-

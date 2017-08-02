@@ -1,8 +1,8 @@
 #pragma once
-#include <logic/Console.h>
 #include "Menu.h"
 #include "View.h"
 #include <engine/BaseEngine.h>
+#include <logic/Console.h>
 
 // HACK: Work around windows.h messing this up with its define
 #ifdef DialogBox
@@ -38,7 +38,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * @param value for health-bar of current player
@@ -61,7 +61,7 @@ namespace UI
         /**
          * @param timeStr Current time of day to be shown on the hud
          */
-        void setDateTimeDisplay(const std::string &timeStr);
+        void setDateTimeDisplay(const std::string& timeStr);
 
         /**
          * To be called when one of the given actions were triggered
@@ -78,33 +78,29 @@ namespace UI
         /**
          * @return Console-Box
          */
-        UI::ConsoleBox& getConsoleBox(){ return *m_pConsoleBox; }
-
+        UI::ConsoleBox& getConsoleBox() { return *m_pConsoleBox; }
         /**
          * @return Dialog-box
          */
-        DialogBox& getDialogBox(){ return *m_pDialogBox; }
-
+        DialogBox& getDialogBox() { return *m_pDialogBox; }
         /**
          * @return PrintScreenManager
          */
         UI::PrintScreenMessages& getPrintScreenManager() { return *m_pPrintScreenMessageView; }
-
         /**
          * LoadingScreen
          */
-        LoadingScreen& getLoadingScreen(){ return *m_pLoadingScreen; }
-
+        LoadingScreen& getLoadingScreen() { return *m_pLoadingScreen; }
         /**
          * Controls visibility of gameplay-hud
          */
-         void setGameplayHudVisible(bool value);
+        void setGameplayHudVisible(bool value);
 
         /**
          * Appends a menu to the current menu-chain.
          * @tparam T Type of menu to append. Must have a static 'create' function!
          */
-        template<typename T>
+        template <typename T>
         T& pushMenu();
 
         /**
@@ -116,7 +112,7 @@ namespace UI
          * Pops all menus from the chain and frees its memory.
          */
         void popAllMenus();
-        
+
         template <typename T>
         bool isTopMenu()
         {
@@ -125,10 +121,8 @@ namespace UI
         /**
          * @return Whether a menu is currently active
          */
-        bool isMenuActive(){ return !m_MenuChain.empty(); }
-        
+        bool isMenuActive() { return !m_MenuChain.empty(); }
     protected:
-
         /**
          * Deletes all menus stored in the m_MenusToDelete-list
          */
@@ -153,7 +147,7 @@ namespace UI
          * Chain of opened menus. Only the last one will be rendered and processed
          */
         std::list<Menu*> m_MenuChain;
-        std::list<Menu*> m_MenusToDelete; // Menus to be deleted next frame
+        std::list<Menu*> m_MenusToDelete;  // Menus to be deleted next frame
 
         /**
          * All menus registered here
@@ -176,7 +170,7 @@ namespace UI
         {
             m_Engine.setPaused(true);
         }
-        T *menu = T::create(m_Engine);
+        T* menu = T::create(m_Engine);
         m_MenuChain.push_back(menu);
         addChild(m_MenuChain.back());
         return *menu;

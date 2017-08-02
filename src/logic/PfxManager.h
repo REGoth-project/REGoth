@@ -25,15 +25,14 @@ namespace World
 
 namespace Logic
 {
-
     /**
      * Class which holds on to a Daedalus-VM loaded with the PARTICLEFX.DAT
      */
     class PfxManager
     {
     public:
-
-        enum EmitterShape {
+        enum EmitterShape
+        {
             ES_POINT,
             ES_LINE,
             ES_BOX,
@@ -42,28 +41,32 @@ namespace Logic
             ES_MESH
         };
 
-        enum EmitterFOR {
+        enum EmitterFOR
+        {
             EFOR_WORLD,
             EFOR_OBJECT
         };
 
-        enum EmitterDirMode {
+        enum EmitterDirMode
+        {
             EDM_NONE,
             EDM_DIR,
             EDM_TARGET,
             EDM_MESH
         };
 
-        enum EmitterVisOrient {
+        enum EmitterVisOrient
+        {
             EVO_NONE,
             EVO_VELO_ALIGNED,
             EVO_VOB_XZPLANE,
             EVO_VELO_ALIGNED3D,
         };
 
-        enum EmitterDistribType {
+        enum EmitterDistribType
+        {
             EDT_RAND,
-            EDT_UNIFORM, // Does not work in the original
+            EDT_UNIFORM,  // Does not work in the original
             EDT_WALK,
         };
 
@@ -76,7 +79,8 @@ namespace Logic
          * 3 = die Partikel halten an;
          * 4 = die Partikel werden entfernt
          */
-        enum EmitterCollDetType {
+        enum EmitterCollDetType
+        {
             ECDT_None = 0,
             ECDT_Slow_Reflect = 1,
             ECDT_Accel_Reflect = 2,
@@ -84,7 +88,8 @@ namespace Logic
             ECDT_Kill = 4
         };
 
-        enum EmitterBlendMode {
+        enum EmitterBlendMode
+        {
             EBM_None,
             EBM_Blend,
             EBM_Add,
@@ -94,13 +99,13 @@ namespace Logic
         struct Emitter
         {
             // https://wiki.worldofgothic.de/doku.php?id=partikel_effekte
-            float ppsValue;                     // Particles per second
-            std::vector<float> ppsScaleKeys;    // Factors for ppsValue by time
-            bool ppsIsLooping;                  // Whether to loop the factors in ppsScaleKeys
-            bool ppsIsSmooth;                   // Whether to lerp between ppsScaleKeys or just jump straight to them
-            float ppsFPS;                       // How fast to go through the list in ppsScaleKeys
-            std::string ppsCreateEm;            // Creates an other Emitter on top of this one (apparently barely used)
-            float ppsCreateEmDelay;             // Delay before the emitter in "ppsCreateEm" will be created
+            float ppsValue;                   // Particles per second
+            std::vector<float> ppsScaleKeys;  // Factors for ppsValue by time
+            bool ppsIsLooping;                // Whether to loop the factors in ppsScaleKeys
+            bool ppsIsSmooth;                 // Whether to lerp between ppsScaleKeys or just jump straight to them
+            float ppsFPS;                     // How fast to go through the list in ppsScaleKeys
+            std::string ppsCreateEm;          // Creates an other Emitter on top of this one (apparently barely used)
+            float ppsCreateEmDelay;           // Delay before the emitter in "ppsCreateEm" will be created
 
             EmitterShape shpType;               // Type of shape the emitter should have
             EmitterFOR shpFOR;                  // "Frame-Of-Reference" for the emitter. Setting this to "world" will not rotate the emitter with it's object.
@@ -116,53 +121,52 @@ namespace Logic
             bool shpScaleIsSmooth;              // Whether to lerp between shpScaleKeys or just jump straight to them
             float shpScaleFPS;                  // How fast to go through the list in ppsScaleKeys
 
-            EmitterDirMode dirMode;             // Direction of the particles
-            EmitterFOR dirFOR;                  // "Frame-Of-Reference" for the particles. See shpFOR.
-            EmitterFOR dirModeTargetFOR;        // Same as dirFOR but for target?
-            Math::float3 dirModeTargetPos;      // Position the particles go to if dirMode == TARGET.
-            float dirAngleHead;                 // Angle (Degrees) the particles fly to if dirMode == DIR (left/right)
-            float dirAngleHeadVar;              // Variance in dirAngleHead
-            float dirAngleElev;                 // Angle (Degrees) the particles fly to if dirMode == DIR (up/down)
-            float dirAngleElevVar;              // Variance in dirAngleElev
-            Math::float3 dirDirection;          // (REGOTH) Calculated direction-vector
+            EmitterDirMode dirMode;         // Direction of the particles
+            EmitterFOR dirFOR;              // "Frame-Of-Reference" for the particles. See shpFOR.
+            EmitterFOR dirModeTargetFOR;    // Same as dirFOR but for target?
+            Math::float3 dirModeTargetPos;  // Position the particles go to if dirMode == TARGET.
+            float dirAngleHead;             // Angle (Degrees) the particles fly to if dirMode == DIR (left/right)
+            float dirAngleHeadVar;          // Variance in dirAngleHead
+            float dirAngleElev;             // Angle (Degrees) the particles fly to if dirMode == DIR (up/down)
+            float dirAngleElevVar;          // Variance in dirAngleElev
+            Math::float3 dirDirection;      // (REGOTH) Calculated direction-vector
             Utils::BBox3D dirAngleBox;
             Math::float3 dirAngleBoxDim;
 
-            float velAvg;                       // Initial speed of the particles
-            float velVar;                       // Variance of velAvg
+            float velAvg;  // Initial speed of the particles
+            float velVar;  // Variance of velAvg
 
-            float lspPartAvg;                   // Lifespan of the particles
-            float lspPartVar;                   // Variance of lspPartAvg
+            float lspPartAvg;  // Lifespan of the particles
+            float lspPartVar;  // Variance of lspPartAvg
 
-            Math::float3 flyGravity;            // Acceleration (gravity) for each particle (No FOR here)
+            Math::float3 flyGravity;  // Acceleration (gravity) for each particle (No FOR here)
             EmitterCollDetType flyCollDet;
 
-            std::string visName;                // Name of the texture for each particle
-            EmitterVisOrient visOrientation;    // Orientation for each particle
-            bool visTexIsQuadPoly;                 // Whether to draw a complete polygon (Always the case in REGoth)
-            float visTexAniFPS;                 // Number of texture-animation frames per second
-            bool visTexAniIsLooping;            // Whether to loop the texture animation
-            Math::float3 visTexColorStart;      // Start of texture color-modulation interpolation
-            Math::float3 visTexColorEnd;        // End of texture color-modulation interpolation
-            Math::float2 visSizeStart;          // Size of the particle on start. (visOrientation == None: Screen axis. X = Target direction otherwise)
-            float visSizeEndScale;              // Scale of visSizeStart at the end of the lifetime of a particle
-            EmitterBlendMode visAlphaFunc;      // Blend-mode for the particles
-            float visAlphaStart;                // Multiplied with the particles alpha-value. Linear interpolation over lifetime to visAlphaEnd
-            float visAlphaEnd;                  // See visAlphaStart
+            std::string visName;              // Name of the texture for each particle
+            EmitterVisOrient visOrientation;  // Orientation for each particle
+            bool visTexIsQuadPoly;            // Whether to draw a complete polygon (Always the case in REGoth)
+            float visTexAniFPS;               // Number of texture-animation frames per second
+            bool visTexAniIsLooping;          // Whether to loop the texture animation
+            Math::float3 visTexColorStart;    // Start of texture color-modulation interpolation
+            Math::float3 visTexColorEnd;      // End of texture color-modulation interpolation
+            Math::float2 visSizeStart;        // Size of the particle on start. (visOrientation == None: Screen axis. X = Target direction otherwise)
+            float visSizeEndScale;            // Scale of visSizeStart at the end of the lifetime of a particle
+            EmitterBlendMode visAlphaFunc;    // Blend-mode for the particles
+            float visAlphaStart;              // Multiplied with the particles alpha-value. Linear interpolation over lifetime to visAlphaEnd
+            float visAlphaEnd;                // See visAlphaStart
 
-            float trlFadeSpeed;                 // Fade speed for particle-trails
-            std::string trlTexture;             // Texture to use as trail
-            float trlWidth;                     // Width of the trail
+            float trlFadeSpeed;      // Fade speed for particle-trails
+            std::string trlTexture;  // Texture to use as trail
+            float trlWidth;          // Width of the trail
 
-            float mrkFadeSpeed;                 // How quick a mark on the worldmesh should decay
-            std::string mrkTexture;             // Texture to leave behind on the worldmesh on impact
-            float mrkSize;                      // Scale if the mark
+            float mrkFadeSpeed;      // How quick a mark on the worldmesh should decay
+            std::string mrkTexture;  // Texture to leave behind on the worldmesh on impact
+            float mrkSize;           // Scale if the mark
 
-            bool useEmittersFOR;                // If true, particles will move with the emitter
-            std::pair<float,float> timeStartEnd;// Time when to render this emitter. Can be something like (22, 3) to render the effect only during nighttime
-            bool isAmbientPFX;                  // Not rendered if the player choose to not render AmbientPFX in the games settings
+            bool useEmittersFOR;                   // If true, particles will move with the emitter
+            std::pair<float, float> timeStartEnd;  // Time when to render this emitter. Can be something like (22, 3) to render the effect only during nighttime
+            bool isAmbientPFX;                     // Not rendered if the player choose to not render AmbientPFX in the games settings
         };
-
 
         PfxManager(World::WorldInstance& world);
         ~PfxManager();
@@ -180,8 +184,8 @@ namespace Logic
          * @return Settings for the given FX.
          */
         const Emitter& getParticleFX(const std::string& name);
-    private:
 
+    private:
         /**
          * Loads the PARTICLEFX.DAT
          * @return Success
@@ -209,5 +213,3 @@ namespace Logic
         Emitter m_DefaultEmitter;
     };
 }
-
-

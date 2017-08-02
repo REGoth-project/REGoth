@@ -1,16 +1,16 @@
+#include "MobController.h"
+#include "PlayerController.h"
+#include "visuals/ModelVisual.h"
+#include <ZenLib/utils/logger.h>
+#include <ZenLib/zenload/zTypes.h>
+#include <components/EntityActions.h>
 #include <components/Vob.h>
 #include <components/VobClasses.h>
-#include <ZenLib/zenload/zTypes.h>
-#include <ZenLib/utils/logger.h>
-#include <logic/mobs/Bed.h>
-#include <components/EntityActions.h>
-#include "MobController.h"
-#include "visuals/ModelVisual.h"
-#include "PlayerController.h"
-#include <engine/BaseEngine.h>
 #include <debugdraw/debugdraw.h>
-#include <logic/mobs/Ladder.h>
+#include <engine/BaseEngine.h>
+#include <logic/mobs/Bed.h>
 #include <logic/mobs/Container.h>
+#include <logic/mobs/Ladder.h>
 
 using namespace Logic;
 
@@ -31,8 +31,8 @@ void MobCore::importCore(const json& j)
     m_StateNum = j["stateNum"];
 }
 
-MobController::MobController(World::WorldInstance& world, Handle::EntityHandle entity) :
-        Controller(world, entity)
+MobController::MobController(World::WorldInstance& world, Handle::EntityHandle entity)
+    : Controller(world, entity)
 {
     m_NumNpcsMax = 0;
     m_NumNpcsCurrent = 0;
@@ -53,7 +53,7 @@ ModelVisual* MobController::getModelVisual()
 {
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
 
-    if(!vob.visual || vob.visual->getVisualType() != EVisualType::Model)
+    if (!vob.visual || vob.visual->getVisualType() != EVisualType::Model)
         return nullptr;
 
     return reinterpret_cast<ModelVisual*>(vob.visual);
@@ -100,17 +100,17 @@ void MobController::findInteractPositions()
     ModelVisual* model = getModelVisual();
 
     // Some mobs seem to be just static meshes without any nodes
-    if(!model || model->getAnimationHandler().getObjectSpaceTransforms().empty())
+    if (!model || model->getAnimationHandler().getObjectSpaceTransforms().empty())
         return;
 
     const std::vector<ZenLoad::ModelNode>& nodes = model->getMeshLib().getNodes();
 
-    for(size_t i=0;i<nodes.size();i++)
+    for (size_t i = 0; i < nodes.size(); i++)
     {
         const ZenLoad::ModelNode& n = nodes[i];
 
         // Check if this is a position-node
-        if(n.name.find("ZS_POS") != std::string::npos)
+        if (n.name.find("ZS_POS") != std::string::npos)
         {
             m_InteractPositions.emplace_back();
 
@@ -122,19 +122,19 @@ void MobController::findInteractPositions()
             //LogInfo() << "Interact-position: " << n.name;
 
             // Check if this can be used by multiple npcs
-            if(n.name.find("NPC") != std::string::npos)
+            if (n.name.find("NPC") != std::string::npos)
                 m_NumNpcsMax++;
         }
     }
 
-    if(!m_NumNpcsMax)
+    if (!m_NumNpcsMax)
         m_NumNpcsMax = 1;
 }
 
 InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, float maxDistance)
 {
-    if(m_NumNpcsCurrent >= m_NumNpcsMax)
-        return nullptr; // Mob is full
+    if (m_NumNpcsCurrent >= m_NumNpcsMax)
+        return nullptr;  // Mob is full
 
     // Square for faster distance computation
     float maxDistance2 = maxDistance * maxDistance;
@@ -143,30 +143,29 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
     Math::float3 npcPosition = m_World.getEntity<Components::PositionComponent>(npc).m_WorldMatrix.Translation();
     VobTypes::NpcVobInformation npcVob = VobTypes::asNpcVob(m_World, npc);
 
-
     bool wrongSide = false;
     float minDist = FLT_MAX;
     bool playerTooFar = false;
     InteractPosition* found = nullptr;
-    for(InteractPosition& p : m_InteractPositions)
+    for (InteractPosition& p : m_InteractPositions)
     {
-        if(p.usedByNpc == npc)
-            return &p; // This npc already using the mob
+        if (p.usedByNpc == npc)
+            return &p;  // This npc already using the mob
 
-        if(p.usedByNpc.isValid())
-            return nullptr; // Other npc using this
+        if (p.usedByNpc.isValid())
+            return nullptr;  // Other npc using this
 
         Math::float3 worldPosition = p.transform.Translation() + getEntityTransform().Translation();
 
         // Get distance from npc to node
         float dist2 = (worldPosition - npcPosition).lengthSquared();
 
-        if(dist2 < minDist)
+        if (dist2 < minDist)
         {
             // Check if we can see this position if not only distance matters
-            if(dist2 < maxDistance2 && !p.distance)
+            if (dist2 < maxDistance2 && !p.distance)
             {
-                if(!npcVob.playerController->freeLineOfSight(worldPosition))
+                if (!npcVob.playerController->freeLineOfSight(worldPosition))
                 {
                     wrongSide = true;
                     continue;
@@ -175,9 +174,9 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
 
             // If this is a player-charakter, also check the max allowed distance, since he should not run all the way there
             // by himself, but let the actual player do that
-            if(npcVob.playerController->isPlayerControlled())
+            if (npcVob.playerController->isPlayerControlled())
             {
-                if(!p.distance && dist2 > maxDistance2)
+                if (!p.distance && dist2 > maxDistance2)
                 {
                     playerTooFar = true;
                     continue;
@@ -189,17 +188,18 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
         }
     }
 
-    if(!found && npcVob.playerController->isPlayerControlled())
+    if (!found && npcVob.playerController->isPlayerControlled())
     {
         // Notfiy the player about the mob being too far or standing on the wrong side
-        if(playerTooFar)
+        if (playerTooFar)
         {
             EventMessages::ManipulateMessage msg;
             msg.subType = EventMessages::ManipulateMessage::ST_CallScript;
             msg.symIdx = m_World.getScriptEngine().getSymbolIndexByName(PlayerScriptInfo::PLAYER_MOB_TOO_FAR_AWAY);
 
             npcVob.playerController->getEM().onMessage(msg, m_Entity);
-        }else if(wrongSide)
+        }
+        else if (wrongSide)
         {
             EventMessages::ManipulateMessage msg;
             msg.subType = EventMessages::ManipulateMessage::ST_CallScript;
@@ -212,17 +212,16 @@ InteractPosition* MobController::findFreePosition(Handle::EntityHandle npc, floa
     return found;
 }
 
-
 void MobController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 {
     m_FocusName = vob.vobName;
     m_zObjectClass = vob.objectClass;
 
-    if(m_FocusName == "Bed")
+    if (m_FocusName == "Bed")
         m_MobCore = new MobCores::Bed(m_World, m_Entity);
-    else if(m_FocusName == "Ladder")
+    else if (m_FocusName == "Ladder")
         m_MobCore = new MobCores::Ladder(m_World, m_Entity);
-    else if(m_zObjectClass.find("oCMobContainer:") != std::string::npos)
+    else if (m_zObjectClass.find("oCMobContainer:") != std::string::npos)
     {
         MobCores::Container* cnt = new MobCores::Container(m_World, m_Entity);
 
@@ -248,11 +247,11 @@ void MobController::initFromJSONDescriptor(const json& j)
     m_FocusName = j["focusName"];
     m_zObjectClass = j["objectClass"];
 
-    if(m_FocusName == "Bed")
+    if (m_FocusName == "Bed")
         m_MobCore = new MobCores::Bed(m_World, m_Entity);
-    else if(m_FocusName == "Ladder")
+    else if (m_FocusName == "Ladder")
         m_MobCore = new MobCores::Ladder(m_World, m_Entity);
-    else if(m_zObjectClass.find("oCMobContainer:") != std::string::npos)
+    else if (m_zObjectClass.find("oCMobContainer:") != std::string::npos)
         m_MobCore = new MobCores::Container(m_World, m_Entity);
     else
         m_MobCore = new MobCore(m_World, m_Entity);
@@ -274,14 +273,24 @@ void MobController::onMessage(std::shared_ptr<EventMessages::EventMessage> messa
     assert(message->messageType == EventMessages::EventMessageType::Mob);
 
     EventMessages::MobMessage& msg = *std::dynamic_pointer_cast<EventMessages::MobMessage>(message);
-    switch((EventMessages::MobMessage::MobSubType)msg.subType)
+    switch ((EventMessages::MobMessage::MobSubType)msg.subType)
     {
-        case EventMessages::MobMessage::ST_STARTINTERACTION: startInteraction(msg.npc); break;
-        case EventMessages::MobMessage::ST_STARTSTATECHANGE: startStateChange(msg.npc, msg.stateFrom, msg.stateTo); break;
-        case EventMessages::MobMessage::ST_ENDINTERACTION: stopInteraction(msg.npc); break;
-        case EventMessages::MobMessage::ST_UNLOCK:break;
-        case EventMessages::MobMessage::ST_LOCK:break;
-        case EventMessages::MobMessage::ST_CALLSCRIPT: callOnStateFunc(msg.npc, msg.stateTo); break;
+        case EventMessages::MobMessage::ST_STARTINTERACTION:
+            startInteraction(msg.npc);
+            break;
+        case EventMessages::MobMessage::ST_STARTSTATECHANGE:
+            startStateChange(msg.npc, msg.stateFrom, msg.stateTo);
+            break;
+        case EventMessages::MobMessage::ST_ENDINTERACTION:
+            stopInteraction(msg.npc);
+            break;
+        case EventMessages::MobMessage::ST_UNLOCK:
+            break;
+        case EventMessages::MobMessage::ST_LOCK:
+            break;
+        case EventMessages::MobMessage::ST_CALLSCRIPT:
+            callOnStateFunc(msg.npc, msg.stateTo);
+            break;
     }
 }
 
@@ -292,7 +301,7 @@ void MobController::callOnStateFunc(Handle::EntityHandle npc, int state)
     std::string symName = m_OnStateFuncName + "_S" + std::to_string(state);
     size_t idx = s.getSymbolIndexByName(symName);
 
-    if(idx != static_cast<size_t>(-1))
+    if (idx != static_cast<size_t>(-1))
     {
         VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
         s.setInstanceNPC("self", VobTypes::getScriptHandle(nv));
@@ -305,7 +314,7 @@ void MobController::callOnStateFunc(Handle::EntityHandle npc, int state)
 
 void MobController::sendCallOnStateFunc(Handle::EntityHandle npc, int state)
 {
-    if(!m_OnStateFuncName.empty())
+    if (!m_OnStateFuncName.empty())
     {
         EventMessages::MobMessage msg;
         msg.subType = EventMessages::MobMessage::ST_CALLSCRIPT;
@@ -318,8 +327,8 @@ void MobController::sendCallOnStateFunc(Handle::EntityHandle npc, int state)
 
 void MobController::startInteraction(Handle::EntityHandle npc)
 {
-    if(isInteractingWith(npc))
-        return; // Don't allow interacting twice on the same npc
+    if (isInteractingWith(npc))
+        return;  // Don't allow interacting twice on the same npc
 
     // Move NPC to it's position
     setIdealPosition(npc);
@@ -344,10 +353,10 @@ void MobController::startInteraction(Handle::EntityHandle npc)
 
     // This is save, because mobs generally won't be deleted from the map.
     // If not, this will just do nothing
-    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>){
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>) {
 
-	LogInfo() << "lock camera";
-    	m_lockCamera = true;
+        LogInfo() << "lock camera";
+        m_lockCamera = true;
 
         // Re-get everything to make sure it is still there
         /*VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
@@ -362,7 +371,6 @@ void MobController::startInteraction(Handle::EntityHandle npc)
 
     nv.playerController->getEM().onMessage(sm);
 
-
     m_NumNpcsCurrent++;
 }
 
@@ -370,10 +378,10 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 {
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
-    if(from == -1)
+    if (from == -1)
         from = m_MobCore->getState();
 
-    if(to != -1)
+    if (to != -1)
         m_MobCore->onBeginStateChange(npc, from, to);
 
     // Find out which animations to play
@@ -387,17 +395,17 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
 
     // This is save, because vobs generally won't be deleted from the map.
     // If not, this will just do nothing
-    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>){
+    sm.addDoneCallback(m_Entity, [=](Handle::EntityHandle hostVob, std::shared_ptr<EventMessages::EventMessage>) {
 
         // Re-get everything to make sure it is still there
         VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
         VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, hostVob);
 
-        if(!nv.isValid() || !mob.isValid())
-            return; // Either mob or NPC isn't there anymore
+        if (!nv.isValid() || !mob.isValid())
+            return;  // Either mob or NPC isn't there anymore
 
         // First animation is done, thus, go to the next state
-        if(to != -1)
+        if (to != -1)
             mob.mobController->m_MobCore->onEndStateChange(npc, from, to);
         else
             stopInteraction(npc);
@@ -406,27 +414,24 @@ void MobController::startStateChange(Handle::EntityHandle npc, int from, int to)
     nv.playerController->getEM().onMessage(sm);
 
     // Play the mobs animation
-    if(getModelVisual())
+    if (getModelVisual())
         getModelVisual()->setAnimation(mobAni, false);
-
 }
 
 void MobController::stopInteraction(Handle::EntityHandle npc)
 {
     ModelVisual* model = getModelVisual();
 
-    if(!model)
+    if (!model)
         return;
 
     if (!isInteractingWith(npc))
         return;
 
-
-
     // Free position used by the npc
-    for(InteractPosition& p : m_InteractPositions)
+    for (InteractPosition& p : m_InteractPositions)
     {
-        if(p.usedByNpc == npc)
+        if (p.usedByNpc == npc)
         {
             p.usedByNpc.invalidate();
             break;
@@ -451,27 +456,28 @@ void MobController::getAnimationTransitionNames(int stateFrom, int stateTo,
                                                 std::string& outMobAnimation,
                                                 std::string& outNpcAnimation)
 {
-    if(!m_MobCore)
+    if (!m_MobCore)
         return;
 
-    if(stateTo == -1)
+    if (stateTo == -1)
     {
         // Go from current state to stand
         outMobAnimation = "";
         outNpcAnimation = "T_" + m_MobCore->getSchemeName() + "_S" + std::to_string(stateFrom) + "_2_STAND";
-    }else
+    }
+    else
     {
         // Go from current state to the next one
-        outMobAnimation	 = "T_S" + std::to_string(stateFrom)  + "_2_S" + std::to_string(stateTo);
-        outNpcAnimation	 = "T_"  + m_MobCore->getSchemeName() + "_S" + std::to_string(stateFrom) + "_2_S" + std::to_string(stateTo);
+        outMobAnimation = "T_S" + std::to_string(stateFrom) + "_2_S" + std::to_string(stateTo);
+        outNpcAnimation = "T_" + m_MobCore->getSchemeName() + "_S" + std::to_string(stateFrom) + "_2_S" + std::to_string(stateTo);
     }
 }
 
 bool MobController::isInteractingWith(Handle::EntityHandle npc)
 {
-    for(InteractPosition& p : m_InteractPositions)
+    for (InteractPosition& p : m_InteractPositions)
     {
-        if(p.usedByNpc == npc)
+        if (p.usedByNpc == npc)
             return true;
     }
 
@@ -480,13 +486,13 @@ bool MobController::isInteractingWith(Handle::EntityHandle npc)
 
 void MobController::setIdealPosition(Handle::EntityHandle npc)
 {
-    if(!m_MobCore)
+    if (!m_MobCore)
         return;
 
     // Find a free position
     InteractPosition* p = findFreePosition(npc);
 
-    if(!p)
+    if (!p)
         return;
 
     p->usedByNpc = npc;
@@ -496,12 +502,12 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
 
     VobTypes::NpcVobInformation nv = VobTypes::asNpcVob(m_World, npc);
 
-    if(p->distance)
+    if (p->distance)
     {
         // Just look at the mob
-        nv.playerController->setDirection((getEntityTransform().Translation()
-                                           - nv.position->m_WorldMatrix.Translation()).normalize());
-    }else
+        nv.playerController->setDirection((getEntityTransform().Translation() - nv.position->m_WorldMatrix.Translation()).normalize());
+    }
+    else
     {
         nv.playerController->teleportToPosition(getEntityTransform() * p->transform.Translation());
         nv.playerController->setDirection(getEntityTransform() * (-1.0f * p->transform.Forward()) - getEntityTransform().Translation());
@@ -512,35 +518,40 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
     }
 }
 
-
 void MobController::useMobIncState(Handle::EntityHandle npc, MobController::EDirection direction)
 {
-    if(!m_MobCore)
+    if (!m_MobCore)
         return;
 
-    switch(direction)
+    switch (direction)
     {
-        case D_Forward: useMobToState(npc, m_MobCore->getState() + 1); break;
-        case D_Backward: useMobToState(npc, m_MobCore->getState() - 1);  break;
+        case D_Forward:
+            useMobToState(npc, m_MobCore->getState() + 1);
+            break;
+        case D_Backward:
+            useMobToState(npc, m_MobCore->getState() - 1);
+            break;
 
-        case D_Left: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */ break;
-        case D_Right: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */ break;
+        case D_Left: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */
+            break;
+        case D_Right: /*useMobToState(npc, m_MobCore->getState() + 1); TODO */
+            break;
     }
 }
 
 void MobController::useMobToState(Handle::EntityHandle npc, int target)
 {
-    if(!m_MobCore)
+    if (!m_MobCore)
         return;
 
     // Check if this is the initial start of the interaction
-    if(!isInteractingWith(npc))
+    if (!isInteractingWith(npc))
     {
         // TODO: Check if the NPC is allowed to use this mob (Only one npc per mob, etc)
 
         // Begin use if we will either set a new state or the mob is already in a state
         // other than the default one, which will set it back.
-        if(target > 0 || (target == 0 && m_MobCore->getState() > 0))
+        if (target > 0 || (target == 0 && m_MobCore->getState() > 0))
         {
             EventMessages::MobMessage msg;
             msg.subType = EventMessages::MobMessage::ST_STARTINTERACTION;
@@ -568,7 +579,6 @@ void MobController::useMobToState(Handle::EntityHandle npc, int target)
 
     // FIXME: Already interacting with a mob!
     LogInfo() << "FIXME: Already interacting with a mob!";
-
 }
 
 void MobController::onVisualChanged()
@@ -580,12 +590,12 @@ void MobController::onVisualChanged()
     ****/
     Vob::VobInformation v = Vob::asVob(m_World, m_Entity);
 
-    if(!v.visual || v.visual->getVisualType() != EVisualType::Model)
+    if (!v.visual || v.visual->getVisualType() != EVisualType::Model)
         return;
 
     // Add animation-component, if not already done
     Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(
-                m_World.getComponentAllocator(), m_Entity);
+        m_World.getComponentAllocator(), m_Entity);
 
     // Strip extension
     std::string libName = v.visual->getName().substr(0, v.visual->getName().find_last_of('.'));
@@ -598,9 +608,8 @@ void MobController::onVisualChanged()
 
     // Get new animation scheme. This is done by taking everything in front of the first _ inside the visual name.
     std::string scheme = v.visual->getName().substr(0, v.visual->getName().find_first_of('_'));
-    if(m_MobCore)
+    if (m_MobCore)
         m_MobCore->setSchemeName(scheme);
-
 }
 
 void MobController::exportPart(json& j)
@@ -619,4 +628,3 @@ void MobController::importObject(const json& j)
 
     initFromJSONDescriptor(j);
 }
-

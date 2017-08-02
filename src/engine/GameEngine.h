@@ -1,8 +1,8 @@
 #pragma once
 #include "BaseEngine.h"
-#include <render/RenderSystem.h>
-#include <logic/CameraController.h>
 #include "Input.h"
+#include <logic/CameraController.h>
+#include <render/RenderSystem.h>
 
 namespace Engine
 {
@@ -24,8 +24,8 @@ namespace Engine
         {
             return m_DefaultRenderSystem;
         }
-    protected:
 
+    protected:
         /**
 		 * Called when a world was added
 		 */

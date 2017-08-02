@@ -3,14 +3,14 @@
 //
 
 #include "Vob.h"
+#include <components/EntityActions.h>
+#include <engine/World.h>
 #include <logic/Controller.h>
 #include <logic/VisualController.h>
-#include <logic/visuals/StaticMeshVisual.h>
-#include <engine/World.h>
-#include <components/EntityActions.h>
 #include <logic/visuals/ModelVisual.h>
-#include <utils/logger.h>
 #include <logic/visuals/PfxVisual.h>
+#include <logic/visuals/StaticMeshVisual.h>
+#include <utils/logger.h>
 
 Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
 {
@@ -51,24 +51,23 @@ Vob::VobInformation Vob::asVob(World::WorldInstance& world, Handle::EntityHandle
     info.entity = e;
     info.world = &world;
 
-    if(!e.isValid())
+    if (!e.isValid())
         return info;
 
     Components::ComponentAllocator& alloc = world.getComponentAllocator();
     Components::EntityComponent& entity = alloc.getElement<Components::EntityComponent>(e);
 
-    if(Components::hasComponent<Components::LogicComponent>(entity))
+    if (Components::hasComponent<Components::LogicComponent>(entity))
         info.logic = alloc.getElement<Components::LogicComponent>(e).m_pLogicController;
 
-    if(Components::hasComponent<Components::VisualComponent>(entity))
+    if (Components::hasComponent<Components::VisualComponent>(entity))
         info.visual = alloc.getElement<Components::VisualComponent>(e).m_pVisualController;
 
-    if(Components::hasComponent<Components::ObjectComponent>(entity))
+    if (Components::hasComponent<Components::ObjectComponent>(entity))
         info.object = &alloc.getElement<Components::ObjectComponent>(e);
 
-    if(Components::hasComponent<Components::PositionComponent>(entity))
+    if (Components::hasComponent<Components::PositionComponent>(entity))
         info.position = &alloc.getElement<Components::PositionComponent>(e);
-
 
     return info;
 }
@@ -89,10 +88,10 @@ void ::Vob::setTransform(VobInformation& vob, const Math::Matrix& transform)
 
 void ::Vob::broadcastTransformChange(VobInformation& vob)
 {
-    if(vob.logic)
+    if (vob.logic)
         vob.logic->onTransformChanged();
 
-    if(vob.visual)
+    if (vob.visual)
         vob.visual->onTransformChanged();
 }
 
@@ -102,47 +101,40 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
 
     // Don't set twice
-    if(vob.visual && vob.visual->getName() == visual)
+    if (vob.visual && vob.visual->getName() == visual)
         return;
 
     // Clear old visual
     delete vob.visual;
 
-    Logic::VisualController** ppVisual
-            = &vob.world->getComponentAllocator().getElement<Components::VisualComponent>(vob.entity).m_pVisualController;
+    Logic::VisualController** ppVisual = &vob.world->getComponentAllocator().getElement<Components::VisualComponent>(vob.entity).m_pVisualController;
 
     vob.visual = nullptr;
     *ppVisual = nullptr;
 
-
-
     // Check type of visual
-    if(visual.find(".3DS") != std::string::npos
-       || visual.find(".MMB") != std::string::npos
-		|| visual.find(".MMS") != std::string::npos
-		|| visual.find(".MDMS") != std::string::npos)
+    if (visual.find(".3DS") != std::string::npos || visual.find(".MMB") != std::string::npos || visual.find(".MMS") != std::string::npos || visual.find(".MDMS") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::StaticMeshVisual(*vob.world, vob.entity);
-        if(ld->load(visual))
+        if (ld->load(visual))
             (*ppVisual) = ld;
         else
             delete ld;
-    }else if(visual.find(".MDM") != std::string::npos
-             || visual.find(".MDL") != std::string::npos
-             || visual.find(".MDS") != std::string::npos
-             || visual.find(".ASC") != std::string::npos)
+    }
+    else if (visual.find(".MDM") != std::string::npos || visual.find(".MDL") != std::string::npos || visual.find(".MDS") != std::string::npos || visual.find(".ASC") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::ModelVisual(*vob.world, vob.entity);
-        if(ld->load(visual))
+        if (ld->load(visual))
         {
             (*ppVisual) = ld;
         }
         else
             delete ld;
-    }else if(visual.find(".PFX") != std::string::npos)
+    }
+    else if (visual.find(".PFX") != std::string::npos)
     {
         Logic::VisualController* ld = new Logic::PfxVisual(*vob.world, vob.entity);
-        if(ld->load(visual))
+        if (ld->load(visual))
         {
             (*ppVisual) = ld;
         }
@@ -151,9 +143,9 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     }
 
     // Notify the logic controller
-    if(vob.visual != (*ppVisual))
+    if (vob.visual != (*ppVisual))
     {
-        if(vob.logic)
+        if (vob.logic)
             vob.logic->onVisualChanged();
     }
 
@@ -162,7 +154,7 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
 
 void ::Vob::setName(VobInformation& vob, const std::string& name)
 {
-    if(vob.object)
+    if (vob.object)
         vob.object->m_Name = name;
 }
 
@@ -173,24 +165,24 @@ void ::Vob::setBBox(VobInformation& vob, const Math::float3& min, const Math::fl
     vob.world->getComponentAllocator().getElement<Components::BBoxComponent>(vob.entity).m_DebugColor = debugColor;
 }
 
-const Math::Matrix &::Vob::getTransform(Vob::VobInformation &vob)
+const Math::Matrix& ::Vob::getTransform(Vob::VobInformation& vob)
 {
     return vob.position->m_WorldMatrix;
 }
 
-World::WorldInstance &::Vob::getWorld(Vob::VobInformation &vob)
+World::WorldInstance& ::Vob::getWorld(Vob::VobInformation& vob)
 {
     return *vob.world;
 }
 
-Logic::VisualController *::Vob::getVisual(Vob::VobInformation &vob)
+Logic::VisualController* ::Vob::getVisual(Vob::VobInformation& vob)
 {
     return vob.visual;
 }
 
 std::string Vob::getName(Vob::VobInformation& vob)
 {
-    if(vob.object)
+    if (vob.object)
         return vob.object->m_Name;
 
     return "";
@@ -198,34 +190,14 @@ std::string Vob::getName(Vob::VobInformation& vob)
 
 void ::Vob::setCollisionEnabled(VobInformation& vob, bool value)
 {
-    if(vob.object)
+    if (vob.object)
         vob.object->m_EnableCollision = value;
 }
 
 bool ::Vob::getCollisionEnabled(VobInformation& vob)
 {
-    if(vob.object)
+    if (vob.object)
         return vob.object->m_EnableCollision;
 
     return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

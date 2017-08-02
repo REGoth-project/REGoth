@@ -15,7 +15,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Sets the text to be displayed inside the box
@@ -26,9 +26,8 @@ namespace UI
          * @param rel If set to true, images actual width and height will be ignored and it will be stretched to fit
          *            with the given m_Size-value of the View-class.
          */
-        void setRelativeSize(bool rel){ m_RelativeSize = rel; }
+        void setRelativeSize(bool rel) { m_RelativeSize = rel; }
     protected:
-
         /**
          * Image to display
          */
@@ -45,6 +44,5 @@ namespace UI
          * with the given m_Size-value of the View-class.
          */
         bool m_RelativeSize;
-
     };
 }

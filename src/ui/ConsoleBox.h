@@ -1,7 +1,7 @@
 #pragma once
 
-#include <handle/HandleDef.h>
 #include "View.h"
+#include <handle/HandleDef.h>
 
 namespace UI
 {
@@ -17,7 +17,7 @@ namespace UI
          * @param dt time since last frame
          * @param mstate mouse-state
          */
-        void update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config) override;
+        void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
         /**
          * Increases the selection index by the given amount.
@@ -32,10 +32,8 @@ namespace UI
          */
         void setSelectionIndex(int newIndex);
 
-        int getSelectionIndex() const { return m_CurrentlySelected;}
-
+        int getSelectionIndex() const { return m_CurrentlySelected; }
     protected:
-
         /**
          * Console background image
          */
