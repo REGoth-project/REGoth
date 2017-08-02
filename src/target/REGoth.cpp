@@ -1,7 +1,7 @@
 /*
-* Copyright 2011-2016 Branimir Karadzic. All rights reserved.
-* License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
-*/
+ * Copyright 2011-2016 Branimir Karadzic. All rights reserved.
+ * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
+ */
 
 #include <fstream>
 #include "rgconfig.h"
@@ -448,7 +448,7 @@ void REGoth::initConsole()
         }
         }
         return suggestions;
-        */
+         */
     };
 
     console.registerCommand("switchlevel", [this](const std::vector<std::string>& args) -> std::string {

@@ -586,8 +586,8 @@ void MobController::onVisualChanged()
     Controller::onVisualChanged();
 
     /****
-    * Initialize animations
-    ****/
+     * Initialize animations
+     ****/
     Vob::VobInformation v = Vob::asVob(m_World, m_Entity);
 
     if (!v.visual || v.visual->getVisualType() != EVisualType::Model)

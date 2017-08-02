@@ -49,8 +49,8 @@ namespace Logic
         virtual void updateCollision(){};
 
         /**
-		 * @return The name of this visual
-		 */
+         * @return The name of this visual
+         */
         const std::string& getName() { return m_Name; }
         /**
          * Sets the shadow-value from the worldmesh for this visual-controller

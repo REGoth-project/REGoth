@@ -29,8 +29,8 @@ namespace Engine
         std::thread m_Thread;
 
         /**
-		 * @brief Virtual onscreen-thumbstick
-		 */
+         * @brief Virtual onscreen-thumbstick
+         */
         Math::float2 m_ThumbstickPosition[2];
     };
 }

@@ -63,11 +63,11 @@ namespace Components
         namespace StaticMesh
         {
             /**
-			 * @brief Initializes a static-mesh component using the given mesh-data and entity handle
-			 * @param alloc Allocator to lookup the handle
-			 * @param h Handle of the component to modify
-			 * @param msh Mesh handle to set
-			 */
+             * @brief Initializes a static-mesh component using the given mesh-data and entity handle
+             * @param alloc Allocator to lookup the handle
+             * @param h Handle of the component to modify
+             * @param msh Mesh handle to set
+             */
             inline void initComponent(Components::ComponentAllocator& alloc,
                                       Handle::EntityHandle h,
                                       Handle::MeshHandle msh)

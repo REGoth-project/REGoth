@@ -31,14 +31,14 @@ namespace Meshes
     };
 
     /**
-    * Static mesh, contains buffer-handles and submeshes
-    * @param V Vertex-typename
-    * @param I Index-typename
-    * @param MHDL Material handle-typename
-    * @param VHDL Vertexbuffer handle typename
-    * @param IHDL Indexbuffer handle typename
-    * @param NMSH Number of submeshes stored here.
-    */
+     * Static mesh, contains buffer-handles and submeshes
+     * @param V Vertex-typename
+     * @param I Index-typename
+     * @param MHDL Material handle-typename
+     * @param VHDL Vertexbuffer handle typename
+     * @param IHDL Indexbuffer handle typename
+     * @param NMSH Number of submeshes stored here.
+     */
     template <typename V, typename I, typename MHDL, typename VHDL, typename IHDL, int NMSH>
     struct StaticMeshFixedSize : public StaticMeshInfo<V, I, VHDL, IHDL>
     {

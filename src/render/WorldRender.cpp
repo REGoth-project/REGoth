@@ -52,8 +52,8 @@ namespace Render
         bgfx::touch(RenderViewList::ALPHA_2);
     }
     /**
-	 * @brief Draws the main renderpass of the given world
-	 */
+     * @brief Draws the main renderpass of the given world
+     */
     void drawWorld(World::WorldInstance& world, const RenderConfig& config, RenderSystem& system)
     {
         // Setup sky and fog

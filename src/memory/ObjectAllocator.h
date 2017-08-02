@@ -15,13 +15,13 @@ namespace Memory
 
     private:
         /**
-		 * Actual memory allocation
-		 */
+         * Actual memory allocation
+         */
         StaticReferencedAllocator<T, NUM_OBJ> m_Alloc;
 
         /**
          * @brief Function called when the memory of an object was free'd
-		 */
+         */
         std::function<void(T*)> m_OnDelete;
     };
 };

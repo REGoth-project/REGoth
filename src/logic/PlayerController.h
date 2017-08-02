@@ -448,8 +448,8 @@ namespace Logic
         void importObject(const json& j, bool noTransform);
 
         /**
-	 * Check if this NPC has equipped any melee weapon
-	 */
+         * Check if this NPC has equipped any melee weapon
+         */
         bool hasEquippedMeleeWeapon() const
         {
             return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
@@ -498,9 +498,9 @@ namespace Logic
             bool routineActive;
 
             /**
-            * List of waypoints to move to on this AIs daily routine
-            * TODO: Implement timing for these
-            */
+             * List of waypoints to move to on this AIs daily routine
+             * TODO: Implement timing for these
+             */
             std::vector<size_t> routineWaypoints;
 
             /**

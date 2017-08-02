@@ -55,8 +55,8 @@ namespace Logic
         Daedalus::GEngineClasses::C_Item& getItem(Daedalus::GameState::ItemHandle item);
 
         /**
-		 * @return Count of how many items of the given type are in this inventory
-		 */
+         * @return Count of how many items of the given type are in this inventory
+         */
         unsigned int getItemCount(size_t symIndex);
         unsigned int getItemCount(Daedalus::GameState::ItemHandle item);
 

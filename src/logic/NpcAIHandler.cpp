@@ -294,7 +294,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         getNpcAnimationHandler().Action_Stand();
     }
 
-*/
+     */
 
     resetKeyStates();
 }

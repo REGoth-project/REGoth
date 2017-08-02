@@ -277,7 +277,7 @@ namespace World
     {
         /*LogInfo() << "alloc sound " << name << " file " << sfx.file << " vol: " << sfx.vol
                   << " loop: " << sfx.loop << " loop start: " << sfx.loopStartOffset << " loop end: " << sfx.loopEndOffset;
-*/
+         */
         Handle::SfxHandle h = m_Allocator.createObject();
         Sound& snd = m_Allocator.getElement(h);
         snd.sfx = sfx;
