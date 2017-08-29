@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include <content/VertexTypes.h>
+#include <zenload/zCFont.h>
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
-#include <zenload/zCFont.h>
+#include <content/VertexTypes.h>
 
 namespace Engine
 {
@@ -30,11 +30,8 @@ namespace UI
 
         struct GlyphStream
         {
-            GlyphStream()
-                : xPos(0)
-                , yPos(0)
-            {
-            }
+            GlyphStream() : xPos(0), yPos(0)
+            { }
 
             /**
              * Sets the starting-position of this stream
@@ -43,15 +40,13 @@ namespace UI
              */
             void setPosition(int x, int y)
             {
-                xReturn = x;
                 xPos = x;
                 yPos = y;
             }
 
             std::vector<Meshes::PositionUVVertex2D> vxStream;
-            int xPos;     // Next glyphs x position
-            int yPos;     // Next glyphs y position
-            int xReturn;  // x-position to return after a newline
+            int xPos; // Next glyphs x position
+            int yPos; // Next glyphs y position
         };
 
         /**
@@ -66,6 +61,7 @@ namespace UI
          * @return Height of the font in pixels
          */
         int getFontHeight() const { return m_Font.fontHeight; };
+
         /**
          * Returns lines where each is no wider than maxWidth
          * @param text Text to fit
@@ -86,6 +82,7 @@ namespace UI
          * @return Texture handle (Engines texture allocator)
          */
         Handle::TextureHandle getFontTexture() const { return m_FontTexture; }
+
         /**
          * Appends a single character to a glyph-stream
          * @param glyphStream Stream to append to (Simply create an object of that yourself)
@@ -98,7 +95,6 @@ namespace UI
          * @param glyphStream Stream to bind
          */
         static bool bindGlyphStream(const GlyphStream& glyphStream);
-
     private:
         /**
          * Loaded font
@@ -129,6 +125,7 @@ namespace UI
         const zFont* getFont(const std::string& font);
 
     private:
+
         /**
          * Engine
          */
@@ -140,3 +137,6 @@ namespace UI
         std::map<std::string, zFont> m_Fonts;
     };
 }
+
+
+
