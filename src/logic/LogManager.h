@@ -3,6 +3,9 @@
 #include <daedalus/DaedalusDialogManager.h>
 #include <logic/messages/EventMessage.h>
 #include <daedalus/DaedalusGameState.h>
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 namespace World
 {
@@ -21,6 +24,16 @@ namespace Logic
 		* Get the current player log
 		*/
 		std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
+
+		/**
+		* Export the current log to the given log parameter
+		*/
+        void exportLogManager(json& log);
+
+		/**
+		 * Import the log from the given log parameter
+		 */
+        void importLogManager(const json& log);
 
 	private:
 

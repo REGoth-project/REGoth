@@ -3,23 +3,22 @@
 //
 
 #include "GameSession.h"
-#include <fstream>
 #include "AsyncAction.h"
-#include "ui/Hud.h"
-#include "ui/LoadingScreen.h"
+#include <fstream>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include "ui/Hud.h"
+#include "ui/LoadingScreen.h"
 
 using namespace Engine;
 
-GameSession::GameSession(BaseEngine& engine)
-    : m_Engine(engine)
+GameSession::GameSession(BaseEngine& engine) :
+    m_Engine(engine)
 {
     m_CurrentSlotIndex = -1;
 }
 
-GameSession::~GameSession()
-{
+GameSession::~GameSession() {
     removeAllWorlds();
 }
 
@@ -28,7 +27,7 @@ void GameSession::addInactiveWorld(const std::string& worldName, nlohmann::json&
     m_InactiveWorlds[worldName] = exportedWorld;
 }
 
-bool GameSession::hasInactiveWorld(const std::string& worldName)
+bool GameSession::hasInactiveWorld(const std::string &worldName)
 {
     return m_InactiveWorlds.find(worldName) != m_InactiveWorlds.end();
 }
@@ -38,7 +37,7 @@ std::map<std::string, nlohmann::json>& GameSession::getInactiveWorlds()
     return m_InactiveWorlds;
 }
 
-nlohmann::json GameSession::retrieveInactiveWorld(const std::string& worldName)
+nlohmann::json GameSession::retrieveInactiveWorld(const std::string &worldName)
 {
     if (hasInactiveWorld(worldName))
     {
@@ -50,14 +49,14 @@ nlohmann::json GameSession::retrieveInactiveWorld(const std::string& worldName)
         return nlohmann::json();
 }
 
-GameClock& GameSession::getGameClock()
+GameClock &GameSession::getGameClock()
 {
     return m_GameClock;
 }
 
 void GameSession::removeAllWorlds()
 {
-    while (!m_WorldInstances.empty())
+    while(!m_WorldInstances.empty())
     {
         Handle::WorldHandle w = m_Worlds.front();
         removeWorld(w);
@@ -71,9 +70,10 @@ void GameSession::setMainWorld(Handle::WorldHandle world)
 }
 
 std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
-                                                               const json& worldJson,
-                                                               const json& scriptEngine,
-                                                               const json& dialogManager)
+                                          const json& worldJson,
+                                          const json& scriptEngine,
+                                          const json& dialogManager,
+	                                      const json& logManager)
 {
     std::string worldFile = _worldFile;
 
@@ -84,7 +84,7 @@ std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string
     {
         worldFile = worldJson["zenfile"];
     }
-    if (!worldFile.empty())
+    if(!worldFile.empty())
     {
         std::vector<uint8_t> zenData;
         m_Engine.getVDFSIndex().getFileData(worldFile, zenData);
@@ -95,7 +95,7 @@ std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string
             return nullptr;
         }
     }
-    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager))  // expensive operation
+    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager, logManager)) // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
         return nullptr;
@@ -124,9 +124,9 @@ void GameSession::removeWorld(Handle::WorldHandle world)
 
     m_Worlds.erase(std::remove(m_Worlds.begin(), m_Worlds.end(), world), m_Worlds.end());
 
-    for (auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
+    for(auto it = m_WorldInstances.begin(); it != m_WorldInstances.end(); it++)
     {
-        if (it->get() == &world.get())
+        if(it->get() == &world.get())
         {
             m_WorldInstances.erase(it);
             break;
@@ -135,9 +135,9 @@ void GameSession::removeWorld(Handle::WorldHandle world)
     m_Engine.onWorldRemoved(world);
 }
 
-void GameSession::switchToWorld(const std::string& worldFile)
+void GameSession::switchToWorld(const std::string &worldFile)
 {
-    auto switchToWorld_ = [worldFile](BaseEngine* engine) {
+    auto switchToWorld_ = [worldFile](BaseEngine* engine){
 
         json newWorldJson;
         json exportedPlayer;
@@ -146,7 +146,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
         /**
          * prolog
          */
-        auto exportData = [&](BaseEngine* engine) {
+        auto exportData = [&](BaseEngine* engine){
             auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
             engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
@@ -162,8 +162,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
             if (session.hasInactiveWorld(worldFile))
             {
                 newWorldJson = session.retrieveInactiveWorld(worldFile);
-            }
-            else
+            } else
             {
                 auto slotIndex = engine->getSession().getCurrentSlot();
                 if (slotIndex != -1)
@@ -171,7 +170,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
                     // try read from disk
                     std::string worldFromDisk = SavegameManager::readWorld(slotIndex, Utils::stripExtension(worldFile));
                     if (!worldFromDisk.empty())
-                        newWorldJson = json::parse(worldFromDisk);  // we found the world on disk
+                        newWorldJson = json::parse(worldFromDisk); // we found the world on disk
                 }
             }
         };
@@ -185,8 +184,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
         /**
          * epilog
          */
-        auto registerWorld_ = [ w = std::move(pNewWorld), exportedPlayer ](BaseEngine * engine) mutable
-        {
+        auto registerWorld_ = [w = std::move(pNewWorld), exportedPlayer](BaseEngine* engine) mutable {
             Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
             engine->getSession().setMainWorld(newWorld);
             auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
@@ -210,8 +208,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
     AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread, true);
 }
 
-void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
-{
+void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle) {
     json worldJson;
     worldHandle.get().exportWorld(worldJson);
     addInactiveWorld(worldHandle.get().getZenFile(), std::move(worldJson));
@@ -221,15 +218,16 @@ void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
 Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
                                           const json& worldJson,
                                           const json& scriptEngine,
-                                          const json& dialogManager)
+                                          const json& dialogManager,
+	                                      const json& logManager)
 {
-    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
+    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager, logManager);
     return registerWorld(std::move(pWorldInstance));
 }
 
-void GameSession::startNewGame(const std::string& worldFile)
+void GameSession::startNewGame(const std::string &worldFile)
 {
-    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine) {
+    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine){
 
         auto prolog = [](Engine::BaseEngine* engine) {
             engine->getHud().getLoadingScreen().reset();
@@ -240,8 +238,7 @@ void GameSession::startNewGame(const std::string& worldFile)
 
         std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
 
-        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine * engine) mutable
-        {
+        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine* engine) mutable {
             Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
             if (worldHandle.isValid())
             {
@@ -249,8 +246,7 @@ void GameSession::startNewGame(const std::string& worldFile)
                 auto& se = worldHandle.get().getScriptEngine();
                 auto player = se.createDefaultPlayer(engine->getEngineArgs().playerScriptname);
                 worldHandle.get().takeControlOver(player);
-            }
-            else
+            } else
             {
                 LogError() << "Failed to add given startup world, world handle is invalid!";
             }

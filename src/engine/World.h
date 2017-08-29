@@ -98,7 +98,8 @@ namespace World
 		bool init(const std::string& zen,
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
-                  const json& dialogManager = json());
+                  const json& dialogManager = json(),
+			      const json& logManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle

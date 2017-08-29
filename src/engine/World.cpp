@@ -81,7 +81,8 @@ WorldInstance::~WorldInstance()
 bool WorldInstance::init(const std::string& zen,
                          const json& worldJson,
                          const json& scriptEngine,
-                         const json& dialogManager)
+                         const json& dialogManager,
+	                     const json& logManager)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -480,6 +481,12 @@ bool WorldInstance::init(const std::string& zen,
         {
             m_DialogManager.importDialogManager(dialogManager);
         }
+		// Load logManager if one is provided.
+		if (!logManager.empty())
+		{
+			m_LogManager.importLogManager(logManager);
+		}
+
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);
 
         // Wait for a bit, so the user sees the loading-bar go to 100%
