@@ -34,7 +34,8 @@ namespace UI
         IA_HOME,
         IA_END,
         IA_ToggleStatusMenu,
-        IA_ToggleConsole
+        IA_ToggleConsole,
+		IA_ToggleLogMenu
     };
 
     // BGFX-View to be used for rendering views

@@ -11,6 +11,7 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include "Menu_Status.h"
+#include "Menu_Log.h"
 #include "PrintScreenMessages.h"
 #include "TextView.h"
 #include "TextView.h"
@@ -221,6 +222,12 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             player.playerController->updateStatusScreen(statsScreen);
             return;
         }
+		case IA_ToggleLogMenu:
+		{
+			LogInfo() << "Open log";
+			pushMenu<UI::Menu_Log>();
+			return;
+		}
         default:
             return;
     }
