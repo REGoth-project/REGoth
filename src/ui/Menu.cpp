@@ -3,19 +3,19 @@
 //
 
 #include "Menu.h"
-#include "Hud.h"
-#include "ImageView.h"
 #include "MenuItem.h"
-#include "TextView.h"
-#include <ZenLib/utils/logger.h>
+#include "MenuItemScrollableText.h"
+#include "MenuItemListbox.h"
 #include <daedalus/DaedalusVM.h>
-#include <engine/BaseEngine.h>
-#include <render/RenderSystem.h>
 #include <utils/Utils.h>
+#include <engine/BaseEngine.h>
+#include <ZenLib/utils/logger.h>
+#include <render/RenderSystem.h>
+#include "ImageView.h"
+#include "TextView.h"
+#include "Hud.h"
 
-UI::Menu::Menu(Engine::BaseEngine& e)
-    : View(e)
-    , m_pVM(nullptr)
+UI::Menu::Menu(Engine::BaseEngine& e) : View(e), m_pVM(nullptr)
 {
     m_pBackgroundImage = nullptr;
     m_pInfoText = nullptr;
@@ -29,26 +29,27 @@ UI::Menu::~Menu()
     removeChild(m_pBackgroundImage);
     delete m_pBackgroundImage;
 
-    if (m_pInfoText)
+    if(m_pInfoText)
     {
         removeChild(m_pInfoText);
         delete m_pInfoText;
     }
 
-    for (auto& item : m_Items)
+    for(auto& item: m_Items)
     {
         removeChild(item.second);
         delete item.second;
     }
 }
 
+
 void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if (m_IsHidden)
+    if(m_IsHidden)
         return;
 
     // Check if we want unscaled views
-    if ((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_DONTSCALE_DIM) != 0)
+    if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_DONTSCALE_DIM) != 0)
     {
         // Gothic menus are normalized to 640,480.
         Math::float2 fac = Math::float2(640.0f / config.state.viewWidth, 480.0f / config.state.viewHeight);
@@ -57,12 +58,11 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
     }
 
     // Center view, if wanted
-    if ((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_ALIGN_CENTER) != 0)
+    if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_ALIGN_CENTER) != 0)
     {
         Math::float2 c = Math::float2(0.5f, 0.5f) - m_Size * 0.5f;
         setTranslation(c);
-    }
-    else if ((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_DONTSCALE_DIM) != 0)
+    }else if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_DONTSCALE_DIM) != 0)
     {
         // Note: I guess they meant to use MENU_DONTSCALE_POS here, but this is what they do
 
@@ -72,12 +72,13 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         setTranslation(Math::float2((getScriptData().posx / 8192.0f) * fac.x, (getScriptData().posx / 8192.0f) * fac.y));
     }
 
+    
     // Lighten up the selected item
-    if (!m_SelectableItems.empty())
+    if(!m_SelectableItems.empty())
     {
         // Make sure we really do have a selectable item active
         unsigned cnt = 0;
-        while (!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size())
+        while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size())
         {
             m_SelectedItem = Utils::mod(m_SelectedItem + 1, static_cast<int>(m_SelectableItems.size()));
             cnt++;
@@ -87,14 +88,14 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
         m_SelectedItem = Utils::mod(m_SelectedItem, static_cast<int>(m_SelectableItems.size()));
 
         // Disable highlight on all of them
-        for (Daedalus::GameState::MenuItemHandle h : m_SelectableItems)
+        for(Daedalus::GameState::MenuItemHandle h : m_SelectableItems)
             m_Items[h]->setFontHighlighted(false);
 
         // Highlight the selected one
         m_Items[m_SelectableItems[m_SelectedItem]]->setFontHighlighted(true);
 
         // Update info-text
-        if ((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0 && m_pInfoText)
+        if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0 && m_pInfoText)
         {
             m_pInfoText->setText(getItemScriptData(m_SelectableItems[m_SelectedItem]).text[1]);
         }
@@ -106,7 +107,7 @@ void UI::Menu::update(double dt, Engine::Input::MouseState& mstate, Render::Rend
 void UI::Menu::initializeInstance(const std::string& instance)
 {
     // Load MENU.DAT in case this hasn't been done yet
-    if (!loadMenuDAT())
+    if(!loadMenuDAT())
         return;
 
     // Create and initialize instance for this very menu
@@ -116,6 +117,7 @@ void UI::Menu::initializeInstance(const std::string& instance)
                               m_pVM->getDATFile().getSymbolIndexByName(instance),
                               Daedalus::IC_Menu);
 
+
     // Create background image first
     m_pBackgroundImage = new ImageView(m_Engine);
     m_pBackgroundImage->setTranslation(Math::float2(getScriptData().posx / 8192.0f, getScriptData().posy / 8192.0f));
@@ -123,13 +125,14 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
     Handle::TextureHandle bgr = m_Engine.getEngineTextureAlloc().loadTextureVDF(getScriptData().backPic);
     m_pBackgroundImage->setImage(bgr);
-    m_pBackgroundImage->setRelativeSize(false);  // Scale like this screen
+    m_pBackgroundImage->setRelativeSize(false); // Scale like this screen
     addChild(m_pBackgroundImage);
 
     // Create all other items drawn on top
     m_Items = initializeItems();
 
-    if ((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0)
+
+    if((getScriptData().flags & Daedalus::GEngineClasses::C_Menu::MENU_SHOW_INFO) != 0)
     {
         m_pInfoText = new TextView(m_Engine);
         addChild(m_pInfoText);
@@ -139,10 +142,10 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
         // There could be script-defined values
 
-        if (m_pVM->getDATFile().hasSymbolName("MENU_INFO_X") && m_pVM->getDATFile().hasSymbolName("MENU_INFO_X"))
+        if(m_pVM->getDATFile().hasSymbolName("MENU_INFO_X") && m_pVM->getDATFile().hasSymbolName("MENU_INFO_X"))
         {
-            Daedalus::PARSymbol& symX = m_pVM->getDATFile().getSymbolByName("MENU_INFO_X");
-            Daedalus::PARSymbol& symY = m_pVM->getDATFile().getSymbolByName("MENU_INFO_Y");
+            Daedalus::PARSymbol& symX =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_X");
+            Daedalus::PARSymbol& symY =  m_pVM->getDATFile().getSymbolByName("MENU_INFO_Y");
 
             infoX = symX.getInt() / 8192.0f;
             infoY = symY.getInt() / 8192.0f;
@@ -161,13 +164,13 @@ void UI::Menu::initializeInstance(const std::string& instance)
 
 bool UI::Menu::loadMenuDAT()
 {
-    if (m_pVM)
-        return true;  // Nothing to do, already loaded
+    if(m_pVM)
+        return true; // Nothing to do, already loaded
 
     std::string datPath = "/_work/data/Scripts/_compiled/MENU.DAT";
     std::string datFile = Utils::getCaseSensitivePath(datPath, m_Engine.getEngineArgs().gameBaseDirectory);
 
-    if (!Utils::fileExists(datFile))
+    if(!Utils::fileExists(datFile))
     {
         LogError() << "Failed to find MENU.DAT at: " << datFile;
         return false;
@@ -200,12 +203,13 @@ Daedalus::GEngineClasses::C_Menu_Item& UI::Menu::getItemScriptData(const std::st
     return getItemScriptData(h);
 }
 
+
 std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializeItems()
 {
     Daedalus::GEngineClasses::C_Menu& menu = getScriptData();
     std::vector<Daedalus::GameState::MenuItemHandle> items;
 
-    for (int i = 0; i < Daedalus::GEngineClasses::MenuConstants::MAX_ITEMS; i++)
+    for(int i=0;i<Daedalus::GEngineClasses::MenuConstants::MAX_ITEMS;i++)
     {
         if (!menu.items[i].empty())
         {
@@ -220,39 +224,38 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
 
     // Create actual views
     std::map<Daedalus::GameState::MenuItemHandle, MenuItem*> outMap;
-    for (Daedalus::GameState::MenuItemHandle& h : items)
+    for(Daedalus::GameState::MenuItemHandle& h : items)
     {
         Daedalus::GEngineClasses::C_Menu_Item& itemData = getItemScriptData(h);
 
         MenuItem* m = nullptr;
-        switch (itemData.type)
+        switch(itemData.type)
         {
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_UNDEF:
-                break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_UNDEF:break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_INPUT:
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_TEXT:
-                m = new MenuItemTypes::MenuItemText(m_Engine, *this, h);
-                break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_SLIDER:
-                break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CURSOR:
-                break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CHOICEBOX:
-                break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_BUTTON:
-                break;
-            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_LISTBOX:
-                break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_TEXT: 
+				if( (itemData.flags & Daedalus::GEngineClasses::C_Menu_Item::EFlags::IT_MULTILINE) && 
+					!(itemData.flags & Daedalus::GEngineClasses::C_Menu_Item::EFlags::IT_SELECTABLE) ) {
+					m = new MenuItemTypes::MenuItemScrollableText(m_Engine, *this, h);
+				} else {
+					m = new MenuItemTypes::MenuItemText(m_Engine, *this, h);
+				}
+				break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_SLIDER:break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CURSOR:break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_CHOICEBOX:break;
+            case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_BUTTON:break;
+			case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_LISTBOX: m = new MenuItemTypes::MenuItemListbox(m_Engine, *this, h); break;
             default:
                 LogWarn() << "Invalid item type: " << itemData.type;
         }
 
-        if (m)
+        if(m)
         {
             addChild(m);
             outMap[h] = m;
 
-            if (m->isSelectable())
+            if(m->isSelectable())
                 m_SelectableItems.push_back(h);
         }
     }
@@ -260,36 +263,35 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
     return outMap;
 }
 
+
 bool UI::Menu::onInputAction(EInputAction action)
 {
-    switch (action)
+    switch(action)
     {
         case IA_Up:
-            if (!m_SelectableItems.empty())
+            if(!m_SelectableItems.empty()) 
             {
                 // Make sure we really do have a selectable item active
                 unsigned cnt = 0;
-                do
-                {
+                do{
                     m_SelectedItem = Utils::mod(m_SelectedItem - 1, static_cast<int>(m_SelectableItems.size()));
                     cnt++;
-                } while (!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size());
+                }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable() && cnt != m_SelectableItems.size());
             }
             break;
 
         case IA_Down:
-            if (!m_SelectableItems.empty())
+            if(!m_SelectableItems.empty()) 
             {
                 // Skip all items which are no longer selectable
-                do
-                {
+                do{
                     m_SelectedItem = Utils::mod(m_SelectedItem + 1, static_cast<int>(m_SelectableItems.size()));
-                } while (!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable());
+                }while(!m_Items[m_SelectableItems[m_SelectedItem]]->isSelectable());
             }
-            break;
-
+            break; 
+        
         case IA_Accept:
-            if (!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
+            if(!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
             break;
 
         case IA_Close:
@@ -301,13 +303,14 @@ bool UI::Menu::onInputAction(EInputAction action)
     return false;
 }
 
+
 void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
 {
     MenuItem* iData = m_Items[item];
 
     using namespace Daedalus::GEngineClasses::MenuConstants;
 
-    switch (iData->getSelectionEvent(0))
+    switch(iData->getSelectionEvent(0))
     {
         case SEL_ACTION_BACK:
             m_Engine.getHud().popMenu();
@@ -315,11 +318,12 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
 
         default:
             break;
-    }
+    } 
+
 
     std::string customFn = iData->getItemScriptData().onSelAction_S[0];
-    if (!customFn.empty())
-        onCustomAction(customFn);
+    if(!customFn.empty())
+        onCustomAction(customFn);                    
 }
 UI::Hud& UI::Menu::getHud()
 {
@@ -328,4 +332,6 @@ UI::Hud& UI::Menu::getHud()
 
 void UI::Menu::onTextInput(const std::string& text)
 {
+
 }
+

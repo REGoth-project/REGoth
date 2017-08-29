@@ -15,6 +15,13 @@ namespace UI
 
     public:
 
+		enum EMenuLogStatus
+		{
+			CategorySelection,
+			TopicSelection,
+			ContentViewer
+		};
+
         /**
          * To be called when one of the given actions were triggered
          * @param action Input action
@@ -30,13 +37,24 @@ namespace UI
     private:
 
 		/**
-		* Set the time and day text to the view
-		*/
+		 * Set the time and day text to the view
+		 */
 		void setTimeAndDay();
+
+		/**
+		* Initialize the listboxes with the log entries
+		*/
+		void initializeLogEntries();
 
 		/**
 		* Find a menu item by an instance string
 		*/
 		MenuItem * findMenuItem( const std::string &instance );
+
+		/**
+		* This member is used to indicate which
+		* view is current effected by an input action
+		*/
+		EMenuLogStatus m_LogStatus;
     };
 }
