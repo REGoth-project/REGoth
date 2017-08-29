@@ -22,7 +22,19 @@ Menu_Log* Menu_Log::create(Engine::BaseEngine& e)
 	// Hide content viewer on log opening
 	s->findMenuItem("MENU_ITEM_CONTENT_VIEWER")->setHidden(true);
 
+	s->setTimeAndDay();
+
     return s;
+}
+
+
+void Menu_Log::setTimeAndDay()
+{
+	if (!m_MenuHandle.isValid())
+		return;
+
+	getItemScriptData("MENU_ITEM_TIME").text[0] = m_Engine.getGameClock().getTimeOfDayFormatted();
+	getItemScriptData("MENU_ITEM_DAY").text[0] = m_Engine.getGameClock().getDayFormatted();
 }
 
 

@@ -30,6 +30,11 @@ namespace UI
     private:
 
 		/**
+		* Set the time and day text to the view
+		*/
+		void setTimeAndDay();
+
+		/**
 		* Find a menu item by an instance string
 		*/
 		MenuItem * findMenuItem( const std::string &instance );
