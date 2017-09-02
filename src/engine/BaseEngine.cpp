@@ -231,30 +231,6 @@ void BaseEngine::setPaused(bool paused)
     }
 }
 
-void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction)
-{
-    m_SaveGameActionQueue.push(saveGameAction);
-}
-
-void BaseEngine::processSaveGameActionQueue()
-{
-    while (!m_SaveGameActionQueue.empty())
-    {
-        SavegameManager::SaveGameAction action = m_SaveGameActionQueue.front();
-        switch (action.type)
-        {
-            case SavegameManager::Save:
-                if (!getMainWorld().get().getDialogManager().isDialogActive())
-                {
-                    // only save while not in Dialog
-                    SavegameManager::saveToSlot(action.slot, action.savegameName);
-                }
-                break;
-        }
-        m_SaveGameActionQueue.pop();
-    }
-}
-
 void BaseEngine::processMessageQueue()
 {
     m_MessageQueueMutex.lock();
