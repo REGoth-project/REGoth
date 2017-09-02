@@ -169,16 +169,6 @@ namespace Engine
         bool isMainThread();
 
         /**
-         * Insert the given action at the end of the queue
-         */
-        void queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction);
-
-        /**
-         * process all queued actions by FIFO, TODO: remove and use general purpose message queue
-         */
-        void processSaveGameActionQueue();
-
-        /**
          * Guarantees execution of the given function in the main thread
          * @param job function to execute in the main thread
          * @param forceQueueing if false AND if called from main thread: executes the job right away
@@ -271,11 +261,6 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-
-        /**
-         * save/load action queue
-         */
-        std::queue<Engine::SavegameManager::SaveGameAction> m_SaveGameActionQueue;
 
         std::list<AsyncAction> m_MessageQueue;
         std::mutex m_MessageQueueMutex;
