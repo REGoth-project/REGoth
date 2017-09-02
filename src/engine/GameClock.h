@@ -95,17 +95,15 @@ namespace Engine
          */
         double getTime();
 
-
-
         /**
          * @return time of day as string in hh:mm format
          */
         std::string getTimeOfDayFormatted() const;
 
-		/**
+        /**
 		* @return day as string in day. format
 		*/
-		std::string getDayFormatted() const;
+        std::string getDayFormatted() const;
 
         /**
          * helper function for conversion

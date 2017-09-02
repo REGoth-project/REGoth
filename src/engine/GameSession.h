@@ -2,18 +2,19 @@
 // Created by markus on 23.05.17.
 //
 #pragma once
+#include <list>
 #include <map>
 #include <memory>
-#include <list>
-#include <json/json.hpp>
-#include <handle/HandleDef.h>
-#include "World.h"
-#include "GameClock.h"
 #include "BaseEngine.h"
+#include "GameClock.h"
+#include "World.h"
+#include <handle/HandleDef.h>
+#include <json/json.hpp>
 
 namespace Engine
 {
-    class GameSession {
+    class GameSession
+    {
     public:
         GameSession(BaseEngine& engine);
 
@@ -33,7 +34,7 @@ namespace Engine
          * Get the remembered World and removes it from the map if it exists, else returns empty json
          * @param worldName zen filename including extension
          */
-        nlohmann::json retrieveInactiveWorld(const std::string &worldName);
+        nlohmann::json retrieveInactiveWorld(const std::string& worldName);
 
         /**
          * @return refernce to all inactive Worlds of the current session
@@ -76,10 +77,10 @@ namespace Engine
         void setMainWorld(Handle::WorldHandle world);
 
         std::unique_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
-                                     const json& worldJson = json(),
-                                     const json& scriptEngine = json(),
-                                     const json& dialogManager = json(),
-			                         const json& logManager = json());
+                                                          const json& worldJson = json(),
+                                                          const json& scriptEngine = json(),
+                                                          const json& dialogManager = json(),
+                                                          const json& logManager = json());
 
         Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
 
@@ -92,7 +93,7 @@ namespace Engine
                                      const json& worldJson = json(),
                                      const json& scriptEngine = json(),
                                      const json& dialogManager = json(),
-			                         const json& logManager = json());
+                                     const json& logManager = json());
 
         /**
          * Switch to world with the given name.
@@ -102,13 +103,13 @@ namespace Engine
          * - else: First visit. No vobs get imported. <World>_startup script-fu will be executed
          * @param worldFile including .zen extension
          */
-        void switchToWorld(const std::string &worldFile);
+        void switchToWorld(const std::string& worldFile);
 
         /**
          * starts a new game
          * @param worldFile
          */
-        void startNewGame(const std::string &worldFile);
+        void startNewGame(const std::string& worldFile);
 
         /**
          * @brief moves world from worldInstance list to inactive json map.
@@ -165,5 +166,4 @@ namespace Engine
          */
         BaseEngine& m_Engine;
     };
-
 }

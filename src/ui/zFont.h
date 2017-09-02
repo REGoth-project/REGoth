@@ -3,10 +3,10 @@
 //
 
 #pragma once
-#include <zenload/zCFont.h>
+#include <content/VertexTypes.h>
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
-#include <content/VertexTypes.h>
+#include <zenload/zCFont.h>
 
 namespace Engine
 {
@@ -30,8 +30,11 @@ namespace UI
 
         struct GlyphStream
         {
-            GlyphStream() : xPos(0), yPos(0)
-            { }
+            GlyphStream()
+                : xPos(0)
+                , yPos(0)
+            {
+            }
 
             /**
              * Sets the starting-position of this stream
@@ -45,8 +48,8 @@ namespace UI
             }
 
             std::vector<Meshes::PositionUVVertex2D> vxStream;
-            int xPos; // Next glyphs x position
-            int yPos; // Next glyphs y position
+            int xPos;  // Next glyphs x position
+            int yPos;  // Next glyphs y position
         };
 
         /**
@@ -95,6 +98,7 @@ namespace UI
          * @param glyphStream Stream to bind
          */
         static bool bindGlyphStream(const GlyphStream& glyphStream);
+
     private:
         /**
          * Loaded font
@@ -125,7 +129,6 @@ namespace UI
         const zFont* getFont(const std::string& font);
 
     private:
-
         /**
          * Engine
          */
@@ -137,6 +140,3 @@ namespace UI
         std::map<std::string, zFont> m_Fonts;
     };
 }
-
-
-

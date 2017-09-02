@@ -2,12 +2,12 @@
 // Created by desktop on 11.08.16.
 //
 
-#include <assert.h>
-#include <handle/HandleDef.h>
 #include "View.h"
 #include "zFont.h"
-#include <imgui/imgui.h>
+#include <assert.h>
 #include <engine/BaseEngine.h>
+#include <handle/HandleDef.h>
+#include <imgui/imgui.h>
 
 using namespace UI;
 
@@ -23,10 +23,10 @@ namespace ViewUtil
         static void init()
         {
             ms_decl
-                    .begin()
-                    .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
-                    .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-                    .end();
+                .begin()
+                .add(bgfx::Attrib::Position, 2, bgfx::AttribType::Float)
+                .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+                .end();
         }
 
         static bgfx::VertexDecl ms_decl;
@@ -42,7 +42,7 @@ namespace ViewUtil
         {
             bgfx::TransientVertexBuffer vb;
             bgfx::allocTransientVertexBuffer(&vb, 6, PosUvVertex::ms_decl);
-            PosUvVertex* vertex = (PosUvVertex*) vb.data;
+            PosUvVertex* vertex = (PosUvVertex*)vb.data;
 
             const float widthf = float(_width);
             const float heightf = float(_height);
@@ -101,14 +101,15 @@ namespace ViewUtil
     }
 }
 
-View::View(Engine::BaseEngine& e) : m_Engine(e)
+View::View(Engine::BaseEngine& e)
+    : m_Engine(e)
 {
     assert(e.isMainThread());
     m_IsHidden = false;
     m_pParent = nullptr;
 
-    m_Translation = Math::float2(0,0);
-    m_Size = Math::float2(1,1);
+    m_Translation = Math::float2(0, 0);
+    m_Size = Math::float2(1, 1);
     m_Alignment = EAlign::A_TopLeft;
 
     ViewUtil::PosUvVertex::init();
@@ -120,20 +121,20 @@ View::~View()
     assert(m_Children.empty());
 }
 
-void View::removeChild(View *pView)
+void View::removeChild(View* pView)
 {
     m_Children.erase(std::remove(m_Children.begin(), m_Children.end(), pView), m_Children.end());
 }
 
 void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    if(m_IsHidden)
+    if (m_IsHidden)
         return;
 
     bgfx::setViewSeq(BGFX_VIEW, true);
 
     // Update all children
-    for(View* v : m_Children)
+    for (View* v : m_Children)
     {
         v->update(dt, mstate, config);
     }
@@ -142,7 +143,7 @@ void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderCo
 void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surfaceWidth, int surfaceHeight,
                        bgfx::TextureHandle texture, bgfx::ProgramHandle program, bgfx::UniformHandle texUniform)
 {
-    if(bgfx::isValid(texture))
+    if (bgfx::isValid(texture))
     {
         //extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
         //bgfx::ProgramHandle program = imguiGetImageProgram(0);
@@ -151,17 +152,14 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
         //imguiImage(texture, 0, width, height);
 
         float ortho[16];
-        bx::mtxOrtho(ortho, 0.0f, (float) surfaceWidth, (float) surfaceHeight, 0.0f, 0.0f, 1000.0f);
+        bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
         bgfx::setViewTransform(id, NULL, ortho);
         bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
 
         if (ViewUtil::screenQuad(x, y, width, height))
         {
             bgfx::setTexture(0, texUniform, texture);
-            bgfx::setState(BGFX_STATE_RGB_WRITE
-                           | BGFX_STATE_ALPHA_WRITE
-                           | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-            );
+            bgfx::setState(BGFX_STATE_RGB_WRITE | BGFX_STATE_ALPHA_WRITE | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
 
             //bgfx::setScissor(uint16_t(std::max(0, x)), uint16_t(std::max(0, y)), width, height
             //);
@@ -176,8 +174,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
 
 Math::float2 View::getAbsoluteTranslation()
 {
-
-    if(!m_pParent)
+    if (!m_pParent)
         return m_Translation;
 
     Math::float2 absSize = m_pParent->getAbsoluteSize();
@@ -186,7 +183,7 @@ Math::float2 View::getAbsoluteTranslation()
 
 Math::float2 View::getAbsoluteSize()
 {
-    if(!m_pParent)
+    if (!m_pParent)
         return m_Size;
 
     Math::float2 abs = m_pParent->getAbsoluteSize();
@@ -202,17 +199,26 @@ void View::addChild(View* pView)
 
 Math::float2 View::getAlignOffset(EAlign align, float width, float height)
 {
-    switch(align)
+    switch (align)
     {
-        case A_Center:          return Math::float2(-width / 2.0f, -height / 2.0f);
-        case A_LeftCenter:      return Math::float2(0, -height / 2.0f);
-        case A_RightCenter:     return Math::float2(-width, -height / 2.0f);
-        case A_TopCenter:       return Math::float2(-width / 2.0f, 0);
-        case A_BottomCenter:    return Math::float2(-width / 2.0f, -height);
-        case A_TopLeft:         return Math::float2(0, 0);
-        case A_TopRight:        return Math::float2(-width, 0);
-        case A_BottomLeft:      return Math::float2(0, -height);
-        case A_BottomRight:     return Math::float2(-width, -height);
+        case A_Center:
+            return Math::float2(-width / 2.0f, -height / 2.0f);
+        case A_LeftCenter:
+            return Math::float2(0, -height / 2.0f);
+        case A_RightCenter:
+            return Math::float2(-width, -height / 2.0f);
+        case A_TopCenter:
+            return Math::float2(-width / 2.0f, 0);
+        case A_BottomCenter:
+            return Math::float2(-width / 2.0f, -height);
+        case A_TopLeft:
+            return Math::float2(0, 0);
+        case A_TopRight:
+            return Math::float2(-width, 0);
+        case A_BottomLeft:
+            return Math::float2(0, -height);
+        case A_BottomRight:
+            return Math::float2(-width, -height);
     }
     return Math::float2(nullptr);
 }
@@ -221,68 +227,63 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
 {
     const UI::zFont* fnt = m_Engine.getFontCache().getFont(font);
 
-    if(!fnt)
+    if (!fnt)
         return;
 
-	// Calc metrics of the hole text
-	int width, height;
-	fnt->calcTextMetrics(txt, width, height);
-	Math::float2 hole_offset = getAlignOffset(alignment, width, height);
+    // Calc metrics of the hole text
+    int width, height;
+    fnt->calcTextMetrics(txt, width, height);
+    Math::float2 hole_offset = getAlignOffset(alignment, width, height);
 
     // Get position of the first text line and calc metrics
-	std::size_t line_end = txt.find("\n");
-	if (line_end == std::string::npos)
-		line_end = txt.length();
-	std::string txt_line = txt.substr(0, line_end);
+    std::size_t line_end = txt.find("\n");
+    if (line_end == std::string::npos)
+        line_end = txt.length();
+    std::string txt_line = txt.substr(0, line_end);
     fnt->calcTextMetrics(txt_line, width, height);
     Math::float2 offset = getAlignOffset(alignment, width, height);
 
-	// Set the position as offset
-	zFont::GlyphStream s;
+    // Set the position as offset
+    zFont::GlyphStream s;
     s.setPosition(px + offset.x, py + hole_offset.y);
 
     // Fill stream
-	for (unsigned i = 0; i < txt.size(); i++)
-	{
-		// If exist handle next text line
-		if (txt[i] == '\n')
-		{
-			// Find if exist next newline and calculate the txt line offset
-			line_end = txt.find("\n", i + 1);
-			if (line_end == std::string::npos)
-				line_end = txt.length();
-			txt_line = txt.substr(i + 1, line_end - i + 1 );
-			fnt->calcTextMetrics(txt_line, width, height);
-			offset = getAlignOffset(alignment, width, height);
+    for (unsigned i = 0; i < txt.size(); i++)
+    {
+        // If exist handle next text line
+        if (txt[i] == '\n')
+        {
+            // Find if exist next newline and calculate the txt line offset
+            line_end = txt.find("\n", i + 1);
+            if (line_end == std::string::npos)
+                line_end = txt.length();
+            txt_line = txt.substr(i + 1, line_end - i + 1);
+            fnt->calcTextMetrics(txt_line, width, height);
+            offset = getAlignOffset(alignment, width, height);
 
-			// Add a new line and add if necessary an offset
-			s.setPosition(px + offset.x, s.yPos + fnt->getFontHeight());
-		}
-		else
-		{
-			fnt->appendGlyph(s, (unsigned char)txt[i]);
-		}
-	}
+            // Add a new line and add if necessary an offset
+            s.setPosition(px + offset.x, s.yPos + fnt->getFontHeight());
+        }
+        else
+        {
+            fnt->appendGlyph(s, (unsigned char)txt[i]);
+        }
+    }
 
-
-    if(UI::zFont::bindGlyphStream(s))
+    if (UI::zFont::bindGlyphStream(s))
     {
         float ortho[16];
-        bx::mtxOrtho(ortho, 0.0f, (float) config.state.viewWidth, (float) config.state.viewHeight, 0.0f, 0.0f, 1000.0f);
+        bx::mtxOrtho(ortho, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, 0.0f, 1000.0f);
         bgfx::setViewTransform(BGFX_VIEW, NULL, ortho);
-        bgfx::setViewRect(BGFX_VIEW, 0, 0, (uint16_t) config.state.viewWidth, (uint16_t) config.state.viewHeight);
+        bgfx::setViewRect(BGFX_VIEW, 0, 0, (uint16_t)config.state.viewWidth, (uint16_t)config.state.viewHeight);
 
         //Handle::TextureHandle fntTex = fnt->getFontTexture();
-        Handle::TextureHandle fntTex = fnt->getFontTexture();// m_Engine.getEngineTextureAlloc().loadTextureVDF("STARTSCREEN.TGA");
+        Handle::TextureHandle fntTex = fnt->getFontTexture();  // m_Engine.getEngineTextureAlloc().loadTextureVDF("STARTSCREEN.TGA");
         bgfx::setTexture(0, config.uniforms.diffuseTexture,
                          m_Engine.getEngineTextureAlloc().getTexture(fntTex).m_TextureHandle);
-        bgfx::setState(BGFX_STATE_RGB_WRITE
-                       | BGFX_STATE_ALPHA_WRITE
-                       | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA)
-        );
+        bgfx::setState(BGFX_STATE_RGB_WRITE | BGFX_STATE_ALPHA_WRITE | BGFX_STATE_BLEND_FUNC(BGFX_STATE_BLEND_SRC_ALPHA, BGFX_STATE_BLEND_INV_SRC_ALPHA));
 
         //setCurrentScissor();
         bgfx::submit(BGFX_VIEW, config.programs.imageProgram);
     }
 }
-

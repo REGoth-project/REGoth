@@ -14,13 +14,12 @@ namespace UI
         Menu_Log(Engine::BaseEngine& e);
 
     public:
-
-		enum EMenuLogStatus
-		{
-			CategorySelection,
-			TopicSelection,
-			ContentViewer
-		};
+        enum EMenuLogStatus
+        {
+            CategorySelection,
+            TopicSelection,
+            ContentViewer
+        };
 
         /**
          * To be called when one of the given actions were triggered
@@ -35,26 +34,25 @@ namespace UI
         static Menu_Log* create(Engine::BaseEngine& e);
 
     private:
-
-		/**
+        /**
 		 * Set the time and day text to the view
 		 */
-		void setTimeAndDay();
+        void setTimeAndDay();
 
-		/**
+        /**
 		* Initialize the listboxes with the log entries
 		*/
-		void initializeLogEntries();
+        void initializeLogEntries();
 
-		/**
+        /**
 		* Find a menu item by an instance string
 		*/
-		MenuItem * findMenuItem( const std::string &instance );
+        MenuItem* findMenuItem(const std::string& instance);
 
-		/**
+        /**
 		* This member is used to indicate which
 		* view is current effected by an input action
 		*/
-		EMenuLogStatus m_LogStatus;
+        EMenuLogStatus m_LogStatus;
     };
 }

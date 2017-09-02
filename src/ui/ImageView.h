@@ -27,6 +27,7 @@ namespace UI
          *            with the given m_Size-value of the View-class.
          */
         void setRelativeSize(bool rel) { m_RelativeSize = rel; }
+
     protected:
         /**
          * Image to display
