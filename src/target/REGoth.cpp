@@ -227,10 +227,10 @@ void REGoth::initConsole()
     using Suggestion = Logic::Console::Suggestion;
     using CandidateListGenerator = Logic::Console::CandidateListGenerator;
 
-    // suggestion generator for an integer range. stop is not included
+    // suggestion generator for the integer range [start, stop[. stop is not included
     auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<Suggestion> {
         std::vector<Suggestion> suggestions;
-        for (int i = start; i < stop; ++i)
+        for (int i = start; i < stop; i += step)
             suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::to_string(i)}}));
         return suggestions;
     };
