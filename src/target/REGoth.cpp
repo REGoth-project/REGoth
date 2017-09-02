@@ -510,7 +510,10 @@ void REGoth::initConsole()
             saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
         }
 
-        this->m_pEngine->queueSaveGameAction({SavegameManager::Save, index, saveGameName});
+        bool forceQueue = true; // better do saving at frame end and not between entity updates
+        this->m_pEngine->executeInMainThread([index, saveGameName](Engine::BaseEngine* engine){
+            Engine::SavegameManager::saveToSlot(index, saveGameName);
+        }, forceQueue);
 
         return "Saving world to slot: " + std::to_string(index) + "...";
     });
@@ -1042,8 +1045,6 @@ bool REGoth::update()
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.
     bgfx::frame();
-    // TODO migrate SaveGameActions to general purpose message queue
-    m_pEngine->processSaveGameActionQueue();
     m_pEngine->processMessageQueue();
 
     return true;
