@@ -197,6 +197,11 @@ void REGoth::init(int _argc, char** _argv)
     // Init SavegameManager
     Engine::SavegameManager::init(*m_pEngine);
 
+    if (m_pEngine->getEngineArgs().startNewGame)
+    {
+        menuMain.onCustomAction("NEW_GAME");
+    }
+
     m_timeOffset = bx::getHPCounter();
 
     ddInit();
