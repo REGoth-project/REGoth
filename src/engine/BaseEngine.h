@@ -47,6 +47,7 @@ namespace Engine
             std::string gameBaseDirectory;
             std::string startupZEN;
             std::string playerScriptname;
+            bool startNewGame;
             std::string testVisual;
             std::string modfile;
             bx::CommandLine cmdline;

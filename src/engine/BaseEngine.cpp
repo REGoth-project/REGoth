@@ -34,6 +34,7 @@ namespace Flags
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
     Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
     Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
+    Cli::Flag startNewGame("", "newgame", 0, "Starts a new game directly instead of showing the menu at startup");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
@@ -105,6 +106,8 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     if (Flags::playerScriptname.isSet())
         m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
+
+    m_Args.startNewGame = Flags::startNewGame.isSet();
 
     std::string snd_device;
     if (Flags::sndDevice.isSet())
