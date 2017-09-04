@@ -4,7 +4,12 @@
 #if BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN || BX_PLATFORM_BSD
 #include <thread>
 #include "PlatformGLFW.h"
-#include "utils/Utils.h"
+
+// #include "utils/Utils.h"
+namespace Utils
+{
+    void destroyFileReaderWriter();
+}
 
 #if defined(_glfw3_h_)
 // If GLFW/glfw3.h is included before bgfx/platform.h we can enable GLFW3
