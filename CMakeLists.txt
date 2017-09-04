@@ -78,6 +78,9 @@ if(ANDROID)
     include("src/android/Apk.cmake" REQUIRED)
 endif()
 
+if (APPLE)
+    ADD_DEFINITIONS(-DBGFX_CONFIG_MULTITHREADED=0)
+endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
     # add warning flags
