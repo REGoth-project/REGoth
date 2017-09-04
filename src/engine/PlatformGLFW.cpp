@@ -121,7 +121,9 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     }
 
     /* Make the window's context current */
-    //glfwMakeContextCurrent(window);
+#ifdef BX_PLATFORM_OSX
+    glfwMakeContextCurrent(window);
+#endif
 
     // Initialize bgfx
     glfwSetWindow(window);
