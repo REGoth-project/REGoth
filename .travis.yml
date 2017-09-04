@@ -11,6 +11,8 @@ addons:
             - cmake
             - cmake-data
             - libx11-xcb-dev
+            - libxinerama-dev
+            - libxcursor-dev
             - libxcb-image0-dev
             - libxcb-randr0-dev
             - libudev-dev
