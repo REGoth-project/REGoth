@@ -16,10 +16,10 @@
 class REGoth : public PLATFORM_CLASS
 {
 public:
-    void init(int _argc, char** _argv) BX_OVERRIDE;
+    void init(int _argc, char** _argv) override;
     void initConsole();
-    int shutdown() BX_OVERRIDE;
-    bool update() BX_OVERRIDE;
+    int shutdown() override;
+    bool update() override;
     void drawLog();
     void showSplash();
     void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height);
