@@ -909,7 +909,7 @@ int REGoth::shutdown()
 
     bgfx::shutdown();
 
-    return PLATFORM_CLASS::shutdown();
+    return REGothPlatform::shutdown();
 }
 
 bool REGoth::update()
