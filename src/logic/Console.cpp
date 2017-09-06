@@ -5,6 +5,7 @@
 #include <ui/Hud.h>
 #include <utils/Utils.h>
 #include <utils/logger.h>
+#include <utils/naturalcompare.h>
 
 using Logic::Console;
 
@@ -223,13 +224,6 @@ std::list<Logic::Console::Command>::iterator Console::determineCommand(const std
     return m_Commands.end();
 }
 
-/*
-bool naturalComparator(const std::string& left, const std::string& right)
-{
-    // TODO
-    return left < right;
-}*/
-
 void Console::generateSuggestions(const std::string& input, bool limitToFixed)
 {
     using std::vector;
@@ -366,5 +360,5 @@ bool SuggestionBase::operator<(const SuggestionBase& b) const
     if (a.anyStartsWith != b.anyStartsWith)
         return !a.anyStartsWith < !b.anyStartsWith;
     return std::lexicographical_compare(a.aliasList.begin(), a.aliasList.end(),
-                                        b.aliasList.begin(), b.aliasList.end());
+                                        b.aliasList.begin(), b.aliasList.end(), NaturalCompare::less<std::string>(false));
 }
