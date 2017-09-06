@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
+cmake_policy(SET CMP0042 NEW)
 project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -77,6 +78,9 @@ if(ANDROID)
     include("src/android/Apk.cmake" REQUIRED)
 endif()
 
+if (APPLE)
+    ADD_DEFINITIONS(-DBGFX_CONFIG_MULTITHREADED=0)
+endif()
 
 if (CMAKE_COMPILER_IS_GNUCC)
     # add warning flags
