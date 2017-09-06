@@ -5,15 +5,15 @@
 #include <utils/bgfx_lib.h>
 #if BX_PLATFORM_ANDROID
 #include "engine/PlatformAndroid.h"
-#define PLATFORM_CLASS Engine::PlatformAndroid
+using REGothPlatform = Engine::PlatformAndroid;
 #elif BX_PLATFORM_LINUX || BX_PLATFORM_OSX || BX_PLATFORM_WINDOWS || BX_PLATFORM_EMSCRIPTEN || BX_PLATFORM_BSD
 #include "engine/PlatformGLFW.h"
-#define PLATFORM_CLASS Engine::PlatformGLFW
+using REGothPlatform = Engine::PlatformGLFW;
 #else
 #error Unknown platform
 #endif
 
-class REGoth : public PLATFORM_CLASS
+class REGoth : public REGothPlatform
 {
 public:
     void init(int _argc, char** _argv) override;
