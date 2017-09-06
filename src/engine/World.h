@@ -281,8 +281,8 @@ namespace World
         }
 
         /**
-     * HUD's print-screen manager
-     */
+         * HUD's print-screen manager
+         */
         UI::PrintScreenMessages& getPrintScreenManager();
 
         /**

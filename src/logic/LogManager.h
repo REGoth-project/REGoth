@@ -21,18 +21,18 @@ namespace Logic
         ~LogManager();
 
         /**
-		* Get the current player log
-		*/
+         * Get the current player log
+         */
         std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
 
         /**
-		* Export the current log to the given log parameter
-		*/
+         * Export the current log to the given log parameter
+         */
         void exportLogManager(json& log);
 
         /**
-		 * Import the log from the given log parameter
-		 */
+         * Import the log from the given log parameter
+         */
         void importLogManager(const json& log);
 
     private:

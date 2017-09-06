@@ -491,9 +491,8 @@ bool WorldInstance::init(const std::string& zen,
     else
     {
         // Dump a list of possible zens
-        auto& files = m_pEngine->getVDFSIndex().getKnownFiles();
         std::vector<std::string> zenFiles;
-        for (auto& f : files)
+        for (const auto& f : m_pEngine->getVDFSIndex().getKnownFiles())
         {
             if (f.find(".ZEN") != std::string::npos)
             {
@@ -697,7 +696,7 @@ std::vector<size_t> WorldInstance::findStartPoints()
     auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
     if(it != m_Waynet.waypointsByName.end())
         pts.push_back((*it).second);
-    */
+     */
 
     auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
     if (it != m_Waynet.waypointsByName.end())
@@ -780,7 +779,7 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
         if(fp.first.substr(0, tag.size()) == tag)
             mp.push_back(fp.second);
     }
-	*/
+     */
 
     return mp;
 }
