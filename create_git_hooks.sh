@@ -9,6 +9,6 @@ do
     SYMLINK_HOOK=.git/$hook
     if [ -f $hook ] && [ ! -e "$SYMLINK_HOOK" ] && [ ! -L "$SYMLINK_HOOK" ]
     then
-        eval "ln -s $hook .git/hooks/"
+        ln -v -s "../../$hook" .git/hooks/
     fi
 done
