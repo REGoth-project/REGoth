@@ -35,24 +35,24 @@ namespace UI
 
     private:
         /**
-		 * Set the time and day text to the view
-		 */
+         * Set the time and day text to the view
+         */
         void setTimeAndDay();
 
         /**
-		* Initialize the listboxes with the log entries
-		*/
+         * Initialize the listboxes with the log entries
+         */
         void initializeLogEntries();
 
         /**
-		* Find a menu item by an instance string
-		*/
+         * Find a menu item by an instance string
+         */
         MenuItem* findMenuItem(const std::string& instance);
 
         /**
-		* This member is used to indicate which
-		* view is current effected by an input action
-		*/
+         * This member is used to indicate which
+         * view is current effected by an input action
+         */
         EMenuLogStatus m_LogStatus;
     };
 }

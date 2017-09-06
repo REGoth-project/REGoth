@@ -28,19 +28,19 @@ namespace UI
             void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
             /*
-			 * Set the topic entries
-			 * @param entries The entries which should be added
-			 */
+             * Set the topic entries
+             * @param entries The entries which should be added
+             */
             void setTopicEntries(std::vector<std::string>& entries);
 
             /*
-			* Scroll the entries one line down
-			*/
+             * Scroll the entries one line down
+             */
             void scrollDown();
 
             /*
-			* Scroll the entries one line up
-			*/
+             * Scroll the entries one line up
+             */
             void scrollUp();
 
         private:

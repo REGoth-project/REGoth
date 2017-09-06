@@ -28,8 +28,8 @@ namespace Engine
         int getDay() const;
 
         /**
-        * @param newDay day to be set to
-        */
+         * @param newDay day to be set to
+         */
         void setDay(int newDay);
 
         /**
@@ -101,8 +101,8 @@ namespace Engine
         std::string getTimeOfDayFormatted() const;
 
         /**
-		* @return day as string in day. format
-		*/
+         * @return day as string in day. format
+         */
         std::string getDayFormatted() const;
 
         /**
