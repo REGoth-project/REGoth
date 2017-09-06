@@ -5,6 +5,7 @@
 #include <daedalus/DaedalusDialogManager.h>
 #include <daedalus/DaedalusGameState.h>
 #include <logic/messages/EventMessage.h>
+#include <ui/View.h>
 
 using json = nlohmann::json;
 

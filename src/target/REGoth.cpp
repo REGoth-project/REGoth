@@ -548,7 +548,7 @@ void REGoth::initConsole()
                auto& worldInstance = m_pEngine->getMainWorld().get();
 
                auto suggestions = worlddNpcNamesGen();
-               auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+               auto baseSuggestion = Logic::Console::findSuggestion(suggestions, requested);
                auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
                if (suggestion != nullptr)
                {
@@ -622,7 +622,7 @@ void REGoth::initConsole()
             Handle::EntityHandle entityHandle = Handle::EntityHandle::makeInvalidHandle();
             if (!requestedName.empty())
             {
-                auto baseSuggestion = Utils::findSuggestion(suggestions, requestedName);
+                auto baseSuggestion = Logic::Console::findSuggestion(suggestions, requestedName);
                 auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
                 if (suggestion != nullptr)
                     entityHandle = suggestion->npcHandle;
@@ -690,7 +690,7 @@ void REGoth::initConsole()
         {
             const std::string& requested = args.at(1);
             auto suggestions = worlddNpcNamesGen();
-            auto baseSuggestion = Utils::findSuggestion(suggestions, requested);
+            auto baseSuggestion = Logic::Console::findSuggestion(suggestions, requested);
             auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
             if (suggestion == nullptr)
                 return "NPC not found in this world: " + requested;
@@ -845,7 +845,7 @@ void REGoth::initConsole()
 
         std::size_t index = 0;
         auto suggestions = itemNamesGen();
-        auto suggestion = Utils::findSuggestion(suggestions, itemName);
+        auto suggestion = Logic::Console::findSuggestion(suggestions, itemName);
         if (suggestion == nullptr)
             return "Item not found!";
 

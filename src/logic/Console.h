@@ -40,6 +40,14 @@ namespace Logic
         // generator, which returns vector of candidates
         using CandidateListGenerator = std::function<std::vector<Suggestion>()>;
 
+        /**
+         * searches for the first suggestion which contains name and returns it
+         * returns nullptr if not found any
+         * @param suggestions suggestions to search in
+         * @param name token to find
+         */
+        static Suggestion findSuggestion(const std::vector<Suggestion>& suggestions, const std::string& name);
+
         struct NPCSuggestion : SuggestionBase
         {
             NPCSuggestion(const std::vector<std::string>& aliasList, Handle::EntityHandle npcHandle)

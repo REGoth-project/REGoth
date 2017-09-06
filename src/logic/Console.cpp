@@ -204,7 +204,7 @@ std::list<Logic::Console::Command>::iterator Console::determineCommand(const std
         bool allStagesMatched = true;
         for (std::size_t tokenID = 0; tokenID < command.numFixTokens; tokenID++)
         {
-            auto suggestion = Utils::findSuggestion(command.generators.at(tokenID)(), tokens.at(tokenID));
+            auto suggestion = findSuggestion(command.generators.at(tokenID)(), tokens.at(tokenID));
             if (suggestion == nullptr)
                 allStagesMatched = false;
         }
@@ -343,6 +343,19 @@ void Console::setOpen(bool open)
     m_Open = open;
     if (!open)
         invalidateSuggestions();
+}
+
+Console::Suggestion Console::findSuggestion(const std::vector<Suggestion>& suggestions, const std::string& name)
+{
+    for (auto& suggestion : suggestions)
+    {
+        auto& aliasList = suggestion->aliasList;
+        if (std::find(aliasList.begin(), aliasList.end(), name) != aliasList.end())
+        {
+            return suggestion;
+        }
+    }
+    return nullptr;
 }
 
 using SuggestionBase = Logic::Console::SuggestionBase;

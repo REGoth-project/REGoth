@@ -14,7 +14,6 @@
 #include <vector>
 #include <stdlib.h>
 #include <bgfx/bgfx.h>
-#include <logic/Console.h>
 #include <math/mathlib.h>
 
 namespace Utils
@@ -532,22 +531,13 @@ namespace Utils
     bool containsLike(const std::string& searchSpace, const std::string& part);
 
     /**
-     * searches for the first suggestion which contains name and returns it
-     * returns nullptr if not found any
-     * @param suggestions suggestions to search in
-     * @param name token to find
-     */
-    Logic::Console::Suggestion findSuggestion(const std::vector<Logic::Console::Suggestion>& suggestions,
-                                              const std::string& name);
-
-    /**
-     * performs case insensitive euqal check
+     * performs case insensitive equal check
      * @return true if strings are equal ignoring case
      */
     bool stringEqualIngoreCase(const std::string a, const std::string b);
 
     /**
-     * concatenates tokens using delim inbetweeen
+     * concatenates tokens using delim in between
      * @tparam Iterator
      * @param begin
      * @param end

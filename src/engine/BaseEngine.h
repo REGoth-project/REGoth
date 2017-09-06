@@ -5,6 +5,7 @@
 #include <engine/GameClock.h>
 #include <engine/GameSession.h>
 #include <engine/World.h>
+#include <logic/Console.h>
 #include <logic/SavegameManager.h>
 #include <memory/StaticReferencedAllocator.h>
 #include <ui/View.h>
