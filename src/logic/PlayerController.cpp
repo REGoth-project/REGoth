@@ -2071,7 +2071,10 @@ void PlayerController::setupKeyBindings()
     Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float) {
         if (triggered)
         {
-            m_World.getEngine()->queueSaveGameAction({Engine::SavegameManager::Save, 0, ""});
+            bool forceQueue = true; // better do saving at frame end and not between entity updates
+            m_World.getEngine()->executeInMainThread([](Engine::BaseEngine* engine){
+                Engine::SavegameManager::saveToSlot(0, "");
+            }, forceQueue);
         }
     });
 

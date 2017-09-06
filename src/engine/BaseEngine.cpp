@@ -33,7 +33,8 @@ namespace Flags
     Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
     Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
     Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
-    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game the player will play as the given NPC", {"PC_HERO"});
+    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
+    Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
@@ -105,6 +106,8 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     if (Flags::playerScriptname.isSet())
         m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
+
+    m_Args.startNewGame = Flags::startNewGame.isSet();
 
     std::string snd_device;
     if (Flags::sndDevice.isSet())
@@ -225,30 +228,6 @@ void BaseEngine::setPaused(bool paused)
                 getMainWorld().get().getAudioWorld().continueSounds();
         }
         m_Paused = paused;
-    }
-}
-
-void BaseEngine::queueSaveGameAction(SavegameManager::SaveGameAction saveGameAction)
-{
-    m_SaveGameActionQueue.push(saveGameAction);
-}
-
-void BaseEngine::processSaveGameActionQueue()
-{
-    while (!m_SaveGameActionQueue.empty())
-    {
-        SavegameManager::SaveGameAction action = m_SaveGameActionQueue.front();
-        switch (action.type)
-        {
-            case SavegameManager::Save:
-                if (!getMainWorld().get().getDialogManager().isDialogActive())
-                {
-                    // only save while not in Dialog
-                    SavegameManager::saveToSlot(action.slot, action.savegameName);
-                }
-                break;
-        }
-        m_SaveGameActionQueue.pop();
     }
 }
 

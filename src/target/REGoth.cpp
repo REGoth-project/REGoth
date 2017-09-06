@@ -197,6 +197,11 @@ void REGoth::init(int _argc, char** _argv)
     // Init SavegameManager
     Engine::SavegameManager::init(*m_pEngine);
 
+    if (m_pEngine->getEngineArgs().startNewGame)
+    {
+        menuMain.onCustomAction("NEW_GAME");
+    }
+
     m_timeOffset = bx::getHPCounter();
 
     ddInit();
@@ -222,10 +227,10 @@ void REGoth::initConsole()
     using Suggestion = Logic::Console::Suggestion;
     using CandidateListGenerator = Logic::Console::CandidateListGenerator;
 
-    // suggestion generator for an integer range. stop is not included
+    // suggestion generator for the integer range [start, stop[. stop is not included
     auto rangeGen = [this](int start, int stop, int step = 1) -> std::vector<Suggestion> {
         std::vector<Suggestion> suggestions;
-        for (int i = start; i < stop; ++i)
+        for (int i = start; i < stop; i += step)
             suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::to_string(i)}}));
         return suggestions;
     };
@@ -505,7 +510,10 @@ void REGoth::initConsole()
             saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
         }
 
-        this->m_pEngine->queueSaveGameAction({SavegameManager::Save, index, saveGameName});
+        bool forceQueue = true; // better do saving at frame end and not between entity updates
+        this->m_pEngine->executeInMainThread([index, saveGameName](Engine::BaseEngine* engine){
+            Engine::SavegameManager::saveToSlot(index, saveGameName);
+        }, forceQueue);
 
         return "Saving world to slot: " + std::to_string(index) + "...";
     });
@@ -1037,8 +1045,6 @@ bool REGoth::update()
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.
     bgfx::frame();
-    // TODO migrate SaveGameActions to general purpose message queue
-    m_pEngine->processSaveGameActionQueue();
     m_pEngine->processMessageQueue();
 
     return true;

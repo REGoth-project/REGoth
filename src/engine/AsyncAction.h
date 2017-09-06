@@ -36,7 +36,7 @@ namespace Engine
         /**
          * Safely waits for the future to be started and finished
          * If the calling thread is the main thread, the execution will be triggered additionally
-         * It is safe call this function from any thread
+         * It is safe to call this function from any thread
          */
         void wait()
         {
