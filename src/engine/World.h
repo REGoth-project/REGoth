@@ -274,6 +274,11 @@ namespace World
             return m_AnimationLibrary;
         }
 
+        BspTree& getBspTree()
+        {
+            return m_BspTree;
+        }
+
         /**
          * HUD's print-screen manager
          */
