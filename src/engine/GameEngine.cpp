@@ -12,6 +12,7 @@
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
 #include <utils/logger.h>
+#include <glfw/include/GLFW/glfw3.h>
 
 using namespace Engine;
 
@@ -90,7 +91,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
 {
     Math::Matrix view;
     if (getMainWorld().isValid())
-        view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(), getMainWorld().get().getCamera());
+        view = Components::Actions::Position::makeViewMatrixFrom(getMainWorld().get().getComponentAllocator(),
+                                                                 getMainWorld().get().getCamera());
     else
         view = Math::Matrix::CreateIdentity();
 
@@ -112,17 +114,30 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     // Update the frame-config with the cameras world-matrix
     if (getMainWorld().isValid())
         m_DefaultRenderSystem.getConfig().state.cameraWorld = getMainWorld().get().getCameraComp<Components::PositionComponent>().m_WorldMatrix;
-    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared = DRAW_DISTANCE * DRAW_DISTANCE;  // TODO: Config for these kind of variables
+    m_DefaultRenderSystem.getConfig().state.drawDistanceSquared =
+            DRAW_DISTANCE * DRAW_DISTANCE;  // TODO: Config for these kind of variables
     m_DefaultRenderSystem.getConfig().state.farPlane = farPlane;
     m_DefaultRenderSystem.getConfig().state.viewWidth = width;
     m_DefaultRenderSystem.getConfig().state.viewHeight = height;
+    m_DefaultRenderSystem.getConfig().state.cameraProj = proj;
 
     bgfx::touch(0);
 
     // Draw only main world
     if (getMainWorld().isValid())
-        Render::drawWorld(getMainWorld().get(), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
+    {
+        static unsigned int frame = 0;
+        frame++;
 
+        static Math::Matrix viewProj;
+        bool assign = !Input::getKeysState()[GLFW_KEY_G];
+
+        if(assign)
+            viewProj = Math::Matrix(proj) * view;
+
+        getMainWorld().get().getBspTree().markNodesVisibleNow(viewProj, frame);
+        Render::drawWorld(getMainWorld().get(), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
+    }
     //bgfx::frame();
 }
 
