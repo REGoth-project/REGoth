@@ -541,6 +541,55 @@ namespace Math
             return tmp;
         }
 
+        Math::float4 GetViewProjFrustumPlaneTop() const
+        {
+            return { m[0][3] - m[0][1],
+                     m[1][3] - m[1][1],
+                     m[2][3] - m[2][1],
+                     m[3][3] - m[3][1] };
+        }
+
+        Math::float4 GetViewProjFrustumPlaneBottom() const
+        {
+            return { m[0][3] + m[0][1],
+                     m[1][3] + m[1][1],
+                     m[2][3] + m[2][1],
+                     m[3][3] + m[3][1] };
+        }
+
+        Math::float4 GetViewProjFrustumPlaneLeft() const
+        {
+            return { m[0][3] - m[0][0],
+                     m[1][3] - m[1][0],
+                     m[2][3] - m[2][0],
+                     m[3][3] - m[3][0] };
+        }
+
+        Math::float4 GetViewProjFrustumPlaneRight() const
+        {
+            return { m[0][3] + m[0][0],
+                     m[1][3] + m[1][0],
+                     m[2][3] + m[2][0],
+                     m[3][3] + m[3][0] };
+        }
+
+        Math::float4 GetViewProjFrustumPlaneFar() const
+        {
+            return { m[0][2],
+                     m[1][2],
+                     m[2][2],
+                     m[3][2] };
+        }
+
+        Math::float4 GetViewProjFrustumPlaneNear() const
+        {
+            return { m[0][3] + m[0][2],
+                     m[1][3] + m[1][2],
+                     m[2][3] + m[2][2],
+                     m[3][3] + m[3][2] };
+        }
+
+
         float Determinant() const { return glm::determinant(_glmMatrix); }
         static Matrix CreateIdentity() { return Matrix(glm::mat4(1.0)); }
         static Matrix CreateTranslation(const float3& position) { return Matrix(glm::translate(glm::mat4x4(), position._glmt_vector)); }
