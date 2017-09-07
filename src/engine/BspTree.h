@@ -34,6 +34,8 @@ namespace World
              * AABB of this node
              */
             Utils::BBox3D bbox;
+            Math::float3 bboxCenter;
+            float bboxRadius;
 
             /**
              * Plane dividing this node
@@ -41,9 +43,20 @@ namespace World
             Math::float4 plane;
 
             /**
+             * Plane this node failed the frustum test agains last time.
+             * It is likely to fail again against that plane, so cache it!
+             */
+            int lastFailingFrustumPlane;
+
+            /**
+             * Last frame this passed the visibility test
+             */
+            unsigned int lastFrameVisible;
+
+            /**
              * @return Whether this is a leaf
              */
-            bool isLeaf() { return front == INVALID_NODE && back == INVALID_NODE; }
+            bool isLeaf() const { return front == INVALID_NODE && back == INVALID_NODE; }
         };
 
         BspTree(WorldInstance& world);
@@ -71,11 +84,20 @@ namespace World
         std::vector<NodeIndex> findLeafOf(const Utils::BBox3D& bbox);
 
         /**
+         * Goes through all nodes and checks if it can be seen by the given View-Projection-Matrix.
+         * @param frameNow Number of this frame (ie. running index)
+         */
+        void markNodesVisibleNow(const Math::Matrix& viewProj, unsigned int frameNow);
+
+        /**
          * Debug-rendering
          */
         void debugDraw();
 
     private:
+
+        void debugDrawNode(NodeIndex n, uint32_t argb);
+
         /**
          * Nodes stored in this tree. First one is the root-node
          */
