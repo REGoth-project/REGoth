@@ -52,3 +52,9 @@ ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
     assert(m_WorldMeshData.triangles[triangleIdx].submeshIndex < m_WorldMeshData.subMeshes.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
 }
+
+ZenLoad::PolyFlags WorldMesh::getPolyFlags(size_t triangleIdx) const
+{
+    assert(triangleIdx < m_WorldMeshData.triangles.size());
+    return m_WorldMeshData.triangles[triangleIdx].flags;
+}

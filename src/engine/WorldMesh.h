@@ -48,6 +48,11 @@ namespace World
          */
         ZenLoad::zCMaterialData getMatData(size_t triangleIdx) const;
 
+        /**
+         * @return Flags of the triangle with the given indenx
+         */
+        ZenLoad::PolyFlags getPolyFlags(size_t triangleIdx) const;
+
     protected:
         /**
          * Data of the worldmesh
