@@ -192,6 +192,9 @@ void PlayerController::onUpdate(float deltaTime)
 
             m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
         }
+
+        // Update the room the NPC is standing inside
+        handleWorldSectors();
     }
 
     // Run extra stuff if this is the controlled character
@@ -200,6 +203,32 @@ void PlayerController::onUpdate(float deltaTime)
         onUpdateForPlayer(deltaTime);
     }
 }
+
+void PlayerController::handleWorldSectors()
+{
+    ZenLoad::SectorIndex sectorNow = getSectorStandingInRightNowFromMesh();
+
+    // Save last sector if we changed sectors (rooms)
+    if(m_SectorState.currentSectorIndex != sectorNow)
+    {
+        m_SectorState.lastSectorIndex = m_SectorState.currentSectorIndex;
+        m_SectorState.currentSectorIndex = sectorNow;
+    }
+}
+
+ZenLoad::SectorIndex PlayerController::getSectorStandingInRightNowFromMesh()
+{
+    if (m_MoveState.ground.successful)
+    {
+        ZenLoad::PolyFlags flags = m_World.getWorldMesh().getPolyFlags(m_MoveState.ground.triangleIndex);
+
+        return flags.sectorIndex;
+    }else
+    {
+        return ZenLoad::SECTOR_INDEX_INVALID;
+    }
+}
+
 
 void PlayerController::continueRoutine()
 {
@@ -2776,3 +2805,4 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 {
     //if(tag.m_Tag == )
 }
+

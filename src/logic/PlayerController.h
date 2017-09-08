@@ -455,7 +455,24 @@ namespace Logic
             return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
         };
 
+        /**
+         * @return Sectors (Rooms) the NPC is/was standing in. Index to BspTree::getSectorByIndex.
+         */
+        ZenLoad::SectorIndex getSectorStandingInRightNow() { return m_SectorState.currentSectorIndex; }
+        ZenLoad::SectorIndex getSectorStandingInFormerly() { return m_SectorState.lastSectorIndex; }
     protected:
+
+        /**
+         * @return Name of the sector the NPC is standing in right now.
+         */
+        ZenLoad::SectorIndex getSectorStandingInRightNowFromMesh();
+
+        /**
+         * Checks if the player is inside a room and updates the stored sectors accordingly
+         * Should be called in the update-method
+         */
+        void handleWorldSectors();
+
         /**
          * Callbacks registered inside the animation-handler
          */
@@ -485,6 +502,15 @@ namespace Logic
          * @return true, if the current paths destination was reached
          */
         bool travelPath(float deltaTime);
+
+        /**
+         * Sectors, Rooms, etc
+         */
+        struct
+        {
+            ZenLoad::SectorIndex currentSectorIndex;
+            ZenLoad::SectorIndex lastSectorIndex; // Sector before the last roomchange
+        } m_SectorState;
 
         /**
          * Current routine state
