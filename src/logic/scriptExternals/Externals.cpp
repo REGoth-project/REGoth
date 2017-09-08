@@ -1438,4 +1438,55 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             npc.playerController->drawWeaponMelee(true);
         }
     });
+
+    vm->registerExternalFunction("wld_assignroomtoguild", [=](Daedalus::DaedalusVM& vm) {
+        int guild = vm.popDataValue();
+        std::string sectorName = vm.popString();
+
+        pWorld->getBspTree().setGuildOfSector(sectorName, guild);
+    });
+
+    vm->registerExternalFunction("wld_getformerplayerportalguild", [=](Daedalus::DaedalusVM& vm) {
+
+        // Shall return the guildId of the sector the player was before the last room-change
+
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(*pWorld, pWorld->getScriptEngine().getPlayerEntity());
+
+        if(player.isValid())
+        {
+            ZenLoad::SectorIndex sector = player.playerController->getSectorStandingInFormerly();
+
+            if(sector != ZenLoad::SECTOR_INDEX_INVALID)
+            {
+                int guildId = pWorld->getBspTree().getGuildOfSector(sector);
+
+                vm.setReturn(0);
+                return;
+            }
+        }
+
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("wld_getplayerportalguild", [=](Daedalus::DaedalusVM& vm) {
+
+        // Shall return the guildId of the sector the player is in right now
+
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(*pWorld, pWorld->getScriptEngine().getPlayerEntity());
+
+        if(player.isValid())
+        {
+            ZenLoad::SectorIndex sector = player.playerController->getSectorStandingInRightNow();
+
+            if(sector != ZenLoad::SECTOR_INDEX_INVALID)
+            {
+                int guildId = pWorld->getBspTree().getGuildOfSector(sector);
+
+                vm.setReturn(0);
+                return;
+            }
+        }
+
+        vm.setReturn(0);
+    });
 }
