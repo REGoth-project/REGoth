@@ -100,6 +100,11 @@ namespace Logic
             bool isOverlay;
 
             /**
+             * Whether this is the first time this message is being handled
+             */
+            bool isFirstRun;
+
+            /**
              * Adds a callback, triggered when this message has been successfully and completely processed
              * @param hostVob Vob which the callback is set from
              * @param callback Callback function
