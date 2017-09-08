@@ -126,16 +126,16 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     // Draw only main world
     if (getMainWorld().isValid())
     {
-        static unsigned int frame = 0;
+        /*static unsigned int frame = 0;
         frame++;
 
         static Math::Matrix viewProj;
         bool assign = !Input::getKeysState()[GLFW_KEY_G];
 
         if(assign)
-            viewProj = Math::Matrix(proj) * view;
+            viewProj = Math::Matrix(proj) * view;*/
 
-        getMainWorld().get().getBspTree().markNodesVisibleNow(viewProj, frame);
+        //getMainWorld().get().getBspTree().markNodesVisibleNow(viewProj, frame);
         Render::drawWorld(getMainWorld().get(), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
     }
     //bgfx::frame();
