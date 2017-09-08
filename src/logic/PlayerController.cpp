@@ -68,10 +68,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_AIStateMachine(world, entity)
     , m_NPCAnimationHandler(world, entity)
     , m_AIHandler(world, entity)
+    , m_PathFinder(world)
 {
-    m_RoutineState.routineTarget = static_cast<size_t>(-1);
-    m_RoutineState.routineActive = true;
-
     m_AIState.closestWaypoint = 0;
     m_MoveState.currentPathPerc = 0;
     m_NPCProperties.moveSpeed = 7.0f;
@@ -110,6 +108,10 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
 void PlayerController::onUpdate(float deltaTime)
 {
+    // If anything wants this to be modified, it as to keep it up to date
+    // It is important that the update-method is called last in this update-handler
+    m_AIHandler.setTargetMovementState(EMovementState::None);
+
     m_RefuseTalkTime -= deltaTime;
 
     m_AIStateMachine.doAIState(deltaTime);
@@ -128,25 +130,15 @@ void PlayerController::onUpdate(float deltaTime)
         // FIXME: Doing this every frame is too often
         size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
 
-        setDailyRoutine({});
         gotoWaypoint(targetWP);
     }
-    m_NoAniRootPosHack = !m_MoveState.currentPath.empty();  // NPCs are already moved in travelPath
+    m_NoAniRootPosHack = false;
 
-    if (!m_MoveState.currentPath.empty() || !m_RoutineState.routineWaypoints.empty())
+    // Do waypoint-actions
+    if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
     {
-        // Do waypoint-actions
-        if (travelPath(deltaTime))
-        {
-            m_NoAniRootPosHack = true;
-
-            // Path done, stop animation
-            //if (model)
-            //    model->setAnimation(ModelVisual::Idle);
-
-            if (m_RoutineState.routineActive)
-                continueRoutine();
-        }
+        travelPath(deltaTime);
+        //m_NoAniRootPosHack = true;
     }
 
     if (model)
@@ -198,25 +190,10 @@ void PlayerController::onUpdate(float deltaTime)
     if (isPlayerControlled())
     {
         onUpdateForPlayer(deltaTime);
+    }else
+    {
+        m_AIHandler.npcUpdate(deltaTime);
     }
-}
-
-void PlayerController::continueRoutine()
-{
-    if (m_RoutineState.routineWaypoints.empty())
-        return;
-
-    // Start next route
-    if (m_RoutineState.routineTarget == static_cast<size_t>(-1))
-        m_RoutineState.routineTarget = 0;  // Start routing. Could let the integer overflow do this, but this is better.
-    else
-        m_RoutineState.routineTarget++;
-
-    // Start over, if done
-    if (m_RoutineState.routineTarget + 1 >= m_RoutineState.routineWaypoints.size())
-        m_RoutineState.routineTarget = 0;
-
-    gotoWaypoint(m_RoutineState.routineWaypoints[m_RoutineState.routineTarget]);
 }
 
 void PlayerController::teleportToWaypoint(size_t wp)
@@ -241,93 +218,39 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
     //getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
-void PlayerController::gotoWaypoint(size_t wp)
+
+void PlayerController::gotoWaypoint(World::Waynet::WaypointIndex wp)
 {
-    if (wp == m_AIState.targetWaypoint)
-        return;
-
-    // Set our current target as closest so we don't move back if we are following an entity
-    if (m_AIState.targetWaypoint != World::Waynet::INVALID_WAYPOINT)
-        m_AIState.closestWaypoint = m_AIState.targetWaypoint;
-    else
-        m_AIState.closestWaypoint = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
-                                                                         getEntityTransform().Translation());
-
-    if (m_AIState.closestWaypoint == World::Waynet::INVALID_WAYPOINT)
-        m_AIState.closestWaypoint = wp;  // Something bad happened...
-
-    m_AIState.targetWaypoint = wp;
-
-    // Route is most likely outdated, make a new one
-    rebuildRoute();
+    m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), wp);
 }
 
-void PlayerController::rebuildRoute()
+
+void PlayerController::gotoVob(Handle::EntityHandle vob)
 {
-    m_MoveState.currentPath = World::Waynet::findWay(m_World.getWaynet(),
-                                                     m_AIState.closestWaypoint,
-                                                     m_AIState.targetWaypoint);
-
-    m_MoveState.currentPathPerc = 0.0f;
-    m_MoveState.currentRouteLength = World::Waynet::getPathLength(m_World.getWaynet(), m_MoveState.currentPath);
-    m_MoveState.targetNode = 0;
-
-    // Update script-instance with target waypoint
-    getScriptInstance().wp = m_World.getWaynet().waypoints[m_AIState.targetWaypoint].name;
+    m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), vob);
 }
 
-bool PlayerController::travelPath(float deltaTime)
+void PlayerController::gotoPosition(const Math::float3& position)
 {
-    if (m_MoveState.currentPath.empty())
-        return true;
+    m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), position);
+}
 
-    Math::float3 targetPosition = m_World.getWaynet().waypoints[m_MoveState.currentPath[m_MoveState.targetNode]].position;
+void PlayerController::travelPath(float deltaTime)
+{
+    Math::float3 positionNow = getEntityTransform().Translation();
 
-    Math::float3 currentPosition = getEntityTransform().Translation();
-    Math::float3 differenceXZ = targetPosition - currentPosition;
+    Pathfinder::Instruction inst = m_PathFinder.updateToNextInstructionToTarget(positionNow);
 
-    // Remove angle
-    differenceXZ.y = 0.0f;
-    if (differenceXZ.lengthSquared() > 0.0f)
+    if(!m_PathFinder.isTargetReachedByPosition(positionNow, inst.targetPosition))
     {
-        Math::float3 direction = differenceXZ;
-        direction.normalize();
-
-        m_MoveState.direction = direction;
-
-        // FIXME: This is right, but somehow NPCs don't appear where they belong
-        //m_NPCProperties.moveSpeed = getModelVisual()->getAnimationHandler().getRootNodeVelocity().length();
-
-        direction *= deltaTime * m_NPCProperties.moveSpeed;
-        m_MoveState.position = currentPosition + direction;
-
-        // Move
-        setEntityTransform(Math::Matrix::CreateLookAt(currentPosition + direction,
-                                                      currentPosition + direction * 2,
-                                                      Math::float3(0, 1, 0))
-                               .Invert());
+        // Turn towards target
+        setDirection(inst.targetPosition - positionNow);
     }
 
-    // Set run animation
-    getModelVisual()->setAnimation(ModelVisual::Run);
-
-    if (differenceXZ.lengthSquared() < 0.5f)  // TODO: Find a nice setting for this
-    {
-        //if(abs(currentPosition.y - targetPosition.y) < 2.0f)
-        {
-            m_AIState.closestWaypoint = m_MoveState.currentPath[m_MoveState.targetNode];
-            m_MoveState.targetNode++;
-
-            if (m_MoveState.targetNode >= m_MoveState.currentPath.size())
-            {
-                m_MoveState.currentPath.clear();
-                return true;
-            }
-        }
-    }
-
-    return false;
+    // Start running
+    m_AIHandler.setTargetMovementState(EMovementState::Forward);
 }
+
 
 void PlayerController::onDebugDraw()
 {
@@ -903,8 +826,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
         {
             VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
             VobTypes::NPC_DrawMeleeWeapon(npc);
-
-            npc.playerController->setDailyRoutine({}); // FIXME: Idle-animation from routine finish overwriting other animations!
         }
     });
 
@@ -1265,7 +1186,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             break;
         case EventMessages::MovementMessage::ST_GotoFP:
         {
-            if (!message.targetVob.isValid())
+            if(message.isFirstRun)
             {
                 std::vector<Handle::EntityHandle> fp = m_World.getFreepointsInRange(getEntityTransform().Translation(),
                                                                                     100.0f, message.targetVobName, true,
@@ -1277,93 +1198,55 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
                 Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(fp.front());
                 message.targetPosition = pos.m_WorldMatrix.Translation();
 
-                // Find closest position from the waynet
-                World::Waynet::WaypointIndex wp = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
-                                                                                       message.targetPosition);
-
-                if (wp != World::Waynet::INVALID_WAYPOINT)
-                    gotoWaypoint(wp);
+                gotoPosition(pos.m_WorldMatrix.Translation());
             }
 
-            if (m_MoveState.currentPath.empty())
-            {
-                // Just teleport to position // TODO: Implement properly
-                teleportToPosition(message.targetPosition);
-
-                // Back to idle-animation when done
-                getModelVisual()->setAnimation(ModelVisual::Idle);
-                return true;
-            }
-
-            return false;
+            return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
         break;
 
         case EventMessages::MovementMessage::ST_GotoVob:
         {
-            Math::float3 pos;
-
-            // Find a waypoint with that name
-            World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(),
-                                                                              message.targetVobName);
-
-            if (wp != World::Waynet::INVALID_WAYPOINT)
+            if(message.isFirstRun)
             {
-                gotoWaypoint(wp);
+                Math::float3 pos;
 
-                if (m_MoveState.currentPath.empty())
+                // Find a waypoint with that name
+                World::Waynet::WaypointIndex wp = World::Waynet::getWaypointIndex(m_World.getWaynet(),
+                                                                                  message.targetVobName);
+
+                if (wp != World::Waynet::INVALID_WAYPOINT)
                 {
-                    // Back to idle-animation when done
-                    getModelVisual()->setAnimation(ModelVisual::Idle);
-                    return true;
-                }
-
-                return false;
-            }
-            else
-            {
-                // This must be an actual vob
-                Handle::EntityHandle v = message.targetVob;
-
-                if (!v.isValid())
+                    gotoWaypoint(wp);
+                } else
                 {
-                    v = m_World.getVobEntityByName(message.targetVobName);
-                }
+                    // This must be an actual vob
+                    Handle::EntityHandle v = message.targetVob;
 
-                // isEntityValid can be false if the npc entity was removed from this world while this message was queued
-                if (v.isValid() && m_World.isEntityValid(v))
-                {
-                    Vob::VobInformation vob = Vob::asVob(m_World, v);
-                    message.targetPosition = Vob::getTransform(vob).Translation();
+                    if (!v.isValid())
+                    {
+                        v = m_World.getVobEntityByName(message.targetVobName);
+                    }
 
-                    // Fall through to ST_GotoPos
-                }
-                else
-                {
-                    return true;
+                    // isEntityValid can be false if the npc entity was removed from this world while this message was queued
+                    if (v.isValid() && m_World.isEntityValid(v))
+                    {
+                        gotoVob(v);
+                    }
                 }
             }
+            return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
+        break;
 
         case EventMessages::MovementMessage::ST_GotoPos:
         {
-            // Move to nearest waypoint for now
-            // TODO: Implement moving to arbitrary positions
-
-            World::Waynet::WaypointIndex wp = World::Waynet::findNearestWaypointTo(m_World.getWaynet(),
-                                                                                   message.targetPosition);
-
-            if (wp != World::Waynet::INVALID_WAYPOINT)
-                gotoWaypoint(wp);
-
-            if (m_MoveState.currentPath.empty())
+            if(message.isFirstRun)
             {
-                // Back to idle-animation when done
-                getModelVisual()->setAnimation(ModelVisual::Idle);
-                return true;
+                gotoPosition(message.targetPosition);
             }
 
-            return false;
+            return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
         break;
 
@@ -1634,9 +1517,6 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             {
                 message.status = ConversationMessage::Status::PLAYING;
 
-                // Don't let the routine overwrite our animations
-                setDailyRoutine({});
-
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
@@ -1806,7 +1686,6 @@ void PlayerController::interrupt()
     undrawWeapon(true);
 
     getEM().clear();
-    stopRoute();
 }
 
 bool PlayerController::canSee(Handle::EntityHandle entity, bool ignoreAngles)
@@ -1868,8 +1747,6 @@ float PlayerController::getAngleTo(const Math::float3& pos)
 
 void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 {
-    stopRoute();
-
     setBodyState(BS_STAND);
 
     if (!startAniTransition)
@@ -1884,7 +1761,6 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
 void PlayerController::stopRoute()
 {
     m_MoveState.currentPath.clear();
-    m_RoutineState.routineActive = false;
     m_RoutineState.entityTarget.invalidate();
 }
 
@@ -2776,3 +2652,6 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 {
     //if(tag.m_Tag == )
 }
+
+
+
