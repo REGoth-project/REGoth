@@ -13,6 +13,8 @@ namespace World
     struct BspSector
     {
         std::string name;
+
+        int ownerGuildNr;
     };
 
     /**
@@ -132,6 +134,23 @@ namespace World
          *         Note: You should not store this pointer somewhere!
          */
         const BspSector* findSectorByName(const std::string& name);
+
+        /**
+         * @return Looks up the sector with the given index
+         */
+        const BspSector& getSectorByIndex(size_t index);
+
+        /**
+         * @return Guild of the sector with the given name. -1 of not found.
+         */
+        int getGuildOfSector(const std::string& sectorname);
+        int getGuildOfSector(ZenLoad::SectorIndex sectorindex);
+
+        /**
+         * Sets the guild that the given sector belongs to
+         */
+        void setGuildOfSector(const std::string& sectorname, int guildId);
+        void setGuildOfSector(ZenLoad::SectorIndex sectorindex, int guildId);
 
     private:
 

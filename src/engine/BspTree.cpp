@@ -359,7 +359,8 @@ void BspTree::debugDrawNode(NodeIndex n, uint32_t argb)
 
 void BspTree::markEntitiesVisibleIfNodeIsVisible(unsigned int frameNow)
 {
-    auto markEntitesVisible = [&](const std::set<Handle::EntityHandle>& entities)
+    // Commented out because it's not really faster at the moment and not used right now anyways
+    /*auto markEntitesVisible = [&](const std::set<Handle::EntityHandle>& entities)
     {
         for(Handle::EntityHandle h : entities)
         {
@@ -375,7 +376,7 @@ void BspTree::markEntitiesVisibleIfNodeIsVisible(unsigned int frameNow)
         {
             markEntitesVisible(node.entitiesInside);
         }
-    }
+    }*/
 }
 
 const BspSector* BspTree::findSectorByName(const std::string& name)
@@ -387,4 +388,50 @@ const BspSector* BspTree::findSectorByName(const std::string& name)
 
     return &m_Sectors[it->second];
 }
+
+const BspSector& BspTree::getSectorByIndex(size_t index)
+{
+    assert(index < m_Sectors.size());
+
+    return m_Sectors[index];
+}
+
+
+void BspTree::setGuildOfSector(const std::string& sectorname, int guildId)
+{
+    auto it = m_SectorIndicesByName.find(sectorname);
+
+    if(it == m_SectorIndicesByName.end())
+        return;
+
+    setGuildOfSector(it->second, guildId);
+}
+
+void BspTree::setGuildOfSector(ZenLoad::SectorIndex sectorindex, int guildId)
+{
+    assert(sectorindex < m_Sectors.size());
+
+    // TODO: This must be saved inside the savegame!
+    m_Sectors[sectorindex].ownerGuildNr = guildId;
+}
+
+
+int BspTree::getGuildOfSector(const std::string& sectorname)
+{
+    auto it = m_SectorIndicesByName.find(sectorname);
+
+    if(it == m_SectorIndicesByName.end())
+        return -1;
+
+    return getGuildOfSector(it->second);
+}
+
+int BspTree::getGuildOfSector(ZenLoad::SectorIndex sectorindex)
+{
+    assert(sectorindex < m_Sectors.size());
+
+    return m_Sectors[sectorindex].ownerGuildNr;
+}
+
+
 
