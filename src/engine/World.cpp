@@ -351,9 +351,9 @@ bool WorldInstance::init(const std::string& zen,
                     if (v.objectClass == "zCVobSpot:zCVob")
                     {
                         // Register freepoint
-                        Handle::EntityHandle h = addEntity(Components::ObjectComponent::MASK | Components::SpotComponent::MASK | Components::PositionComponent::MASK);
-                        getEntity<Components::ObjectComponent>(h).m_Name = v.vobName;
-                        m_FreePoints[v.vobName] = h;
+                        Components::SpotComponent& spot = Components::Actions::initComponent<Components::SpotComponent>(getComponentAllocator(), vob.entity);
+
+                        m_FreePoints[v.vobName] = vob.entity;
                     }
                 }
                 else
