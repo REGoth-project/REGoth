@@ -727,9 +727,6 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
 {
     std::vector<Handle::EntityHandle> m;
 
-    // FIXME: This is too slow! (And not used anyways)
-    return m;
-
     Handle::EntityHandle closestFP;
 
     float closest2 = FLT_MAX;
@@ -737,28 +734,26 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
     std::vector<Handle::EntityHandle> fps = getFreepoints(name);
     for (auto& fp : fps)
     {
-        Components::ObjectComponent& obj = getEntity<Components::ObjectComponent>(fp);
-        if (name.empty() || obj.m_Name == name)
+        Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
+        Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
+
+        if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) &&
+            (!inst.isValid() || sp.m_UsingEntity != inst))
         {
-            Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
-            Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
-
-            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
+            float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
+            if (fpd2 < distance2)
             {
-                float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
-                if (fpd2 < distance2)
+                if (fpd2 < closest2)
                 {
-                    if (fpd2 < closest2)
-                    {
-                        closest2 = fpd2;
-                        closestFP = fp;
-                    }
+                    closest2 = fpd2;
+                    closestFP = fp;
                 }
-
-                if (!closestOnly)
-                    m.push_back(fp);
             }
+
+            if (!closestOnly)
+                m.push_back(fp);
         }
+
     }
 
     if (closestOnly)
@@ -771,14 +766,18 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
 {
     std::vector<Handle::EntityHandle> mp;
 
-    // FIXME: This is too slow!
-    /*
+    auto cacheIt = m_FreePointTagCache.find(tag);
+    if(cacheIt != m_FreePointTagCache.end())
+        return cacheIt->second;
+
+    // Tag not cached, do full search now and cache it
     for(auto& fp : m_FreePoints)
     {
-        if(fp.first.substr(0, tag.size()) == tag)
+        if(fp.first.find(tag) != std::string::npos)
             mp.push_back(fp.second);
     }
-     */
+
+    m_FreePointTagCache[tag] = mp;
 
     return mp;
 }

@@ -436,6 +436,13 @@ namespace World
         std::map<std::string, Handle::EntityHandle> m_FreePoints;
 
         /**
+         * Usually freepoints are named like "FP_GUARD_XXX", where "FP_GUARD" is the 'tag' of
+         * a freepoint. To save us from going through the whole freepoint list every time we need a
+         * freepoint with a specific tag, we cache the searches here
+         */
+        std::map<std::string, std::vector<Handle::EntityHandle>> m_FreePointTagCache;
+
+        /**
          * NPCs in this world
          */
         std::set<Handle::EntityHandle> m_NPCEntities;
