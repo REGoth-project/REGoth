@@ -143,6 +143,11 @@ Pathfinder::Instruction Pathfinder::updateToNextInstructionToTarget(const Math::
 
     inst.targetPosition = getCurrentTargetPosition();
 
+    debugDrawRoute(positionNow);
+    ddSetColor(0xFF00FFFF);
+    ddMoveTo(positionNow.v);
+    ddLineTo(inst.targetPosition.v);
+
     return inst;
 }
 
@@ -260,4 +265,27 @@ bool Pathfinder::canDirectlyMovetoLocation(const Math::float3& from, const Math:
     Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to);
 
     return !hit.hasHit; // FIXME: This breaks when the creature should go down a slope but is standing on the top of it right now
+}
+
+void Pathfinder::debugDrawRoute(const Math::float3& positionNow)
+{
+    size_t seed = reinterpret_cast<size_t>(this); // Need some variation here and this is an easy way
+
+    int prevSeed = rand();
+    srand(seed);
+    uint8_t r = rand() % 256;
+    uint8_t g = rand() % 256;
+    uint8_t b = rand() % 256;
+
+    uint32_t color = 0xFF000000 | (b << 24) | (g << 16) | (r << 8);
+
+    srand(prevSeed);
+
+    ddSetColor(color);
+    ddMoveTo(positionNow.v);
+    for(Math::float3 p : m_ActiveRoute.positionsToGo)
+    {
+        ddLineTo(p.v);
+        ddMoveTo(p.v);
+    }
 }
