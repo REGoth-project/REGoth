@@ -244,7 +244,7 @@ void Pathfinder::startNewRouteTo(const Math::float3& positionNow, const Math::fl
         return;
     }
 
-    Waynet::WaypointIndex nearestWpToTarget = Waynet::findNearestWaypointTo(m_World.getWaynet(), getTargetEntityPosition());
+    Waynet::WaypointIndex nearestWpToTarget = Waynet::findNearestWaypointTo(m_World.getWaynet(), position);
     Waynet::WaypointIndex nearestWpToStart = Waynet::findNearestWaypointTo(m_World.getWaynet(), positionNow);
 
     std::vector<Waynet::WaypointIndex> path = Waynet::findWay(m_World.getWaynet(), nearestWpToStart, nearestWpToTarget);
