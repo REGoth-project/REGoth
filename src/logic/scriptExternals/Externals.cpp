@@ -565,19 +565,50 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("ai_gotonextfp", [=](Daedalus::DaedalusVM& vm) {
-        std::string fp = vm.popString(true);
+        std::string fpname = vm.popString(true);
         int32_t self = vm.popVar();
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
         if (npc.isValid())
         {
-            EventMessages::MovementMessage sm;
-            sm.subType = EventMessages::MovementMessage::ST_GotoFP;
-            sm.targetVobName = fp;
-            npc.playerController->getEM().onMessage(sm);
-            //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+            // Find closest fp not used by npc
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true, npc.entity);
+
+            if(!fp.empty())
+            {
+                Math::float3 fpPosition = pWorld->getEntity<Components::PositionComponent>(fp.front()).m_WorldMatrix.Translation();
+
+                EventMessages::MovementMessage sm;
+                sm.subType = EventMessages::MovementMessage::ST_GotoPos;
+                sm.targetPosition = fpPosition;
+                npc.playerController->getEM().onMessage(sm);
+            }
         }
+    });
+
+    vm->registerExternalFunction("ai_gotofp", [=](Daedalus::DaedalusVM& vm) {
+        std::string fpname = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if (npc.isValid())
+        {
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
+
+            if(!fp.empty())
+            {
+                Math::float3 fpPosition = pWorld->getEntity<Components::PositionComponent>(fp.front()).m_WorldMatrix.Translation();
+
+                EventMessages::MovementMessage sm;
+                sm.subType = EventMessages::MovementMessage::ST_GotoPos;
+                sm.targetPosition = fpPosition;
+                npc.playerController->getEM().onMessage(sm);
+            }
+        }
+
     });
 
     vm->registerExternalFunction("ai_gotonpc", [=](Daedalus::DaedalusVM& vm) {
@@ -907,7 +938,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if (npc.isValid())
         {
             // Find closest fp
-            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true);
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
 
             vm.setReturn(!fp.empty());
         }
@@ -926,7 +957,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if (npc.isValid())
         {
             // Find closest fp
-            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true, npc.entity);
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true, npc.entity);
 
             vm.setReturn(!fp.empty());
         }
