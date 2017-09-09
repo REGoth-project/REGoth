@@ -4,11 +4,13 @@
 
 #include "Pathfinder.h"
 #include <engine/World.h>
+#include <debugdraw/debugdraw.h>
+#include <stdlib.h>
 
 using namespace Logic;
 
 static const float MAX_SIDE_DIFFERENCE_TO_REACH_POSITION   = 0.5f; // Meters
-static const float MAX_HEIGHT_DIFFERENCE_TO_REACH_POSITION = 0.5f; // Meters
+static const float MAX_HEIGHT_DIFFERENCE_TO_REACH_POSITION = 2.0f; // Meters
 
 
 Pathfinder::Pathfinder(World::WorldInstance& world)
