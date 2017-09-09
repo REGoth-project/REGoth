@@ -666,6 +666,12 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
+
+    for(const auto& fp : m_FreePoints)
+    {
+        Math::float3 fpPosition = getEntity<Components::PositionComponent>(fp.second).m_WorldMatrix.Translation();
+        ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
+    }
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
