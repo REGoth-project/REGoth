@@ -158,6 +158,11 @@ namespace Logic
         Math::float3 getCurrentTargetPosition();
 
         /**
+         * Draws lines on where to go to
+         */
+        void debugDrawRoute(const Math::float3& positionNow);
+
+        /**
          * Information about the creature using this pathfinder
          */
         UserConfiguration m_UserConfiguration;
