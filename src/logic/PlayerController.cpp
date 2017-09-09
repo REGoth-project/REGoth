@@ -1246,6 +1246,10 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
                 gotoPosition(message.targetPosition);
             }
 
+            ddSetColor(0xFFFFFFFF);
+            ddMoveTo(getEntityTransform().Translation().v);
+            ddLineTo(message.targetPosition.v);
+
             return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
         break;
