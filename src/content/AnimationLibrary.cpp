@@ -53,9 +53,11 @@ namespace Animations
         for (auto fn : m_World.getEngine()->getVDFSIndex().getKnownFiles())
         {
             Utils::upper(fn);
-            auto withoutExt = fn.substr(0, fn.find_last_of('.'));
+            auto posExt = fn.find_last_of('.');
+            auto withoutExt = fn.substr(0, posExt);
+            auto ext = (posExt != std::string::npos) ? fn.substr(posExt, std::string::npos) : std::string();
 
-            if (std::equal(ext_mds.rbegin(), ext_mds.rend(), fn.rbegin()))
+            if (!ext.empty() && ext_mds.compare(ext) == 0)
             {
                 ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
                 ModelScriptTextParser p(zen);
@@ -66,7 +68,7 @@ namespace Animations
                 // MDS always overwrites
                 msb_loaded[withoutExt] = true;
             }
-            else if (std::equal(ext_msb.rbegin(), ext_msb.rend(), fn.rbegin()))
+            else if (!ext.empty() && ext_msb.compare(ext) == 0)
             {
                 auto it = msb_loaded.find(withoutExt);
                 if (it != msb_loaded.end() && it->second == true)
