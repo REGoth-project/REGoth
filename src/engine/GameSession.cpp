@@ -16,10 +16,12 @@ GameSession::GameSession(BaseEngine& engine)
     : m_Engine(engine)
 {
     m_CurrentSlotIndex = -1;
+    setupKeyBindings();
 }
 
 GameSession::~GameSession()
 {
+    Engine::Input::clearActions();
     removeAllWorlds();
 }
 
@@ -263,4 +265,67 @@ void GameSession::startNewGame(const std::string& worldFile)
     // we never want to execute it right away (if it is on MainThread)
     bool forceQueue = true;
     AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
+}
+
+void GameSession::setupKeyBindings()
+{
+    LogInfo() << "setupKeyBindings";
+    using Engine::ActionType;
+
+    auto baseEngine = &m_Engine;
+
+    auto getPlayerVob = [baseEngine]() -> VobTypes::NpcVobInformation {
+        auto worldHandle = baseEngine->getMainWorld();
+        if (!worldHandle.isValid())
+            return {};
+
+        auto player = worldHandle.get().getScriptEngine().getPlayerEntity();
+        if (!player.isValid())
+            return {};
+
+        return VobTypes::asNpcVob(worldHandle.get(), player);
+    };
+
+    Engine::Input::RegisterAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
+        if (triggered)
+        {
+            bool forceQueue = true; // better do saving at frame end and not between entity updates
+            baseEngine->executeInMainThread([](Engine::BaseEngine* engine){
+                Engine::SavegameManager::saveToSlot(0, "");
+            }, forceQueue);
+        }
+    });
+
+    Engine::Input::RegisterAction(ActionType::Quickload, [baseEngine](bool triggered, float) {
+        if (triggered)
+            Engine::SavegameManager::loadSaveGameSlot(0);
+    });
+
+    Engine::Input::RegisterAction(ActionType::PauseGame, [baseEngine](bool triggered, float) {
+        if (triggered && !baseEngine->getHud().isMenuActive())
+        {
+            baseEngine->togglePaused();
+        }
+    });
+
+    std::vector<ActionType> playerActions = {ActionType::PlayerDrawWeaponMelee,
+                                             ActionType::PlayerForward,
+                                             ActionType::PlayerBackward,
+                                             ActionType::PlayerTurnLeft,
+                                             ActionType::PlayerTurnRight,
+                                             ActionType::PlayerStrafeLeft,
+                                             ActionType::PlayerStrafeRight,
+                                             ActionType::DebugMoveSpeed,
+                                             ActionType::DebugMoveSpeed2,
+                                             ActionType::PlayerAction};
+
+    for (auto action : playerActions)
+    {
+        Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float) {
+            auto vob = getPlayerVob();
+            if (!vob.isValid())
+                return;
+            vob.playerController->onAction(action, triggered);
+        });
+    }
 }

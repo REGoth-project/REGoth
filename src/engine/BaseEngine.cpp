@@ -252,7 +252,9 @@ void BaseEngine::processMessageQueue()
 
 void BaseEngine::resetSession()
 {
+    // the order is important: first destroy old session
     // GameSession's destructor will clean up worlds
+    m_Session = nullptr;
     m_Session = std::make_unique<GameSession>(*this);
 }
 

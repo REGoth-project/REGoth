@@ -123,6 +123,11 @@ namespace Engine
          */
         void removeAllWorlds();
 
+        /**
+         * Registers all key bindings
+         */
+        void setupKeyBindings();
+
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;
 

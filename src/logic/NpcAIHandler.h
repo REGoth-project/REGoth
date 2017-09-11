@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <handle/HandleDef.h>
+#include <engine/Input.h>
 
 namespace World
 {
@@ -60,9 +61,9 @@ namespace Logic
         void standup();
 
         /**
-         * Sets up keybindings for this handler
+         * Handles key event
          */
-        void bindKeys();
+        void onAction(Engine::ActionType actionType, bool triggered);
         void unbindKeys();
 
         /**
@@ -94,17 +95,6 @@ namespace Logic
             bool isStrafeRight = false;
             bool isLastWeaponKey = false;
             bool isAction = false;
-            /**
-             * All bound actions. Stored so we can unbind them later
-             */
-            Engine::Action* actionForward = nullptr;
-            Engine::Action* actionBackward = nullptr;
-            Engine::Action* actionTurnLeft = nullptr;
-            Engine::Action* actionTurnRight = nullptr;
-            Engine::Action* actionStrafeLeft = nullptr;
-            Engine::Action* actionStrafeRight = nullptr;
-            Engine::Action* actionLastWeapon = nullptr;
-            Engine::Action* actionAction = nullptr;
         } m_MovementState;
 
         /**

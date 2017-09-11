@@ -347,7 +347,7 @@ namespace World
         Handle::EntityHandle importVobAndTakeControl(const json& j);
 
         /**
-         * take control over the given entity (camera, movement(key bindings))
+         * sets the controlled entity
          */
         void takeControlOver(Handle::EntityHandle entityHandle);
 

@@ -275,7 +275,7 @@ int Engine::SavegameManager::maxSlots()
 
 void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
 {
-    if (gameEngine->getMainWorld().get().getDialogManager().isDialogActive())
+    if (!gameEngine->getMainWorld().isValid() || gameEngine->getMainWorld().get().getDialogManager().isDialogActive())
         return; // only save while not in Dialog
 
     ExcludeFrameTime exclude(*gameEngine);

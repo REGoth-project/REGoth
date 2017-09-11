@@ -949,13 +949,9 @@ void WorldInstance::exportControllers(Logic::Controller* logicController, Logic:
 
 void WorldInstance::takeControlOver(Handle::EntityHandle entityHandle)
 {
-    VobTypes::NpcVobInformation npcVob = VobTypes::asNpcVob(*this, entityHandle);
-
+    VobTypes::NpcVobInformation newPlayer = VobTypes::asNpcVob(*this, entityHandle);
     getScriptEngine().setPlayerEntity(entityHandle);
-    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(npcVob));
-    // reset bindings
-    Engine::Input::clearActions();
-    npcVob.playerController->setupKeyBindings();
+    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(newPlayer));
 }
 
 Handle::EntityHandle WorldInstance::importVobAndTakeControl(const json& j)
