@@ -7,12 +7,12 @@
 #include "DialogBox.h"
 #include "LoadingScreen.h"
 #include "Menu_Load.h"
+#include "Menu_Log.h"
 #include "Menu_Main.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include "Menu_Status.h"
 #include "PrintScreenMessages.h"
-#include "TextView.h"
 #include "TextView.h"
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
@@ -219,6 +219,12 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             auto& s = m_Engine.getMainWorld().get().getScriptEngine();
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_Engine.getMainWorld().get(), s.getPlayerEntity());
             player.playerController->updateStatusScreen(statsScreen);
+            return;
+        }
+        case IA_ToggleLogMenu:
+        {
+            LogInfo() << "Open log";
+            pushMenu<UI::Menu_Log>();
             return;
         }
         default:

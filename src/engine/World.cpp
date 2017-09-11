@@ -12,7 +12,6 @@
 #include <debugdraw/debugdraw.h>
 #include <engine/BaseEngine.h>
 #include <engine/GameEngine.h>
-#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <entry/input.h>
 #include <handle/HandleDef.h>
@@ -50,6 +49,7 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     , m_AnimationLibrary(*this)
     , m_Sky(*this)
     , m_DialogManager(*this)
+    , m_LogManager(*this)
     , m_BspTree(*this)
     , m_PfxManager(*this)
     , m_AudioWorld(nullptr)
@@ -79,7 +79,8 @@ WorldInstance::~WorldInstance()
 bool WorldInstance::init(const std::string& zen,
                          const json& worldJson,
                          const json& scriptEngine,
-                         const json& dialogManager)
+                         const json& dialogManager,
+                         const json& logManager)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -185,7 +186,7 @@ bool WorldInstance::init(const std::string& zen,
         wvob.position->m_DrawDistanceFactor = 0.0f;
         Vob::setVisual(wvob, "WORLDMESH.3DS");
         Vob::setTransform(wvob, Math::Matrix::CreateIdentity());
-         */
+*/
 
         Meshes::WorldStaticMesh& worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
 
@@ -475,6 +476,11 @@ bool WorldInstance::init(const std::string& zen,
         if (!dialogManager.empty())
         {
             m_DialogManager.importDialogManager(dialogManager);
+        }
+        // Load logManager if one is provided.
+        if (!logManager.empty())
+        {
+            m_LogManager.importLogManager(logManager);
         }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);

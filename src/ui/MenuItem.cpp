@@ -58,6 +58,9 @@ MenuItem::~MenuItem()
 
 void MenuItem::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    if (m_IsHidden)
+        return;
+
     if (m_pBackgroundImage)  // Background image shouldn't be centered in any way
         m_pBackgroundImage->setAlignment(A_TopLeft);
 
@@ -97,6 +100,9 @@ MenuItemTypes::MenuItemText::MenuItemText(Engine::BaseEngine& e, UI::Menu& baseM
 
 void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
+    if (m_IsHidden)
+        return;
+
     MenuItem::update(dt, mstate, config);
 
     if (!m_ScriptHandle.isValid())
@@ -107,9 +113,6 @@ void MenuItemTypes::MenuItemText::update(double dt, Engine::Input::MouseState& m
 
     if (!fnt)
         return;
-
-    int width, height;
-    fnt->calcTextMetrics(item.text[0], width, height);
 
     // Get position of the text
     Math::float2 absTranslation = getAbsoluteTranslation();

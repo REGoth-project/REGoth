@@ -33,6 +33,7 @@ namespace UI
         void setSelectionIndex(int newIndex);
 
         int getSelectionIndex() const { return m_CurrentlySelected; }
+
     protected:
         /**
          * Console background image
