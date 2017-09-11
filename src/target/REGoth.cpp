@@ -546,6 +546,19 @@ void REGoth::initConsole()
         return suggestions;
     };
 
+    CandidateListGenerator npcNamesGen = [this]() {
+        auto& worldInstance = m_pEngine->getMainWorld().get();
+        auto& scriptEngine = worldInstance.getScriptEngine();
+        auto& datFile = scriptEngine.getVM().getDATFile();
+
+        std::vector<Suggestion> suggestions;
+        datFile.iterateSymbolsOfClass("C_NPC", [&](size_t i, Daedalus::PARSymbol& parSymbol) {
+            Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{parSymbol.name}});
+            suggestions.push_back(suggestion);
+        });
+        return suggestions;
+    };
+
     console.registerCommand("control", [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
                if (args.size() < 2)
                    return "Missing argument. Usage: control <npc>";
@@ -742,6 +755,26 @@ void REGoth::initConsole()
 
         return npnNameFull + " is now in " + stateName + " state";
     };
+
+    console.registerCommand("insertnpc", [this](const std::vector<std::string>& args) -> std::string {
+        if (args.size() < 3)
+            return "Missing argument. Usage: insertnpc <npc> <waypoint>";
+
+        auto& worldInstance = m_pEngine->getMainWorld().get();
+        auto& se = worldInstance.getScriptEngine();
+        auto& datFile = se.getVM().getDATFile();
+
+        auto name = args[1];
+        auto waypoint = args[2];
+        if (!datFile.hasSymbolName(name))
+            return "NPC not found: " + name;
+
+        if (!World::Waynet::waypointExists(worldInstance.getWaynet(), waypoint))
+            return "Invalid location: " + waypoint;
+
+        se.getVM().getGameState().insertNPC(datFile.getSymbolIndexByName(name), waypoint);
+        return "Inserting NPC " + name + " at location " + waypoint;
+    }).registerAutoComplete(npcNamesGen).registerAutoComplete(waypointNamesGen);
 
     console.registerCommand("knockout", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);
     console.registerCommand("kill", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);

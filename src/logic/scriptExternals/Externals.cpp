@@ -1240,7 +1240,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string svmname = vm.popString();
         int32_t target = vm.popVar();
         int32_t self = vm.popVar();
-        LogInfo() << "ai_outputsvm: " << svmname;
 
         NpcHandle hself = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(self).instanceDataHandle);
         NpcHandle htarget = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(target).instanceDataHandle);
@@ -1249,7 +1248,13 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string messageName = "SVM_" + std::to_string(cSelf.voice) + "_" + svmname.substr(1);
 
         auto& dialogManager = pWorld->getDialogManager();
-        auto& message = dialogManager.getScriptDialogManager()->getMessageLib().getMessageByName(messageName);
+        auto& messageLib = dialogManager.getScriptDialogManager()->getMessageLib();
+        if (!messageLib.messageExists(messageName))
+        {
+            LogError() << "Error: SVM file not found: " + messageName; // happens for Character Helper (voice=15) in g2
+            return;
+        }
+        auto& message = messageLib.getMessageByName(messageName);
         dialogManager.onAIOutput(hself, htarget, message);
 
     });
