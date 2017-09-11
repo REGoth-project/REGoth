@@ -63,7 +63,7 @@ void MenuItemTypes::MenuItemListbox::update(double dt, Engine::Input::MouseState
     }
 }
 
-boolean MenuItemTypes::MenuItemListbox::hasTopics()
+bool MenuItemTypes::MenuItemListbox::hasTopics()
 {
     if (m_Entries.size() > 0)
         return true;
@@ -81,7 +81,7 @@ std::vector<std::string> MenuItemTypes::MenuItemListbox::getSelectedTopicEntries
     return m_Entries[m_Selection]->getEntries();
 }
 
-void MenuItemTypes::MenuItemListbox::setFocus(boolean focus)
+void MenuItemTypes::MenuItemListbox::setFocus(bool focus)
 {
     m_Focus = focus;
 }

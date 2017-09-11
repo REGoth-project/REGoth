@@ -27,7 +27,7 @@ std::vector<std::string> MenuItemTypes::MenuItemListboxEntry::getEntries()
     return m_Topic.entries;
 }
 
-void MenuItemTypes::MenuItemListboxEntry::drawEntry(int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font, boolean highlight)
+void MenuItemTypes::MenuItemListboxEntry::drawEntry(int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font, bool highlight)
 {
     // Highlight the selected listbox entry
     std::string fontBase;

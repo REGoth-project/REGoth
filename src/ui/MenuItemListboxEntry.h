@@ -26,7 +26,7 @@ namespace UI
             /**
              * Draw this entry
              */
-            void drawEntry(int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font, boolean highlight);
+            void drawEntry(int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font, bool highlight);
 
         private:
             /**
@@ -37,7 +37,7 @@ namespace UI
 
             Daedalus::GameState::LogTopic m_Topic;
             std::string m_TopicName;
-            boolean is_Selected;
+            bool is_Selected;
         };
     }
 }

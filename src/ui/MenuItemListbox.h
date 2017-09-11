@@ -35,13 +35,13 @@ namespace UI
             /*
              * Returns true if this listbox has at least one topic entry, false otherwise
              */
-            boolean hasTopics();
+            bool hasTopics();
 
             /*
              * Set the focus of view to this listbox by highlighting an entry
              * @param focus Whether to set the focus or not
              */
-            void setFocus(boolean focus);
+            void setFocus(bool focus);
 
             /**
              * Return the topic entries of the current selected topic
@@ -59,7 +59,7 @@ namespace UI
             void selectPreviousItem();
 
         private:
-            boolean m_Focus;
+            bool m_Focus;
             unsigned int m_Selection;
             std::vector<MenuItemListboxEntry*> m_Entries;
         };

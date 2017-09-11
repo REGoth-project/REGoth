@@ -141,7 +141,7 @@ bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
 
 void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height) const
 {
-    boolean found_newline = false;
+    bool found_newline = false;
     int xPos = 0;
     int yPos = 0;
     int xMax = 0;
