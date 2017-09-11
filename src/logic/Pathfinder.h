@@ -49,6 +49,11 @@ namespace Logic
             // If this is valid, the Creature will move to this entity, once it has been to
             // all positions it had to go to or has a direct line of sight to it
             Handle::EntityHandle targetEntity;
+
+            // Position the target entity was at when we started the route.
+            // This must be saved so we can perform a re-route if the target moves too far from the spot
+            // the route goes to
+            Math::float3 targetEntityPositionOnStart;
         };
 
         Pathfinder(World::WorldInstance& world);
@@ -155,12 +160,36 @@ namespace Logic
          * @return Position of the route to go to right now
          *         Note: Result is undefined when the target has been reached and there is no entity-target.
          */
-        Math::float3 getCurrentTargetPosition();
+        Math::float3 getCurrentTargetPosition(const Math::float3& positionNow);
 
         /**
          * Draws lines on where to go to
          */
         void debugDrawRoute(const Math::float3& positionNow);
+
+        /**
+         * @return Whether the target entity has moved too far from the spot it was when we started the route
+         */
+        bool hasTargetEntityMovedTooFar();
+
+        /**
+         * Sometimes, the waynet isn't exactly detailed and NPCs take some weird looking detours instead of
+         * going straight. This function uses raytraces to check which points on the route can be erased because
+         * there are not obstacles on the way to them
+         */
+        void cleanupRoute();
+
+        /**
+         * @return Whether the route-position on the given iterator can be removed. See cleanupRoute().
+         */
+        bool canRoutePositionBeRemoved(std::list<Math::float3>::iterator it);
+
+        /**
+         * @return Whether the currently active route is considered not up-to-date and should be redone.
+         *         This happens for example, when a target entity moved too far or something is blocking
+         *         the way now.
+         */
+        bool shouldReRoute(const Math::float3& positionNow);
 
         /**
          * Information about the creature using this pathfinder
