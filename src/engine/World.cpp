@@ -25,6 +25,7 @@
 #include <utils/logger.h>
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
+#include <type_traits>
 
 using namespace World;
 
@@ -65,13 +66,32 @@ WorldInstance::~WorldInstance()
         VobTypes::Wld_RemoveNpc(*this, player);
 
     // Destroy all allocated components
-    auto ents = getComponentAllocator().getDataBundle();
-    Utils::for_each_in_tuple(ents.m_Data, [&](auto& v) {
+    // Loop because some destructor may create more entities
+    while(getComponentAllocator().getNumObtainedElements() != 0)
+    {
+        auto ents = getComponentAllocator().getDataBundle();
+        Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
+
+        // Need to make a list of all entites because some destructors could remove some entites inside
+        std::vector<Handle::EntityHandle> allEntities;
         for (size_t i = 0; i < ents.m_NumElements; i++)
         {
-            Components::Actions::destroyComponent(v);
+            allEntities.push_back(entityComponents[i].m_ThisEntity);
         }
-    });
+
+        for (Handle::EntityHandle e : allEntities)
+        {
+            if (isEntityValid(e))
+            {
+                Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
+                    Components::Actions::destroyComponent(v);
+                });
+
+                getComponentAllocator().removeObject(e);
+            }
+        }
+    }
+
 
     delete m_AudioWorld;
 }
@@ -245,7 +265,7 @@ bool WorldInstance::init(const std::string& zen,
         {
             // Init positions
             Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
-            Components::addComponent<Components::PositionComponent>(entity);
+            Components::Actions::initComponent<Components::PositionComponent>(getComponentAllocator(), e);
 
             // Copy world-matrix (These are all identiy on the worldmesh)
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
@@ -564,13 +584,13 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 {
     auto h = m_Allocators.m_ComponentAllocator.createObject();
 
-    Components::Actions::forAllComponents(m_Allocators.m_ComponentAllocator, h, [&](auto& c) {
-        c.init(c);
-    });
-
     Components::EntityComponent& entity = m_Allocators.m_ComponentAllocator.getElement<Components::EntityComponent>(h);
     entity.m_ComponentMask = components;
     entity.m_ThisEntity = h;
+
+    Components::Actions::forAllComponents(m_Allocators.m_ComponentAllocator, h, [&](auto& c) {
+        c.init(c);
+    });
 
     /*Components::BBoxComponent& bbox = m_Allocators.m_ComponentAllocator.getElement<Components::BBoxComponent>(h);
     bbox.m_BBox3D.min = -1.0f * Math::float3(rand() % 1000,rand() % 1000,rand() % 1000);
@@ -667,17 +687,19 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     m_BspTree.debugDraw();
 
-    for(const auto& fp : m_FreePoints)
+    /*for(const auto& fp : m_FreePoints)
     {
         Math::float3 fpPosition = getEntity<Components::PositionComponent>(fp.second).m_WorldMatrix.Translation();
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
-    }
+    }*/
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
 {
     // Clean all components
-    Components::Actions::forAllComponents(getComponentAllocator(), h, [](auto& c) {
+    Components::EntityComponent& entityComponent = getEntity<Components::EntityComponent>(h);
+
+    Components::Actions::forAllComponents(getComponentAllocator(), h, [&](auto& c) {
         Components::Actions::destroyComponent(c);
     });
 
