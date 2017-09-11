@@ -42,7 +42,7 @@ bool StaticMeshVisual::load(const std::string& visual)
     {
         // Init positions
         Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(e);
-        Components::addComponent<Components::PositionComponent>(entity);
+        Components::Actions::initComponent<Components::PositionComponent>(m_World.getComponentAllocator(), e);
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);

@@ -52,6 +52,11 @@ namespace Components
      */
     struct EntityComponent : public Component
     {
+        enum
+        {
+            MASK = 1 << 1
+        };
+
         ComponentMask m_ComponentMask;
 
         // Handle of this entity-component
@@ -66,7 +71,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 1
+            MASK = 1 << 2
         };
         Math::Matrix m_WorldMatrix;
 
@@ -90,7 +95,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 2
+            MASK = 1 << 3
         };
 
         std::vector<Utils::BBox3D> m_BBox3D;
@@ -107,7 +112,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 3
+            MASK = 1 << 4
         };
 
         Utils::BBox3D m_BBox3D;
@@ -128,7 +133,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 4
+            MASK = 1 << 5
         };
 
         /**
@@ -166,7 +171,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 5
+            MASK = 1 << 6
         };
 
         /**
@@ -187,7 +192,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 6
+            MASK = 1 << 7
         };
 
         /**
@@ -208,7 +213,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 7
+            MASK = 1 << 8
         };
 
         /**
@@ -232,7 +237,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 8
+            MASK = 1 << 9
         };
 
         enum EObjectType
@@ -272,7 +277,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 9
+            MASK = 1 << 10
         };
 
         /**
@@ -300,7 +305,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 10
+            MASK = 1 << 11
         };
 
         /**
@@ -323,7 +328,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 11
+            MASK = 1 << 12
         };
 
         /**
@@ -346,7 +351,7 @@ namespace Components
     {
         enum
         {
-            MASK = 1 << 12
+            MASK = 1 << 13
         };
 
         /**
