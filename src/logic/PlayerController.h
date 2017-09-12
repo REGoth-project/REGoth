@@ -463,7 +463,7 @@ namespace Logic
         /**
          * Moves the NPC to the next waypoint of the current path
          */
-        void travelPath(float deltaTime);
+        void travelPath();
 
         /**
          * Current routine state

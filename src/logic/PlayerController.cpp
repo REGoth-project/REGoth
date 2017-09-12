@@ -134,13 +134,6 @@ void PlayerController::onUpdate(float deltaTime)
     }
     m_NoAniRootPosHack = false;
 
-    // Do waypoint-actions
-    if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
-    {
-        travelPath(deltaTime);
-        //m_NoAniRootPosHack = true;
-    }
-
     if (model)
     {
         // Make sure the idle-animation is running
@@ -235,7 +228,7 @@ void PlayerController::gotoPosition(const Math::float3& position)
     m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), position);
 }
 
-void PlayerController::travelPath(float deltaTime)
+void PlayerController::travelPath()
 {
     Math::float3 positionNow = getEntityTransform().Translation();
 
@@ -1200,6 +1193,13 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
                 gotoPosition(pos.m_WorldMatrix.Translation());
             }
+            else
+            {
+                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                {
+                    travelPath();
+                }
+            }
 
             return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
@@ -1235,6 +1235,14 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
                     }
                 }
             }
+            else
+            {
+                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                {
+                    travelPath();
+                }
+            }
+
             return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
         }
         break;
@@ -1244,6 +1252,13 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             if(message.isFirstRun)
             {
                 gotoPosition(message.targetPosition);
+            }
+            else
+            {
+                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                {
+                    travelPath();
+                }
             }
 
             return m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation());
