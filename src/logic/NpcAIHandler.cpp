@@ -39,9 +39,6 @@ void NpcAIHandler::playerUpdate(float deltaTime)
         return;
     }
 
-    if (m_MovementState.isAction)
-        bgfx::dbgTextPrintf(0, 6, 0x4, "Action");
-
     switch (m_ActiveMovementState)
     {
         case EMovementState::None:
@@ -101,7 +98,6 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Forward:
-            bgfx::dbgTextPrintf(0, 5, 0x4, "Forward");
             if (m_MovementState.isForward)
             {
                 // Forward-key still pressed, keep going
@@ -133,7 +129,6 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Backward:
-            bgfx::dbgTextPrintf(0, 5, 0x4, "Backward");
             if (m_MovementState.isBackward)
             {
                 // Backward-key still pressed, keep going
