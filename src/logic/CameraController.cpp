@@ -296,7 +296,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 const auto& height = playerSize.y;
                 const auto& length = playerSize.z;
                 float playerDimension = (width + height + length) / 3;
-                LogInfo() << playerDimension << "   " << height;
+
                 const auto& playerCenter = pTrans.Translation();
 
                 const Math::float3 up = Math::float3(0.0f, 1.0f, 0.0f);
