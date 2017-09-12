@@ -510,7 +510,7 @@ void MobController::setIdealPosition(Handle::EntityHandle npc)
     else
     {
         nv.playerController->teleportToPosition(getEntityTransform() * p->transform.Translation());
-        nv.playerController->setDirection(getEntityTransform() * p->transform.Forward() - getEntityTransform().Translation());
+        nv.playerController->setDirection(getEntityTransform() * (-1.0f * p->transform.Forward()) - getEntityTransform().Translation());
 
         // Just look at the mob for now //TODO: Implement the transform-stuff
         //nv.playerController->setDirection((getEntityTransform().Translation()
