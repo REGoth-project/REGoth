@@ -1186,14 +1186,17 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
         {
             if(message.isFirstRun)
             {
-                std::vector<Handle::EntityHandle> fp = m_World.getFreepointsInRange(getEntityTransform().Translation(),
-                                                                                    100.0f, message.targetVobName, true,
-                                                                                    m_Entity);
+                using namespace Components;
 
-                if (fp.empty())
-                    return true;  // End message on invalid freepoint
+                assert(message.targetVob.isValid());
+                assert(hasComponent<SpotComponent>(m_World.getEntity<EntityComponent>(message.targetVob)));
+                assert(hasComponent<PositionComponent>(m_World.getEntity<EntityComponent>(message.targetVob)));
 
-                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(fp.front());
+                // How long the FP should count as occupied. Gothic uses a default value of 30 seconds
+                const float secondsOccupied = 30;
+                m_World.markFreepointOccupied(message.targetVob, m_Entity, secondsOccupied);
+
+                Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(message.targetVob);
                 message.targetPosition = pos.m_WorldMatrix.Translation();
 
                 gotoPosition(pos.m_WorldMatrix.Translation());
@@ -2661,7 +2664,17 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
     // Play sound specified in the event
     float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 
-    m_MainNoiseSoundSlot = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
+    auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
+
+    if(!sfx.m_EmptySlot)
+    {
+        // If emptyslot is not set, the currently played sound shall be stopped
+
+        if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+            m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+
+        m_MainNoiseSoundSlot = ticket;
+    }
 }
 
 void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
@@ -2675,13 +2688,17 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         std::string soundfile = sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat);
 
-        if(!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+        auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
+
+        if(!sfx.m_EmptySlot)
         {
             // If emptyslot is not set, the currently played sound shall be stopped
-            m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
-        }
 
-        m_MainNoiseSoundSlot = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
+            if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+                m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+
+            m_MainNoiseSoundSlot = ticket;
+        }
     }
 }
 

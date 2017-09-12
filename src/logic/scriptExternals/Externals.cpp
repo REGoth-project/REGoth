@@ -568,20 +568,19 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string fpname = vm.popString(true);
         int32_t self = vm.popVar();
 
+        // FIXME: Same as ai_gotofp. What's the exact difference between them?
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
         if (npc.isValid())
         {
-            // Find closest fp not used by npc
-            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true, npc.entity);
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
 
             if(!fp.empty())
             {
-                Math::float3 fpPosition = pWorld->getEntity<Components::PositionComponent>(fp.front()).m_WorldMatrix.Translation();
-
                 EventMessages::MovementMessage sm;
-                sm.subType = EventMessages::MovementMessage::ST_GotoPos;
-                sm.targetPosition = fpPosition;
+                sm.subType = EventMessages::MovementMessage::ST_GotoFP;
+                sm.targetVob = fp.front();
                 npc.playerController->getEM().onMessage(sm);
             }
         }
@@ -600,11 +599,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
             if(!fp.empty())
             {
-                Math::float3 fpPosition = pWorld->getEntity<Components::PositionComponent>(fp.front()).m_WorldMatrix.Translation();
-
                 EventMessages::MovementMessage sm;
-                sm.subType = EventMessages::MovementMessage::ST_GotoPos;
-                sm.targetPosition = fpPosition;
+                sm.subType = EventMessages::MovementMessage::ST_GotoFP;
+                sm.targetVob = fp.front();
                 npc.playerController->getEM().onMessage(sm);
             }
         }
