@@ -48,6 +48,11 @@ namespace BodyNodes
     const char* NPC_NODE_TORSO = "ZS_TORSO";
 }
 
+/**
+ * Default soundrange for SFX which doesn't specify a range. Gothic uses a default value of 35 meters.
+ */
+static const float DEFAULT_CHARACTER_SOUND_RANGE = 35; // Meters
+
 #define SINGLE_ACTION_KEY(key, fn)               \
     {                                            \
         static bool last = false;                \
@@ -2648,7 +2653,9 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
     }
 
     // Play sound specified in the event
-    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation());
+    float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
+
+    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 }
 
 void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
@@ -2658,8 +2665,9 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
         // Play sound depending on ground type
         ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
 
+        float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
         m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
-                                                       getEntityTransform().Translation());
+                                                       getEntityTransform().Translation(), range);
     }
 }
 
