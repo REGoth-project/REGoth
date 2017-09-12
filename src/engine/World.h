@@ -300,6 +300,16 @@ namespace World
                                                                Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
 
         /**
+         * Marks the given Freepoint as "occupied" for the next occupiedForSeconds
+         */
+        void markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity, float occupiedForSeconds);
+
+        /**
+         * @return Whether the freepoint is currently occupied
+         */
+        bool isFreepointOccupied(Handle::EntityHandle freepoint);
+
+        /**
          * Exports this world into a json-object
          * @param j json-object to write into
          * @param skip entities which shall be excluded from export

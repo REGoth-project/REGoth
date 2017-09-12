@@ -759,8 +759,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
         Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
         Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-        if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) &&
-            (!inst.isValid() || sp.m_UsingEntity != inst))
+        if (!isFreepointOccupied(fp))
         {
             float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
             if (fpd2 < distance2)
@@ -802,6 +801,29 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     m_FreePointTagCache[tag] = mp;
 
     return mp;
+}
+
+void WorldInstance::markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity,
+                                      float occupiedForSeconds)
+{
+    using namespace Components;
+
+    assert(hasComponent<SpotComponent>(getEntity<EntityComponent>(freepoint)));
+
+    Components::SpotComponent& sp = getEntity<Components::SpotComponent>(freepoint);
+    sp.m_UsingEntity = usingEntity;
+    sp.m_UseEndTime = getEngine()->getGameClock().getTotalSeconds() + occupiedForSeconds;
+}
+
+bool WorldInstance::isFreepointOccupied(Handle::EntityHandle freepoint)
+{
+    using namespace Components;
+
+    assert(hasComponent<SpotComponent>(getEntity<EntityComponent>(freepoint)));
+
+    Components::SpotComponent& sp = getEntity<Components::SpotComponent>(freepoint);
+
+    return sp.m_UsingEntity.isValid() && sp.m_UseEndTime > getEngine()->getGameClock().getTotalSeconds();
 }
 
 Daedalus::GameType WorldInstance::getBasicGameType()
@@ -1003,3 +1025,7 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
 {
     return m_pEngine->getHud().getPrintScreenManager();
 }
+
+
+
+
