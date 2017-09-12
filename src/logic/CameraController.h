@@ -46,8 +46,19 @@ namespace Logic
              */
             struct
             {
+                Engine::Action* actionWheel;
+                Engine::Action* actionLookVertical;
+                Engine::Action* actionLookHorizontal;
+
                 Math::float3 currentLookAt;
                 Math::float3 currentOffsetDirection;
+                float zoomExponent;
+                // vertical angle of the camera: 0° = behind player horizontal. 90° = looking from above (-y direction)
+                float pitch;
+                // angle between camera's look-at-point and rotation center. 0° = camera looks at rotation center
+                float cameraElevation;
+                // rotation around vertical axis (y) to be done on next camera update
+                float deltaPhi;
             } thirdPersonCameraSettings;
 
             struct
@@ -99,10 +110,7 @@ namespace Logic
         /**
          * @brief Sets how the camera should behave
          */
-        void setCameraMode(ECameraMode mode)
-        {
-            m_CameraMode = mode;
-        }
+        void setCameraMode(ECameraMode mode);
 
         /**
          * @brief Sets whether this controller should read input

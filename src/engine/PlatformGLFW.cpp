@@ -172,6 +172,10 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_RIGHT, ActionType::FirstPersonLookHorizontal, true, false);
     bindKey(GLFW_KEY_LEFT, ActionType::FirstPersonLookHorizontal, true, true);
 
+    // ThirdPerson Camera Controller
+    bindMouseAxis(MouseAxis::CursorX, ActionType::ThirdPersonLookHorizontal, true, false);
+    bindMouseAxis(MouseAxis::CursorY, ActionType::ThirdPersonLookVertical, true, false);
+
     // Free Camera Controller
 
     bindKey(GLFW_KEY_W, ActionType::FreeMoveForward, true, false);

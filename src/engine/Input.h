@@ -29,6 +29,9 @@ namespace Engine
         FirstPersonLookHorizontal,
         FirstPersonLookVertical,
 
+        ThirdPersonLookHorizontal,
+        ThirdPersonLookVertical,
+
         FreeMoveForward,
         FreeMoveRight,
         FreeMoveUp,

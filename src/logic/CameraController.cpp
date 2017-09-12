@@ -10,8 +10,9 @@
 #include <components/VobClasses.h>
 #include <engine/World.h>
 #include <entry/input.h>
+#include <components/EntityActions.h>
 
-const float CAMERA_SMOOTHING = 4.0f;
+const float CAMERA_SMOOTHING = 10.0f;
 
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
@@ -36,6 +37,10 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.viewerCameraSettings.zoom = 30.0f;
 
     m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
+    m_CameraSettings.thirdPersonCameraSettings.zoomExponent = 3.2f; // initial zoom pos, feel free to modify
+    m_CameraSettings.thirdPersonCameraSettings.pitch = Math::degreeToRadians(20.0f); // initial camera angle, feel free to modify
+    m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f); // feel free to modify
+    m_CameraSettings.thirdPersonCameraSettings.deltaPhi = 0;
 
     // FirstPerson action
     {
@@ -54,6 +59,29 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         });
         firstPerson.actionLookVertical = Input::RegisterAction(ActionType::FirstPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
+        });
+    }
+
+    // ThirdPerson action
+    {
+        using namespace Engine;
+        auto& settings = m_CameraSettings.thirdPersonCameraSettings;
+
+        settings.actionWheel = Input::RegisterAction(ActionType::ViewerMouseWheel, [&settings](bool triggered, float intensity) {
+            if (triggered)
+            {
+                auto& zoom = settings.zoomExponent;
+                zoom = Math::clamp(zoom - intensity / 8, 0.0f, 20.0f);
+            }
+        });
+
+        settings.actionLookVertical = Input::RegisterAction(ActionType::ThirdPersonLookVertical, [&settings](bool, float intensity) {
+            settings.pitch += 0.02f * intensity;
+            settings.pitch =  Utils::fmod(settings.pitch, 2 * static_cast<float>(M_PI));
+        });
+
+        settings.actionLookHorizontal = Input::RegisterAction(ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
+            settings.deltaPhi += 0.02f * intensity; // TODO screen aspect ratio influences this???
         });
     }
 
@@ -165,55 +193,22 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
     // Disable all at first and wait until one is enabled.
     disableActions();
+    std::vector<std::pair<Engine::ActionType, ECameraMode>> cameraModes = {
+        {Engine::ActionType::CameraFirstPerson, ECameraMode::FirstPerson},
+        {Engine::ActionType::CameraThirdPerson, ECameraMode::ThirdPerson},
+        {Engine::ActionType::CameraFree, ECameraMode::Free},
+        {Engine::ActionType::CameraViewer, ECameraMode::Viewer},
+    };
 
-    Engine::Input::RegisterAction(Engine::ActionType::CameraFirstPerson, [this](bool triggered, float) {
-        if (triggered)
-        {
-            disableActions();
-            m_CameraMode = ECameraMode::FirstPerson;
-            Engine::Input::setMouseLock(true);
-            m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(true);
-        }
-    });
-    Engine::Input::RegisterAction(Engine::ActionType::CameraFree, [this](bool triggered, float) {
-        if (triggered)
-        {
-            disableActions();
-            m_CameraMode = ECameraMode::Free;
-            Engine::Input::setMouseLock(true);
-            m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(true);
-        }
-    });
-    Engine::Input::RegisterAction(Engine::ActionType::CameraViewer, [this](bool triggered, float) {
-        if (triggered)
-        {
-            disableActions();
-            m_CameraMode = ECameraMode::Viewer;
-            Engine::Input::setMouseLock(false);
-            m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(true);
-        }
-    });
-    Engine::Input::RegisterAction(Engine::ActionType::CameraThirdPerson, [this](bool triggered, float) {
-        if (triggered && m_World.getScriptEngine().getPlayerEntity().isValid())
-        {
-            disableActions();
-            m_CameraMode = ECameraMode::ThirdPerson;
-            Engine::Input::setMouseLock(false);
-        }
-    });
+    for (auto cameraMode : cameraModes)
+    {
+        Engine::Input::RegisterAction(cameraMode.first, [this, mode = cameraMode.second](bool triggered, float) {
+            if (triggered)
+            {
+                setCameraMode(mode);
+            }
+        });
+    }
 
     Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
         m_moveSpeedMultiplier = triggered ? 5.0f : 1.0f;
@@ -222,10 +217,15 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
 void Logic::CameraController::disableActions()
 {
+    Engine::Input::setMouseLock(false);
     m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(false);
     m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(false);
     m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(false);
     m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(false);
+
+    m_CameraSettings.thirdPersonCameraSettings.actionWheel->setEnabled(false);
+    m_CameraSettings.thirdPersonCameraSettings.actionLookVertical->setEnabled(false);
+    m_CameraSettings.thirdPersonCameraSettings.actionLookHorizontal->setEnabled(false);
 
     m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(false);
     m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(false);
@@ -256,8 +256,15 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
             if (player.isValid())
             {
-                Math::Matrix ptrans = Vob::getTransform(player);
+                auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
 
+                auto dir = player.playerController->getDirection();
+                dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, player.playerController->getEntityTransform().Up(), deltaPhi);
+                player.playerController->setDirection(dir);
+                deltaPhi = 0;
+                const float verticalFactor = std::sin(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+                const float horizontalFactor = std::cos(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+                Math::Matrix pTrans = player.playerController->getEntityTransformFacing();
                 Math::float3 pdir;
 
                 // If player is currently using a mob check if camera should be locked
@@ -265,42 +272,69 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, player.playerController->getUsedMob());
                 if (!mob.isValid())
                 {
-                    pdir = -1.0f * ptrans.Forward();
+                    pdir = pTrans.Forward();
                 }
                 else if (!mob.mobController->isCameraLocked())
                 {
-                    pdir = -1.0f * ptrans.Forward();
+                    pdir = pTrans.Forward();
                     m_savedPdir = pdir;
                 }
                 else
                     pdir = m_savedPdir;
 
+                const float interpolationFraction = std::min(CAMERA_SMOOTHING * deltaTime, 1.0f);
                 m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
                                                                                                        pdir,
-                                                                                                       CAMERA_SMOOTHING * deltaTime);
+                                                                                                       interpolationFraction);
 
                 pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
 
-                const float bestRange = 2.5f;
-                const float bestElevation = 25.0f;  // Degrees
-                //const Math::float3 targetOffset = Math::float3(0.0f, 2.0f, 0.0f);
-                //const Math::float3 cameraOffset = Math::float3(0.0f, 1.0f, 0.0f);
-                const Math::float3 targetOffset = Math::float3(0.0f, 1.0f, 0.0f);
-                const Math::float3 cameraOffset = Math::float3(0.0f, 1.2f, 0.0f);
 
-                Math::float3 ppos = ptrans.Translation() - pdir * bestRange + cameraOffset;  // Camera position
+                Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(player.world->getComponentAllocator(), player.entity);
+                const auto& playerSize = anim.getAnimHandler().getMeshLib().getBBoxMax();
+                const auto& width = playerSize.x;
+                const auto& height = playerSize.y;
+                const auto& length = playerSize.z;
+                float playerDimension = (width + height + length) / 3;
+                LogInfo() << playerDimension << "   " << height;
+                const auto& playerCenter = pTrans.Translation();
 
-                Math::float3 camPos = getEntityTransform().Translation();
+                const Math::float3 up = Math::float3(0.0f, 1.0f, 0.0f);
 
-                ppos = Math::float3::lerp(camPos, ppos, CAMERA_SMOOTHING * deltaTime);
+                float angle = m_CameraSettings.thirdPersonCameraSettings.pitch;
+                auto actualCameraAngle = Math::radiansToDegree(angle + m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
 
-                m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
-                                                                                              ptrans.Translation() + targetOffset,
-                                                                                              CAMERA_SMOOTHING * deltaTime);
+                auto rotationAxisDir = pTrans.Left();
+                if (Math::radiansToDegree(angle) > 90 && Math::radiansToDegree(angle) < 270)
+                {
+                    // case front view: flip view
+                    pdir *= -1;
+                    rotationAxisDir *= -1;
+                    angle = static_cast<float>(M_PI) - angle;
+                    // TODO maybe invert control inversion
+                }
 
-                m_ViewMatrix = Math::Matrix::CreateLookAt(ppos,
+                // cardinalPoint around which the camera will rotate vertically
+                auto cameraRotationCenter = playerCenter - length * pdir - height / 2 * up;
+                const auto& zoomExponent = m_CameraSettings.thirdPersonCameraSettings.zoomExponent;
+                float zoom = std::exp(zoomExponent * playerDimension);
+
+                Math::float3 newLookAt = cameraRotationCenter + verticalFactor * zoom * up;
+                Math::float3 newCamPos = newLookAt - horizontalFactor * zoom * pdir;
+
+                for (auto p : {&newLookAt, &newCamPos})
+                    *p = Math::Matrix::rotatedPointAroundLine(*p, cameraRotationCenter, rotationAxisDir, angle);
+
+                Math::float3 oldCamPos = getEntityTransform().Translation();
+                Math::float3 intCamPos = Math::float3::lerp(oldCamPos, newCamPos, interpolationFraction);
+
+                const Math::float3& oldLookAt = m_CameraSettings.thirdPersonCameraSettings.currentLookAt;
+                m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3::lerp(oldLookAt, newLookAt,
+                                                                                              interpolationFraction);
+
+                m_ViewMatrix = Math::Matrix::CreateLookAt(intCamPos,
                                                           m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
-                                                          Math::float3(0, 1, 0));
+                                                          up);
 
                 setEntityTransform(m_ViewMatrix.Invert());
             }
@@ -393,4 +427,44 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
     m_CameraSettings.floatingCameraSettings.position = position;
     m_CameraSettings.floatingCameraSettings.yaw = yaw;
     m_CameraSettings.floatingCameraSettings.pitch = pitch;
+}
+
+void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode mode)
+{
+    m_CameraMode = mode;
+    disableActions();
+    switch (mode)
+    {
+        case ECameraMode::FirstPerson:
+            Engine::Input::setMouseLock(true);
+            m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(true);
+            m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(true);
+            break;
+        case ECameraMode::Free:
+            Engine::Input::setMouseLock(true);
+            m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(true);
+            m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(true);
+            break;
+        case ECameraMode::Viewer:
+            Engine::Input::setMouseLock(false);
+            m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(true);
+            m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(true);
+            break;
+        case ECameraMode::ThirdPerson:
+            Engine::Input::setMouseLock(true);
+            m_CameraSettings.thirdPersonCameraSettings.actionWheel->setEnabled(true);
+            m_CameraSettings.thirdPersonCameraSettings.actionLookVertical->setEnabled(true);
+            m_CameraSettings.thirdPersonCameraSettings.actionLookHorizontal->setEnabled(true);
+            break;
+    }
 }

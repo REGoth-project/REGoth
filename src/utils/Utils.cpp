@@ -491,3 +491,13 @@ bool Utils::endsWith(const std::string& searchSpace, const std::string& end)
     auto pos = searchSpace.size() - end.size();
     return end.size() <= searchSpace.size() && searchSpace.find(end, pos) != std::string::npos;
 }
+
+float Utils::fmod(float a, float b)
+{
+    return std::fmod(std::fmod(a, b) + b, b);
+}
+
+double Utils::fmod(double a, double b)
+{
+    return std::fmod(std::fmod(a, b) + b, b);
+}

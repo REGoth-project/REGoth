@@ -32,3 +32,13 @@ std::ostream& Math::operator<<(std::ostream& out, Math::Matrix& m)
     out << "]";
     return out;
 }
+
+float Math::degreeToRadians(float degree)
+{
+    return glm::radians(degree);
+}
+
+float ::Math::radiansToDegree(float radians)
+{
+    return glm::degrees(radians);
+}
