@@ -1540,7 +1540,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation());
+                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
                 if (!isMonolog)
                 {
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
