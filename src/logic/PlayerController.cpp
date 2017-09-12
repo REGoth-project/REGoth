@@ -2652,10 +2652,16 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
     }
 
+    if(!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+    {
+        // If emptyslot is not set, the currently played sound shall be stopped
+        m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+    }
+
     // Play sound specified in the event
     float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 
-    m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
+    m_MainNoiseSoundSlot = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 }
 
 void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx)
@@ -2666,8 +2672,16 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
         ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
 
         float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
-        m_World.getAudioWorld().playSoundVariantRandom(sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat),
-                                                       getEntityTransform().Translation(), range);
+
+        std::string soundfile = sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat);
+
+        if(!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+        {
+            // If emptyslot is not set, the currently played sound shall be stopped
+            m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+        }
+
+        m_MainNoiseSoundSlot = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
     }
 }
 

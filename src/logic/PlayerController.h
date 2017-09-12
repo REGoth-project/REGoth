@@ -614,6 +614,9 @@ namespace Logic
         bool m_NoAniRootPosHack;
         size_t m_LastAniRootPosUpdatedAniHash;
 
+        // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
+        Utils::Ticket<World::AudioWorld> m_MainNoiseSoundSlot;
+
         /**
          * Contstants
          */
