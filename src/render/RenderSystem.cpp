@@ -20,32 +20,56 @@ RenderSystem::RenderSystem(Engine::BaseEngine& engine)
 RenderSystem::~RenderSystem()
 {
     // Clean the created resources
-    bgfx::destroyProgram(m_Config.programs.mainWorldProgram);
-    bgfx::destroyUniform(m_Config.uniforms.diffuseTexture);
+    for(bgfx::ProgramHandle h : m_LoadedPrograms)
+        bgfx::destroyProgram(h);
+
+    for(bgfx::UniformHandle h : m_AllUniforms)
+        bgfx::destroyUniform(h);
+
+    for(bgfx::DynamicVertexBufferHandle h : m_InstanceDataBuffers)
+        bgfx::destroyDynamicVertexBuffer(h);
 }
 
 void RenderSystem::init()
 {
-    LogInfo() << "mainWorldProgram";
     m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
-    LogInfo() << "mainWorldInstancedProgram";
+    m_LoadedPrograms.push_back(m_Config.programs.mainWorldProgram);
+
     m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
-    LogInfo() << "mainSkinnedMeshProgram";
+    m_LoadedPrograms.push_back(m_Config.programs.mainWorldInstancedProgram);
+
     m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
-    LogInfo() << "particle_textured";
+    m_LoadedPrograms.push_back(m_Config.programs.mainSkinnedMeshProgram);
+
     m_Config.programs.particle_textured = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
+    m_LoadedPrograms.push_back(m_Config.programs.particle_textured);
 
     m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
+    m_LoadedPrograms.push_back(m_Config.programs.fullscreenQuadProgram);
+
     m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
+    m_LoadedPrograms.push_back(m_Config.programs.imageProgram);
 
     m_Config.uniforms.diffuseTexture = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
+    m_AllUniforms.push_back(m_Config.uniforms.diffuseTexture);
+
     m_Config.uniforms.objectColor = bgfx::createUniform("u_color", bgfx::UniformType::Vec4);
+    m_AllUniforms.push_back(m_Config.uniforms.objectColor);
+
     m_Config.uniforms.nodeTransforms = bgfx::createUniform("PI_NodeTransforms", bgfx::UniformType::Vec4, 4 * ZenLoad::MAX_NUM_SKELETAL_NODES);
+    m_AllUniforms.push_back(m_Config.uniforms.nodeTransforms);
+
 
     // Sky/Fog
     m_Config.uniforms.skyCLUT = bgfx::createUniform("SKY_CLUT", bgfx::UniformType::Vec4, 256);
+    m_AllUniforms.push_back(m_Config.uniforms.skyCLUT);
+
     m_Config.uniforms.fogColor = bgfx::createUniform("u_FogColor", bgfx::UniformType::Vec4);
+    m_AllUniforms.push_back(m_Config.uniforms.fogColor);
+
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
+    m_AllUniforms.push_back(m_Config.uniforms.fogNearFar);
+
 
 #if BX_PLATFORM_EMSCRIPTEN
     int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(), "OES_element_index_uint");
