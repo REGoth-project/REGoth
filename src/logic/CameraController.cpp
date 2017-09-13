@@ -39,7 +39,8 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
     m_CameraSettings.thirdPersonCameraSettings.zoomExponent = 3.2f; // initial zoom pos, feel free to modify
     m_CameraSettings.thirdPersonCameraSettings.pitch = Math::degreeToRadians(20.0f); // initial camera angle, feel free to modify
-    m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f); // feel free to modify
+    // if you want to see more of the hero's legs, decrease this value
+    m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f);
     m_CameraSettings.thirdPersonCameraSettings.deltaPhi = 0;
 
     // FirstPerson action
@@ -305,17 +306,16 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 auto actualCameraAngle = Math::radiansToDegree(angle + m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
 
                 auto rotationAxisDir = pTrans.Left();
-                if (Math::radiansToDegree(angle) > 90 && Math::radiansToDegree(angle) < 270)
+                if (m_CameraSettings.thirdPersonCameraSettings.isFrontView())
                 {
                     // case front view: flip view
                     pdir *= -1;
                     rotationAxisDir *= -1;
                     angle = ZMath::Pi - angle;
-                    // TODO maybe invert control inversion
                 }
 
                 // cardinalPoint around which the camera will rotate vertically
-                auto cameraRotationCenter = playerCenter - length * pdir - height / 2 * up;
+                auto cameraRotationCenter = playerCenter;
                 const auto& zoomExponent = m_CameraSettings.thirdPersonCameraSettings.zoomExponent;
                 float zoom = std::exp(zoomExponent * playerDimension);
 

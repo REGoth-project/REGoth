@@ -59,6 +59,12 @@ namespace Logic
                 float cameraElevation;
                 // rotation around vertical axis (y) to be done on next camera update
                 float deltaPhi;
+                bool isFrontView() const
+                {
+                    const auto& angle = pitch;
+                    // if angle is between 90 and 270 degree
+                    return angle > ZMath::Pi / 2 && angle < (3.0f / 2) * ZMath::Pi;
+                }
             } thirdPersonCameraSettings;
 
             struct
