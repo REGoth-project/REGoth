@@ -101,11 +101,6 @@ namespace Engine
         std::string getTimeOfDayFormatted() const;
 
         /**
-         * @return day as string in day. format
-         */
-        std::string getDayFormatted() const;
-
-        /**
          * helper function for conversion
          * @param hours
          * @param minutes

@@ -38,7 +38,7 @@ void Menu_Log::setTimeAndDay()
         return;
 
     getItemScriptData("MENU_ITEM_TIME").text[0] = m_Engine.getGameClock().getTimeOfDayFormatted();
-    getItemScriptData("MENU_ITEM_DAY").text[0] = m_Engine.getGameClock().getDayFormatted();
+    getItemScriptData("MENU_ITEM_DAY").text[0] = std::to_string(m_Engine.getGameClock().getDay()) + ".";
 }
 
 void Menu_Log::initializeLogEntries()
