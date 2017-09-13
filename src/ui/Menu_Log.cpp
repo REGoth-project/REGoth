@@ -52,41 +52,41 @@ void Menu_Log::initializeLogEntries()
     MenuItemTypes::MenuItemListbox* listbox_info;
 
     // Find listboxes
-    for (auto iter = m_Items.begin(); iter != m_Items.end(); iter++)
-        if (iter->second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_ACT").instanceSymbol)
-            listbox_running = dynamic_cast<MenuItemTypes::MenuItemListbox*>(iter->second);
-        else if (iter->second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_FAILED").instanceSymbol)
-            listbox_failed = dynamic_cast<MenuItemTypes::MenuItemListbox*>(iter->second);
-        else if (iter->second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_OLD").instanceSymbol)
-            listbox_old = dynamic_cast<MenuItemTypes::MenuItemListbox*>(iter->second);
-        else if (iter->second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_LOG").instanceSymbol)
-            listbox_info = dynamic_cast<MenuItemTypes::MenuItemListbox*>(iter->second);
+    for (auto& item : m_Items)
+        if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_ACT").instanceSymbol)
+            listbox_running = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
+        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_FAILED").instanceSymbol)
+            listbox_failed = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
+        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_OLD").instanceSymbol)
+            listbox_old = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
+        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_LOG").instanceSymbol)
+            listbox_info = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
 
     // Set topic entries to listboxes
     std::map<std::string, Daedalus::GameState::LogTopic>& log = m_Engine.getMainWorld().get().getLogManager().getPlayerLog();
-    for (auto iterator = log.begin(); iterator != log.end(); iterator++)
+    for (auto& entry : log)
     {
-        if (iterator->second.section == Daedalus::GameState::LogTopic::ESection::LT_Mission)
+        if (entry.second.section == Daedalus::GameState::LogTopic::ESection::LT_Mission)
         {
-            switch (iterator->second.status)
+            switch (entry.second.status)
             {
                 case Daedalus::GameState::LogTopic::ELogStatus::LS_Running:
-                    listbox_running->addTopic(iterator->first, iterator->second);
+                    listbox_running->addTopic(entry.first, entry.second);
                     break;
                 case Daedalus::GameState::LogTopic::ELogStatus::LS_Failed:
-                    listbox_failed->addTopic(iterator->first, iterator->second);
+                    listbox_failed->addTopic(entry.first, entry.second);
                     break;
                 case Daedalus::GameState::LogTopic::ELogStatus::LS_Obsolete:
                     LogInfo() << "Found mission with status LS_Obsolete. This is current not supported!";
                     break;
                 case Daedalus::GameState::LogTopic::ELogStatus::LS_Success:
-                    listbox_old->addTopic(iterator->first, iterator->second);
+                    listbox_old->addTopic(entry.first, entry.second);
                     break;
             }
         }
-        else if (iterator->second.section == Daedalus::GameState::LogTopic::ESection::LT_Note)
+        else if (entry.second.section == Daedalus::GameState::LogTopic::ESection::LT_Note)
         {
-            listbox_info->addTopic(iterator->first, iterator->second);
+            listbox_info->addTopic(entry.first, entry.second);
         }
     }
 
@@ -96,9 +96,16 @@ void Menu_Log::initializeLogEntries()
 
 MenuItem* UI::Menu_Log::findMenuItem(const std::string& instance)
 {
-    for (auto iterator = m_Items.begin(); iterator != m_Items.end(); iterator++)
-        if (iterator->second->getItemScriptData().instanceSymbol == getItemScriptData(instance).instanceSymbol)
-            return iterator->second;
+    MenuItem* menuItem = nullptr;
+
+    for (auto& item : m_Items)
+        if (item.second->getItemScriptData().instanceSymbol == getItemScriptData(instance).instanceSymbol)
+        {
+            menuItem = item.second;
+            break;
+        }
+
+    return menuItem;
 }
 
 bool Menu_Log::onInputAction(EInputAction action)
@@ -121,15 +128,15 @@ bool Menu_Log::onInputAction(EInputAction action)
     if (result[0] == "EFFECTS")
     {
         // Find current selected listbox and hide all other listboxes
-        for (auto iterator = m_Items.begin(); iterator != m_Items.end(); iterator++)
-            if (iterator->second->getItemScriptData().instanceSymbol == getItemScriptData(result[1]).instanceSymbol)
+        for (auto& item : m_Items)
+            if (item.second->getItemScriptData().instanceSymbol == getItemScriptData(result[1]).instanceSymbol)
             {
-                listbox = dynamic_cast<MenuItemTypes::MenuItemListbox*>(iterator->second);
+                listbox = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
                 listbox->setHidden(false);
             }
-            else if (iterator->second->getItemScriptData().type == Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_LISTBOX)
+            else if (item.second->getItemScriptData().type == Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_LISTBOX)
             {
-                iterator->second->setHidden(true);
+                item.second->setHidden(true);
             }
     }
 

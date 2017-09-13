@@ -46,6 +46,7 @@ namespace UI
 
         /**
          * Find a menu item by an instance string
+         * @return The found menu item or nullptr
          */
         MenuItem* findMenuItem(const std::string& instance);
 
