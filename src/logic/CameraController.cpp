@@ -77,7 +77,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
         settings.actionLookVertical = Input::RegisterAction(ActionType::ThirdPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
-            settings.pitch =  Utils::fmod(settings.pitch, 2 * static_cast<float>(M_PI));
+            settings.pitch =  Utils::fmod(settings.pitch, 2 * ZMath::Pi);
         });
 
         settings.actionLookHorizontal = Input::RegisterAction(ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
@@ -310,7 +310,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                     // case front view: flip view
                     pdir *= -1;
                     rotationAxisDir *= -1;
-                    angle = static_cast<float>(M_PI) - angle;
+                    angle = ZMath::Pi - angle;
                     // TODO maybe invert control inversion
                 }
 
