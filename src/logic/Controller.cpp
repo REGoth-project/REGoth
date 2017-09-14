@@ -34,7 +34,7 @@ void Logic::Controller::onUpdate(float deltaTime)
 Math::Matrix Logic::Controller::getEntityTransformFacing()
 {
     Math::Matrix copy = getEntityTransform();
-    return copy.RotatedAroundLine(copy.Translation(), getEntityTransform().Up(), ZMath::Pi);
+    return copy.RotatedAroundLine(copy.Translation(), getEntityTransform().Up(), Math::PI);
 }
 
 void Logic::Controller::exportObject(json& j)

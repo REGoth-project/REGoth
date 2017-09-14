@@ -63,7 +63,7 @@ namespace Logic
                 {
                     const auto& angle = pitch;
                     // if angle is between 90 and 270 degree
-                    return angle > ZMath::Pi / 2 && angle < (3.0f / 2) * ZMath::Pi;
+                    return angle > Math::PI / 2 && angle < (3.0f / 2) * Math::PI;
                 }
             } thirdPersonCameraSettings;
 
