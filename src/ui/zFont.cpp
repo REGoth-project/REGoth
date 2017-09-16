@@ -109,21 +109,12 @@ void UI::zFont::appendGlyph(UI::zFont::GlyphStream& glyphStream, unsigned char c
         return;
     }
 
-    if (c == '\n')
-    {
-        // Just return to beginning of the line and move one line down
-        glyphStream.xPos = glyphStream.xReturn;
-        glyphStream.yPos += m_Font.fontHeight;
-    }
-    else
-    {
-        // Append at current xPos
-        FontUtil::appendGlyph(glyphStream.vxStream, glyphStream.xPos, glyphStream.yPos, g.width, m_Font.fontHeight, g.uvTopLeft,
-                              g.uvBottomRight);
+    // Append at current xPos
+    FontUtil::appendGlyph(glyphStream.vxStream, glyphStream.xPos, glyphStream.yPos, g.width, m_Font.fontHeight, g.uvTopLeft,
+                          g.uvBottomRight);
 
-        // Shift xpos for the next character
-        glyphStream.xPos += g.width + DISTANCE_BETWEEN_GLYPHS;
-    }
+    // Shift xpos for the next character
+    glyphStream.xPos += g.width + DISTANCE_BETWEEN_GLYPHS;
 }
 
 bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)

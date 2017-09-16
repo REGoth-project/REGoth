@@ -6,7 +6,6 @@
 #include <json.hpp>
 #include "audio/AudioWorld.h"
 #include <components/Entities.h>
-#include <components/Entities.h>
 #include <components/Vob.h>
 #include <content/AnimationAllocator.h>
 #include <content/AnimationLibrary.h>
@@ -17,6 +16,7 @@
 #include <content/VertexTypes.h>
 #include <logic/CameraController.h>
 #include <logic/DialogManager.h>
+#include <logic/LogManager.h>
 #include <logic/PfxManager.h>
 #include <logic/ScriptEngine.h>
 #include <memory/AllocatorBundle.h>
@@ -90,11 +90,13 @@ namespace World
          * @param worldJson may be empty
          * @param scriptEngine may be empty
          * @param dialogManager may be empty
+         * @param logManager may be empty
          */
         bool init(const std::string& zen,
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
-                  const json& dialogManager = json());
+                  const json& dialogManager = json(),
+                  const json& logManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -259,6 +261,10 @@ namespace World
         {
             return m_DialogManager;
         }
+        Logic::LogManager& getLogManager()
+        {
+            return m_LogManager;
+        }
         World::AudioWorld& getAudioWorld()
         {
             return *m_AudioWorld;
@@ -328,6 +334,7 @@ namespace World
          * @return world-file this is built after
          */
         const std::string& getZenFile() { return m_ZenFile; }
+
         /**
          * Imports vobs from a json-object
          * @param j
@@ -444,6 +451,11 @@ namespace World
          * This worlds dialog-manager
          */
         Logic::DialogManager m_DialogManager;
+
+        /**
+         * The log-manager
+         */
+        Logic::LogManager m_LogManager;
 
         /**
          * Pfx-cache

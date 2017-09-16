@@ -32,6 +32,7 @@ namespace UI
         void setGrowDirection(float direction) { m_growDirection = direction; }
         void setScaling(float scaling) { m_Scaling = scaling; }
         float getScaling() { return m_Scaling; }
+
     protected:
         struct Text
         {

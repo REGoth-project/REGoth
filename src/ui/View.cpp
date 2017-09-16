@@ -230,21 +230,45 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
     if (!fnt)
         return;
 
-    // Get position of the text
-
+    // Calc metrics of the hole text
     int width, height;
     fnt->calcTextMetrics(txt, width, height);
+    Math::float2 hole_offset = getAlignOffset(alignment, width, height);
 
+    // Get position of the first text line and calc metrics
+    std::size_t line_end = txt.find("\n");
+    if (line_end == std::string::npos)
+        line_end = txt.length();
+    std::string txt_line = txt.substr(0, line_end);
+    fnt->calcTextMetrics(txt_line, width, height);
     Math::float2 offset = getAlignOffset(alignment, width, height);
-    px += offset.x;
-    py += offset.y;
 
+    // Set the position as offset
     zFont::GlyphStream s;
-    s.setPosition(px, py);
+    s.setPosition(px + offset.x, py + hole_offset.y);
 
     // Fill stream
     for (unsigned i = 0; i < txt.size(); i++)
-        fnt->appendGlyph(s, (unsigned char)txt[i]);
+    {
+        // If exist handle next text line
+        if (txt[i] == '\n')
+        {
+            // Find if exist next newline and calculate the txt line offset
+            line_end = txt.find("\n", i + 1);
+            if (line_end == std::string::npos)
+                line_end = txt.length();
+            txt_line = txt.substr(i + 1, line_end - i + 1);
+            fnt->calcTextMetrics(txt_line, width, height);
+            offset = getAlignOffset(alignment, width, height);
+
+            // Add a new line and add if necessary an offset
+            s.setPosition(px + offset.x, s.yPos + fnt->getFontHeight());
+        }
+        else
+        {
+            fnt->appendGlyph(s, (unsigned char)txt[i]);
+        }
+    }
 
     if (UI::zFont::bindGlyphStream(s))
     {

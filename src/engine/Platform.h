@@ -22,6 +22,7 @@ namespace Engine
         static uint32_t getWindowHeight() { return m_WindowHeight; }
         static bool getQuit() { return m_Quit; }
         static void setQuit(bool quit) { m_Quit = quit; }
+
     protected:
         static void windowSizeEvent(int width, int height);
 
