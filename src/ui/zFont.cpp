@@ -141,7 +141,6 @@ bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
 
 void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height) const
 {
-    bool found_newline = false;
     int xPos = 0;
     int yPos = 0;
     int xMax = 0;
@@ -152,7 +151,6 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
         {
             xPos = 0;
             yPos += m_Font.fontHeight;
-            found_newline = true;
         }
         else
         {
@@ -165,10 +163,6 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
         xMax = std::max(xPos, xMax);
         yMax = std::max(yPos, yMax);
     }
-
-    //fixme: This workaround moves multiline text closer to the top. Why is this needed?
-    if (found_newline)
-        yMax += 1.3 * m_Font.fontHeight;
 
     width = xMax;
     height = yMax + m_Font.fontHeight;  // Dont forget the last line (yMax is only the top-line)
