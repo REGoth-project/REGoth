@@ -71,7 +71,7 @@ bool MenuItemTypes::MenuItemListbox::hasTopics()
         return false;
 }
 
-void MenuItemTypes::MenuItemListbox::addTopic(std::string topic_name, Daedalus::GameState::LogTopic& topic)
+void MenuItemTypes::MenuItemListbox::addTopic(std::string topic_name, const Daedalus::GameState::LogTopic& topic)
 {
     m_Entries.push_back(new MenuItemListboxEntry(m_Engine, m_BaseMenu, m_ScriptHandle, topic_name, topic));
 }

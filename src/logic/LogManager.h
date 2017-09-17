@@ -1,9 +1,7 @@
 #pragma once
 
 #include <json.hpp>
-#include <daedalus/DaedalusDialogManager.h>
 #include <daedalus/DaedalusGameState.h>
-#include <logic/messages/EventMessage.h>
 
 using json = nlohmann::json;
 
@@ -17,13 +15,25 @@ namespace Logic
     class LogManager
     {
     public:
-        LogManager(World::WorldInstance& world);
-        ~LogManager();
-
         /**
          * Get the current player log
          */
-        std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
+        const std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
+
+        /**
+         * Creates a new topic
+         */
+        void createTopic(const std::string& topicName, Daedalus::GameState::LogTopic::ESection section);
+
+        /**
+         * Sets the status of a topic
+         */
+        void setTopicStatus(const std::string& topicName, Daedalus::GameState::LogTopic::ELogStatus status);
+
+        /**
+         * Adds an entry to a topic
+         */
+        void addEntry(const std::string& topicName, std::string entry);
 
         /**
          * Export the current log to the given log parameter
@@ -35,10 +45,16 @@ namespace Logic
          */
         void importLogManager(const json& log);
 
-    private:
         /**
-         * World this runs in
+         * Imports a single mission-topic or note-topic
          */
-        World::WorldInstance& m_World;
+        void importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status);
+
+    private:
+
+        /**
+         * @brief The player's log. Map of entries by topics
+         */
+        std::map<std::string, Daedalus::GameState::LogTopic> m_PlayerLog;
     };
 }

@@ -16,7 +16,10 @@ namespace UI
         class MenuItemListboxEntry : public MenuItemText
         {
         public:
-            MenuItemListboxEntry(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle, std::string& topic_name, Daedalus::GameState::LogTopic& topic);
+            MenuItemListboxEntry(Engine::BaseEngine& e, Menu& baseMenu,
+                                 const Daedalus::GameState::MenuItemHandle& scriptHandle,
+                                 const std::string& topic_name,
+                                 const Daedalus::GameState::LogTopic& topic);
 
             /**
              * Get the entries of this listbox entry

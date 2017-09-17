@@ -16,7 +16,6 @@
 #include <content/VertexTypes.h>
 #include <logic/CameraController.h>
 #include <logic/DialogManager.h>
-#include <logic/LogManager.h>
 #include <logic/PfxManager.h>
 #include <logic/ScriptEngine.h>
 #include <memory/AllocatorBundle.h>
@@ -261,10 +260,7 @@ namespace World
         {
             return m_DialogManager;
         }
-        Logic::LogManager& getLogManager()
-        {
-            return m_LogManager;
-        }
+
         World::AudioWorld& getAudioWorld()
         {
             return *m_AudioWorld;
@@ -451,11 +447,6 @@ namespace World
          * This worlds dialog-manager
          */
         Logic::DialogManager m_DialogManager;
-
-        /**
-         * The log-manager
-         */
-        Logic::LogManager m_LogManager;
 
         /**
          * Pfx-cache

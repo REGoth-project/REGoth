@@ -325,7 +325,7 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
 
     // export log info
     json logManager;
-    mainWorld.getLogManager().exportLogManager(logManager);
+    gameEngine->getSession().getLogManager().exportLogManager(logManager);
     Engine::SavegameManager::writeFileInSlot(index, "logmanager.json", Utils::iso_8859_1_to_utf8(logManager.dump(4)));
 
     // export script engine

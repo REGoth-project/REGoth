@@ -49,7 +49,6 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     , m_AnimationLibrary(*this)
     , m_Sky(*this)
     , m_DialogManager(*this)
-    , m_LogManager(*this)
     , m_BspTree(*this)
     , m_PfxManager(*this)
     , m_AudioWorld(nullptr)
@@ -480,7 +479,7 @@ bool WorldInstance::init(const std::string& zen,
         // Load logManager if one is provided.
         if (!logManager.empty())
         {
-            m_LogManager.importLogManager(logManager);
+            engine.getSession().getLogManager().importLogManager(logManager);
         }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);

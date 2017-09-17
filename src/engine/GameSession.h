@@ -9,6 +9,7 @@
 #include "GameClock.h"
 #include "World.h"
 #include <handle/HandleDef.h>
+#include <logic/LogManager.h>
 #include <json/json.hpp>
 
 namespace Engine
@@ -128,6 +129,8 @@ namespace Engine
          */
         void removeAllWorlds();
 
+        Logic::LogManager& getLogManager() { return m_LogManager; }
+
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;
 
@@ -145,6 +148,11 @@ namespace Engine
          * known infoInstances by npcInstances
          */
         std::map<size_t, std::set<size_t>> m_KnownInfos;
+
+        /**
+         * The log-manager
+         */
+        Logic::LogManager m_LogManager;
 
         /**
          * Currently active world instances
