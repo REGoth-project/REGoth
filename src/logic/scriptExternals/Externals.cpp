@@ -1344,23 +1344,23 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
-    vm->registerExternalFunction("log_createtopic", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_CreateTopic", [=](Daedalus::DaedalusVM& vm) {
         int32_t section = vm.popDataValue();
         std::string topicName = vm.popString();
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].section = static_cast<Daedalus::GameState::LogTopic::ESection>(section);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.createTopic(topicName, static_cast<Daedalus::GameState::LogTopic::ESection>(section));
     });
 
-    vm->registerExternalFunction("log_settopicstatus", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_SetTopicStatus", [=](Daedalus::DaedalusVM& vm) {
         int32_t status = vm.popDataValue();
         std::string topicName = vm.popString();
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].status = static_cast<Daedalus::GameState::LogTopic::ELogStatus>(status);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.setTopicStatus(topicName, static_cast<Daedalus::GameState::LogTopic::ELogStatus>(status));
     });
 
-    vm->registerExternalFunction("log_addentry", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_AddEntry", [=](Daedalus::DaedalusVM& vm) {
         std::string entry = vm.popString();
         std::string topicName = vm.popString();
 
@@ -1369,8 +1369,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         LogInfo() << entry;
         LogInfo() << "";
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].entries.push_back(entry);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.addEntry(topicName, entry);
 
         pWorld->getScriptEngine().onLogEntryAdded(topicName, entry);
     });

@@ -3,46 +3,40 @@
 //
 
 #include "LogManager.h"
-#include <components/VobClasses.h>
-#include <engine/AsyncAction.h>
 #include <engine/BaseEngine.h>
-#include <engine/World.h>
-#include <logic/PlayerController.h>
-#include <logic/visuals/ModelVisual.h>
-#include <ui/DialogBox.h>
-#include <ui/Hud.h>
-#include <ui/PrintScreenMessages.h>
-#include <ui/SubtitleBox.h>
 #include <utils/logger.h>
 
 using namespace Logic;
 
-LogManager::LogManager(World::WorldInstance& world)
-    : m_World(world)
+const std::map<std::string, Daedalus::GameState::LogTopic>& Logic::LogManager::getPlayerLog()
 {
+    return m_PlayerLog;
 }
 
-LogManager::~LogManager()
+void LogManager::createTopic(const std::string& topicName, Daedalus::GameState::LogTopic::ESection section)
 {
+    m_PlayerLog[topicName].section = section;
 }
 
-std::map<std::string, Daedalus::GameState::LogTopic>& Logic::LogManager::getPlayerLog()
+void LogManager::setTopicStatus(const std::string& topicName, Daedalus::GameState::LogTopic::ELogStatus status)
 {
-    Logic::ScriptEngine& vm = m_World.getScriptEngine();
-    return vm.getGameState().getPlayerLog();
+    m_PlayerLog[topicName].status = status;
+}
+
+void LogManager::addEntry(const std::string& topicName, std::string entry)
+{
+    m_PlayerLog[topicName].entries.push_back(std::move(entry));
 }
 
 void LogManager::exportLogManager(json& log)
 {
-    std::map<std::string, Daedalus::GameState::LogTopic>& playerLog = getPlayerLog();
-
     log["mission"]["running"] = json::array();
     log["mission"]["success"] = json::array();
     log["mission"]["failed"] = json::array();
     log["mission"]["obsolete"] = json::array();
     log["note"] = json::array();
 
-    for (const auto& topic : playerLog)
+    for (const auto& topic : m_PlayerLog)
     {
         json jsonTopic;
         jsonTopic["name"] = topic.first;
@@ -75,19 +69,15 @@ void LogManager::exportLogManager(json& log)
 
 void LogManager::importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status)
 {
-    std::map<std::string, Daedalus::GameState::LogTopic>& playerLog = getPlayerLog();
     std::string name = Utils::utf8_to_iso8859_1(topic.at("name").get<std::string>().c_str());
-    playerLog[name].section = section;
-    playerLog[name].status = status;
+    createTopic(name, section);
+    setTopicStatus(name, status);
     for (auto entry : topic.at("entries"))
-    {
-        playerLog[name].entries.push_back(Utils::utf8_to_iso8859_1(entry.get<std::string>().c_str()));
-    }
+        addEntry(name, Utils::utf8_to_iso8859_1(entry.get<std::string>().c_str()));
 }
 
 void LogManager::importLogManager(const json& log)
 {
-    std::map<std::string, Daedalus::GameState::LogTopic>& playerLog = getPlayerLog();
     using ELogStatus = Daedalus::GameState::LogTopic::ELogStatus;
     const std::map<std::string, ELogStatus> logStatus {
         std::make_pair("running", ELogStatus::LS_Running),

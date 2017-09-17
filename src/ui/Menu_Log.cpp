@@ -63,7 +63,7 @@ void Menu_Log::initializeLogEntries()
             listbox_info = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
 
     // Set topic entries to listboxes
-    std::map<std::string, Daedalus::GameState::LogTopic>& log = m_Engine.getMainWorld().get().getLogManager().getPlayerLog();
+    const std::map<std::string, Daedalus::GameState::LogTopic>& log = m_Engine.getSession().getLogManager().getPlayerLog();
     for (auto& entry : log)
     {
         if (entry.second.section == Daedalus::GameState::LogTopic::ESection::LT_Mission)

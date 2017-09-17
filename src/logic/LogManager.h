@@ -1,9 +1,7 @@
 #pragma once
 
 #include <json.hpp>
-#include <daedalus/DaedalusDialogManager.h>
 #include <daedalus/DaedalusGameState.h>
-#include <logic/messages/EventMessage.h>
 
 using json = nlohmann::json;
 
@@ -17,13 +15,25 @@ namespace Logic
     class LogManager
     {
     public:
-        LogManager(World::WorldInstance& world);
-        ~LogManager();
-
         /**
          * Get the current player log
          */
-        std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
+        const std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
+
+        /**
+         * Creates a new Topic
+         */
+        void createTopic(const std::string& topicName, Daedalus::GameState::LogTopic::ESection section);
+
+        /**
+         * Creates a new Topic
+         */
+        void setTopicStatus(const std::string& topicName, Daedalus::GameState::LogTopic::ELogStatus status);
+
+        /**
+         * Adds an entry to a topic
+         */
+        void addEntry(const std::string& topicName, std::string entry);
 
         /**
          * Export the current log to the given log parameter
@@ -41,9 +51,10 @@ namespace Logic
         void importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status);
 
     private:
+
         /**
-         * World this runs in
+         * @brief The players log. Map of Entries by Topics
          */
-        World::WorldInstance& m_World;
+        std::map<std::string, Daedalus::GameState::LogTopic> m_PlayerLog;
     };
 }

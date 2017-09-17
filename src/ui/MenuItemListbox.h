@@ -30,7 +30,7 @@ namespace UI
              * @param topic_name The name of the topic
              * @param topic The topic containing the topic entries
              */
-            void addTopic(std::string topic_name, Daedalus::GameState::LogTopic& topic);
+            void addTopic(std::string topic_name, const Daedalus::GameState::LogTopic& topic);
 
             /*
              * Returns true if this listbox has at least one topic entry, false otherwise
