@@ -302,6 +302,16 @@ namespace World
                                                                Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
 
         /**
+         * Marks the given Freepoint as "occupied" for the next occupiedForSeconds
+         */
+        void markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity, float occupiedForSeconds);
+
+        /**
+         * @return Whether the freepoint is currently occupied
+         */
+        bool isFreepointOccupied(Handle::EntityHandle freepoint);
+
+        /**
          * Exports this world into a json-object
          * @param j json-object to write into
          * @param skip entities which shall be excluded from export
@@ -437,6 +447,13 @@ namespace World
          * List of freepoints
          */
         std::map<std::string, Handle::EntityHandle> m_FreePoints;
+
+        /**
+         * Usually freepoints are named like "FP_GUARD_XXX", where "FP_GUARD" is the 'tag' of
+         * a freepoint. To save us from going through the whole freepoint list every time we need a
+         * freepoint with a specific tag, we cache the searches here
+         */
+        std::map<std::string, std::vector<Handle::EntityHandle>> m_FreePointTagCache;
 
         /**
          * NPCs in this world

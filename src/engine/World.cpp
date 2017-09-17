@@ -24,6 +24,7 @@
 #include <utils/logger.h>
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
+#include <type_traits>
 
 using namespace World;
 
@@ -64,13 +65,32 @@ WorldInstance::~WorldInstance()
         VobTypes::Wld_RemoveNpc(*this, player);
 
     // Destroy all allocated components
-    auto ents = getComponentAllocator().getDataBundle();
-    Utils::for_each_in_tuple(ents.m_Data, [&](auto& v) {
+    // Loop because some destructor may create more entities
+    while(getComponentAllocator().getNumObtainedElements() != 0)
+    {
+        auto ents = getComponentAllocator().getDataBundle();
+        Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
+
+        // Need to make a list of all entites because some destructors could remove some entites inside
+        std::vector<Handle::EntityHandle> allEntities;
         for (size_t i = 0; i < ents.m_NumElements; i++)
         {
-            Components::Actions::destroyComponent(v);
+            allEntities.push_back(entityComponents[i].m_ThisEntity);
         }
-    });
+
+        for (Handle::EntityHandle e : allEntities)
+        {
+            if (isEntityValid(e))
+            {
+                Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
+                    Components::Actions::destroyComponent(v);
+                });
+
+                getComponentAllocator().removeObject(e);
+            }
+        }
+    }
+
 
     delete m_AudioWorld;
 }
@@ -245,7 +265,7 @@ bool WorldInstance::init(const std::string& zen,
         {
             // Init positions
             Components::EntityComponent& entity = getEntity<Components::EntityComponent>(e);
-            Components::addComponent<Components::PositionComponent>(entity);
+            Components::Actions::initComponent<Components::PositionComponent>(getComponentAllocator(), e);
 
             // Copy world-matrix (These are all identiy on the worldmesh)
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
@@ -351,9 +371,9 @@ bool WorldInstance::init(const std::string& zen,
                     if (v.objectClass == "zCVobSpot:zCVob")
                     {
                         // Register freepoint
-                        Handle::EntityHandle h = addEntity(Components::ObjectComponent::MASK | Components::SpotComponent::MASK | Components::PositionComponent::MASK);
-                        getEntity<Components::ObjectComponent>(h).m_Name = v.vobName;
-                        m_FreePoints[v.vobName] = h;
+                        Components::SpotComponent& spot = Components::Actions::initComponent<Components::SpotComponent>(getComponentAllocator(), vob.entity);
+
+                        m_FreePoints[v.vobName] = vob.entity;
                     }
                 }
                 else
@@ -569,13 +589,13 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 {
     auto h = m_Allocators.m_ComponentAllocator.createObject();
 
-    Components::Actions::forAllComponents(m_Allocators.m_ComponentAllocator, h, [&](auto& c) {
-        c.init(c);
-    });
-
     Components::EntityComponent& entity = m_Allocators.m_ComponentAllocator.getElement<Components::EntityComponent>(h);
     entity.m_ComponentMask = components;
     entity.m_ThisEntity = h;
+
+    Components::Actions::forAllComponents(m_Allocators.m_ComponentAllocator, h, [&](auto& c) {
+        c.init(c);
+    });
 
     /*Components::BBoxComponent& bbox = m_Allocators.m_ComponentAllocator.getElement<Components::BBoxComponent>(h);
     bbox.m_BBox3D.min = -1.0f * Math::float3(rand() % 1000,rand() % 1000,rand() % 1000);
@@ -672,12 +692,20 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
+
+    /*for(const auto& fp : m_FreePoints)
+    {
+        Math::float3 fpPosition = getEntity<Components::PositionComponent>(fp.second).m_WorldMatrix.Translation();
+        ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
+    }*/
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
 {
     // Clean all components
-    Components::Actions::forAllComponents(getComponentAllocator(), h, [](auto& c) {
+    Components::EntityComponent& entityComponent = getEntity<Components::EntityComponent>(h);
+
+    Components::Actions::forAllComponents(getComponentAllocator(), h, [&](auto& c) {
         Components::Actions::destroyComponent(c);
     });
 
@@ -727,9 +755,6 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
 {
     std::vector<Handle::EntityHandle> m;
 
-    // FIXME: This is too slow! (And not used anyways)
-    return m;
-
     Handle::EntityHandle closestFP;
 
     float closest2 = FLT_MAX;
@@ -737,28 +762,25 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
     std::vector<Handle::EntityHandle> fps = getFreepoints(name);
     for (auto& fp : fps)
     {
-        Components::ObjectComponent& obj = getEntity<Components::ObjectComponent>(fp);
-        if (name.empty() || obj.m_Name == name)
+        Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
+        Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
+
+        if (!isFreepointOccupied(fp))
         {
-            Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
-            Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
-
-            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
+            float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
+            if (fpd2 < distance2)
             {
-                float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
-                if (fpd2 < distance2)
+                if (fpd2 < closest2)
                 {
-                    if (fpd2 < closest2)
-                    {
-                        closest2 = fpd2;
-                        closestFP = fp;
-                    }
+                    closest2 = fpd2;
+                    closestFP = fp;
                 }
-
-                if (!closestOnly)
-                    m.push_back(fp);
             }
+
+            if (!closestOnly)
+                m.push_back(fp);
         }
+
     }
 
     if (closestOnly)
@@ -771,16 +793,43 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
 {
     std::vector<Handle::EntityHandle> mp;
 
-    // FIXME: This is too slow!
-    /*
+    auto cacheIt = m_FreePointTagCache.find(tag);
+    if(cacheIt != m_FreePointTagCache.end())
+        return cacheIt->second;
+
+    // Tag not cached, do full search now and cache it
     for(auto& fp : m_FreePoints)
     {
-        if(fp.first.substr(0, tag.size()) == tag)
+        if(fp.first.find(tag) != std::string::npos)
             mp.push_back(fp.second);
     }
-     */
+
+    m_FreePointTagCache[tag] = mp;
 
     return mp;
+}
+
+void WorldInstance::markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity,
+                                      float occupiedForSeconds)
+{
+    using namespace Components;
+
+    assert(hasComponent<SpotComponent>(getEntity<EntityComponent>(freepoint)));
+
+    Components::SpotComponent& sp = getEntity<Components::SpotComponent>(freepoint);
+    sp.m_UsingEntity = usingEntity;
+    sp.m_UseEndTime = getEngine()->getGameClock().getTotalSeconds() + occupiedForSeconds;
+}
+
+bool WorldInstance::isFreepointOccupied(Handle::EntityHandle freepoint)
+{
+    using namespace Components;
+
+    assert(hasComponent<SpotComponent>(getEntity<EntityComponent>(freepoint)));
+
+    Components::SpotComponent& sp = getEntity<Components::SpotComponent>(freepoint);
+
+    return sp.m_UsingEntity.isValid() && sp.m_UseEndTime > getEngine()->getGameClock().getTotalSeconds();
 }
 
 Daedalus::GameType WorldInstance::getBasicGameType()
@@ -982,3 +1031,7 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
 {
     return m_pEngine->getHud().getPrintScreenManager();
 }
+
+
+
+

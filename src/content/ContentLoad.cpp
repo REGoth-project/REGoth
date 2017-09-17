@@ -4,6 +4,7 @@
 
 #include "ContentLoad.h"
 #include <engine/World.h>
+#include <components/EntityActions.h>
 
 Handle::EntityHandle Content::Wrap::createEntity(World::WorldInstance& world, Components::ComponentMask mask)
 {
@@ -20,7 +21,7 @@ Components::CompoundComponent& Content::Wrap::getCompoundComponent(World::WorldI
                                                                    Handle::EntityHandle e)
 {
     // Make sure the component is enabled
-    Components::addComponent<Components::CompoundComponent>(world.getEntity<Components::EntityComponent>(e));
+    Components::Actions::initComponent<Components::CompoundComponent>(world.getComponentAllocator(), e);
 
     return world.getEntity<Components::CompoundComponent>(e);
 }

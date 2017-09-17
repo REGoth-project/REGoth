@@ -277,7 +277,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
                 m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
                                                                                                        pdir,
-                                                                                                       CAMERA_SMOOTHING * deltaTime);
+                                                                                                       std::min(1.0f, CAMERA_SMOOTHING * deltaTime));
 
                 pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
 
@@ -292,11 +292,11 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
                 Math::float3 camPos = getEntityTransform().Translation();
 
-                ppos = Math::float3::lerp(camPos, ppos, CAMERA_SMOOTHING * deltaTime);
+                ppos = Math::float3::lerp(camPos, ppos, std::min(1.0f, CAMERA_SMOOTHING * deltaTime));
 
                 m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
                                                                                               ptrans.Translation() + targetOffset,
-                                                                                              CAMERA_SMOOTHING * deltaTime);
+                                                                                              std::min(1.0f, CAMERA_SMOOTHING * deltaTime));
 
                 m_ViewMatrix = Math::Matrix::CreateLookAt(ppos,
                                                           m_CameraSettings.thirdPersonCameraSettings.currentLookAt,

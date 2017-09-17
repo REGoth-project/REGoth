@@ -95,5 +95,8 @@ namespace Render
          */
         std::vector<bgfx::DynamicVertexBufferHandle> m_InstanceDataBuffers;
         std::vector<uint32_t> m_FreeInstanceDataBuffers;
+
+        std::vector<bgfx::ProgramHandle> m_LoadedPrograms;
+        std::vector<bgfx::UniformHandle> m_AllUniforms;
     };
 }
