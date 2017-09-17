@@ -6,7 +6,6 @@
 #include <json.hpp>
 #include "audio/AudioWorld.h"
 #include <components/Entities.h>
-#include <components/Entities.h>
 #include <components/Vob.h>
 #include <content/AnimationAllocator.h>
 #include <content/AnimationLibrary.h>
@@ -90,11 +89,13 @@ namespace World
          * @param worldJson may be empty
          * @param scriptEngine may be empty
          * @param dialogManager may be empty
+         * @param logManager may be empty
          */
         bool init(const std::string& zen,
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
-                  const json& dialogManager = json());
+                  const json& dialogManager = json(),
+                  const json& logManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -259,6 +260,7 @@ namespace World
         {
             return m_DialogManager;
         }
+
         World::AudioWorld& getAudioWorld()
         {
             return *m_AudioWorld;
@@ -300,6 +302,16 @@ namespace World
                                                                Handle::EntityHandle inst = Handle::EntityHandle::makeInvalidHandle());
 
         /**
+         * Marks the given Freepoint as "occupied" for the next occupiedForSeconds
+         */
+        void markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity, float occupiedForSeconds);
+
+        /**
+         * @return Whether the freepoint is currently occupied
+         */
+        bool isFreepointOccupied(Handle::EntityHandle freepoint);
+
+        /**
          * Exports this world into a json-object
          * @param j json-object to write into
          * @param skip entities which shall be excluded from export
@@ -328,6 +340,7 @@ namespace World
          * @return world-file this is built after
          */
         const std::string& getZenFile() { return m_ZenFile; }
+
         /**
          * Imports vobs from a json-object
          * @param j
@@ -434,6 +447,13 @@ namespace World
          * List of freepoints
          */
         std::map<std::string, Handle::EntityHandle> m_FreePoints;
+
+        /**
+         * Usually freepoints are named like "FP_GUARD_XXX", where "FP_GUARD" is the 'tag' of
+         * a freepoint. To save us from going through the whole freepoint list every time we need a
+         * freepoint with a specific tag, we cache the searches here
+         */
+        std::map<std::string, std::vector<Handle::EntityHandle>> m_FreePointTagCache;
 
         /**
          * NPCs in this world

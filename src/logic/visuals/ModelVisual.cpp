@@ -159,14 +159,14 @@ bool ModelVisual::load(const std::string& visual)
     {
         // Init positions
         Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(e);
-        Components::addComponent<Components::PositionComponent>(entity);
+        Components::Actions::initComponent<Components::PositionComponent>(m_World.getComponentAllocator(), e);
 
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
         pos = hostPos;
 
         // Init animation components
-        Components::addComponent<Components::AnimationComponent>(entity);
+        Components::Actions::initComponent<Components::AnimationComponent>(m_World.getComponentAllocator(), e);
         Components::AnimationComponent& anim = m_World.getEntity<Components::AnimationComponent>(e);
 
         // Assign the main-vob as animation controller
@@ -176,6 +176,9 @@ bool ModelVisual::load(const std::string& visual)
     /****
      * Read nodes and attachments
      ****/
+
+    // In case this wasn't already initialized...
+    Components::Actions::initComponent<Components::AnimationComponent>(m_World.getComponentAllocator(), m_Entity);
 
     // Read attachments
     if (m_VisualAttachments.size() < getAnimationHandler().getObjectSpaceTransforms().size())
@@ -230,7 +233,7 @@ bool ModelVisual::load(const std::string& visual)
             {
                 // Init positions
                 Components::EntityComponent& entity = m_World.getEntity<Components::EntityComponent>(e);
-                Components::addComponent<Components::PositionComponent>(entity);
+                Components::Actions::initComponent<Components::PositionComponent>(m_World.getComponentAllocator(), e);
 
                 // Important: Apply draw distance, and every other setting from the host
                 Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);

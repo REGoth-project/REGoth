@@ -34,7 +34,8 @@ namespace UI
         IA_HOME,
         IA_END,
         IA_ToggleStatusMenu,
-        IA_ToggleConsole
+        IA_ToggleConsole,
+        IA_ToggleLogMenu
     };
 
     // BGFX-View to be used for rendering views
@@ -95,16 +96,19 @@ namespace UI
          */
         bool isHidden() { return m_IsHidden; }
         void setHidden(bool v) { m_IsHidden = v; }
+
         /**
          * Transforms in normalized coords
          */
         void setTranslation(const Math::float2& translation) { m_Translation = translation; }
         void setSize(const Math::float2& size) { m_Size = size; }
+
         /**
          * Sets how this view should be aligned to it's translation
          * @param alignment The alignment
          */
         void setAlignment(EAlign alignment) { m_Alignment = alignment; }
+
         /**
          * Draws a texture on screen somewhere
          * Note: Uses alpha-blending
@@ -143,6 +147,7 @@ namespace UI
          * @param pParent Parent of this view
          */
         void setParent(View* pParent) { m_pParent = pParent; };
+
         /**
          * Sub-views drawn on top of this one
          */

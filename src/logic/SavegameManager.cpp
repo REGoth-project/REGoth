@@ -239,9 +239,10 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         // TODO: catch json exception when emtpy file is parsed or parser crashes
         json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
         json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
+        json logManager = json::parse(SavegameManager::readFileInSlot(index, "logmanager.json"));
         gameEngine->getSession().setCurrentSlot(index);
         gameEngine->getGameClock().setTotalSeconds(timePlayed);
-        std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager);
+        std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager);
 
         auto registerWorld = [ index, w = std::move(pWorld) ](BaseEngine * engine) mutable
         {
@@ -321,6 +322,11 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
     json dialogManager;
     mainWorld.getDialogManager().exportDialogManager(dialogManager);
     Engine::SavegameManager::writeFileInSlot(index, "dialogmanager.json", Utils::iso_8859_1_to_utf8(dialogManager.dump(4)));
+
+    // export log info
+    json logManager;
+    gameEngine->getSession().getLogManager().exportLogManager(logManager);
+    Engine::SavegameManager::writeFileInSlot(index, "logmanager.json", Utils::iso_8859_1_to_utf8(logManager.dump(4)));
 
     // export script engine
     json scriptEngine;

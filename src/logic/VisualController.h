@@ -64,6 +64,7 @@ namespace Logic
          * @param value Whether to save this visual when exporting a world
          */
         void setTransient(bool value) { m_Transient = value; }
+
     protected:
         virtual void exportPart(json& j) override;
 

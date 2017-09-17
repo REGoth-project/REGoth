@@ -6,6 +6,8 @@
 #include "Hud.h"
 #include "ImageView.h"
 #include "MenuItem.h"
+#include "MenuItemListbox.h"
+#include "MenuItemScrollableText.h"
 #include "TextView.h"
 #include <ZenLib/utils/logger.h>
 #include <daedalus/DaedalusVM.h>
@@ -231,7 +233,15 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
                 break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_INPUT:
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_TEXT:
-                m = new MenuItemTypes::MenuItemText(m_Engine, *this, h);
+                if ((itemData.flags & Daedalus::GEngineClasses::C_Menu_Item::EFlags::IT_MULTILINE) &&
+                    !(itemData.flags & Daedalus::GEngineClasses::C_Menu_Item::EFlags::IT_SELECTABLE))
+                {
+                    m = new MenuItemTypes::MenuItemScrollableText(m_Engine, *this, h);
+                }
+                else
+                {
+                    m = new MenuItemTypes::MenuItemText(m_Engine, *this, h);
+                }
                 break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_SLIDER:
                 break;
@@ -242,6 +252,7 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_BUTTON:
                 break;
             case Daedalus::GEngineClasses::C_Menu_Item::MENU_ITEM_LISTBOX:
+                m = new MenuItemTypes::MenuItemListbox(m_Engine, *this, h);
                 break;
             default:
                 LogWarn() << "Invalid item type: " << itemData.type;

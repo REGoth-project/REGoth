@@ -56,6 +56,12 @@ namespace Logic
         void playerUpdate(float deltaTime);
 
         /**
+         * Frame update for non-player-characters
+         * @param deltaTime Time since last frame
+         */
+        void npcUpdate(float deltaTime);
+
+        /**
          * Moves the player back to the usual-standing state
          */
         void standup();
@@ -65,6 +71,11 @@ namespace Logic
          */
         void onAction(Engine::ActionType actionType, bool triggered);
         void unbindKeys();
+
+        /**
+         * @param state Movementstate to set for AI
+         */
+        void setTargetMovementState(EMovementState state);
 
         /**
          * @return Controller this is attached to
@@ -111,5 +122,6 @@ namespace Logic
          * Current movment state
          */
         EMovementState m_ActiveMovementState;
+        EMovementState m_TargetMovementState;
     };
 }

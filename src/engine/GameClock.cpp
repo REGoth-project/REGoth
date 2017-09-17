@@ -95,6 +95,11 @@ std::string GameClock::getTimeOfDayFormatted() const
     return std::to_string(h) + ":" + (m < 10 ? "0" : "") + std::to_string(m);
 }
 
+std::string GameClock::getDayFormatted() const
+{
+    return std::to_string(getDay()) + ".";
+}
+
 double GameClock::hmToDayTime(int hours, int minutes)
 {
     return (hours + minutes / 60.0f) / 24.0f;

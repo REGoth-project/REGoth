@@ -88,6 +88,7 @@ namespace Logic
          * @return Classes which want to get exported on save should return true here
          */
         virtual bool shouldExport() { return false; }
+
     protected:
         /**
          * Exports this class only, ignores the base-classes values, but must call the function *BEFORE* writing values
