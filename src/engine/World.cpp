@@ -59,10 +59,13 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
 
 WorldInstance::~WorldInstance()
 {
-    // kick out player if he is still in this world (clears key bindings)
+    // kick out player if he is still in this world
+    /*
+    // FIXME currently crashes game if player is not PC_HERO
     auto player = getScriptEngine().getPlayerEntity();
-    if (player.isValid())
+    if (player.isValid() && false)
         VobTypes::Wld_RemoveNpc(*this, player);
+    */
 
     // Destroy all allocated components
     // Loop because some destructor may create more entities

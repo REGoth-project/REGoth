@@ -2458,7 +2458,7 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
     //if(tag.m_Tag == )
 }
 
-void PlayerController::onAction(Engine::ActionType actionType, bool triggered)
+void PlayerController::onAction(Engine::ActionType actionType, bool triggered, float intensity)
 {
     using Engine::ActionType;
 
@@ -2530,6 +2530,14 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered)
             break;
         case ActionType::DebugMoveSpeed2:
             m_MoveSpeed2 = m_MoveSpeed2 || triggered;
+            break;
+        case ActionType::PlayerRotate:
+        {
+            auto dir = getDirection();
+            auto deltaPhi = 0.02f * intensity; // TODO window width influences this???
+            dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, getEntityTransform().Up(), deltaPhi);
+            setDirection(dir);
+        }
             break;
         case ActionType::PlayerAction:
         {

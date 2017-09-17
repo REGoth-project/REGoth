@@ -271,7 +271,6 @@ void GameSession::startNewGame(const std::string& worldFile)
 
 void GameSession::setupKeyBindings()
 {
-    LogInfo() << "setupKeyBindings";
     using Engine::ActionType;
 
     auto baseEngine = &m_Engine;
@@ -319,15 +318,16 @@ void GameSession::setupKeyBindings()
                                              ActionType::PlayerStrafeRight,
                                              ActionType::DebugMoveSpeed,
                                              ActionType::DebugMoveSpeed2,
-                                             ActionType::PlayerAction};
+                                             ActionType::PlayerAction,
+                                             ActionType::PlayerRotate};
 
     for (auto action : playerActions)
     {
-        Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float) {
+        Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float intensity) {
             auto vob = getPlayerVob();
             if (!vob.isValid())
                 return;
-            vob.playerController->onAction(action, triggered);
+            vob.playerController->onAction(action, triggered, intensity);
         });
     }
 }

@@ -50,6 +50,7 @@ namespace Engine
         PlayerBackward,
         PlayerTurnLeft,
         PlayerTurnRight,
+        PlayerRotate,
         PlayerStrafeLeft,
         PlayerStrafeRight,
         PlayerDrawWeaponMelee,

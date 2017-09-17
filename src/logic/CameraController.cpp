@@ -72,7 +72,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
             if (triggered)
             {
                 auto& zoom = settings.zoomExponent;
-                zoom = Math::clamp(zoom - intensity / 8, 0.0f, 20.0f);
+                zoom = Math::clamp(zoom - intensity / 4, 0.0f, 15.0f);
             }
         });
 
@@ -82,7 +82,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         });
 
         settings.actionLookHorizontal = Input::RegisterAction(ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
-            settings.deltaPhi += 0.02f * intensity; // TODO screen aspect ratio influences this???
+            settings.deltaPhi += 0.02f * intensity; // TODO window width influences this???
         });
     }
 
@@ -257,14 +257,16 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
             if (player.isValid())
             {
-                auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
 
-                auto dir = player.playerController->getDirection();
-                dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, player.playerController->getEntityTransform().Up(), deltaPhi);
-                player.playerController->setDirection(dir);
+                // TODO rotate camera instead
+                auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
+                //auto dir = player.playerController->getDirection();
+                //dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, player.playerController->getEntityTransform().Up(), deltaPhi);
+                //player.playerController->setDirection(dir);
                 deltaPhi = 0;
                 const float verticalFactor = std::sin(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
                 const float horizontalFactor = std::cos(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+                // TODO use movestate direction instead? (swimming not tested)
                 Math::Matrix pTrans = player.playerController->getEntityTransformFacing();
                 Math::float3 pdir;
 
