@@ -73,58 +73,36 @@ void LogManager::exportLogManager(json& log)
     }
 }
 
+void LogManager::importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status)
+{
+    std::map<std::string, Daedalus::GameState::LogTopic>& playerLog = getPlayerLog();
+    std::string name = Utils::utf8_to_iso8859_1(topic.at("name").get<std::string>().c_str());
+    playerLog[name].section = section;
+    playerLog[name].status = status;
+    for (auto entry : topic.at("entries"))
+    {
+        playerLog[name].entries.push_back(Utils::utf8_to_iso8859_1(entry.get<std::string>().c_str()));
+    }
+}
+
 void LogManager::importLogManager(const json& log)
 {
     std::map<std::string, Daedalus::GameState::LogTopic>& playerLog = getPlayerLog();
+    using ELogStatus = Daedalus::GameState::LogTopic::ELogStatus;
+    const std::map<std::string, ELogStatus> logStatus {
+        std::make_pair("running", ELogStatus::LS_Running),
+        std::make_pair("success", ELogStatus::LS_Success),
+        std::make_pair("failed", ELogStatus::LS_Failed),
+        std::make_pair("obsolete", ELogStatus::LS_Obsolete),
+    };
 
-    for (auto it1 = log.begin(); it1 != log.end(); it1++)
+    for (auto missionStatus : json::iterator_wrapper(log.at("mission")))
     {
-        for (auto it2 = log.at(it1.key()).begin(); it2 != log.at(it1.key()).end(); it2++)
-        {
-            if (it1.key() == "mission")
-            {
-                for (auto it3 = it2.value().begin(); it3 != it2.value().end(); it3++)
-                {
-                    json missionTopic = it3.value();
-                    std::string name = Utils::utf8_to_iso8859_1(missionTopic.at("name").get<std::string>().c_str());
-
-                    if (it2.key() == "running")
-                    {
-                        playerLog[name].status = Daedalus::GameState::LogTopic::ELogStatus::LS_Running;
-                    }
-                    else if (it2.key() == "success")
-                    {
-                        playerLog[name].status = Daedalus::GameState::LogTopic::ELogStatus::LS_Success;
-                    }
-                    else if (it2.key() == "failed")
-                    {
-                        playerLog[name].status = Daedalus::GameState::LogTopic::ELogStatus::LS_Failed;
-                    }
-                    else if (it2.key() == "obsolete")
-                    {
-                        playerLog[name].status = Daedalus::GameState::LogTopic::ELogStatus::LS_Obsolete;
-                    }
-
-                    playerLog[name].section = Daedalus::GameState::LogTopic::ESection::LT_Mission;
-
-                    for (auto it4 = missionTopic.at("entries").begin(); it4 != missionTopic.at("entries").end(); it4++)
-                    {
-                        playerLog[name].entries.push_back(Utils::utf8_to_iso8859_1(it4.value().get<std::string>().c_str()));
-                    }
-                }
-            }
-            else if (it1.key() == "note")
-            {
-                json noteTopic = it2.value();
-                std::string name = Utils::utf8_to_iso8859_1(noteTopic.at("name").get<std::string>().c_str());
-
-                playerLog[name].section = Daedalus::GameState::LogTopic::ESection::LT_Note;
-
-                for (auto it5 = noteTopic.at("entries").begin(); it5 != noteTopic.at("entries").end(); it5++)
-                {
-                    playerLog[name].entries.push_back(Utils::utf8_to_iso8859_1(it5.value().get<std::string>().c_str()));
-                }
-            }
-        }
+        auto status = logStatus.at(missionStatus.key());
+        for (auto missionTopic : missionStatus.value())
+            importTopic(missionTopic, Daedalus::GameState::LogTopic::ESection::LT_Mission, status);
     }
+
+    for (auto noteTopic : log.at("note"))
+        importTopic(noteTopic, Daedalus::GameState::LogTopic::ESection::LT_Note, ELogStatus::LS_Running);
 }

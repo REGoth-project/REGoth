@@ -35,6 +35,11 @@ namespace Logic
          */
         void importLogManager(const json& log);
 
+        /**
+         * imports a single Mission-topic or Note-topic
+         */
+        void importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status);
+
     private:
         /**
          * World this runs in
