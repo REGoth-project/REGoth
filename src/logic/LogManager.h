@@ -21,12 +21,12 @@ namespace Logic
         const std::map<std::string, Daedalus::GameState::LogTopic>& getPlayerLog();
 
         /**
-         * Creates a new Topic
+         * Creates a new topic
          */
         void createTopic(const std::string& topicName, Daedalus::GameState::LogTopic::ESection section);
 
         /**
-         * Creates a new Topic
+         * Sets the status of a topic
          */
         void setTopicStatus(const std::string& topicName, Daedalus::GameState::LogTopic::ELogStatus status);
 
@@ -46,14 +46,14 @@ namespace Logic
         void importLogManager(const json& log);
 
         /**
-         * imports a single Mission-topic or Note-topic
+         * Imports a single mission-topic or note-topic
          */
         void importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status);
 
     private:
 
         /**
-         * @brief The players log. Map of Entries by Topics
+         * @brief The player's log. Map of entries by topics
          */
         std::map<std::string, Daedalus::GameState::LogTopic> m_PlayerLog;
     };
