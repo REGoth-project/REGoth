@@ -7,18 +7,19 @@
 #include <utils/logger.h>
 
 using namespace Logic;
+using LogTopic = Daedalus::GameState::LogTopic;
 
-const std::map<std::string, Daedalus::GameState::LogTopic>& Logic::LogManager::getPlayerLog()
+const std::map<std::string, LogTopic>& Logic::LogManager::getPlayerLog()
 {
     return m_PlayerLog;
 }
 
-void LogManager::createTopic(const std::string& topicName, Daedalus::GameState::LogTopic::ESection section)
+void LogManager::createTopic(const std::string& topicName, LogTopic::ESection section)
 {
     m_PlayerLog[topicName].section = section;
 }
 
-void LogManager::setTopicStatus(const std::string& topicName, Daedalus::GameState::LogTopic::ELogStatus status)
+void LogManager::setTopicStatus(const std::string& topicName, LogTopic::ELogStatus status)
 {
     m_PlayerLog[topicName].status = status;
 }
@@ -42,32 +43,32 @@ void LogManager::exportLogManager(json& log)
         jsonTopic["name"] = topic.first;
         jsonTopic["entries"] = topic.second.entries;
 
-        if (topic.second.section == Daedalus::GameState::LogTopic::ESection::LT_Mission)
+        if (topic.second.section == LogTopic::ESection::LT_Mission)
         {
             switch (topic.second.status)
             {
-                case Daedalus::GameState::LogTopic::ELogStatus::LS_Running:
+                case LogTopic::ELogStatus::LS_Running:
                     log["mission"]["running"].push_back(jsonTopic);
                     break;
-                case Daedalus::GameState::LogTopic::ELogStatus::LS_Success:
+                case LogTopic::ELogStatus::LS_Success:
                     log["mission"]["success"].push_back(jsonTopic);
                     break;
-                case Daedalus::GameState::LogTopic::ELogStatus::LS_Failed:
+                case LogTopic::ELogStatus::LS_Failed:
                     log["mission"]["failed"].push_back(jsonTopic);
                     break;
-                case Daedalus::GameState::LogTopic::ELogStatus::LS_Obsolete:
+                case LogTopic::ELogStatus::LS_Obsolete:
                     log["mission"]["obsolete"].push_back(jsonTopic);
                     break;
             }
         }
-        else if (topic.second.section == Daedalus::GameState::LogTopic::ESection::LT_Note)
+        else if (topic.second.section == LogTopic::ESection::LT_Note)
         {
             log["note"].push_back(jsonTopic);
         }
     }
 }
 
-void LogManager::importTopic(const json& topic, Daedalus::GameState::LogTopic::ESection section, Daedalus::GameState::LogTopic::ELogStatus status)
+void LogManager::importTopic(const json& topic, LogTopic::ESection section, LogTopic::ELogStatus status)
 {
     std::string name = Utils::utf8_to_iso8859_1(topic.at("name").get<std::string>().c_str());
     createTopic(name, section);
@@ -78,7 +79,7 @@ void LogManager::importTopic(const json& topic, Daedalus::GameState::LogTopic::E
 
 void LogManager::importLogManager(const json& log)
 {
-    using ELogStatus = Daedalus::GameState::LogTopic::ELogStatus;
+    using ELogStatus = LogTopic::ELogStatus;
     const std::map<std::string, ELogStatus> logStatus {
         std::make_pair("running", ELogStatus::LS_Running),
         std::make_pair("success", ELogStatus::LS_Success),
@@ -90,9 +91,9 @@ void LogManager::importLogManager(const json& log)
     {
         auto status = logStatus.at(missionStatus.key());
         for (auto missionTopic : missionStatus.value())
-            importTopic(missionTopic, Daedalus::GameState::LogTopic::ESection::LT_Mission, status);
+            importTopic(missionTopic, LogTopic::ESection::LT_Mission, status);
     }
 
     for (auto noteTopic : log.at("note"))
-        importTopic(noteTopic, Daedalus::GameState::LogTopic::ESection::LT_Note, ELogStatus::LS_Running);
+        importTopic(noteTopic, LogTopic::ESection::LT_Note, ELogStatus::LS_Running);
 }
