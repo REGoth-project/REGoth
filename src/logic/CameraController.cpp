@@ -78,7 +78,9 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
         settings.actionLookVertical = Input::RegisterAction(ActionType::ThirdPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
-            settings.pitch =  Utils::fmod(settings.pitch, 2 * Math::PI);
+            auto max = Math::PI / 2 - settings.cameraElevation;
+            constexpr auto epsilon = 0.05f;
+            settings.pitch = Math::clamp(settings.pitch, -Math::PI / 2 * (1 - epsilon), max);
         });
 
         settings.actionLookHorizontal = Input::RegisterAction(ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
@@ -257,13 +259,6 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
             if (player.isValid())
             {
-
-                // TODO rotate camera instead
-                auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
-                //auto dir = player.playerController->getDirection();
-                //dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, player.playerController->getEntityTransform().Up(), deltaPhi);
-                //player.playerController->setDirection(dir);
-                deltaPhi = 0;
                 const float verticalFactor = std::sin(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
                 const float horizontalFactor = std::cos(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
                 // TODO use movestate direction instead? (swimming not tested)
@@ -305,16 +300,10 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 const Math::float3 up = Math::float3(0.0f, 1.0f, 0.0f);
 
                 float angle = m_CameraSettings.thirdPersonCameraSettings.pitch;
-                auto actualCameraAngle = Math::radiansToDegree(angle + m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+                const auto& elevation = m_CameraSettings.thirdPersonCameraSettings.cameraElevation;
+                auto actualCameraAngle = Math::radiansToDegree(angle + elevation);
 
                 auto rotationAxisDir = pTrans.Left();
-                if (m_CameraSettings.thirdPersonCameraSettings.isFrontView())
-                {
-                    // case front view: flip view
-                    pdir *= -1;
-                    rotationAxisDir *= -1;
-                    angle = Math::PI - angle;
-                }
 
                 // cardinalPoint around which the camera will rotate vertically
                 auto cameraRotationCenter = playerCenter;
@@ -324,8 +313,13 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 Math::float3 newLookAt = cameraRotationCenter + verticalFactor * zoom * up;
                 Math::float3 newCamPos = newLookAt - horizontalFactor * zoom * pdir;
 
+                auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
                 for (auto p : {&newLookAt, &newCamPos})
+                {
                     *p = Math::Matrix::rotatedPointAroundLine(*p, cameraRotationCenter, rotationAxisDir, angle);
+                    // rotate camera around y-axis
+                    // *p = Math::Matrix::rotatedPointAroundLine(*pc, pTrans.Translation(), pTrans.Up(), deltaPhi);
+                }
 
                 Math::float3 oldCamPos = getEntityTransform().Translation();
                 Math::float3 intCamPos = Math::float3::lerp(oldCamPos, newCamPos, interpolationFraction);
