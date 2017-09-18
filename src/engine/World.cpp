@@ -664,7 +664,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getSession().getGameClock().getDateTimeFormatted());
+    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }
@@ -738,7 +738,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
             Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getSession().getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
+            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
             {
                 float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
                 if (fpd2 < distance2)

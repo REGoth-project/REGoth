@@ -7,7 +7,7 @@ namespace UI
     class TextView : public View
     {
     public:
-        TextView(Engine::BaseEngine& e);
+        TextView(Engine::GameEngine& e);
         ~TextView();
 
         /**

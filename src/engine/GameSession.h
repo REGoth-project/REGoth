@@ -5,7 +5,6 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "GameClock.h"
 #include "GameEngine.h"
 #include "World.h"
 #include <handle/HandleDef.h>
@@ -46,11 +45,6 @@ namespace Engine
          * @return whether a world is currently unloaded to memory as json object
          */
         bool hasInactiveWorld(const std::string& worldName);
-
-        /**
-         * @return Gameclock
-         */
-        GameClock& getGameClock();
 
         void setCurrentSlot(int index) { m_CurrentSlotIndex = index; }
         int getCurrentSlot() { return m_CurrentSlotIndex; }
@@ -130,11 +124,6 @@ namespace Engine
          * last savegame slot used in this session (save or load). Is -1 if "new game" was started
          */
         int m_CurrentSlotIndex;
-
-        /**
-         * Gameclock
-         */
-        GameClock m_GameClock;
 
         /**
          * known infoInstances by npcInstances

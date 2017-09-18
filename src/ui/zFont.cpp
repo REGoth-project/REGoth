@@ -4,7 +4,7 @@
 
 #include "zFont.h"
 #include <ZenLib/utils/logger.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 
 #include <content/VertexTypes.h>
 
@@ -71,7 +71,7 @@ namespace FontUtil
     }
 }
 
-UI::zFont::zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo)
+UI::zFont::zFont(Engine::GameEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo)
     : m_Engine(e)
     , m_Font(fontInfo)
 {
@@ -219,7 +219,7 @@ std::vector<std::string> UI::zFont::layoutText(const std::string& text, int maxW
     return lines;
 }
 
-UI::zFontCache::zFontCache(Engine::BaseEngine& e)
+UI::zFontCache::zFontCache(Engine::GameEngine& e)
     : m_Engine(e)
 {
 }

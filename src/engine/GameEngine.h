@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseEngine.h"
 #include "GameSession.h"
+#include "GameClock.h"
 #include <future>
 #include "Input.h"
 #include <logic/CameraController.h>
@@ -67,6 +68,11 @@ namespace Engine
          * @return GameSession
          */
         GameSession& getSession() { return *m_Session; }
+
+        /**
+         * @return Gameclock
+         */
+        GameClock& getGameClock();
 
         /**
          * drop all information bound to the current session
@@ -142,6 +148,11 @@ namespace Engine
          * because it has a member variable reference
          */
         std::unique_ptr<GameSession> m_Session;
+
+        /**
+         * Gameclock
+         */
+        GameClock m_GameClock;
 
         /**
          * Base UI-View

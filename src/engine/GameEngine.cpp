@@ -81,7 +81,7 @@ void GameEngine::initEngine(int argc, char** argv)
 
 void GameEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-    onFrameUpdate(dt * getSession().getGameClock().getGameEngineSpeedFactor(), width, height);
+    onFrameUpdate(dt * m_GameClock.getGameEngineSpeedFactor(), width, height);
 }
 
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
@@ -105,7 +105,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         }
         else
         {
-            getSession().getGameClock().update(dt);
+            m_GameClock.update(dt);
             for (auto& s : getSession().getWorldInstances())
             {
                 // Update main-world after every other world, since the camera is in there
@@ -230,6 +230,11 @@ void GameEngine::setPaused(bool paused)
         }
         m_Paused = paused;
     }
+}
+
+GameClock& GameEngine::getGameClock()
+{
+    return m_GameClock;
 }
 
 void GameEngine::onWorldCreated(Handle::WorldHandle world)

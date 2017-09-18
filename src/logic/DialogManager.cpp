@@ -5,7 +5,7 @@
 #include "DialogManager.h"
 #include <components/VobClasses.h>
 #include <engine/AsyncAction.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <logic/PlayerController.h>
 #include <logic/visuals/ModelVisual.h>
@@ -348,7 +348,7 @@ bool DialogManager::init()
                                                                             m_World.getEngine()->getSession().getKnownInfoMap());
 
     LogInfo() << "Adding dialog-UI to root view";
-    auto createSubtitleBox = [this](Engine::BaseEngine* engine) {
+    auto createSubtitleBox = [this](Engine::GameEngine* engine) {
         // Add subtitle box (Hidden if there is nothing to display)
         m_ActiveSubtitleBox = new UI::SubtitleBox(*engine);
         engine->getRootUIView().addChild(m_ActiveSubtitleBox);

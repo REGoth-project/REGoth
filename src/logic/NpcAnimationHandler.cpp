@@ -1,7 +1,7 @@
 #include "NpcAnimationHandler.h"
 #include <ZenLib/utils/logger.h>
 #include <components/Entities.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <logic/PlayerController.h>
 #include <logic/visuals/ModelVisual.h>

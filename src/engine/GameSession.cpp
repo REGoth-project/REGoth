@@ -51,11 +51,6 @@ nlohmann::json GameSession::retrieveInactiveWorld(const std::string& worldName)
         return nlohmann::json();
 }
 
-GameClock& GameSession::getGameClock()
-{
-    return m_GameClock;
-}
-
 void GameSession::removeAllWorlds()
 {
     while (!m_WorldInstances.empty())

@@ -4,7 +4,7 @@
 
 #include "TextView.h"
 
-UI::TextView::TextView(Engine::BaseEngine& e)
+UI::TextView::TextView(Engine::GameEngine& e)
     : View(e)
     , m_Font("FONT_OLD_20_WHITE.FNT")
 {

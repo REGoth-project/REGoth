@@ -10,7 +10,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace UI
@@ -18,7 +18,7 @@ namespace UI
     class zFont
     {
     public:
-        zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo);
+        zFont(Engine::GameEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo);
         ~zFont();
 
         struct Glyph
@@ -113,13 +113,13 @@ namespace UI
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
     };
 
     class zFontCache
     {
     public:
-        zFontCache(Engine::BaseEngine& e);
+        zFontCache(Engine::GameEngine& e);
 
         /**
          * Tries to get a font from cache. If not already loaded, loads it.
@@ -132,7 +132,7 @@ namespace UI
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
 
         /**
          * Map of already loaded fonts
