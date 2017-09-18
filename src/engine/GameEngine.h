@@ -8,6 +8,18 @@
 #include <logic/Console.h>
 #include <render/RenderSystem.h>
 
+namespace UI
+{
+    class Hud;
+    class zFont;
+    class zFontCache;
+}
+
+namespace Audio
+{
+    class AudioEngine;
+}
+
 namespace Engine
 {
     class GameEngine : public BaseEngine

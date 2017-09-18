@@ -1,25 +1,12 @@
 #pragma once
 #include "World.h"
 #include <bx/commandline.h>
-#include <engine/GameClock.h>
 #include <engine/World.h>
 #include <logic/SavegameManager.h>
 #include <memory/StaticReferencedAllocator.h>
 #include <ui/View.h>
 #include <vdfs/fileIndex.h>
 #include <utils/cli.h>
-
-namespace UI
-{
-    class Hud;
-    class zFont;
-    class zFontCache;
-}
-
-namespace Audio
-{
-    class AudioEngine;
-}
 
 namespace Flags
 {
@@ -79,7 +66,7 @@ namespace Engine
         /**
          * @return Basic gametype this is. Needed for sky configuration, for example
          */
-        Daedalus::GameType getBasicGameType() { return m_BasicGameType; };
+        Daedalus::GameType getBasicGameType() { return m_BasicGameType; }
         /**
          * @return Basic gametype this is. Needed for sky configuration, for example
          */
@@ -123,9 +110,9 @@ namespace Engine
         /**
          * increase the time, which the current frame should not treat as elapsed
          */
-        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
-        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
-        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
+        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; }
+        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; }
+        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; }
 
         /**
          * Called when a world was added
