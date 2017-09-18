@@ -1,10 +1,8 @@
 #pragma once
-#include "World.h"
 #include <bx/commandline.h>
 #include <engine/World.h>
 #include <logic/SavegameManager.h>
 #include <memory/StaticReferencedAllocator.h>
-#include <ui/View.h>
 #include <vdfs/fileIndex.h>
 #include <utils/cli.h>
 
@@ -26,8 +24,6 @@ namespace Flags
 
 namespace Engine
 {
-    class GameSession;
-    class AsyncAction;
     const int MAX_NUM_WORLDS = 4;
 
     enum class ExecutionPolicy
@@ -36,6 +32,10 @@ namespace Engine
         NewThread
     };
 
+    /**
+     * @brief The BaseEngine class
+     * Covering start parameters and archive loading
+     */
     class BaseEngine
     {
     public:
@@ -94,7 +94,8 @@ namespace Engine
          * @param path New path
          */
         void setContentBasePath(const std::string& path) { m_ContentBasePath = path; }
-        /*+
+
+        /**
          * @return The path where the engine is looking for content files
          */
         const std::string& getContentBasePath() { return m_ContentBasePath; }
@@ -111,12 +112,21 @@ namespace Engine
          * increase the time, which the current frame should not treat as elapsed
          */
         void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; }
+
+        /**
+         * @return The excluded frame time, which is not treated as elapsed.
+         */
         int64_t getExludedFrameTime() { return m_ExcludedFrameTime; }
+
+        /**
+         * Resets the excluded frame time.
+         */
         void resetExludedFrameTime() { m_ExcludedFrameTime = 0; }
 
         /**
          * Called when a world was added
-         * TODO onWorld... should be protected, but currently need to call this function from GameSession
+         * TODO onWorld... should be protected, but currently there is a need to call
+         * this function from GameSession.
          */
         virtual void onWorldCreated(Handle::WorldHandle world);
         virtual void onWorldRemoved(Handle::WorldHandle world){}

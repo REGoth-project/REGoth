@@ -75,8 +75,36 @@ void BaseEngine::initEngine(int argc, char** argv)
         m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
 
     m_Args.startNewGame = Flags::startNewGame.isSet();
+}
 
+void BaseEngine::onWorldCreated(Handle::WorldHandle world)
+{
+}
 
+World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
+{
+    return h.get();
+}
+
+BaseEngine::EngineArgs BaseEngine::getEngineArgs()
+{
+    return m_Args;
+}
+
+bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
+{
+    json j;
+    world.get().exportWorld(j);
+
+    // Save
+    std::ofstream f(file);
+    if (!f.is_open())
+        return false;
+
+    f << Utils::iso_8859_1_to_utf8(j.dump(4));
+    f.close();
+
+    return true;
 }
 
 void BaseEngine::loadArchives()
@@ -90,18 +118,18 @@ void BaseEngine::loadArchives()
     //m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
 
     /*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
-	m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
-	m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures.VDF");
-	m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
+    m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
+    m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
+    m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
+    m_FileIndex.loadVDF("vdf/g1/sound.VDF");
+    m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
+    m_FileIndex.loadVDF("vdf/g1/speech.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures.VDF");
+    m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
 
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
@@ -137,36 +165,6 @@ void BaseEngine::loadArchives()
     {
         m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
-}
-
-void BaseEngine::onWorldCreated(Handle::WorldHandle world)
-{
-}
-
-World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
-{
-    return h.get();
-}
-
-BaseEngine::EngineArgs BaseEngine::getEngineArgs()
-{
-    return m_Args;
-}
-
-bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
-{
-    json j;
-    world.get().exportWorld(j);
-
-    // Save
-    std::ofstream f(file);
-    if (!f.is_open())
-        return false;
-
-    f << Utils::iso_8859_1_to_utf8(j.dump(4));
-    f.close();
-
-    return true;
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

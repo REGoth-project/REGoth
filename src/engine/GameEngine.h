@@ -1,12 +1,13 @@
 #pragma once
-#include "BaseEngine.h"
-#include "GameSession.h"
-#include "GameClock.h"
 #include <future>
-#include "Input.h"
+#include <engine/BaseEngine.h>
+#include <engine/GameSession.h>
+#include <engine/GameClock.h>
+#include <engine/Input.h>
 #include <logic/CameraController.h>
 #include <logic/Console.h>
 #include <render/RenderSystem.h>
+#include <ui/View.h>
 
 namespace UI
 {
@@ -22,6 +23,9 @@ namespace Audio
 
 namespace Engine
 {
+    class GameSession;
+    class AsyncAction;
+
     class GameEngine : public BaseEngine
     {
     public:
