@@ -23,6 +23,7 @@ namespace Audio
 namespace Engine
 {
     class GameSession;
+    class GameClock;
     class AsyncAction;
 
     class GameEngine : public BaseEngine

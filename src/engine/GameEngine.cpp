@@ -5,6 +5,7 @@
 #include "GameEngine.h"
 #include <engine/GameSession.h>
 #include <engine/AsyncAction.h>
+#include <engine/GameClock.h>
 #include <audio/AudioEngine.h>
 #include <common.h>
 #include <bx/commandline.h>
