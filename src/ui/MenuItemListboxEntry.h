@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <ui/MenuItem.h>
 
 namespace UI
@@ -16,7 +16,7 @@ namespace UI
         class MenuItemListboxEntry : public MenuItemText
         {
         public:
-            MenuItemListboxEntry(Engine::BaseEngine& e, Menu& baseMenu,
+            MenuItemListboxEntry(Engine::GameEngine& e, Menu& baseMenu,
                                  const Daedalus::GameState::MenuItemHandle& scriptHandle,
                                  const std::string& topic_name,
                                  const Daedalus::GameState::LogTopic& topic);

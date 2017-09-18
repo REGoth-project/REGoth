@@ -18,7 +18,7 @@ namespace UI
         class MenuItemScrollableText : public MenuItemText
         {
         public:
-            MenuItemScrollableText(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
+            MenuItemScrollableText(Engine::GameEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
 
             /**
              * Updates/draws the UI-Views

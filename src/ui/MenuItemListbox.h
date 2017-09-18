@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <ui/MenuItemListboxEntry.h>
 
 namespace UI
@@ -16,7 +16,7 @@ namespace UI
         class MenuItemListbox : public MenuItem
         {
         public:
-            MenuItemListbox(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
+            MenuItemListbox(Engine::GameEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
 
             /**
              * Updates/draws the UI-Views

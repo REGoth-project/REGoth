@@ -11,7 +11,7 @@ namespace UI
 {
     class Menu_Log : public Menu
     {
-        Menu_Log(Engine::BaseEngine& e);
+        Menu_Log(Engine::GameEngine& e);
 
     public:
         enum EMenuLogStatus
@@ -31,7 +31,7 @@ namespace UI
          * Creates an instance of this class and appends it to the root UI-View
          * @return Instance of the class. Don't forget to delete!
          */
-        static Menu_Log* create(Engine::BaseEngine& e);
+        static Menu_Log* create(Engine::GameEngine& e);
 
     private:
         /**
