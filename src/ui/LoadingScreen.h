@@ -13,7 +13,7 @@ namespace UI
     class LoadingScreen : public ImageView
     {
     public:
-        LoadingScreen(Engine::BaseEngine& e);
+        LoadingScreen(Engine::GameEngine& e);
         ~LoadingScreen();
 
         /**

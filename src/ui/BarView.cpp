@@ -5,12 +5,12 @@
 #include "BarView.h"
 #include "ImageView.h"
 #include <content/Texture.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <imgui/imgui.h>
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
-UI::BarView::BarView(Engine::BaseEngine& e)
+UI::BarView::BarView(Engine::GameEngine& e)
     : View(e)
 {
     m_Value = 1.0f;

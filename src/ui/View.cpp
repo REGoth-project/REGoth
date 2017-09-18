@@ -5,7 +5,7 @@
 #include "View.h"
 #include "zFont.h"
 #include <assert.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <handle/HandleDef.h>
 #include <imgui/imgui.h>
 
@@ -101,7 +101,7 @@ namespace ViewUtil
     }
 }
 
-View::View(Engine::BaseEngine& e)
+View::View(Engine::GameEngine& e)
     : m_Engine(e)
 {
     assert(e.isMainThread());

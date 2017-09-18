@@ -10,7 +10,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace Meshes
@@ -37,7 +37,7 @@ namespace Meshes
     class StaticMeshAllocator : public GenericMeshAllocator
     {
     public:
-        StaticMeshAllocator(Engine::BaseEngine& engine);
+        StaticMeshAllocator(Engine::GameEngine& engine);
         virtual ~StaticMeshAllocator();
 
         /**
@@ -88,7 +88,7 @@ namespace Meshes
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
 
         /**
          * Rough estimation about how much memory the loaded textures need on the GPU

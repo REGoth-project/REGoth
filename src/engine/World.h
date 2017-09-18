@@ -33,14 +33,14 @@ namespace ZenLoad
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace World
 {
     struct WorldAllocators
     {
-        WorldAllocators(Engine::BaseEngine& engine)
+        WorldAllocators(Engine::GameEngine& engine)
             : m_LevelTextureAllocator(engine)
             , m_LevelSkeletalMeshAllocator(engine)
             , m_LevelStaticMeshAllocator(engine)
@@ -82,7 +82,7 @@ namespace World
     class WorldInstance : public Handle::HandleTypeDescriptor<Handle::WorldHandle>
     {
     public:
-        WorldInstance(Engine::BaseEngine& engine);
+        WorldInstance(Engine::GameEngine& engine);
         ~WorldInstance();
 
         /**
@@ -235,7 +235,7 @@ namespace World
         {
             return Handle::WorldHandle(this);
         }
-        Engine::BaseEngine* getEngine()
+        Engine::GameEngine* getEngine()
         {
             return m_pEngine;
         }
@@ -391,7 +391,7 @@ namespace World
         /**
          * Engine-instance
          */
-        Engine::BaseEngine* m_pEngine;
+        Engine::GameEngine* m_pEngine;
 
         /**
          * Scripting-Engine of this world

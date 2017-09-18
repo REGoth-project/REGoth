@@ -12,7 +12,7 @@ namespace UI
 {
     class Menu_Main : public Menu
     {
-        Menu_Main(Engine::BaseEngine& e);
+        Menu_Main(Engine::GameEngine& e);
 
     public:
         /**
@@ -25,7 +25,7 @@ namespace UI
          * Creates an instance of this class and appends it to the root UI-View
          * @return Instance of the class. Don't forget to delete!
          */
-        static Menu_Main* create(Engine::BaseEngine& e);
+        static Menu_Main* create(Engine::GameEngine& e);
 
         /**
          * @return the gametype of the Menu's VM (based on the existence of Gothic 2 specific symbols)

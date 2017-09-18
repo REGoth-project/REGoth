@@ -5,8 +5,8 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "BaseEngine.h"
 #include "GameClock.h"
+#include "GameEngine.h"
 #include "World.h"
 #include <handle/HandleDef.h>
 #include <json/json.hpp>
@@ -16,7 +16,7 @@ namespace Engine
     class GameSession
     {
     public:
-        GameSession(BaseEngine& engine);
+        GameSession(GameEngine& engine);
 
         /**
          * Cleans current session
@@ -157,8 +157,8 @@ namespace Engine
         std::vector<Handle::WorldHandle> m_Worlds;
 
         /**
-         * reference to base engine
+         * reference to game engine
          */
-        BaseEngine& m_Engine;
+        GameEngine& m_Engine;
     };
 }

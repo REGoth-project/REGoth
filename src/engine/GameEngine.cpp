@@ -3,12 +3,18 @@
 //
 
 #include "GameEngine.h"
+#include "GameSession.h"
+#include "audio/AudioEngine.h"
+#include "AsyncAction.h"
 #include <common.h>
 #include <bx/commandline.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
 #include <entry/input.h>
 #include <logic/CameraController.h>
+#include <ui/Hud.h>
+#include <ui/LoadingScreen.h>
+#include <ui/zFont.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
 #include <utils/logger.h>
@@ -19,16 +25,38 @@ const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine()
     : m_DefaultRenderSystem(*this)
+    , m_RootUIView(*this)
+    , m_EngineTextureAlloc(*this)
+    , m_MainThreadID(std::this_thread::get_id())
+    , m_Console(*this)
 {
+    m_pHUD = nullptr;
+    m_pFontCache = nullptr;
+    resetSession();
 }
 
 GameEngine::~GameEngine()
 {
+    getRootUIView().removeChild(m_pHUD);
+    delete m_AudioEngine;
+    delete m_pHUD;
+    delete m_pFontCache;
 }
 
 void GameEngine::initEngine(int argc, char** argv)
 {
     BaseEngine::initEngine(argc, argv);
+
+    std::string snd_device;
+    if (Flags::sndDevice.isSet())
+        snd_device = Flags::sndDevice.getParam(0);
+
+    m_AudioEngine = new Audio::AudioEngine(snd_device);
+
+    // Init HUD
+    m_pFontCache = new UI::zFontCache(*this);
+    m_pHUD = new UI::Hud(*this);
+    getRootUIView().addChild(m_pHUD);
 
     bx::CommandLine cmdLine(argc, (const char**)argv);
     const char* value = nullptr;
@@ -49,6 +77,11 @@ void GameEngine::initEngine(int argc, char** argv)
                 m_Args.testVisual += "S";
         }
     }
+}
+
+void GameEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
+{
+    onFrameUpdate(dt * getSession().getGameClock().getGameEngineSpeedFactor(), width, height);
 }
 
 void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
@@ -72,7 +105,7 @@ void GameEngine::onFrameUpdate(double dt, uint16_t width, uint16_t height)
         }
         else
         {
-            getGameClock().update(dt);
+            getSession().getGameClock().update(dt);
             for (auto& s : getSession().getWorldInstances())
             {
                 // Update main-world after every other world, since the camera is in there
@@ -124,6 +157,79 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         Render::drawWorld(getMainWorld().get(), m_DefaultRenderSystem.getConfig(), m_DefaultRenderSystem);
 
     //bgfx::frame();
+}
+
+void GameEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
+{
+    auto wrappedJob = [job](Engine::GameEngine* engine) -> bool {
+        job(engine);
+        return true;
+    };
+    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
+}
+
+void GameEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
+{
+    if (!forceQueue && isMainThread())
+    {
+        // execute right away
+        bool success = job(this);
+        if (success)
+            return;
+        // else job returned false -> queue the job
+    }
+    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
+    m_MessageQueue.emplace_back(AsyncAction{job});
+}
+
+void GameEngine::processMessageQueue()
+{
+    m_MessageQueueMutex.lock();
+    auto current = m_MessageQueue.begin();
+    while (current != m_MessageQueue.end())
+    {
+        auto& action = *current;
+        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
+        m_MessageQueueMutex.unlock();
+        bool finished = action.run(*this);
+        m_MessageQueueMutex.lock();
+        if (finished)
+            current = m_MessageQueue.erase(current);  // erase returns next iterator
+        else
+            std::advance(current, 1);
+    }
+    m_MessageQueueMutex.unlock();
+}
+
+bool GameEngine::isMainThread()
+{
+    return std::this_thread::get_id() == m_MainThreadID;
+}
+
+void GameEngine::resetSession()
+{
+    // GameSession's destructor will clean up worlds
+    m_Session = std::make_unique<GameSession>(*this);
+}
+
+Handle::WorldHandle GameEngine::getMainWorld()
+{
+    return getSession().getMainWorld();
+}
+
+void GameEngine::setPaused(bool paused)
+{
+    if (paused != m_Paused)
+    {
+        if (getMainWorld().isValid())
+        {
+            if (paused)
+                getMainWorld().get().getAudioWorld().pauseSounds();
+            else
+                getMainWorld().get().getAudioWorld().continueSounds();
+        }
+        m_Paused = paused;
+    }
 }
 
 void GameEngine::onWorldCreated(Handle::WorldHandle world)

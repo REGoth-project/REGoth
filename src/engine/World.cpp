@@ -12,7 +12,7 @@
 #include <debugdraw/debugdraw.h>
 #include <engine/BaseEngine.h>
 #include <engine/GameEngine.h>
-#include <engine/GameEngine.h>
+#include <engine/GameSession.h>
 #include <engine/World.h>
 #include <entry/input.h>
 #include <handle/HandleDef.h>
@@ -42,7 +42,7 @@ const LoadSection LOAD_SECTION_COLLISION = {40, 60, "Generating world collision"
 const LoadSection LOAD_SECTION_VOBS = {60, 80, "Loading objects"};
 const LoadSection LOAD_SECTION_RUNSCRIPTS = {80, 100, "Running startup scripts"};
 
-WorldInstance::WorldInstance(Engine::BaseEngine& engine)
+WorldInstance::WorldInstance(Engine::GameEngine& engine)
     : m_pEngine(&engine)
     , m_WorldMesh(*this)
     , m_ScriptEngine(*this)
@@ -82,7 +82,7 @@ bool WorldInstance::init(const std::string& zen,
                          const json& dialogManager)
 {
     m_ZenFile = zen;
-    Engine::BaseEngine& engine = *m_pEngine;
+    Engine::GameEngine& engine = *m_pEngine;
 
     if (!m_AnimationLibrary.loadAnimations())
         LogError() << "failed to load animations!";
@@ -664,7 +664,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     m_ScriptEngine.onFrameEnd();
 
     // Update hud
-    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
+    m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getSession().getGameClock().getDateTimeFormatted());
 
     m_BspTree.debugDraw();
 }
@@ -738,7 +738,7 @@ WorldInstance::getFreepointsInRange(const Math::float3& center, float distance, 
             Components::SpotComponent& sp = getEntity<Components::SpotComponent>(fp);
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
 
-            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
+            if ((!sp.m_UsingEntity.isValid() || sp.m_UseEndTime < getEngine()->getSession().getGameClock().getTime()) && (!inst.isValid() || sp.m_UsingEntity != inst))
             {
                 float fpd2 = (center - pos.m_WorldMatrix.Translation()).lengthSquared();
                 if (fpd2 < distance2)

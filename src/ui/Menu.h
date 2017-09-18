@@ -21,7 +21,7 @@ namespace UI
     class Menu : public View
     {
     public:
-        Menu(Engine::BaseEngine& e);
+        Menu(Engine::GameEngine& e);
         ~Menu();
 
         /**

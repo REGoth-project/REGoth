@@ -14,7 +14,8 @@
 #include <logic/ScriptEngine.h>
 #include <utils/logger.h>
 
-#include "engine/BaseEngine.h"
+#include "engine/GameEngine.h"
+#include "engine/GameSession.h"
 
 #include "AudioEngine.h"
 #include "AudioWorld.h"
@@ -24,7 +25,7 @@ using namespace Audio;
 
 namespace World
 {
-    AudioWorld::AudioWorld(Engine::BaseEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
+    AudioWorld::AudioWorld(Engine::GameEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
         : m_Engine(engine)
         , m_VDFSIndex(vdfidx)
     {
@@ -175,7 +176,7 @@ namespace World
 
         LogInfo() << "play sound " << snd.sfx.file << " vol " << snd.sfx.vol;
 
-        alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameClock().getGameEngineSpeedFactor());
+        alSourcef(s.m_Handle, AL_PITCH, m_Engine.getSession().getGameClock().getGameEngineSpeedFactor());
         alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);
         alSource3f(s.m_Handle, AL_POSITION, position.x, position.y, position.z);
         alSource3f(s.m_Handle, AL_VELOCITY, 0, 0, 0);

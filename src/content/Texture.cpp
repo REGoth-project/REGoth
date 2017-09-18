@@ -1,6 +1,6 @@
 #include "Texture.h"
 #include <bgfx/bgfx.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 #include <vdfs/fileIndex.h>
 #include <zenload/ztex2dds.h>
@@ -12,7 +12,7 @@ typedef unsigned char stbi_uc;
 extern "C" stbi_uc* stbi_load_from_memory(stbi_uc const* _buffer, int _len, int* _x, int* _y, int* _comp, int _req_comp);
 extern "C" void stbi_image_free(void* _ptr);
 
-TextureAllocator::TextureAllocator(Engine::BaseEngine& engine)
+TextureAllocator::TextureAllocator(Engine::GameEngine& engine)
     : m_Engine(engine)
 {
 }
@@ -161,7 +161,7 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         h = loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
     }
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.executeInMainThread([this, h](Engine::GameEngine* pEngine) {
         finalizeLoad(h);
     });
 

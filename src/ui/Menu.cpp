@@ -9,11 +9,11 @@
 #include "TextView.h"
 #include <ZenLib/utils/logger.h>
 #include <daedalus/DaedalusVM.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <render/RenderSystem.h>
 #include <utils/Utils.h>
 
-UI::Menu::Menu(Engine::BaseEngine& e)
+UI::Menu::Menu(Engine::GameEngine& e)
     : View(e)
     , m_pVM(nullptr)
 {

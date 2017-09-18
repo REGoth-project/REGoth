@@ -3,11 +3,11 @@
 //
 
 #include "AsyncAction.h"
-#include "BaseEngine.h"
+#include "GameEngine.h"
 
 using namespace Engine;
 
-bool Engine::AsyncAction::run(Engine::BaseEngine& engine)
+bool Engine::AsyncAction::run(Engine::GameEngine& engine)
 {
     return m_Job(&engine);
 }

@@ -83,7 +83,7 @@ namespace Logic
             }
         };
 
-        Console(Engine::BaseEngine& e);
+        Console(Engine::GameEngine& e);
 
         ~Console();
 
@@ -206,6 +206,6 @@ namespace Logic
          */
         bool m_Open;
 
-        Engine::BaseEngine& m_BaseEngine;
+        Engine::GameEngine& m_GameEngine;
     };
 }

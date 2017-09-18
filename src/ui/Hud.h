@@ -1,7 +1,7 @@
 #pragma once
 #include "Menu.h"
 #include "View.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <logic/Console.h>
 
 // HACK: Work around windows.h messing this up with its define
@@ -11,7 +11,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace UI
@@ -30,7 +30,7 @@ namespace UI
     class Hud : public View
     {
     public:
-        Hud(Engine::BaseEngine& e);
+        Hud(Engine::GameEngine& e);
         ~Hud();
 
         /**

@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <ZenLib/zenload/zCMaterial.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <utils/logger.h>
 #include <vdfs/fileIndex.h>

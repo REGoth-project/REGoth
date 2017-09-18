@@ -14,7 +14,7 @@ namespace UI
     class DialogBox : public View
     {
     public:
-        DialogBox(Engine::BaseEngine& e);
+        DialogBox(Engine::GameEngine& e);
 
         ~DialogBox();
 

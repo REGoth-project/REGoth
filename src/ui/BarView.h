@@ -12,7 +12,7 @@ namespace UI
     class BarView : public View
     {
     public:
-        BarView(Engine::BaseEngine& e);
+        BarView(Engine::GameEngine& e);
         ~BarView();
 
         /**

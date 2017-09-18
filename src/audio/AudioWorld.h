@@ -20,7 +20,7 @@ namespace Audio
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace Daedalus
@@ -50,7 +50,7 @@ namespace World
         friend class Audio::AudioEngine;
 
     public:
-        AudioWorld(Engine::BaseEngine& engine, Audio::AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx);
+        AudioWorld(Engine::GameEngine& engine, Audio::AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx);
 
         virtual ~AudioWorld();
 
@@ -118,7 +118,7 @@ namespace World
         void continueSounds();
 
     private:
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
 
         /**
          * Pointer to a vdfs-index to work on (can be nullptr)

@@ -1,13 +1,13 @@
 #include "Menu_Load.h"
 #include "Hud.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <logic/SavegameManager.h>
 #include <utils/Utils.h>
 #include <utils/logger.h>
 
 using namespace UI;
 
-Menu_Load::Menu_Load(Engine::BaseEngine& e)
+Menu_Load::Menu_Load(Engine::GameEngine& e)
     : Menu(e)
 {
 }
@@ -16,7 +16,7 @@ Menu_Load::~Menu_Load()
 {
 }
 
-Menu_Load* Menu_Load::create(Engine::BaseEngine& e)
+Menu_Load* Menu_Load::create(Engine::GameEngine& e)
 {
     Menu_Load* s = new Menu_Load(e);
     s->initializeInstance("MENU_SAVEGAME_LOAD");
