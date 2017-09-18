@@ -5,8 +5,9 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "GameEngine.h"
-#include "World.h"
+#include <engine/GameClock.h>
+#include <engine/GameEngine.h>
+#include <engine/World.h>
 #include <handle/HandleDef.h>
 #include <logic/LogManager.h>
 #include <json/json.hpp>
@@ -59,6 +60,11 @@ namespace Engine
         {
             return m_MainWorld;
         }
+
+        /**
+         * @return GameClock
+         */
+        GameClock& getGameClock() { return m_GameClock; }
 
         /**
          * @return const reference to the list of unqiue pointers to loaded worlds
@@ -162,5 +168,10 @@ namespace Engine
          * reference to game engine
          */
         GameEngine& m_Engine;
+
+        /**
+         * Gameclock
+         */
+        GameClock m_GameClock;
     };
 }

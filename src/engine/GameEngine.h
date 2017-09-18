@@ -2,7 +2,6 @@
 #include <future>
 #include <engine/BaseEngine.h>
 #include <engine/GameSession.h>
-#include <engine/GameClock.h>
 #include <engine/Input.h>
 #include <logic/CameraController.h>
 #include <logic/Console.h>
@@ -164,11 +163,6 @@ namespace Engine
          * because it has a member variable reference
          */
         std::unique_ptr<GameSession> m_Session;
-
-        /**
-         * Gameclock
-         */
-        GameClock m_GameClock;
 
         /**
          * Base UI-View
