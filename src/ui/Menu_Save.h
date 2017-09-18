@@ -6,14 +6,14 @@ namespace UI
     class Menu_Save : public Menu
     {
     public:
-        Menu_Save(Engine::BaseEngine& e);
+        Menu_Save(Engine::GameEngine& e);
         ~Menu_Save();
 
         /**
          * Creates an instance of this class and appends it to the root UI-View
          * @return Instance of the class. Don't forget to delete!
          */
-        static Menu_Save* create(Engine::BaseEngine& e);
+        static Menu_Save* create(Engine::GameEngine& e);
 
         /**
          * Gathers all available savegames and writes their names to the slot-labels

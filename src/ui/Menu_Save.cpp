@@ -3,13 +3,13 @@
 #include "MenuItem.h"
 #include "Menu_Main.h"
 #include <daedalus/DaedalusVM.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <logic/SavegameManager.h>
 
 using namespace UI;
 
-Menu_Save::Menu_Save(Engine::BaseEngine& e)
+Menu_Save::Menu_Save(Engine::GameEngine& e)
     : Menu(e)
 {
 }
@@ -18,7 +18,7 @@ Menu_Save::~Menu_Save()
 {
 }
 
-Menu_Save* Menu_Save::create(Engine::BaseEngine& e)
+Menu_Save* Menu_Save::create(Engine::GameEngine& e)
 {
     Menu_Save* s = new Menu_Save(e);
     s->initializeInstance("MENU_SAVEGAME_SAVE");
