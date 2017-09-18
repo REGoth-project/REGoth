@@ -309,25 +309,56 @@ void GameSession::setupKeyBindings()
         }
     });
 
-    std::vector<ActionType> playerActions = {ActionType::PlayerDrawWeaponMelee,
-                                             ActionType::PlayerForward,
-                                             ActionType::PlayerBackward,
-                                             ActionType::PlayerTurnLeft,
-                                             ActionType::PlayerTurnRight,
-                                             ActionType::PlayerStrafeLeft,
-                                             ActionType::PlayerStrafeRight,
-                                             ActionType::DebugMoveSpeed,
-                                             ActionType::DebugMoveSpeed2,
-                                             ActionType::PlayerAction,
-                                             ActionType::PlayerRotate};
-
-    for (auto action : playerActions)
     {
-        Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float intensity) {
-            auto vob = getPlayerVob();
-            if (!vob.isValid())
-                return;
-            vob.playerController->onAction(action, triggered, intensity);
+        // player actions
+        std::vector<ActionType> playerActions = {ActionType::PlayerDrawWeaponMelee,
+                                                 ActionType::PlayerForward,
+                                                 ActionType::PlayerBackward,
+                                                 ActionType::PlayerTurnLeft,
+                                                 ActionType::PlayerTurnRight,
+                                                 ActionType::PlayerStrafeLeft,
+                                                 ActionType::PlayerStrafeRight,
+                                                 ActionType::DebugMoveSpeed,
+                                                 ActionType::DebugMoveSpeed2,
+                                                 ActionType::PlayerAction,
+                                                 ActionType::PlayerRotate};
+
+        for (auto action : playerActions)
+        {
+            Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float intensity) {
+                auto vob = getPlayerVob();
+                if (!vob.isValid())
+                    return;
+                vob.playerController->onAction(action, triggered, intensity);
+            });
+        }
+    }
+
+    {
+        // camera change actions
+        using ECameraMode = Logic::CameraController::ECameraMode;
+        std::vector<std::pair<Engine::ActionType, ECameraMode>> cameraModes = {
+            {Engine::ActionType::CameraFirstPerson, ECameraMode::FirstPerson},
+            {Engine::ActionType::CameraThirdPerson, ECameraMode::ThirdPerson},
+            {Engine::ActionType::CameraFree, ECameraMode::Free},
+            {Engine::ActionType::CameraViewer, ECameraMode::Viewer},
+        };
+
+        for (auto cameraMode : cameraModes)
+        {
+            Engine::Input::RegisterAction(cameraMode.first, [baseEngine, mode = cameraMode.second](bool triggered, float) {
+                if (triggered && baseEngine->getMainWorld().isValid())
+                {
+                    baseEngine->getMainWorld().get().getCameraController()->setCameraMode(mode);
+                }
+            });
+        }
+
+        Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [baseEngine](bool triggered, float intensity) {
+            if (baseEngine->getMainWorld().isValid())
+            {
+                baseEngine->getMainWorld().get().getCameraController()->setDebugMoveSpeed(triggered ? 5.0f : 1.0f);
+            }
         });
     }
 }

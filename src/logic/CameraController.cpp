@@ -17,7 +17,7 @@ const float CAMERA_SMOOTHING = 10.0f;
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
     , m_Active(true)
-    , m_CameraMode(ECameraMode::FirstPerson)
+    , m_CameraMode(ECameraMode::ThirdPerson)
 {
     memset(&m_CameraSettings, 0, sizeof(m_CameraSettings));
 
@@ -49,16 +49,16 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         auto& settings = m_CameraSettings.floatingCameraSettings;
         auto& firstPerson = m_CameraSettings.firstPersonCameraSettings;
 
-        firstPerson.actionMoveForward = Input::RegisterAction(ActionType::FirstPersonMoveForward, [&settings](bool, float intensity) {
+        firstPerson.actionMoveForward = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonMoveForward, [&settings](bool, float intensity) {
             settings.position += 0.1f * intensity * settings.forward;
         });
-        firstPerson.actionMoveRight = Input::RegisterAction(ActionType::FirstPersonMoveRight, [&settings](bool, float intensity) {
+        firstPerson.actionMoveRight = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonMoveRight, [&settings](bool, float intensity) {
             settings.position -= 0.1f * intensity * settings.right;
         });
-        firstPerson.actionLookHorizontal = Input::RegisterAction(ActionType::FirstPersonLookHorizontal, [&settings](bool, float intensity) {
+        firstPerson.actionLookHorizontal = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookHorizontal, [&settings](bool, float intensity) {
             settings.yaw += 0.02f * intensity;
         });
-        firstPerson.actionLookVertical = Input::RegisterAction(ActionType::FirstPersonLookVertical, [&settings](bool, float intensity) {
+        firstPerson.actionLookVertical = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
         });
     }
@@ -68,7 +68,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         using namespace Engine;
         auto& settings = m_CameraSettings.thirdPersonCameraSettings;
 
-        settings.actionWheel = Input::RegisterAction(ActionType::ViewerMouseWheel, [&settings](bool triggered, float intensity) {
+        settings.actionWheel = registerBinding(ECameraMode::ThirdPerson, ActionType::ThirdPersonMouseWheel, [&settings](bool triggered, float intensity) {
             if (triggered)
             {
                 auto& zoom = settings.zoomExponent;
@@ -76,14 +76,14 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
             }
         });
 
-        settings.actionLookVertical = Input::RegisterAction(ActionType::ThirdPersonLookVertical, [&settings](bool, float intensity) {
+        settings.actionLookVertical = registerBinding(ECameraMode::ThirdPerson, ActionType::ThirdPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
             auto max = Math::PI / 2 - settings.cameraElevation;
             constexpr auto epsilon = 0.05f;
             settings.pitch = Math::clamp(settings.pitch, -Math::PI / 2 * (1 - epsilon), max);
         });
 
-        settings.actionLookHorizontal = Input::RegisterAction(ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
+        settings.actionLookHorizontal = registerBinding(ECameraMode::ThirdPerson, ActionType::ThirdPersonLookHorizontal, [&settings](bool, float intensity) {
             settings.deltaPhi += 0.02f * intensity; // TODO window width influences this???
         });
     }
@@ -94,16 +94,16 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         auto& settings = m_CameraSettings.floatingCameraSettings;
         auto& free = m_CameraSettings.freeCameraSettings;
 
-        free.actionMoveForward = Input::RegisterAction(ActionType::FreeMoveForward, [&settings, this](bool, float intensity) {
+        free.actionMoveForward = registerBinding(ECameraMode::Free, ActionType::FreeMoveForward, [&settings, this](bool, float intensity) {
             settings.position += 0.07f * intensity * settings.forward * m_moveSpeedMultiplier;
         });
-        free.actionMoveRight = Input::RegisterAction(ActionType::FreeMoveRight, [&settings, this](bool, float intensity) {
+        free.actionMoveRight = registerBinding(ECameraMode::Free, ActionType::FreeMoveRight, [&settings, this](bool, float intensity) {
             settings.position -= 0.1f * intensity * settings.right * m_moveSpeedMultiplier;
         });
-        free.actionMoveUp = Input::RegisterAction(ActionType::FreeMoveUp, [&settings, this](bool, float intensity) {
+        free.actionMoveUp = registerBinding(ECameraMode::Free, ActionType::FreeMoveUp, [&settings, this](bool, float intensity) {
             settings.position += 0.1f * intensity * settings.up * m_moveSpeedMultiplier;
         });
-        free.actionLookHorizontal = Input::RegisterAction(ActionType::FreeLookHorizontal, [&settings, this](bool, float intensity) {
+        free.actionLookHorizontal = registerBinding(ECameraMode::Free, ActionType::FreeLookHorizontal, [&settings, this](bool, float intensity) {
             settings.yaw += 0.02f * intensity;
 
             // Rotate direction-vector, if wanted // TODO: Refractor
@@ -118,7 +118,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
                     m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
             }
         });
-        free.actionLookVertical = Input::RegisterAction(ActionType::FreeLookVertical, [&settings](bool, float intensity) {
+        free.actionLookVertical = registerBinding(ECameraMode::Free, ActionType::FreeLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
         });
     }
@@ -128,7 +128,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
         using namespace Engine;
         auto& settings = m_CameraSettings.viewerCameraSettings;
 
-        settings.actionViewHorizontal = Input::RegisterAction(ActionType::ViewerHorizontal, [&settings](bool, float intensity) {
+        settings.actionViewHorizontal = registerBinding(ECameraMode::Viewer, ActionType::ViewerHorizontal, [&settings](bool, float intensity) {
             if (settings.isRotateModifier)
             {
                 // Neither pan nor zoom activated, or both -> Rotate
@@ -138,7 +138,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
                     settings.lookAt -= 0.01 * settings.zoom * intensity * settings.right;
             }
         });
-        settings.actionViewVertical = Input::RegisterAction(ActionType::ViewerVertical, [&settings](bool, float intensity) {
+        settings.actionViewVertical = registerBinding(ECameraMode::Viewer, ActionType::ViewerVertical, [&settings](bool, float intensity) {
             if (settings.isRotateModifier)
             {
                 // Neither pan nor zoom activated, or both -> Rotate
@@ -154,16 +154,16 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
                 }
             }
         });
-        settings.actionPan = Input::RegisterAction(ActionType::ViewerPan, [&settings](bool triggered, float) {
+        settings.actionPan = registerBinding(ECameraMode::Viewer, ActionType::ViewerPan, [&settings](bool triggered, float) {
             settings.isPanModifier = triggered;
         });
-        settings.actionZoom = Input::RegisterAction(ActionType::ViewerZoom, [&settings](bool triggered, float) {
+        settings.actionZoom = registerBinding(ECameraMode::Viewer, ActionType::ViewerZoom, [&settings](bool triggered, float) {
             settings.isZoomModifier = triggered;
         });
-        settings.actionRotate = Input::RegisterAction(ActionType::ViewerRotate, [&settings](bool triggered, float) {
+        settings.actionRotate = registerBinding(ECameraMode::Viewer, ActionType::ViewerRotate, [&settings](bool triggered, float) {
             settings.isRotateModifier = triggered;
         });
-        settings.actionClick = Input::RegisterAction(ActionType::ViewerClick, [this, &settings](bool triggered, float) {
+        settings.actionClick = registerBinding(ECameraMode::Viewer, ActionType::ViewerClick, [this, &settings](bool triggered, float) {
             if (triggered)
             {
                 constexpr float maxRayLength = 1000.0f;
@@ -184,7 +184,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
                 }
             }
         });
-        settings.actionWheel = Input::RegisterAction(ActionType::ViewerMouseWheel, [&settings](bool triggered, float intensity) {
+        settings.actionWheel = registerBinding(ECameraMode::Viewer, ActionType::ViewerMouseWheel, [&settings](bool triggered, float intensity) {
             if (triggered)
             {
                 settings.zoom -= 3.0 * intensity;
@@ -196,26 +196,6 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
     // Disable all at first and wait until one is enabled.
     disableActions();
-    std::vector<std::pair<Engine::ActionType, ECameraMode>> cameraModes = {
-        {Engine::ActionType::CameraFirstPerson, ECameraMode::FirstPerson},
-        {Engine::ActionType::CameraThirdPerson, ECameraMode::ThirdPerson},
-        {Engine::ActionType::CameraFree, ECameraMode::Free},
-        {Engine::ActionType::CameraViewer, ECameraMode::Viewer},
-    };
-
-    for (auto cameraMode : cameraModes)
-    {
-        Engine::Input::RegisterAction(cameraMode.first, [this, mode = cameraMode.second](bool triggered, float) {
-            if (triggered)
-            {
-                setCameraMode(mode);
-            }
-        });
-    }
-
-    Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [this](bool triggered, float intensity) {
-        m_moveSpeedMultiplier = triggered ? 5.0f : 1.0f;
-    });
 }
 
 void Logic::CameraController::disableActions()
@@ -466,4 +446,22 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
     #ifndef NDEBUG
     Engine::Input::setMouseLock(false);
     #endif
+}
+
+void Logic::CameraController::clearBindings()
+{
+    for (const auto& camMode : m_KeyBindings)
+    {
+        for (const auto& pair : camMode.second)
+        {
+            Engine::Input::RemoveAction(pair.first, pair.second);
+        }
+    }
+    m_KeyBindings.clear();
+
+}
+
+Logic::CameraController::~CameraController()
+{
+    clearBindings();
 }

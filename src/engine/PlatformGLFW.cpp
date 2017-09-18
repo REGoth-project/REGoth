@@ -175,6 +175,7 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     // ThirdPerson Camera Controller
     bindMouseAxis(MouseAxis::CursorX, ActionType::ThirdPersonLookHorizontal, true, false);
     bindMouseAxis(MouseAxis::CursorY, ActionType::ThirdPersonLookVertical, true, false);
+    bindMouseAxis(MouseAxis::ScrollY, ActionType::ThirdPersonMouseWheel, false);
 
     // Free Camera Controller
 

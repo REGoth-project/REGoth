@@ -7,6 +7,8 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
+        ~CameraController();
+
         enum class ECameraMode
         {
             Free = 0,
@@ -59,12 +61,6 @@ namespace Logic
                 float cameraElevation;
                 // rotation around vertical axis (y) to be done on next camera update
                 float deltaPhi;
-                bool isFrontView() const
-                {
-                    const auto& angle = pitch;
-                    // if angle is between 90 and 270 degree
-                    return angle > Math::PI / 2 && angle < (3.0f / 2) * Math::PI;
-                }
             } thirdPersonCameraSettings;
 
             struct
@@ -147,7 +143,25 @@ namespace Logic
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
 
+        void setDebugMoveSpeed(float moveSpeedMultiplier) { m_moveSpeedMultiplier = moveSpeedMultiplier; }
+
     protected:
+        /**
+         * registers a binding
+         */
+        template <class Functor>
+        Engine::Action* registerBinding(ECameraMode cameraMode, Engine::ActionType actionType, Functor functor)
+        {
+            auto action = Engine::Input::RegisterAction(actionType, functor);
+            m_KeyBindings[cameraMode].push_back(std::make_pair(actionType, action));
+            return action;
+        }
+
+        /**
+         * clears all bindings for camera steering
+         */
+        void clearBindings();
+
         /**
          * Transforms the given yaw/pitch into the corresponding direction vectors
          * @return pair of (forward, right)
@@ -175,6 +189,11 @@ namespace Logic
          * Settings for the different camera modes
          */
         CameraSettings m_CameraSettings;
+
+        /**
+         * stored bindings
+         */
+        std::map<ECameraMode, std::vector<std::pair<Engine::ActionType, Engine::Action*>>> m_KeyBindings;
 
         /**
          * Current view-matrix

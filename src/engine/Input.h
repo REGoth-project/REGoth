@@ -31,6 +31,7 @@ namespace Engine
 
         ThirdPersonLookHorizontal,
         ThirdPersonLookVertical,
+        ThirdPersonMouseWheel,
 
         FreeMoveForward,
         FreeMoveRight,
