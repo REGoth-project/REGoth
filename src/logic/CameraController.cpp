@@ -463,4 +463,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             m_CameraSettings.thirdPersonCameraSettings.actionLookHorizontal->setEnabled(true);
             break;
     }
+    #ifndef NDEBUG
+    Engine::Input::setMouseLock(false);
+    #endif
 }
