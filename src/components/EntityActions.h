@@ -188,8 +188,15 @@ namespace Components
                                      F f)
         {
             std::tuple<ALL_COMPONENTS> t;
+            Components::EntityComponent entityComponent = alloc.getElement<Components::EntityComponent>(e);
+
+
             Utils::for_each_in_tuple(t, [&](auto& v) {
-                f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
+
+                if(Components::hasComponent<typename std::decay<decltype(v)>::type>(entityComponent))
+                {
+                    f(alloc.getElement<typename std::remove_reference<decltype(v)>::type>(e));
+                }
             });
         }
     }

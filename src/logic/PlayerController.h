@@ -7,6 +7,7 @@
 #include "NpcAIHandler.h"
 #include "NpcAnimationHandler.h"
 #include "NpcScriptState.h"
+#include "Pathfinder.h"
 #include <daedalus/DaedalusGameState.h>
 
 namespace UI
@@ -87,22 +88,9 @@ namespace Logic
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
         virtual EControllerType getControllerType() override { return EControllerType::PlayerController; }
-        /**
-         * Sets the daily routine for this.
-         * TODO: Add timing for these // TODO: Done, now remove this
-         *
-         * @param wps List of waypoints the NPC should visit, in order
-         */
-        void setDailyRoutine(const std::vector<size_t>& wps)
-        {
-            m_RoutineState.routineWaypoints = wps;
-        }
-        void addRoutineWaypoint(size_t wp)
-        {
-            m_RoutineState.routineWaypoints.push_back(wp);
-        }
 
         void setFollowTarget(Handle::EntityHandle e) { m_RoutineState.entityTarget = e; }
+
         /**
          * Called when the models visual changed
          */
@@ -137,19 +125,11 @@ namespace Logic
         void onDebugDraw() override;
 
         /**
-         * Lets the controller move the entity to the next routine target
-         */
-        void continueRoutine();
-
-        /**
          * Calculates a route and begins to move the NPC to the given waypoint
          */
-        void gotoWaypoint(size_t wp);
-
-        /**
-         * Recalculates the current route
-         */
-        void rebuildRoute();
+        void gotoWaypoint(World::Waynet::WaypointIndex wp);
+        void gotoVob(Handle::EntityHandle vob);
+        void gotoPosition(const Math::float3& position);
 
         /**
          * Stops going along the current route
@@ -482,27 +462,14 @@ namespace Logic
 
         /**
          * Moves the NPC to the next waypoint of the current path
-         * @return true, if the current paths destination was reached
          */
-        bool travelPath(float deltaTime);
+        void travelPath();
 
         /**
          * Current routine state
          */
         struct
         {
-            // Route-Waypoint index to got to
-            size_t routineTarget;
-
-            // If this is false, the NPC won't do it's routine after finishing moving to the current target
-            bool routineActive;
-
-            /**
-             * List of waypoints to move to on this AIs daily routine
-             * TODO: Implement timing for these
-             */
-            std::vector<size_t> routineWaypoints;
-
             /**
              * Target of where the NPC should keep trying to go to
              */
@@ -619,6 +586,9 @@ namespace Logic
          */
         NpcAIHandler m_AIHandler;
 
+        // Route-information
+        Pathfinder m_PathFinder;
+
         /**
          * refuse talk countdown
          */
@@ -643,6 +613,9 @@ namespace Logic
         // Turns of modifying the root postion from the animation
         bool m_NoAniRootPosHack;
         size_t m_LastAniRootPosUpdatedAniHash;
+
+        // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
+        Utils::Ticket<World::AudioWorld> m_MainNoiseSoundSlot;
 
         /**
          * Contstants

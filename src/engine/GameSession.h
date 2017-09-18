@@ -8,6 +8,7 @@
 #include "GameEngine.h"
 #include "World.h"
 #include <handle/HandleDef.h>
+#include <logic/LogManager.h>
 #include <json/json.hpp>
 
 namespace Engine
@@ -48,7 +49,9 @@ namespace Engine
 
         void setCurrentSlot(int index) { m_CurrentSlotIndex = index; }
         int getCurrentSlot() { return m_CurrentSlotIndex; }
+
         std::map<size_t, std::set<size_t>>& getKnownInfoMap() { return m_KnownInfos; };
+
         /**
          * @return data-access to the main world of this session
          */
@@ -61,6 +64,7 @@ namespace Engine
          * @return const reference to the list of unqiue pointers to loaded worlds
          */
         const std::list<std::unique_ptr<World::WorldInstance>>& getWorldInstances() { return m_WorldInstances; }
+
         /**
          * Sets the currently active world.
          * @param world
@@ -70,7 +74,8 @@ namespace Engine
         std::unique_ptr<World::WorldInstance> createWorld(const std::string& worldFile,
                                                           const json& worldJson = json(),
                                                           const json& scriptEngine = json(),
-                                                          const json& dialogManager = json());
+                                                          const json& dialogManager = json(),
+                                                          const json& logManager = json());
 
         Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
 
@@ -82,7 +87,8 @@ namespace Engine
         Handle::WorldHandle addWorld(const std::string& worldFile,
                                      const json& worldJson = json(),
                                      const json& scriptEngine = json(),
-                                     const json& dialogManager = json());
+                                     const json& dialogManager = json(),
+                                     const json& logManager = json());
 
         /**
          * Switch to world with the given name.
@@ -117,6 +123,8 @@ namespace Engine
          */
         void removeAllWorlds();
 
+        Logic::LogManager& getLogManager() { return m_LogManager; }
+
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;
 
@@ -129,6 +137,11 @@ namespace Engine
          * known infoInstances by npcInstances
          */
         std::map<size_t, std::set<size_t>> m_KnownInfos;
+
+        /**
+         * The log-manager
+         */
+        Logic::LogManager m_LogManager;
 
         /**
          * Currently active world instances

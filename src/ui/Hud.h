@@ -122,6 +122,7 @@ namespace UI
          * @return Whether a menu is currently active
          */
         bool isMenuActive() { return !m_MenuChain.empty(); }
+
     protected:
         /**
          * Deletes all menus stored in the m_MenusToDelete-list

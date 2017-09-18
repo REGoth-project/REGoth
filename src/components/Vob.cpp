@@ -19,20 +19,15 @@ Handle::EntityHandle Vob::constructVob(World::WorldInstance& world)
     Components::EntityComponent& entity = world.getEntity<Components::EntityComponent>(e);
 
     // Add components
-    Components::addComponent<Components::LogicComponent>(entity);
     Components::Actions::initComponent<Components::LogicComponent>(world.getComponentAllocator(), e);
 
-    Components::addComponent<Components::VisualComponent>(entity);
     Components::Actions::initComponent<Components::VisualComponent>(world.getComponentAllocator(), e);
 
-    Components::addComponent<Components::BBoxComponent>(entity);
     Components::Actions::initComponent<Components::BBoxComponent>(world.getComponentAllocator(), e);
 
-    Components::addComponent<Components::ObjectComponent>(entity);
     Components::ObjectComponent& obj = Components::Actions::initComponent<Components::ObjectComponent>(world.getComponentAllocator(), e);
     obj.m_Type = Components::ObjectComponent::Other;
 
-    Components::addComponent<Components::PositionComponent>(entity);
     Components::Actions::initComponent<Components::PositionComponent>(world.getComponentAllocator(), e);
 
     //Components::addComponent<Components::PhysicsComponent>(entity);
@@ -104,13 +99,13 @@ void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
     if (vob.visual && vob.visual->getName() == visual)
         return;
 
-    // Clear old visual
-    delete vob.visual;
-
     Logic::VisualController** ppVisual = &vob.world->getComponentAllocator().getElement<Components::VisualComponent>(vob.entity).m_pVisualController;
 
-    vob.visual = nullptr;
+    // Clear old visual
+    delete *ppVisual;
+
     *ppVisual = nullptr;
+    vob.visual = nullptr;
 
     // Check type of visual
     if (visual.find(".3DS") != std::string::npos || visual.find(".MMB") != std::string::npos || visual.find(".MMS") != std::string::npos || visual.find(".MDMS") != std::string::npos)

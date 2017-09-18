@@ -69,7 +69,8 @@ void GameSession::setMainWorld(Handle::WorldHandle world)
 std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string& _worldFile,
                                                                const json& worldJson,
                                                                const json& scriptEngine,
-                                                               const json& dialogManager)
+                                                               const json& dialogManager,
+                                                               const json& logManager)
 {
     std::string worldFile = _worldFile;
 
@@ -91,7 +92,7 @@ std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string
             return nullptr;
         }
     }
-    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager))  // expensive operation
+    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager, logManager))  // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
         return nullptr;
@@ -217,9 +218,10 @@ void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
 Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
                                           const json& worldJson,
                                           const json& scriptEngine,
-                                          const json& dialogManager)
+                                          const json& dialogManager,
+                                          const json& logManager)
 {
-    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager);
+    std::unique_ptr<World::WorldInstance> pWorldInstance = createWorld("", worldJson, scriptEngine, dialogManager, logManager);
     return registerWorld(std::move(pWorldInstance));
 }
 

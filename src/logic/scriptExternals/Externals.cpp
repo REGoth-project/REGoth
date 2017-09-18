@@ -565,19 +565,47 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("ai_gotonextfp", [=](Daedalus::DaedalusVM& vm) {
-        std::string fp = vm.popString(true);
+        std::string fpname = vm.popString(true);
+        int32_t self = vm.popVar();
+
+        // FIXME: Same as ai_gotofp. What's the exact difference between them?
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if (npc.isValid())
+        {
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
+
+            if(!fp.empty())
+            {
+                EventMessages::MovementMessage sm;
+                sm.subType = EventMessages::MovementMessage::ST_GotoFP;
+                sm.targetVob = fp.front();
+                npc.playerController->getEM().onMessage(sm);
+            }
+        }
+    });
+
+    vm->registerExternalFunction("ai_gotofp", [=](Daedalus::DaedalusVM& vm) {
+        std::string fpname = vm.popString(true);
         int32_t self = vm.popVar();
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
         if (npc.isValid())
         {
-            EventMessages::MovementMessage sm;
-            sm.subType = EventMessages::MovementMessage::ST_GotoFP;
-            sm.targetVobName = fp;
-            npc.playerController->getEM().onMessage(sm);
-            //npc.playerController->gotoWaypoint(World::Waynet::getWaypointIndex(pWorld->getWaynet(), wp));
+            // Find closest fp
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
+
+            if(!fp.empty())
+            {
+                EventMessages::MovementMessage sm;
+                sm.subType = EventMessages::MovementMessage::ST_GotoFP;
+                sm.targetVob = fp.front();
+                npc.playerController->getEM().onMessage(sm);
+            }
         }
+
     });
 
     vm->registerExternalFunction("ai_gotonpc", [=](Daedalus::DaedalusVM& vm) {
@@ -907,7 +935,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if (npc.isValid())
         {
             // Find closest fp
-            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true);
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true);
 
             vm.setReturn(!fp.empty());
         }
@@ -926,7 +954,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         if (npc.isValid())
         {
             // Find closest fp
-            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 100.0f, fpname, true, npc.entity);
+            std::vector<Handle::EntityHandle> fp = pWorld->getFreepointsInRange(npc.position->m_WorldMatrix.Translation(), 20.0f, fpname, true, npc.entity);
 
             vm.setReturn(!fp.empty());
         }
@@ -1344,23 +1372,23 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
-    vm->registerExternalFunction("log_createtopic", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_CreateTopic", [=](Daedalus::DaedalusVM& vm) {
         int32_t section = vm.popDataValue();
         std::string topicName = vm.popString();
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].section = static_cast<Daedalus::GameState::LogTopic::ESection>(section);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.createTopic(topicName, static_cast<Daedalus::GameState::LogTopic::ESection>(section));
     });
 
-    vm->registerExternalFunction("log_settopicstatus", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_SetTopicStatus", [=](Daedalus::DaedalusVM& vm) {
         int32_t status = vm.popDataValue();
         std::string topicName = vm.popString();
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].status = static_cast<Daedalus::GameState::LogTopic::ELogStatus>(status);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.setTopicStatus(topicName, static_cast<Daedalus::GameState::LogTopic::ELogStatus>(status));
     });
 
-    vm->registerExternalFunction("log_addentry", [=](Daedalus::DaedalusVM& vm) {
+    vm->registerExternalFunction("Log_AddEntry", [=](Daedalus::DaedalusVM& vm) {
         std::string entry = vm.popString();
         std::string topicName = vm.popString();
 
@@ -1369,8 +1397,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         LogInfo() << entry;
         LogInfo() << "";
 
-        auto& playerLog = vm.getGameState().getPlayerLog();
-        playerLog[topicName].entries.push_back(entry);
+        auto& logManager = engine->getSession().getLogManager();
+        logManager.addEntry(topicName, entry);
 
         pWorld->getScriptEngine().onLogEntryAdded(topicName, entry);
     });

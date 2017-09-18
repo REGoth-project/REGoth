@@ -20,6 +20,9 @@ EventManager::EventManager(World::WorldInstance& world, Handle::EntityHandle hos
 
 void EventManager::handleMessage(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
+
+    message->isFirstRun = true;
+
     // Check if we shall execute this right away
     if (!message->isJob && (message->isHighPriority || m_EventQueue.empty()))
     {
@@ -51,6 +54,8 @@ void EventManager::sendMessageToHost(SharedEMessage message, Handle::EntityHandl
     Vob::VobInformation vob = Vob::asVob(m_World, m_HostVob);
 
     vob.logic->onMessage(message, sourceVob);
+
+    message->isFirstRun = false;
 }
 
 void EventManager::processMessageQueue()

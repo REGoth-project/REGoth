@@ -139,7 +139,10 @@ std::map<int, UI::EInputAction> keyMap = {
     {GLFW_KEY_PAGE_UP, UI::IA_Up},
     {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
     {GLFW_KEY_B, UI::IA_ToggleStatusMenu},
-    {GLFW_KEY_F10, UI::IA_ToggleConsole}};
+    {GLFW_KEY_F10, UI::IA_ToggleConsole},
+    {GLFW_KEY_BACKSPACE, UI::IA_ToggleStatusMenu},
+    {GLFW_KEY_N, UI::IA_ToggleLogMenu},
+    {GLFW_KEY_L, UI::IA_ToggleLogMenu}};
 
 void REGoth::init(int _argc, char** _argv)
 {

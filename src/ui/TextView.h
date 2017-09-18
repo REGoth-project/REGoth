@@ -26,6 +26,7 @@ namespace UI
          * @param font Sets the font to use.
          */
         void setFont(const std::string& font) { m_Font = font; }
+
     protected:
         /**
          * String to display
