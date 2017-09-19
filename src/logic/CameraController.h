@@ -7,6 +7,8 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
+        ~CameraController();
+
         enum class ECameraMode
         {
             Free = 0,

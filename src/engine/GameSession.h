@@ -129,11 +129,15 @@ namespace Engine
          */
         void removeAllWorlds();
 
-
         /**
          * Registers all key bindings
          */
         void setupKeyBindings();
+
+        /**
+         * Un-registers all bindings
+         */
+        void clearBindings();
 
         Logic::LogManager& getLogManager() { return m_LogManager; }
 

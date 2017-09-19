@@ -416,3 +416,8 @@ void Logic::CameraController::clearBindings()
 {
     m_ActionBindings.clear();
 }
+
+Logic::CameraController::~CameraController()
+{
+    clearBindings();
+}

@@ -21,7 +21,7 @@ GameSession::GameSession(BaseEngine& engine)
 
 GameSession::~GameSession()
 {
-    Engine::Input::clearActions();
+    clearBindings();
     removeAllWorlds();
 }
 
@@ -377,4 +377,10 @@ void GameSession::enablePlayerBindings(bool enabled)
     {
         managedBinding.getAction().setEnabled(enabled);
     }
+}
+
+void GameSession::clearBindings()
+{
+    m_ActionBindings.clear();
+    m_PlayerBindings.clear();
 }
