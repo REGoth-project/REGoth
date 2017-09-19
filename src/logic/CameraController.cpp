@@ -201,28 +201,13 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 void Logic::CameraController::disableActions()
 {
     Engine::Input::setMouseLock(false);
-    m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(false);
-    m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(false);
-    m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(false);
-    m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(false);
-
-    m_CameraSettings.thirdPersonCameraSettings.actionWheel->setEnabled(false);
-    m_CameraSettings.thirdPersonCameraSettings.actionLookVertical->setEnabled(false);
-    m_CameraSettings.thirdPersonCameraSettings.actionLookHorizontal->setEnabled(false);
-
-    m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(false);
-    m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(false);
-    m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(false);
-    m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(false);
-    m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(false);
-
-    m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(false);
-    m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(false);
+    for (auto& pair : m_ActionBindings)
+    {
+        for (auto& managedBinding : pair.second)
+        {
+            managedBinding.getAction().setEnabled(false);
+        }
+    }
 }
 
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
@@ -408,39 +393,27 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
 void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode mode)
 {
     m_CameraMode = mode;
-    disableActions();
+    for (auto& pair : m_ActionBindings)
+    {
+        bool enabled = pair.first == mode;
+        for (auto& managedBinding : pair.second)
+        {
+            managedBinding.getAction().setEnabled(enabled);
+        }
+    }
     switch (mode)
     {
         case ECameraMode::FirstPerson:
             Engine::Input::setMouseLock(true);
-            m_CameraSettings.firstPersonCameraSettings.actionMoveForward->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionMoveRight->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionLookHorizontal->setEnabled(true);
-            m_CameraSettings.firstPersonCameraSettings.actionLookVertical->setEnabled(true);
             break;
         case ECameraMode::Free:
             Engine::Input::setMouseLock(true);
-            m_CameraSettings.freeCameraSettings.actionMoveForward->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionMoveRight->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionMoveUp->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionLookHorizontal->setEnabled(true);
-            m_CameraSettings.freeCameraSettings.actionLookVertical->setEnabled(true);
             break;
         case ECameraMode::Viewer:
             Engine::Input::setMouseLock(false);
-            m_CameraSettings.viewerCameraSettings.actionViewHorizontal->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionViewVertical->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionPan->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionZoom->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionRotate->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionClick->setEnabled(true);
-            m_CameraSettings.viewerCameraSettings.actionWheel->setEnabled(true);
             break;
         case ECameraMode::ThirdPerson:
             Engine::Input::setMouseLock(true);
-            m_CameraSettings.thirdPersonCameraSettings.actionWheel->setEnabled(true);
-            m_CameraSettings.thirdPersonCameraSettings.actionLookVertical->setEnabled(true);
-            m_CameraSettings.thirdPersonCameraSettings.actionLookHorizontal->setEnabled(true);
             break;
     }
     #ifndef NDEBUG
@@ -451,9 +424,4 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
 void Logic::CameraController::clearBindings()
 {
     m_ActionBindings.clear();
-}
-
-Logic::CameraController::~CameraController()
-{
-    clearBindings();
 }
