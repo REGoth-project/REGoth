@@ -152,9 +152,9 @@ namespace Logic
         template <class Functor>
         Engine::Action* registerBinding(ECameraMode cameraMode, Engine::ActionType actionType, Functor functor)
         {
-            auto action = Engine::Input::RegisterAction(actionType, functor);
-            m_KeyBindings[cameraMode].push_back(std::make_pair(actionType, action));
-            return action;
+            auto managedBinding = Engine::Input::RegisterAction(actionType, functor);
+            m_ActionBindings[cameraMode].push_back(std::move(managedBinding));
+            return &m_ActionBindings[cameraMode].back().getAction();
         }
 
         /**
@@ -193,7 +193,7 @@ namespace Logic
         /**
          * stored bindings
          */
-        std::map<ECameraMode, std::vector<std::pair<Engine::ActionType, Engine::Action*>>> m_KeyBindings;
+        std::map<ECameraMode, std::vector<Engine::ManagedActionBinding>> m_ActionBindings;
 
         /**
          * Current view-matrix

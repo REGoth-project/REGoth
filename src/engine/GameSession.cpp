@@ -287,7 +287,11 @@ void GameSession::setupKeyBindings()
         return VobTypes::asNpcVob(worldHandle.get(), player);
     };
 
-    Engine::Input::RegisterAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
+    auto registerAction = [this](ActionType actionType, auto functor){
+        m_ActionBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
+    registerAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
         if (triggered)
         {
             bool forceQueue = true; // better do saving at frame end and not between entity updates
@@ -297,12 +301,12 @@ void GameSession::setupKeyBindings()
         }
     });
 
-    Engine::Input::RegisterAction(ActionType::Quickload, [baseEngine](bool triggered, float) {
+    registerAction(ActionType::Quickload, [baseEngine](bool triggered, float) {
         if (triggered)
             Engine::SavegameManager::loadSaveGameSlot(0);
     });
 
-    Engine::Input::RegisterAction(ActionType::PauseGame, [baseEngine](bool triggered, float) {
+    registerAction(ActionType::PauseGame, [baseEngine](bool triggered, float) {
         if (triggered && !baseEngine->getHud().isMenuActive())
         {
             baseEngine->togglePaused();
@@ -325,7 +329,7 @@ void GameSession::setupKeyBindings()
 
         for (auto action : playerActions)
         {
-            Engine::Input::RegisterAction(action, [action, getPlayerVob](bool triggered, float intensity) {
+            registerAction(action, [action, getPlayerVob](bool triggered, float intensity) {
                 auto vob = getPlayerVob();
                 if (!vob.isValid())
                     return;
@@ -346,7 +350,7 @@ void GameSession::setupKeyBindings()
 
         for (auto cameraMode : cameraModes)
         {
-            Engine::Input::RegisterAction(cameraMode.first, [baseEngine, mode = cameraMode.second](bool triggered, float) {
+            registerAction(cameraMode.first, [baseEngine, mode = cameraMode.second](bool triggered, float) {
                 if (triggered && baseEngine->getMainWorld().isValid())
                 {
                     baseEngine->getMainWorld().get().getCameraController()->setCameraMode(mode);
@@ -354,7 +358,7 @@ void GameSession::setupKeyBindings()
             });
         }
 
-        Engine::Input::RegisterAction(Engine::ActionType::DebugMoveSpeed, [baseEngine](bool triggered, float intensity) {
+        registerAction(Engine::ActionType::DebugMoveSpeed, [baseEngine](bool triggered, float intensity) {
             if (baseEngine->getMainWorld().isValid())
             {
                 baseEngine->getMainWorld().get().getCameraController()->setDebugMoveSpeed(triggered ? 5.0f : 1.0f);

@@ -70,10 +70,10 @@ float Input::windowHalfHeight;
 float Input::windowHalfWidth;
 std::string Input::frameTextInput;
 
-Action* Input::RegisterAction(ActionType actionType, std::function<void(bool, float)> function)
+ManagedActionBinding Input::RegisterAction(ActionType actionType, std::function<void(bool, float)> function)
 {
-    // Returns pointer to inserted Action object
-    return &((*actionTypeToActionMap.insert(std::make_pair(actionType, Action(function)))).second);
+    auto it = actionTypeToActionMap.insert(std::make_pair(actionType, Action(function)));
+    return {it->first, &it->second};
 }
 
 void Input::clearActions()
@@ -342,40 +342,40 @@ std::string Input::getFrameTextInput()
     return r;
 }
 
-ActionBindingAlive::ActionBindingAlive()
+ManagedActionBinding::ManagedActionBinding()
     : action(nullptr)
 {
 }
 
-ActionBindingAlive::ActionBindingAlive(ActionBindingAlive&& other)
-    : ActionBindingAlive()
+ManagedActionBinding::ManagedActionBinding(ManagedActionBinding&& other)
+    : ManagedActionBinding()
 {
     swap(*this, other);
 }
 
-void ActionBindingAlive::swap(ActionBindingAlive& a, ActionBindingAlive& b)
+void ManagedActionBinding::swap(ManagedActionBinding& a, ManagedActionBinding& b)
 {
     std::swap(a.actionType, b.actionType);
     std::swap(a.action, b.action);
 }
 
-ActionBindingAlive::~ActionBindingAlive()
+ManagedActionBinding::~ManagedActionBinding()
 {
     if (action)
         Input::RemoveAction(actionType, action);
 }
 
-ActionBindingAlive::ActionBindingAlive(Engine::ActionType actionType, Engine::Action* action)
+ManagedActionBinding::ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action)
     : actionType(actionType)
     , action(action)
 {
 }
 
-ActionBindingAlive& ActionBindingAlive::operator=(ActionBindingAlive&& other)
+ManagedActionBinding& ManagedActionBinding::operator=(ManagedActionBinding&& other)
 {
     {
         // disposes *this first
-        ActionBindingAlive tempEmpty;
+        ManagedActionBinding tempEmpty;
         swap(*this, tempEmpty);
     }
     swap(*this, other);

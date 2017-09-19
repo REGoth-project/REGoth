@@ -180,5 +180,10 @@ namespace Engine
          * reference to base engine
          */
         BaseEngine& m_Engine;
+
+        /**
+         * stored bindings
+         */
+        std::vector<ManagedActionBinding> m_ActionBindings;
     };
 }

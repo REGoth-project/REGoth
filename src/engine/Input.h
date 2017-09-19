@@ -100,20 +100,21 @@ namespace Engine
         std::function<void(bool /*triggered*/, float /*intensity*/)> function;
     };
 
-    class ActionBindingAlive
+    class ManagedActionBinding
     {
     public:
-        ActionBindingAlive();
-        ActionBindingAlive(Engine::ActionType actionType, Engine::Action* action);
-        ActionBindingAlive(ActionBindingAlive&& other);
-        ActionBindingAlive& operator= (ActionBindingAlive&& other);
+        ManagedActionBinding();
+        ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action);
+        ManagedActionBinding(ManagedActionBinding&& other);
+        ManagedActionBinding& operator= (ManagedActionBinding&& other);
         // copying is forbidden
-        ActionBindingAlive(const ActionBindingAlive&) = delete;
-        ActionBindingAlive& operator= (const ActionBindingAlive&) = delete;
+        ManagedActionBinding(const ManagedActionBinding&) = delete;
+        ManagedActionBinding& operator= (const ManagedActionBinding&) = delete;
 
-        ~ActionBindingAlive();
-        static void swap(ActionBindingAlive& a, ActionBindingAlive& b);
-    private:
+        ~ManagedActionBinding();
+        static void swap(ManagedActionBinding& a, ManagedActionBinding& b);
+        Engine::Action& getAction() { return *action; }
+    protected:
         Engine::ActionType actionType;
         Engine::Action* action;
     };
@@ -145,7 +146,7 @@ namespace Engine
         };
 
     public:
-        static Action* RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
+        static ManagedActionBinding RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
         static bool RemoveAction(ActionType actionType, Action* action);
         static void clearActions();
         static void fireBindings();

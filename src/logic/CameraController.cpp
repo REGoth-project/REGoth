@@ -450,15 +450,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
 
 void Logic::CameraController::clearBindings()
 {
-    for (const auto& camMode : m_KeyBindings)
-    {
-        for (const auto& pair : camMode.second)
-        {
-            Engine::Input::RemoveAction(pair.first, pair.second);
-        }
-    }
-    m_KeyBindings.clear();
-
+    m_ActionBindings.clear();
 }
 
 Logic::CameraController::~CameraController()
