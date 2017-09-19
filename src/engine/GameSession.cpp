@@ -291,6 +291,10 @@ void GameSession::setupKeyBindings()
         m_ActionBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
     };
 
+    auto registerPlayerAction = [this](ActionType actionType, auto functor){
+        m_PlayerBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
     registerAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
         if (triggered)
         {
@@ -329,7 +333,7 @@ void GameSession::setupKeyBindings()
 
         for (auto action : playerActions)
         {
-            registerAction(action, [action, getPlayerVob](bool triggered, float intensity) {
+            registerPlayerAction(action, [action, getPlayerVob](bool triggered, float intensity) {
                 auto vob = getPlayerVob();
                 if (!vob.isValid())
                     return;
@@ -364,5 +368,13 @@ void GameSession::setupKeyBindings()
                 baseEngine->getMainWorld().get().getCameraController()->setDebugMoveSpeed(triggered ? 5.0f : 1.0f);
             }
         });
+    }
+}
+
+void GameSession::enablePlayerBindings(bool enabled)
+{
+    for (auto& managedBinding : m_PlayerBindings)
+    {
+        managedBinding.getAction().setEnabled(enabled);
     }
 }

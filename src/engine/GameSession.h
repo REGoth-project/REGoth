@@ -137,6 +137,10 @@ namespace Engine
 
         Logic::LogManager& getLogManager() { return m_LogManager; }
 
+        /**
+         * Enables/Disables bindings that control the player
+         */
+        void enablePlayerBindings(bool enabled);
 
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;
@@ -185,5 +189,10 @@ namespace Engine
          * stored bindings
          */
         std::vector<ManagedActionBinding> m_ActionBindings;
+
+        /**
+         * stored player bindings
+         */
+        std::vector<ManagedActionBinding> m_PlayerBindings;
     };
 }

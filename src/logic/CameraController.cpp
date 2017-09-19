@@ -11,6 +11,7 @@
 #include <engine/World.h>
 #include <entry/input.h>
 #include <components/EntityActions.h>
+#include <engine/GameSession.h>
 
 const float CAMERA_SMOOTHING = 10.0f;
 
@@ -416,6 +417,8 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(true);
             break;
     }
+    bool enablePlayerBindings = (mode == ECameraMode::FirstPerson) || (mode == ECameraMode::ThirdPerson);
+    m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings);
     #ifndef NDEBUG
     Engine::Input::setMouseLock(false);
     #endif
