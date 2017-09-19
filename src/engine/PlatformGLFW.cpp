@@ -152,20 +152,14 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 
     std::cout << "Binding keys..." << std::endl;
 
-    bindKey(GLFW_KEY_F1, ActionType::CameraFirstPerson, false);
-    bindKey(GLFW_KEY_F2, ActionType::CameraThirdPerson, false);
+    bindKey(GLFW_KEY_F1, ActionType::CameraThirdPerson, false);
+    bindKey(GLFW_KEY_F2, ActionType::CameraFirstPerson, false);
     bindKey(GLFW_KEY_F3, ActionType::CameraFree, false);
     bindKey(GLFW_KEY_F4, ActionType::CameraViewer, false);
 
     // FirstPerson Camera Controller
-
-    bindKey(GLFW_KEY_W, ActionType::FirstPersonMoveForward, true, false);
-    bindKey(GLFW_KEY_S, ActionType::FirstPersonMoveForward, true, true);
-    bindKey(GLFW_KEY_D, ActionType::FirstPersonMoveRight, true, false);
-    bindKey(GLFW_KEY_A, ActionType::FirstPersonMoveRight, true, true);
-
     bindMouseAxis(MouseAxis::CursorX, ActionType::FirstPersonLookHorizontal, true, false);
-    bindMouseAxis(MouseAxis::CursorY, ActionType::FirstPersonLookVertical, true, true);
+    bindMouseAxis(MouseAxis::CursorY, ActionType::FirstPersonLookVertical, true, false);
 
     bindKey(GLFW_KEY_UP, ActionType::FirstPersonLookVertical, true, false);
     bindKey(GLFW_KEY_DOWN, ActionType::FirstPersonLookVertical, true, true);
@@ -178,7 +172,6 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindMouseAxis(MouseAxis::ScrollY, ActionType::ThirdPersonMouseWheel, false);
 
     // Free Camera Controller
-
     bindKey(GLFW_KEY_W, ActionType::FreeMoveForward, true, false);
     bindKey(GLFW_KEY_S, ActionType::FreeMoveForward, true, true);
     bindKey(GLFW_KEY_D, ActionType::FreeMoveRight, true, false);

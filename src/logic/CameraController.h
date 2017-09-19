@@ -35,10 +35,10 @@ namespace Logic
              */
             struct
             {
-                Engine::Action* actionMoveForward;
-                Engine::Action* actionMoveRight;
                 Engine::Action* actionLookHorizontal;
                 Engine::Action* actionLookVertical;
+
+                float yaw, pitch;
             } firstPersonCameraSettings;
 
             /**

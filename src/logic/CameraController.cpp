@@ -44,23 +44,21 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f);
     m_CameraSettings.thirdPersonCameraSettings.deltaPhi = 0;
 
+    m_CameraSettings.firstPersonCameraSettings.pitch = 0;
+    m_CameraSettings.firstPersonCameraSettings.yaw = 0;
+
     // FirstPerson action
     {
         using namespace Engine;
-        auto& settings = m_CameraSettings.floatingCameraSettings;
-        auto& firstPerson = m_CameraSettings.firstPersonCameraSettings;
+        auto& settings = m_CameraSettings.firstPersonCameraSettings;
 
-        firstPerson.actionMoveForward = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonMoveForward, [&settings](bool, float intensity) {
-            settings.position += 0.1f * intensity * settings.forward;
-        });
-        firstPerson.actionMoveRight = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonMoveRight, [&settings](bool, float intensity) {
-            settings.position -= 0.1f * intensity * settings.right;
-        });
-        firstPerson.actionLookHorizontal = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookHorizontal, [&settings](bool, float intensity) {
+        settings.actionLookHorizontal = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookHorizontal, [&settings](bool, float intensity) {
             settings.yaw += 0.02f * intensity;
+            settings.yaw = Math::clamp(settings.yaw, -Math::PI / 2, Math::PI / 2);
         });
-        firstPerson.actionLookVertical = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookVertical, [&settings](bool, float intensity) {
+        settings.actionLookVertical = registerBinding(ECameraMode::FirstPerson, ActionType::FirstPersonLookVertical, [&settings](bool, float intensity) {
             settings.pitch += 0.02f * intensity;
+            settings.pitch = Math::clamp(settings.pitch, -Math::PI / 2, Math::PI / 2);
         });
     }
 
@@ -305,27 +303,16 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
 
         case ECameraMode::FirstPerson:
         {
-            auto& settings = m_CameraSettings.floatingCameraSettings;
+            VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
 
-            // Get forward/right vector
-            std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
-            settings.up = settings.right.cross(settings.forward);
-            settings.forward *= deltaTime;
-
-            // Fix position
-            Math::float3 to = settings.position + Math::float3(0.0f, -100.0f, 0.0f);
-            Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(settings.position, to);
-
-            if (hit.hasHit)
+            if (player.isValid())
             {
-                settings.position = hit.hitPosition + Math::float3(0.0f, 1.8f, 0.0f);
+                auto& settings = m_CameraSettings.firstPersonCameraSettings;
+                Math::Matrix pTrans = player.playerController->getEntityTransform();
+                // TODO find position of player's head
+                m_ViewMatrix = pTrans.RotatedAroundLine(pTrans.Translation(), pTrans.Right(), settings.pitch);
+                setEntityTransform(m_ViewMatrix);
             }
-
-            m_ViewMatrix = Math::Matrix::CreateView(settings.position,
-                                                    settings.yaw,
-                                                    settings.pitch);
-
-            setEntityTransform(m_ViewMatrix.Invert());
         }
         break;
 
@@ -406,6 +393,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
     {
         case ECameraMode::FirstPerson:
             Engine::Input::setMouseLock(true);
+            // TODO disable player visual rendering
             break;
         case ECameraMode::Free:
             Engine::Input::setMouseLock(true);
