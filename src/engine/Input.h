@@ -100,6 +100,24 @@ namespace Engine
         std::function<void(bool /*triggered*/, float /*intensity*/)> function;
     };
 
+    class ActionBindingAlive
+    {
+    public:
+        ActionBindingAlive();
+        ActionBindingAlive(Engine::ActionType actionType, Engine::Action* action);
+        ActionBindingAlive(ActionBindingAlive&& other);
+        ActionBindingAlive& operator= (ActionBindingAlive&& other);
+        // copying is forbidden
+        ActionBindingAlive(const ActionBindingAlive&) = delete;
+        ActionBindingAlive& operator= (const ActionBindingAlive&) = delete;
+
+        ~ActionBindingAlive();
+        static void swap(ActionBindingAlive& a, ActionBindingAlive& b);
+    private:
+        Engine::ActionType actionType;
+        Engine::Action* action;
+    };
+
     class Input
     {
     public:

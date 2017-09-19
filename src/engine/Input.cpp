@@ -341,3 +341,43 @@ std::string Input::getFrameTextInput()
     frameTextInput.clear();
     return r;
 }
+
+ActionBindingAlive::ActionBindingAlive()
+    : action(nullptr)
+{
+}
+
+ActionBindingAlive::ActionBindingAlive(ActionBindingAlive&& other)
+    : ActionBindingAlive()
+{
+    swap(*this, other);
+}
+
+void ActionBindingAlive::swap(ActionBindingAlive& a, ActionBindingAlive& b)
+{
+    std::swap(a.actionType, b.actionType);
+    std::swap(a.action, b.action);
+}
+
+ActionBindingAlive::~ActionBindingAlive()
+{
+    if (action)
+        Input::RemoveAction(actionType, action);
+}
+
+ActionBindingAlive::ActionBindingAlive(Engine::ActionType actionType, Engine::Action* action)
+    : actionType(actionType)
+    , action(action)
+{
+}
+
+ActionBindingAlive& ActionBindingAlive::operator=(ActionBindingAlive&& other)
+{
+    {
+        // disposes *this first
+        ActionBindingAlive tempEmpty;
+        swap(*this, tempEmpty);
+    }
+    swap(*this, other);
+    return *this;
+}
