@@ -147,16 +147,16 @@ namespace Engine
         void drawFrame(uint16_t width, uint16_t height);
 
         /**
+         * ID of the main thread (bgfx thread)
+         */
+        std::thread::id m_MainThreadID;
+
+        /**
          * Default rendering system
          */
         Render::RenderSystem m_DefaultRenderSystem;
 
         Audio::AudioEngine* m_AudioEngine = nullptr;
-
-        /**
-         * ingame console
-         */
-        Logic::Console m_Console;
 
         /**
          * Game session, stores information that should be reset on starting a new game/loading
@@ -171,11 +171,6 @@ namespace Engine
         UI::View m_RootUIView;
         UI::Hud* m_pHUD;
         UI::zFontCache* m_pFontCache;
-
-        /**
-         * ID of the main thread (bgfx thread)
-         */
-        std::thread::id m_MainThreadID;
         std::list<AsyncAction> m_MessageQueue;
         std::mutex m_MessageQueueMutex;
 
@@ -183,5 +178,10 @@ namespace Engine
          * Allocator for always present textures
          */
         Textures::TextureAllocator m_EngineTextureAlloc;
+
+        /**
+         * ingame console
+         */
+        Logic::Console m_Console;
     };
 }

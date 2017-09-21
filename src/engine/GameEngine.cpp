@@ -25,10 +25,10 @@ using namespace Engine;
 const float DRAW_DISTANCE = 100.0f;
 
 GameEngine::GameEngine()
-    : m_DefaultRenderSystem(*this)
+    : m_MainThreadID(std::this_thread::get_id())
+    , m_DefaultRenderSystem(*this)
     , m_RootUIView(*this)
     , m_EngineTextureAlloc(*this)
-    , m_MainThreadID(std::this_thread::get_id())
     , m_Console(*this)
 {
     m_pHUD = nullptr;
