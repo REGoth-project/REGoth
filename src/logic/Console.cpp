@@ -1,5 +1,5 @@
 #include "Console.h"
-#include <GLFW/glfw3.h>
+#include <utils/GLFW_Keys.h>
 #include <ZenLib/utils/split.h>
 #include <engine/BaseEngine.h>
 #include <ui/Hud.h>

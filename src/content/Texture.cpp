@@ -138,7 +138,7 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         ZenLoad::convertZTEX2DDS(ztex, dds);
     }
 
-#if ANDROID || EMSCRIPTEN
+#if EMSCRIPTEN
     if (asDDS)
     {
         LogInfo() << "Converting DDS to RGBA8 for: " << name;

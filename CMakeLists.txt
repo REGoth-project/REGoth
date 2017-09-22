@@ -30,7 +30,7 @@ if(EMSCRIPTEN)
 endif()
 
 if(ANDROID)
-    #set(BGFX_DEBUG 0)
+    set(BGFX_DEBUG 0)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 
@@ -57,8 +57,6 @@ if(ANDROID)
         #src/android/compat/*.c
     )
 
-    set(ANDROID_STL gnustl_static CACHE STRING "" FORCE) # Static STL
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++") # Static libc++
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-unaligned-access") # Unaligned access not supported on ARM
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -ffor-scope -fno-rtti -pipe -ffunction-sections -fdata-sections -ffast-math -Wnon-virtual-dtor -Wreorder -Wsign-promo -fvisibility=hidden -fvisibility-inlines-hidden -Wstrict-null-sentinel -Os -funroll-all-loops -fpeel-loops -ftree-vectorize")
@@ -67,15 +65,9 @@ if(ANDROID)
     add_library(android_glue SHARED ${ANDROID_SRC})
 
     # Stuff all android libraries in here
-    target_link_libraries(android_glue log android crystax bgfx_common EGL GLESv2)
+    target_link_libraries(android_glue log android bgfx_common EGL GLESv2)
     set_target_properties(android_glue PROPERTIES COMPILE_DEFINITIONS "ANDROID")
 
-    # Make sure to copy all libraries put into here
-    file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/armeabi-v7a/*.so)
-    #file(GLOB APP_SHARED_LIBRARIES ${CMAKE_CURRENT_SOURCE_DIR}/src/android/lib/x86/*.so)
-    set(APP_SHARED_LIBRARIES "${APP_SHARED_LIBRARIES};${LIBRARY_OUTPUT_PATH}/libandroid_glue.so")
-
-    include("src/android/Apk.cmake" REQUIRED)
 endif()
 
 if (APPLE)
@@ -95,9 +87,11 @@ if (CMAKE_COMPILER_IS_GNUCC)
     endif()
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+if(NOT ANDROID)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+endif()
 
 set(GAME_CONTENT_DIR ../content CACHE STRING "Content-folder, containing VDF-Archives and other files.")
 set(GAME_STARTUP_WORLD addonworld.zen CACHE STRING "[Testing] World to load at program start")
@@ -283,13 +277,10 @@ if(NOT ANDROID)
 
     if(NOT EMSCRIPTEN)
         add_subdirectory(lib/glfw)
-        # We want audio if not on android
-        add_definitions(-DRE_USE_SOUND)
         target_link_libraries(engine glfw)
     endif()
 else()
-
-    # TODO: Audio
+    add_definitions(-DRE_USE_SOUND)
     target_link_libraries(engine android_glue)
 endif()
 

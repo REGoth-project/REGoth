@@ -20,6 +20,8 @@ namespace Engine
 
         int32_t run(int argc, char** argv) override;
 
+        int shutdown() override;
+
     private:
         void onAppCmd(struct android_app* app, int32_t cmd);
         int onInputEvent(struct android_app* app, AInputEvent* event);

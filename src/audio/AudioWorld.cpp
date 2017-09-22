@@ -1,9 +1,11 @@
 #include <cstddef>
 #include <functional>
 
+#ifdef RE_USE_SOUND
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#endif
 
 #include <adpcm/adpcm-lib.h>
 
