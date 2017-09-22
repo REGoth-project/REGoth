@@ -329,6 +329,8 @@ std::string Utils::getUserDataLocation()
     if (!result) return USERDATA_FOLDER;
     return std::string(buffer) + "/" + USERDATA_FOLDER;
 
+#elif ANDROID
+    return "/sdcard/REGoth/userdata";
 #elif __unix__
     struct passwd* pw = getpwuid(getuid());
 
