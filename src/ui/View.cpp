@@ -239,6 +239,9 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
     std::size_t line_end = txt.find("\n");
     if (line_end == std::string::npos)
         line_end = txt.length();
+    else // Adjust vertical offset of multiline text by a half glyph height
+        hole_offset.y -= 0.5*fnt->getFontHeight();
+
     std::string txt_line = txt.substr(0, line_end);
     fnt->calcTextMetrics(txt_line, width, height);
     Math::float2 offset = getAlignOffset(alignment, width, height);

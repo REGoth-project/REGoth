@@ -69,7 +69,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
         std::copy_n(outputList.begin(), numLines, outputLines.rbegin());
         outputLines.push_back(console.getTypedLine());
         auto joined = Utils::join(outputLines.begin(), outputLines.end(), "\n");
-        drawText(joined, xDistanceToEdge, consoleSizeY, A_BottomLeft, config, font);
+        drawText(joined, xDistanceToEdge, consoleSizeY + 0.5*fnt->getFontHeight(), A_BottomLeft, config, font);
     }
     // Draw suggestions
     {
@@ -170,15 +170,21 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
         int colID = 0;
         int columnOffsetX = strBeforeWidth;
+        int multilineAdjustment = 0;
         for (auto& column : columns)
         {
             std::vector<std::string> columnsSelected(column.size());
             if (m_CurrentlySelected != -1)
                 std::swap(column.at(currentlySelectedRelative), columnsSelected.at(currentlySelectedRelative));
             auto joined = Utils::join(column.begin(), column.end(), "\n");
-            drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, font);
+            
+            // Compensating multiline adjustment by a half glyph height
+            if (column.size() != 1)
+                multilineAdjustment = 0.5*fnt->getFontHeight();
+
+            drawText(joined, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY + multilineAdjustment, A_BottomLeft, config, font);
             auto joinedSelected = Utils::join(columnsSelected.begin(), columnsSelected.end(), "\n");
-            drawText(joinedSelected, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY, A_BottomLeft, config, fontSelected);
+            drawText(joinedSelected, xDistanceToEdge + columnOffsetX, consoleSizeY + suggestionBoxSizeY + multilineAdjustment, A_BottomLeft, config, fontSelected);
             columnOffsetX += columnWidths[colID++] + spaceBetweenColumns;
         }
     }
