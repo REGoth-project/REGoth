@@ -147,6 +147,7 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
+add_subdirectory(lib/CAB-Installer-Extractor)
 
 # Set up bullet
 set(USE_GRAPHICAL_BENCHMARK OFF CACHE STRING "" FORCE)
@@ -207,6 +208,7 @@ file(GLOB ENGINE_SRC
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
+target_link_libraries(engine gextract)
 
 # ------------------ OpenAL ------------------
 
@@ -269,6 +271,7 @@ include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
 include_directories(lib/json)
+include_directories(lib/CAB-Installer-Extractor/include)
 
 if(NOT ANDROID)
 
@@ -276,6 +279,7 @@ if(NOT ANDROID)
     include_directories(lib/glfw/include)
 
     if(NOT EMSCRIPTEN)
+        add_definitions(-DRE_USE_SOUND)
         add_subdirectory(lib/glfw)
         target_link_libraries(engine glfw)
     endif()

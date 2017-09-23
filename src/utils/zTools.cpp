@@ -3,16 +3,22 @@
 #include "Utils.h"
 #include "cli.h"
 #include <ZenLib/vdfs/fileIndex.h>
+#include <g-extract.h>
+#include <ZenLib/utils/logger.h>
 
 namespace Flags
 {
     Cli::Flag unpackVdf("", "unpack-vdf", 2,
-                        " [vdf-archive, target-folder] "
-                        "Unpacks the given vdf-archive to the target-folder. "
-                        "Directory structure is not preserved.");
+                                " [vdf-archive, target-folder] "
+                                "Unpacks the given vdf-archive to the target-folder. "
+                                "Directory structure is not preserved.");
+
+    Cli::Flag installGame("", "install-game", 2,
+                                " [installer-exe, target-folder] "
+                                "Unpacks the given Gothic-Installer-Executable without actually running the installer.");
 }
 
-void unpackVdf()
+static void unpackVdf()
 {
     std::string vdf = Flags::unpackVdf.getParam(0);
     std::string target = Flags::unpackVdf.getParam(1);
@@ -40,11 +46,47 @@ void unpackVdf()
     }
 }
 
+bool ::zTools::extractInstaller(const std::string& file, const std::string& targetLocation)
+{
+    try
+    {
+        GExtract::extractInstallerExecutable(file, targetLocation + "/installer-temp");
+
+        std::string datacab = Utils::getCaseSensitivePath(targetLocation + "/installer-temp/data1.cab");
+        GExtract::extractInternalCABFile(datacab, targetLocation);
+    }catch(std::runtime_error e)
+    {
+        LogError() << "Failed to extract installer: " << e.what();
+        return false;
+    }
+
+    return true;
+}
+
+static void installGame()
+{
+    std::string installer = Flags::installGame.getParam(0);
+    std::string target = Flags::installGame.getParam(1);
+
+    if(!Utils::fileExists(installer))
+    {
+        LogError() << "Failed ot find file: " << installer;
+        return;
+    }
+
+    zTools::extractInstaller(installer, target);
+}
+
+
 bool ::zTools::tryRunTools()
 {
     if (Flags::unpackVdf.isSet())
     {
         unpackVdf();
+        return true;
+    }else if(Flags::installGame.isSet())
+    {
+        installGame();
         return true;
     }
 
