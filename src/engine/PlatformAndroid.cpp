@@ -192,9 +192,8 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
                             dir.x = dir.x > 0 ? std::min(controlSize.x, dir.x) : std::max(-controlSize.x, dir.x);
                             dir.y = dir.y > 0 ? std::min(controlSize.y, dir.y) : std::max(-controlSize.y, dir.y);
 
-                            // Normalize
-                            dir.x /= controlSize.length();
-                            dir.y /= controlSize.length();
+                            // Normalize // FIXME: Analogue input not working properly because the normalize drops all distance information
+                            dir.normalize();
 
                             LogInfo() << "Thumb " << thumb << ": " << dir.toString();
 
@@ -314,6 +313,8 @@ int32_t PlatformAndroid::run(int argc, char** argv)
                 dirPressed = ACTION_PlayerStrafeLeft;
             else if(m_ThumbstickPosition[0].dot(Math::float2(1.0f, 0.0f)) > 0.5f)
                 dirPressed = ACTION_PlayerStrafeRight;
+
+            LogInfo() << "DirPressed: " << dirPressed;
         }
 
         if(getKeysState()[ACTION_PlayerForward] && dirPressed != ACTION_PlayerForward)
