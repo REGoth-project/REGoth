@@ -1,26 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.regothproject.regoth">
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-feature android:name="android.hardware.touchscreen.multitouch" />
 
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="REGoth">
+        <activity
 
-    <uses-feature
-        android:name="android.hardware.touchscreen.multitouch" />
-    <application>
+            android:name=".StartupActivity"
+            android:label="REGoth"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.Light">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".LoadLibraries"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="landscape"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
-            <meta-data android:name="android.app.lib_name" android:value="REGoth" />
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="REGoth" />
         </activity>
     </application>
+
 </manifest>

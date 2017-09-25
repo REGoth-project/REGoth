@@ -50,9 +50,21 @@ bool ::zTools::extractInstaller(const std::string& file, const std::string& targ
 {
     try
     {
+        LogInfo() << "Trying to extract Installer";
         GExtract::extractInstallerExecutable(file, targetLocation + "/installer-temp");
 
-        std::string datacab = Utils::getCaseSensitivePath(targetLocation + "/installer-temp/data1.cab");
+        std::string datacab = targetLocation + "/installer-temp/data1.cab";
+
+        // FIXME: getCaseSensitivePath does not work on android?
+        //std::string datacab = Utils::getCaseSensitivePath(datacabCaseInsensitive);
+
+        if(datacab.empty())
+        {
+            LogError() << "Failed to find datacab at " << datacab;
+            return false;
+        }
+
+        LogInfo() << "Extracting internal data-CAB-File";
         GExtract::extractInternalCABFile(datacab, targetLocation);
     }catch(std::runtime_error e)
     {

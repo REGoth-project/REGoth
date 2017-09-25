@@ -5,11 +5,11 @@ android {
     buildToolsVersion '25.0.0'
 
     productFlavors {
-        /*x86 {
+        x86 {
             ndk {
-                abiFilter "x86"
+                abiFilters "x86"
             }
-        }*/
+        }
         arm {
             ndk {
                 abiFilters "armeabi-v7a"
@@ -44,12 +44,14 @@ android {
 
     sourceSets {
         main {
-            jniLibs.srcDirs 'imported-lib/src/', 'more-imported-libs/src/'
+            //jniLibs.srcDirs 'imported-lib/src/', 'more-imported-libs/src/'
         }
     }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     testCompile 'junit:junit:4.12'
 }

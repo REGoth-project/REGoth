@@ -11,8 +11,13 @@
 #include <utils/logger.h>
 #include <utils/Utils.h>
 #include <utils/GLFW_Keys.h>
+#include <utils/zTools.h>
+#include <jni.h>
+#include <chrono>
 
 #define DBG(x) __android_log_print(ANDROID_LOG_INFO, "REGOTH", x)
+
+const std::string CONTENT_BASE_PATH = "/sdcard/REGoth";
 
 const char* ARGS[] = { "android.so", "-g", "/sdcard/REGoth/Gothic", "-w", "world.zen" };
 const int NUMARGS = 5;
@@ -57,6 +62,9 @@ extern "C"
 #pragma GCC diagnostic pop
 } // extern "C"
 
+static bool extractInstaller(const std::string& installerFile);
+static bool hasGameData();
+
 extern "C" int main(int argc, char** argv);
 extern "C" void android_main(android_app* _app)
 {
@@ -69,10 +77,36 @@ extern "C" void android_main(android_app* _app)
     main(NUMARGS, const_cast<char**>(ARGS));
 }
 
+
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_regothproject_regoth_InstallerExtract_extractInstaller(JNIEnv *env,
+                                                       jclass,
+                                                       jstring jinstaller)
+{
+    std::string installer;
+    const char* nativeString = env->GetStringUTFChars(jinstaller, JNI_FALSE);
+    installer = std::string(nativeString);
+
+    env->ReleaseStringUTFChars(jinstaller, nativeString);
+
+    bool retval = extractInstaller(installer);
+
+    return static_cast<jboolean>(retval);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_regothproject_regoth_InstallerExtract_hasGameData(JNIEnv *env,
+                                                               jclass)
+{
+    return static_cast<jboolean>(hasGameData());
+}
+
 PlatformAndroid::PlatformAndroid()
 {
     m_Window = nullptr;
     m_App = nullptr;
+    m_HasFocus = false;
 
     m_ThumbstickPosition[0] = Math::float2(0,0);
     m_ThumbstickPosition[1] = Math::float2(0,0);
@@ -91,6 +125,7 @@ void PlatformAndroid::onAppCmd(struct android_app* app, int32_t cmd)
             //*((struct saved_state*)window->m_pAppHandle->savedState) = engine->state;
             //window->m_pAppHandle->savedStateSize = sizeof(saved_state);
             break;
+
         case APP_CMD_INIT_WINDOW:
             // Command from main thread: a new ANativeWindow is ready for use.  Upon
             // receiving this command, android_app->window will contain the new window
@@ -100,32 +135,46 @@ void PlatformAndroid::onAppCmd(struct android_app* app, int32_t cmd)
                 DBG("Setting window");
                 m_Window = m_App->window;
                 bgfx::androidSetWindow(m_Window);
+                m_HasFocus = true;
 
                 int32_t width  = ANativeWindow_getWidth(m_Window);
                 int32_t height = ANativeWindow_getHeight(m_Window);
 
-                //DBG("ANativeWindow width %d, height %d", width, height);
                 windowSizeEvent(width, height);
-
-
 
                 m_Thread = std::thread(
                         [this](){
+                            using namespace std::chrono_literals;
+
                             std::promise<int32_t> returnValue;
                             mainLoop(std::move(returnValue), NUMARGS, const_cast<char**>(ARGS));
-                            while(true){update();}
+                            while(true)
+                            {
+                                if(m_HasFocus)
+                                {
+                                    update();
+                                }else
+                                {
+                                    std::this_thread::sleep_for(1s);
+                                }
+                            }
                             });
-                //m_thread.init(MainThreadEntry::threadFunc, &m_mte);
             }
             break;
+
         case APP_CMD_TERM_WINDOW:
             // The window is being hidden or closed, clean it up.
             //engine_term_display(window);
             setQuit(true);
             break;
+
         case APP_CMD_GAINED_FOCUS:
+            m_HasFocus = true;
+            bgfx::reset(m_WindowWidth, m_WindowHeight);
             break;
+
         case APP_CMD_LOST_FOCUS:
+            m_HasFocus = false;
             break;
     }
 
@@ -137,15 +186,11 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 {
     static int activePointerIdx;
 
-    LogInfo() << "Input event!";
-
     switch(AInputEvent_getSource(event))
 	{
 	case AINPUT_SOURCE_TOUCHSCREEN:
 		int action = AKeyEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
 		int pointer = (AKeyEvent_getAction(event) & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-
-		LogInfo() << "Pointer: " << AMotionEvent_getPointerId(event, pointer);
 
 		// Only need two pointers for now
 		//if(pointer > 1)
@@ -185,7 +230,7 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 
                             Math::float2 dir = Math::float2(static_cast<float>(x - movementX), static_cast<float>(y - movementY));
 
-                            LogInfo() << "Thumb Source" << thumb << ": " << dir.toString();
+                            //LogInfo() << "Thumb Source" << thumb << ": " << dir.toString();
 
                             //  Set max thumbstick position
 
@@ -195,7 +240,7 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
                             // Normalize // FIXME: Analogue input not working properly because the normalize drops all distance information
                             dir.normalize();
 
-                            LogInfo() << "Thumb " << thumb << ": " << dir.toString();
+                            //LogInfo() << "Thumb " << thumb << ": " << dir.toString();
 
                             m_ThumbstickPosition[0] = dir;
                         }
@@ -220,7 +265,7 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
                             s_lastX = movementX;
                             s_lastY = movementY;
 
-                            LogInfo() << "Thumb " << thumb << ": " << m_ThumbstickPosition[1].toString();
+                            //LogInfo() << "Thumb " << thumb << ": " << m_ThumbstickPosition[1].toString();
 
                             s_tumbLastFrameDown[1] = 1;
                         }
@@ -263,6 +308,8 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 		}
 		break;
 	} // end switch
+
+    return 1;
 }
 
 int32_t PlatformAndroid::run(int argc, char** argv)
@@ -314,7 +361,6 @@ int32_t PlatformAndroid::run(int argc, char** argv)
             else if(m_ThumbstickPosition[0].dot(Math::float2(1.0f, 0.0f)) > 0.5f)
                 dirPressed = ACTION_PlayerStrafeRight;
 
-            LogInfo() << "DirPressed: " << dirPressed;
         }
 
         if(getKeysState()[ACTION_PlayerForward] && dirPressed != ACTION_PlayerForward)
@@ -363,6 +409,42 @@ int PlatformAndroid::shutdown()
 {
     Utils::destroyFileReaderWriter();
     return 0;
+}
+
+/**
+ * @return Whether game-data has been found
+ */
+static bool hasGameData()
+{
+    const bool recursive = true;
+    std::list<std::string> gamefiles = Utils::getFilesInDirectory(CONTENT_BASE_PATH + "/Gothic", "vdf", recursive);
+
+    // Check for a crucial game file to be there
+    return !gamefiles.empty();
+}
+
+/**
+ * Extracts a given gothic installer executable
+ * @return success
+ */
+static bool extractInstaller(const std::string& installerFile)
+{
+
+    if (!Utils::fileExists(installerFile))
+    {
+        LogError() << "Non-valid gamedata and no installer to extract found!";
+        return false;
+    }
+
+    LogInfo() << "Extracting installer: " << installerFile;
+
+    if (!zTools::extractInstaller(installerFile, CONTENT_BASE_PATH + "/Gothic"))
+    {
+        LogError() << "Failed to extract installer: " << installerFile;
+        return false;
+    }
+
+    return true;
 }
 
 #endif

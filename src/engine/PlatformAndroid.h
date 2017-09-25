@@ -29,6 +29,7 @@ namespace Engine
         android_app* m_App;
         ANativeWindow* m_Window;
         std::thread m_Thread;
+        bool m_HasFocus;
 
         /**
          * @brief Virtual onscreen-thumbstick

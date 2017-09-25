@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">REGoth</string>
+    <string name="demo_files_default">https://www.worldofgothic.de/download.php?id=3</string>
 </resources>
