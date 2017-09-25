@@ -6,7 +6,7 @@ pushd android-dependencies
 curl -L https://dl.google.com/android/repository/android-ndk-r14b-linux-x86_64.zip -O
 
 # Install NDK
-unzip android-ndk-r14b-linux-x86_64.zip
+unzip -q android-ndk-r14b-linux-x86_64.zip
 rm android-ndk-r14b-linux-x86_64.zip
 
 # Setup environment
