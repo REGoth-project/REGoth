@@ -1,3 +1,5 @@
+pushd "$(dirname "$0")"
+
 mkdir -p android-dependencies
 
 pushd android-dependencies
@@ -16,3 +18,4 @@ export LOCAL_ANDROID_NDK_HOST_PLATFORM="linux-x86_64"
 export PATH=$PATH:${ANDROID_NDK_HOME}
 
 popd # Leaving dependencies
+popd # Leaving script-folder
