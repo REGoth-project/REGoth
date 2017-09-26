@@ -29,6 +29,7 @@ addons:
 
 env:
   - PLATFORM=android
+  - TERM=dumb
 
 git:
   submodules: false
