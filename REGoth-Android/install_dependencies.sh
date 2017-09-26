@@ -18,7 +18,7 @@ unzip -q android-studio-ide-162.4069837-linux.zip
 rm android-studio-ide-162.4069837-linux.zip
 
 # Setup environment
-export ANDROID_SDK_HOME=`pwd`/android-studio-ide-162.4069837-linux
+export ANDROID_HOME=`pwd`/android-studio-ide-162.4069837-linux
 export ANDROID_NDK_HOME=`pwd`/android-ndk-r14b-linux-x86_64
 export LOCAL_ANDROID_NDK_HOME="$ANDROID_NDK_HOME"
 export LOCAL_ANDROID_NDK_HOST_PLATFORM="linux-x86_64"
