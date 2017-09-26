@@ -28,14 +28,14 @@ export PATH=$PATH:${ANDROID_HOME}/tools
 export PATH=$PATH:${ANDROID_NDK_HOME}
 
 # Setup Android SDK
-echo "Andorid SDK Licenses..."
-yes | ${ANDROID_HOME}/tools/bin/sdkmanager --licenses
-
 echo "Updating SDK"
 yes | ${ANDROID_HOME}/tools/bin/sdkmanager --update
 
 echo "Downloading Android Build Tools"
 yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platforms;android-21" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
+
+echo "Andorid SDK Licenses..."
+yes | ${ANDROID_HOME}/tools/bin/sdkmanager --licenses
 
 popd # Leaving dependencies
 
