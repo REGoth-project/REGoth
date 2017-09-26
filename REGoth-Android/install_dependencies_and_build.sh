@@ -1,3 +1,5 @@
+git submodule update --init --recursive
+
 pushd "$(dirname "$0")"
 
 mkdir -p android-dependencies
