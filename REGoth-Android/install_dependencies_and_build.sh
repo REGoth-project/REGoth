@@ -38,4 +38,7 @@ echo "Downloading Android Build Tools"
 yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platforms;android-21" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
 
 popd # Leaving dependencies
+
+./gradlew build
+
 popd # Leaving script-folder
