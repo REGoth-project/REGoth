@@ -1,19 +1,11 @@
+language: c++
 
-matrix:
-  include:
-    - language: android
-      jdk: oraclejdk8
-      android:
-        components:
-          - tools
-          - android-25
-          - build-tools-25.0.3
-      addons:
-        apt:
-          sources:
+addons:
+    apt:
+        sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
-          packages:
+        packages:
             - g++-6
             - gcc-6
             - cmake
@@ -34,51 +26,22 @@ matrix:
             - libasound2-dev 
             - alsa-utils 
             - alsa-oss
-            
-        git:
-          submodules: false
-          
-        script:
-          - REGoth-Android/install_dependencies.sh;
-          - REGoth-Android/build.sh;
 
-              
-    - language: c++
-        addons:
-            apt:
-                sources:
-                    - ubuntu-toolchain-r-test
-                    - george-edison55-precise-backports
-                packages:
-                    - g++-6
-                    - gcc-6
-                    - cmake
-                    - cmake-data
-                    - libx11-xcb-dev
-                    - libxinerama-dev
-                    - libxcursor-dev
-                    - libxcb-image0-dev
-                    - libxcb-randr0-dev
-                    - libudev-dev
-                    - libopenal-dev
-                    - freeglut3-dev
-                    - libjpeg-dev
-                    - libfreetype6-dev
-                    - libxrandr-dev
-                    - libglew-dev
-                    - libsndfile1-dev
-                    - libasound2-dev 
-                    - alsa-utils 
-                    - alsa-oss
+env:
+  - PLATFORM=android
 
-        git:
-          submodules: false
+git:
+  submodules: false
 
-        script:
-          - if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi;
-          - git submodule update --init --recursive;
-          - mkdir -p build;
-          - cd build;
-          - cmake ..;
-          - make -j2;
-              
+script:
+  - 'if [ "$PLATFORM" = "android" ]; then
+     REGoth-Android/install_dependencies.sh
+     REGoth-Android/build.sh
+   else
+     if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
+     git submodule update --init --recursive
+     mkdir -p build
+     cd build
+     cmake ..
+     make -j2
+   fi'
