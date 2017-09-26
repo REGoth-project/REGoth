@@ -42,6 +42,7 @@ yes | ${ANDROID_HOME}/tools/bin/sdkmanager --licenses
 
 popd # Leaving dependencies
 
+export TERM=dumb # Fixes gradle output looking bad
 ./gradlew build
 
 popd # Leaving script-folder
