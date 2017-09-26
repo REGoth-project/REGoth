@@ -30,7 +30,7 @@ if(EMSCRIPTEN)
 endif()
 
 if(ANDROID)
-    set(BGFX_DEBUG 0)
+    set(BGFX_DEBUG 1)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 
@@ -62,7 +62,7 @@ if(ANDROID)
     #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -ffor-scope -fno-rtti -pipe -ffunction-sections -fdata-sections -ffast-math -Wnon-virtual-dtor -Wreorder -Wsign-promo -fvisibility=hidden -fvisibility-inlines-hidden -Wstrict-null-sentinel -Os -funroll-all-loops -fpeel-loops -ftree-vectorize")
     set(LINKER_FLAGS "${LINKER_FLAGS} -nostartfiles, -Wl,--as-needed -Wl,--gc-sections -Wl,--no-undefined -Wl,--strip-all -Wl,-rpath-link=${ANDROID_NDK_SYSROOT}/usr/lib/ -L${ANDROID_NDK_SYSROOT}/usr/lib/")
 
-    add_library(android_glue SHARED ${ANDROID_SRC})
+    add_library(android_glue STATIC ${ANDROID_SRC})
 
     # Stuff all android libraries in here
     target_link_libraries(android_glue log android bgfx_common EGL GLESv2)
