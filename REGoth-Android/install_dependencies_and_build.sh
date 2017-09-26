@@ -29,10 +29,10 @@ export PATH=$PATH:${ANDROID_NDK_HOME}
 
 # Setup Android SDK
 echo "Updating SDK"
-yes | ${ANDROID_HOME}/tools/bin/sdkmanager --update
+yes | ${ANDROID_HOME}/tools/bin/sdkmanager --update  > /dev/null # /dev/null because travis complains about the build log getting too long
 
 echo "Downloading Android Build Tools"
-yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platforms;android-21" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository"
+yes | ${ANDROID_HOME}/tools/bin/sdkmanager "platforms;android-21" "build-tools;25.0.2" "extras;google;m2repository" "extras;android;m2repository" > /dev/null
 
 echo "Andorid SDK Licenses..."
 yes | ${ANDROID_HOME}/tools/bin/sdkmanager --licenses
