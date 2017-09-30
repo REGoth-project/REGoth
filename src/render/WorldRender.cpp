@@ -24,7 +24,12 @@ namespace Render
         world.getSky().setFarPlane(config.state.farPlane);
 
         // Set up sky-LUT
-        bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+        //bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
+
+        Math::float4 skyColors[2];
+        world.getSky().getSkyColors(skyColors[0], skyColors[1]);
+        bgfx::setUniform(config.uniforms.skyColors, (float*)skyColors, 2);
+
 
         // Set fog constants
         Math::float3 fogColor;
@@ -370,9 +375,9 @@ namespace Render
 		}
 #endif
 
-        /*bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
+        bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
         bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls:    %d", numDrawcalls);
-        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);*/
+        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);
 
         //world.getPhysicsSystem().debugDraw();
 

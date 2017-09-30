@@ -42,40 +42,33 @@ Sky::~Sky()
 {
 }
 
+static Math::float3 applySkyColor(const Math::float3& col0, const Math::float3& col1, uint8_t c)
+{
+    return Math::float3::lerp(col0, col1, (float)c / 255.0f);
+}
+
 void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1, Math::float4* pLut)
 {
-    Math::float3 delta = col1 - col0;
-
-    // Put base color into upper half
-    uint32_t ic[] = {Utils::round<uint32_t>(255.0f * col0.x) << 16,
-                     Utils::round<uint32_t>(255.0f * col0.y) << 16,
-                     Utils::round<uint32_t>(255.0f * col0.z) << 16};
-
-    // Inflate color-delta to the lower 16-bits
-    uint32_t idelta[] = {Utils::round<uint32_t>(delta.x * 65535),
-                         Utils::round<uint32_t>(delta.y * 65535),
-                         Utils::round<uint32_t>(delta.z * 65535)};
-
     for (int i = 0; i < 256; i++)
     {
-        // Magic?
-        ic[0] += idelta[0];
-        ic[1] += idelta[1];
-        ic[2] += idelta[2];
-
-        // Plug the color-bytes together
-        /*uint32_t final =  (((ic[0] >> 16) << 24) &      0xFF000000) // r
-                          + (((ic[1] >> 16) << 16) &    0x00FF0000) // g
-                          + (((ic[2] >> 16) << 8) &     0x0000FF00)  // b
-                          + 0xFF;                                 // a
-         */
-
-        pLut[i].x = (ic[0] >> 16) / 255.0f;
-        pLut[i].y = (ic[1] >> 16) / 255.0f;
-        pLut[i].z = (ic[2] >> 16) / 255.0f;
+        Math::float3 c = applySkyColor(col0, col1, (uint8_t)i);
+        pLut[i].x = c.x;
+        pLut[i].y = c.y;
+        pLut[i].z = c.z;
         pLut[i].w = 1.0f;
     }
 }
+
+
+void Sky::getSkyColors(Math::float4 &color0, Math::float4 &color1)
+{
+    color0 = {0.0f, 0.0f, 0.0f, 0.0f};
+    color1 = {m_MasterState.baseColor.x,
+              m_MasterState.baseColor.y,
+              m_MasterState.baseColor.z,
+              1};
+}
+
 
 void Sky::interpolate()
 {
@@ -127,7 +120,7 @@ void Sky::interpolate()
     // FIXME: Multiply fogColor with 0.8 when using dome!
 
     // Calculate LUT based on our interpolated colors
-    calculateLUT_ZenGin(Math::float3(0, 0, 0), m_MasterState.baseColor, m_LUT);
+    //calculateLUT_ZenGin(Math::float3(0, 0, 0), m_MasterState.baseColor, m_LUT); // Commented out because getSkyColors is used now
 
     // TODO: Fix up the textures here
 }
@@ -378,3 +371,5 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
     // Calculate actual fog color
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
 }
+
+

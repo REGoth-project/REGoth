@@ -98,6 +98,12 @@ namespace Content
          * @return Pointer to the LUT
          */
         const Math::float4* getLUTPtr() const { return m_LUT; }
+
+        /**
+         * Outputs the two colors to lerp intensity values with to turn it into a sky-colored pixel
+         */
+        void getSkyColors(Math::float4& color0, Math::float4& color1);
+
         /**
          * @return current interpolated sky-state
          */
