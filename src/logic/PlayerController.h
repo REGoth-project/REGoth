@@ -362,11 +362,13 @@ namespace Logic
         /**
          * @return Waypoint closest to the NPC
          */
-        size_t getClosestWaypoint() { return m_AIState.closestWaypoint; }
+        World::Waynet::WaypointIndex getClosestWaypoint();
+
         /**
-         * @return Waypoint the NPC is currently going to
+         * @return Waypoint second closest to the NPC
          */
-        size_t getTargetWaypoint() { return m_AIState.targetWaypoint; }
+        World::Waynet::WaypointIndex getSecondClosestWaypoint();
+
         /**
          * Sets up the bindings for this playercontroller // TODO: REMOVE THIS AND DO IT OUTSIDE OF THE PLAYERCONTROLLER
          */

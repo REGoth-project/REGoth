@@ -2710,5 +2710,37 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
     //if(tag.m_Tag == )
 }
 
+World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
+{
+    return World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+}
+
+
+World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
+{
+    using namespace World::Waynet;
+
+    const Math::float3 position = getEntityTransform().Translation();
+
+    WaypointIndex nearest = INVALID_WAYPOINT;
+    WaypointIndex secondNearest = INVALID_WAYPOINT;
+    const WaynetInstance& waynet = m_World.getWaynet();
+
+    float nearestLen = FLT_MAX;
+
+    for (size_t i = 0; i < waynet.waypoints.size(); i++)
+    {
+        float chk = (position - waynet.waypoints[i].position).lengthSquared();
+        if (chk < nearestLen)
+        {
+            nearestLen = chk;
+            secondNearest = nearest;
+            nearest = i;
+        }
+    }
+
+    return secondNearest;
+}
+
 
 
