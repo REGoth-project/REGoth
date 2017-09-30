@@ -78,6 +78,7 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
     Handle::TextureHandle h = m_Allocator.createObject();
 
     m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
+    m_Allocator.getElement(h).imageData = data;
     //m_Allocator.getElement(h).m_TextureHandle = bth;
     m_Allocator.getElement(h).m_TextureName = name;
     m_Allocator.getElement(h).m_Width = width;
