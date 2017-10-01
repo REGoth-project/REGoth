@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace VDFS
@@ -34,7 +34,7 @@ namespace Textures
     class TextureAllocator
     {
     public:
-        TextureAllocator(Engine::BaseEngine& engine);
+        TextureAllocator(Engine::GameEngine& engine);
         virtual ~TextureAllocator();
 
         /**
@@ -79,7 +79,7 @@ namespace Textures
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
 
         /**
          * Rough estimation about how much memory the loaded textures need on the GPU in bytes

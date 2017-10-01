@@ -15,11 +15,11 @@
 #include "PrintScreenMessages.h"
 #include "TextView.h"
 #include <components/VobClasses.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <logic/PlayerController.h>
 #include <utils/logger.h>
 
-UI::Hud::Hud(Engine::BaseEngine& e)
+UI::Hud::Hud(Engine::GameEngine& e)
     : View(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();

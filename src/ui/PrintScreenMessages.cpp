@@ -5,7 +5,7 @@
 #include "PrintScreenMessages.h"
 #include "View.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <render/RenderSystem.h>
 
 using namespace UI;
@@ -15,7 +15,7 @@ using namespace UI;
  */
 const double TIME_TO_POP_MESSAGE = 1.0;
 
-PrintScreenMessages::PrintScreenMessages(Engine::BaseEngine& e)
+PrintScreenMessages::PrintScreenMessages(Engine::GameEngine& e)
     : View(e)
 {
     m_TimeToPopMessage = TIME_TO_POP_MESSAGE;

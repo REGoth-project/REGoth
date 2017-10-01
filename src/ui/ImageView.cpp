@@ -4,12 +4,12 @@
 
 #include "ImageView.h"
 #include <content/Texture.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <render/RenderSystem.h>
 
 extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
-UI::ImageView::ImageView(Engine::BaseEngine& e)
+UI::ImageView::ImageView(Engine::GameEngine& e)
     : View(e)
 {
     m_RelativeSize = true;

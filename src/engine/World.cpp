@@ -42,7 +42,7 @@ const LoadSection LOAD_SECTION_COLLISION = {40, 60, "Generating world collision"
 const LoadSection LOAD_SECTION_VOBS = {60, 80, "Loading objects"};
 const LoadSection LOAD_SECTION_RUNSCRIPTS = {80, 100, "Running startup scripts"};
 
-WorldInstance::WorldInstance(Engine::BaseEngine& engine)
+WorldInstance::WorldInstance(Engine::GameEngine& engine)
     : m_pEngine(&engine)
     , m_WorldMesh(*this)
     , m_ScriptEngine(*this)
@@ -102,7 +102,7 @@ bool WorldInstance::init(const std::string& zen,
                          const json& logManager)
 {
     m_ZenFile = zen;
-    Engine::BaseEngine& engine = *m_pEngine;
+    Engine::GameEngine& engine = *m_pEngine;
 
     if (!m_AnimationLibrary.loadAnimations())
         LogError() << "failed to load animations!";

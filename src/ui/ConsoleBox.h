@@ -9,7 +9,7 @@ namespace UI
     class ConsoleBox : public View
     {
     public:
-        ConsoleBox(Engine::BaseEngine& e);
+        ConsoleBox(Engine::GameEngine& e);
         ~ConsoleBox();
 
         /**

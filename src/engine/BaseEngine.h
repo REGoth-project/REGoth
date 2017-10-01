@@ -1,32 +1,29 @@
 #pragma once
-#include <future>
-#include "World.h"
 #include <bx/commandline.h>
-#include <engine/GameClock.h>
-#include <engine/GameSession.h>
 #include <engine/World.h>
-#include <logic/Console.h>
 #include <logic/SavegameManager.h>
 #include <memory/StaticReferencedAllocator.h>
-#include <ui/View.h>
 #include <vdfs/fileIndex.h>
+#include <utils/cli.h>
 
-namespace UI
+namespace Flags
 {
-    class Hud;
-    class zFont;
-    class zFontCache;
-}
+    static Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
+    static Cli::Flag g1Directory("", "g1-path", 1, "Game data to use when the -g1 flag is specified on the commandline", {"."}, "Data");
+    static Cli::Flag g2Directory("", "g2-path", 1, "Game data to use when the -g2 flag is specified on the commandline", {"."}, "Data");
+    static Cli::Flag startG1("g1", "start-g1", 0, "Uses the path stored in the 'g1-path' config setting as game data path");
+    static Cli::Flag startG2("g2", "start-g2", 0, "Uses the path stored in the 'g2-path' config setting as game data path");
 
-namespace Audio
-{
-    class AudioEngine;
+    static Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
+    static Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
+    static Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
+    static Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
+    static Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
+    static Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 }
 
 namespace Engine
 {
-    class GameSession;
-    class AsyncAction;
     const int MAX_NUM_WORLDS = 4;
 
     enum class ExecutionPolicy
@@ -35,6 +32,10 @@ namespace Engine
         NewThread
     };
 
+    /**
+     * @brief The BaseEngine class
+     * Covering start parameters and archive loading
+     */
     class BaseEngine
     {
     public:
@@ -65,15 +66,11 @@ namespace Engine
         /**
          * @return Basic gametype this is. Needed for sky configuration, for example
          */
-        Daedalus::GameType getBasicGameType() { return m_BasicGameType; };
+        Daedalus::GameType getBasicGameType() { return m_BasicGameType; }
         /**
          * @return Basic gametype this is. Needed for sky configuration, for example
          */
         void setBasicGameType(Daedalus::GameType type) { m_BasicGameType = type; }
-        /**
-         * @brief Frame update // TODO: Remove width and height
-         */
-        void frameUpdate(double dt, uint16_t width, uint16_t m_height);
 
         /**
          * @return Main VDF-Archive
@@ -88,57 +85,20 @@ namespace Engine
         World::WorldInstance& getWorldInstance(Handle::WorldHandle& h);
 
         /**
-         * @return Gameclock
-         */
-        GameClock& getGameClock();
-
-        /**
-         * information stored in a session is cleared when loading a savegame or starting a new game
-         * @return GameSession
-         */
-        GameSession& getSession() { return *m_Session; }
-        /**
-         * drop all information bound to the current session
-         */
-        void resetSession();
-
-        /**
-         * @return Console
-         */
-        Logic::Console& getConsole() { return m_Console; }
-        /**
          * @return Arguments passed to the engine
          */
         EngineArgs getEngineArgs();
 
         /**
-         * @return Base-level UI-View. Parent of all other views.
-         */
-        UI::View& getRootUIView() { return m_RootUIView; }
-        /**
-         * // TODO: Move to GameEngine, or pass GameEngine to world!
-         * @return HUD
-         */
-        UI::Hud& getHud() { return *m_pHUD; }
-        UI::zFontCache& getFontCache() { return *m_pFontCache; }
-        Audio::AudioEngine& getAudioEngine() { return *m_AudioEngine; }
-        /**
          * Sets the path the engine is looking for files
          * @param path New path
          */
         void setContentBasePath(const std::string& path) { m_ContentBasePath = path; }
-        /*+
+
+        /**
          * @return The path where the engine is looking for content files
          */
         const std::string& getContentBasePath() { return m_ContentBasePath; }
-        /**
-         * @return Allocator for always present textures
-         */
-        Textures::TextureAllocator& getEngineTextureAlloc() { return m_EngineTextureAlloc; }
-        /**
-         * @return data-access to the main world
-         */
-        Handle::WorldHandle getMainWorld();
 
         /**
          * Saves the given world to a file, as savegame
@@ -149,51 +109,27 @@ namespace Engine
         bool saveWorld(Handle::WorldHandle world, const std::string& file);
 
         /**
-         * Pauses or continues the game.
-         * @param paused
-         */
-        void setPaused(bool paused);
-
-        /**
-         * Pauses or continues the game. Depending on the current state
-         */
-        void togglePaused() { setPaused(!m_Paused); }
-        /**
          * increase the time, which the current frame should not treat as elapsed
          */
-        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
-        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
-        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
-        /**
-         * @return true if the calling thread is the main thread
-         */
-        bool isMainThread();
+        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; }
 
         /**
-         * Guarantees execution of the given function in the main thread
-         * @param job function to execute in the main thread
-         * @param forceQueueing if false AND if called from main thread: executes the job right away
-         * 		  instead of queueing and does not acquire the lock.
+         * @return The excluded frame time, which is not treated as elapsed.
          */
-        void executeInMainThread(const std::function<void(BaseEngine* engine)>& job, bool forceQueueing = false);
+        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; }
 
         /**
-         * Execute the given job on the main thread one time per frame update until it returns true
+         * Resets the excluded frame time.
          */
-        void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine* engine)>& job,
-                                          bool forceQueueing = false);
-
-        /**
-         * executes all jobs in the queue and removes the ones, that return true
-         */
-        void processMessageQueue();
+        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; }
 
         /**
          * Called when a world was added
-         * TODO onWorld... should be protected, but currently need to call this function from GameSession
+         * TODO onWorld... should be protected, but currently there is a need to call
+         * this function from GameSession.
          */
         virtual void onWorldCreated(Handle::WorldHandle world);
-        virtual void onWorldRemoved(Handle::WorldHandle world){};
+        virtual void onWorldRemoved(Handle::WorldHandle world){}
 
     protected:
         /**
@@ -208,11 +144,6 @@ namespace Engine
         virtual void loadArchives();
 
         /**
-         * ID of the main thread (bgfx thread)
-         */
-        std::thread::id m_MainThreadID;
-
-        /**
          * Enum with values for Gothic I and Gothic II
          */
         Daedalus::GameType m_BasicGameType;
@@ -223,35 +154,9 @@ namespace Engine
         VDFS::FileIndex m_FileIndex;
 
         /**
-         * Game session, stores information that should be reset on starting a new game/loading
-         * unique_ptr is used, because we can't overwrite the session itself,
-         * because it has a member variable reference
-         */
-        std::unique_ptr<GameSession> m_Session;
-
-        /**
-         * ingame console
-         */
-        Logic::Console m_Console;
-
-        /**
          * Arguments
          */
         EngineArgs m_Args;
-
-        Audio::AudioEngine* m_AudioEngine = nullptr;
-
-        /**
-         * Base UI-View
-         */
-        UI::View m_RootUIView;
-        UI::Hud* m_pHUD;
-        UI::zFontCache* m_pFontCache;
-
-        /**
-         * Allocator for always present textures
-         */
-        Textures::TextureAllocator m_EngineTextureAlloc;
 
         /**
          * Folder where the content is
@@ -262,9 +167,6 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-
-        std::list<AsyncAction> m_MessageQueue;
-        std::mutex m_MessageQueueMutex;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

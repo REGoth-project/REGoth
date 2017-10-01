@@ -6,7 +6,8 @@
 #include <cstdint>
 #include <iostream>
 #include "engine/Input.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
+#include <engine/GameSession.h>
 #include <engine/World.h>
 #include <entry/input.h>
 #include <utils/Utils.h>

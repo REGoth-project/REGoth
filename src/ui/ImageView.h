@@ -7,7 +7,7 @@ namespace UI
     class ImageView : public View
     {
     public:
-        ImageView(Engine::BaseEngine& e);
+        ImageView(Engine::GameEngine& e);
         ~ImageView();
 
         /**

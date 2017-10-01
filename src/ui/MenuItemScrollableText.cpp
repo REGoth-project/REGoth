@@ -6,12 +6,12 @@
 #include "Menu.h"
 #include "MenuItem.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 
 using namespace UI;
 
-MenuItemTypes::MenuItemScrollableText::MenuItemScrollableText(Engine::BaseEngine& e, UI::Menu& baseMenu,
+MenuItemTypes::MenuItemScrollableText::MenuItemScrollableText(Engine::GameEngine& e, UI::Menu& baseMenu,
                                                               const Daedalus::GameState::MenuItemHandle& scriptHandle)
     : MenuItemText(e, baseMenu, scriptHandle)
 {

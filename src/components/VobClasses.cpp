@@ -4,7 +4,7 @@
 
 #include "VobClasses.h"
 #include "EntityActions.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <logic/ItemController.h>
 #include <logic/MobController.h>

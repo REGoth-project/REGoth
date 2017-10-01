@@ -8,7 +8,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace Meshes
@@ -20,7 +20,7 @@ namespace Meshes
     class SkeletalMeshAllocator
     {
     public:
-        SkeletalMeshAllocator(Engine::BaseEngine& engine);
+        SkeletalMeshAllocator(Engine::GameEngine& engine);
         virtual ~SkeletalMeshAllocator();
 
         /**
@@ -78,7 +78,7 @@ namespace Meshes
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
 
         /**
          * Rough estimation about how much memory the loaded textures need on the GPU

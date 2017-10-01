@@ -6,12 +6,12 @@
 #include "ImageView.h"
 #include "Menu.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 
 using namespace UI;
 
-MenuItem::MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle)
+MenuItem::MenuItem(Engine::GameEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle)
     : View(e)
     , m_ScriptHandle(scriptHandle)
     , m_BaseMenu(baseMenu)
@@ -92,7 +92,7 @@ void MenuItem::setTextLine(const std::string& text, unsigned int line)
  *
  */
 
-MenuItemTypes::MenuItemText::MenuItemText(Engine::BaseEngine& e, UI::Menu& baseMenu,
+MenuItemTypes::MenuItemText::MenuItemText(Engine::GameEngine& e, UI::Menu& baseMenu,
                                           const Daedalus::GameState::MenuItemHandle& scriptHandle)
     : MenuItem(e, baseMenu, scriptHandle)
 {

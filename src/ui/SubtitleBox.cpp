@@ -5,13 +5,13 @@
 #include "SubtitleBox.h"
 #include <algorithm>
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <entry/input.h>
 #include <imgui/imgui.h>
 #include <render/RenderSystem.h>
 #include <utils/logger.h>
 
-UI::SubtitleBox::SubtitleBox(Engine::BaseEngine& e)
+UI::SubtitleBox::SubtitleBox(Engine::GameEngine& e)
     : View(e)
 {
     m_Scaling = 1;

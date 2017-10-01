@@ -1,7 +1,7 @@
 #include "Console.h"
 #include <GLFW/glfw3.h>
 #include <ZenLib/utils/split.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <ui/Hud.h>
 #include <utils/Utils.h>
 #include <utils/logger.h>
@@ -9,8 +9,8 @@
 
 using Logic::Console;
 
-Console::Console(Engine::BaseEngine& e)
-    : m_BaseEngine(e)
+Console::Console(Engine::GameEngine& e)
+    : m_GameEngine(e)
 {
     m_HistoryIndex = 0;
     m_Open = false;
@@ -23,7 +23,7 @@ Console::~Console()
 
 void Console::onKeyDown(int glfwKey, int mods)
 {
-    auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();
+    auto& consoleBox = m_GameEngine.getHud().getConsoleBox();
     if (glfwKey == GLFW_KEY_PAGE_DOWN)
     {
         consoleBox.increaseSelectionIndex(1);
@@ -192,7 +192,7 @@ void Console::outputAdd(const std::string& msg)
 
 std::list<Logic::Console::Command>::iterator Console::determineCommand(const std::vector<std::string>& tokens)
 {
-    bool worldAvailable = m_BaseEngine.getMainWorld().isValid();
+    bool worldAvailable = m_GameEngine.getMainWorld().isValid();
     std::vector<std::size_t> numMatchingTokens(m_Commands.size(), 0);
     size_t commandIndex = 0;
     for (auto it = m_Commands.begin(); it != m_Commands.end(); ++it, ++commandIndex)
@@ -235,7 +235,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed)
     vector<bool> commandIsAlive;
     for (const auto& command : m_Commands)
     {
-        bool disabled = command.requiresWorld && !m_BaseEngine.getMainWorld().isValid();
+        bool disabled = command.requiresWorld && !m_GameEngine.getMainWorld().isValid();
         commandIsAlive.push_back(!disabled);
     }
 
@@ -292,7 +292,7 @@ void Console::generateSuggestions(const std::string& input, bool limitToFixed)
 
 void Console::invalidateSuggestions()
 {
-    m_BaseEngine.getHud().getConsoleBox().setSelectionIndex(-1);
+    m_GameEngine.getHud().getConsoleBox().setSelectionIndex(-1);
     m_SuggestionsList.clear();
 }
 
@@ -313,7 +313,7 @@ void Console::replaceSelectedToken()
         return;
     // default for now: only auto complete last token
     const auto& suggestions = m_SuggestionsList.back();
-    auto selectedSuggestion = suggestions.at(m_BaseEngine.getHud().getConsoleBox().getSelectionIndex());
+    auto selectedSuggestion = suggestions.at(m_GameEngine.getHud().getConsoleBox().getSelectionIndex());
     std::vector<std::string> tokens = tokenized(m_TypedLine);
     tokens.back() = selectedSuggestion->aliasList.at(0);
     std::string newLine = Utils::join(tokens.begin(), tokens.end(), " ");

@@ -227,8 +227,8 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         return "Target world-file invalid: " + buildWorldPath(index, info.world);
     }
     auto timePlayed = info.timePlayed;
-    auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine) {
-        auto resetSession = [](BaseEngine* engine) {
+    auto loadSave = [worldFileData, index, timePlayed](GameEngine* engine) {
+        auto resetSession = [](GameEngine* engine) {
             gameEngine->resetSession();
             gameEngine->getHud().getLoadingScreen().reset();
             gameEngine->getHud().getLoadingScreen().setHidden(false);
@@ -244,7 +244,7 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         gameEngine->getGameClock().setTotalSeconds(timePlayed);
         std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager);
 
-        auto registerWorld = [ index, w = std::move(pWorld) ](BaseEngine * engine) mutable
+        auto registerWorld = [ index, w = std::move(pWorld) ](GameEngine * engine) mutable
         {
             Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(w));
             if (worldHandle.isValid())

@@ -1,7 +1,7 @@
 #include "StaticMeshAllocator.h"
 #include "VertexTypes.h"
 #include <bgfx/bgfx.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 #include <vdfs/fileIndex.h>
 #include <zenload/zCModelMeshLib.h>
@@ -9,7 +9,7 @@
 
 using namespace Meshes;
 
-StaticMeshAllocator::StaticMeshAllocator(Engine::BaseEngine& engine)
+StaticMeshAllocator::StaticMeshAllocator(Engine::GameEngine& engine)
     : GenericMeshAllocator(&engine.getVDFSIndex())
     , m_Engine(engine)
 {
@@ -62,7 +62,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.executeInMainThread([this, h](Engine::GameEngine* pEngine) {
         finalizeLoad(h);
     });
 
@@ -140,7 +140,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.executeInMainThread([this, h](Engine::GameEngine* pEngine) {
         bgfx::frame();  // Flush the pipeline to prevent an overflow
         finalizeLoad(h);
     });

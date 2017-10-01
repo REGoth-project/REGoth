@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 }
 
 namespace UI
@@ -66,7 +66,7 @@ namespace UI
     class View
     {
     public:
-        View(Engine::BaseEngine& e);
+        View(Engine::GameEngine& e);
 
         virtual ~View();
 
@@ -169,6 +169,6 @@ namespace UI
         /**
          * Engine
          */
-        Engine::BaseEngine& m_Engine;
+        Engine::GameEngine& m_Engine;
     };
 }

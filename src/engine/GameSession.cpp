@@ -3,6 +3,7 @@
 //
 
 #include "GameSession.h"
+#include "GameEngine.h"
 #include <fstream>
 #include "AsyncAction.h"
 #include "ui/Hud.h"
@@ -12,7 +13,7 @@
 
 using namespace Engine;
 
-GameSession::GameSession(BaseEngine& engine)
+GameSession::GameSession(GameEngine& engine)
     : m_Engine(engine)
 {
     m_CurrentSlotIndex = -1;
@@ -48,11 +49,6 @@ nlohmann::json GameSession::retrieveInactiveWorld(const std::string& worldName)
     }
     else
         return nlohmann::json();
-}
-
-GameClock& GameSession::getGameClock()
-{
-    return m_GameClock;
 }
 
 void GameSession::removeAllWorlds()
@@ -138,7 +134,7 @@ void GameSession::removeWorld(Handle::WorldHandle world)
 
 void GameSession::switchToWorld(const std::string& worldFile)
 {
-    auto switchToWorld_ = [worldFile](BaseEngine* engine) {
+    auto switchToWorld_ = [worldFile](GameEngine* engine) {
 
         json newWorldJson;
         json exportedPlayer;
@@ -147,7 +143,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
         /**
          * prolog
          */
-        auto exportData = [&](BaseEngine* engine) {
+        auto exportData = [&](GameEngine* engine) {
             auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
             engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
@@ -186,7 +182,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
         /**
          * epilog
          */
-        auto registerWorld_ = [ w = std::move(pNewWorld), exportedPlayer ](BaseEngine * engine) mutable
+        auto registerWorld_ = [ w = std::move(pNewWorld), exportedPlayer ](GameEngine * engine) mutable
         {
             Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
             engine->getSession().setMainWorld(newWorld);
@@ -231,9 +227,9 @@ Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
 
 void GameSession::startNewGame(const std::string& worldFile)
 {
-    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine) {
+    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::GameEngine* engine) {
 
-        auto prolog = [](Engine::BaseEngine* engine) {
+        auto prolog = [](Engine::GameEngine* engine) {
             engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
@@ -242,7 +238,7 @@ void GameSession::startNewGame(const std::string& worldFile)
 
         std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
 
-        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine * engine) mutable
+        auto registerWorld = [w = std::move(uniqueWorld)](Engine::GameEngine * engine) mutable
         {
             Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
             if (worldHandle.isValid())

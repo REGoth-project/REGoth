@@ -5,19 +5,19 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include "engine/AsyncAction.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/Platform.h>
 #include <ui/LoadingScreen.h>
 #include <utils/logger.h>
 
 using namespace UI;
 
-Menu_Main::Menu_Main(Engine::BaseEngine& e)
+Menu_Main::Menu_Main(Engine::GameEngine& e)
     : Menu(e)
 {
 }
 
-Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
+Menu_Main* Menu_Main::create(Engine::GameEngine& e)
 {
     Menu_Main* s = new Menu_Main(e);
     s->initializeInstance("MENU_MAIN");

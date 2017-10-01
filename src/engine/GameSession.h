@@ -5,9 +5,9 @@
 #include <list>
 #include <map>
 #include <memory>
-#include "BaseEngine.h"
-#include "GameClock.h"
-#include "World.h"
+#include <engine/GameClock.h>
+#include <engine/GameEngine.h>
+#include <engine/World.h>
 #include <handle/HandleDef.h>
 #include <logic/LogManager.h>
 #include <json/json.hpp>
@@ -17,7 +17,7 @@ namespace Engine
     class GameSession
     {
     public:
-        GameSession(BaseEngine& engine);
+        GameSession(GameEngine& engine);
 
         /**
          * Cleans current session
@@ -48,11 +48,6 @@ namespace Engine
          */
         bool hasInactiveWorld(const std::string& worldName);
 
-        /**
-         * @return Gameclock
-         */
-        GameClock& getGameClock();
-
         void setCurrentSlot(int index) { m_CurrentSlotIndex = index; }
         int getCurrentSlot() { return m_CurrentSlotIndex; }
 
@@ -65,6 +60,11 @@ namespace Engine
         {
             return m_MainWorld;
         }
+
+        /**
+         * @return GameClock
+         */
+        GameClock& getGameClock() { return m_GameClock; }
 
         /**
          * @return const reference to the list of unqiue pointers to loaded worlds
@@ -140,11 +140,6 @@ namespace Engine
         int m_CurrentSlotIndex;
 
         /**
-         * Gameclock
-         */
-        GameClock m_GameClock;
-
-        /**
          * known infoInstances by npcInstances
          */
         std::map<size_t, std::set<size_t>> m_KnownInfos;
@@ -170,8 +165,13 @@ namespace Engine
         std::vector<Handle::WorldHandle> m_Worlds;
 
         /**
-         * reference to base engine
+         * reference to game engine
          */
-        BaseEngine& m_Engine;
+        GameEngine& m_Engine;
+
+        /**
+         * Gameclock
+         */
+        GameClock m_GameClock;
     };
 }

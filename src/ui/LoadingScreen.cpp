@@ -5,7 +5,7 @@
 #include "LoadingScreen.h"
 #include "BarView.h"
 #include "TextView.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <render/RenderSystem.h>
 
 /**
@@ -21,7 +21,7 @@ const Math::float2 BAR_SIZE_G1 = {1.5f, 0.6f};
 const Math::float2 BAR_POSITION_G2 = {0.85f, 0.15f};
 const Math::float2 BAR_SIZE_G2 = {0.7f, 0.6f};
 
-UI::LoadingScreen::LoadingScreen(Engine::BaseEngine& e)
+UI::LoadingScreen::LoadingScreen(Engine::GameEngine& e)
     : ImageView(e)
 {
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();

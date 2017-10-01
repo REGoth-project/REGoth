@@ -1,19 +1,14 @@
 #include "BaseEngine.h"
+#include "GameSession.h"
 #include <fstream>
-#include "AsyncAction.h"
 #include "World.h"
-#include "audio/AudioEngine.h"
 #include <bx/commandline.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
 #include <render/WorldRender.h>
-#include <ui/Hud.h>
-#include <ui/LoadingScreen.h>
-#include <ui/zFont.h>
 #include <utils/bgfx_lib.h>
-#include <utils/cli.h>
 #include <utils/logger.h>
 #include <vdfs/fileIndex.h>
 #include <zenload/zCMesh.h>
@@ -22,44 +17,16 @@
 
 using namespace Engine;
 
-namespace Flags
-{
-    Cli::Flag gameDirectory("g", "game-dir", 1, "Root-folder of your Gothic installation", {"."}, "Data");
-    Cli::Flag g1Directory("", "g1-path", 1, "Game data to use when the -g1 flag is specified on the commandline", {"."}, "Data");
-    Cli::Flag g2Directory("", "g2-path", 1, "Game data to use when the -g2 flag is specified on the commandline", {"."}, "Data");
-    Cli::Flag startG1("g1", "start-g1", 0, "Uses the path stored in the 'g1-path' config setting as game data path");
-    Cli::Flag startG2("g2", "start-g2", 0, "Uses the path stored in the 'g2-path' config setting as game data path");
-
-    Cli::Flag modFile("m", "mod-file", 1, "Additional .mod-file to load", {""}, "Data");
-    Cli::Flag world("w", "world", 1, ".ZEN-file to load out of one of the vdf-archives", {""}, "Data");
-    Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
-    Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
-    Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
-    Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
-}
-
 BaseEngine::BaseEngine()
-    : m_MainThreadID(std::this_thread::get_id())
-    , m_RootUIView(*this)
-    , m_Console(*this)
-    , m_EngineTextureAlloc(*this)
 {
-    m_pHUD = nullptr;
-    m_pFontCache = nullptr;
-
     m_BasicGameType = Daedalus::GameType::GT_Gothic2;
     m_Paused = false;
     m_ExcludedFrameTime = 0;
     // allocate and init default session
-    resetSession();
 }
 
 BaseEngine::~BaseEngine()
 {
-    getRootUIView().removeChild(m_pHUD);
-    delete m_AudioEngine;
-    delete m_pHUD;
-    delete m_pFontCache;
 }
 
 void BaseEngine::initEngine(int argc, char** argv)
@@ -108,22 +75,36 @@ void BaseEngine::initEngine(int argc, char** argv)
         m_Args.playerScriptname = Flags::playerScriptname.getParam(0);
 
     m_Args.startNewGame = Flags::startNewGame.isSet();
-
-    std::string snd_device;
-    if (Flags::sndDevice.isSet())
-        snd_device = Flags::sndDevice.getParam(0);
-
-    m_AudioEngine = new Audio::AudioEngine(snd_device);
-
-    // Init HUD
-    m_pFontCache = new UI::zFontCache(*this);
-    m_pHUD = new UI::Hud(*this);
-    getRootUIView().addChild(m_pHUD);
 }
 
-void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
+void BaseEngine::onWorldCreated(Handle::WorldHandle world)
 {
-    onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
+}
+
+World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
+{
+    return h.get();
+}
+
+BaseEngine::EngineArgs BaseEngine::getEngineArgs()
+{
+    return m_Args;
+}
+
+bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
+{
+    json j;
+    world.get().exportWorld(j);
+
+    // Save
+    std::ofstream f(file);
+    if (!f.is_open())
+        return false;
+
+    f << Utils::iso_8859_1_to_utf8(j.dump(4));
+    f.close();
+
+    return true;
 }
 
 void BaseEngine::loadArchives()
@@ -137,18 +118,18 @@ void BaseEngine::loadArchives()
     //m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
 
     /*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
-	m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
-	m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures.VDF");
-	m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
+    m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
+    m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
+    m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
+    m_FileIndex.loadVDF("vdf/g1/sound.VDF");
+    m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
+    m_FileIndex.loadVDF("vdf/g1/speech.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
+    m_FileIndex.loadVDF("vdf/g1/textures.VDF");
+    m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
 
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
@@ -184,114 +165,6 @@ void BaseEngine::loadArchives()
     {
         m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
-}
-
-void BaseEngine::onWorldCreated(Handle::WorldHandle world)
-{
-}
-
-World::WorldInstance& BaseEngine::getWorldInstance(Handle::WorldHandle& h)
-{
-    return h.get();
-}
-
-BaseEngine::EngineArgs BaseEngine::getEngineArgs()
-{
-    return m_Args;
-}
-
-bool BaseEngine::saveWorld(Handle::WorldHandle world, const std::string& file)
-{
-    json j;
-    world.get().exportWorld(j);
-
-    // Save
-    std::ofstream f(file);
-    if (!f.is_open())
-        return false;
-
-    f << Utils::iso_8859_1_to_utf8(j.dump(4));
-    f.close();
-
-    return true;
-}
-
-void BaseEngine::setPaused(bool paused)
-{
-    if (paused != m_Paused)
-    {
-        if (getMainWorld().isValid())
-        {
-            if (paused)
-                getMainWorld().get().getAudioWorld().pauseSounds();
-            else
-                getMainWorld().get().getAudioWorld().continueSounds();
-        }
-        m_Paused = paused;
-    }
-}
-
-void BaseEngine::processMessageQueue()
-{
-    m_MessageQueueMutex.lock();
-    auto current = m_MessageQueue.begin();
-    while (current != m_MessageQueue.end())
-    {
-        auto& action = *current;
-        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
-        m_MessageQueueMutex.unlock();
-        bool finished = action.run(*this);
-        m_MessageQueueMutex.lock();
-        if (finished)
-            current = m_MessageQueue.erase(current);  // erase returns next iterator
-        else
-            std::advance(current, 1);
-    }
-    m_MessageQueueMutex.unlock();
-}
-
-void BaseEngine::resetSession()
-{
-    // GameSession's destructor will clean up worlds
-    m_Session = std::make_unique<GameSession>(*this);
-}
-
-GameClock& BaseEngine::getGameClock()
-{
-    return getSession().getGameClock();
-}
-
-Handle::WorldHandle BaseEngine::getMainWorld()
-{
-    return getSession().getMainWorld();
-}
-
-void BaseEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
-{
-    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
-        job(engine);
-        return true;
-    };
-    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
-}
-
-void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
-{
-    if (!forceQueue && isMainThread())
-    {
-        // execute right away
-        bool success = job(this);
-        if (success)
-            return;
-        // else job returned false -> queue the job
-    }
-    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-    m_MessageQueue.emplace_back(AsyncAction{job});
-}
-
-bool BaseEngine::isMainThread()
-{
-    return std::this_thread::get_id() == m_MainThreadID;
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

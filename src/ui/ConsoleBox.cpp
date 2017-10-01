@@ -1,12 +1,12 @@
 #include "ConsoleBox.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <imgui/imgui.h>
 #include <logic/Console.h>
 #include <render/RenderSystem.h>
 #include <utils/logger.h>
 
-UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e)
+UI::ConsoleBox::ConsoleBox(Engine::GameEngine& e)
     : View(e)
 {
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");

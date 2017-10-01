@@ -4,7 +4,7 @@
 
 #include "SoundController.h"
 #include <ZenLib/zenload/zTypes.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/World.h>
 
 using namespace Logic;

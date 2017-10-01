@@ -7,18 +7,18 @@
 #include "MenuItemListbox.h"
 #include "MenuItemScrollableText.h"
 #include <daedalus/DaedalusGameState.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <logic/LogManager.h>
 
 using namespace UI;
 
-Menu_Log::Menu_Log(Engine::BaseEngine& e)
+Menu_Log::Menu_Log(Engine::GameEngine& e)
     : Menu(e)
 {
     m_LogStatus = EMenuLogStatus::CategorySelection;
 }
 
-Menu_Log* Menu_Log::create(Engine::BaseEngine& e)
+Menu_Log* Menu_Log::create(Engine::GameEngine& e)
 {
     Menu_Log* s = new Menu_Log(e);
     s->initializeInstance("MENU_LOG");

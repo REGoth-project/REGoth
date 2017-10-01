@@ -3,16 +3,16 @@
 //
 
 #include "Menu_Status.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 
 using namespace UI;
 
-Menu_Status::Menu_Status(Engine::BaseEngine& e)
+Menu_Status::Menu_Status(Engine::GameEngine& e)
     : Menu(e)
 {
 }
 
-Menu_Status* Menu_Status::create(Engine::BaseEngine& e)
+Menu_Status* Menu_Status::create(Engine::GameEngine& e)
 {
     Menu_Status* s = new Menu_Status(e);
     s->initializeInstance("MENU_STATUS");

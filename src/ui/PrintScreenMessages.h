@@ -10,7 +10,7 @@ namespace UI
     class PrintScreenMessages : public View
     {
     public:
-        PrintScreenMessages(Engine::BaseEngine& e);
+        PrintScreenMessages(Engine::GameEngine& e);
         ~PrintScreenMessages();
 
         /**

@@ -5,18 +5,18 @@
 #include <functional>
 #include <future>
 #include <list>
-#include "BaseEngine.h"
+#include "GameEngine.h"
 
 namespace Engine
 {
-    class BaseEngine;
+    class GameEngine;
 
     template <class T>
     class SafeFuture
     {
     public:
-        SafeFuture(BaseEngine* pBaseEngine, std::shared_future<T> f)
-            : m_pBaseEngine(pBaseEngine)
+        SafeFuture(GameEngine* pGameEngine, std::shared_future<T> f)
+            : m_pGameEngine(pGameEngine)
             , m_SharedFuture(f)
         {
         }
@@ -40,7 +40,7 @@ namespace Engine
          */
         void wait()
         {
-            if (!m_pBaseEngine->isMainThread())
+            if (!m_pGameEngine->isMainThread())
             {
                 // wait until the main thread has started the execution
                 // timespan doesn't matter, since it is ignored if the status is deferred
@@ -52,7 +52,7 @@ namespace Engine
         }
 
     private:
-        BaseEngine* m_pBaseEngine;
+        GameEngine* m_pGameEngine;
         std::shared_future<T> m_SharedFuture;
     };
 
@@ -60,15 +60,15 @@ namespace Engine
     {
     public:
         template <class T>
-        using JobType = std::function<T(BaseEngine* engine)>;
+        using JobType = std::function<T(GameEngine* engine)>;
 
         template <class Callable>
-        using ReturnType = decltype(std::declval<Callable>()(std::declval<BaseEngine*>()));
+        using ReturnType = decltype(std::declval<Callable>()(std::declval<GameEngine*>()));
 
         /**
          * Executes the job in the specified thread
-         * @tparam Callable any callable type that accepts BaseEngine pointer. i.e. std::function<T(BaseEngine* engine)>
-         * @param job a callable object. Unlike BaseEngine::onMessage also accepts non-copyable objects
+         * @tparam Callable any callable type that accepts GameEngine pointer. i.e. std::function<T(GameEngine* engine)>
+         * @param job a callable object. Unlike GameEngine::onMessage also accepts non-copyable objects
          * @param engine
          * @param executionPolicy defines which thread should execute the job
          * @param forceQueueing if false and if called from main thread the job will be executed right away
@@ -77,7 +77,7 @@ namespace Engine
          */
         template <class Callable>
         static SafeFuture<ReturnType<Callable>>
-        executeInThread(Callable job, BaseEngine* engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
+        executeInThread(Callable job, GameEngine* engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
         {
             std::launch policy;
             switch (executionPolicy)
@@ -90,7 +90,7 @@ namespace Engine
                     break;
             }
             std::shared_future<AsyncAction::ReturnType<Callable>> future = std::async(policy, std::forward<Callable>(job), engine);
-            std::function<bool(BaseEngine * engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool {
+            std::function<bool(GameEngine * engine)> wrapperJob = [future, policy](GameEngine* engine) -> bool {
                 bool finished = false;
                 switch (policy)
                 {
@@ -113,7 +113,7 @@ namespace Engine
             return SafeFuture<ReturnType<Callable>>(engine, future);
         }
 
-        bool run(BaseEngine& engine);
+        bool run(GameEngine& engine);
 
         JobType<bool> m_Job;
     };

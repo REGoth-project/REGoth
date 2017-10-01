@@ -14,7 +14,7 @@ namespace UI
     class MenuItem : public View
     {
     public:
-        MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle);
+        MenuItem(Engine::GameEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle);
         ~MenuItem();
 
         void setTextLine(const std::string& text, unsigned int line = 0);
@@ -74,7 +74,7 @@ namespace UI
         class MenuItemText : public MenuItem
         {
         public:
-            MenuItemText(Engine::BaseEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
+            MenuItemText(Engine::GameEngine& e, Menu& baseMenu, const Daedalus::GameState::MenuItemHandle& scriptHandle);
 
             /**
              * Updates/draws the UI-Views

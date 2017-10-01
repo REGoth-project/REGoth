@@ -1,7 +1,7 @@
 #include "SkeletalMeshAllocator.h"
 #include "VertexTypes.h"
 #include <bgfx/bgfx.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 #include <vdfs/fileIndex.h>
 #include <zenload/zCModelMeshLib.h>
@@ -9,7 +9,7 @@
 
 using namespace Meshes;
 
-SkeletalMeshAllocator::SkeletalMeshAllocator(Engine::BaseEngine& engine)
+SkeletalMeshAllocator::SkeletalMeshAllocator(Engine::GameEngine& engine)
     : m_Engine(engine)
 {
 }
@@ -144,7 +144,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
 
     // Flush the pipeline to prevent an overflow
     //bgfx::frame();
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.executeInMainThread([this, h](Engine::GameEngine* pEngine) {
         bgfx::frame();  // quick fix: executes all pending resource creations to prevent overflow
 
         finalizeLoad(h);

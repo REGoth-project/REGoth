@@ -8,7 +8,7 @@ namespace UI
     class SubtitleBox : public View
     {
     public:
-        SubtitleBox(Engine::BaseEngine& e);
+        SubtitleBox(Engine::GameEngine& e);
         ~SubtitleBox();
 
         enum class TextAlignment

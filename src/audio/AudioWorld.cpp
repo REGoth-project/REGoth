@@ -14,7 +14,8 @@
 #include <logic/ScriptEngine.h>
 #include <utils/logger.h>
 
-#include "engine/BaseEngine.h"
+#include "engine/GameEngine.h"
+#include "engine/GameSession.h"
 
 #include "AudioEngine.h"
 #include "AudioWorld.h"
@@ -24,7 +25,7 @@ using namespace Audio;
 
 namespace World
 {
-    AudioWorld::AudioWorld(Engine::BaseEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
+    AudioWorld::AudioWorld(Engine::GameEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
         : m_Engine(engine)
         , m_VDFSIndex(vdfidx)
     {

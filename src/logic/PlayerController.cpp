@@ -13,7 +13,7 @@
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include <debugdraw/debugdraw.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <engine/Input.h>
 #include <engine/Waynet.h>
 #include <engine/World.h>
@@ -1971,7 +1971,7 @@ void PlayerController::setupKeyBindings()
         if (triggered)
         {
             bool forceQueue = true; // better do saving at frame end and not between entity updates
-            m_World.getEngine()->executeInMainThread([](Engine::BaseEngine* engine){
+            m_World.getEngine()->executeInMainThread([](Engine::GameEngine* engine){
                 Engine::SavegameManager::saveToSlot(0, "");
             }, forceQueue);
         }

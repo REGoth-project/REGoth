@@ -7,7 +7,7 @@
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include <debugdraw/debugdraw.h>
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <logic/mobs/Bed.h>
 #include <logic/mobs/Container.h>
 #include <logic/mobs/Ladder.h>

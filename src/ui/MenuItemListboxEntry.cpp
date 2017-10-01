@@ -6,13 +6,13 @@
 #include "Menu.h"
 #include "MenuItem.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <utils/logger.h>
 
 using namespace UI;
 using namespace MenuItemTypes;
 
-MenuItemTypes::MenuItemListboxEntry::MenuItemListboxEntry(Engine::BaseEngine& e, UI::Menu& baseMenu,
+MenuItemTypes::MenuItemListboxEntry::MenuItemListboxEntry(Engine::GameEngine& e, UI::Menu& baseMenu,
                                                           const Daedalus::GameState::MenuItemHandle& scriptHandle,
                                                           const std::string& topic_name,
                                                           const Daedalus::GameState::LogTopic& topic)

@@ -4,14 +4,14 @@
 
 #include "DialogBox.h"
 #include "zFont.h"
-#include <engine/BaseEngine.h>
+#include <engine/GameEngine.h>
 #include <imgui/imgui.h>
 #include <render/RenderSystem.h>
 #include <utils/logger.h>
 
 using namespace UI;
 
-DialogBox::DialogBox(Engine::BaseEngine& e)
+DialogBox::DialogBox(Engine::GameEngine& e)
     : View(e)
 {
     m_ScrollArea = 0;

@@ -15,7 +15,7 @@
 
 void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose)
 {
-    Engine::BaseEngine* engine = world.getEngine();
+    Engine::GameEngine* engine = world.getEngine();
     World::WorldInstance* pWorld = &world;
     using Daedalus::GameState::NpcHandle;
     using Daedalus::GameState::ItemHandle;
