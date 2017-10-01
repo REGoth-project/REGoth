@@ -418,7 +418,7 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
 void Logic::CameraController::storeKeyframe(unsigned idx)
 {
     Keyframe f;
-    f.position = m_ViewMatrix.Invert().Translation(); 
+    f.position = m_ViewMatrix.Invert().Translation();
     f.lookat = -1.0f * m_ViewMatrix.Invert().Forward();
 
     if(idx >= m_Keyframes.size())

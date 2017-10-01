@@ -258,7 +258,7 @@ void REGoth::initConsole()
 
             LogInfo() << ss.str();
             return ss.str();
-            });
+        });
 
         console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
             if(args.size() < 2)
