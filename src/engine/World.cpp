@@ -1057,6 +1057,10 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
     return m_pEngine->getHud().getPrintScreenManager();
 }
 
+const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints() const
+{
+    return m_FreePoints;
+}
 
 
 

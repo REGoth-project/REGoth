@@ -379,25 +379,72 @@ void REGoth::initConsole()
         return suggestions;
     };
 
-    console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
-               if (args.size() != 3)
-                   return "Invalid argument. Usage: goto waypoint [waypoint]";
+    auto freepointNamesGen = [this]() -> std::vector<Suggestion> {
+        std::vector<Suggestion> suggestions;
+        auto& freepoints = m_pEngine->getMainWorld().get().getFreepoints();
+        for (auto& freepoint : freepoints)
+        {
+            Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{freepoint.first}});
+            suggestions.push_back(suggestion);
+        }
+        return suggestions;
+    };
 
-               const std::string& waypointArgument = args[2];
-               const World::Waynet::WaynetInstance& waynet = m_pEngine->getMainWorld().get().getWaynet();
-               Logic::ScriptEngine& scriptEngine = m_pEngine->getMainWorld().get().getScriptEngine();
-               const auto waypointIndex = World::Waynet::getWaypointIndex(waynet, waypointArgument);
-               if (waypointIndex == World::Waynet::INVALID_WAYPOINT)
-                   return "Error: Waypoint " + waypointArgument + " not found";
+    auto spawnpointNamesGen = [waypointNamesGen, freepointNamesGen]() -> std::vector<Suggestion> {
+        auto spawnpoints = waypointNamesGen();
+        auto freepoints = freepointNamesGen();
+        spawnpoints.insert(spawnpoints.end(), freepoints.begin(), freepoints.end() );
+        return spawnpoints;
+    };
 
-               VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), scriptEngine.getPlayerEntity());
-               if (!player.isValid())
-                   return "Error: There is no valid player in the world";
-               player.playerController->teleportToWaypoint(waypointIndex);
+    auto& gotoWaypoint = console.registerCommand("goto waypoint", [this](const std::vector<std::string>& args) -> std::string {
+        if (args.size() != 3)
+            return "Invalid argument. Usage: goto waypoint [waypoint]";
 
-               return "Player moved to waypoint " + waypointArgument;
-           })
-        .registerAutoComplete(waypointNamesGen);
+        const std::string& waypoint = args[2];
+
+        auto& world = m_pEngine->getMainWorld().get();
+        Logic::ScriptEngine& scriptEngine = world.getScriptEngine();
+
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(world, scriptEngine.getPlayerEntity());
+        if (!player.isValid())
+            return "Error: There is no valid player in the world";
+
+        if (World::Waynet::waypointExists(world.getWaynet(), waypoint))
+        {
+            player.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(world.getWaynet(), waypoint));
+            return "Player moved to waypoint " + waypoint;
+        }
+        else
+        {
+            return "Error: waypoint " + waypoint + " not found";
+        }
+    });
+    gotoWaypoint.registerAutoComplete(waypointNamesGen);
+
+    auto& gotoFreepoint = console.registerCommand("goto freepoint", [this](const std::vector<std::string>& args) -> std::string {
+        if (args.size() != 3)
+            return "Invalid argument. Usage: goto waypoint [waypoint]";
+
+        const std::string& freepoint = args[2];
+
+        auto& world = m_pEngine->getMainWorld().get();
+        Logic::ScriptEngine& scriptEngine = world.getScriptEngine();
+
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(world, scriptEngine.getPlayerEntity());
+        if (!player.isValid())
+            return "Error: There is no valid player in the world";
+
+        if(world.doesFreepointExist(freepoint))
+        {
+            player.playerController->teleportToPosition(world.getFreepointPosition(freepoint));
+            return "Player moved to freepoint " + freepoint;
+        } else
+        {
+            return "Error: freepoint " + freepoint + " not found";
+        }
+    });
+    gotoFreepoint.registerAutoComplete(freepointNamesGen);
 
     console.registerCommand("heroimport", [this](const std::vector<std::string>& args) -> std::string {
         auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -759,25 +806,26 @@ void REGoth::initConsole()
         return npnNameFull + " is now in " + stateName + " state";
     };
 
-    console.registerCommand("insertnpc", [this](const std::vector<std::string>& args) -> std::string {
+    auto& insertNPC = console.registerCommand("insertnpc", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 3)
-            return "Missing argument. Usage: insertnpc <npc> <waypoint>";
+            return "Missing argument. Usage: insertnpc <npc> <spawnpoint>";
 
         auto& worldInstance = m_pEngine->getMainWorld().get();
         auto& se = worldInstance.getScriptEngine();
         auto& datFile = se.getVM().getDATFile();
 
         auto name = args[1];
-        auto waypoint = args[2];
+        auto spawnpoint = args[2];
         if (!datFile.hasSymbolName(name))
             return "NPC not found: " + name;
 
-        if (!World::Waynet::waypointExists(worldInstance.getWaynet(), waypoint))
-            return "Invalid location: " + waypoint;
+        if (!World::Waynet::waypointExists(worldInstance.getWaynet(), spawnpoint) && !worldInstance.doesFreepointExist(spawnpoint))
+            return "Invalid spawnpoint: " + spawnpoint;
 
-        se.getVM().getGameState().insertNPC(datFile.getSymbolIndexByName(name), waypoint);
-        return "Inserting NPC " + name + " at location " + waypoint;
-    }).registerAutoComplete(npcNamesGen).registerAutoComplete(waypointNamesGen);
+        se.getVM().getGameState().insertNPC(datFile.getSymbolIndexByName(name), spawnpoint);
+        return "Inserting NPC " + name + " at spawnpoint " + spawnpoint;
+    });
+    insertNPC.registerAutoComplete(npcNamesGen).registerAutoComplete(spawnpointNamesGen);
 
     console.registerCommand("knockout", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);
     console.registerCommand("kill", killOrKnockoutCallback).registerAutoComplete(worlddNpcNamesGen);
