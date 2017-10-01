@@ -269,9 +269,6 @@ void REGoth::initConsole()
         });
 
     console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
-        if(args.size() < 2)
-            return "Missing argument. Usage: kf <idx>";
-
             m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
             return "Cleared keyframe";
         });
