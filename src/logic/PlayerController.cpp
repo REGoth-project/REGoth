@@ -32,6 +32,11 @@ using namespace Logic;
 using SharedEMessage = std::shared_ptr<Logic::EventMessages::EventMessage>;
 
 /**
+ * Radius the sound of the voicelines and other sounds of the NPCs(in meters)
+ */
+const float NPC_SOUND_RADIUS = 14;
+
+/**
  * Standard node-names
  */
 namespace BodyNodes
@@ -1964,8 +1969,9 @@ void PlayerController::changeAttribute(Daedalus::GEngineClasses::C_Npc::EAttribu
 
 void PlayerController::setupKeyBindings()
 {
-    // Engine::Input::clearActions();
+    Engine::Input::clearActions();
     m_AIHandler.bindKeys();
+    m_World.getCameraController()->setupKeybinds();
 
     Engine::Input::RegisterAction(Engine::ActionType::Quicksave, [this](bool triggered, float) {
         if (triggered)
