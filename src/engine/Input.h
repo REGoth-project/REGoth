@@ -29,6 +29,10 @@ namespace Engine
         FirstPersonLookHorizontal,
         FirstPersonLookVertical,
 
+        ThirdPersonLookHorizontal,
+        ThirdPersonLookVertical,
+        ThirdPersonMouseWheel,
+
         FreeMoveForward,
         FreeMoveRight,
         FreeMoveUp,
@@ -47,6 +51,7 @@ namespace Engine
         PlayerBackward,
         PlayerTurnLeft,
         PlayerTurnRight,
+        PlayerRotate,
         PlayerStrafeLeft,
         PlayerStrafeRight,
         PlayerDrawWeaponMelee,
@@ -95,6 +100,25 @@ namespace Engine
         std::function<void(bool /*triggered*/, float /*intensity*/)> function;
     };
 
+    class ManagedActionBinding
+    {
+    public:
+        ManagedActionBinding();
+        ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action);
+        ManagedActionBinding(ManagedActionBinding&& other);
+        ManagedActionBinding& operator= (ManagedActionBinding&& other);
+        // copying is forbidden
+        ManagedActionBinding(const ManagedActionBinding&) = delete;
+        ManagedActionBinding& operator= (const ManagedActionBinding&) = delete;
+
+        ~ManagedActionBinding();
+        static void swap(ManagedActionBinding& a, ManagedActionBinding& b);
+        Engine::Action& getAction() { return *action; }
+    protected:
+        Engine::ActionType actionType;
+        Engine::Action* action;
+    };
+
     class Input
     {
     public:
@@ -122,7 +146,13 @@ namespace Engine
         };
 
     public:
-        static Action* RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
+        /**
+         * Registers a function to the given action
+         * Caution: The returned object must be stored somewhere.
+         * As soon as it goes out of scope, the binding is unregistered.
+         * @return An object on whose end of lifetime the binding is automatically unregistered
+         */
+        static ManagedActionBinding RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
         static bool RemoveAction(ActionType actionType, Action* action);
         static void clearActions();
         static void fireBindings();

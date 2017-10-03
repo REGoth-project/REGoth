@@ -11,6 +11,16 @@ namespace Math
 {
     static const float PI = glm::pi<float>();
 
+    /**
+     * converts angle in unit degree to unit radians
+     */
+    float degreeToRadians(float degree);
+
+    /**
+     * converts angle in unit radians to unit degree
+     */
+    float radiansToDegree(float radians);
+
     constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1)
     {
         return exp < 1 ? result : ipow(base * base, exp / 2, (exp % 2) ? result * base : result);
@@ -524,7 +534,7 @@ namespace Math
             _43 = v.z;
         }
 
-        Matrix Rotation()
+        Matrix Rotation() const
         {
             Matrix m = *this;
             m.Translation(Math::float3(0, 0, 0));
@@ -540,6 +550,26 @@ namespace Math
 
             return tmp;
         }
+
+        /**
+         * apply a rotation by angle around the specifed line (axis) and returns the result
+         */
+        Matrix RotatedAroundLine(const float3& linePoint, const float3& lineDirection, float angle) const
+        {
+            auto rotationMatrix = Math::Matrix::CreateFromAxisAngle(lineDirection, angle);
+            auto result = rotationMatrix * this->Rotation();
+            auto newTranslation = rotatedPointAroundLine(this->Translation(), linePoint, lineDirection, angle);
+            result.Translation(newTranslation);
+            return result;
+        }
+
+        static float3 rotatedPointAroundLine(Math::float3 point, Math::float3 linePoint, Math::float3 lineDirection, float angle)
+        {
+            point -= linePoint;
+            auto rotationMatrix = Math::Matrix::CreateFromAxisAngle(lineDirection, angle);
+            return rotationMatrix * point + linePoint;
+        };
+
 
         float Determinant() const { return glm::determinant(_glmMatrix); }
         static Matrix CreateIdentity() { return Matrix(glm::mat4(1.0)); }

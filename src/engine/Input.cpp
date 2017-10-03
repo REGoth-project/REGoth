@@ -70,10 +70,10 @@ float Input::windowHalfHeight;
 float Input::windowHalfWidth;
 std::string Input::frameTextInput;
 
-Action* Input::RegisterAction(ActionType actionType, std::function<void(bool, float)> function)
+ManagedActionBinding Input::RegisterAction(ActionType actionType, std::function<void(bool, float)> function)
 {
-    // Returns pointer to inserted Action object
-    return &((*actionTypeToActionMap.insert(std::make_pair(actionType, Action(function)))).second);
+    auto it = actionTypeToActionMap.insert(std::make_pair(actionType, Action(function)));
+    return {it->first, &it->second};
 }
 
 void Input::clearActions()
@@ -291,9 +291,9 @@ void Input::fireBindings()
         for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
             if (itAction->second.isEnabled)
                 itAction->second.function(triggerAction, intensity);
-
-        mouseAxisTriggered[mouseAxisIndex] = false;
     }
+    // This must be done after the loop, because multiple bindings to the same axis may occur
+    mouseAxisTriggered.reset();
 }
 
 void Input::setMouseLock(bool mouseLock)
@@ -340,4 +340,44 @@ std::string Input::getFrameTextInput()
     std::string r = frameTextInput;
     frameTextInput.clear();
     return r;
+}
+
+ManagedActionBinding::ManagedActionBinding()
+    : action(nullptr)
+{
+}
+
+ManagedActionBinding::ManagedActionBinding(ManagedActionBinding&& other)
+    : ManagedActionBinding()
+{
+    swap(*this, other);
+}
+
+void ManagedActionBinding::swap(ManagedActionBinding& a, ManagedActionBinding& b)
+{
+    std::swap(a.actionType, b.actionType);
+    std::swap(a.action, b.action);
+}
+
+ManagedActionBinding::~ManagedActionBinding()
+{
+    if (action)
+        Input::RemoveAction(actionType, action);
+}
+
+ManagedActionBinding::ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action)
+    : actionType(actionType)
+    , action(action)
+{
+}
+
+ManagedActionBinding& ManagedActionBinding::operator=(ManagedActionBinding&& other)
+{
+    {
+        // disposes *this first
+        ManagedActionBinding tempEmpty;
+        swap(*this, tempEmpty);
+    }
+    swap(*this, other);
+    return *this;
 }

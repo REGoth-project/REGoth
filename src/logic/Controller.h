@@ -63,6 +63,12 @@ namespace Logic
         Math::Matrix& getEntityTransform();
 
         /**
+         * @return The current transform of the underlaying entity
+         * where Forward/Left/Right matches the perspective of the player model
+         */
+        Math::Matrix getEntityTransformFacing();
+
+        /**
          * @brief Called when something else modified the transform of the underlaying entity
          */
         virtual void onTransformChanged(){};
