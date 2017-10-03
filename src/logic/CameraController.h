@@ -15,7 +15,8 @@ namespace Logic
             Static = 1,
             FirstPerson = 2,
             ThirdPerson = 3,
-            Viewer  // name is open to change
+            KeyedAnimation,
+            Viewer // name is open to change
         };
 
         struct CameraSettings
@@ -139,13 +140,40 @@ namespace Logic
         }
 
         /**
+         * Registers all inputs inside the engine
+         */
+        void setupKeybinds();
+
+        /**
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
 
         void setDebugMoveSpeed(float moveSpeedMultiplier) { m_moveSpeedMultiplier = moveSpeedMultiplier; }
 
+        /**
+         * Stores a keyframe with the current camera postion/rotation
+         * @param idx Index of the keyframe to store
+         */
+        void storeKeyframe(unsigned idx);
+
+        /**
+         * Clears all stored keyframes
+         */
+        void clearKeyframes();
+
+        /**
+         * Plays all stored keyframes
+         */
+        void playKeyframes(float duration = 1.0f);
     protected:
+
+        /**
+         * Moves the camera according to the stored keyframes
+         * @return (Position, lookat)
+         */
+        std::pair<Math::float3, Math::float3> updateKeyframedPlay(float dt);
+
         /**
          * registers a binding
          */
@@ -167,6 +195,8 @@ namespace Logic
          * @return pair of (forward, right)
          */
         std::pair<Math::float3, Math::float3> getDirectionVectors(float yaw, float pitch);
+
+
 
         /**
          * Whether this controller should read player input
@@ -207,7 +237,24 @@ namespace Logic
          */
         float m_moveSpeedMultiplier;
 
+        struct Keyframe
+        {
+            Math::float3 position;
+            Math::float3 lookat;
+        };
+
         /**
+         * List of keyframes currently set
+         */
+        std::vector<Keyframe> m_Keyframes;
+
+        /**
+         * Currently active keyframe (fraction). -1 = no keyframe active
+         */
+        float m_KeyframeActive;
+        float m_KeyframeDuration;
+
+	/**
          * Direction to use during locked camera while using mobs
          */
         Math::float3 m_savedPdir;

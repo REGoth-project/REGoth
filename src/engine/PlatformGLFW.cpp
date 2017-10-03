@@ -134,7 +134,10 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     glfwSetCursorPosCallback(window, GLFWmouseMoveEvent);
     glfwSetScrollCallback(window, GLFWscrollEvent);
 
-    glfwSetWindowSizeCallback(window, GLFWwindowSizeEvent);
+    // window size is in screen units, while framebuffer size is in pixels
+    // we want pixels
+    glfwSetFramebufferSizeCallback(window, GLFWwindowSizeEvent);
+    glfwGetFramebufferSize(window, &width, &height);
     GLFWwindowSizeEvent(window, width, height);
 
     setMouseLockCallback([&window](bool lock) {

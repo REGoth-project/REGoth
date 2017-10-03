@@ -47,6 +47,12 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.firstPersonCameraSettings.pitch = 0;
     m_CameraSettings.firstPersonCameraSettings.yaw = 0;
 
+    m_KeyframeDuration = 1.0f;
+    setupKeybinds();
+}
+
+void Logic::CameraController::setupKeybinds()
+{
     // FirstPerson action
     {
         using namespace Engine;
@@ -347,6 +353,19 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             setEntityTransform(m_ViewMatrix.Invert());
         }
         break;
+
+        case ECameraMode::KeyedAnimation:
+        {
+            if(!m_Keyframes.empty() && m_KeyframeActive != -1.0f)
+            {
+                std::pair<Math::float3, Math::float3> poslookat = updateKeyframedPlay(deltaTime);
+                m_ViewMatrix = Math::Matrix::CreateLookAt(
+                        poslookat.first, poslookat.first + poslookat.second, Math::float3(0, 1, 0));
+                setEntityTransform(m_ViewMatrix.Invert());
+            }
+        }
+            break;
+
         case ECameraMode::Static:
         {
             //TODO add handling there?
@@ -399,11 +418,14 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::Viewer:
+            m_CameraMode = ECameraMode::KeyedAnimation;
+            m_KeyframeActive = 0.0f;
             Engine::Input::setMouseLock(false);
             break;
         case ECameraMode::ThirdPerson:
             Engine::Input::setMouseLock(true);
             break;
+        // TODO separate Viewer and KeyedAnimation
     }
     bool enablePlayerBindings = (mode == ECameraMode::FirstPerson) || (mode == ECameraMode::ThirdPerson);
     m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings);
@@ -420,4 +442,53 @@ void Logic::CameraController::clearBindings()
 Logic::CameraController::~CameraController()
 {
     clearBindings();
+}
+
+void Logic::CameraController::storeKeyframe(unsigned idx)
+{
+    Keyframe f;
+    f.position = m_ViewMatrix.Invert().Translation();
+    f.lookat = -1.0f * m_ViewMatrix.Invert().Forward();
+
+    if(idx >= m_Keyframes.size())
+        m_Keyframes.resize(idx + 1, f);
+
+    m_Keyframes[idx] = f;
+}
+
+void Logic::CameraController::clearKeyframes()
+{
+    m_Keyframes.clear();
+}
+
+void Logic::CameraController::playKeyframes(float speed)
+{
+    m_KeyframeDuration = speed;
+    m_KeyframeActive = 0.0f;
+    setCameraMode(ECameraMode::KeyedAnimation);
+}
+
+std::pair<Math::float3, Math::float3> Logic::CameraController::updateKeyframedPlay(float dt)
+{
+    if(m_KeyframeActive == -1.0f)
+        return std::make_pair(m_Keyframes.back().position, m_Keyframes.back().lookat);
+
+    m_KeyframeActive += dt;
+
+    float frame = (m_KeyframeActive / (m_KeyframeDuration * 2.0f)) * m_Keyframes.size();
+
+    float frac = fmod(frame, 1.0f);
+    int current = (int)frame;
+    int next = current + 1;
+
+    if(current + 1 >= (int)m_Keyframes.size())
+    {
+        m_KeyframeActive = -1.0f;
+        return std::make_pair(m_Keyframes.back().position, m_Keyframes.back().lookat);
+    }
+
+    Math::float3 pos    = Math::float3::lerp(m_Keyframes[current].position, m_Keyframes[next].position, frac);
+    Math::float3 lookat = Math::float3::lerp(m_Keyframes[current].lookat, m_Keyframes[next].lookat, frac);
+
+    return std::make_pair(pos, lookat);
 }

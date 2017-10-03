@@ -282,9 +282,31 @@ namespace World
         UI::PrintScreenMessages& getPrintScreenManager();
 
         /**
-         * @return Map of freepoints
+         * @return freepoints with this tag
          */
         std::vector<Handle::EntityHandle> getFreepoints(const std::string& tag);
+
+        /**
+         * @return Map of all freepoints
+         */
+        const std::map<std::string, Handle::EntityHandle>& getFreepoints() const;
+
+        /**
+         * Checks whether a freepoint with the given exact name exists
+         * @param name Name to look for
+         * @return Whether such a freepoint exists
+         */
+        bool doesFreepointExist(const std::string& name);
+
+        /**
+         * @return Freepoint handle with the given exact name
+         */
+        Handle::EntityHandle getFreepoint(const std::string& name);
+
+        /**
+         * @return Position of the freepoint given with the exact name. (0,0,0) if not found.
+         */
+        Math::float3 getFreepointPosition(const std::string& name);
 
         /**
          * Returns a map of freepoints in the given range of the center

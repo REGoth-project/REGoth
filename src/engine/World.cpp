@@ -812,6 +812,31 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     return mp;
 }
 
+bool WorldInstance::doesFreepointExist(const std::string& name)
+{
+    return m_FreePoints.find(name) != m_FreePoints.end();
+
+}
+
+Handle::EntityHandle WorldInstance::getFreepoint(const std::string& name)
+{
+    if(!doesFreepointExist(name))
+        return Handle::EntityHandle::makeInvalidHandle();
+
+    return m_FreePoints[name];
+}
+
+Math::float3 WorldInstance::getFreepointPosition(const std::string& name)
+{
+    Handle::EntityHandle fp = getFreepoint(name);
+
+    if(!fp.isValid())
+        return Math::float3(0,0,0);
+
+    Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
+    return pos.m_WorldMatrix.Translation();
+}
+
 void WorldInstance::markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity,
                                       float occupiedForSeconds)
 {
@@ -1031,6 +1056,10 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
     return m_pEngine->getHud().getPrintScreenManager();
 }
 
+const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints() const
+{
+    return m_FreePoints;
+}
 
 
 
