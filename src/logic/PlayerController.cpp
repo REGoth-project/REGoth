@@ -2720,26 +2720,24 @@ World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
 {
     using namespace World::Waynet;
 
+    const WaynetInstance& waynet = m_World.getWaynet();
+    if (waynet.waypoints.size() < 2)
+        return INVALID_WAYPOINT;
+
     const Math::float3 position = getEntityTransform().Translation();
 
-    WaypointIndex nearest = INVALID_WAYPOINT;
-    WaypointIndex secondNearest = INVALID_WAYPOINT;
-    const WaynetInstance& waynet = m_World.getWaynet();
-
-    float nearestLen = FLT_MAX;
-
+    std::vector<std::pair<float, size_t>> distances;
+    distances.reserve(waynet.waypoints.size());
     for (size_t i = 0; i < waynet.waypoints.size(); i++)
     {
-        float chk = (position - waynet.waypoints[i].position).lengthSquared();
-        if (chk < nearestLen)
-        {
-            nearestLen = chk;
-            secondNearest = nearest;
-            nearest = i;
-        }
+        float l2 = (position - waynet.waypoints[i].position).lengthSquared();
+        distances.emplace_back(l2, i);
     }
-
-    return secondNearest;
+    auto compare = [](const auto& pair1, const auto& pair2){
+        return pair1.first < pair2.first;
+    };
+    std::nth_element(distances.begin(), distances.begin() + 1, distances.end(), compare);
+    return distances[1].second;
 }
 
 
