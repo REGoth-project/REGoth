@@ -291,9 +291,9 @@ void Input::fireBindings()
         for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
             if (itAction->second.isEnabled)
                 itAction->second.function(triggerAction, intensity);
-
-        mouseAxisTriggered[mouseAxisIndex] = false;
     }
+    // This must be done after the loop, because multiple bindings to the same axis may occur
+    mouseAxisTriggered.reset();
 }
 
 void Input::setMouseLock(bool mouseLock)
