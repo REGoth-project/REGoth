@@ -11,12 +11,12 @@ namespace Logic
 
         enum class ECameraMode
         {
-            Free = 0,
-            Static = 1,
-            FirstPerson = 2,
-            ThirdPerson = 3,
+            ThirdPerson,
+            FirstPerson,
+            Free,
+            Viewer, // name is open to change
+            Static,
             KeyedAnimation,
-            Viewer // name is open to change
         };
 
         struct CameraSettings
@@ -195,8 +195,6 @@ namespace Logic
          * @return pair of (forward, right)
          */
         std::pair<Math::float3, Math::float3> getDirectionVectors(float yaw, float pitch);
-
-
 
         /**
          * Whether this controller should read player input

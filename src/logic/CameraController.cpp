@@ -100,7 +100,7 @@ void Logic::CameraController::setupKeybinds()
         auto& free = m_CameraSettings.freeCameraSettings;
 
         free.actionMoveForward = registerBinding(ECameraMode::Free, ActionType::FreeMoveForward, [&settings, this](bool, float intensity) {
-            settings.position += 0.07f * intensity * settings.forward * m_moveSpeedMultiplier;
+            settings.position += 0.1f * intensity * settings.forward * m_moveSpeedMultiplier;
         });
         free.actionMoveRight = registerBinding(ECameraMode::Free, ActionType::FreeMoveRight, [&settings, this](bool, float intensity) {
             settings.position -= 0.1f * intensity * settings.right * m_moveSpeedMultiplier;
@@ -330,7 +330,8 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
             settings.up = settings.right.cross(settings.forward);
 
-            settings.forward *= deltaTime * 40.0f;
+            settings.forward *= deltaTime * 100.0f;
+            settings.right *= deltaTime * 100.0f;
 
             m_ViewMatrix = Math::Matrix::CreateView(settings.position,
                                                     settings.yaw,
@@ -418,16 +419,23 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::Viewer:
-            m_CameraMode = ECameraMode::KeyedAnimation;
-            m_KeyframeActive = 0.0f;
             Engine::Input::setMouseLock(false);
             break;
         case ECameraMode::ThirdPerson:
             Engine::Input::setMouseLock(true);
             break;
-        // TODO separate Viewer and KeyedAnimation
+        case ECameraMode::KeyedAnimation:
+            m_KeyframeActive = 0.0f;
+            Engine::Input::setMouseLock(false);
+            break;
+        case ECameraMode::Static:
+            Engine::Input::setMouseLock(false);
+            break;
     }
-    bool enablePlayerBindings = (mode == ECameraMode::FirstPerson) || (mode == ECameraMode::ThirdPerson);
+    bool enablePlayerBindings = false
+        || (mode == ECameraMode::FirstPerson)
+        || (mode == ECameraMode::ThirdPerson)
+        || (mode == ECameraMode::Static);
     m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings);
     #ifndef NDEBUG
     Engine::Input::setMouseLock(false);
@@ -463,6 +471,8 @@ void Logic::CameraController::clearKeyframes()
 
 void Logic::CameraController::playKeyframes(float speed)
 {
+    if (speed <= 0.0f)
+        return;
     m_KeyframeDuration = speed;
     m_KeyframeActive = 0.0f;
     setCameraMode(ECameraMode::KeyedAnimation);

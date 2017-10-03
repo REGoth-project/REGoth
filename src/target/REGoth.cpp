@@ -238,6 +238,16 @@ void REGoth::initConsole()
         return suggestions;
     };
 
+    // creates simple suggestion generator from iterables of string
+    auto simpleStringGenGen = [](const auto& stringContainer){
+        return [stringContainer](){
+            std::vector<Suggestion> suggestions;
+            for (auto& token : stringContainer)
+                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::move(token)}}));
+            return suggestions;
+        };
+    };
+
     console.registerCommand("estimatedGPUMem", [this](const std::vector<std::string>& args) -> std::string {
         World::WorldInstance& world = m_pEngine->getMainWorld().get();
 
@@ -301,17 +311,31 @@ void REGoth::initConsole()
         return "Toggled hud";
     });
 
-    console.registerCommand("camera", [this](const std::vector<std::string>& args) -> std::string {
+    std::map<std::string, Logic::CameraController::ECameraMode> camModes = {
+        {"ThirdPerson", Logic::CameraController::ECameraMode::ThirdPerson},
+        {"FirstPerson", Logic::CameraController::ECameraMode::FirstPerson, },
+        {"Free", Logic::CameraController::ECameraMode::Free},
+        {"Viewer", Logic::CameraController::ECameraMode::Viewer},
+        {"Static", Logic::CameraController::ECameraMode::Static},
+        {"KeyedAnimation", Logic::CameraController::ECameraMode::KeyedAnimation},
+    };
+    auto& commandCamera = console.registerCommand("set camera", [this, camModes](const std::vector<std::string>& args) -> std::string {
 
-        if (args.size() < 2)
-            return "Missing argument. Usage: camera <mode> | (0=Free, 1=Static, 2=FirstPerson, 3=ThirdPerson)";
+        if (args.size() < 3)
+            return "Missing argument. Usage: camera <mode>";
 
-        int idx = std::stoi(args[1]);
-
-        m_pEngine->getMainWorld().get().getCameraController()->setCameraMode((Logic::CameraController::ECameraMode)idx);
-
-        return "Cameramode changed to " + std::to_string(idx);
+        const std::string& modeStr = args[2];
+        auto it = camModes.find(modeStr);
+        if (it == camModes.end())
+            return "invalid camera mode: " + modeStr;
+        const auto& mode = it->second;
+        m_pEngine->getMainWorld().get().getCameraController()->setCameraMode(mode);
+        return "Cameramode changed to " + modeStr;
     });
+    std::vector<std::string> camModeNames;
+    for (const auto& pair : camModes)
+        camModeNames.push_back(pair.first);
+    commandCamera.registerAutoComplete(simpleStringGenGen(camModeNames));
 
     console.registerCommand("test", [this](const std::vector<std::string>& args) -> std::string {
         auto& worldInstance = m_pEngine->getMainWorld().get();
