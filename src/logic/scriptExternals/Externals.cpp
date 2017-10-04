@@ -838,22 +838,30 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         hour2 = (hour2 + 24) % 24;
 
         auto& clock = pWorld->getEngine()->getGameClock();
-        int32_t hour, min;
-        clock.getTimeOfDay(hour, min);
-        double timeOfDay = clock.getTimeOfDay();
-        double timeOfDay1 = clock.hmToDayTime(hour1, min1);
-        double timeOfDay2 = clock.hmToDayTime(hour2, min2);
+        double timeOfDayNow = clock.getTimeOfDay();
+        double timeOfDay1 = Engine::GameClock::hmToDayTime(hour1, min1);
+        double timeOfDay2 = Engine::GameClock::hmToDayTime(hour2, min2);
+
+        const double minuteOfDayFraction = 1.0f / (24 * 60);
+        if(timeOfDay1 != timeOfDay2)
+            timeOfDay2 -= minuteOfDayFraction; // Gothic subtracts one minute from the second time here to counter issues happening with overlapping times for Daily Routines.
+
         bool inside;
-        if (timeOfDay1 < timeOfDay2)
+
+        if (hour1 == hour2 && min1 == min2)
         {
-            // check if it is in interval
-            inside = (timeOfDay1 <= timeOfDay) && (timeOfDay <= timeOfDay2);
+            // Scripts seem to expect this to return false. The original does this implicitly.
+            inside = false;
+        }
+        else if (timeOfDay2 < timeOfDay1)
+        {
+            // Case: Interval contains midnight
+            inside = timeOfDayNow >= timeOfDay1 || timeOfDayNow <= timeOfDay2;
         }
         else
         {
-            // case interval contains midnight
-            // check if it is not in complementary interval
-            inside = !((timeOfDay2 <= timeOfDay) && (timeOfDay <= timeOfDay1));
+            // Case: Not wrapping around
+            inside = timeOfDay1 <= timeOfDayNow && timeOfDayNow <= timeOfDay2;
         }
         vm.setReturn(inside);
     });
