@@ -333,11 +333,10 @@ void GameSession::setupKeyBindings()
 
         for (auto action : playerActions)
         {
-            registerPlayerAction(action, [action, getPlayerVob](bool triggered, float intensity) {
+            registerPlayerAction(action, [this, action, getPlayerVob](bool triggered, float intensity) {
                 auto vob = getPlayerVob();
-                if (!vob.isValid())
-                    return;
-                vob.playerController->onAction(action, triggered, intensity);
+                if (vob.isValid() && !this->getMainWorld().get().getDialogManager().isDialogActive())
+                    vob.playerController->onAction(action, triggered, intensity);
             });
         }
     }
