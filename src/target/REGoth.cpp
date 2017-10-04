@@ -42,79 +42,6 @@ namespace Flags
     Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
 }
 
-struct PosColorVertex
-{
-    float m_x;
-    float m_y;
-    float m_z;
-    uint32_t m_abgr;
-
-    static void init()
-    {
-        ms_decl
-            .begin()
-            .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-            .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-            .end();
-    };
-
-    static bgfx::VertexDecl ms_decl;
-};
-
-bgfx::VertexDecl PosColorVertex::ms_decl;
-
-static PosColorVertex s_cubeVertices[8] =
-    {
-        {-1.0f, 1.0f, 1.0f, 0xff000000},
-        {1.0f, 1.0f, 1.0f, 0xff0000ff},
-        {-1.0f, -1.0f, 1.0f, 0xff00ff00},
-        {1.0f, -1.0f, 1.0f, 0xff00ffff},
-        {-1.0f, 1.0f, -1.0f, 0xffff0000},
-        {1.0f, 1.0f, -1.0f, 0xffff00ff},
-        {-1.0f, -1.0f, -1.0f, 0xffffff00},
-        {1.0f, -1.0f, -1.0f, 0xffffffff},
-};
-
-static const uint16_t s_cubeIndices[36] =
-    {
-        0, 1, 2,  // 0
-        1, 3, 2,
-        4, 6, 5,  // 2
-        5, 6, 7,
-        0, 2, 4,  // 4
-        4, 2, 6,
-        1, 5, 3,  // 6
-        5, 7, 3,
-        0, 4, 1,  // 8
-        4, 5, 1,
-        2, 3, 6,  // 10
-        6, 3, 7,
-};
-
-struct PosColorTexCoord0Vertex
-{
-    float m_x;
-    float m_y;
-    float m_z;
-    uint32_t m_abgr;
-    float m_u;
-    float m_v;
-
-    static void init()
-    {
-        ms_decl
-            .begin()
-            .add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float)
-            .add(bgfx::Attrib::Color0, 4, bgfx::AttribType::Uint8, true)
-            .add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-            .end();
-    }
-
-    static bgfx::VertexDecl ms_decl;
-};
-
-bgfx::VertexDecl PosColorTexCoord0Vertex::ms_decl;
-
 // TODO: Keymap should be loaded from config
 std::map<int, UI::EInputAction> keyMap = {
     {GLFW_KEY_UP, UI::IA_Up},
@@ -171,7 +98,6 @@ void REGoth::init(int _argc, char** _argv)
     bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x7EC0EEff, 1.0f, 0);
 
     // Create vertex stream declaration.
-    PosColorVertex::init();
     Meshes::UVNormColorVertex::init();
     Meshes::UVNormVertex::init();
     Meshes::UVVertex::init();
@@ -180,8 +106,6 @@ void REGoth::init(int _argc, char** _argv)
     Meshes::PositionUVVertex::init();
     Meshes::PositionUVVertex2D::init();
     Meshes::SkeletalVertex::init();
-
-    PosColorTexCoord0Vertex::init();
 
     m_pEngine = new Engine::GameEngine;
 
@@ -1220,70 +1144,6 @@ void REGoth::showSplash()
 
     bgfx::dbgTextPrintf(0, 1, 0x4f, "Loading...");
     bgfx::frame();
-}
-
-void REGoth::renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height)
-{
-    bgfx::TransientVertexBuffer tvb;
-    bgfx::TransientIndexBuffer tib;
-
-    if (!bgfx::allocTransientBuffers(&tvb, PosColorTexCoord0Vertex::ms_decl, 4, &tib, 6))
-        return;
-
-    PosColorTexCoord0Vertex* vertex = (PosColorTexCoord0Vertex*)tvb.data;
-
-    float zz = 1.0f;
-
-    const float minx = _x;
-    const float maxx = _x + _width;
-    const float miny = _y;
-    const float maxy = _y + _height;
-
-    float minu = 0.0f;
-    float minv = 0.0f;
-    float maxu = _width;
-    float maxv = _height;
-
-    vertex[0].m_x = minx;
-    vertex[0].m_y = miny;
-    vertex[0].m_z = zz;
-    vertex[0].m_abgr = 0xffffffff;
-    vertex[0].m_u = minu;
-    vertex[0].m_v = minv;
-
-    vertex[1].m_x = maxx;
-    vertex[1].m_y = miny;
-    vertex[1].m_z = zz;
-    vertex[1].m_abgr = 0xffffffff;
-    vertex[1].m_u = maxu;
-    vertex[1].m_v = minv;
-
-    vertex[2].m_x = maxx;
-    vertex[2].m_y = maxy;
-    vertex[2].m_z = zz;
-    vertex[2].m_abgr = 0xffffffff;
-    vertex[2].m_u = maxu;
-    vertex[2].m_v = maxv;
-
-    vertex[3].m_x = minx;
-    vertex[3].m_y = maxy;
-    vertex[3].m_z = zz;
-    vertex[3].m_abgr = 0xffffffff;
-    vertex[3].m_u = minu;
-    vertex[3].m_v = maxv;
-
-    uint16_t* indices = (uint16_t*)tib.data;
-
-    indices[0] = 0;
-    indices[1] = 2;
-    indices[2] = 1;
-    indices[3] = 0;
-    indices[4] = 3;
-    indices[5] = 2;
-
-    bgfx::setIndexBuffer(&tib);
-    bgfx::setVertexBuffer(&tvb);
-    bgfx::submit(_view, _program);
 }
 
 //Usage of Platform:

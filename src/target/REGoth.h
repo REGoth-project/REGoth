@@ -22,7 +22,6 @@ public:
     bool update() override;
     void drawLog();
     void showSplash();
-    void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height);
 
         Engine::GameEngine* m_pEngine;
         uint32_t m_debug;
