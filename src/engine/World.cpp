@@ -59,10 +59,13 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
 
 WorldInstance::~WorldInstance()
 {
-    // kick out player if he is still in this world (clears key bindings)
+    // kick out player if he is still in this world
+    /*
+    // FIXME currently crashes game if player is not PC_HERO
     auto player = getScriptEngine().getPlayerEntity();
-    if (player.isValid())
+    if (player.isValid() && false)
         VobTypes::Wld_RemoveNpc(*this, player);
+    */
 
     // Destroy all allocated components
     // Loop because some destructor may create more entities
@@ -809,6 +812,31 @@ std::vector<Handle::EntityHandle> WorldInstance::getFreepoints(const std::string
     return mp;
 }
 
+bool WorldInstance::doesFreepointExist(const std::string& name)
+{
+    return m_FreePoints.find(name) != m_FreePoints.end();
+
+}
+
+Handle::EntityHandle WorldInstance::getFreepoint(const std::string& name)
+{
+    if(!doesFreepointExist(name))
+        return Handle::EntityHandle::makeInvalidHandle();
+
+    return m_FreePoints[name];
+}
+
+Math::float3 WorldInstance::getFreepointPosition(const std::string& name)
+{
+    Handle::EntityHandle fp = getFreepoint(name);
+
+    if(!fp.isValid())
+        return Math::float3(0,0,0);
+
+    Components::PositionComponent& pos = getEntity<Components::PositionComponent>(fp);
+    return pos.m_WorldMatrix.Translation();
+}
+
 void WorldInstance::markFreepointOccupied(Handle::EntityHandle freepoint, Handle::EntityHandle usingEntity,
                                       float occupiedForSeconds)
 {
@@ -1003,13 +1031,9 @@ void WorldInstance::exportControllers(Logic::Controller* logicController, Logic:
 
 void WorldInstance::takeControlOver(Handle::EntityHandle entityHandle)
 {
-    VobTypes::NpcVobInformation npcVob = VobTypes::asNpcVob(*this, entityHandle);
-
+    VobTypes::NpcVobInformation newPlayer = VobTypes::asNpcVob(*this, entityHandle);
     getScriptEngine().setPlayerEntity(entityHandle);
-    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(npcVob));
-    // reset bindings
-    Engine::Input::clearActions();
-    npcVob.playerController->setupKeyBindings();
+    getScriptEngine().setInstanceNPC("hero", VobTypes::getScriptHandle(newPlayer));
 }
 
 Handle::EntityHandle WorldInstance::importVobAndTakeControl(const json& j)
@@ -1032,6 +1056,10 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
     return m_pEngine->getHud().getPrintScreenManager();
 }
 
+const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints() const
+{
+    return m_FreePoints;
+}
 
 
 

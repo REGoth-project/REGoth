@@ -1070,7 +1070,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string spawnpoint = vm.popString();
         uint32_t npcinstance = vm.popDataValue();
 
-        if (spawnpoint != "" && !World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint))
+        if(spawnpoint == "")
+            return;
+
+        if (!World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint)
+            && !pWorld->doesFreepointExist(spawnpoint))
         {
             LogWarn() << "Invalid location: " << spawnpoint;
             return;

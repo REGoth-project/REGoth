@@ -16,10 +16,12 @@ GameSession::GameSession(BaseEngine& engine)
     : m_Engine(engine)
 {
     m_CurrentSlotIndex = -1;
+    setupKeyBindings();
 }
 
 GameSession::~GameSession()
 {
+    clearBindings();
     removeAllWorlds();
 }
 
@@ -265,4 +267,120 @@ void GameSession::startNewGame(const std::string& worldFile)
     // we never want to execute it right away (if it is on MainThread)
     bool forceQueue = true;
     AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
+}
+
+void GameSession::setupKeyBindings()
+{
+    using Engine::ActionType;
+
+    auto baseEngine = &m_Engine;
+
+    auto getPlayerVob = [baseEngine]() -> VobTypes::NpcVobInformation {
+        auto worldHandle = baseEngine->getMainWorld();
+        if (!worldHandle.isValid())
+            return {};
+
+        auto player = worldHandle.get().getScriptEngine().getPlayerEntity();
+        if (!player.isValid())
+            return {};
+
+        return VobTypes::asNpcVob(worldHandle.get(), player);
+    };
+
+    auto registerAction = [this](ActionType actionType, auto functor){
+        m_ActionBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
+    auto registerPlayerAction = [this](ActionType actionType, auto functor){
+        m_PlayerBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
+    registerAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
+        if (triggered)
+        {
+            bool forceQueue = true; // better do saving at frame end and not between entity updates
+            baseEngine->executeInMainThread([](Engine::BaseEngine* engine){
+                Engine::SavegameManager::saveToSlot(0, "");
+            }, forceQueue);
+        }
+    });
+
+    registerAction(ActionType::Quickload, [baseEngine](bool triggered, float) {
+        if (triggered)
+            Engine::SavegameManager::loadSaveGameSlot(0);
+    });
+
+    registerAction(ActionType::PauseGame, [baseEngine](bool triggered, float) {
+        if (triggered && !baseEngine->getHud().isMenuActive())
+        {
+            baseEngine->togglePaused();
+        }
+    });
+
+    {
+        // player actions
+        std::vector<ActionType> playerActions = {ActionType::PlayerDrawWeaponMelee,
+                                                 ActionType::PlayerForward,
+                                                 ActionType::PlayerBackward,
+                                                 ActionType::PlayerTurnLeft,
+                                                 ActionType::PlayerTurnRight,
+                                                 ActionType::PlayerStrafeLeft,
+                                                 ActionType::PlayerStrafeRight,
+                                                 ActionType::DebugMoveSpeed,
+                                                 ActionType::DebugMoveSpeed2,
+                                                 ActionType::PlayerAction,
+                                                 ActionType::PlayerRotate};
+
+        for (auto action : playerActions)
+        {
+            registerPlayerAction(action, [action, getPlayerVob](bool triggered, float intensity) {
+                auto vob = getPlayerVob();
+                if (!vob.isValid())
+                    return;
+                vob.playerController->onAction(action, triggered, intensity);
+            });
+        }
+    }
+
+    {
+        // camera change actions
+        using ECameraMode = Logic::CameraController::ECameraMode;
+        std::vector<std::pair<Engine::ActionType, ECameraMode>> cameraModes = {
+            {Engine::ActionType::CameraFirstPerson, ECameraMode::FirstPerson},
+            {Engine::ActionType::CameraThirdPerson, ECameraMode::ThirdPerson},
+            {Engine::ActionType::CameraFree, ECameraMode::Free},
+            {Engine::ActionType::CameraViewer, ECameraMode::Viewer},
+        };
+
+        for (auto cameraMode : cameraModes)
+        {
+            registerAction(cameraMode.first, [baseEngine, mode = cameraMode.second](bool triggered, float) {
+                if (triggered && baseEngine->getMainWorld().isValid())
+                {
+                    baseEngine->getMainWorld().get().getCameraController()->setCameraMode(mode);
+                }
+            });
+        }
+
+        registerAction(Engine::ActionType::DebugMoveSpeed, [baseEngine](bool triggered, float intensity) {
+            if (baseEngine->getMainWorld().isValid())
+            {
+                baseEngine->getMainWorld().get().getCameraController()->setDebugMoveSpeed(triggered ? 5.0f : 1.0f);
+            }
+        });
+    }
+}
+
+void GameSession::enablePlayerBindings(bool enabled)
+{
+    for (auto& managedBinding : m_PlayerBindings)
+    {
+        managedBinding.getAction().setEnabled(enabled);
+    }
+}
+
+void GameSession::clearBindings()
+{
+    m_ActionBindings.clear();
+    m_PlayerBindings.clear();
 }

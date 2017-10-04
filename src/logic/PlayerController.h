@@ -370,9 +370,9 @@ namespace Logic
         World::Waynet::WaypointIndex getSecondClosestWaypoint();
 
         /**
-         * Sets up the bindings for this playercontroller // TODO: REMOVE THIS AND DO IT OUTSIDE OF THE PLAYERCONTROLLER
+         * Handles actions, that affect this NPC
          */
-        void setupKeyBindings();
+        void onAction(Engine::ActionType actionType, bool triggered, float intensity);
 
         /**
          * Updates the given status-screen once with the current attributes
@@ -612,7 +612,7 @@ namespace Logic
         void resetKeyStates();
 
         // FIXME: Hack for as long as animation-flags are not implemented
-        // Turns of modifying the root postion from the animation
+        // Turns of modifying the root position from the animation
         bool m_NoAniRootPosHack;
         size_t m_LastAniRootPosUpdatedAniHash;
 

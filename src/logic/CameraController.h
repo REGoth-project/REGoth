@@ -7,13 +7,16 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
+        ~CameraController();
+
         enum class ECameraMode
         {
-            Free = 0,
-            Static = 1,
-            FirstPerson = 2,
-            ThirdPerson = 3,
-            Viewer  // name is open to change
+            ThirdPerson,
+            FirstPerson,
+            Free,
+            Viewer, // name is open to change
+            Static,
+            KeyedAnimation,
         };
 
         struct CameraSettings
@@ -35,10 +38,10 @@ namespace Logic
              */
             struct
             {
-                Engine::Action* actionMoveForward;
-                Engine::Action* actionMoveRight;
                 Engine::Action* actionLookHorizontal;
                 Engine::Action* actionLookVertical;
+
+                float yaw, pitch;
             } firstPersonCameraSettings;
 
             /**
@@ -46,8 +49,19 @@ namespace Logic
              */
             struct
             {
+                Engine::Action* actionWheel;
+                Engine::Action* actionLookVertical;
+                Engine::Action* actionLookHorizontal;
+
                 Math::float3 currentLookAt;
                 Math::float3 currentOffsetDirection;
+                float zoomExponent;
+                // vertical angle of the camera: 0° = behind player horizontal. 90° = looking from above (-y direction)
+                float pitch;
+                // angle between camera's look-at-point and rotation center. 0° = camera looks at rotation center
+                float cameraElevation;
+                // rotation around vertical axis (y) to be done on next camera update
+                float deltaPhi;
             } thirdPersonCameraSettings;
 
             struct
@@ -99,10 +113,7 @@ namespace Logic
         /**
          * @brief Sets how the camera should behave
          */
-        void setCameraMode(ECameraMode mode)
-        {
-            m_CameraMode = mode;
-        }
+        void setCameraMode(ECameraMode mode);
 
         /**
          * @brief Sets whether this controller should read input
@@ -129,11 +140,56 @@ namespace Logic
         }
 
         /**
+         * Registers all inputs inside the engine
+         */
+        void setupKeybinds();
+
+        /**
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
 
+        void setDebugMoveSpeed(float moveSpeedMultiplier) { m_moveSpeedMultiplier = moveSpeedMultiplier; }
+
+        /**
+         * Stores a keyframe with the current camera postion/rotation
+         * @param idx Index of the keyframe to store
+         */
+        void storeKeyframe(unsigned idx);
+
+        /**
+         * Clears all stored keyframes
+         */
+        void clearKeyframes();
+
+        /**
+         * Plays all stored keyframes
+         */
+        void playKeyframes(float duration = 1.0f);
     protected:
+
+        /**
+         * Moves the camera according to the stored keyframes
+         * @return (Position, lookat)
+         */
+        std::pair<Math::float3, Math::float3> updateKeyframedPlay(float dt);
+
+        /**
+         * registers a binding
+         */
+        template <class Functor>
+        Engine::Action* registerBinding(ECameraMode cameraMode, Engine::ActionType actionType, Functor functor)
+        {
+            auto managedBinding = Engine::Input::RegisterAction(actionType, functor);
+            m_ActionBindings[cameraMode].push_back(std::move(managedBinding));
+            return &m_ActionBindings[cameraMode].back().getAction();
+        }
+
+        /**
+         * clears all bindings for camera steering
+         */
+        void clearBindings();
+
         /**
          * Transforms the given yaw/pitch into the corresponding direction vectors
          * @return pair of (forward, right)
@@ -163,6 +219,11 @@ namespace Logic
         CameraSettings m_CameraSettings;
 
         /**
+         * stored bindings
+         */
+        std::map<ECameraMode, std::vector<Engine::ManagedActionBinding>> m_ActionBindings;
+
+        /**
          * Current view-matrix
          */
         Math::Matrix m_ViewMatrix;
@@ -174,7 +235,24 @@ namespace Logic
          */
         float m_moveSpeedMultiplier;
 
+        struct Keyframe
+        {
+            Math::float3 position;
+            Math::float3 lookat;
+        };
+
         /**
+         * List of keyframes currently set
+         */
+        std::vector<Keyframe> m_Keyframes;
+
+        /**
+         * Currently active keyframe (fraction). -1 = no keyframe active
+         */
+        float m_KeyframeActive;
+        float m_KeyframeDuration;
+
+	/**
          * Direction to use during locked camera while using mobs
          */
         Math::float3 m_savedPdir;
