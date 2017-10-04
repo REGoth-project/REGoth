@@ -592,4 +592,19 @@ namespace Utils
      * checks if string searchSpace ends with end
      */
     bool endsWith(const std::string& searchSpace, const std::string& end);
+
+    /**
+     * Replaces all occurrences of string from in string searchSpace to string to. Modifies searchSpace in-place.
+     */
+    void replace(std::string& searchSpace, const std::string& from, const std::string& to);
+
+    /**
+     * Replaces all occurrences of string from in string searchSpace to string to and returns the result.
+     */
+    std::string replaced(std::string searchSpace, const std::string& from, const std::string& to);
+
+    /**
+     * @returns pair of filename without extension and extension
+     */
+    std::pair<std::string, std::string> splitExtension(const std::string& filename);
 }
