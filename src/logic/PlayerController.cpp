@@ -2463,6 +2463,36 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
     //if(tag.m_Tag == )
 }
 
+World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
+{
+    return World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+}
+
+
+World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
+{
+    using namespace World::Waynet;
+
+    const WaynetInstance& waynet = m_World.getWaynet();
+    if (waynet.waypoints.size() < 2)
+        return INVALID_WAYPOINT;
+
+    const Math::float3 position = getEntityTransform().Translation();
+
+    std::vector<std::pair<float, size_t>> distances;
+    distances.reserve(waynet.waypoints.size());
+    for (size_t i = 0; i < waynet.waypoints.size(); i++)
+    {
+        float l2 = (position - waynet.waypoints[i].position).lengthSquared();
+        distances.emplace_back(l2, i);
+    }
+    auto compare = [](const auto& pair1, const auto& pair2){
+        return pair1.first < pair2.first;
+    };
+    std::nth_element(distances.begin(), distances.begin() + 1, distances.end(), compare);
+    return distances[1].second;
+}
+
 void PlayerController::onAction(Engine::ActionType actionType, bool triggered, float intensity)
 {
     using Engine::ActionType;

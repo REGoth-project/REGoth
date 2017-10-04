@@ -660,7 +660,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if (npc.isValid())
         {
-            size_t wp = npc.playerController->getTargetWaypoint();
+            size_t wp = npc.playerController->getSecondClosestWaypoint();
 
             if (wp != World::Waynet::INVALID_WAYPOINT)
             {
