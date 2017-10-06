@@ -21,13 +21,13 @@ RenderSystem::~RenderSystem()
 {
     // Clean the created resources
     for(bgfx::ProgramHandle h : m_LoadedPrograms)
-        bgfx::destroyProgram(h);
+        bgfx::destroy(h);
 
     for(bgfx::UniformHandle h : m_AllUniforms)
-        bgfx::destroyUniform(h);
+        bgfx::destroy(h);
 
     for(bgfx::DynamicVertexBufferHandle h : m_InstanceDataBuffers)
-        bgfx::destroyDynamicVertexBuffer(h);
+        bgfx::destroy(h);
 }
 
 void RenderSystem::init()
@@ -165,6 +165,6 @@ void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1
         vertex[2].TexCoord.x = maxu;
         vertex[2].TexCoord.y = maxv;
 
-        bgfx::setVertexBuffer(&vb);
+        bgfx::setVertexBuffer(0, &vb);
     }
 }

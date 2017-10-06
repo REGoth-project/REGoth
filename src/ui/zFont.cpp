@@ -131,7 +131,7 @@ bool UI::zFont::bindGlyphStream(const UI::zFont::GlyphStream& glyphStream)
 
         memcpy(vertex, glyphStream.vxStream.data(), sizeof(Meshes::PositionUVVertex2D) * glyphStream.vxStream.size());
 
-        bgfx::setVertexBuffer(&vb);
+        bgfx::setVertexBuffer(0, &vb);
 
         return true;
     }

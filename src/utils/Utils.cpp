@@ -4,7 +4,7 @@
 #include <fstream>
 #include <tinydir.h>
 #include <bgfx/bgfx.h>
-#include <bx/crtimpl.h>
+#include <bx/file.h>
 #include <bx/readerwriter.h>
 #include <utils/logger.h>
 #include <utils/split.h>
@@ -26,8 +26,8 @@ static bx::FileWriterI* fileWriter = nullptr;
 
 void Utils::initializeFileReaderWriter()
 {
-    fileReader = new bx::CrtFileReader;
-    fileWriter = new bx::CrtFileWriter;
+    fileReader = new bx::FileReader;
+    fileWriter = new bx::FileWriter;
 }
 
 void Utils::destroyFileReaderWriter()

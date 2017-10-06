@@ -142,7 +142,7 @@ void REGoth::init(int _argc, char** _argv)
 
     initConsole();
 
-    imguiCreate(nullptr, 0, fontSize);
+    imguiCreate(fontSize);
     m_ImgUiCreated = true;
     m_scrollArea = 0;
 }
@@ -1114,7 +1114,7 @@ void REGoth::showSplash()
     float proj[16];
 
     bx::mtxIdentity(view);
-    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
+    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, true);
 
     bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 
