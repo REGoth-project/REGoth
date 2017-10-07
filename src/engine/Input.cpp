@@ -305,7 +305,9 @@ void Input::setMouseLock(bool mouseLock)
 {
     if (mouseLock != isMouseLocked)
     {
-        mouseLockCallback(mouseLock);
+        if(mouseLockCallback)
+            mouseLockCallback(mouseLock);
+
         isMouseLocked = mouseLock;
     }
 }
