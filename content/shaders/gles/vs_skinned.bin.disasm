@@ -1,3 +1,5 @@
+attribute highp vec4 a_color0;
+attribute highp vec3 a_normal;
 attribute highp vec2 a_texcoord0;
 attribute highp vec3 a_texcoord1;
 attribute highp vec3 a_texcoord2;
@@ -11,43 +13,55 @@ varying highp vec3 v_view_pos;
 uniform mat4 u_model[32];
 uniform highp mat4 u_modelView;
 uniform highp mat4 u_modelViewProj;
-uniform vec4 SKY_CLUT[256];
+uniform vec4 u_SkyColors[2];
+uniform highp vec4 u_color;
 void main ()
 {
-  highp vec4 tmpvar_9_1;
-  highp vec4 tmpvar_6_2;
-  highp vec4 tmpvar_5_3;
-  highp vec4 tmpvar_4_4;
-  highp vec4 tmpvar_3_5;
-  highp vec4 tmpvar_2_6;
-  highp vec3 position_1_7;
-  tmpvar_2_6.w = 1.0;
-  tmpvar_2_6.xyz = a_texcoord1;
-  position_1_7 = ((u_model[(1 + 
+  highp vec3 position_1;
+  highp vec4 tmpvar_2;
+  tmpvar_2.w = 1.0;
+  tmpvar_2.xyz = a_texcoord1;
+  position_1 = ((u_model[(1 + 
     int(a_texcoord5.x)
-  )] * tmpvar_2_6).xyz * a_texcoord6.x);
-  tmpvar_3_5.w = 1.0;
-  tmpvar_3_5.xyz = a_texcoord2;
-  position_1_7 = (position_1_7 + ((u_model[
+  )] * tmpvar_2).xyz * a_texcoord6.x);
+  highp vec4 tmpvar_3;
+  tmpvar_3.w = 1.0;
+  tmpvar_3.xyz = a_texcoord2;
+  position_1 = (position_1 + ((u_model[
     (1 + int(a_texcoord5.y))
-  ] * tmpvar_3_5).xyz * a_texcoord6.y));
-  tmpvar_4_4.w = 1.0;
-  tmpvar_4_4.xyz = a_texcoord3;
-  position_1_7 = (position_1_7 + ((u_model[
+  ] * tmpvar_3).xyz * a_texcoord6.y));
+  highp vec4 tmpvar_4;
+  tmpvar_4.w = 1.0;
+  tmpvar_4.xyz = a_texcoord3;
+  position_1 = (position_1 + ((u_model[
     (1 + int(a_texcoord5.z))
-  ] * tmpvar_4_4).xyz * a_texcoord6.z));
-  tmpvar_5_3.w = 1.0;
-  tmpvar_5_3.xyz = a_texcoord4;
-  position_1_7 = (position_1_7 + ((u_model[
+  ] * tmpvar_4).xyz * a_texcoord6.z));
+  highp vec4 tmpvar_5;
+  tmpvar_5.w = 1.0;
+  tmpvar_5.xyz = a_texcoord4;
+  position_1 = (position_1 + ((u_model[
     (1 + int(a_texcoord5.w))
-  ] * tmpvar_5_3).xyz * a_texcoord6.w));
-  tmpvar_6_2.w = 1.0;
-  tmpvar_6_2.xyz = position_1_7;
-  gl_Position = (u_modelViewProj * tmpvar_6_2);
+  ] * tmpvar_5).xyz * a_texcoord6.w));
+  highp vec4 tmpvar_6;
+  tmpvar_6.w = 1.0;
+  tmpvar_6.xyz = position_1;
+  gl_Position = (u_modelViewProj * tmpvar_6);
   v_texcoord0 = a_texcoord0;
-  v_color = SKY_CLUT[255];
-  tmpvar_9_1.w = 1.0;
-  tmpvar_9_1.xyz = position_1_7;
-  v_view_pos = (u_modelView * tmpvar_9_1).xyz;
+  highp mat3 tmpvar_7;
+  highp mat4 tmpvar_8;
+  tmpvar_8 = u_model[0];
+  tmpvar_7[0] = tmpvar_8[0].xyz;
+  tmpvar_7[1] = tmpvar_8[1].xyz;
+  tmpvar_7[2] = tmpvar_8[2].xyz;
+  v_color = (min (1.0, (
+    (max (0.0, dot ((tmpvar_7 * a_normal), vec3(-0.5773503, 0.5773503, 0.5773503))) * u_color.x)
+   + 
+    (u_color.x * 0.5)
+  )) * a_color0);
+  v_color = mix (u_SkyColors[0], u_SkyColors[1], v_color.x);
+  highp vec4 tmpvar_9;
+  tmpvar_9.w = 1.0;
+  tmpvar_9.xyz = position_1;
+  v_view_pos = (u_modelView * tmpvar_9).xyz;
 }
 

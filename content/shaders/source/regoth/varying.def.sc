@@ -13,8 +13,7 @@ vec3 a_texcoord2 : TEXCOORD2;
 vec3 a_texcoord3 : TEXCOORD3;
 vec3 a_texcoord4 : TEXCOORD4;
 vec4 a_texcoord5 : TEXCOORD5;
-ivec4 a_texcoord6    : TEXCOORD6;
-vec4 a_texcoord6         : TEXCOORD7;
+vec4 a_texcoord6    : TEXCOORD6;
 
 
 vec4 i_data0 : TEXCOORD7;

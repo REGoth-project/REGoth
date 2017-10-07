@@ -1,4 +1,4 @@
-../../.build/shaders/gles/fs_screenquad.bin :  \
+../../.build/shaders/essl/fs_screenquad.bin :  \
  varying.def.sc \
  ../common/common.sh \
  ../../scripts//../src/bgfx_shader.sh \

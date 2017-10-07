@@ -1,23 +1,38 @@
 attribute highp vec4 a_color0;
+attribute highp vec3 a_normal;
 attribute highp vec3 a_position;
 attribute highp vec2 a_texcoord0;
 varying highp vec4 v_color;
 varying highp vec2 v_texcoord0;
 varying highp vec3 v_view_pos;
+uniform mat4 u_model[32];
 uniform highp mat4 u_modelView;
 uniform highp mat4 u_modelViewProj;
+uniform vec4 u_SkyColors[2];
+uniform highp vec4 u_color;
 void main ()
 {
-  highp vec4 tmpvar_4_1;
-  highp vec4 tmpvar_1_2;
-  tmpvar_1_2.w = 1.0;
-  tmpvar_1_2.xyz = a_position;
-  gl_Position = (u_modelViewProj * tmpvar_1_2);
+  highp vec4 tmpvar_1;
+  tmpvar_1.w = 1.0;
+  tmpvar_1.xyz = a_position;
+  gl_Position = (u_modelViewProj * tmpvar_1);
   v_texcoord0 = a_texcoord0;
-  v_color.xyz = a_color0.xyz;
-  v_color.w = 1.0;
-  tmpvar_4_1.w = 1.0;
-  tmpvar_4_1.xyz = a_position;
-  v_view_pos = (u_modelView * tmpvar_4_1).xyz;
+  highp mat3 tmpvar_2;
+  highp mat4 tmpvar_3;
+  tmpvar_3 = u_model[0];
+  tmpvar_2[0] = tmpvar_3[0].xyz;
+  tmpvar_2[1] = tmpvar_3[1].xyz;
+  tmpvar_2[2] = tmpvar_3[2].xyz;
+  v_color.xyz = (min (1.0, (
+    (max (0.0, dot ((tmpvar_2 * a_normal), vec3(-0.5773503, 0.5773503, 0.5773503))) * u_color.x)
+   + 
+    (u_color.x * 0.5)
+  )) * a_color0.xyz);
+  v_color.xyz = mix (u_SkyColors[0], u_SkyColors[1], v_color.x).xyz;
+  v_color.w = (v_color.w * u_color.w);
+  highp vec4 tmpvar_4;
+  tmpvar_4.w = 1.0;
+  tmpvar_4.xyz = a_position;
+  v_view_pos = (u_modelView * tmpvar_4).xyz;
 }
 
