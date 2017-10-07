@@ -5,11 +5,11 @@ android {
     buildToolsVersion '25.0.0'
 
     productFlavors {
-        x86 {
+        /*x86 {
             ndk {
                 abiFilters "x86"
             }
-        }
+        }*/
         arm {
             ndk {
                 abiFilters "armeabi-v7a"
