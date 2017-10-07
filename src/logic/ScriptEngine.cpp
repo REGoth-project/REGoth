@@ -171,7 +171,10 @@ void ScriptEngine::onNPCInserted(Daedalus::GameState::NpcHandle npc, const std::
     {
         if (World::Waynet::waypointExists(m_World.getWaynet(), spawnpoint))
             vob.playerController->teleportToWaypoint(World::Waynet::getWaypointIndex(m_World.getWaynet(), spawnpoint));
-        else
+        else if(m_World.doesFreepointExist(spawnpoint))
+        {
+            vob.playerController->teleportToPosition(m_World.getFreepointPosition(spawnpoint));
+        } else
         {
             LogError() << "spawnpoint does not exist: " << spawnpoint;
             assert(false);

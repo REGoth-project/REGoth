@@ -493,3 +493,36 @@ bool Utils::endsWith(const std::string& searchSpace, const std::string& end)
     auto pos = searchSpace.size() - end.size();
     return end.size() <= searchSpace.size() && searchSpace.find(end, pos) != std::string::npos;
 }
+
+void Utils::replace(std::string& searchSpace, const std::string& from, const std::string& to)
+{
+    std::size_t pos = 0;
+    while((pos = searchSpace.find(from, pos)) != std::string::npos) {
+        searchSpace.replace(pos, from.length(), to);
+        pos += to.length();
+    }
+}
+
+std::string Utils::replaced(std::string searchSpace, const std::string& from, const std::string& to)
+{
+    replace(searchSpace, from, to);
+    return searchSpace;
+}
+
+std::pair<std::string, std::string> Utils::splitExtension(const std::string& filename)
+{
+    auto dotPos = filename.find_last_of('.');
+    auto withoutExt = filename.substr(0, dotPos);
+    auto ext = (dotPos != std::string::npos) ? filename.substr(dotPos, std::string::npos) : "";
+    return std::make_pair(withoutExt, ext);
+}
+
+float Utils::fmod(float a, float b)
+{
+    return std::fmod(std::fmod(a, b) + b, b);
+}
+
+double Utils::fmod(double a, double b)
+{
+    return std::fmod(std::fmod(a, b) + b, b);
+}

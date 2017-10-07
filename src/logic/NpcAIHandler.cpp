@@ -98,7 +98,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Forward:
-            if (m_MovementState.isForward)
+            if(m_MovementState.isForward)
             {
                 // Forward-key still pressed, keep going
                 if (!getNpcAnimationHandler().Action_GoForward())
@@ -129,7 +129,7 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             break;
 
         case EMovementState::Backward:
-            if (m_MovementState.isBackward)
+            if(m_MovementState.isBackward)
             {
                 // Backward-key still pressed, keep going
                 getNpcAnimationHandler().Action_GoBackward();
@@ -294,52 +294,43 @@ void NpcAIHandler::playerUpdate(float deltaTime)
     resetKeyStates();
 }
 
-void NpcAIHandler::bindKeys()
+void NpcAIHandler::onAction(Engine::ActionType actionType, bool triggered)
 {
-    m_MovementState.actionForward = Engine::Input::RegisterAction(Engine::ActionType::PlayerForward, [this](bool triggered, float) {
-        m_MovementState.isForward = m_MovementState.isForward || triggered;
-    });
-
-    m_MovementState.actionBackward = Engine::Input::RegisterAction(Engine::ActionType::PlayerBackward, [this](bool triggered, float) {
-        m_MovementState.isBackward = m_MovementState.isBackward || triggered;
-    });
-
-    m_MovementState.actionStrafeLeft = Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeLeft, [this](bool triggered, float) {
-        m_MovementState.isStrafeLeft = m_MovementState.isStrafeLeft || triggered;
-    });
-
-    m_MovementState.actionStrafeRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerStrafeRight, [this](bool triggered, float) {
-        m_MovementState.isStrafeRight = m_MovementState.isStrafeRight || triggered;
-    });
-
-    m_MovementState.actionTurnRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnRight, [this](bool triggered, float) {
-        m_MovementState.isTurnRight = m_MovementState.isTurnRight || triggered;
-    });
-
-    m_MovementState.actionTurnRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerTurnLeft, [this](bool triggered, float) {
-        m_MovementState.isTurnLeft = m_MovementState.isTurnLeft || triggered;
-    });
-
-    m_MovementState.actionTurnRight = Engine::Input::RegisterAction(Engine::ActionType::PlayerDrawWeaponMelee, [this](bool triggered, float) {
-        m_MovementState.isLastWeaponKey = m_MovementState.isLastWeaponKey || triggered;
-    });
-
-    m_MovementState.actionAction = Engine::Input::RegisterAction(Engine::ActionType::PlayerAction, [this](bool triggered, float) {
-        m_MovementState.isAction = m_MovementState.isAction || triggered;
-    });
+    // TODO remove this? and replace by Playercontroller isForward...?
+    using Engine::ActionType;
+    switch (actionType)
+    {
+        case ActionType::PlayerForward:
+            m_MovementState.isForward = m_MovementState.isForward || triggered;
+            break;
+        case ActionType::PlayerBackward:
+            m_MovementState.isBackward = m_MovementState.isBackward || triggered;
+            break;
+        case ActionType::PlayerStrafeLeft:
+            m_MovementState.isStrafeLeft = m_MovementState.isStrafeLeft || triggered;
+            break;
+        case ActionType::PlayerStrafeRight:
+            m_MovementState.isStrafeRight = m_MovementState.isStrafeRight || triggered;
+            break;
+        case ActionType::PlayerTurnRight:
+            m_MovementState.isTurnRight = m_MovementState.isTurnRight || triggered;
+            break;
+        case ActionType::PlayerTurnLeft:
+            m_MovementState.isTurnLeft = m_MovementState.isTurnLeft || triggered;
+            break;
+        case ActionType::PlayerDrawWeaponMelee:
+            m_MovementState.isLastWeaponKey = m_MovementState.isLastWeaponKey || triggered;
+            break;
+        case ActionType::PlayerAction:
+            m_MovementState.isAction = m_MovementState.isAction || triggered;
+            break;
+        default:
+            break;
+    }
 }
 
 void NpcAIHandler::unbindKeys()
 {
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerForward, m_MovementState.actionForward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerBackward, m_MovementState.actionBackward);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeLeft, m_MovementState.actionStrafeLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerStrafeRight, m_MovementState.actionStrafeRight);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnLeft, m_MovementState.actionTurnLeft);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerTurnRight, m_MovementState.actionTurnRight);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerDrawWeaponMelee, m_MovementState.actionLastWeapon);
-    Engine::Input::RemoveAction(Engine::ActionType::PlayerAction, m_MovementState.actionAction);
-
     // Zero out everything
     m_MovementState = {};
 }

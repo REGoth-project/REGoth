@@ -22,15 +22,14 @@ public:
     bool update() override;
     void drawLog();
     void showSplash();
-    void renderScreenSpaceQuad(uint32_t _view, bgfx::ProgramHandle _program, float _x, float _y, float _width, float _height);
 
-    Engine::GameEngine* m_pEngine;
-    uint32_t m_debug;
-    uint32_t m_reset;
-    uint32_t m_Width, m_Height;
-    int64_t m_timeOffset;
-    int32_t m_scrollArea;
-    bool m_NoHUD;
-    // prevents imgui from crashing if we failed on startup and didn't init it
-    bool m_ImgUiCreated = false;
+        Engine::GameEngine* m_pEngine;
+        uint32_t m_debug;
+        uint32_t m_reset;
+        uint32_t m_Width, m_Height;
+        int64_t m_timeOffset;
+        int32_t m_scrollArea;
+        int m_HUDMode;
+        // prevents imgui from crashing if we failed on startup and didn't init it
+        bool m_ImgUiCreated = false;
 };
