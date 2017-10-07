@@ -1,6 +1,6 @@
 #include "RenderSystem.h"
 #include "bgfx_utils.h"
-#include "utils/Utils.h"
+#include "content/Shader.h"
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
 #include <zenload/zTypes.h>
@@ -32,22 +32,22 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::init()
 {
-    m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainWorldProgram);
 
-    m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldInstancedProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainWorldInstancedProgram);
 
-    m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
+    m_Config.programs.mainSkinnedMeshProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainSkinnedMeshProgram);
 
-    m_Config.programs.particle_textured = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
+    m_Config.programs.particle_textured = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
     m_LoadedPrograms.push_back(m_Config.programs.particle_textured);
 
-    m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
+    m_Config.programs.fullscreenQuadProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
     m_LoadedPrograms.push_back(m_Config.programs.fullscreenQuadProgram);
 
-    m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
+    m_Config.programs.imageProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
     m_LoadedPrograms.push_back(m_Config.programs.imageProgram);
 
     m_Config.uniforms.diffuseTexture = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);

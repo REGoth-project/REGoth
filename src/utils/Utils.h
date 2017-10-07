@@ -427,6 +427,12 @@ namespace Utils
      */
     size_t getFileSize(const std::string& file);
 
+
+    /**
+     * @return Instance of bgfx::Memory with file content inside
+     */
+    const bgfx::Memory* loadFileToMemory(const char* _filePath);
+
     /**
      * Removes the last .ext from the string
      * @param fileName Input string with extension as ".ext"
@@ -448,12 +454,6 @@ namespace Utils
      * @return str, full sensitive path. Empty if path is invalid/could not be found
      */
     std::string getCaseSensitivePath(const std::string& case_insensitive_path, const std::string& prePath = "");
-
-    bgfx::ShaderHandle loadShader(const char* basePath, const char* _name);
-
-    bgfx::ProgramHandle loadProgram(const char* basePath, const char* _vsName, const char* _fsName);
-
-    //bgfx::TextureHandle loadTexture(const char* _name, uint32_t _flags = BGFX_TEXTURE_NONE, uint8_t _skip = 0, bgfx::TextureInfo* _info = NULL);
 
     /**
      * Creates a directory on the given path
