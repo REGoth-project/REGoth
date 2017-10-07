@@ -29,7 +29,7 @@ addons:
 
 env:
   - PLATFORM=linux
-  - PLATFORM=android
+  #- PLATFORM=android
 
 git:
   submodules: false
