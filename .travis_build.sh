@@ -13,5 +13,5 @@ else
     mkdir -p build;
     cd build;
     cmake ..;
-    make -j2;
+    make -j4;
 fi
