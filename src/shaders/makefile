@@ -3,20 +3,24 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 #
 
-BGFX_DIR=../../lib/bgfx-cmake/bgfx
+MAKEFILE_NAME := $(lastword $(MAKEFILE_LIST))
+ROOT:=$(dir $(MAKEFILE_NAME))
+
+BGFX_DIR=$(ROOT)../../lib/bgfx-cmake/bgfx
 RUNTIME_DIR=$(BGFX_DIR)/examples/runtime
-BUILD_DIR=../../content/
+BUILD_DIR=$(ROOT)../../content
+SHADERS_DIR=$(ROOT)
 
 ADDITIONAL_INCLUDES=-i $(BGFX_DIR)/examples/common
 
 include $(BGFX_DIR)/scripts/shader.mk
 
-.PHONY: rebuild
-rebuild:
-	@make -s --no-print-directory TARGET=3 clean all
-	@make -s --no-print-directory TARGET=4 clean all
+.PHONY: rebuildall
+rebuildall:
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=3 rebuild
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=4 rebuild
 
 .PHONY: cleanall
 cleanall:
-	@make -s --no-print-directory TARGET=3 clean
-	@make -s --no-print-directory TARGET=4 clean
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=3 clean
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=4 clean
