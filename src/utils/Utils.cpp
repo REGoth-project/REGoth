@@ -232,7 +232,7 @@ namespace Utils
                 break;
 
             case bgfx::RendererType::OpenGLES:
-                shaderPath = "shaders/gles/";
+                shaderPath = "shaders/essl/";
                 break;
 
             default:
