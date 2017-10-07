@@ -28,7 +28,8 @@ addons:
             - alsa-oss
 
 env:
-  - PLATFORM=android
+  - PLATFORM=linux
+  #- PLATFORM=android
 
 git:
   submodules: false
