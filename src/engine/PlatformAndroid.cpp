@@ -170,7 +170,6 @@ void PlatformAndroid::onAppCmd(struct android_app* app, int32_t cmd)
 
         case APP_CMD_GAINED_FOCUS:
             m_HasFocus = true;
-            bgfx::reset(m_WindowWidth, m_WindowHeight);
             break;
 
         case APP_CMD_LOST_FOCUS:
