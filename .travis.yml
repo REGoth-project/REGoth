@@ -1,11 +1,18 @@
 language: c++
 
-addons:
-    apt:
-        sources:
+script:
+  - ./.travis_build.sh
+
+matrix:
+  include:
+    - os: linux
+      env: PLATFORM=linux
+      addons:
+        apt:
+          sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
-        packages:
+          packages:
             - g++-6
             - gcc-6
             - cmake
@@ -23,21 +30,24 @@ addons:
             - libxrandr-dev
             - libglew-dev
             - libsndfile1-dev
-            - libasound2-dev 
-            - alsa-utils 
+            - libasound2-dev
+            - alsa-utils
             - alsa-oss
-
-git:
-  submodules: false
-
-script:
-  - ./.travis_build.sh
-
-matrix:
-  include:
     - os: linux
-      env: PLATFORM=linux
-    - os: linux
+      language: android
       env: PLATFORM=android
+      android:
+        components:
+          - tools
+          - platform-tools
+          - tools # it's required to have this duplicated
+
+          - build-tools-25.0.2
+          - android-21
+        licenses:
+          - '.+'
+      install:
+        - "yes | sdkmanager ndk-bundle"
+        - "yes | sdkmanager \"extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2\""
     - os: osx
       compiler: clang
