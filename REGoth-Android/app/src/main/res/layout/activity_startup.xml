@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.regothproject.regoth.StartupActivity">
+
+    <EditText
+        android:id="@+id/demoFilesURL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="32dp"
+        android:layout_marginRight="32dp"
+        android:layout_marginTop="16dp"
+        android:ems="10"
+        android:hint="Demo files URL"
+        android:inputType="textUri"
+        android:text="@string/demo_files_default" />
+
+    <Button
+        android:id="@+id/btnDownload"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/demoFilesURL"
+        android:layout_alignLeft="@+id/demoFilesURL"
+        android:layout_centerInParent="true"
+        android:onClick="onDownloadGamefilesButtonPressed"
+        android:text="Download Gamefiles" />
+
+    <Button
+        android:id="@+id/btnExtract"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/btnDownload"
+        android:layout_centerInParent="true"
+        android:layout_toRightOf="@+id/btnDownload"
+        android:onClick="onExtractGamefilesButtonPressed"
+        android:text="Extract gamefiles" />
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnDownload"
+        android:layout_alignLeft="@+id/demoFilesURL"
+        android:onClick="onStartButtonPressed"
+        android:text="Start Game" />
+
+
+</RelativeLayout>

@@ -1,9 +1,11 @@
 #include <cstddef>
 #include <functional>
 
+#ifdef RE_USE_SOUND
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#endif
 
 #include <adpcm/adpcm-lib.h>
 
@@ -173,7 +175,7 @@ namespace World
         // Get a cached source object
         Source s = getFreeSource();
 
-        LogInfo() << "play sound " << snd.sfx.file << " vol " << snd.sfx.vol;
+        //LogInfo() << "play sound " << snd.sfx.file << " vol " << snd.sfx.vol;
 
         alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameClock().getGameEngineSpeedFactor());
         alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);

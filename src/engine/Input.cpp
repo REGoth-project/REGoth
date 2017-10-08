@@ -123,8 +123,13 @@ void Input::keyEvent(int key, int scancode, int action, int mods)
 
     if (KEY_ACTION_PRESS == action)
     {
+        if(!keyState[key])
+        {
+            keyTriggered[key] = true;
+        }
+
         keyState[key] = true;
-        keyTriggered[key] = true;
+
         modsTriggered[key] = mods;
     }
     else if (KEY_ACTION_REPEAT == action)
@@ -300,7 +305,9 @@ void Input::setMouseLock(bool mouseLock)
 {
     if (mouseLock != isMouseLocked)
     {
-        mouseLockCallback(mouseLock);
+        if(mouseLockCallback)
+            mouseLockCallback(mouseLock);
+
         isMouseLocked = mouseLock;
     }
 }

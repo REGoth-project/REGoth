@@ -33,6 +33,7 @@
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
 #include <zenload/ztex2dds.h>
+#include <utils/GLFW_Keys.h>
 
 using json = nlohmann::json;
 

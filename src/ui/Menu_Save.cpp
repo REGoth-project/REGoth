@@ -74,6 +74,11 @@ void Menu_Save::onCustomAction(const std::string& action)
 
             const std::string saveGameName = Engine::SavegameManager::isSavegameAvailable(index) ? Engine::SavegameManager::readSavegameInfo(index).name : "";
             m_SaveName.clear();
+
+#ifdef ANDROID
+            m_SaveName = "Slot " + std::to_string(index);
+#endif
+
             onTextInput(saveGameName);
         }
         else

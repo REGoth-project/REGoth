@@ -389,6 +389,9 @@ bool WorldInstance::init(const std::string& zen,
 
                     //LogInfo() << "Vobsize (" << v.visual << "): " << (bbox.max - bbox.min).length() / 10.0f;
                     vob.position->m_DrawDistanceFactor = std::max(0.12f, std::min(1.0f, (bbox.max - bbox.min).length() / 10.0f));
+#ifdef ANDROID
+                    vob.position->m_DrawDistanceFactor *= 0.6f;
+#endif
                     //LogInfo() << "DistanceFactor (" << v.visual << "): " << vob.position->m_DrawDistanceFactor;
 
                     Vob::setVisual(vob, v.visual);
@@ -705,6 +708,15 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
 {
+    if(!isEntityValid(h))
+    {
+        // FIXME: Reason for this is, that on the final world-clean, entities are removed in the wrong order.
+        // FIXME: Thus, when cleaning complex objects, there sub-entites might already be deleted and so their handle has become invalid.
+
+        LogWarn() << "Tried to delete an entity with an invalid handle!";
+        return; // Already deleted!
+    }
+
     // Clean all components
     Components::EntityComponent& entityComponent = getEntity<Components::EntityComponent>(h);
 

@@ -22,3 +22,6 @@
 [submodule "lib/openal-soft"]
 	path = lib/openal-soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "lib/CAB-Installer-Extractor"]
+	path = lib/CAB-Installer-Extractor
+	url = https://github.com/REGoth-project/CAB-Installer-Extractor.git
