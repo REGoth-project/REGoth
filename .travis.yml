@@ -27,12 +27,15 @@ addons:
             - alsa-utils 
             - alsa-oss
 
-env:
-  - PLATFORM=linux
-  #- PLATFORM=android
-
 git:
   submodules: false
 
 script:
   - ./.travis_build.sh
+
+matrix:
+  include:
+    - os: linux
+      env: PLATFORM=linux
+    - os: osx
+      compiler: clang
