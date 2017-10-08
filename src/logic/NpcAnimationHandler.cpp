@@ -472,7 +472,26 @@ void NpcAnimationHandler::startAni_UndrawWeapon()
 
 const NpcAnimationHandler::AnimationSet& NpcAnimationHandler::getActiveSet()
 {
-    return m_Anims[(int)getController().getWeaponMode()];
+    EWeaponMode mode = getController().getWeaponMode();
+
+    // See patchGoblinWeaponMode() why this is needed
+    mode = patchGoblinWeaponMode(mode);
+
+    return m_Anims[(int)mode];
+}
+
+EWeaponMode NpcAnimationHandler::patchGoblinWeaponMode(EWeaponMode targetMode)
+{
+    if(targetMode == EWeaponMode::Weapon1h)
+    {
+        // Goblins are using the "fist"-set, even though they are holding a 1h-weapon.
+        if(!isAnimationSetUsable(targetMode) && isAnimationSetUsable(EWeaponMode::WeaponFist))
+        {
+            return EWeaponMode::WeaponFist;
+        }
+    }
+
+    return targetMode;
 }
 
 void NpcAnimationHandler::playAnimation(Handle::AnimationHandle anim)
@@ -536,4 +555,18 @@ void NpcAnimationHandler::startAni_FightForward()
     {
         playAnimation(anim);
     }
+}
+
+bool NpcAnimationHandler::isAnimationSetUsable(EWeaponMode weaponMode)
+{
+    AnimationSet& set = m_Anims[(int)weaponMode];
+
+    bool valid = false;
+
+    valid = valid || set.s_run.isValid();
+    valid = valid || set.s_runl.isValid();
+    valid = valid || set.s_walk.isValid();
+    valid = valid || set.s_walkl.isValid();
+
+    return valid;
 }

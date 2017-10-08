@@ -150,6 +150,23 @@ namespace Logic
         void playAnimation(Handle::AnimationHandle anim);
         void playAnimation(const std::string& anim);
 
+        /**
+         * Goblins use the "fist"-modes like all other monsters, even though they are holding a 1h-weapon.
+         * Maybe someone can come up with a nicer solution than this when we completely figured that one out.
+         * TODO: Completely figure that one out.
+         *
+         * @param targetMode Mode that is requested
+         * @return actual mode that should be used
+         */
+        EWeaponMode patchGoblinWeaponMode(EWeaponMode targetMode);
+
+        /**
+         * Checks whether crucial animations exist within this weapon-mode
+         * @param weaponMode Weaponmode to check the animations for
+         * @return Whether this is okay to use for a real monster
+         */
+        bool isAnimationSetUsable(EWeaponMode weaponMode);
+
         struct AnimationSet
         {
             /* ---- run ---- */
