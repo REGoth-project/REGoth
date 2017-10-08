@@ -1,0 +1,57 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion '25.0.0'
+
+    productFlavors {
+        /*x86 {
+            ndk {
+                abiFilters "x86"
+            }
+        }*/
+        arm {
+            ndk {
+                abiFilters "armeabi-v7a"
+            }
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.regothproject.regoth"
+        minSdkVersion 15
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++14 -Wno-format-security"
+                arguments '-DANDROID_STL=c++_shared', '-DCMAKE_BUILD_TYPE=RelWithDebInfo'
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path '../../CMakeLists.txt'
+        }
+    }
+
+    sourceSets {
+        main {
+            //jniLibs.srcDirs 'imported-lib/src/', 'more-imported-libs/src/'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+}

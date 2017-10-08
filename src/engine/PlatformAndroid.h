@@ -20,6 +20,8 @@ namespace Engine
 
         int32_t run(int argc, char** argv) override;
 
+        int shutdown() override;
+
     private:
         void onAppCmd(struct android_app* app, int32_t cmd);
         int onInputEvent(struct android_app* app, AInputEvent* event);
@@ -27,6 +29,7 @@ namespace Engine
         android_app* m_App;
         ANativeWindow* m_Window;
         std::thread m_Thread;
+        bool m_HasFocus;
 
         /**
          * @brief Virtual onscreen-thumbstick

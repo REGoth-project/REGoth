@@ -64,6 +64,9 @@ void RenderSystem::init()
     m_Config.uniforms.skyCLUT = bgfx::createUniform("SKY_CLUT", bgfx::UniformType::Vec4, 256);
     m_AllUniforms.push_back(m_Config.uniforms.skyCLUT);
 
+    m_Config.uniforms.skyColors = bgfx::createUniform("u_SkyColors", bgfx::UniformType::Vec4, 2);
+    m_AllUniforms.push_back(m_Config.uniforms.skyColors);
+
     m_Config.uniforms.fogColor = bgfx::createUniform("u_FogColor", bgfx::UniformType::Vec4);
     m_AllUniforms.push_back(m_Config.uniforms.fogColor);
 

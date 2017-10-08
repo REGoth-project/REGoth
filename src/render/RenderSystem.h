@@ -29,6 +29,7 @@ namespace Render
             bgfx::UniformHandle nodeTransforms;
             bgfx::UniformHandle objectColor;
             bgfx::UniformHandle skyCLUT;
+            bgfx::UniformHandle skyColors;
             bgfx::UniformHandle fogColor;
             bgfx::UniformHandle fogNearFar;
             bgfx::UniformHandle s_TexColor;
