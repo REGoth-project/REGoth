@@ -705,6 +705,15 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
 {
+    if(!isEntityValid(h))
+    {
+        // FIXME: Reason for this is, that on the final world-clean, entities are removed in the wrong order.
+        // FIXME: Thus, when cleaning complex objects, there sub-entites might already be deleted and so their handle has become invalid.
+
+        LogWarn() << "Tried to delete an entity with an invalid handle!";
+        return; // Already deleted!
+    }
+
     // Clean all components
     Components::EntityComponent& entityComponent = getEntity<Components::EntityComponent>(h);
 
