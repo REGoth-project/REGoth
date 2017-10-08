@@ -184,6 +184,8 @@ void BaseEngine::loadArchives()
     {
         m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
+    
+    m_FileIndex.finalizeLoad();
 }
 
 void BaseEngine::onWorldCreated(Handle::WorldHandle world)
