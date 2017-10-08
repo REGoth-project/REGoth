@@ -153,7 +153,6 @@ include_directories(${PROJECT_BINARY_DIR}/src)
 add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
-add_subdirectory(lib/CAB-Installer-Extractor)
 
 # Set up bullet
 set(USE_GRAPHICAL_BENCHMARK OFF CACHE STRING "" FORCE)
@@ -216,6 +215,7 @@ add_library(engine STATIC ${ENGINE_SRC})
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
 if(REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR)
+    add_subdirectory(lib/CAB-Installer-Extractor)
     add_definitions(-DRE_WITH_INSTALLER_EXTRACTOR)
     target_link_libraries(engine gextract)
 endif()
