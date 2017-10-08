@@ -4,6 +4,10 @@ project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
 
+
+option (REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR "Compile with library to extract some installers of Gothic" OFF) 
+
+
 # Vim - You Complete Me
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 
@@ -31,6 +35,7 @@ endif()
 
 if(ANDROID)
     set(BGFX_DEBUG 1)
+    set(REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR ON CACHE STRING "" FORCE)
 
     # Usage: cmake -DANDROID_NDK=$NDK -DCMAKE_TOOLCHAIN_FILE=$NDK/cmake/toolchain.cmake -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=23 -DLIBRARY_OUTPUT_PATH=. ..
 
@@ -209,7 +214,11 @@ file(GLOB ENGINE_SRC
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
-target_link_libraries(engine gextract)
+
+if(REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR)
+    add_definitions(-DRE_WITH_INSTALLER_EXTRACTOR)
+    target_link_libraries(engine gextract)
+endif()
 
 # ------------------ OpenAL ------------------
 

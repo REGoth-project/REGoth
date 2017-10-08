@@ -3,8 +3,11 @@
 #include "Utils.h"
 #include "cli.h"
 #include <ZenLib/vdfs/fileIndex.h>
-#include <g-extract.h>
 #include <ZenLib/utils/logger.h>
+
+#ifdef RE_WITH_INSTALLER_EXTRACTOR
+#include <g-extract.h>
+#endif
 
 namespace Flags
 {
@@ -46,8 +49,10 @@ static void unpackVdf()
     }
 }
 
+
 bool ::zTools::extractInstaller(const std::string& file, const std::string& targetLocation)
 {
+#ifdef RE_WITH_INSTALLER_EXTRACTOR
     try
     {
         LogInfo() << "Trying to extract Installer";
@@ -71,9 +76,12 @@ bool ::zTools::extractInstaller(const std::string& file, const std::string& targ
         LogError() << "Failed to extract installer: " << e.what();
         return false;
     }
-
+#else
+    LogError() << "Did not compile with installer-extraction enabled";
+#endif
     return true;
 }
+
 
 static void installGame()
 {
