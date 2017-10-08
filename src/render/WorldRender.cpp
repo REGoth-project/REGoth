@@ -375,9 +375,9 @@ namespace Render
 		}
 #endif
 
-        bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
-        bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls:    %d", numDrawcalls);
-        bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);
+        //bgfx::dbgTextPrintf(0, 3, 0x0f, "Num Triangles:    %d", numIndices/3);
+        //bgfx::dbgTextPrintf(0, 4, 0x0f, "Num Drawcalls:    %d", numDrawcalls);
+        //bgfx::dbgTextPrintf(0, 5, 0x0f, "Num Meshes drawn: %d", numSubmeshesDrawn);
 
         //world.getPhysicsSystem().debugDraw();
 
