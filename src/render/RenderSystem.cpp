@@ -5,10 +5,7 @@
 #include <utils/logger.h>
 #include <zenload/zTypes.h>
 
-#if BX_PLATFORM_EMSCRIPTEN
-#include <emscripten.h>
-#include <html5.h>
-#endif
+
 
 using namespace Render;
 
@@ -72,13 +69,7 @@ void RenderSystem::init()
 
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
     m_AllUniforms.push_back(m_Config.uniforms.fogNearFar);
-
-
-#if BX_PLATFORM_EMSCRIPTEN
-    int enabled = emscripten_webgl_enable_extension(emscripten_webgl_get_current_context(), "OES_element_index_uint");
-    assert(enabled == 1);
-    LogInfo() << "OES_element_index_uint enabled: " << enabled;
-#endif
+    
 }
 
 uint32_t RenderSystem::requestInstanceDataBuffer()

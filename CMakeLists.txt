@@ -29,7 +29,7 @@ if(EMSCRIPTEN)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ASSERTIONS=0")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_GLFW=3")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_PTHREADS=2")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s TOTAL_MEMORY=924288000")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s TOTAL_MEMORY=939524096")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --preload-file ${CMAKE_CURRENT_SOURCE_DIR}/../content@/")
 endif()
 
@@ -283,6 +283,10 @@ include_directories(lib/tinydir)
 include_directories(lib/json)
 include_directories(lib/CAB-Installer-Extractor/include)
 
+if(EMSCRIPTEN)
+    add_definitions(-DRE_USE_SOUND)
+endif()
+
 if(NOT ANDROID)
 
 
@@ -293,6 +297,8 @@ if(NOT ANDROID)
         add_subdirectory(lib/glfw)
         target_link_libraries(engine glfw)
     endif()
+    
+    
 else()
     add_definitions(-DRE_USE_SOUND)
     target_link_libraries(engine android_glue)
