@@ -210,8 +210,8 @@ void REGoth::initConsole()
 
     console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
 
-        if(args.size() < 2)
-            return "Missing argument. Usage: pkf <duration>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: pkf <duration>";
 
             m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
             return "Playing keyed animation";
@@ -324,6 +324,61 @@ void REGoth::initConsole()
         m_pEngine->getGameClock().setGameEngineSpeedFactor(factor);
 
         return "Set gamespeed to " + std::to_string(factor);
+    });
+
+    auto& setWalkmode = console.registerCommand("set walkmode", [this](const std::vector<std::string>& args) -> std::string {
+
+        using WalkMode = Logic::EventMessages::MovementMessage::WalkMode;
+        using MovementMessage = Logic::EventMessages::MovementMessage;
+
+        if (args.size() < 3)
+            return "Missing argument. Usage: set walkmode <mode>";
+
+        std::string modestr = Utils::uppered(args[2]);
+
+
+
+        WalkMode mode = WalkMode::Run;
+
+        if(modestr == "RUN")        mode = WalkMode::Run;
+        else if(modestr == "WALK")  mode = WalkMode::Walk;
+        else if(modestr == "SNEAK") mode = WalkMode::Sneak;
+        else if(modestr == "WATER") mode = WalkMode::Water;
+        else if(modestr == "SWIM")  mode = WalkMode::Swim;
+        else if(modestr == "DIVE")  mode = WalkMode::Dive;
+        else return "Invalid Walkmode: " + modestr;
+
+        auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+
+        if(!player.isValid())
+            return "No valid player found!";
+
+        MovementMessage msg;
+        msg.subType = MovementMessage::ST_SetWalkMode;
+        msg.walkMode = mode;
+
+        player.playerController->getEM().onMessage(msg);
+
+        return "Set Walkmode to " + modestr + "(" + std::to_string((int)mode) + ")";
+    });
+
+    setWalkmode.registerAutoComplete([]() -> std::vector<Suggestion> {
+        std::vector<std::string> names = {"run",
+                "walk",
+                "sneak",
+                "water",
+                "swim",
+                "dive"};
+
+        std::vector<Suggestion> suggestions;
+        for(const std::string& s : names)
+        {
+            Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{s}});
+            suggestions.push_back(suggestion);
+        }
+
+        return suggestions;
     });
 
     console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
