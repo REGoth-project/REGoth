@@ -24,6 +24,7 @@ A list showing the current state of the engine, can be found [here](../../wiki/s
 # Download (Latest stable version)
 
 **Version 0.4 (Windows)**: https://github.com/REGoth-project/REGoth/releases/tag/0.4
+
 **Version 0.4 (Android)**: https://github.com/REGoth-project/REGoth/releases/tag/0.4-android
 
 Automated nightly builds: https://github.com/degenerated1123/REGoth/releases
