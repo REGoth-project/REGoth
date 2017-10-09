@@ -1,7 +1,5 @@
 #!/bin/bash
-
-set -e
-set -o pipefail
+set -e -x -o pipefail
 
 rm -rf dist/
 mkdir -p dist/
