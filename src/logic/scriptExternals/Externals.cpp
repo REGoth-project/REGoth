@@ -838,13 +838,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         hour2 = (hour2 + 24) % 24;
 
         auto& clock = pWorld->getEngine()->getGameClock();
+        int32_t hour, min;
+        clock.getTimeOfDay(hour, min);
         double timeOfDayNow = clock.getTimeOfDay();
-        double timeOfDay1 = Engine::GameClock::hmToDayTime(hour1, min1);
-        double timeOfDay2 = Engine::GameClock::hmToDayTime(hour2, min2);
+        double timeOfDay1 = clock.hmToDayTime(hour1, min1);
+        double timeOfDay2 = clock.hmToDayTime(hour2, min2);
 
         const double minuteOfDayFraction = 1.0f / (24 * 60);
         if(timeOfDay1 != timeOfDay2)
             timeOfDay2 -= minuteOfDayFraction; // Gothic subtracts one minute from the second time here to counter issues happening with overlapping times for Daily Routines.
+
 
         bool inside;
 
@@ -856,6 +859,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         else if (timeOfDay2 < timeOfDay1)
         {
             // Case: Interval contains midnight
+            // check if it is not in complementary interval
             inside = timeOfDayNow >= timeOfDay1 || timeOfDayNow <= timeOfDay2;
         }
         else
@@ -906,6 +910,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             {
                 npc.playerController->getEM().onMessage(sm);
             }
+        }
+    });
+
+    vm->registerExternalFunction("ai_setwalkmode", [=](Daedalus::DaedalusVM& vm) {
+        using EventMessages::MovementMessage;
+
+        int32_t walkmode = vm.popDataValue();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if (npc.isValid())
+        {
+            MovementMessage msg;
+            msg.subType = MovementMessage::ST_SetWalkMode;
+            msg.walkMode = static_cast<MovementMessage::WalkMode>(walkmode);
+
+            npc.playerController->getEM().onMessage(msg);
         }
     });
 
