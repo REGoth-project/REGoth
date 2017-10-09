@@ -329,6 +329,7 @@ void GameSession::setupKeyBindings()
                                                  ActionType::DebugMoveSpeed,
                                                  ActionType::DebugMoveSpeed2,
                                                  ActionType::PlayerAction,
+                                                 ActionType::PlayerActionContinous,
                                                  ActionType::PlayerRotate};
 
         for (auto action : playerActions)

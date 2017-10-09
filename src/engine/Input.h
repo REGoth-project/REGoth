@@ -56,6 +56,7 @@ namespace Engine
         PlayerStrafeRight,
         PlayerDrawWeaponMelee,
         PlayerAction,
+        PlayerActionContinous,
 
         AllNpcDrawWeapon,
         AllNpcUndrawWeapon,

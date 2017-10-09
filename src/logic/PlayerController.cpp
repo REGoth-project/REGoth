@@ -2727,6 +2727,11 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
             }
         }
             break;
+
+
+        case ActionType::PlayerActionContinous:
+            break;
+
         default:
             assert(false);
             break;
