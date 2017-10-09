@@ -3,6 +3,15 @@ language: c++
 script:
   - ./.travis_build.sh
 
+deploy:
+  provider: releases
+  api_key:
+    secure: 0FQRtVSqKYui5GzEBrv+OWwnJG59roRreBsWy+/7VOlelRVGHFT+Onj5cDz3tmd94lFCV6DjdRkv6D4csx6TFX9E5FzuTzBb0FPhSYrpZDB5wMebuJXEVy5kA4yq856YgD+w91vBRlaqcF8JDVaNe/1jHG4piEI3wOa0inkmqu3z8QdcRz5tsEGfNN6DIiNYQL1czrx5UGzNHxZlMdHmFy+Zn8yH8wfJtS0szflXAqAvQPns4AqfqycZpb61EDXpy0qJh2CSpleZLnybez9heBdFsWH9lNwdbWRlR9tKiK5IR+A4PMPvuzzUaOQ8HWgGewiNtn9ednyp4HSLwkEmn4J67j9fG/eLYu+OyUnQ9teX0U3RsFNTs0NdX43NCRK1eiwsf11SBfz0gI+a1Y/re0AcUx+6BL2CGOdn7Nnu9O9vhHEd2vNKAWNzceiBNei0OsVes8bC9QLti7+wj6MQWkk9QDqRHK6UGnBz0keJcqVMX8kp1EIxX0a/4WtGOLBIXuS9v1w3jckD85dG88BIrIT9SP+fqceAiUiu6D94axG7U5iNXrnBrTb6kuAWrJQE2Z5y1Ihc1ep5AZqS3rcqNyyaoBg8tUpFp0Mm3WdyYxT6XBkCIPkHQ9f6SuPYj5ricMiFEwL9ChKzjuCWpOy2NLIeXu2GRseF56E3kAmiKZU=
+  file: README.md
+  skip_cleanup: true
+  on:
+    tags: true
+
 matrix:
   include:
     - os: linux
