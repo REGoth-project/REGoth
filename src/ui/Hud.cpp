@@ -14,6 +14,7 @@
 #include "Menu_Status.h"
 #include "PrintScreenMessages.h"
 #include "TextView.h"
+#include "ItemGrid.h"
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
 #include <logic/CameraController.h>
@@ -39,6 +40,8 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pMenuBackground = new ImageView(m_Engine);
     m_pMenuBackground->setHidden(true);
     m_pMenuBackground->setRelativeSize(false);
+    m_pItemGrid = new ItemGrid(m_Engine);
+
 
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
@@ -49,6 +52,7 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     addChild(m_pLoadingScreen);
     addChild(m_pMenuBackground);
     addChild(m_pConsoleBox);
+    addChild(m_pItemGrid);
 
     // Initialize status bars
     {
@@ -119,6 +123,7 @@ UI::Hud::~Hud()
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
     removeChild(m_pMenuBackground);
+    removeChild(m_pItemGrid);
 
     popAllMenus();
 
@@ -130,6 +135,7 @@ UI::Hud::~Hud()
     delete m_pClock;
     delete m_pLoadingScreen;
     delete m_pConsoleBox;
+    delete m_pItemGrid;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -341,4 +347,9 @@ void UI::Hud::popAllMenus()
 {
     while (!m_MenuChain.empty())
         popMenu();
+}
+
+void UI::Hud::toggleInventory()
+{
+    m_pItemGrid->setHidden(!m_pItemGrid->isHidden());
 }

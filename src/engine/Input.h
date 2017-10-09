@@ -92,6 +92,8 @@ namespace Engine
         UI_HOME,
         UI_END,
 
+        HUD_ShowInventory,
+
         Count
     };
 

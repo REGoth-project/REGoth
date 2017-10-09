@@ -319,6 +319,12 @@ void GameSession::setupKeyBindings()
         }
     });
 
+    registerAction(Engine::ActionType::HUD_ShowInventory, [baseEngine](bool triggered, float){
+        // Toggle inventory
+        if(triggered)
+            baseEngine->getHud().toggleInventory();
+    });
+
     {
         // player actions
         std::vector<ActionType> playerActions = {ActionType::PlayerDrawWeaponMelee,

@@ -11,5 +11,8 @@ namespace RenderViewList
     const uint8_t DEFAULT = 1;  // Opaque
     const uint8_t ALPHA_1 = 2;  // Draws smoke, etc
     const uint8_t ALPHA_2 = 3;  // Draws fire above the smoke
+
+	const uint8_t INVENTORY = 253; // Draws inventory items
+    
     const uint8_t UI = 254;
 }
