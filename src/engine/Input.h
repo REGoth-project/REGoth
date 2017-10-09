@@ -74,6 +74,8 @@ namespace Engine
         UI_Right,
         UI_Confirm,
 
+        HUD_ShowInventory,
+
         Count
     };
 

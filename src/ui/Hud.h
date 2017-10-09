@@ -26,6 +26,7 @@ namespace UI
     class Menu;
     class DialogBox;
     class LoadingScreen;
+    class ItemGrid;
 
     class Hud : public View
     {
@@ -123,6 +124,8 @@ namespace UI
          */
         bool isMenuActive() { return !m_MenuChain.empty(); }
 
+        void toggleInventory();
+
     protected:
         /**
          * Deletes all menus stored in the m_MenusToDelete-list
@@ -143,6 +146,7 @@ namespace UI
         LoadingScreen* m_pLoadingScreen;
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
+        ItemGrid* m_pItemGrid;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed
