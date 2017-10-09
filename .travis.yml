@@ -1,4 +1,4 @@
-language: c++
+language: cpp
 
 deploy:
   provider: releases
@@ -13,6 +13,7 @@ deploy:
 matrix:
   include:
     - os: linux
+      env: PLATFORM=linux
       addons:
         apt:
           sources:
@@ -60,6 +61,7 @@ matrix:
       script: ./bin/build_android.sh
       before_deploy: ./bin/archive_android.sh
     - os: osx
+      env: PLATFORM=osx
       compiler: clang
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
