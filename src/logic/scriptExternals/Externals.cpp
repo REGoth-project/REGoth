@@ -32,8 +32,8 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if (!hnpc.isValid())
         {
-            LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
-            LogWarn() << "Callstack: " << vm->getCallStack();
+            //LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
+            //LogWarn() << "Callstack: " << vm->getCallStack();
 
             VobTypes::NpcVobInformation vob;
             vob.entity.invalidate();
