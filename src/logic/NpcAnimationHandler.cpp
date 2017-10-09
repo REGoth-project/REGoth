@@ -12,6 +12,7 @@ NpcAnimationHandler::NpcAnimationHandler(World::WorldInstance& world, Handle::En
     : m_World(world)
     , m_HostVob(hostVob)
 {
+    m_WalkMode = WalkMode::Run;
 }
 
 NpcAnimationHandler::~NpcAnimationHandler()
@@ -249,7 +250,7 @@ void NpcAnimationHandler::initAnimations()
 
         m_Anims[i].s_walk = lib.getAnimation(meshLib, meshLib, "S_" + n);
         m_Anims[i].t_walk_2_walkl = lib.getAnimation(meshLib, meshLib, "T_" + n + "_2_" + n + "L");
-        m_Anims[i].t_walkl_2_walk = lib.getAnimation(meshLib, meshLib, "T_" + n + "_2_" + n + "L");
+        m_Anims[i].t_walkl_2_walk = lib.getAnimation(meshLib, meshLib, "T_" + n + "L_2_" + n + "");
         m_Anims[i].s_walkl = lib.getAnimation(meshLib, meshLib, "S_" + n + "L");
         m_Anims[i].s_walkr = lib.getAnimation(meshLib, meshLib, "S_" + n + "R");
         m_Anims[i].t_walk_2_walkr = lib.getAnimation(meshLib, meshLib, "T_" + n + "_2_" + n + "R");
@@ -408,8 +409,17 @@ void NpcAnimationHandler::startAni_Stand(bool force, bool allowTurning)
     }
     else if (force)
     {
-        // FIXME: Respect walkmode
-        playAnimation(getActiveSet().s_run);
+        switch(m_WalkMode)
+        {
+            case WalkMode::Run:   playAnimation(getActiveSet().s_run);  break;
+            case WalkMode::Walk:  playAnimation(getActiveSet().s_walk); break;
+            case WalkMode::Sneak: playAnimation(getActiveSet().s_walk); break; // FIXME: Correct walk->sneak
+            case WalkMode::Water: playAnimation(getActiveSet().s_walk); break; // FIXME: Correct walk->water
+            case WalkMode::Swim:  playAnimation(getActiveSet().s_walk); break; // FIXME: Correct walk->swim
+            case WalkMode::Dive:  playAnimation(getActiveSet().s_walk); break; // FIXME: Correct walk-dive
+            default:              playAnimation(getActiveSet().s_run);  break;
+        }
+
     }
 }
 
@@ -569,4 +579,48 @@ bool NpcAnimationHandler::isAnimationSetUsable(EWeaponMode weaponMode)
     valid = valid || set.s_walkl.isValid();
 
     return valid;
+}
+
+void NpcAnimationHandler::setWalkMode(NpcAnimationHandler::WalkMode walkMode)
+{
+    m_WalkMode = walkMode;
+
+    switch(walkMode)
+    {
+        case WalkMode::Sneak:
+        case WalkMode::Water:
+        case WalkMode::Swim:
+        case WalkMode::Dive:
+            LogWarn() << "Tried to set non-implemented walk-mode: " << getWalkModeTag(walkMode);
+            return;
+
+
+        case WalkMode::Walk:
+        case WalkMode::Run:
+            // Walkmode is implemented!
+            break;
+    }
+
+    // TODO: Sneak, Swim, Dive, Water, ...
+    if(isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk))
+    {
+        std::string tag = getWalkModeTag(walkMode);
+
+        playAnimationTrans("S_" + tag);
+    }
+}
+
+std::string NpcAnimationHandler::getWalkModeTag(NpcAnimationHandler::WalkMode walkMode)
+{
+    switch(m_WalkMode)
+    {
+        case WalkMode::Run:   return "RUN";
+        case WalkMode::Walk:  return "WALK";
+        case WalkMode::Sneak: return "SNEAK";
+        case WalkMode::Water: return "WATER";
+        case WalkMode::Swim:  return "SWIM";
+        case WalkMode::Dive:  return "DIVE";
+        default:              return "INVALID_WALKMODE";
+    }
+
 }
