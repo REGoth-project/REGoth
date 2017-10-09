@@ -321,7 +321,7 @@ void NpcAIHandler::onAction(Engine::ActionType actionType, bool triggered)
         case ActionType::PlayerDrawWeaponMelee:
             m_MovementState.isLastWeaponKey = m_MovementState.isLastWeaponKey || triggered;
             break;
-        case ActionType::PlayerAction:
+        case ActionType::PlayerActionContinous:
             m_MovementState.isAction = m_MovementState.isAction || triggered;
             break;
         default:
