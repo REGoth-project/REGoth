@@ -1,6 +1,12 @@
+#include <utils/cli.h>
 #include "Input.h"
 
 using namespace Engine;
+
+namespace Flags
+{
+    Cli::Flag disableMouse("", "disable-mouse", 0, "Will ignore any mouse input.");
+}
 
 namespace Keys
 {
@@ -249,6 +255,8 @@ void Input::fireBindings()
 
     clearTriggered();
 
+    bool enableMouse = !Flags::disableMouse.isSet();
+
     for (const auto itBindingToButton : actionBindingToMouseButtonMap)
     {
         bool triggerAction = mouseButtonState.test(itBindingToButton.second) && (itBindingToButton.first.isContinuous || mouseButtonTriggered.test(itBindingToButton.second));
@@ -259,7 +267,7 @@ void Input::fireBindings()
 
         auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToButton.first.actionType);
         for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
-            if (itAction->second.isEnabled)
+            if (itAction->second.isEnabled && enableMouse)
                 itAction->second.function(triggerAction, intensity);
 
     }
@@ -295,7 +303,7 @@ void Input::fireBindings()
 
         auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToAxis.first.actionType);
         for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
-            if (itAction->second.isEnabled)
+            if (itAction->second.isEnabled && enableMouse)
                 itAction->second.function(triggerAction, intensity);
     }
     // This must be done after the loop, because multiple bindings to the same axis may occur
