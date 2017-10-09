@@ -348,19 +348,13 @@ void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
     const char* str = ANIMATION_NAMES[type];
 
     // TODO: Implement the priority stuff
-    if (getAnimationHandler().hasAnimation(str))
-    {
-        setAnimation(str, false);  // Don't loop
-    }
+    setAnimation(str, false);  // Don't loop
 }
 
 void ModelVisual::playAnimation(const std::string& anim)
 {
     // TODO: Implement the priority stuff
-    if (getAnimationHandler().hasAnimation(anim))
-    {
-        setAnimation(anim, false);  // Don't loop
-    }
+    setAnimation(anim, false);  // Don't loop
 }
 
 void ModelVisual::playAnimation(Handle::AnimationHandle anim)
