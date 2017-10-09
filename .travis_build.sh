@@ -9,6 +9,7 @@ if [ "$PLATFORM" = "android" ]; then
     cd REGoth-Android/
     ./gradlew task
     ./gradlew assembleRelease
+    ls -R
 else
     if [ "$CXX" = "g++" ]; then export CXX="g++-6" CC="gcc-6"; fi
     mkdir -p build;
