@@ -2576,14 +2576,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
             break;
         case ActionType::PlayerAction:
         {
-            static bool s_triggered = false;
-
-            if (s_triggered && !triggered)
-                s_triggered = false;
-            else if (!s_triggered && triggered)
+            if (triggered)
             {
-                s_triggered = true;
-
                 if (m_World.getDialogManager().isDialogActive())
                     return;
 

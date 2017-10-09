@@ -210,12 +210,11 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_D, ActionType::PlayerStrafeRight, true);
     bindKey(GLFW_KEY_Q, ActionType::PlayerTurnLeft, true);
     bindKey(GLFW_KEY_E, ActionType::PlayerTurnRight, true);
-    bindKey(GLFW_KEY_1, ActionType::PlayerDrawWeaponMelee, true);
+    bindKey(GLFW_KEY_1, ActionType::PlayerDrawWeaponMelee, true); // FIXME should be non-continous (also fix onAction)
     bindKey(GLFW_KEY_SPACE, ActionType::DebugMoveSpeed, true);
     bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::DebugMoveSpeed2, true);
-    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, true);
-    // mouse button is currently bugged. causing PlayerAction to fire multiple times even from LEFT_CONTROL
-    //bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::PlayerAction, true);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, false);
+    bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::PlayerAction, false);
     bindMouseAxis(MouseAxis::CursorX, ActionType::PlayerRotate, true, false);
 
     bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);

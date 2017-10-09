@@ -262,8 +262,9 @@ void Input::fireBindings()
             if (itAction->second.isEnabled)
                 itAction->second.function(triggerAction, intensity);
 
-        mouseButtonTriggered[itBindingToButton.second] = false;
     }
+    // This must be done after the loop, because multiple bindings to the same button may occur
+    mouseButtonTriggered.reset();
 
     float deltaMouse[2] = {
         axisPosition[static_cast<std::size_t>(MouseAxis::CursorX)] - mousePosition.x,
