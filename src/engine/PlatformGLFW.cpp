@@ -214,8 +214,9 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_SPACE, ActionType::DebugMoveSpeed, true);
     bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::DebugMoveSpeed2, true);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, true);
+    // mouse button is currently bugged. causing PlayerAction to fire multiple times even from LEFT_CONTROL
+    //bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::PlayerAction, true);
     bindMouseAxis(MouseAxis::CursorX, ActionType::PlayerRotate, true, false);
-    bindKey(GLFW_KEY_TAB, ActionType::HUD_ShowInventory, false);
 
     bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);
     bindKey(GLFW_KEY_F9, ActionType::Quickload, false);
