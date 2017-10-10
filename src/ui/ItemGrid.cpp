@@ -17,7 +17,7 @@ UI::ItemGrid::ItemGrid(Engine::BaseEngine& e)
     : View(e),
       m_SlotSize(100),
       m_Position(0.6, 0.2),
-      m_Size(0.4, 0.5)
+      m_Size(0.4, 0.7)
 {
     // Initially hide this view element
     m_IsHidden = true;
@@ -41,7 +41,7 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
 
     const std::list<Daedalus::GameState::ItemHandle> &itemList = playerController->getInventory().getItems();
 
-    /*
+
     // Just some debug things
     static bool isFirstTime = true;
     if(isFirstTime)
@@ -55,8 +55,9 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         m_Engine.getConsole().submitCommand("giveitem HEALTHWATER");
         m_Engine.getConsole().submitCommand("giveitem ASTRONOMIE");
         m_Engine.getConsole().submitCommand("giveitem ITARRUNEFIREBOLT");
+        m_Engine.getConsole().submitCommand("giveitem ITFO_POTION_MANA_02");
     }
-    */
+
 
     // Probably not necessary to call this each frame
     bgfx::setViewClear(RenderViewList::INVENTORY, BGFX_CLEAR_DEPTH, 0x00000000);
@@ -93,20 +94,25 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         int xPos = xOrigin + x * m_SlotSize;
         int yPos = yOrigin + y * m_SlotSize;
 
-        drawTexture(BGFX_VIEW, xPos, yPos, m_SlotSize, m_SlotSize,
+        drawTexture(RenderViewList::INVENTORY_BG, xPos, yPos, m_SlotSize, m_SlotSize,
                     config.state.viewWidth, config.state.viewHeight, texSlot.m_TextureHandle,
                     config.programs.imageProgram, config.uniforms.diffuseTexture);
 
-        // we draw all numSlots slots but we can't draw more items than there are in the inventory
+        // we draw all slots but we can't draw more items than there are in the inventory
         if(slot >= itemList.size())
             continue;
 
         Daedalus::GameState::ItemHandle itemHandle = *itItem;
         ++itItem;
         Daedalus::GEngineClasses::C_Item &itemData = world.getScriptEngine().getGameState().getItem(itemHandle);
-        Handle::MeshHandle itemMeshHandle = world.getStaticMeshAllocator().loadMeshVDF(itemData.visual);
+        Handle::MeshHandle itemMeshHandle = world.getStaticMeshAllocator().loadMeshVDF(Utils::toUpper(itemData.visual));
         Meshes::WorldStaticMesh &itemMesh = world.getStaticMeshAllocator().getMesh(itemMeshHandle);
 
+        // Draw the item amount number in the lower right corner
+        drawText(std::to_string(itemData.amount), xPos + m_SlotSize - 15, yPos + m_SlotSize - 5,
+                 A_BottomRight, config, UI::DEFAULT_FONT_LARGE);
+
+        // TODO do this once when mesh is loaded and not on every frame
         // Before we can do any reasonable rendering we have to first
         // determine a approximate size of the item to render
         // Let's calculate the axis aligned bounding box and take the biggest
@@ -128,10 +134,28 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         // The origin of some item meshes are too far away from their actual center
         Math::float3 itemCenter = (bbmin + bbmax) / 2.0f;
 
+        /* Commentary by Nico Bendlin @nicodex about the positioning of items in the original game
+        G2A: width and height is derived from BBox (half), corrected in Magic category for Amulet -4.0,
+        Ring -0.5, Belt -2.0; Distance is scaled by C_Item.inv_zbias * 0.01 if not 0.0, ELSE (most items)
+        135% for Meele, Ranged, Munition, Docs, 145% for Potions, Misc, and 150% for Food, Runes; Finally
+        scaled by (INI) ENGINE.zInventoryItemsDistanceScale if not 0.0.
+        And there is a hack for the burning torch (no visual, but VobTree), the view is based on the first
+        child Vob and the distance is scaled by 200%.
+        Fianlly, distance for selected items is 80%
+        */
+
         float scale = 0.9 * m_SlotSize / itemSize;
-        Math::Matrix transform = Math::Matrix::CreateScale(scale, scale, scale);
         Math::float3 translation(xPos + (float)m_SlotSize / 2, yPos + (float)m_SlotSize / 2, farPlane / 2);
-        transform.Translation(translation);
+
+        Math::Matrix transform = Math::Matrix::CreateTranslation(-1.0f * itemCenter);
+        /*
+        transform = Math::Matrix::CreateRotationX(itemData.inv_rotx) * transform;
+        transform = Math::Matrix::CreateRotationY(itemData.inv_roty) * transform;
+        transform = Math::Matrix::CreateRotationZ(itemData.inv_rotz) * transform;
+        */
+        transform = Math::Matrix::CreateRotationZ(Math::PI) * transform;
+        transform = Math::Matrix::CreateScale(Math::float3(scale, scale, scale)) * transform;
+        transform = Math::Matrix::CreateTranslation(translation) * transform;
 
         for( int subMesh = 0; subMesh < itemMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
         {
@@ -164,12 +188,13 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
                                       itemMesh.mesh.m_SubmeshStarts[subMesh].m_NumIndices);
             }
 
-            // TODO changing fog uniform. should be fixed shader
+            // TODO changing fog uniform. should be fixed in shader
             Math::float4 fogNearFar = Math::float4(FLT_MAX, FLT_MAX, 0, 0);
             bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
 
             bgfx::submit(RenderViewList::INVENTORY, config.programs.mainWorldProgram);
         }
+
     }
 
     View::update(dt, mstate, config);
