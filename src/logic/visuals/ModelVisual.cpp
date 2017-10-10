@@ -624,27 +624,17 @@ void ModelVisual::updateBodyMesh()
                     if (sm.m_Texture.isValid())
                     {
                         // Get texture parts
-                        std::string tx = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
+                        const std::string& textureName = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
+                        std::string newTextureName = textureName;
 
-                        size_t cpos = tx.find("_C0");
-                        size_t vpos = tx.find("_V0");
+                        // Only modify if that is the core body texture (not armor)
+                        if (m_BodyState.bodyTextureIdx != 0 && textureName.find("_ARMOR_V") == std::string::npos)
+                            Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
 
-                        std::string cleanName = tx;
+                        if (m_BodyState.bodySkinColorIdx != 0)
+                            Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
 
-                        // Only modify if that is the core body texture
-                        if (cpos != std::string::npos)
-                        {
-                            cleanName = cleanName.substr(0, vpos);
-
-                            if (vpos != std::string::npos)
-                                cleanName += "_V" + std::to_string(m_BodyState.bodyTextureIdx);
-
-                            cleanName += "_C" + std::to_string(m_BodyState.bodySkinColorIdx);
-
-                            cleanName += ".TGA";
-                        }
-
-                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(cleanName);
+                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newTextureName);
                     }
                 }
             }
