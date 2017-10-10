@@ -627,13 +627,16 @@ void ModelVisual::updateBodyMesh()
                         const std::string& textureName = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
                         std::string newTextureName = textureName;
 
+                        bool isBodyTexture = textureName.find("_BODY") != std::string::npos;
                         // Only modify if that is the core body texture (not armor)
-                        if (m_BodyState.bodyTextureIdx != 0 && textureName.find("_ARMOR_V") == std::string::npos)
-                            Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
+                        if (isBodyTexture)
+                        {
+                            if (m_BodyState.bodyTextureIdx != 0)
+                                Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
 
-                        if (m_BodyState.bodySkinColorIdx != 0)
-                            Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
-
+                            if (m_BodyState.bodySkinColorIdx != 0)
+                                Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
+                        }
                         sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newTextureName);
                     }
                 }
