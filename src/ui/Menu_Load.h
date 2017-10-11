@@ -20,7 +20,7 @@ namespace UI
          */
         void gatherAvailableSavegames();
 
-        void onCustomAction(const std::string& action);
+        void onCustomAction(const std::string& action) override;
 
         static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
 

@@ -131,7 +131,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Name of the vob this message targets. This could be the attack target or a waypoint to go to.
@@ -156,7 +156,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             // TODO: Implement DamageDescriptor!
         };
@@ -190,7 +190,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Type of weapon to go to
@@ -245,7 +245,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Route the NPC has to go if this is a ST_GoRoute.
@@ -303,7 +303,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * How far we are in our combo
@@ -344,7 +344,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             // TODO: We have no actual object for these right now, as they are explicitly in the inventory.
             // TODO: Use the itemhandle here or something
@@ -372,7 +372,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Symbol to the Setupfunction for this state (ZS_...)
@@ -449,7 +449,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Symbol of the item to use. If no item with this symbol can be found in the inventory, nothing happens
@@ -553,7 +553,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             /**
              * Text to be displayed in the subtitle box
@@ -632,7 +632,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             // TODO: Implement
         };
@@ -659,7 +659,7 @@ namespace Logic
             /**
              * Export as JSON-String
              */
-            virtual std::string exportPart();
+            std::string exportPart() override;
 
             // NPC this message is from
             Handle::EntityHandle npc;

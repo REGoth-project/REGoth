@@ -21,7 +21,7 @@ namespace Logic
              * @param from Current state
              * @param to State to go to
              */
-            virtual void onBeginStateChange(Handle::EntityHandle npc, int from, int to);
+            void onBeginStateChange(Handle::EntityHandle npc, int from, int to) override;
 
             /**
              *
@@ -29,7 +29,7 @@ namespace Logic
              * @param from Current state
              * @param to State to go to
              */
-            virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to);
+            void onEndStateChange(Handle::EntityHandle npc, int from, int to) override;
 
         private:
         };

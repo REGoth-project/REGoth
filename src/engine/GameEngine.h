@@ -15,7 +15,7 @@ namespace Engine
         /**
          * @brief Initializes the Engine
          */
-        virtual void initEngine(int argc, char** argv) override;
+        void initEngine(int argc, char** argv) override;
 
         /**
          * @return Default set of shaders and constants
@@ -29,8 +29,8 @@ namespace Engine
         /**
          * Called when a world was added
          */
-        virtual void onWorldCreated(Handle::WorldHandle world) override;
-        virtual void onWorldRemoved(Handle::WorldHandle world) override;
+        void onWorldCreated(Handle::WorldHandle world) override;
+        void onWorldRemoved(Handle::WorldHandle world) override;
 
         /**
          * Update-method for subclasses

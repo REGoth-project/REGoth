@@ -20,7 +20,7 @@ namespace Engine
          * @param scancode Scancode from input-library (GLFW)
          * @return Actual name of the pressed key
          */
-        virtual std::string getActualKeyName(int scancode);
+        std::string getActualKeyName(int scancode) override;
 
     private:
         static void GLFWkeyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);

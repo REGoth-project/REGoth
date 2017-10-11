@@ -18,13 +18,13 @@ namespace Logic
         /**
          * @return Classtype of this visual
          */
-        virtual EVisualType getVisualType() { return EVisualType::StaticMesh; }
+        EVisualType getVisualType() override { return EVisualType::StaticMesh; }
         /**
          * Loads the visual from the given name from the worlds VDFS
          * Note: The type must match this class
          * @param visual Filename of the visual. Uncompiled-version of the name!
          */
-        virtual bool load(const std::string& visual);
+        bool load(const std::string& visual) override;
 
         /**
          * Sets the texture on the specified submesh
@@ -60,12 +60,12 @@ namespace Logic
         /**
          * Updates the collision-hull depending on this visual
          */
-        virtual void updateCollision();
+        void updateCollision() override;
 
         /**
          * Sets the shadow-value from the worldmesh for this visual-controller
          */
-        virtual void setShadowValue(float shadow);
+        void setShadowValue(float shadow) override;
 
     protected:
         /**

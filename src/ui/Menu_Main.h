@@ -19,7 +19,7 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        virtual bool onInputAction(EInputAction action) override;
+        bool onInputAction(EInputAction action) override;
 
         /**
          * Creates an instance of this class and appends it to the root UI-View
@@ -32,7 +32,7 @@ namespace UI
          */
         Daedalus::GameType determineGameType();
 
-        virtual void onCustomAction(const std::string& action) override;
+        void onCustomAction(const std::string& action) override;
 
     protected:
     };
