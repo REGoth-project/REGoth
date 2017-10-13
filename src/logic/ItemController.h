@@ -18,7 +18,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() { return EControllerType::ItemController; }
+        EControllerType getControllerType() override { return EControllerType::ItemController; }
         /**
          * Removes this item from the world and adds it to the given NPCs inventory
          * @param npc NPC to give the item to
@@ -28,11 +28,11 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport() { return true; }
-        virtual void importObject(const json& j);
+        bool shouldExport() override { return true; }
+        void importObject(const json& j) override;
 
     protected:
-        virtual void exportPart(json& j) override;
+        void exportPart(json& j) override;
 
         struct
         {

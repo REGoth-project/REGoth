@@ -19,7 +19,7 @@ namespace Logic
         /**
          * @return Classtype of this visual
          */
-        virtual EVisualType getVisualType() { return EVisualType::Pfx; }
+        EVisualType getVisualType() override { return EVisualType::Pfx; }
         /**
          * Called on game-tick
          */
@@ -30,7 +30,7 @@ namespace Logic
          * Note: The type must match this class
          * @param visual Filename of the visual. Uncompiled-version of the name!
          */
-        virtual bool load(const std::string& visual);
+        bool load(const std::string& visual) override;
 
     private:
         /**

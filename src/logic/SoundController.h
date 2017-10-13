@@ -29,7 +29,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() { return EControllerType::SoundController; }
+        EControllerType getControllerType() override { return EControllerType::SoundController; }
         /**
          * Plays the given soundfile applying the settings of this controller
          */
@@ -38,8 +38,8 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport() { return false; }  // TODO: Implement saving/loading
-        virtual void importObject(const json& j);
+        bool shouldExport() override { return false; }  // TODO: Implement saving/loading
+        void importObject(const json& j) override;
 
     protected:
         /**
@@ -52,7 +52,7 @@ namespace Logic
          */
         void setNextPlayingTimeRandomized();
 
-        virtual void exportPart(json& j) override;
+        void exportPart(json& j) override;
 
         /**
          * Name of the played sound

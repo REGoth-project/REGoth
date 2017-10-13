@@ -104,7 +104,7 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() { return EControllerType::CameraController; }
+        EControllerType getControllerType() override { return EControllerType::CameraController; }
         /**
          * Called on game-tick
          */

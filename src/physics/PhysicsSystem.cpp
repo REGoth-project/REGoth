@@ -255,7 +255,7 @@ std::vector<RayTestResult> PhysicsSystem::raytraceAll(const Math::float3& from, 
         {
         }
 
-        virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+        btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
         {
             const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);
 
@@ -353,7 +353,7 @@ RayTestResult PhysicsSystem::raytrace(const Math::float3& from, const Math::floa
     struct FilteredRayResultCallback : public btCollisionWorld::RayResultCallback
     {
         FilteredRayResultCallback() {}
-        virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+        btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
         {
             const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);
             if (rb->getCollisionShape()->getUserIndex() != -1)

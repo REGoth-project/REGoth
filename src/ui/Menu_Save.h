@@ -20,19 +20,19 @@ namespace UI
          */
         void gatherAvailableSavegames();
 
-        void onCustomAction(const std::string& action);
+        void onCustomAction(const std::string& action) override;
 
         /**
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        virtual bool onInputAction(EInputAction action) override;
+        bool onInputAction(EInputAction action) override;
 
         /**
          * To be called when there was text input since the last frame
          * @param text Characters input since the last frame
          */
-        virtual void onTextInput(const std::string& text) override;
+        void onTextInput(const std::string& text) override;
 
         static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
 
@@ -41,7 +41,7 @@ namespace UI
          * Performs the select-action on the given item
          * @param item Item to perform the action on
          */
-        virtual void performSelectAction(Daedalus::GameState::MenuItemHandle item) override;
+        void performSelectAction(Daedalus::GameState::MenuItemHandle item) override;
 
         bool m_isWaitingForSaveName = false;
 
