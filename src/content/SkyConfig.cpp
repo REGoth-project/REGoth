@@ -15,8 +15,8 @@ const std::string DEFAULT_COLORSET_NAME = "default";
  * Colorset selected when an invalid set has been requested
  */
 const SkyConfig::SkyDayColorSet NOTIFY_INVALID_SET = {
-        .world = "INVALID CONFIG",
-        .colors = {
+        "INVALID CONFIG",
+        {
                 Math::float3(1.0f, 0.0f, 0.0f),
                 Math::float3(1.0f, 0.0f, 0.0f),
                 Math::float3(1.0f, 0.0f, 0.0f),
