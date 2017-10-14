@@ -320,7 +320,7 @@ void GameSession::setupKeyBindings()
         }
     });
 
-    registerAction(Engine::ActionType::HUD_ShowInventory, [baseEngine](bool triggered, float){
+    registerAction(Engine::ActionType::Inventory_Show_Hide, [baseEngine](bool triggered, float){
         // Toggle inventory
         if(triggered)
             baseEngine->getHud().toggleInventory();

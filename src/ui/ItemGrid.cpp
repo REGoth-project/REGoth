@@ -15,19 +15,38 @@ extern bgfx::ProgramHandle imguiGetImageProgram(uint8_t _mip);
 
 UI::ItemGrid::ItemGrid(Engine::BaseEngine& e)
     : View(e),
-      m_SlotSize(100),
-      m_Position(0.6, 0.2),
-      m_Size(0.4, 0.7)
+      m_SlotSize(100)
 {
-    // Initially hide this view element
-    m_IsHidden = true;
-
     Textures::TextureAllocator& texAlloc = m_Engine.getEngineTextureAlloc();
     m_TexSlot = texAlloc.loadTextureVDF("INV_SLOT.TGA");
+    m_TexSlotSelected = texAlloc.loadTextureVDF("INV_SLOT_HIGHLIGHTED.TGA");
 }
 
 UI::ItemGrid::~ItemGrid()
 {
+}
+
+void UI::ItemGrid::setItemList(const std::vector<Daedalus::GEngineClasses::C_Item> *itemList, int selectedItem)
+{
+    m_pItemList = itemList;
+    m_SelectedItem = selectedItem;
+}
+
+void UI::ItemGrid::probeGridSize(int &rows, int &columns, uint32_t width, uint32_t height)
+{
+    // The grid has always a size of at least 1x1
+    columns = std::max(1, Math::ifloor(m_Size.x / m_SlotSize));
+    rows = std::max(1, Math::ifloor(m_Size.y / m_SlotSize));
+}
+
+void UI::ItemGrid::calculateAlignedOrigin(int &xOrigin, int &yOrigin, int numRows, int numColumns)
+{
+    Math::float2 origin = m_Translation - getAlignOffset(m_Alignment, m_Size.x, m_Size.y)
+            + getAlignOffset(m_Alignment, m_SlotSize * numColumns, m_SlotSize * numRows);
+
+    // TODO consider using floats instead of ints
+    xOrigin = Math::ifloor(origin.x);
+    yOrigin = Math::ifloor(origin.y);
 }
 
 void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -36,17 +55,13 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         return;
 
     World::WorldInstance &world = m_Engine.getMainWorld().get();
-    Logic::PlayerController* playerController = reinterpret_cast<Logic::PlayerController*>(
-                world.getEntity<Components::LogicComponent>(world.getScriptEngine().getPlayerEntity()).m_pLogicController);
-
-    const std::list<Daedalus::GameState::ItemHandle> &itemList = playerController->getInventory().getItems();
-
 
     // Just some debug things
     static bool isFirstTime = true;
     if(isFirstTime)
     {
         isFirstTime = false;
+        //g1
         m_Engine.getConsole().submitCommand("giveitem ALTESSCHWERT");
         m_Engine.getConsole().submitCommand("giveitem HEILTRANK");
         m_Engine.getConsole().submitCommand("giveitem CRONOS_BRIEF");
@@ -55,34 +70,53 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         m_Engine.getConsole().submitCommand("giveitem HEALTHWATER");
         m_Engine.getConsole().submitCommand("giveitem ASTRONOMIE");
         m_Engine.getConsole().submitCommand("giveitem ITARRUNEFIREBOLT");
+        // g2
         m_Engine.getConsole().submitCommand("giveitem ITFO_POTION_MANA_02");
+        m_Engine.getConsole().submitCommand("giveitem ITRI_ADDON_HEALTH_01");
+        m_Engine.getConsole().submitCommand("giveitem ITAM_ADDON_HEALTH");
+        m_Engine.getConsole().submitCommand("giveitem ITWR_STONEPLATECOMMON_ADDON");
+        m_Engine.getConsole().submitCommand("giveitem ITMW_ADDON_PIR1HAXE");
+        m_Engine.getConsole().submitCommand("giveitem ITFO_BEER");
+        m_Engine.getConsole().submitCommand("giveitem ITRU_ARMYOFDARKNESS");
+        m_Engine.getConsole().submitCommand("giveitem ITPO_HEALTH_01");
+        m_Engine.getConsole().submitCommand("giveitem ITFO_APPLE");
+        m_Engine.getConsole().submitCommand("giveitem ITKE_BROMOR");
+        m_Engine.getConsole().submitCommand("giveitem ITPL_MUSHROOM_01");
+        m_Engine.getConsole().submitCommand("giveitem ITPL_MUSHROOM_02");
+        m_Engine.getConsole().submitCommand("giveitem ITFO_CHEESE");
+        m_Engine.getConsole().submitCommand("giveitem ITKE_LOCKPICK");
+        m_Engine.getConsole().submitCommand("giveitem ITWR_MAP_NEWWORLD_CITY");
+        m_Engine.getConsole().submitCommand("giveitem ITMI_PANFULL");
+        m_Engine.getConsole().submitCommand("giveitem ITAT_WARANFIRETONGUE");
+        m_Engine.getConsole().submitCommand("giveitem ITLSTORCH");
+        m_Engine.getConsole().submitCommand("giveitem ITAR_PAL_H");
+        m_Engine.getConsole().submitCommand("giveitem ITPL_STRENGTH_HERB_01");
+        m_Engine.getConsole().submitCommand("giveitem ITMI_GOLD");
+        m_Engine.getConsole().submitCommand("giveitem ITRI_DEX_01");
     }
 
 
     // Probably not necessary to call this each frame
     bgfx::setViewClear(RenderViewList::INVENTORY, BGFX_CLEAR_DEPTH, 0x00000000);
 
-    const float farPlane = 1000.0f;
+    const float farPlane = 10000.0f;
     Math::Matrix projection;
-
-    bx::mtxOrtho(projection.mv, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, 0.0f, farPlane);
-
+    bx::mtxOrtho(projection.mv, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, farPlane, 0.0f);
     // View matrix is the identity
     bgfx::setViewTransform(RenderViewList::INVENTORY, nullptr, projection.m);
-
     bgfx::setViewRect(RenderViewList::INVENTORY, 0, 0, uint16_t(config.state.viewWidth), uint16_t(config.state.viewHeight));
 
-    int numColumns = (m_Size.x * config.state.viewWidth) / m_SlotSize;
-    int numRows = (m_Size.y * config.state.viewHeight) / m_SlotSize;
+    int numColumns, numRows;
+    probeGridSize(numRows, numColumns, config.state.viewWidth, config.state.viewWidth);
     int numSlots = numColumns * numRows;
+    int xOrigin, yOrigin;
+    calculateAlignedOrigin(xOrigin, yOrigin, numRows, numColumns);
 
-    // Right align the inventory
-    int xOrigin = (m_Position.x + m_Size.x) * config.state.viewWidth - numColumns * m_SlotSize;
-    int yOrigin = m_Position.y * config.state.viewHeight;
-
+    // slot background texture
     Textures::Texture& texSlot = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlot);
+    Textures::Texture& texSlotSelected = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlotSelected);
 
-    std::list<Daedalus::GameState::ItemHandle>::const_iterator itItem = itemList.begin();
+
     for(int slot = 0; slot < numSlots; ++slot)
     {
         int y = slot / numColumns;
@@ -98,13 +132,17 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
                     config.state.viewWidth, config.state.viewHeight, texSlot.m_TextureHandle,
                     config.programs.imageProgram, config.uniforms.diffuseTexture);
 
-        // we draw all slots but we can't draw more items than there are in the inventory
-        if(slot >= itemList.size())
+        if(slot >= m_pItemList->size())
             continue;
 
-        Daedalus::GameState::ItemHandle itemHandle = *itItem;
-        ++itItem;
-        Daedalus::GEngineClasses::C_Item &itemData = world.getScriptEngine().getGameState().getItem(itemHandle);
+        if(slot == m_SelectedItem)
+        {
+            drawTexture(RenderViewList::UI, xPos, yPos, m_SlotSize, m_SlotSize,
+                        config.state.viewWidth, config.state.viewHeight, texSlotSelected.m_TextureHandle,
+                        config.programs.imageProgram, config.uniforms.diffuseTexture);
+        }
+
+        const Daedalus::GEngineClasses::C_Item &itemData = m_pItemList->at(slot);
         Handle::MeshHandle itemMeshHandle = world.getStaticMeshAllocator().loadMeshVDF(Utils::toUpper(itemData.visual));
         Meshes::WorldStaticMesh &itemMesh = world.getStaticMeshAllocator().getMesh(itemMeshHandle);
 
@@ -134,27 +172,16 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         // The origin of some item meshes are too far away from their actual center
         Math::float3 itemCenter = (bbmin + bbmax) / 2.0f;
 
-        /* Commentary by Nico Bendlin @nicodex about the positioning of items in the original game
-        G2A: width and height is derived from BBox (half), corrected in Magic category for Amulet -4.0,
-        Ring -0.5, Belt -2.0; Distance is scaled by C_Item.inv_zbias * 0.01 if not 0.0, ELSE (most items)
-        135% for Meele, Ranged, Munition, Docs, 145% for Potions, Misc, and 150% for Food, Runes; Finally
-        scaled by (INI) ENGINE.zInventoryItemsDistanceScale if not 0.0.
-        And there is a hack for the burning torch (no visual, but VobTree), the view is based on the first
-        child Vob and the distance is scaled by 200%.
-        Fianlly, distance for selected items is 80%
-        */
-
-        float scale = 0.9 * m_SlotSize / itemSize;
+        // Scale required for the bounding box to exactly fit into the slot
+        float scale = m_SlotSize / itemSize;
+        // Translation to the slot center
         Math::float3 translation(xPos + (float)m_SlotSize / 2, yPos + (float)m_SlotSize / 2, farPlane / 2);
 
-        Math::Matrix transform = Math::Matrix::CreateTranslation(-1.0f * itemCenter);
-        /*
-        transform = Math::Matrix::CreateRotationX(itemData.inv_rotx) * transform;
-        transform = Math::Matrix::CreateRotationY(itemData.inv_roty) * transform;
-        transform = Math::Matrix::CreateRotationZ(itemData.inv_rotz) * transform;
-        */
-        transform = Math::Matrix::CreateRotationZ(Math::PI) * transform;
+        // Apply rotations for gothic 2 inventory
+        Math::Matrix transform = applyGothic2Rotations(itemCenter, itemData, false);
+        // Apply bounding box scale
         transform = Math::Matrix::CreateScale(Math::float3(scale, scale, scale)) * transform;
+        // Apply slot translation
         transform = Math::Matrix::CreateTranslation(translation) * transform;
 
         for( int subMesh = 0; subMesh < itemMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
@@ -198,4 +225,127 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
     }
 
     View::update(dt, mstate, config);
+}
+
+Math::Matrix UI::ItemGrid::applyGothic2Rotations(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected)
+{
+    using Daedalus::GEngineClasses::C_Item;
+    using namespace Math;
+
+    // Corrections to the center
+    if(itemData.mainflag == C_Item::Categories::ITM_CAT_MAGIC)
+    {
+        if(C_Item::Flags::ITEM_AMULET & itemData.flags)
+            centerPos.y -= 0.04f;
+        if(C_Item::Flags::ITEM_RING & itemData.flags)
+            centerPos.y -= 0.005f;
+        //if(C_Item::Flags::ITEM_BELT & itemData.flags)
+        //    centerPos.y -= 0.02f;
+    }
+
+    // Move the mesh to it's designated center
+    Matrix transform = Matrix::CreateTranslation(-1.0f * centerPos);
+
+    // Scale item based on it's type or, if given, by a bias set in the scripts
+    float scale = 1.0f;
+    if (itemData.inv_zbias != 0)
+        scale = 1.0f / (0.01f * itemData.inv_zbias);
+    else
+    {
+        switch(itemData.mainflag)
+        {
+        case C_Item::Categories::ITM_CAT_NF:
+        case C_Item::Categories::ITM_CAT_FF:
+        case C_Item::Categories::ITM_CAT_MUN:
+        case C_Item::Categories::ITM_CAT_DOCS:
+            scale = 1.0f/1.35f;
+            break;
+
+        case C_Item::Categories::ITM_CAT_NONE:
+        case C_Item::Categories::ITM_CAT_POTION:
+            scale = 1.0f/1.45f;
+            break;
+
+        case C_Item::Categories::ITM_CAT_FOOD:
+        case C_Item::Categories::ITM_CAT_RUNE:
+            scale = 1.0f/1.5f;
+            break;
+
+        case C_Item::Categories::ITM_CAT_MAGIC:
+            if(C_Item::Flags::ITEM_RING)
+                scale = 1.0f/2.0f;
+            break;
+        }
+    }
+
+    if(selected)
+        scale *= 1.2f;
+
+    // Apply scale
+    transform = Math::Matrix::CreateScale(scale, scale, scale) * transform;
+
+    // Base rotation
+    transform = Matrix::CreateRotationX(degreeToRadians(180)) * transform;
+
+    if (itemData.inv_rotx != 0 || itemData.inv_roty != 0 || itemData.inv_rotz != 0)
+    {
+        transform = Matrix::CreateRotationX(degreeToRadians(itemData.inv_rotx)) * transform;
+        transform = Matrix::CreateRotationY(degreeToRadians(-itemData.inv_roty)) * transform;
+        transform = Matrix::CreateRotationZ(degreeToRadians(-itemData.inv_rotz)) * transform;
+    }
+    else
+    {
+        switch (itemData.mainflag)
+        {
+        case C_Item::Categories::ITM_CAT_FF:
+            transform = Matrix::CreateRotationX(degreeToRadians(90)) * transform;
+            transform = Matrix::CreateRotationZ(degreeToRadians(-45)) * transform;
+            break;
+        case C_Item::Categories::ITM_CAT_NF:
+            // if flag & ITM_FLAG_SHIELD: X -90, Z -90 break;
+            transform = Matrix::CreateRotationX(degreeToRadians(-90)) * transform;
+            // if flag & ITM_FLAG_DAG: Z -45 else:
+            transform = Matrix::CreateRotationZ(degreeToRadians(135)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_ARMOR:
+            transform = Matrix::CreateRotationX(degreeToRadians(360)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_MUN:
+            transform = Matrix::CreateRotationZ(degreeToRadians(135)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_DOCS:
+            transform = Matrix::CreateRotationX(degreeToRadians(90)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_POTION:
+            transform = Matrix::CreateRotationY(degreeToRadians(-90)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_LIGHT:
+            break;
+
+        case C_Item::Categories::ITM_CAT_FOOD:
+            transform = Matrix::CreateRotationY(degreeToRadians(90)) * transform;
+            transform = Matrix::CreateRotationX(degreeToRadians(-35)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_MAGIC:
+            transform = Matrix::CreateRotationY(degreeToRadians(90)) * transform;
+            transform = Matrix::CreateRotationX(degreeToRadians(-35)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_RUNE:
+            transform = Matrix::CreateRotationX(degreeToRadians(-90)) * transform;
+            break;
+
+        case C_Item::Categories::ITM_CAT_NONE:
+            transform = Matrix::CreateRotationX(degreeToRadians(-25)) * transform;
+            transform = Matrix::CreateRotationZ(degreeToRadians(45)) * transform;
+            break;
+        }
+    }
+    return transform;
 }
