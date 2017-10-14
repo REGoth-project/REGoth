@@ -14,7 +14,8 @@
 #include "Menu_Status.h"
 #include "PrintScreenMessages.h"
 #include "TextView.h"
-#include "ItemGrid.h"
+//#include "ItemGrid.h"
+#include "InventoryView.h"
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
 #include <logic/PlayerController.h>
@@ -39,7 +40,9 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pMenuBackground = new ImageView(m_Engine);
     m_pMenuBackground->setHidden(true);
     m_pMenuBackground->setRelativeSize(false);
-    m_pItemGrid = new ItemGrid(m_Engine);
+
+    m_pInventoryView = new InventoryView(m_Engine);
+    m_pInventoryView->setHidden(true);
 
 
     addChild(m_pHealthBar);
@@ -51,7 +54,7 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     addChild(m_pLoadingScreen);
     addChild(m_pMenuBackground);
     addChild(m_pConsoleBox);
-    addChild(m_pItemGrid);
+    addChild(m_pInventoryView);
 
     // Initialize status bars
     {
@@ -118,7 +121,7 @@ UI::Hud::~Hud()
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
     removeChild(m_pMenuBackground);
-    removeChild(m_pItemGrid);
+    removeChild(m_pInventoryView);
 
     popAllMenus();
 
@@ -130,7 +133,7 @@ UI::Hud::~Hud()
     delete m_pClock;
     delete m_pLoadingScreen;
     delete m_pConsoleBox;
-    delete m_pItemGrid;
+    delete m_pInventoryView;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -274,5 +277,5 @@ void UI::Hud::popAllMenus()
 
 void UI::Hud::toggleInventory()
 {
-    m_pItemGrid->setHidden(!m_pItemGrid->isHidden());
+    m_pInventoryView->setHidden(!m_pInventoryView->isHidden());
 }

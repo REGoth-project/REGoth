@@ -17,6 +17,10 @@ namespace UI
         ItemGrid(Engine::BaseEngine& e);
         ~ItemGrid();
 
+        void setItemList( const std::vector<Daedalus::GEngineClasses::C_Item> *itemList, int selectedItem);
+
+        void probeGridSize(int &rows, int &columns, uint32_t width, uint32_t height);
+
         /**
          * Updates/draws the UI-Views
          * @param dt time since last frame
@@ -28,12 +32,14 @@ namespace UI
         // width and height of a slot (square slots hard coded)
         int m_SlotSize;
 
-        // screen space for the inventory in normalized coordinates (so the inventory scales with window size)
-        // (0,0) is the top left corner, (1,1) the bottom right corner;
-        Math::float2 m_Position;
-        Math::float2 m_Size;
+        void calculateAlignedOrigin(int &xOrigin, int &yOrigin, int numRows, int numColumns);
 
         Handle::TextureHandle m_TexSlot;
-        //Handle::TextureHandle m_SlotSelected;
+        Handle::TextureHandle m_TexSlotSelected;
+
+        const std::vector<Daedalus::GEngineClasses::C_Item> *m_pItemList;
+        int m_SelectedItem;
+
+        Math::Matrix applyGothic2Rotations(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected);
     };
 }

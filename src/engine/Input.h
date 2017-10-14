@@ -74,7 +74,7 @@ namespace Engine
         UI_Right,
         UI_Confirm,
 
-        HUD_ShowInventory,
+        Inventory_Show_Hide,
 
         Count
     };
@@ -206,8 +206,9 @@ namespace Engine
         static std::map<ActionBinding, MouseAxis> actionBindingToMouseAxisMap;
 
         static std::multimap<ActionType, Action> actionTypeToActionMap;
-
+    public: // TODO REMOVE THIS! for debugging only
         static std::bitset<NUM_KEYS> keyState;
+    private:
         static std::bitset<NUM_KEYS> keyTriggered;
         static std::vector<int32_t> modsTriggered;
 

@@ -26,7 +26,7 @@ namespace UI
     class Menu;
     class DialogBox;
     class LoadingScreen;
-    class ItemGrid;
+    class InventoryView;
 
     class Hud : public View
     {
@@ -146,7 +146,7 @@ namespace UI
         LoadingScreen* m_pLoadingScreen;
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
-        ItemGrid* m_pItemGrid;
+        InventoryView* m_pInventoryView;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed
