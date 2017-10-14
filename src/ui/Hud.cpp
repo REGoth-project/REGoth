@@ -18,6 +18,7 @@
 #include <engine/BaseEngine.h>
 #include <logic/PlayerController.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 UI::Hud::Hud(Engine::BaseEngine& e)
     : View(e)

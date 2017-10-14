@@ -3,6 +3,7 @@
 #include <components/Vob.h>
 #include <components/VobClasses.h>
 #include <engine/World.h>
+#include <logic/ScriptEngine.h>
 
 using namespace Logic;
 

@@ -1,6 +1,5 @@
 #pragma once
-#include "AnimHandler.h"
-#include <content/StaticLevelMesh.h>
+#include <content/StaticMesh.h>
 #include <content/VertexTypes.h>
 #include <engine/WorldTypes.h>
 #include <handle/Handle.h>
@@ -35,6 +34,8 @@ namespace Logic
 
 namespace Components
 {
+    class AnimHandler;
+
     typedef uint32_t ComponentMask;
 
     struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
@@ -292,10 +293,7 @@ namespace Components
         Handle::EntityHandle m_ParentAnimHandler;
 
         AnimHandler& getAnimHandler() { return *m_AnimHandler; }
-        static void init(AnimationComponent& c)
-        {
-            c.m_AnimHandler = new AnimHandler;
-        }
+        static void init(AnimationComponent& c);
     };
 
     /**

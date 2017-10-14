@@ -25,8 +25,43 @@
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
 #include <type_traits>
+#include "BspTree.h"
+#include "WorldMesh.h"
+#include <physics/PhysicsSystem.h>
+#include <content/Sky.h>
+#include <logic/DialogManager.h>
+#include <logic/PfxManager.h>
+#include <logic/ScriptEngine.h>
+#include "WorldAllocators.h"
 
 using namespace World;
+
+class WorldInstance::ClassContents
+{
+public:
+    ClassContents(WorldInstance& world)
+        : worldMesh(world)
+        , scriptEngine(world)
+        , physicsSystem(world)
+        , animationLibrary(world)
+        , sky(world)
+        , dialogManager(world)
+        , bspTree(world)
+        , pfxManager(world)
+        , audioWorld(nullptr)
+    {}
+
+    WorldMesh worldMesh;
+    BspTree bspTree;
+    Waynet::WaynetInstance waynet;
+    Logic::ScriptEngine scriptEngine;
+    Physics::PhysicsSystem physicsSystem;
+    Animations::AnimationLibrary animationLibrary;
+    World::AudioWorld* audioWorld;
+    Content::Sky sky;
+    Logic::DialogManager dialogManager;
+    Logic::PfxManager pfxManager;
+};
 
 struct LoadSection
 {
@@ -44,16 +79,8 @@ const LoadSection LOAD_SECTION_RUNSCRIPTS = {80, 100, "Running startup scripts"}
 
 WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     : m_pEngine(&engine)
-    , m_WorldMesh(*this)
-    , m_ScriptEngine(*this)
-    , m_PhysicsSystem(*this)
-    , m_AnimationLibrary(*this)
-    , m_Sky(*this)
-    , m_DialogManager(*this)
-    , m_BspTree(*this)
-    , m_PfxManager(*this)
-    , m_AudioWorld(nullptr)
-    , m_Allocators(engine)
+    , m_ClassContents(new ClassContents(*this))
+    , m_Allocators(new WorldAllocators(engine))
 {
 }
 
@@ -95,7 +122,7 @@ WorldInstance::~WorldInstance()
     }
 
 
-    delete m_AudioWorld;
+    delete m_ClassContents->audioWorld;
 }
 
 bool WorldInstance::init(const std::string& zen,
@@ -107,14 +134,14 @@ bool WorldInstance::init(const std::string& zen,
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
 
-    if (!m_AnimationLibrary.loadAnimations())
+    if (!m_ClassContents->animationLibrary.loadAnimations())
         LogError() << "failed to load animations!";
 
     // Create static-collision shape beforehand
-    m_StaticWorldObjectCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
-    m_StaticWorldMeshCollsionShape = m_PhysicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_WorldMesh);
-    m_StaticWorldObjectPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldObjectCollsionShape, Math::Matrix::CreateIdentity());
-    m_StaticWorldMeshPhysicsObject = m_PhysicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
+    m_StaticWorldObjectCollsionShape = m_ClassContents->physicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_Object);
+    m_StaticWorldMeshCollsionShape = m_ClassContents->physicsSystem.makeCompoundCollisionShape(Physics::CollisionShape::CT_WorldMesh);
+    m_StaticWorldObjectPhysicsObject = m_ClassContents->physicsSystem.makeRigidBody(m_StaticWorldObjectCollsionShape, Math::Matrix::CreateIdentity());
+    m_StaticWorldMeshPhysicsObject = m_ClassContents->physicsSystem.makeRigidBody(m_StaticWorldMeshCollsionShape, Math::Matrix::CreateIdentity());
 
     // Notify user
     m_pEngine->getHud().getLoadingScreen().startSection(
@@ -128,7 +155,7 @@ bool WorldInstance::init(const std::string& zen,
 
     if (Utils::fileExists(datFile))
     {
-        m_ScriptEngine.loadDAT(datFile);
+        m_ClassContents->scriptEngine.loadDAT(datFile);
     }
     else
     {
@@ -161,7 +188,7 @@ bool WorldInstance::init(const std::string& zen,
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
 
         LogInfo() << "Initilizing BSP-Tree...";
-        m_BspTree.loadBspTree(world.bspTree);
+        m_ClassContents->bspTree.loadBspTree(world.bspTree);
 
         LogInfo() << "Postprocessing worldmesh...";
 
@@ -177,7 +204,7 @@ bool WorldInstance::init(const std::string& zen,
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         // Init worldmesh-wrapper
-        m_WorldMesh.load(packedWorldMesh);
+        m_ClassContents->worldMesh.load(packedWorldMesh);
 
         for (auto& sm : packedWorldMesh.subMeshes)
         {
@@ -257,12 +284,12 @@ bool WorldInstance::init(const std::string& zen,
             m_pEngine->getHud().getLoadingScreen().setSectionProgress(50);
 
             // Add world-mesh collision
-            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(triangles, Physics::CollisionShape::CT_WorldMesh);
-            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
+            Handle::CollisionShapeHandle wmch = m_ClassContents->physicsSystem.makeCollisionShapeFromMesh(triangles, Physics::CollisionShape::CT_WorldMesh);
+            m_ClassContents->physicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
         }
 
         // Make sure static collision is initialized before adding the VOBs
-        m_PhysicsSystem.postProcessLoad();
+        m_ClassContents->physicsSystem.postProcessLoad();
 
         for (Handle::EntityHandle e : ents)
         {
@@ -282,7 +309,7 @@ bool WorldInstance::init(const std::string& zen,
 
         LogInfo() << "Creating AudioWorld";
         // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+        m_ClassContents->audioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
         // TODO: Refractor. Make a map of all vobs by classes or something.
         ZenLoad::zCVobData startPoint;
@@ -406,12 +433,12 @@ bool WorldInstance::init(const std::string& zen,
                     // Trace down from this vob to get the shadow-value from the worldmesh
                     Math::float3 traceStart = Math::float3(m.Translation().x, v.bbox[1].y * (1.0f / 100.0f), m.Translation().z);
                     Math::float3 traceEnd = Math::float3(m.Translation().x, (v.bbox[0].y * (1.0f / 100.0f)) - 5.0f, m.Translation().z);
-                    Physics::RayTestResult hit = m_PhysicsSystem.raytrace(traceStart, traceEnd,
+                    Physics::RayTestResult hit = m_ClassContents->physicsSystem.raytrace(traceStart, traceEnd,
                                                                           Physics::CollisionShape::CT_WorldMesh);  // FIXME: Use boundingbox for this
 
                     if (hit.hasHit)
                     {
-                        float shadow = m_WorldMesh.interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
+                        float shadow = m_ClassContents->worldMesh.interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
 
                         if (Vob::getVisual(vob))
                             Vob::getVisual(vob)->setShadowValue(shadow);
@@ -448,10 +475,10 @@ bool WorldInstance::init(const std::string& zen,
         LogInfo() << "Done!";
 
         // Make sure static collision is initialized before adding the NPCs
-        m_PhysicsSystem.postProcessLoad();
+        m_ClassContents->physicsSystem.postProcessLoad();
 
         // Load waynet
-        m_Waynet = Waynet::makeWaynetFromZen(world);
+        m_ClassContents->waynet = Waynet::makeWaynetFromZen(world);
 
         // Insert startpoint as a waypoint with the name zCVobStartpoint:zCVob.
         if (!startPoint.objectClass.empty())
@@ -463,7 +490,7 @@ bool WorldInstance::init(const std::string& zen,
             startWP.position = (1.0f / 100.0f) * Math::float3(startPoint.position.v);
             startWP.underWater = false;
             startWP.waterDepth = 0;
-            Waynet::addWaypoint(m_Waynet, startWP);
+            Waynet::addWaypoint(m_ClassContents->waynet, startWP);
         }
 
         // Notify user
@@ -474,7 +501,7 @@ bool WorldInstance::init(const std::string& zen,
 
         LogInfo() << "Creating AudioWorld";
         // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_AudioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+        m_ClassContents->audioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
@@ -484,8 +511,8 @@ bool WorldInstance::init(const std::string& zen,
         if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
         {
             LogInfo() << "Failed to initialize script engine for zen world";
-            delete m_AudioWorld;
-            m_AudioWorld = nullptr;
+            delete m_ClassContents->audioWorld;
+            m_ClassContents->audioWorld = nullptr;
             return false;
         }
         //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
@@ -495,12 +522,12 @@ bool WorldInstance::init(const std::string& zen,
         // Load script engine if one is provided. Always the case except "start new game"
         if (!scriptEngine.empty())
         {
-            m_ScriptEngine.importScriptEngine(scriptEngine);
+            m_ClassContents->scriptEngine.importScriptEngine(scriptEngine);
         }
         // Load dialogManager if one is provided. Only after loading a savegame
         if (!dialogManager.empty())
         {
-            m_DialogManager.importDialogManager(dialogManager);
+            m_ClassContents->dialogManager.importDialogManager(dialogManager);
         }
         // Load logManager if one is provided.
         if (!logManager.empty())
@@ -534,7 +561,7 @@ bool WorldInstance::init(const std::string& zen,
     }
 
     // Initialize the sky, so it will get the right values
-    m_Sky.fillSkyStates();
+    m_ClassContents->sky.fillSkyStates();
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
@@ -549,7 +576,7 @@ bool WorldInstance::init(const std::string& zen,
     for(int i=0;i<40;i++)
     {
         for(int j=0;j<(rand() % 50) + 20;j++)
-            wp = m_Waynet.waypoints[wp].edges[rand() % m_Waynet.waypoints[wp].edges.size()];
+            wp = m_ClassContents->waynet.waypoints[wp].edges[rand() % m_ClassContents->waynet.waypoints[wp].edges.size()];
 
         routine.push_back(wp);
     }
@@ -576,12 +603,12 @@ bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
     if (!worldName.empty())
     {
         LogInfo() << "Initializing scripts for world: " << worldName;
-        m_ScriptEngine.initForWorld(worldName, firstStart);
+        m_ClassContents->scriptEngine.initForWorld(worldName, firstStart);
     }
 
     LogInfo() << "Initialize dialog manager";
     // Initialize dialog manager
-    if (!m_DialogManager.init())
+    if (!m_ClassContents->dialogManager.init())
     {
         LogWarn() << "Failed to initialize dialog manager";
         return false;
@@ -591,24 +618,24 @@ bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
     return true;
 }
 
-Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::ComponentMask components)
+Handle::EntityHandle WorldInstance::addEntity(Components::ComponentMask components)
 {
-    auto h = m_Allocators.m_ComponentAllocator.createObject();
+    auto h = m_Allocators->m_ComponentAllocator.createObject();
 
-    Components::EntityComponent& entity = m_Allocators.m_ComponentAllocator.getElement<Components::EntityComponent>(h);
+    Components::EntityComponent& entity = m_Allocators->m_ComponentAllocator.getElement<Components::EntityComponent>(h);
     entity.m_ComponentMask = components;
     entity.m_ThisEntity = h;
 
-    Components::Actions::forAllComponents(m_Allocators.m_ComponentAllocator, h, [&](auto& c) {
+    Components::Actions::forAllComponents(m_Allocators->m_ComponentAllocator, h, [&](auto& c) {
         c.init(c);
     });
 
-    /*Components::BBoxComponent& bbox = m_Allocators.m_ComponentAllocator.getElement<Components::BBoxComponent>(h);
+    /*Components::BBoxComponent& bbox = m_Allocators->m_ComponentAllocator.getElement<Components::BBoxComponent>(h);
     bbox.m_BBox3D.min = -1.0f * Math::float3(rand() % 1000,rand() % 1000,rand() % 1000);
     bbox.m_BBox3D.max = Math::float3(rand() % 1000,rand() % 1000,rand() % 1000);
     entity.m_ComponentMask |= Components::BBoxComponent::MASK;*/
 
-    Components::LogicComponent& logic = m_Allocators.m_ComponentAllocator.getElement<Components::LogicComponent>(h);
+    Components::LogicComponent& logic = m_Allocators->m_ComponentAllocator.getElement<Components::LogicComponent>(h);
     logic.m_pLogicController = nullptr;
 
     // TODO: Make generic "on entity created"-method or something
@@ -619,13 +646,13 @@ Components::ComponentAllocator::Handle WorldInstance::addEntity(Components::Comp
 void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, const Math::Matrix& cameraWorld)
 {
     // Tell script engine the frame started
-    m_ScriptEngine.onFrameStart();
+    m_ClassContents->scriptEngine.onFrameStart();
 
     // Update physics
-    m_PhysicsSystem.update(deltaTime);
+    m_ClassContents->physicsSystem.update(deltaTime);
 
     // Update sky
-    m_Sky.interpolate();
+    m_ClassContents->sky.interpolate();
 
     size_t num = getComponentAllocator().getNumObtainedElements();
     const auto& ctuple = getComponentDataBundle().m_Data;
@@ -674,9 +701,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     // TODO: Move this somewhere else, where other game-logic is!
     // TODO: Must be done before the main-camera gets updated, actually
-    if (m_ScriptEngine.getPlayerEntity().isValid())
+    if (m_ClassContents->scriptEngine.getPlayerEntity().isValid())
     {
-        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(*this, m_ScriptEngine.getPlayerEntity());
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(*this, m_ClassContents->scriptEngine.getPlayerEntity());
 
         if (player.playerController)
             player.playerController->onUpdateByInput(deltaTime);
@@ -689,15 +716,15 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     getAudioWorld().setListenerOrientation(camMatrix.Forward(), camMatrix.Up());
 
     // Update dialogs
-    m_DialogManager.update(deltaTime);
+    m_ClassContents->dialogManager.update(deltaTime);
 
     // Tell script engine the frame ended
-    m_ScriptEngine.onFrameEnd();
+    m_ClassContents->scriptEngine.onFrameEnd();
 
     // Update hud
     m_pEngine->getHud().setDateTimeDisplay(m_pEngine->getGameClock().getDateTimeFormatted());
 
-    m_BspTree.debugDraw();
+    m_ClassContents->bspTree.debugDraw();
 
     /*for(const auto& fp : m_FreePoints)
     {
@@ -735,19 +762,19 @@ std::vector<size_t> WorldInstance::findStartPoints()
 
     /*
     // Gothic 1
-    auto it = m_Waynet.waypointsByName.find("WP_INTRO_SHORE");
-    if(it != m_Waynet.waypointsByName.end())
+    auto it = m_ClassContents->waynet.waypointsByName.find("WP_INTRO_SHORE");
+    if(it != m_ClassContents->waynet.waypointsByName.end())
         pts.push_back((*it).second);
      */
 
-    auto it = m_Waynet.waypointsByName.find("zCVobStartpoint:zCVob");
-    if (it != m_Waynet.waypointsByName.end())
+    auto it = m_ClassContents->waynet.waypointsByName.find("zCVobStartpoint:zCVob");
+    if (it != m_ClassContents->waynet.waypointsByName.end())
         pts.push_back((*it).second);
 
     if (!pts.empty())
         return pts;
 
-    for (size_t i = 0; i < m_Waynet.waypoints.size(); i++)
+    for (size_t i = 0; i < m_ClassContents->waynet.waypoints.size(); i++)
     {
         // From spacer-doc:
         // Der Name eines Startpoints muss den Instanznamen des Spielers enthalten, der an diesem Punkt starten soll.
@@ -757,7 +784,7 @@ std::vector<size_t> WorldInstance::findStartPoints()
         // Doesn't actually seem the case, tho!
 
         // Take anything with START for now
-        if (m_Waynet.waypoints[i].name.find("START") != std::string::npos)
+        if (m_ClassContents->waynet.waypoints[i].name.find("START") != std::string::npos)
             pts.push_back(i);
     }
 
@@ -993,7 +1020,7 @@ void WorldInstance::importVobs(const json& j)
 
 bool WorldInstance::isEntityValid(Handle::EntityHandle e)
 {
-    return m_Allocators.m_ComponentAllocator.isHandleValid(e);
+    return m_Allocators->m_ComponentAllocator.isHandleValid(e);
 }
 
 Handle::EntityHandle WorldInstance::createCamera()
@@ -1073,5 +1100,93 @@ const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints(
     return m_FreePoints;
 }
 
+const Waynet::WaynetInstance& WorldInstance::getWaynet()
+{
+    return m_ClassContents->waynet;
+}
 
+Logic::ScriptEngine& WorldInstance::getScriptEngine()
+{
+    return m_ClassContents->scriptEngine;
+}
 
+Physics::PhysicsSystem& WorldInstance::getPhysicsSystem()
+{
+    return m_ClassContents->physicsSystem;
+}
+
+WorldMesh& WorldInstance::getWorldMesh()
+{
+    return m_ClassContents->worldMesh;
+}
+
+Content::Sky& WorldInstance::getSky()
+{
+    return m_ClassContents->sky;
+}
+
+Logic::DialogManager& WorldInstance::getDialogManager()
+{
+    return m_ClassContents->dialogManager;
+}
+
+World::AudioWorld& WorldInstance::getAudioWorld()
+{
+    return *m_ClassContents->audioWorld;
+}
+
+Logic::PfxManager& WorldInstance::getPfxManager()
+{
+    return m_ClassContents->pfxManager;
+}
+
+Animations::AnimationLibrary& WorldInstance::getAnimationLibrary()
+{
+    return m_ClassContents->animationLibrary;
+}
+
+Components::ComponentAllocator::DataBundle WorldInstance::getComponentDataBundle()
+{
+    return m_Allocators->m_ComponentAllocator.getDataBundle();
+}
+
+Textures::TextureAllocator& WorldInstance::getTextureAllocator()
+{
+    return m_Allocators->m_LevelTextureAllocator;
+}
+
+Components::ComponentAllocator& WorldInstance::getComponentAllocator()
+{
+    return m_Allocators->m_ComponentAllocator;
+}
+
+Meshes::StaticMeshAllocator& WorldInstance::getStaticMeshAllocator()
+{
+    return m_Allocators->m_LevelStaticMeshAllocator;
+}
+
+Meshes::SkeletalMeshAllocator& WorldInstance::getSkeletalMeshAllocator()
+{
+    return m_Allocators->m_LevelSkeletalMeshAllocator;
+}
+
+Animations::AnimationAllocator& WorldInstance::getAnimationAllocator()
+{
+    return m_Allocators->m_AnimationAllocator;
+}
+
+Animations::AnimationDataAllocator& WorldInstance::getAnimationDataAllocator()
+{
+    return m_Allocators->m_AnimationDataAllocator;
+}
+
+World::WorldAllocators& WorldInstance::getAllocators()
+{
+    return *m_Allocators;
+}
+
+Logic::CameraController* WorldInstance::getCameraController()
+{
+    Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
+    return dynamic_cast<Logic::CameraController*>(ptr);
+}

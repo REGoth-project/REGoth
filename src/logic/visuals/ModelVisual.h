@@ -2,6 +2,11 @@
 #include "../VisualController.h"
 #include <handle/HandleDef.h>
 
+namespace ZenLoad
+{
+    class zCModelMeshLib;
+}
+
 namespace Logic
 {
     enum class EModelNode

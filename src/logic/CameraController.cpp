@@ -12,6 +12,8 @@
 #include <entry/input.h>
 #include <components/EntityActions.h>
 #include <engine/GameSession.h>
+#include <physics/PhysicsSystem.h>
+#include <logic/ScriptEngine.h>
 
 const float CAMERA_SMOOTHING = 10.0f;
 

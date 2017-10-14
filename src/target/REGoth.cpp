@@ -34,6 +34,10 @@
 #include <zenload/zenParser.h>
 #include <zenload/ztex2dds.h>
 #include <utils/GLFW_Keys.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
+#include <content/StaticMeshAllocator.h>
+#include <content/SkeletalMeshAllocator.h>
 
 using json = nlohmann::json;
 
@@ -209,9 +213,8 @@ void REGoth::initConsole()
         });
 
     console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
-
-        if(args.size() < 2)
-            return "Missing argument. Usage: pkf <duration>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: pkf <duration>";
 
             m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
             return "Playing keyed animation";

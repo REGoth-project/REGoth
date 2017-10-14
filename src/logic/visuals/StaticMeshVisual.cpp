@@ -5,6 +5,7 @@
 #include <engine/GameEngine.h>
 #include <engine/World.h>
 #include <utils/logger.h>
+#include <physics/PhysicsSystem.h>
 
 using namespace Logic;
 

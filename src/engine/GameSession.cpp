@@ -9,6 +9,9 @@
 #include "ui/LoadingScreen.h"
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
+#include <logic/CameraController.h>
 
 using namespace Engine;
 

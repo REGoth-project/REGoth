@@ -9,6 +9,7 @@
 #include <engine/Platform.h>
 #include <ui/LoadingScreen.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 using namespace UI;
 

@@ -5,6 +5,7 @@
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
 #include <logic/visuals/ModelVisual.h>
+#include <logic/ScriptEngine.h>
 
 using namespace Logic;
 

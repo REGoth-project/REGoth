@@ -10,6 +10,10 @@
 #include <utils/logger.h>
 
 #include <logic/Controller.h>
+#include <content/Sky.h>
+#include <content/SkeletalMeshAllocator.h>
+#include <content/StaticMeshAllocator.h>
+#include <components/AnimHandler.h>
 
 namespace Render
 {

@@ -1,6 +1,7 @@
 #include "EntityActions.h"
 #include <logic/Controller.h>
 #include <logic/VisualController.h>
+#include <components/AnimHandler.h>
 
 void ::Components::Actions::Logic::destroyLogicComponent(Components::LogicComponent& c)
 {

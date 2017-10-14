@@ -7,6 +7,8 @@
 #include <json/json.hpp>
 #include <utils/Utils.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
 
 using json = nlohmann::json;
 using namespace Engine;

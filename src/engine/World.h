@@ -1,27 +1,11 @@
 #pragma once
 
-#include "BspTree.h"
-#include "Waynet.h"
-#include "WorldMesh.h"
 #include <json.hpp>
-#include "audio/AudioWorld.h"
+#include <set>
+#include <ZenLib/daedalus/DaedalusStdlib.h>
+#include <handle/HandleDef.h>
+#include <math/mathlib.h>
 #include <components/Entities.h>
-#include <components/Vob.h>
-#include <content/AnimationAllocator.h>
-#include <content/AnimationLibrary.h>
-#include <content/SkeletalMeshAllocator.h>
-#include <content/Sky.h>
-#include <content/StaticMeshAllocator.h>
-#include <content/Texture.h>
-#include <content/VertexTypes.h>
-#include <logic/CameraController.h>
-#include <logic/DialogManager.h>
-#include <logic/PfxManager.h>
-#include <logic/ScriptEngine.h>
-#include <memory/AllocatorBundle.h>
-#include <memory/Config.h>
-#include <memory/StaticReferencedAllocator.h>
-#include <physics/PhysicsSystem.h>
 
 using json = nlohmann::json;
 
@@ -35,38 +19,58 @@ namespace Engine
     class BaseEngine;
 }
 
+namespace Physics
+{
+    class PhysicsSystem;
+}
+
+namespace Content
+{
+    class Sky;
+}
+
+namespace Logic
+{
+    class DialogManager;
+    class PfxManager;
+    class CameraController;
+    class ScriptEngine;
+}
+
+namespace Animations
+{
+    class AnimationLibrary;
+}
+
+namespace UI
+{
+    class PrintScreenMessages;
+}
+
+namespace Meshes
+{
+    class StaticMeshAllocator;
+    class SkeletalMeshAllocator;
+}
+
+namespace Animations
+{
+    class AnimationAllocator;
+    class AnimationDataAllocator;
+}
+
+
+
 namespace World
 {
-    struct WorldAllocators
+    class AudioWorld;
+    class WorldMesh;
+    class WorldAllocators;
+
+    namespace Waynet
     {
-        WorldAllocators(Engine::BaseEngine& engine)
-            : m_LevelTextureAllocator(engine)
-            , m_LevelSkeletalMeshAllocator(engine)
-            , m_LevelStaticMeshAllocator(engine)
-        {
-        }
-        template <typename V, typename I>
-        using MeshAllocator = Memory::StaticReferencedAllocator<
-            Meshes::WorldStaticMesh,
-            Config::MAX_NUM_LEVEL_MESHES>;
-
-        typedef MeshAllocator<Meshes::UVNormColorVertex, uint32_t> WorldMeshAllocator;
-        typedef Memory::StaticReferencedAllocator<
-            Materials::TexturedMaterial,
-            Config::MAX_NUM_LEVEL_MATERIALS>
-            MaterialAllocator;
-
-        Components::ComponentAllocator m_ComponentAllocator;
-        Textures::TextureAllocator m_LevelTextureAllocator;
-        Meshes::StaticMeshAllocator m_LevelStaticMeshAllocator;
-        Meshes::SkeletalMeshAllocator m_LevelSkeletalMeshAllocator;
-        Animations::AnimationAllocator m_AnimationAllocator;
-        Animations::AnimationDataAllocator m_AnimationDataAllocator;
-
-        // TODO: Refractor this one into StaticMeshAllocator
-        WorldMeshAllocator m_WorldMeshAllocator;
-        MaterialAllocator m_MaterialAllocator;
-    };
+        class WaynetInstance;
+    }
 
     /**
      * All information inside this struct are only valid at a certain time of the frame, where no entities can be
@@ -100,7 +104,7 @@ namespace World
         /**
          * Creates an entity with the given components and returns its handle
          */
-        Components::ComponentAllocator::Handle addEntity(Components::ComponentMask components = 0);
+        Handle::EntityHandle addEntity(uint32_t components = 0);
 
         /**
          * creates camera and returns it
@@ -124,11 +128,7 @@ namespace World
         /**
          * @return Camera-Controller of the camera
          */
-        Logic::CameraController* getCameraController()
-        {
-            Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
-            return dynamic_cast<Logic::CameraController*>(ptr);
-        }
+        Logic::CameraController* getCameraController();
 
         /**
          * Checks whether the passed entity handle points to a valid location
@@ -153,7 +153,7 @@ namespace World
         template <typename C>
         C& getEntity(Handle::EntityHandle h)
         {
-            return m_Allocators.m_ComponentAllocator.getElement<C>(h);
+            return getComponentAllocator().getElement<C>(h);
         }
 
         /**
@@ -179,59 +179,19 @@ namespace World
          */
         Daedalus::GameType getBasicGameType();
 
+
         /**
          * Data access
          */
-        Components::ComponentAllocator::DataBundle getComponentDataBundle()
-        {
-            return m_Allocators.m_ComponentAllocator.getDataBundle();
-        }
-        WorldAllocators& getAllocators()
-        {
-            return m_Allocators;
-        }
-        WorldAllocators::WorldMeshAllocator& getWorldMeshAllocator()
-        {
-            return m_Allocators.m_WorldMeshAllocator;
-        }
-        Textures::TextureAllocator& getTextureAllocator()
-        {
-            return m_Allocators.m_LevelTextureAllocator;
-        }
-        Components::ComponentAllocator& getComponentAllocator()
-        {
-            return m_Allocators.m_ComponentAllocator;
-        }
-        Meshes::StaticMeshAllocator& getStaticMeshAllocator()
-        {
-            return m_Allocators.m_LevelStaticMeshAllocator;
-        }
-        Meshes::SkeletalMeshAllocator& getSkeletalMeshAllocator()
-        {
-            return m_Allocators.m_LevelSkeletalMeshAllocator;
-        }
-        Animations::AnimationAllocator& getAnimationAllocator()
-        {
-            return m_Allocators.m_AnimationAllocator;
-        }
-        Animations::AnimationDataAllocator& getAnimationDataAllocator()
-        {
-            return m_Allocators.m_AnimationDataAllocator;
-        }
+        WorldAllocators& getAllocators();
+        Components::ComponentAllocator::DataBundle getComponentDataBundle();
+        Textures::TextureAllocator& getTextureAllocator();
+        Components::ComponentAllocator& getComponentAllocator();
+        Meshes::StaticMeshAllocator& getStaticMeshAllocator();
+        Meshes::SkeletalMeshAllocator& getSkeletalMeshAllocator();
+        Animations::AnimationAllocator& getAnimationAllocator();
+        Animations::AnimationDataAllocator& getAnimationDataAllocator();
 
-        // TODO: Depricated, remove
-        WorldAllocators::MaterialAllocator& getMaterialAllocator()
-        {
-            return m_Allocators.m_MaterialAllocator;
-        }
-        const Waynet::WaynetInstance& getWaynet()
-        {
-            return m_Waynet;
-        }
-        Logic::ScriptEngine& getScriptEngine()
-        {
-            return m_ScriptEngine;
-        }
         Handle::WorldHandle getMyHandle()
         {
             return Handle::WorldHandle(this);
@@ -240,41 +200,26 @@ namespace World
         {
             return m_pEngine;
         }
-        Physics::PhysicsSystem& getPhysicsSystem()
-        {
-            return m_PhysicsSystem;
-        }
+
         Handle::CollisionShapeHandle getStaticObjectCollisionShape()
         {
             return m_StaticWorldObjectCollsionShape;
         }
-        WorldMesh& getWorldMesh()
-        {
-            return m_WorldMesh;
-        }
-        Content::Sky& getSky()
-        {
-            return m_Sky;
-        }
-        Logic::DialogManager& getDialogManager()
-        {
-            return m_DialogManager;
-        }
 
-        World::AudioWorld& getAudioWorld()
-        {
-            return *m_AudioWorld;
-        }
+        const Waynet::WaynetInstance& getWaynet();
+        Logic::ScriptEngine& getScriptEngine();
 
-        Logic::PfxManager& getPfxManager()
-        {
-            return m_PfxManager;
-        }
 
-        Animations::AnimationLibrary& getAnimationLibrary()
-        {
-            return m_AnimationLibrary;
-        }
+
+        Physics::PhysicsSystem& getPhysicsSystem();
+
+
+        WorldMesh& getWorldMesh();
+        Content::Sky& getSky();
+        Logic::DialogManager& getDialogManager();
+        World::AudioWorld& getAudioWorld();
+        Logic::PfxManager& getPfxManager();
+        Animations::AnimationLibrary& getAnimationLibrary();
 
         /**
          * HUD's print-screen manager
@@ -364,6 +309,11 @@ namespace World
         const std::string& getZenFile() { return m_ZenFile; }
 
         /**
+         * @return Name of the loaded ZEN-File (without extension)
+         */
+        std::string getWorldName();
+
+        /**
          * Imports vobs from a json-object
          * @param j
          */
@@ -400,7 +350,7 @@ namespace World
          */
         bool initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
 
-        WorldAllocators m_Allocators;
+
         TransientEntityFeatures m_TransientEntityFeatures;
 
         /**
@@ -408,44 +358,12 @@ namespace World
          */
         std::string m_ZenFile;
 
-        /**
-         * Worldmesh-data
-         */
-        WorldMesh m_WorldMesh;
 
-        /**
-         * BSP-Tree representing this world
-         */
-        BspTree m_BspTree;
-
-        /**
-         * Waynet-data
-         */
-        Waynet::WaynetInstance m_Waynet;
 
         /**
          * Engine-instance
          */
         Engine::BaseEngine* m_pEngine;
-
-        /**
-         * Scripting-Engine of this world
-         */
-        Logic::ScriptEngine m_ScriptEngine;
-
-        /**
-         * This worlds physics system
-         */
-        Physics::PhysicsSystem m_PhysicsSystem;
-
-        World::AudioWorld* m_AudioWorld;
-
-        Animations::AnimationLibrary m_AnimationLibrary;
-
-        /**
-         * Sky of this world
-         */
-        Content::Sky m_Sky;
 
         /**
          * Static collision-shape for the world
@@ -483,18 +401,16 @@ namespace World
         std::set<Handle::EntityHandle> m_NPCEntities;
 
         /**
-         * This worlds dialog-manager
-         */
-        Logic::DialogManager m_DialogManager;
-
-        /**
-         * Pfx-cache
-         */
-        Logic::PfxManager m_PfxManager;
-
-        /**
          * Players camera entity
          */
         Handle::EntityHandle m_Camera;
+
+        struct ClassContents;
+
+        /**
+         * Other classes referenced here (pimple-like)
+         */
+        std::unique_ptr<ClassContents> m_ClassContents;
+        std::unique_ptr<WorldAllocators> m_Allocators;
     };
 }

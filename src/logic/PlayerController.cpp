@@ -24,6 +24,11 @@
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
+#include <physics/PhysicsSystem.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
+#include <engine/WorldMesh.h>
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 

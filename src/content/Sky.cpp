@@ -12,6 +12,7 @@
 #include <utils/Utils.h>
 #include <utils/cli.h>
 #include <utils/logger.h>
+#include <engine/WorldMesh.h>
 
 using namespace Content;
 
