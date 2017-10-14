@@ -364,6 +364,11 @@ namespace World
         const std::string& getZenFile() { return m_ZenFile; }
 
         /**
+         * @return Name of the loaded ZEN-File (without extension)
+         */
+        std::string getWorldName();
+
+        /**
          * Imports vobs from a json-object
          * @param j
          */
