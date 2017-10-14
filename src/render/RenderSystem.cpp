@@ -19,9 +19,7 @@ RenderSystem::RenderSystem(Engine::BaseEngine& engine)
 
 RenderSystem::~RenderSystem()
 {
-    // Clean the created resources
-    for(bgfx::ProgramHandle h : m_LoadedPrograms)
-        bgfx::destroyProgram(h);
+    destroyShaders();
 
     for(bgfx::UniformHandle h : m_AllUniforms)
         bgfx::destroyUniform(h);
@@ -30,8 +28,11 @@ RenderSystem::~RenderSystem()
         bgfx::destroyDynamicVertexBuffer(h);
 }
 
-void RenderSystem::init()
+
+void RenderSystem::loadShaders()
 {
+    destroyShaders();
+
     m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainWorldProgram);
 
@@ -49,6 +50,27 @@ void RenderSystem::init()
 
     m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
     m_LoadedPrograms.push_back(m_Config.programs.imageProgram);
+
+    m_Config.programs.skyProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky", "fs_skylayer");
+    m_LoadedPrograms.push_back(m_Config.programs.skyProgram);
+
+    m_Config.programs.skyDomeColorProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky_domecolor", "fs_sky_domecolor");
+    m_LoadedPrograms.push_back(m_Config.programs.skyDomeColorProgram);
+}
+
+void RenderSystem::destroyShaders()
+{
+    // Clean the created resources
+    for(bgfx::ProgramHandle h : m_LoadedPrograms)
+        bgfx::destroyProgram(h);
+
+    m_LoadedPrograms.clear();
+}
+
+
+void RenderSystem::init()
+{
+    loadShaders();
 
     m_Config.uniforms.diffuseTexture = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
     m_AllUniforms.push_back(m_Config.uniforms.diffuseTexture);
@@ -72,6 +94,9 @@ void RenderSystem::init()
 
     m_Config.uniforms.fogNearFar = bgfx::createUniform("u_FogNearFar", bgfx::UniformType::Vec4);
     m_AllUniforms.push_back(m_Config.uniforms.fogNearFar);
+
+    m_Config.uniforms.skyTextureParams = bgfx::createUniform("u_skyTextureParams", bgfx::UniformType::Vec4);
+    m_AllUniforms.push_back(m_Config.uniforms.skyTextureParams);
 
 
 #if BX_PLATFORM_EMSCRIPTEN
