@@ -43,6 +43,10 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     auto& m = packed.subMeshes[submesh];
     mesh.init();
 
+    mesh.bBox3D.min = packed.bbox[0].v;
+    mesh.bBox3D.max = packed.bbox[1].v;
+    mesh.boundingSphereRadius = (mesh.bBox3D.min * 0.5f + mesh.bBox3D.max * 0.5f).length() + (mesh.bBox3D.max - mesh.bBox3D.min).length() * 0.5f;
+
     mesh.mesh.m_Vertices.resize(m.indices.size());
 
     for (size_t i = 0; i < m.indices.size(); i++)
@@ -80,6 +84,10 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     mesh.name = name;
 
     mesh.init();
+
+    mesh.bBox3D.min = packed.bbox[0].v;
+    mesh.bBox3D.max = packed.bbox[1].v;
+    mesh.boundingSphereRadius = (mesh.bBox3D.min * 0.5f + mesh.bBox3D.max * 0.5f).length() + (mesh.bBox3D.max - mesh.bBox3D.min).length() * 0.5f;
 
     // Copy vertices
     mesh.mesh.m_Vertices.resize(packed.vertices.size());

@@ -5,6 +5,7 @@
 #include <handle/Handle.h>
 #include <handle/HandleDef.h>
 #include <zenload/zCModelMeshLib.h>
+#include <utils/Utils.h>
 
 namespace Engine
 {
@@ -35,6 +36,8 @@ namespace Meshes
          * @brief Returns the texture of the given handle
          */
         WorldSkeletalMesh& getMesh(Handle::MeshHandle h) { return m_Allocator.getElement(h).mesh; }
+        const Utils::BBox3D& getMeshBBox3d(Handle::MeshHandle h) { return m_Allocator.getElement(h).bBox3D; }
+        float getMeshBoundingSphereRadius(Handle::MeshHandle h) { return m_Allocator.getElement(h).boundingSphereRadius; }
         bool isLoaded(Handle::MeshHandle h) { return m_Allocator.getElement(h).loaded; }
         const ZenLoad::zCModelMeshLib& getMeshLib(Handle::MeshHandle h) { return m_Allocator.getElement(h).lib; }
         /**
@@ -62,6 +65,8 @@ namespace Meshes
         struct SkelMesh : public Handle::HandleTypeDescriptor<Handle::MeshHandle>
         {
             WorldSkeletalMesh mesh;
+            Utils::BBox3D bBox3D;
+            float boundingSphereRadius;
             ZenLoad::zCModelMeshLib lib;
             bool loaded;
             std::string name;
