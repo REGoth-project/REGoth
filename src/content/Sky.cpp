@@ -36,6 +36,7 @@ namespace Flags
 static Handle::MeshHandle loadMeshAndApplyFadeToLowerPart(const std::string& filename, World::WorldInstance& world);
 static Handle::MeshHandle loadMeshAndApplyFadeToDomeColorPart(const std::string& filename, World::WorldInstance& world);
 static Math::float3 applySkyColor(const Math::float3& col0, const Math::float3& col1, uint8_t c);
+static Handle::MeshHandle createSkyPlaneMesh(World::WorldInstance& world, size_t layerIdx);
 
 Sky::Sky(World::WorldInstance& world)
     : m_World(world)
@@ -141,6 +142,7 @@ void Sky::interpolate()
     //calculateLUT_ZenGin(Math::float3(0, 0, 0), m_MasterState.baseColor, m_LUT); // Commented out because getSkyColors is used now
 
     setupDomeMeshTexturesForCurrentTime();
+    setupPlaneMeshTexturesForCurrentTime();
 }
 
 void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState& s, Textures::TextureAllocator& texAlloc)
@@ -416,6 +418,7 @@ void Sky::onWorldNameChanged(const std::string& newWorldName)
     reloadAllSkyTextures(newWorldName);
 
     loadDomeLayerMeshes();
+    createSkyPlaneMeshes();
 }
 
 
@@ -613,15 +616,88 @@ void Sky::setupDomeMeshTexturesForCurrentTime()
     }
 }
 
-const std::array<Handle::MeshHandle, Sky::NUM_SKY_LAYERS>& Sky::getDomeMeshes()
+void Sky::setupPlaneMeshTexturesForCurrentTime()
+{
+    for(size_t i = 0; i < m_PlaneMeshesByLayer.size(); i++)
+    {
+        if (!m_PlaneMeshesByLayer[i].isValid())
+            continue;
+
+        Meshes::WorldStaticMesh& plane = m_World.getStaticMeshAllocator().getMesh(m_PlaneMeshesByLayer[i]);
+
+        for(Materials::TexturedMaterial& mat : plane.mesh.m_SubmeshMaterials)
+        {
+            mat.m_TextureHandle = m_MasterState.layers[i].texture;
+        }
+    }
+}
+
+const std::array<Handle::MeshHandle, Sky::NUM_SKY_LAYERS>& Sky::getDomeMeshes() const
 {
     return m_DomeMeshesByLayer;
 }
+
+
+const std::array<Handle::MeshHandle, Sky::NUM_SKY_LAYERS>& Sky::getSkyPlaneMeshes() const
+{
+    return m_PlaneMeshesByLayer;
+}
+
 
 std::string Sky::getDomeLayerMeshFileName(size_t layerIdx)
 {
     return "SKYDOME_LAYER" + std::to_string(layerIdx + 1) + ".MRM";
 }
+
+
+void Sky::createSkyPlaneMeshes()
+{
+    for(size_t i = 0; i < m_PlaneMeshesByLayer.size(); i++)
+    {
+        m_PlaneMeshesByLayer[i] = createSkyPlaneMesh(m_World, i);
+    }
+}
+
+
+static Handle::MeshHandle createSkyPlaneMesh(World::WorldInstance& world, size_t layerIdx)
+{
+    ZenLoad::PackedMesh packed;
+
+    const float PLANE_HALF_LENGTH_SIDE = 500;
+    const float PLANE_HEIGHT = 10;
+
+    packed.vertices.resize(4);
+    packed.vertices[0].Position = { PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT, -PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[1].Position = { PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT,  PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[2].Position = {-PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT,  PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[3].Position = {-PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT, -PLANE_HALF_LENGTH_SIDE};
+
+    /*
+     * 3 --- 0
+     * |   / |
+     * | /   |
+     * 2 --- 1
+     */
+
+    packed.vertices[0].Color = 0xFFFFFFFF;
+    packed.vertices[1].Color = 0xFFFFFFFF;
+    packed.vertices[2].Color = 0xFFFFFFFF;
+    packed.vertices[3].Color = 0xFFFFFFFF;
+
+    packed.vertices[0].TexCoord = {0.0f, 0.0f};
+    packed.vertices[1].TexCoord = {1.0f, 0.0f};
+    packed.vertices[2].TexCoord = {1.0f, 1.0f};
+    packed.vertices[3].TexCoord = {0.0f, 1.0f};
+
+    packed.subMeshes.emplace_back();
+    packed.subMeshes[0].indices = {
+            3,2,0,
+            0,2,1
+    };
+
+    return world.getStaticMeshAllocator().loadFromPacked(packed, "SKYPLANE_LAYER" + std::to_string(layerIdx) + ".MRM");
+}
+
 
 void Sky::loadSkyConfig()
 {
@@ -706,4 +782,27 @@ void Sky::getDomeColors(Math::float3& color0, Math::float3& color1)
     color1.y = Math::clamp(color1.y, 0.0f, 1.0f);
     color1.z = Math::clamp(color1.z, 0.0f, 1.0f);
 }
+
+bool Sky::isNightTime() const
+{
+    return m_MasterState.time >= TIME_KEY_1 && m_MasterState.time <= TIME_KEY_7;
+}
+
+Math::float3 Sky::getPolyCloudsLayerColor()
+{
+    Math::float3 color;
+
+    if(isNightTime())
+        color = {1.0f, 1.0f, 1.0f};
+    else
+        color = getMasterState().domeColorUpper;
+
+    if(m_MasterState.time >= TIME_KEY_3 && m_MasterState.time <= TIME_KEY_5)
+    {
+        color = 0.5f * (color + Math::float3(1.0f, 1.0f, 1.0f));
+    }
+
+    return color;
+}
+
 

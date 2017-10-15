@@ -148,18 +148,29 @@ namespace Content
          * @return Dome-Mesh, set up with the correct textures for the current time.
          *         Attention: Might return an invalid handle, if the game does not have any dome-mesh (Like G1)
          */
-        const std::array<Handle::MeshHandle, NUM_SKY_LAYERS>& getDomeMeshes();
+        const std::array<Handle::MeshHandle, NUM_SKY_LAYERS>& getDomeMeshes() const;
+        const std::array<Handle::MeshHandle, NUM_SKY_LAYERS>& getSkyPlaneMeshes() const;
 
         /**
          * @return Mesh for the fancy looking glow effect in the back of the skydome
          */
-        Handle::MeshHandle getSkyDomeColorLayerMesh() { return m_DomeColorLayerMesh; }
+        Handle::MeshHandle getSkyDomeColorLayerMesh() const { return m_DomeColorLayerMesh; }
 
         /**
          * Fills the given two color-values with colors to be interpolated from top to bottom of
          * the color-dome-mesh
          */
         void getDomeColors(Math::float3& color0, Math::float3& color1);
+
+        /**
+         * @return Whether it's currently nighttime
+         */
+        bool isNightTime() const;
+
+        /**
+         * @return Color of the coulds layer as poly (layer 1)
+         */
+        Math::float3 getPolyCloudsLayerColor();
     private:
 
         /**
@@ -191,12 +202,18 @@ namespace Content
          * Assigns the correct textures for the current time to the dome-mesh
          */
         void setupDomeMeshTexturesForCurrentTime();
+        void setupPlaneMeshTexturesForCurrentTime();
 
         /**
          * Base names have the following format: SOMETAG_LAYERx_Ay.TGA.
          * Depending on the world, textures like SOMETAG_WORLDNAME_LAYERx_Ay.TGA exist.
          */
         std::string insertWorldNameIntoSkyTextureBase(const std::string& skyTextureBase, const std::string& worldName);
+
+        /**
+         * Creates the plane-mesh for all layers used to display the sky in G1
+         */
+        void createSkyPlaneMeshes();
 
         /**
          * LUT-Calculation how the original engine does it
@@ -237,5 +254,6 @@ namespace Content
          */
         std::array<Handle::MeshHandle, NUM_SKY_LAYERS> m_DomeMeshesByLayer;
         Handle::MeshHandle m_DomeColorLayerMesh;
+        std::array<Handle::MeshHandle, NUM_SKY_LAYERS> m_PlaneMeshesByLayer;
     };
 }

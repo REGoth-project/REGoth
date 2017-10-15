@@ -11,6 +11,7 @@
 
 #include <logic/Controller.h>
 #include <engine/BaseEngine.h>
+#include "SkyRendering.h"
 
 namespace Render
 {
@@ -55,100 +56,12 @@ namespace Render
         bgfx::touch(RenderViewList::ALPHA_2);
         bgfx::setViewSeq(RenderViewList::PRE_WORLD_SKY, true);
 
+        Sky::drawSkyOf(world, config);
 
-        Handle::MeshHandle colorLayer = world.getSky().getSkyDomeColorLayerMesh();
-
-        if (colorLayer.isValid())
-        {
-            const Meshes::WorldStaticMesh& mesh = world.getStaticMeshAllocator().getMesh(colorLayer);
-
-            for (size_t i = 0; i < mesh.mesh.m_SubmeshStarts.size(); i++)
-            {
-                Math::Matrix skyTransform = Math::Matrix::CreateTranslation(config.state.cameraWorld.Translation());
-                skyTransform = skyTransform * Math::Matrix::CreateTranslation(0,-5,0);
-                bgfx::setTransform(skyTransform.m);
-
-
-                bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
-                bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
-                                     mesh.mesh.m_SubmeshStarts[i].m_StartIndex,
-                                     mesh.mesh.m_SubmeshStarts[i].m_NumIndices);
-
-
-                Math::float3 interpColor0, interpColor1;
-                world.getSky().getDomeColors(interpColor0, interpColor1);
-
-                Math::float4 skyColorsVec4[2] = {
-                        Math::float4(interpColor0.x, interpColor0.y, interpColor0.z, 1.0f),
-                        Math::float4(interpColor1.x, interpColor1.y, interpColor1.z, 1.0f),
-                };
-
-                bgfx::setUniform(config.uniforms.skyColors, (float *)skyColorsVec4, 2);
-
-                Math::float4 color = { 1.0f, 1.0f, 1.0f, 1.0f};
-                bgfx::setUniform(config.uniforms.objectColor, color.v);
-
-                uint64_t state = BGFX_STATE_DEFAULT;
-                state |= BGFX_STATE_BLEND_ADD;
-                state &= ~BGFX_STATE_DEPTH_WRITE;
-                bgfx::setState(state);
-
-                bgfx::submit(RenderViewList::PRE_WORLD_SKY, config.programs.skyDomeColorProgram);
-            }
-        }
-
+        // Set sky colors again for the rest of the world to use
         Math::float4 skyColors[2];
         world.getSky().getSkyColors(skyColors[0], skyColors[1]);
         bgfx::setUniform(config.uniforms.skyColors, (float*)skyColors, 2);
-
-        const auto& domeLayers = world.getSky().getDomeMeshes();
-
-        int l = 0;
-        for(Handle::MeshHandle domeLayer : domeLayers)
-        {
-            if (domeLayer.isValid())
-            {
-                const Meshes::WorldStaticMesh& mesh = world.getStaticMeshAllocator().getMesh(domeLayer);
-                const auto& layer = world.getSky().getMasterState().layers[l];
-
-                for (size_t i = 0; i < mesh.mesh.m_SubmeshStarts.size(); i++)
-                {
-                    Handle::TextureHandle textureHandle = mesh.mesh.m_SubmeshMaterials[i].m_TextureHandle;
-
-                    if (!textureHandle.isValid())
-                        continue;
-
-                    Textures::Texture& texture = world.getTextureAllocator().getTexture(textureHandle);
-                    bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle);
-
-                    Math::Matrix skyTransform = Math::Matrix::CreateTranslation(config.state.cameraWorld.Translation());
-                    bgfx::setTransform(skyTransform.m);
-
-
-                    bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
-                    bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
-                                         mesh.mesh.m_SubmeshStarts[i].m_StartIndex,
-                                         mesh.mesh.m_SubmeshStarts[i].m_NumIndices);
-
-
-                    Math::float4 color = { 1.0f, 1.0f, 1.0f, layer.textureAlpha };
-                    bgfx::setUniform(config.uniforms.objectColor, color.v);
-
-
-                    Math::float2 texPositionOffset = 0.01f * layer.textureSpeed * (float)world.getEngine()->getGameClock().getTotalSecondsRealtime();
-                    Math::float4 skyTextureParams = Math::float4(1.0f / layer.textureScale, 1.0f / layer.textureScale, texPositionOffset.x, texPositionOffset.y);
-                    bgfx::setUniform(config.uniforms.skyTextureParams, skyTextureParams.v);
-
-                    uint64_t state = BGFX_STATE_DEFAULT;
-                    state |= BGFX_STATE_BLEND_ALPHA;
-                    state &= ~BGFX_STATE_DEPTH_WRITE;
-                    bgfx::setState(state);
-
-                    bgfx::submit(RenderViewList::PRE_WORLD_SKY, config.programs.skyProgram);
-                }
-            }
-            l++;
-        }
 
     }
     /**
