@@ -38,6 +38,7 @@ namespace Render
         struct
         {
             Math::Matrix cameraWorld;
+            Math::Matrix viewProj;
             float drawDistanceSquared;
             float farPlane;
             uint32_t viewWidth;
