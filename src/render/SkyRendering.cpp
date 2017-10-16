@@ -91,17 +91,13 @@ static void drawDomeCloudsLayerOf(World::WorldInstance& world, const Render::Ren
 {
     const float totalSecondsRealtime = (float)world.getEngine()->getGameClock().getTotalSecondsRealtime();
 
-    Math::float4 skyColors[2];
-    world.getSky().getSkyColors(skyColors[0], skyColors[1]);
-    bgfx::setUniform(renderConfig.uniforms.skyColors, (float*)skyColors, 2);
-
     const auto& domeLayers = world.getSky().getDomeMeshes();
 
     for(size_t l = 0 ; l < domeLayers.size(); l++)
     {
         Handle::MeshHandle domeLayer = domeLayers[l];
 
-        if (domeLayer.isValid())
+        if (!domeLayer.isValid())
             continue;
 
         const Meshes::WorldStaticMesh& mesh = world.getStaticMeshAllocator().getMesh(domeLayer);
@@ -145,9 +141,12 @@ static void drawDomeCloudsLayerOf(World::WorldInstance& world, const Render::Ren
             state &= ~BGFX_STATE_DEPTH_WRITE;
             bgfx::setState(state);
 
+            Math::float4 skyColors[2];
+            world.getSky().getSkyColors(skyColors[0], skyColors[1]);
+            bgfx::setUniform(renderConfig.uniforms.skyColors, (float*)skyColors, 2);
+
             bgfx::submit(RenderViewList::PRE_WORLD_SKY, renderConfig.programs.skyProgram);
         }
-
     }
 }
 
