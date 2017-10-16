@@ -405,7 +405,7 @@ namespace World
          */
         Handle::EntityHandle m_Camera;
 
-        struct ClassContents;
+        class ClassContents;
 
         /**
          * Other classes referenced here (pimple-like)
