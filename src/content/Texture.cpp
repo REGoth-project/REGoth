@@ -23,7 +23,7 @@ TextureAllocator::~TextureAllocator()
     for (size_t i = 0; i < m_Allocator.getNumObtainedElements(); i++)
     {
         bgfx::TextureHandle h = m_Allocator.getElements()[i].m_TextureHandle;
-        bgfx::destroyTexture(h);
+        bgfx::destroy(h);
     }
 
     m_EstimatedGPUBytes = 0;
@@ -190,7 +190,7 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
         //stbi_image_free(out);
 
         // Couldn't load this one?
-        if (bth.idx == bgfx::invalidHandle)
+        if (bth.idx == bgfx::kInvalidHandle)
             return false;
 
         tx.m_TextureHandle = bth;
@@ -206,7 +206,7 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
         m_EstimatedGPUBytes += tx.imageData.size();
 
         // Couldn't load this one?
-        if (bth.idx == bgfx::invalidHandle)
+        if (bth.idx == bgfx::kInvalidHandle)
             return false;
 
         tx.m_TextureHandle = bth;

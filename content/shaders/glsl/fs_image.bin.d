@@ -1,3 +1,3 @@
-../../.build/shaders/glsl/fs_image.bin :  \
- varying.def.sc \
- ../../scripts//../src/bgfx_shader.sh
+src/shaders/../../content/shaders/glsl/fs_image.bin :  \
+ src/shaders/varying.def.sc \
+ src/shaders/../../lib/bgfx-cmake/bgfx/scripts//../src/bgfx_shader.sh

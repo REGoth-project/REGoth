@@ -92,7 +92,7 @@ namespace ViewUtil
             vertex[5].m_u = minu;
             vertex[5].m_v = minv;
 
-            bgfx::setVertexBuffer(&vb);
+            bgfx::setVertexBuffer(0, &vb);
 
             return true;
         }
@@ -131,7 +131,7 @@ void View::update(double dt, Engine::Input::MouseState& mstate, Render::RenderCo
     if (m_IsHidden)
         return;
 
-    bgfx::setViewSeq(BGFX_VIEW, true);
+    bgfx::setViewOrder(BGFX_VIEW, true);
 
     // Update all children
     for (View* v : m_Children)
@@ -152,7 +152,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
         //imguiImage(texture, 0, width, height);
 
         float ortho[16];
-        bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f);
+        bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
         bgfx::setViewTransform(id, NULL, ortho);
         bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
 
@@ -273,7 +273,7 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
     if (UI::zFont::bindGlyphStream(s))
     {
         float ortho[16];
-        bx::mtxOrtho(ortho, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, 0.0f, 1000.0f);
+        bx::mtxOrtho(ortho, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, 0.0f, 1000.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
         bgfx::setViewTransform(BGFX_VIEW, NULL, ortho);
         bgfx::setViewRect(BGFX_VIEW, 0, 0, (uint16_t)config.state.viewWidth, (uint16_t)config.state.viewHeight);
 

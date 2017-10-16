@@ -71,7 +71,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 
 Then, choose depending on your OS:
 
-### Linux
+### Linux, MacOS and other *nix
 ```sh
 make -j4
 ```
