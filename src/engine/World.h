@@ -409,8 +409,9 @@ namespace World
 
         /**
          * Other classes referenced here (pimple-like)
+         * m_Allocators must be initialized before m_ClassContents
          */
-        std::unique_ptr<ClassContents> m_ClassContents;
         std::unique_ptr<WorldAllocators> m_Allocators;
+        std::unique_ptr<ClassContents> m_ClassContents;
     };
 }

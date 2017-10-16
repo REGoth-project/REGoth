@@ -79,8 +79,8 @@ const LoadSection LOAD_SECTION_RUNSCRIPTS = {80, 100, "Running startup scripts"}
 
 WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     : m_pEngine(&engine)
-    , m_ClassContents(new ClassContents(*this))
-    , m_Allocators(new WorldAllocators(engine))
+    , m_Allocators(std::make_unique<WorldAllocators>(engine))
+    , m_ClassContents(std::make_unique<ClassContents>(*this))
 {
 }
 
