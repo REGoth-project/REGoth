@@ -83,6 +83,9 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
+
+        using WalkMode = EventMessages::MovementMessage::WalkMode;
+
         /**
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
@@ -442,6 +445,11 @@ namespace Logic
             return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
         };
 
+        /**
+         * @param walkMode Whether we should be runnning, sneaking, etc
+         */
+        void setWalkMode(WalkMode walkMode);
+
     protected:
         /**
          * Callbacks registered inside the animation-handler
@@ -496,6 +504,7 @@ namespace Logic
 
             // Current body state
             EBodyState bodyState;
+
         } m_AIState;
 
         struct

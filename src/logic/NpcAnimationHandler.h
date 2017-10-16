@@ -4,6 +4,7 @@
 #include <content/Animation.h>
 #include <content/AnimationLibrary.h>
 #include <handle/HandleDef.h>
+#include <logic/messages/EventMessage.h>
 
 namespace World
 {
@@ -16,6 +17,8 @@ namespace Logic
     class NpcAnimationHandler
     {
     public:
+        using WalkMode = EventMessages::MovementMessage::WalkMode;
+
         NpcAnimationHandler(World::WorldInstance& world, Handle::EntityHandle hostVob);
         ~NpcAnimationHandler();
 
@@ -113,7 +116,18 @@ namespace Logic
          */
         std::string getWeaponAniTag(EWeaponMode weapon);
 
+        /**
+         * @param walkMode Whether we should be runnning, sneaking, etc
+         */
+        void setWalkMode(WalkMode walkMode);
+
     protected:
+
+        /**
+         * @return Given walkmode as uppercase text
+         */
+        std::string getWalkModeTag(WalkMode walkMode);
+
         /**
          * Starts playing the animation for going in a certain direction
          */
@@ -233,5 +247,8 @@ namespace Logic
          * Animations based on which type of weapon the model is holding
          */
         AnimationSet m_Anims[(int)EWeaponMode::NUM_WEAPON_MODES];
+
+        WalkMode m_WalkMode;
+
     };
 }

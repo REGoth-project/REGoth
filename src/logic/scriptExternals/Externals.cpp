@@ -911,6 +911,24 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
+    vm->registerExternalFunction("ai_setwalkmode", [=](Daedalus::DaedalusVM& vm) {
+        using EventMessages::MovementMessage;
+
+        int32_t walkmode = vm.popDataValue();
+        uint32_t self = vm.popVar();
+
+        VobTypes::NpcVobInformation npc = getNPCByInstance(self);
+
+        if (npc.isValid())
+        {
+            MovementMessage msg;
+            msg.subType = MovementMessage::ST_SetWalkMode;
+            msg.walkMode = static_cast<MovementMessage::WalkMode>(walkmode);
+
+            npc.playerController->getEM().onMessage(msg);
+        }
+    });
+
     vm->registerExternalFunction("mdl_applyoverlaymds", [=](Daedalus::DaedalusVM& vm) {
         std::string overlayname = vm.popString();
         uint32_t self = vm.popVar();
