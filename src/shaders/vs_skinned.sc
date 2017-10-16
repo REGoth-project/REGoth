@@ -20,6 +20,8 @@ $output v_texcoord0, v_color, v_view_pos//, v_view_normal
 #define BONE_INDICES a_texcoord5
 #define WEIGHTS a_texcoord6
 
+#define BGFX_CONFIG_MAX_BONES 100
+
 #include "../common/common.sh"
 #include "tools.sh"
 

@@ -10,7 +10,7 @@ attribute vec4 a_texcoord6;
 varying vec4 v_color;
 varying vec2 v_texcoord0;
 varying vec3 v_view_pos;
-uniform mat4 u_model[32];
+uniform mat4 u_model[100];
 uniform mat4 u_modelView;
 uniform mat4 u_modelViewProj;
 uniform vec4 u_SkyColors[2];
