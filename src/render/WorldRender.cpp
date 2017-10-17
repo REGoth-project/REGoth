@@ -10,6 +10,8 @@
 #include <utils/logger.h>
 
 #include <logic/Controller.h>
+#include <engine/BaseEngine.h>
+#include "SkyRendering.h"
 
 namespace Render
 {
@@ -25,10 +27,6 @@ namespace Render
 
         // Set up sky-LUT
         //bgfx::setUniform(config.uniforms.skyCLUT, world.getSky().getLUTPtr(), 256);
-
-        Math::float4 skyColors[2];
-        world.getSky().getSkyColors(skyColors[0], skyColors[1]);
-        bgfx::setUniform(config.uniforms.skyColors, (float*)skyColors, 2);
 
 
         // Set fog constants
@@ -52,9 +50,19 @@ namespace Render
         bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, fogColorRGBA.toABGR8(), 1.0f, 0);
 
         // Don't complain about setting uniforms twice when not actually drawing anything
+        bgfx::touch(RenderViewList::PRE_WORLD_SKY);
         bgfx::touch(RenderViewList::DEFAULT);
         bgfx::touch(RenderViewList::ALPHA_1);
         bgfx::touch(RenderViewList::ALPHA_2);
+        bgfx::setViewOrder(RenderViewList::PRE_WORLD_SKY, true);
+
+        Sky::drawSkyOf(world, config);
+
+        // Set sky colors again for the rest of the world to use
+        Math::float4 skyColors[2];
+        world.getSky().getSkyColors(skyColors[0], skyColors[1]);
+        bgfx::setUniform(config.uniforms.skyColors, (float*)skyColors, 2);
+
     }
     /**
      * @brief Draws the main renderpass of the given world
@@ -201,7 +209,7 @@ namespace Render
                                          sms[i].m_SubmeshInfo.m_StartIndex,
                                          sms[i].m_SubmeshInfo.m_NumIndices);
 
-                    bgfx::submit(0, config.programs.mainSkinnedMeshProgram);
+                    bgfx::submit(RenderViewList::DEFAULT, config.programs.mainSkinnedMeshProgram);
                 }
                 else
                 {
@@ -289,7 +297,7 @@ namespace Render
                                                   sms[i].m_SubmeshInfo.m_StartIndex,
                                                   sms[i].m_SubmeshInfo.m_NumIndices);
                         }
-                        bgfx::submit(0, config.programs.mainWorldProgram);
+                        bgfx::submit(RenderViewList::DEFAULT, config.programs.mainWorldProgram);
                     }
                 }
 

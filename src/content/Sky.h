@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
+#include <array>
 
 namespace World
 {
@@ -27,6 +28,7 @@ namespace Content
         ESPT_NUM_PRESETS
     };
 
+    class SkyConfig;
     class Sky
     {
     public:
@@ -41,6 +43,7 @@ namespace Content
         {
             // This layers texture
             Handle::TextureHandle texture;
+            std::string textureNameBase;
 
             // Other
             float textureAlpha;
@@ -69,7 +72,7 @@ namespace Content
             bool sunEnabled;
 
             // Information about the cloud and sky layers
-            SkyLayerData layers[NUM_SKY_LAYERS];
+            std::array<SkyLayerData, NUM_SKY_LAYERS> layers;
         };
 
         Sky(World::WorldInstance& world);
@@ -94,6 +97,12 @@ namespace Content
         void fillSkyStates();
 
         /**
+         * To be called when the name of the current level changed, so the sky can adapt to custom-textures the world may has.
+         * @param newWorldName
+         */
+        void onWorldNameChanged(const std::string& newWorldName);
+
+        /**
          * Returns the current LUT-array. Each entry of this array maps an 8-bit luminance to another color.
          * @return Pointer to the LUT
          */
@@ -116,11 +125,96 @@ namespace Content
          */
         void getFogValues(const Math::float3& cameraWorld, float& nearFog, float& farFog, Math::float3& fogColor) const;
 
+        // Testing only
+        const SkyState& getMasterState() { return m_MasterState; }
+
         /**
          * Sets the farplane, needed to do the fog-calculation
          */
         void setFarPlane(float farPlane) { m_FarPlane = farPlane; }
+
+        /**
+         * @return Texture to be used for the given state/layer
+         */
+        Handle::TextureHandle getSkyTextureOfLayer(size_t skyStateIdx, size_t layerIdx);
+
+        /**
+         * Loads the sky-texture of the given state/layer by world name
+         * @return Success
+         */
+        bool loadSkyTextureOfLayer(size_t skyStateIdx, size_t layerIdx, const std::string& worldname);
+
+        /**
+         * @return Dome-Mesh, set up with the correct textures for the current time.
+         *         Attention: Might return an invalid handle, if the game does not have any dome-mesh (Like G1)
+         */
+        const std::array<Handle::MeshHandle, NUM_SKY_LAYERS>& getDomeMeshes() const;
+        const std::array<Handle::MeshHandle, NUM_SKY_LAYERS>& getSkyPlaneMeshes() const;
+
+        /**
+         * @return Mesh for the fancy looking glow effect in the back of the skydome
+         */
+        Handle::MeshHandle getSkyDomeColorLayerMesh() const { return m_DomeColorLayerMesh; }
+
+        /**
+         * Fills the given two color-values with colors to be interpolated from top to bottom of
+         * the color-dome-mesh
+         */
+        void getDomeColors(Math::float3& color0, Math::float3& color1);
+
+        /**
+         * @return Whether it's currently nighttime
+         */
+        bool isNightTime() const;
+
+        /**
+         * @return Color of the coulds layer as poly (layer 1)
+         */
+        Math::float3 getPolyCloudsLayerColor();
     private:
+
+        /**
+         * Loads the config describing the skycolors
+         */
+        void loadSkyConfig();
+
+        /**
+         * Puts the colors from a sky-config into the sky-states
+         */
+        void fillColorsFromSkyConfig(const SkyConfig& config);
+
+        /**
+         * Reloads all textures used by the states/layers, depending on the given world name
+         */
+        void reloadAllSkyTextures(const std::string& worldName);
+
+        /**
+         * Loads the Dome mesh, if it can find one
+         */
+        void loadDomeLayerMeshes();
+
+        /**
+         * @return Filename of the mesh to use for the given layer
+         */
+        std::string getDomeLayerMeshFileName(size_t layerIdx);
+
+        /**
+         * Assigns the correct textures for the current time to the dome-mesh
+         */
+        void setupDomeMeshTexturesForCurrentTime();
+        void setupPlaneMeshTexturesForCurrentTime();
+
+        /**
+         * Base names have the following format: SOMETAG_LAYERx_Ay.TGA.
+         * Depending on the world, textures like SOMETAG_WORLDNAME_LAYERx_Ay.TGA exist.
+         */
+        std::string insertWorldNameIntoSkyTextureBase(const std::string& skyTextureBase, const std::string& worldName);
+
+        /**
+         * Creates the plane-mesh for all layers used to display the sky in G1
+         */
+        void createSkyPlaneMeshes();
+
         /**
          * LUT-Calculation how the original engine does it
          * @param col0 Not sure, was set to (0,0,0) in the original
@@ -138,7 +232,7 @@ namespace Content
         /**
          * Skystates we're interpolating
          */
-        SkyState m_SkyStates[ESkyPresetType::ESPT_NUM_PRESETS];
+        std::array<SkyState, ESkyPresetType::ESPT_NUM_PRESETS> m_SkyStates;
 
         /**
          * Interpolated skystate
@@ -154,5 +248,12 @@ namespace Content
          * Global Farplane
          */
         float m_FarPlane;
+
+        /**
+         * Dome-Mesh for rendering the sky. Might be invalid if no dome-mesh can be found in the gamedata (Like in G1)
+         */
+        std::array<Handle::MeshHandle, NUM_SKY_LAYERS> m_DomeMeshesByLayer;
+        Handle::MeshHandle m_DomeColorLayerMesh;
+        std::array<Handle::MeshHandle, NUM_SKY_LAYERS> m_PlaneMeshesByLayer;
     };
 }

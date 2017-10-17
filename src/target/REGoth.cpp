@@ -269,6 +269,12 @@ void REGoth::initConsole()
         return "Hello World!";
     });
 
+    console.registerCommand("reloadshaders", [this](const std::vector<std::string>& args) -> std::string {
+        m_pEngine->getDefaultRenderSystem().loadShaders();
+
+        return "Reloaded shaders";
+    });
+
     console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
         // modifies the day
         if (args.size() < 3)

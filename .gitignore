@@ -41,10 +41,6 @@ cmake-build*/
 # clion
 .idea/
 
-# temp
-*.jsav
-*.json
-
 # vim
 *.swp
 *.vim

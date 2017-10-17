@@ -20,6 +20,8 @@ namespace Render
             bgfx::ProgramHandle mainSkinnedMeshProgram;
             bgfx::ProgramHandle fullscreenQuadProgram;
             bgfx::ProgramHandle imageProgram;
+            bgfx::ProgramHandle skyProgram;
+            bgfx::ProgramHandle skyDomeColorProgram;
             bgfx::ProgramHandle particle_textured;
         } programs;
 
@@ -30,6 +32,7 @@ namespace Render
             bgfx::UniformHandle objectColor;
             bgfx::UniformHandle skyCLUT;
             bgfx::UniformHandle skyColors;
+            bgfx::UniformHandle skyTextureParams; // { .xy = scale, .zw = speed }
             bgfx::UniformHandle fogColor;
             bgfx::UniformHandle fogNearFar;
             bgfx::UniformHandle s_TexColor;
@@ -83,7 +86,18 @@ namespace Render
             return m_InstanceDataBuffers[idx];
         }
 
+        /**
+         * (re)loads all shaders from disc
+         */
+        void loadShaders();
+
     protected:
+
+        /**
+         * Deletes all shaders and frees their memory
+         */
+        void destroyShaders();
+
         /**
          * Generated config of this system
          */

@@ -534,7 +534,7 @@ bool WorldInstance::init(const std::string& zen,
     }
 
     // Initialize the sky, so it will get the right values
-    m_Sky.fillSkyStates();
+    m_Sky.onWorldNameChanged(getWorldName());
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
@@ -1071,6 +1071,11 @@ UI::PrintScreenMessages& WorldInstance::getPrintScreenManager()
 const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints() const
 {
     return m_FreePoints;
+}
+
+std::string WorldInstance::getWorldName()
+{
+    return Utils::stripExtension(m_ZenFile);
 }
 
 
