@@ -22,11 +22,11 @@ StaticMeshAllocator::~StaticMeshAllocator()
     {
         bgfx::VertexBufferHandle hv = m_Allocator.getElements()[i].mesh.m_VertexBufferHandle;
         if (bgfx::isValid(hv))
-            bgfx::destroyVertexBuffer(hv);
+            bgfx::destroy(hv);
 
         bgfx::IndexBufferHandle hi = m_Allocator.getElements()[i].mesh.m_IndexBufferHandle;
         if (bgfx::isValid(hi))
-            bgfx::destroyIndexBuffer(hi);
+            bgfx::destroy(hi);
     }
 
     m_EstimatedGPUBytes = 0;
@@ -59,8 +59,8 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_SubmeshMaterials.back().m_MatGroup = (ZenLoad::MaterialGroup)m.material.matGroup;
     mesh.mesh.m_SubmeshMaterialNames.push_back(m.material.texture);
 
-    mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
-    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_IndexBufferHandle.idx = bgfx::kInvalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::kInvalidHandle;
 
     m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
         finalizeLoad(h);
@@ -137,8 +137,8 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
         }
     }
 
-    mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
-    mesh.mesh.m_VertexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_IndexBufferHandle.idx = bgfx::kInvalidHandle;
+    mesh.mesh.m_VertexBufferHandle.idx = bgfx::kInvalidHandle;
 
     m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
         bgfx::frame();  // Flush the pipeline to prevent an overflow
@@ -162,7 +162,7 @@ bool StaticMeshAllocator::finalizeLoad(Handle::MeshHandle h)
 
     size_t contentBytes = mesh.mesh.m_Vertices.size() * sizeof(WorldStaticMeshVertex);
 
-    mesh.mesh.m_IndexBufferHandle.idx = bgfx::invalidHandle;
+    mesh.mesh.m_IndexBufferHandle.idx = bgfx::kInvalidHandle;
     if (!mesh.mesh.m_Indices.empty())
     {
         mesh.mesh.m_IndexBufferHandle = bgfx::createIndexBuffer(

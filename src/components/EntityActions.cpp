@@ -18,7 +18,7 @@ void ::Components::Actions::Logic::destroyPfxComponent(Components::PfxComponent&
 {
     if (bgfx::isValid(c.m_ParticleVB))
     {
-        bgfx::destroyDynamicVertexBuffer(c.m_ParticleVB);
+        bgfx::destroy(c.m_ParticleVB);
         c.m_ParticleVB = BGFX_INVALID_HANDLE;
     }
 }

@@ -1,6 +1,6 @@
 #include "RenderSystem.h"
 #include "bgfx_utils.h"
-#include "utils/Utils.h"
+#include "content/Shader.h"
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
 #include <zenload/zTypes.h>
@@ -22,10 +22,10 @@ RenderSystem::~RenderSystem()
     destroyShaders();
 
     for(bgfx::UniformHandle h : m_AllUniforms)
-        bgfx::destroyUniform(h);
+        bgfx::destroy(h);
 
     for(bgfx::DynamicVertexBufferHandle h : m_InstanceDataBuffers)
-        bgfx::destroyDynamicVertexBuffer(h);
+        bgfx::destroy(h);
 }
 
 
@@ -33,22 +33,22 @@ void RenderSystem::loadShaders()
 {
     destroyShaders();
 
-    m_Config.programs.mainWorldProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainWorldProgram);
 
-    m_Config.programs.mainWorldInstancedProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
+    m_Config.programs.mainWorldInstancedProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_world_instanced", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainWorldInstancedProgram);
 
-    m_Config.programs.mainSkinnedMeshProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
+    m_Config.programs.mainSkinnedMeshProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_skinned", "fs_stencil_texture_clip");
     m_LoadedPrograms.push_back(m_Config.programs.mainSkinnedMeshProgram);
 
-    m_Config.programs.particle_textured = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
+    m_Config.programs.particle_textured = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_particle", "fs_particle_textured");
     m_LoadedPrograms.push_back(m_Config.programs.particle_textured);
 
-    m_Config.programs.fullscreenQuadProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
+    m_Config.programs.fullscreenQuadProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_screenquad", "fs_screenquad");
     m_LoadedPrograms.push_back(m_Config.programs.fullscreenQuadProgram);
 
-    m_Config.programs.imageProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
+    m_Config.programs.imageProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
     m_LoadedPrograms.push_back(m_Config.programs.imageProgram);
 
     m_Config.programs.skyProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky", "fs_skylayer");
@@ -62,7 +62,7 @@ void RenderSystem::destroyShaders()
 {
     // Clean the created resources
     for(bgfx::ProgramHandle h : m_LoadedPrograms)
-        bgfx::destroyProgram(h);
+        bgfx::destroy(h);
 
     m_LoadedPrograms.clear();
 }
@@ -193,6 +193,6 @@ void screenSpaceQuad(float _textureWidth, float _textureHeight, float _width = 1
         vertex[2].TexCoord.x = maxu;
         vertex[2].TexCoord.y = maxv;
 
-        bgfx::setVertexBuffer(&vb);
+        bgfx::setVertexBuffer(0, &vb);
     }
 }

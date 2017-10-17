@@ -143,12 +143,12 @@ namespace Logic
         /**
          * Called on game-tick
          */
-        virtual void onUpdate(float deltaTime);
+        void onUpdate(float deltaTime) override;
 
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() { return EControllerType::MobController; }
+        EControllerType getControllerType() override { return EControllerType::MobController; }
         /**
          * Initializes this mob from a vob-descriptor loaded by zenlib
          */
@@ -200,7 +200,7 @@ namespace Logic
         /**
          * Called when the models visual changed
          */
-        virtual void onVisualChanged() override;
+        void onVisualChanged() override;
 
         /**
          * @return Focus name the player sees
@@ -221,11 +221,11 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport() { return true; }
-        virtual void importObject(const json& j);
+        bool shouldExport() override { return true; }
+        void importObject(const json& j) override;
 
     protected:
-        virtual void exportPart(json& j) override;
+        void exportPart(json& j) override;
 
         /**
          * Starts the interaction using the given npc

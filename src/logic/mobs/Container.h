@@ -33,7 +33,7 @@ namespace Logic
              * @param from Current state
              * @param to State to go to
              */
-            virtual void onBeginStateChange(Handle::EntityHandle npc, int from, int to);
+            void onBeginStateChange(Handle::EntityHandle npc, int from, int to) override;
 
             /**
              *
@@ -41,13 +41,13 @@ namespace Logic
              * @param from Current state
              * @param to State to go to
              */
-            virtual void onEndStateChange(Handle::EntityHandle npc, int from, int to);
+            void onEndStateChange(Handle::EntityHandle npc, int from, int to) override;
 
             /**
              * Saves this cores settings to the given JSON-object
              */
-            virtual void exportCore(json& j);
-            virtual void importCore(const json& j);
+            void exportCore(json& j) override;
+            void importCore(const json& j) override;
 
             /**
              * Checks how many of the given items we got in here

@@ -1314,7 +1314,10 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
         case EventMessages::MovementMessage::ST_Jump:
             break;
         case EventMessages::MovementMessage::ST_SetWalkMode:
+            setWalkMode(message.walkMode);
+            return true;
             break;
+
         case EventMessages::MovementMessage::ST_WhirlAround:
             break;
         case EventMessages::MovementMessage::ST_Standup:
@@ -2468,6 +2471,10 @@ World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
     return World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
 }
 
+void PlayerController::setWalkMode(PlayerController::WalkMode walkMode)
+{
+    m_NPCAnimationHandler.setWalkMode(walkMode);
+}
 
 World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
 {

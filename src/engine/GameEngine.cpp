@@ -109,7 +109,7 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     float farPlane = 600.0f;
 
     float proj[16];
-    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
+    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane, bgfx::getCaps()->homogeneousDepth);
 
     // Set for every view
     for (uint8_t i = 0; i < 255; i++)

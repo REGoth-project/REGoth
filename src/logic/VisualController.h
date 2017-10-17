@@ -37,7 +37,7 @@ namespace Logic
         /**
          * @brief Called when something else modified the transform of the underlaying entity
          */
-        virtual void onTransformChanged() override;
+        void onTransformChanged() override;
 
         /**
          * @return Entites created by this visual
@@ -59,14 +59,14 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport() { return !m_Transient; }
+        bool shouldExport() override { return !m_Transient; }
         /**
          * @param value Whether to save this visual when exporting a world
          */
         void setTransient(bool value) { m_Transient = value; }
 
     protected:
-        virtual void exportPart(json& j) override;
+        void exportPart(json& j) override;
 
         /**
          * Entites of the visual registered here

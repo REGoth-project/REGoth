@@ -348,19 +348,13 @@ void ModelVisual::playAnimation(ModelVisual::EModelAnimType type)
     const char* str = ANIMATION_NAMES[type];
 
     // TODO: Implement the priority stuff
-    if (getAnimationHandler().hasAnimation(str))
-    {
-        setAnimation(str, false);  // Don't loop
-    }
+    setAnimation(str, false);  // Don't loop
 }
 
 void ModelVisual::playAnimation(const std::string& anim)
 {
     // TODO: Implement the priority stuff
-    if (getAnimationHandler().hasAnimation(anim))
-    {
-        setAnimation(anim, false);  // Don't loop
-    }
+    setAnimation(anim, false);  // Don't loop
 }
 
 void ModelVisual::playAnimation(Handle::AnimationHandle anim)
@@ -624,27 +618,20 @@ void ModelVisual::updateBodyMesh()
                     if (sm.m_Texture.isValid())
                     {
                         // Get texture parts
-                        std::string tx = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
+                        const std::string& textureName = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
+                        std::string newTextureName = textureName;
 
-                        size_t cpos = tx.find("_C0");
-                        size_t vpos = tx.find("_V0");
-
-                        std::string cleanName = tx;
-
-                        // Only modify if that is the core body texture
-                        if (cpos != std::string::npos)
+                        bool isBodyTexture = textureName.find("_BODY") != std::string::npos;
+                        // Only modify if that is the core body texture (not armor)
+                        if (isBodyTexture)
                         {
-                            cleanName = cleanName.substr(0, vpos);
+                            if (m_BodyState.bodyTextureIdx != 0)
+                                Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
 
-                            if (vpos != std::string::npos)
-                                cleanName += "_V" + std::to_string(m_BodyState.bodyTextureIdx);
-
-                            cleanName += "_C" + std::to_string(m_BodyState.bodySkinColorIdx);
-
-                            cleanName += ".TGA";
+                            if (m_BodyState.bodySkinColorIdx != 0)
+                                Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
                         }
-
-                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(cleanName);
+                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newTextureName);
                     }
                 }
             }

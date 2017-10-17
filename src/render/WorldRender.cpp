@@ -204,7 +204,7 @@ namespace Render
                     //bgfx::setUniform(config.uniforms.nodeTransforms, f, 2);
                     bgfx::setTransform(nodeMat, static_cast<uint16_t>(animHandler->getNumNodes() + 1));
 
-                    bgfx::setVertexBuffer(mesh.m_VertexBufferHandle);
+                    bgfx::setVertexBuffer(0, mesh.m_VertexBufferHandle);
                     bgfx::setIndexBuffer(mesh.m_IndexBufferHandle,
                                          sms[i].m_SubmeshInfo.m_StartIndex,
                                          sms[i].m_SubmeshInfo.m_NumIndices);
@@ -284,16 +284,16 @@ namespace Render
 
                         auto& mesh = meshes.getMesh(sms[i].m_StaticMeshVisual);
 
-                        if (mesh.mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
+                        if (mesh.mesh.m_IndexBufferHandle.idx != bgfx::kInvalidHandle)
                         {
-                            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+                            bgfx::setVertexBuffer(0, mesh.mesh.m_VertexBufferHandle);
                             bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
                                                  sms[i].m_SubmeshInfo.m_StartIndex,
                                                  sms[i].m_SubmeshInfo.m_NumIndices);
                         }
                         else
                         {
-                            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle,
+                            bgfx::setVertexBuffer(0, mesh.mesh.m_VertexBufferHandle,
                                                   sms[i].m_SubmeshInfo.m_StartIndex,
                                                   sms[i].m_SubmeshInfo.m_NumIndices);
                         }
@@ -527,7 +527,7 @@ void ::Render::drawPfx(World::WorldInstance& world, Components::PfxComponent& pf
 
     bgfx::setState(pfx.m_bgfxRenderState);
     bgfx::setTransform(Math::Matrix::CreateIdentity().mv);
-    bgfx::setVertexBuffer(pfx.m_ParticleVB);
+    bgfx::setVertexBuffer(0, pfx.m_ParticleVB);
 
     uint8_t view;
 

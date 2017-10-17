@@ -143,7 +143,7 @@ void REGoth::init(int _argc, char** _argv)
 
     initConsole();
 
-    imguiCreate(nullptr, 0, fontSize);
+    imguiCreate(fontSize);
     m_ImgUiCreated = true;
     m_scrollArea = 0;
 }
@@ -210,8 +210,8 @@ void REGoth::initConsole()
 
     console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
 
-        if(args.size() < 2)
-            return "Missing argument. Usage: pkf <duration>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: pkf <duration>";
 
             m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
             return "Playing keyed animation";
@@ -331,6 +331,54 @@ void REGoth::initConsole()
 
         return "Set gamespeed to " + std::to_string(factor);
     });
+
+    const std::map<std::string, Logic::EventMessages::MovementMessage::WalkMode> walkModes = {
+            {"RUN", Logic::EventMessages::MovementMessage::WalkMode::Run},
+            {"WALK", Logic::EventMessages::MovementMessage::WalkMode::Walk},
+            {"SNEAK", Logic::EventMessages::MovementMessage::WalkMode::Sneak},
+            {"WATER", Logic::EventMessages::MovementMessage::WalkMode::Water},
+            {"SWIM", Logic::EventMessages::MovementMessage::WalkMode::Swim},
+            {"DIVE", Logic::EventMessages::MovementMessage::WalkMode::Dive},
+    };
+
+    auto& setWalkmode = console.registerCommand("set walkmode", [this, walkModes](const std::vector<std::string>& args) -> std::string {
+
+        using WalkMode = Logic::EventMessages::MovementMessage::WalkMode;
+        using MovementMessage = Logic::EventMessages::MovementMessage;
+
+        if (args.size() < 3)
+            return "Missing argument. Usage: set walkmode <mode>";
+
+        std::string modestr = Utils::uppered(args[2]);
+
+        WalkMode mode = WalkMode::Run;
+
+        if(walkModes.find(modestr) != walkModes.end())
+            mode = walkModes.find(modestr)->second;
+        else
+            return "Invalid walkmode: " + modestr;
+
+        auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
+        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
+
+        if(!player.isValid())
+            return "No valid player found!";
+
+        MovementMessage msg;
+        msg.subType = MovementMessage::ST_SetWalkMode;
+        msg.walkMode = mode;
+
+        player.playerController->getEM().onMessage(msg);
+
+        return "Set Walkmode to " + modestr + " (" + std::to_string((int)mode) + ")";
+    });
+
+
+    std::vector<std::string> walkModeNames;
+    for (const auto& pair : walkModes)
+        walkModeNames.push_back(pair.first);
+
+    setWalkmode.registerAutoComplete(simpleStringGenGen(walkModeNames));
 
     console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
         auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -1121,7 +1169,7 @@ void REGoth::showSplash()
     float proj[16];
 
     bx::mtxIdentity(view);
-    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
+    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
     bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 

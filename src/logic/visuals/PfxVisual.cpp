@@ -5,7 +5,7 @@
 #include "PfxVisual.h"
 #include <stdlib.h>
 #include <ZenLib/utils/logger.h>
-#include <bx/fpumath.h>
+#include <bx/math.h>
 #include <components/EntityActions.h>
 #include <debugdraw/debugdraw.h>
 #include <engine/AsyncAction.h>

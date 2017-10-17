@@ -15,8 +15,8 @@ namespace Physics
         Math::float4 getRotationQuat();
         void getOpenGLMatrix(float* m);
 
-        virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const;
-        virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans);
+        void getWorldTransform(btTransform& centerOfMassWorldTrans) const override;
+        void setWorldTransform(const btTransform& centerOfMassWorldTrans) override;
         void setWorldTransform(const Math::Matrix& centerOfMassWorldTrans);
 
     private:

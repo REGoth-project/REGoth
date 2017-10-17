@@ -78,6 +78,9 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
+
+        using WalkMode = EventMessages::MovementMessage::WalkMode;
+
         /**
          * @param world World of the underlaying entity
          * @param entity Entity owning this controller
@@ -87,21 +90,21 @@ namespace Logic
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() override { return EControllerType::PlayerController; }
+        EControllerType getControllerType() override { return EControllerType::PlayerController; }
 
         void setFollowTarget(Handle::EntityHandle e) { m_RoutineState.entityTarget = e; }
 
         /**
          * Called when the models visual changed
          */
-        virtual void onVisualChanged() override;
+        void onVisualChanged() override;
 
         /**
          * Handle NPC specific messages
          * @param message Message to handle
          * @param sourceVob Instigator vob. Can be invalid.
          */
-        virtual void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob) override;
+        void onMessage(std::shared_ptr<EventMessages::EventMessage> message, Handle::EntityHandle sourceVob) override;
 
         /**
          * Called on game-tick
@@ -408,7 +411,7 @@ namespace Logic
         /**
          * @return Classes which want to get exported on save should return true here
          */
-        virtual bool shouldExport() override { return true; }
+        bool shouldExport() override { return true; }
         /**
          * Does the logic for importing an NPC/PC
          * Actually adds the NPC to the world
@@ -420,7 +423,7 @@ namespace Logic
          * Imports state from a json-object
          * @param j
          */
-        virtual void importObject(const json& j) override;
+        void importObject(const json& j) override;
 
         /**
          * Same as the virtual importObject, but won't apply transforms
@@ -437,6 +440,11 @@ namespace Logic
             return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
         };
 
+        /**
+         * @param walkMode Whether we should be runnning, sneaking, etc
+         */
+        void setWalkMode(WalkMode walkMode);
+
     protected:
         /**
          * Callbacks registered inside the animation-handler
@@ -445,7 +453,7 @@ namespace Logic
         void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
         void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
 
-        virtual void exportPart(json& j) override;
+        void exportPart(json& j) override;
 
         /**
          * Events
@@ -491,6 +499,7 @@ namespace Logic
 
             // Current body state
             EBodyState bodyState;
+
         } m_AIState;
 
         struct

@@ -10,7 +10,7 @@ namespace Physics
     public:
         DebugDrawer() {}
         virtual ~DebugDrawer() {}
-        virtual void drawLine(const btVector3& from, const btVector3& to, const btVector3& color)
+        void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override
         {
             ddPush();
             ddSetTransform(nullptr);
@@ -24,11 +24,11 @@ namespace Physics
             ddPop();
         }
 
-        virtual void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color){};
-        virtual void reportErrorWarning(const char* warningString) {}
-        virtual void draw3dText(const btVector3& location, const char* textString) {}
-        virtual void setDebugMode(int debugMode) { m_debugMode = debugMode; }
-        virtual int getDebugMode() const
+        void drawContactPoint(const btVector3& PointOnB, const btVector3& normalOnB, btScalar distance, int lifeTime, const btVector3& color) override {};
+        void reportErrorWarning(const char* warningString) override {}
+        void draw3dText(const btVector3& location, const char* textString) override {}
+        void setDebugMode(int debugMode) override { m_debugMode = debugMode; }
+        int getDebugMode() const override
         {
             return m_debugMode;
         }
