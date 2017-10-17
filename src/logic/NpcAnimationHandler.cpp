@@ -138,8 +138,15 @@ bool NpcAnimationHandler::playAnimationTrans(const std::string& anim)
     }
     else
     {
-        model->playAnimation(anim);
-        return false;
+        // Try to fallback to target animation
+        Handle::AnimationHandle fallbackAni = getAnimLib().getAnimation(h.getMeshLibName(), h.getOverlay(), anim);
+
+        // Cancel if the animation really doesn't exist
+        if(!fallbackAni.isValid())
+            return false;
+
+        model->playAnimation(fallbackAni);
+        return true;
     }
 }
 
@@ -605,8 +612,11 @@ void NpcAnimationHandler::setWalkMode(NpcAnimationHandler::WalkMode walkMode)
     if(isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk))
     {
         std::string tag = getWalkModeTag(walkMode);
-
-        playAnimationTrans("S_" + tag);
+        std::string animation = "S_" + tag;
+        if(!playAnimationTrans(animation))
+        {
+            LogWarn() << "Failed to set walk-mode on NPC (Could not find Animation " << animation << "): " << getController().getScriptInstance().name[0];
+        }
     }
 }
 
