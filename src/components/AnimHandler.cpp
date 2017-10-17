@@ -208,7 +208,19 @@ void AnimHandler::updateAnimations(double deltaTime)
         }
         else
         {
-            // Try to play it by name
+            // Try to play it by name. But check if it even exists first, because otherwise, we would be stuck
+            // inside the current animation with nowhere to go.
+            //
+            // This happens in G2, where T_WALKL_2_WALK defines "S_WALK" as next animation, but "S_WALK" doesn't exist.
+            if (!hasAnimation(anim->m_NextName))
+            {
+                if (!addAnimation(anim->m_NextName))
+                {
+                    stopAnimation();
+                    return;
+                }
+            }
+
             playAnimation(anim->m_NextName);
             return;
         }

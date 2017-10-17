@@ -165,6 +165,62 @@ namespace Logic
         void playAnimation(const std::string& anim);
 
         /**
+         * Given a string like "RUN", this will append the correct weapon-prefix, ie. return "S_FISTRUN".
+         * @param state State animation name (RUN, WALK, RUNL, ...)
+         * @return Full animation name for the current weapon being held
+         */
+        std::string buildStateAnimationNameBasedOnWeapon(const std::string& state);
+
+        /**
+         * Handles animations like "T_RUNTURNL", which are neither state, nor transition. Same as
+         * buildStateAnimationNameBasedOnWeapon otherwise.
+         * @param substate Sub-state animation name like "TURNL"
+         * @return Full animation name for the current weapon being held
+         */
+        std::string buildSubStateAnimationNameBasedOnWeapon(const std::string& state);
+
+        /**
+         * Builds the transition-animation for the two given states, based on the current weapon.
+         * @param stateFrom State the transition should be starting from (ie. RUN)
+         * @param stateTo State the transition should be going to (ie. RUNL)
+         * @return Full animation name which handles the transistion. (ie. T_RUN_2_RUNL)
+         *         If no fitting animation was found, the target state animation is returned.
+         */
+        std::string buildTransitionAnimationNameBasedOnWeapon(const std::string& stateFrom, const std::string& stateTo);
+
+
+
+        /**
+         * Builds the animation we would have to play to get from the currently playing animation to the given one.
+         * This is also based on the current state of the NPC (ie. weapon being held)
+         * @param stateTo Target State-animation
+         * @return Full animation name which handles the transition (ie. T_RUN_2_RUNL).
+         *         Be sure to check whether this animation actually exists!
+         */
+        std::string buildTransitionAnimationFromCurrentToGiven(const std::string& stateTo);
+
+        /**
+         * @return The default idle animation to use if everything fails and no other animation can be found to fall back to.
+         */
+        std::string getDefaultStandAniName();
+
+        /**
+         * @return Whether the given animation exists (includes the currently applied overlay)
+         */
+        bool doesAnimationExist(const std::string& animName);
+
+        /**
+         * @return Whether there is a state-animation currently playing (ie. all animations starting with "S_" or an invalid one)
+         */
+        bool isStateAnimationPlaying();
+
+        /**
+         * @return Whether a turning animation (ie. T_RUNTURNL) is currently playing
+         */
+        bool isTurningAnimationPlaying();
+        bool isSubStateAnimationPlaying();
+
+        /**
          * Goblins use the "fist"-modes like all other monsters, even though they are holding a 1h-weapon.
          * Maybe someone can come up with a nicer solution than this when we completely figured that one out.
          * TODO: Completely figure that one out.
