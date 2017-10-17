@@ -124,11 +124,6 @@ bool NpcAnimationHandler::playAnimationTrans(const std::string& anim)
 
         // Try to find it in the global library
         transAni = getAnimLib().getAnimation(h.getMeshLibName(), h.getOverlay(), transAniName);
-
-        if (transAni.isValid())
-            LogInfo() << "Found transition ani: " << transAniName;
-        else
-            LogInfo() << "Failed to find transition ani: " << transAniName;
     }
 
     if (transAni.isValid())
@@ -167,15 +162,33 @@ bool NpcAnimationHandler::isAnimationActive(const std::string& anim)
 
 bool NpcAnimationHandler::isStanding(bool allowTurning)
 {
-    // Also report standing when playing no animation at all
-    bool standing = isAnimationActive(Handle::AnimationHandle::makeInvalidHandle()) || isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk);
+    const auto allWalkModes = {
+            WalkMode::Run,
+            WalkMode::Walk,
+            WalkMode::Sneak,
+            WalkMode::Water,
+            WalkMode::Swim,
+            WalkMode::Dive
+    };
 
-    if (allowTurning)
+    for(WalkMode w : allWalkModes)
     {
-        standing = standing || isAnimationActive(getActiveSet().t_runturnL) || isAnimationActive(getActiveSet().t_runturnR) || isAnimationActive(getActiveSet().t_walkturnL) || isAnimationActive(getActiveSet().t_walkturnR);
+        const std::string standAniName = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(w));
+
+        if(isAnimationActive(standAniName))
+            return true;
     }
 
-    return standing;
+    if(isAnimationActive(Handle::AnimationHandle::makeInvalidHandle()))
+        return true;
+
+    if(allowTurning)
+    {
+        if(isTurningAnimationPlaying())
+            return true;
+    }
+
+    return false;
 }
 
 std::string NpcAnimationHandler::getWeaponAniTag(EWeaponMode weapon)
@@ -295,96 +308,125 @@ void NpcAnimationHandler::initAnimations()
 
 void NpcAnimationHandler::startAni_Forward()
 {
-    // TODO: Check for swimming, sneaking, etc
-    if (isAnimationActive(getActiveSet().s_walk))  // Standing, walk-mode
-    {
-        // Start walking forward
-        playAnimation(getActiveSet().t_walk_2_walkl);
-    }
-    else if (isAnimationActive(getActiveSet().s_run))  // Standing, run-mode
-    {
-        // Start walking forward
-        playAnimation(getActiveSet().t_run_2_runl);
-    }
+    std::string anim = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "L");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    // Some use "F" as postfix for some reason
+    if(!doesAnimationExist(anim))
+        anim = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "F");
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_Backward()
 {
-    // TODO: Check for swimming, sneaking, etc
-    if (isAnimationActive(getActiveSet().s_walk))  // Standing, walk-mode
-    {
-        // Start walking backward
-        playAnimation(getActiveSet().t_walk_2_walkbl);
-    }
-    else if (isAnimationActive(getActiveSet().s_run))  // Standing, run-mode
-    {
-        // Jump back in running mode
-        playAnimation(getActiveSet().t_jumpb);
-    }
+    std::string anim = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "B");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    if(!doesAnimationExist(anim))
+        anim = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "BL");
+
+    // Fall back to 'bump-back' animation if a proper animation doesn't exist
+    if(!doesAnimationExist(anim))
+        anim = buildSubStateAnimationNameBasedOnWeapon("JUMPB");
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_StrafeLeft()
 {
-    if (isAnimationActive(getActiveSet().s_walk))  // Standing, walk-mode
-    {
-        // Start walking backward
-        playAnimation(getActiveSet().t_walkstrafeL);
-    }
-    else if (isAnimationActive(getActiveSet().s_run))  // Standing, run-mode
-    {
-        // Jump back in running mode
-        playAnimation(getActiveSet().t_runstrafeL);
-    }
+    std::string anim = buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "STRAFEL");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_StrafeRight()
 {
-    if (isAnimationActive(getActiveSet().s_walk))  // Standing, walk-mode
-    {
-        // Start walking backward
-        playAnimation(getActiveSet().t_walkstrafeR);
-    }
-    else if (isAnimationActive(getActiveSet().s_run))  // Standing, run-mode
-    {
-        // Jump back in running mode
-        playAnimation(getActiveSet().t_runstrafeR);
-    }
+    std::string anim = buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "STRAFER");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_TurnLeft()
 {
-    if (isAnimationActive(getActiveSet().s_walk) || isAnimationActive(getActiveSet().t_walkturnR))  // Standing, walk-mode
-    {
-        // Start walking backward
-        playAnimation(getActiveSet().t_walkturnL);
-    }
-    else if (isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().t_runturnR))  // Standing, run-mode
-    {
-        // Jump back in running mode
-        playAnimation(getActiveSet().t_runturnL);
-    }
+    std::string anim = buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "TURNL");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_TurnRight()
 {
-    if (isAnimationActive(getActiveSet().s_walk) || isAnimationActive(getActiveSet().t_walkturnL))  // Standing, walk-mode
-    {
-        // Start walking backward
-        playAnimation(getActiveSet().t_walkturnR);
-    }
-    else if (isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().t_runturnL))  // Standing, run-mode
-    {
-        // Jump back in running mode
-        playAnimation(getActiveSet().t_runturnR);
-    }
+    std::string anim = buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "TURNR");
+
+    if(!isStateAnimationPlaying())
+        return;
+
+    if(!isAnimationActive(anim))
+        playAnimationTrans(anim);
 }
 
 void NpcAnimationHandler::startAni_Stand(bool force, bool allowTurning)
 {
+    // Always overwrite an invalid animation ( = none plays )
+    if(!isAnimationActive(Handle::AnimationHandle::makeInvalidHandle()))
+    {
+        if (!force)
+        {
+            if (allowTurning && isTurningAnimationPlaying())
+                return;
+
+            if (!isStateAnimationPlaying())
+                return; // Can't do anything if we're currently inside a transition
+        }
+
+        if (isStanding(false)) // Set allowTurning false here, since we already filtered that out before
+            return;
+    }
+
+    // Contains "S_RUN", "S_WALK", "S_DIVE", etc
+    std::string standAniName = buildStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode));
+
+    if(!doesAnimationExist(standAniName))
+        standAniName = getDefaultStandAniName();
+
+    // Check if the general transition exists. Otherwise, some animations use "STAND" as target
+    std::string transition = buildTransitionAnimationFromCurrentToGiven(getWalkModeTag(m_WalkMode));
+
+    if(!doesAnimationExist(transition))
+    {
+        if(!playAnimationTrans("S_STAND")) // This animation does not exist, but the transition may
+        {
+            playAnimation(standAniName); // Snap straight to the target animation
+        }
+    }
+    else
+    {
+        playAnimationTrans(standAniName);
+    }
+
+/*
     if (isAnimationActive(Handle::AnimationHandle::makeInvalidHandle()))
     {
         // Default to idle-animation here
-        playAnimation(getActiveSet().s_run);
+        playAnimation(standAniName);
     }
     else if (isAnimationActive(getActiveSet().s_walk))  // Standing in walk-mode
     {
@@ -427,7 +469,7 @@ void NpcAnimationHandler::startAni_Stand(bool force, bool allowTurning)
             default:              playAnimation(getActiveSet().s_run);  break;
         }
 
-    }
+    }*/
 }
 
 void NpcAnimationHandler::StartAni_Turn(float direction)
@@ -435,14 +477,17 @@ void NpcAnimationHandler::StartAni_Turn(float direction)
     // Normalize
     direction = direction < 0 ? -1 : 1;
 
-    // Start regarding animation
-    if (direction < 0)
+    const bool allowTurning = false;
+    if(isStanding(allowTurning))
     {
-        startAni_TurnLeft();
-    }
-    else
-    {
-        startAni_TurnRight();
+        // Start regarding animation, only if we're standing and it hasn't been started
+        if (direction < 0)
+        {
+            startAni_TurnLeft();
+        } else
+        {
+            startAni_TurnRight();
+        }
     }
 
     // Get angles
@@ -481,9 +526,9 @@ void NpcAnimationHandler::startAni_UndrawWeapon()
     //EWeaponMode mode = getController().getWeaponMode();
 
     // FIXME: Find the right animation to play...
-    if (!isAnimationActive(getActiveSet().s_run))
+    if (!isAnimationActive(buildStateAnimationNameBasedOnWeapon("RUN")))
     {
-        playAnimation(getActiveSet().s_run);
+        playAnimation(buildStateAnimationNameBasedOnWeapon("RUN"));
     }
 }
 
@@ -559,7 +604,7 @@ NpcAnimationHandler::EFootSide NpcAnimationHandler::getFootFront()
 
 void NpcAnimationHandler::stopTurningAnimations()
 {
-    if (isAnimationActive(getActiveSet().t_runturnL) || isAnimationActive(getActiveSet().t_runturnR) || isAnimationActive(getActiveSet().t_walkturnL) || isAnimationActive(getActiveSet().t_walkturnR))
+    if (isTurningAnimationPlaying())
     {
         startAni_Stand();
     }
@@ -567,7 +612,7 @@ void NpcAnimationHandler::stopTurningAnimations()
 
 void NpcAnimationHandler::startAni_FightForward()
 {
-    std::string anim = "S_" + getWeaponAniTag(getController().getWeaponMode()) + "ATTACK";
+    std::string anim = buildStateAnimationNameBasedOnWeapon("ATTACK");
     if (!isAnimationActive(anim))
     {
         playAnimation(anim);
@@ -591,38 +636,11 @@ bool NpcAnimationHandler::isAnimationSetUsable(EWeaponMode weaponMode)
 void NpcAnimationHandler::setWalkMode(NpcAnimationHandler::WalkMode walkMode)
 {
     m_WalkMode = walkMode;
-
-    switch(walkMode)
-    {
-        case WalkMode::Sneak:
-        case WalkMode::Water:
-        case WalkMode::Swim:
-        case WalkMode::Dive:
-            LogWarn() << "Tried to set non-implemented walk-mode: " << getWalkModeTag(walkMode);
-            return;
-
-
-        case WalkMode::Walk:
-        case WalkMode::Run:
-            // Walkmode is implemented!
-            break;
-    }
-
-    // TODO: Sneak, Swim, Dive, Water, ...
-    if(isAnimationActive(getActiveSet().s_run) || isAnimationActive(getActiveSet().s_walk))
-    {
-        std::string tag = getWalkModeTag(walkMode);
-        std::string animation = "S_" + tag;
-        if(!playAnimationTrans(animation))
-        {
-            LogWarn() << "Failed to set walk-mode on NPC (Could not find Animation " << animation << "): " << getController().getScriptInstance().name[0];
-        }
-    }
 }
 
 std::string NpcAnimationHandler::getWalkModeTag(NpcAnimationHandler::WalkMode walkMode)
 {
-    switch(m_WalkMode)
+    switch(walkMode)
     {
         case WalkMode::Run:   return "RUN";
         case WalkMode::Walk:  return "WALK";
@@ -634,3 +652,128 @@ std::string NpcAnimationHandler::getWalkModeTag(NpcAnimationHandler::WalkMode wa
     }
 
 }
+
+std::string NpcAnimationHandler::buildStateAnimationNameBasedOnWeapon(const std::string& state)
+{
+    const std::string weaponAniTag = getWeaponAniTag(getController().getWeaponMode());
+
+    return "S_" + weaponAniTag + state;
+}
+
+std::string NpcAnimationHandler::buildTransitionAnimationNameBasedOnWeapon(const std::string& stateFrom,
+                                                                           const std::string& stateTo)
+{
+    const std::string weaponAniTag = getWeaponAniTag(getController().getWeaponMode());
+
+    std::string transition = "T_" + weaponAniTag + stateFrom + "_2_" + weaponAniTag + stateTo;
+
+    if(!doesAnimationExist(transition))
+        return "S_" + stateTo;
+
+    return transition;
+}
+
+bool NpcAnimationHandler::doesAnimationExist(const std::string& animName)
+{
+    Components::AnimHandler& h = getAnimHandler();
+    Handle::AnimationHandle hanim = getAnimLib().getAnimation(h.getMeshLibName(), h.getOverlay(), animName);
+
+    return hanim.isValid();
+}
+
+std::string NpcAnimationHandler::buildTransitionAnimationFromCurrentToGiven(const std::string& stateTo)
+{
+    Handle::AnimationHandle hcurrent = getAnimHandler().getAcitveAnimation();
+
+    if(!hcurrent.isValid())
+        return "S_" + stateTo;
+
+    std::string current = getAnimHandler().getAnimation(hcurrent).m_Name;
+
+    if(current.substr(0, 2) != "S_")
+        return "S_" + stateTo;
+
+    // Strip "S_"-prefix
+    current = current.substr(2);
+
+    return buildTransitionAnimationNameBasedOnWeapon(current, stateTo);
+}
+
+bool NpcAnimationHandler::isStateAnimationPlaying()
+{
+    Handle::AnimationHandle hcurrent = getAnimHandler().getAcitveAnimation();
+
+    if(!hcurrent.isValid())
+        return true;
+
+    std::string current = getAnimHandler().getAnimation(hcurrent).m_Name;
+
+    if(current.substr(0, 2) == "S_")
+        return true;
+
+    // Animations like "T_RUNTURNL" also count as states
+    if(isSubStateAnimationPlaying())
+        return true;
+
+    return false;
+}
+
+std::string NpcAnimationHandler::buildSubStateAnimationNameBasedOnWeapon(const std::string& state)
+{
+    const std::string weaponAniTag = getWeaponAniTag(getController().getWeaponMode());
+
+    return "T_" + weaponAniTag + state;
+}
+
+bool NpcAnimationHandler::isTurningAnimationPlaying()
+{
+    Handle::AnimationHandle hcurrent = getAnimHandler().getAcitveAnimation();
+
+    if(!hcurrent.isValid())
+        return false;
+
+    std::string current = getAnimHandler().getAnimation(hcurrent).m_Name;
+
+    if(current.substr(0, 2) != "T_" )
+        return false;
+
+    if(current.find("TURN") == std::string::npos)
+        return false;
+
+    // Cannot be a transition animation
+    if(current.find("_2_") != std::string::npos)
+        return false;
+
+    return true;
+}
+
+std::string NpcAnimationHandler::getDefaultStandAniName()
+{
+    std::string weaponBased = buildStateAnimationNameBasedOnWeapon("RUN");
+
+    if(doesAnimationExist(weaponBased))
+        return weaponBased;
+
+    return "S_RUN";
+}
+
+bool NpcAnimationHandler::isSubStateAnimationPlaying()
+{
+    if(isAnimationActive(buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "TURNL")))
+        return true;
+
+    if(isAnimationActive(buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "TURNR")))
+        return true;
+
+    if(isAnimationActive(buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "STRAFEL")))
+        return true;
+
+    if(isAnimationActive(buildSubStateAnimationNameBasedOnWeapon(getWalkModeTag(m_WalkMode) + "STRAFER")))
+        return true;
+
+    if(isAnimationActive("T_JUMPB"))
+        return true;
+
+    return false;
+}
+
