@@ -9,8 +9,8 @@
 using namespace Logic;
 
 NpcAnimationHandler::NpcAnimationHandler(World::WorldInstance& world, Handle::EntityHandle hostVob)
-    : m_World(world)
-    , m_HostVob(hostVob)
+        : m_World(world)
+        , m_HostVob(hostVob)
 {
     m_WalkMode = WalkMode::Run;
 }
@@ -101,6 +101,14 @@ void NpcAnimationHandler::Action_UndrawWeapon()
 void NpcAnimationHandler::Action_FightForward()
 {
     startAni_FightForward();
+}
+void NpcAnimationHandler::Action_FightLeft()
+{
+    startAni_FightLeft();
+}
+void NpcAnimationHandler::Action_FightRight()
+{
+    startAni_FightRight();
 }
 
 bool NpcAnimationHandler::playAnimationTrans(const std::string& anim)
@@ -614,6 +622,23 @@ void NpcAnimationHandler::startAni_FightForward()
 {
     std::string anim = buildStateAnimationNameBasedOnWeapon("ATTACK");
     if (!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+
+void NpcAnimationHandler::startAni_FightLeft()
+{
+    std::string anim = "T_"+ getWeaponAniTag(getController().getWeaponMode()) + "ATTACKL";
+    if(!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+void NpcAnimationHandler::startAni_FightRight()
+{
+    std::string anim = "T_"+ getWeaponAniTag(getController().getWeaponMode()) + "ATTACKR";
+    if(!isAnimationActive(anim))
     {
         playAnimation(anim);
     }

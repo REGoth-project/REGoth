@@ -11,8 +11,8 @@ NpcAIHandler::~NpcAIHandler()
 }
 
 NpcAIHandler::NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hostVob)
-    : m_World(world)
-    , m_HostVob(hostVob)
+        : m_World(world)
+        , m_HostVob(hostVob)
 {
     unbindKeys();
     m_ActiveMovementState = EMovementState::None;
@@ -88,11 +88,25 @@ void NpcAIHandler::playerUpdate(float deltaTime)
                 }
                 else if (m_MovementState.isStrafeLeft)
                 {
-                    m_ActiveMovementState = EMovementState::StrafeLeft;
+                    if (m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone)
+                    {
+                        m_ActiveMovementState = EMovementState::FightLeft;
+                    }
+                    else
+                    {
+                        m_ActiveMovementState = EMovementState::StrafeLeft;
+                    }
                 }
                 else if (m_MovementState.isStrafeRight)
                 {
-                    m_ActiveMovementState = EMovementState::StrafeRight;
+                    if (m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone)
+                    {
+                        m_ActiveMovementState = EMovementState::FightRight;
+                    }
+                    else
+                    {
+                        m_ActiveMovementState = EMovementState::StrafeRight;
+                    }
                 }
             }
             break;
@@ -227,6 +241,40 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             if (m_MovementState.isForward && m_MovementState.isAction)
             {
                 getNpcAnimationHandler().Action_FightForward();
+            }
+            else
+            {
+                // FIXME: Find out when the animation actually ended
+                getNpcAnimationHandler().Action_Stand(true);
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::FightLeft:
+            if (m_MovementState.isStrafeLeft && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightLeft();
+            }
+            else
+            {
+                // FIXME: Find out when the animation actually ended
+                getNpcAnimationHandler().Action_Stand(true);
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::FightRight:
+            if (m_MovementState.isStrafeRight && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightRight();
             }
             else
             {

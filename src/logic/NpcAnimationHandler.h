@@ -72,6 +72,14 @@ namespace Logic
          * Plays the fight-forward animation (with transitions)
          */
         void Action_FightForward();
+        /**
+        * Plays the fight-left animation (with transitions)
+        */
+        void Action_FightLeft();
+        /**
+        * Plays the fight-right animation (with transitions)
+        */
+        void Action_FightRight();
 
         /**
          * Goes back to the standing-state, when possible
@@ -141,6 +149,8 @@ namespace Logic
         void startAni_DrawWeapon(int part);
         void startAni_UndrawWeapon();
         void startAni_FightForward();
+        void startAni_FightLeft();
+        void startAni_FightRight();
 
         /**
          * Starts the turning-animations and does the physical turn
