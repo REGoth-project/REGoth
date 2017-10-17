@@ -54,7 +54,7 @@ namespace Render
         bgfx::touch(RenderViewList::DEFAULT);
         bgfx::touch(RenderViewList::ALPHA_1);
         bgfx::touch(RenderViewList::ALPHA_2);
-        bgfx::setViewSeq(RenderViewList::PRE_WORLD_SKY, true);
+        bgfx::setViewOrder(RenderViewList::PRE_WORLD_SKY, true);
 
         Sky::drawSkyOf(world, config);
 

@@ -51,10 +51,10 @@ void RenderSystem::loadShaders()
     m_Config.programs.imageProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_image", "fs_image");
     m_LoadedPrograms.push_back(m_Config.programs.imageProgram);
 
-    m_Config.programs.skyProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky", "fs_skylayer");
+    m_Config.programs.skyProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky", "fs_skylayer");
     m_LoadedPrograms.push_back(m_Config.programs.skyProgram);
 
-    m_Config.programs.skyDomeColorProgram = Utils::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky_domecolor", "fs_sky_domecolor");
+    m_Config.programs.skyDomeColorProgram = Shader::loadProgram(m_Engine.getContentBasePath().c_str(), "vs_sky_domecolor", "fs_sky_domecolor");
     m_LoadedPrograms.push_back(m_Config.programs.skyDomeColorProgram);
 }
 

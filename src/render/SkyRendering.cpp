@@ -58,7 +58,7 @@ static void drawDomeColorLayerOf(World::WorldInstance& world, const Render::Rend
         bgfx::setTransform(skyTransform.m);
 
 
-        bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+        bgfx::setVertexBuffer(0, mesh.mesh.m_VertexBufferHandle);
         bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
                              mesh.mesh.m_SubmeshStarts[i].m_StartIndex,
                              mesh.mesh.m_SubmeshStarts[i].m_NumIndices);
@@ -117,7 +117,7 @@ static void drawDomeCloudsLayerOf(World::WorldInstance& world, const Render::Ren
             bgfx::setTransform(skyTransform.m);
 
 
-            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+            bgfx::setVertexBuffer(0, mesh.mesh.m_VertexBufferHandle);
             bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
                                  mesh.mesh.m_SubmeshStarts[i].m_StartIndex,
                                  mesh.mesh.m_SubmeshStarts[i].m_NumIndices);
@@ -180,7 +180,7 @@ static void drawSkyPlaneOf(World::WorldInstance& world, const Render::RenderConf
             bgfx::setTransform(skyTransform.m);
 
 
-            bgfx::setVertexBuffer(mesh.mesh.m_VertexBufferHandle);
+            bgfx::setVertexBuffer(0, mesh.mesh.m_VertexBufferHandle);
             bgfx::setIndexBuffer(mesh.mesh.m_IndexBufferHandle,
                                  mesh.mesh.m_SubmeshStarts[i].m_StartIndex,
                                  mesh.mesh.m_SubmeshStarts[i].m_NumIndices);
