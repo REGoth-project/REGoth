@@ -94,20 +94,21 @@ The compiled files are inside the `build/bin` directory.
 Make sure to copy the `content/shaders` folder to the working directory of the compiled `REGoth`-Executable.
 Then, run the program with the following flags:
 ```sh
-REGoth -g "path/to/gothic1or2" -w startworld.zen
+REGoth -g "path/to/gothic1or2" -g1/g2
 ```
 
-Where `path/to/gothic1or2` points to the root of a Gothic I or II installation and `startworld.zen` is one of the Zen-Files found in a `.vdf`-files in the games `data/`-directory. For example: `newworld.zen` or `addonworld.zen` for Gothic II.
+Where `path/to/gothic1or2` points to the root of a Gothic I or II installation. Use either '-g1' to start Gothic I or '-g2' to start Gothic II.
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
 
 Additionally, for a list of possible commands, run `REGoth --help`.
 
 # Controls
-
+ 
+ * Look around: Mouse
  * Movement: WASD/QE or arrow-keys (Space or Shift to run faster)
  * Actions: Left CTRL for everything
- * Menus: B for status-screen
+ * Menus: B for status-screen, N for quest-log
  * Console: F10
    * Available commands (square brackets mean optional argument):
       * `tp [<teleporter:default=player>] <target>`: Teleport NPC `teleporter` (= player if none is given) to NPC `target`
@@ -125,22 +126,3 @@ Additionally, for a list of possible commands, run `REGoth --help`.
 # Development
 
 If you want to help out and don't know where to start, I suggest reading the [wiki-page](../../wiki), which contains information about the engine-layout and lists of which features are missing (Not yet, though!). 
-
-### Examples
-**Gothic 1 - Overworld:** `REGoth -g "path/to/gothic1" -w world.zen`
-
-**Gothic 1 - Oldmine:** `REGoth -g "path/to/gothic1" -w oldmine.zen`
-
-**Gothic 1 - Freemine:** `REGoth -g "path/to/gothic1" -w freemine.zen`
-
-**Gothic 1 - Orc graveyard:** `REGoth -g "path/to/gothic1" -w orcgraveyard.zen`
-
-**Gothic 1 - Sleeper temple:** `REGoth -g "path/to/gothic1" -w orctempel.zen`
-
-**Gothic 2 - Overworld:** `REGoth -g "path/to/gothic2" -w newworld.zen`
-
-**Gothic 2 - Valley of mines:** `REGoth -g "path/to/gothic2" -w oldworld.zen`
-
-**Gothic 2 - Addonworld:** `REGoth -g "path/to/gothic2" -w addonworld.zen`
-
-**Gothic 2 - Dragonisland:** `REGoth -g "path/to/gothic2" -w dragonisland.zen`
