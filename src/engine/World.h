@@ -69,7 +69,7 @@ namespace World
 
     namespace Waynet
     {
-        class WaynetInstance;
+        struct WaynetInstance;
     }
 
     /**
