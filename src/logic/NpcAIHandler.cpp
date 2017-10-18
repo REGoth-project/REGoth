@@ -584,5 +584,38 @@ void NpcAIHandler::npcUpdate(float deltaTime)
                 m_ActiveMovementState = EMovementState::None;
             }
             break;
+        case EMovementState::FightLeft:
+            if (m_MovementState.isStrafeLeft && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightLeft();
+            }
+            else
+            {
+                // FIXME: Find out when the animation actually ended
+                getNpcAnimationHandler().Action_Stand(true);
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::FightRight:
+            if (m_MovementState.isStrafeRight && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightRight();
+            }
+            else
+            {
+                // FIXME: Find out when the animation actually ended
+                getNpcAnimationHandler().Action_Stand(true);
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
     }
 }
