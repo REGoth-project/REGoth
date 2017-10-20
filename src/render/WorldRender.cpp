@@ -13,8 +13,19 @@
 #include <engine/BaseEngine.h>
 #include "SkyRendering.h"
 
+enum class ECameraClipType
+{
+    In,
+    Out,
+    Crossing
+};
+
+static ECameraClipType frustrumContainsSphere(const Plane* frustumPlanes, const Math::float3& sphereCenter, float sphereRadius);
+
 namespace Render
 {
+
+
     /**
      * Sets sky and fog related uniforms
      * @param world World to take the parameters from
@@ -69,6 +80,9 @@ namespace Render
      */
     void drawWorld(World::WorldInstance& world, const RenderConfig& config, RenderSystem& system)
     {
+        Plane frustumPlanes[6];
+        buildFrustumPlanes(frustumPlanes, config.state.viewProj.mv);
+
         // Setup sky and fog
         setupSky(world, config);
 
@@ -79,6 +93,9 @@ namespace Render
         // Draw all components
         const auto& ctuple = world.getComponentDataBundle().m_Data;
         size_t num = world.getComponentDataBundle().m_NumElements;
+
+        Plane planes[6];
+        buildFrustumPlanes(planes, config.state.cameraWorld.mv);
 
         auto& meshes = world.getStaticMeshAllocator();
         auto& skelmeshes = world.getSkeletalMeshAllocator();
@@ -140,6 +157,34 @@ namespace Render
             {
                 if (distance2 > drawDistance2 * psc[i].m_DrawDistanceFactor)
                     continue;
+            }
+
+            if ((mask & Components::BBoxComponent::MASK) != 0)
+            {
+                if(frustrumContainsSphere(frustumPlanes, pos.Translation(), bboxes[i].m_SphereRadius) == ECameraClipType::Out)
+                    continue;
+                else
+                {
+                    /*ddPush();
+                    Sphere s = { pos.Translation().x, pos.Translation().y, pos.Translation().z, bboxes[i].m_SphereRadius };
+                    ddSetLod(5);
+                    ddSetColor(0xFFFFFFFF);
+                    ddSetWireframe(true);
+                    ddDraw(s);
+                    ddPop();*/
+
+                    /*
+                    Aabb box = {bboxes[i].m_BBox3D.min.x, bboxes[i].m_BBox3D.min.y, bboxes[i].m_BBox3D.min.z,
+                                bboxes[i].m_BBox3D.max.x, bboxes[i].m_BBox3D.max.y, bboxes[i].m_BBox3D.max.z};
+
+                    ddPush();
+                    Math::Matrix m = Math::Matrix::CreateIdentity();
+                    m.Translation(pos.Translation());
+                    ddSetTransform(m.mv);
+                    ddSetColor(0xFFFF0000);
+                    ddDraw(box);
+                    ddPop();*/
+                }
             }
 
             if ((mask & Components::StaticMeshComponent::MASK) != 0)
@@ -538,4 +583,28 @@ void ::Render::drawPfx(World::WorldInstance& world, Components::PfxComponent& pf
         view = RenderViewList::ALPHA_1;
 
     bgfx::submit(view, config.programs.particle_textured);
+}
+
+static ECameraClipType frustrumContainsSphere(const Plane* frustumPlanes, const Math::float3& sphereCenter, float sphereRadius)
+{
+    // various distances
+    float fDistance;
+
+    // calculate our distances to each of the planes
+    for(int i = 0; i < 6; ++i) {
+
+        // find the distance to this plane
+        fDistance = Math::float3(frustumPlanes[i].m_normal).dot(sphereCenter) + frustumPlanes[i].m_dist;
+
+        // if this distance is < -sphere.radius, we are outside
+        if(fDistance < -sphereRadius)
+            return ECameraClipType::Out;
+
+        // else if the distance is between +- radius, then we intersect
+        if((float)fabs(fDistance) < sphereRadius)
+            return ECameraClipType::Crossing;
+    }
+
+    // otherwise we are fully in view
+    return ECameraClipType::In;
 }

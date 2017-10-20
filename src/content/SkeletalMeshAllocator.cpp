@@ -108,6 +108,11 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     m_Allocator.getElement(h).loaded = false;
     m_Allocator.getElement(h).name = nameUpper;
 
+    SkelMesh& meshBase = m_Allocator.getElement(h);
+    meshBase.bBox3D.min = packed.bbox[0].v;
+    meshBase.bBox3D.max = packed.bbox[1].v;
+    meshBase.boundingSphereRadius = (meshBase.bBox3D.min * 0.5f + meshBase.bBox3D.max * 0.5f).length() + fabs((meshBase.bBox3D.max - meshBase.bBox3D.min).length()) * 0.5f;
+
     // Copy vertices
     mesh.m_Vertices.resize(packed.vertices.size());
     for (size_t i = 0, end = packed.vertices.size(); i < end; i++)
