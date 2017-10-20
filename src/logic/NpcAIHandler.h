@@ -32,6 +32,9 @@ namespace Logic
         DrawWeapon,
         UndrawWeapon,
         FightForward,
+        FightLeft,
+        FightRight,
+        FightParry,
     };
 
     /**
