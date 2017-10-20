@@ -84,7 +84,13 @@ void NpcAIHandler::playerUpdate(float deltaTime)
                 }
                 else if (m_MovementState.isBackward)
                 {
-                    m_ActiveMovementState = EMovementState::Backward;
+                    if (m_MovementState.isAction && getController().getWeaponMode() != EWeaponMode::WeaponNone) {
+                        m_ActiveMovementState = EMovementState::FightParry;
+                    }
+                    else
+                    {
+                        m_ActiveMovementState = EMovementState::Backward;
+                    }
                 }
                 else if (m_MovementState.isStrafeLeft)
                 {
@@ -244,8 +250,16 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                /*Does always return true because animation->next returns the same ani again
+                if(!getNpcAnimationHandler().isFightAnimationActive()) {
+                    getNpcAnimationHandler().Action_Stand(true);
+                }*/
+                /*FIXME Combo only possible when forward key is still pressed. Animation Action_FightForward()
+                //After around 50% the combo starts, so skip it.
+                */
+                if(getNpcAnimationHandler().getAnimHandler().getActiveAnimationProgress() > 0.5f){
+                    getNpcAnimationHandler().Action_Stand();
+                }
             }
 
             if (getNpcAnimationHandler().isStanding(true))
@@ -261,8 +275,9 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                if(!getNpcAnimationHandler().isFightAnimationActive()) {
+                    getNpcAnimationHandler().Action_Stand();
+                }
             }
 
             if (getNpcAnimationHandler().isStanding(true))
@@ -278,8 +293,27 @@ void NpcAIHandler::playerUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                if(!getNpcAnimationHandler().isFightAnimationActive()) {
+                    getNpcAnimationHandler().Action_Stand();
+                }
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::FightParry:
+            if (m_MovementState.isBackward && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightParry();
+            }
+            else
+            {
+                if(!getNpcAnimationHandler().isFightAnimationActive()) {
+                    getNpcAnimationHandler().Action_Stand();
+                }
             }
 
             if (getNpcAnimationHandler().isStanding(true))
@@ -455,7 +489,24 @@ void NpcAIHandler::npcUpdate(float deltaTime)
                 else if (m_TargetMovementState == EMovementState::StrafeRight)
                 {
                     m_ActiveMovementState = EMovementState::StrafeRight;
-                }else
+                }
+                else if (m_TargetMovementState == EMovementState::FightForward)
+                {
+                    m_ActiveMovementState = EMovementState::FightForward;
+                }
+                else if (m_TargetMovementState == EMovementState::FightLeft)
+                {
+                    m_ActiveMovementState = EMovementState::FightLeft;
+                }
+                else if (m_TargetMovementState == EMovementState::FightRight)
+                {
+                    m_ActiveMovementState = EMovementState::FightRight;
+                }
+                else if (m_TargetMovementState == EMovementState::FightParry)
+                {
+                    m_ActiveMovementState = EMovementState::FightParry;
+                }
+                else
                 {
                     m_ActiveMovementState = EMovementState::None;
                 }
@@ -575,8 +626,10 @@ void NpcAIHandler::npcUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                // FIXME see character state machine
+                if(getNpcAnimationHandler().getAnimHandler().getActiveAnimationProgress() > 0.5f){
+                    getNpcAnimationHandler().Action_Stand();
+                }
             }
 
             if (getNpcAnimationHandler().isStanding(true))
@@ -591,8 +644,8 @@ void NpcAIHandler::npcUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                if(!getNpcAnimationHandler().isFightAnimationActive())
+                    getNpcAnimationHandler().Action_Stand();
             }
 
             if (getNpcAnimationHandler().isStanding(true))
@@ -608,8 +661,25 @@ void NpcAIHandler::npcUpdate(float deltaTime)
             }
             else
             {
-                // FIXME: Find out when the animation actually ended
-                getNpcAnimationHandler().Action_Stand(true);
+                if(!getNpcAnimationHandler().isFightAnimationActive())
+                    getNpcAnimationHandler().Action_Stand();
+            }
+
+            if (getNpcAnimationHandler().isStanding(true))
+            {
+                m_ActiveMovementState = EMovementState::None;
+            }
+            break;
+
+        case EMovementState::FightParry:
+            if (m_MovementState.isBackward && m_MovementState.isAction)
+            {
+                getNpcAnimationHandler().Action_FightParry();
+            }
+            else
+            {
+                if(getNpcAnimationHandler().isFightAnimationActive())
+                    getNpcAnimationHandler().Action_Stand();
             }
 
             if (getNpcAnimationHandler().isStanding(true))

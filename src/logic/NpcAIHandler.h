@@ -34,6 +34,7 @@ namespace Logic
         FightForward,
         FightLeft,
         FightRight,
+        FightParry,
     };
 
     /**
