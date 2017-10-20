@@ -337,7 +337,7 @@ bool DialogManager::init()
 
     if (ou.empty())
     {
-        LogWarn() << "Failed to read OU-file!";
+        LogError() << "Failed to read OU-file!";
         return false;
     }
     else

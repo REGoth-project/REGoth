@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iostream>
 #include "engine/Input.h"
+#include "SkyConfig.h"
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <entry/input.h>
@@ -13,6 +14,8 @@
 #include <utils/cli.h>
 #include <utils/logger.h>
 #include <engine/WorldMesh.h>
+#include <ZenLib/zenload/zCProgMeshProto.h>
+#include <content/StaticMeshAllocator.h>
 
 using namespace Content;
 
@@ -25,10 +28,18 @@ const float TIME_KEY_5 = 0.65f;
 const float TIME_KEY_6 = 0.70f;
 const float TIME_KEY_7 = 0.75f;
 
+static const std::string DOME_COLORLAYER_MESH_FILE = "SKYDOME_COLORLAYER.MRM";
+
 namespace Flags
 {
     Cli::Flag skyType("s", "sky", 1, "Selects the sky to render. Possible options: auto, g1, g2", {"auto"}, "Game");
 }
+
+
+static Handle::MeshHandle loadMeshAndApplyFadeToLowerPart(const std::string& filename, World::WorldInstance& world);
+static Handle::MeshHandle loadMeshAndApplyFadeToDomeColorPart(const std::string& filename, World::WorldInstance& world);
+static Math::float3 applySkyColor(const Math::float3& col0, const Math::float3& col1, uint8_t c);
+static Handle::MeshHandle createSkyPlaneMesh(World::WorldInstance& world, size_t layerIdx);
 
 Sky::Sky(World::WorldInstance& world)
     : m_World(world)
@@ -43,11 +54,6 @@ Sky::~Sky()
 {
 }
 
-static Math::float3 applySkyColor(const Math::float3& col0, const Math::float3& col1, uint8_t c)
-{
-    return Math::float3::lerp(col0, col1, (float)c / 255.0f);
-}
-
 void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1, Math::float4* pLut)
 {
     for (int i = 0; i < 256; i++)
@@ -59,6 +65,13 @@ void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1
         pLut[i].w = 1.0f;
     }
 }
+
+
+static Math::float3 applySkyColor(const Math::float3& col0, const Math::float3& col1, uint8_t c)
+{
+    return Math::float3::lerp(col0, col1, (float)c / 255.0f);
+}
+
 
 
 void Sky::getSkyColors(Math::float4 &color0, Math::float4 &color1)
@@ -116,6 +129,14 @@ void Sky::interpolate()
     m_MasterState.fogDistance = s0.fogDistance + t * (s1.fogDistance - s0.fogDistance);
     m_MasterState.domeColorUpper = s0.domeColorUpper + t * (s1.domeColorUpper - s0.domeColorUpper);
 
+    for(size_t i = 0; i < m_MasterState.layers.size(); i++)
+    {
+        // TODO: I guess we have to interpolate here...
+        m_MasterState.layers[i] = s0.layers[i];
+        m_MasterState.layers[i].textureAlpha = bx::flerp(s0.layers[i].textureAlpha, s1.layers[i].textureAlpha, t);
+        m_MasterState.layers[i].textureScale = bx::flerp(s0.layers[i].textureScale, s1.layers[i].textureScale, t);
+    }
+
     // FIXME: There is some stuff about levelchanges here. Like, "turn off rain when on dragonisland"
 
     // FIXME: Multiply fogColor with 0.8 when using dome!
@@ -123,7 +144,8 @@ void Sky::interpolate()
     // Calculate LUT based on our interpolated colors
     //calculateLUT_ZenGin(Math::float3(0, 0, 0), m_MasterState.baseColor, m_LUT); // Commented out because getSkyColors is used now
 
-    // TODO: Fix up the textures here
+    setupDomeMeshTexturesForCurrentTime();
+    setupPlaneMeshTexturesForCurrentTime();
 }
 
 void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::SkyState& s, Textures::TextureAllocator& texAlloc)
@@ -165,13 +187,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.2f;
             s.sunEnabled = true;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
+            s.layers[0].textureNameBase = "SKYDAY_LAYER1_A0.TGA";
             s.layers[0].textureAlpha = 0.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(1.1f, 0);
             s.layers[0].textureScale = 1.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
+            s.layers[1].textureNameBase = "SKYDAY_LAYER0_A0.TGA";
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.3f, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -185,13 +207,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.05f;
             s.sunEnabled = true;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
+            s.layers[0].textureNameBase = "SKYDAY_LAYER1_A0.TGA";
             s.layers[0].textureAlpha = 215.0f / 255.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(1.1f, 0);
             s.layers[0].textureScale = 1.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
+            s.layers[1].textureNameBase = "SKYDAY_LAYER0_A0.TGA";
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.3f, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -205,13 +227,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.05f;
             s.sunEnabled = true;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
+            s.layers[0].textureNameBase = "SKYDAY_LAYER1_A0.TGA";
             s.layers[0].textureAlpha = 0.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(1.1f, 0);
             s.layers[0].textureScale = 1.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
+            s.layers[1].textureNameBase = "SKYDAY_LAYER0_A0.TGA";
             s.layers[1].textureAlpha = 1.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.3f, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -225,13 +247,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.2f;
             s.sunEnabled = true;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER1_A0.TGA");
+            s.layers[0].textureNameBase = "SKYDAY_LAYER1_A0.TGA";
             s.layers[0].textureAlpha = 0.5f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(1.1f, 0);
             s.layers[0].textureScale = 1.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYDAY_LAYER0_A0.TGA");
+            s.layers[1].textureNameBase = "SKYDAY_LAYER0_A0.TGA";
             s.layers[1].textureAlpha = 0.5f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.3f, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -245,13 +267,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
+            s.layers[0].textureNameBase = "SKYNIGHT_LAYER0_A0.TGA";
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[0].textureScale = 4.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
+            s.layers[1].textureNameBase = "SKYNIGHT_LAYER1_A0.TGA";
             s.layers[1].textureAlpha = 0.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -265,13 +287,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
+            s.layers[0].textureNameBase = "SKYNIGHT_LAYER0_A0.TGA";
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[0].textureScale = 4.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
+            s.layers[1].textureNameBase = "SKYNIGHT_LAYER1_A0.TGA";
             s.layers[1].textureAlpha = 215.0f / 255.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -285,13 +307,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.1f;
             s.sunEnabled = false;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
+            s.layers[0].textureNameBase = "SKYNIGHT_LAYER0_A0.TGA";
             s.layers[0].textureAlpha = 1.0f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[0].textureScale = 4.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
+            s.layers[1].textureNameBase = "SKYNIGHT_LAYER1_A0.TGA";
             s.layers[1].textureAlpha = 0.0f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.0f, 0);;
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -305,13 +327,13 @@ void Sky::initSkyState(World::WorldInstance& world, ESkyPresetType type, Sky::Sk
             s.fogDistance = 0.5f;
             s.sunEnabled = true;
 
-            s.layers[0].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER0_A0.TGA");
+            s.layers[0].textureNameBase = "SKYNIGHT_LAYER0_A0.TGA";
             s.layers[0].textureAlpha = 0.5f;
-            s.layers[0].textureSpeed = Math::float2(0, 0);
+            s.layers[0].textureSpeed = Math::float2(1.1f, 0);
             s.layers[0].textureScale = 1.0f;
-            s.layers[1].texture = texAlloc.loadTextureVDF("SKYNIGHT_LAYER1_A0.TGA");
+            s.layers[1].textureNameBase = "SKYNIGHT_LAYER1_A0.TGA";
             s.layers[1].textureAlpha = 0.5f;
-            s.layers[1].textureSpeed = Math::float2(0, 0);
+            s.layers[1].textureSpeed = Math::float2(0.3f, 0);
             s.layers[1].textureScale = 1.0f;
             break;
 
@@ -371,6 +393,419 @@ void Sky::getFogValues(const Math::float3& cameraWorld, float& _near, float& _fa
 
     // Calculate actual fog color
     fogColor = (1.0f - intensityScale) * m_MasterState.fogColor + intensityScale * intensity;
+}
+
+Handle::TextureHandle Sky::getSkyTextureOfLayer(size_t skyStateIdx, size_t layerIdx)
+{
+    assert(skyStateIdx < m_SkyStates.size());
+    if(skyStateIdx >= m_SkyStates.size())
+        return Handle::TextureHandle::makeInvalidHandle();
+
+    assert(layerIdx < m_SkyStates[skyStateIdx].layers.size());
+    if(layerIdx >= m_SkyStates[skyStateIdx].layers.size())
+        return Handle::TextureHandle::makeInvalidHandle();
+
+    return m_SkyStates[skyStateIdx].layers[layerIdx].texture;
+}
+
+
+void Sky::onWorldNameChanged(const std::string& newWorldName)
+{
+    LogInfo() << "Initializing sky for new world: " << newWorldName;
+
+    // Must come before loading the config since fillSkyStates initializes everything with defaults
+    fillSkyStates();
+
+    loadSkyConfig();
+
+    reloadAllSkyTextures(newWorldName);
+
+    loadDomeLayerMeshes();
+    createSkyPlaneMeshes();
+}
+
+
+void Sky::reloadAllSkyTextures(const std::string& worldName)
+{
+    for(size_t i = 0; i < m_SkyStates.size(); i++)
+    {
+        for(size_t j = 0; j < m_SkyStates[j].layers.size(); j++)
+        {
+            loadSkyTextureOfLayer(i, j, worldName);
+        }
+    }
+}
+
+
+bool Sky::loadSkyTextureOfLayer(size_t skyStateIdx, size_t layerIdx, const std::string& worldname)
+{
+    assert(skyStateIdx < m_SkyStates.size());
+    if(skyStateIdx >= m_SkyStates.size())
+        return false;
+
+    assert(layerIdx < m_SkyStates[skyStateIdx].layers.size());
+    if(layerIdx >= m_SkyStates[skyStateIdx].layers.size())
+        return false;
+
+    Textures::TextureAllocator& textureAllocator = m_World.getTextureAllocator();
+
+    std::string texNameBase = m_SkyStates[skyStateIdx].layers[layerIdx].textureNameBase;
+    std::string texNameWorld = insertWorldNameIntoSkyTextureBase(texNameBase, worldname);
+
+    Handle::TextureHandle layerTexture = textureAllocator.loadTextureVDF(texNameWorld);
+
+    if(!layerTexture.isValid())
+    {
+        layerTexture = textureAllocator.loadTextureVDF(texNameBase);
+
+        if(!layerTexture.isValid())
+        {
+            LogError() << "Failed to find sky texture for state " << skyStateIdx << ", layer " << layerIdx << ". "
+                       << "Tried " << texNameWorld << " and " << texNameBase << ".";
+
+            return false;
+        }else
+        {
+            LogInfo() << "Loaded sky texture (Base): " << texNameBase << ", couldn't find custom texture for world " << worldname << " (Tried " << texNameWorld << ")";
+        }
+    } else
+    {
+        LogInfo() << "Loaded sky texture (world-dependent): " << texNameWorld;
+    }
+
+    m_SkyStates[skyStateIdx].layers[layerIdx].texture = layerTexture;
+
+    return true;
+}
+
+std::string Sky::insertWorldNameIntoSkyTextureBase(const std::string& skyTextureBase, const std::string& worldName)
+{
+    std::string texNameWorld = skyTextureBase;
+    texNameWorld.insert(skyTextureBase.find_first_of('_'), "_" + Utils::uppered(worldName));
+
+    return texNameWorld;
+}
+
+
+/**
+ * Sets the alpha-values of the lowest vertices in the mesh to do some fading.
+ *
+ * Gothic does this after loading the mesh. A better way would have been to simply bake this into the mesh...
+ */
+static void applyAlphaFadeToLowerPart(ZenLoad::PackedMesh& mesh)
+{
+    float lowestVertex = mesh.bbox[0].y;
+    float highestVertex = mesh.bbox[1].y;
+    float heightTotal = highestVertex - lowestVertex;
+
+    const float heightTotalInv = 1.0f / heightTotal;
+
+    for(ZenLoad::WorldVertex& vx : mesh.vertices)
+    {
+        if(vx.Position.y > 0)
+        {
+            vx.Color = 0xFFFFFFFF;
+        }
+        else
+        {
+            float vertexHeightRatio = Math::clamp(1.0f - (vx.Position.y - lowestVertex) * heightTotalInv, 0.0f, 1.0f);
+
+            const float alpha = 1.0f - Math::sinusSlowEnd(vertexHeightRatio);
+            Math::float4 color = Math::float4(1.0f, 1.0f, 1.0f, alpha);
+
+            vx.Color = color.toRGBA8();
+        }
+    }
+}
+
+
+/**
+ * Sets the alpha-values of the lowest vertices in the mesh to do some fading.
+ *
+ * Gothic does this after loading the mesh. A better way would have been to simply bake this into the mesh...
+ */
+static void applyAlphaFadeToDomeColorPart(ZenLoad::PackedMesh& mesh)
+{
+    float lowestVertex = mesh.bbox[0].y;
+    float highestVertex = mesh.bbox[1].y;
+    float heightTotal = highestVertex - lowestVertex;
+
+    const float heightTotalInv = 1.0f / heightTotal;
+    const float fadeout_offset = 0.0001f; // Magic value from gothic
+
+    for(ZenLoad::WorldVertex& vx : mesh.vertices)
+    {
+
+        float vertexHeightRatio = Math::clamp((vx.Position.y - lowestVertex) * heightTotalInv, 0.0f, 1.0f);
+
+
+        float alpha;
+        if(vertexHeightRatio < fadeout_offset)
+            alpha = bx::flerp(0.0f, 0.8f, Math::sinusSlowEnd(vertexHeightRatio  / fadeout_offset));
+        else
+            alpha = bx::flerp(0.8f, 0.0f, Math::sinusSlowEnd(vertexHeightRatio) - fadeout_offset);
+
+        Math::float4 color = Math::float4(1.0f, 1.0f, 1.0f, alpha);
+        vx.Color = color.toRGBA8();
+    }
+}
+
+
+void Sky::loadDomeLayerMeshes()
+{
+    for(size_t i = 0; i < m_DomeMeshesByLayer.size(); i++)
+    {
+        m_DomeMeshesByLayer[i] = loadMeshAndApplyFadeToLowerPart(getDomeLayerMeshFileName(i), m_World);
+    }
+
+    m_DomeColorLayerMesh = loadMeshAndApplyFadeToDomeColorPart(DOME_COLORLAYER_MESH_FILE, m_World);
+}
+
+
+static Handle::MeshHandle loadMeshAndApplyFadeToLowerPart(const std::string& filename, World::WorldInstance& world)
+{
+    ZenLoad::PackedMesh packed;
+
+    // Try to load the mesh
+    ZenLoad::zCProgMeshProto zmsh(filename, world.getEngine()->getVDFSIndex());
+
+    // Failed?
+    if (zmsh.getNumSubmeshes() == 0)
+        return Handle::MeshHandle::makeInvalidHandle();
+
+    // Pack the mesh
+    zmsh.packMesh(packed, 1.0f / 100.0f);
+
+    applyAlphaFadeToLowerPart(packed);
+
+    return world.getStaticMeshAllocator().loadFromPacked(packed, filename);
+}
+
+
+static Handle::MeshHandle loadMeshAndApplyFadeToDomeColorPart(const std::string& filename, World::WorldInstance& world)
+{
+    ZenLoad::PackedMesh packed;
+
+    // Try to load the mesh
+    ZenLoad::zCProgMeshProto zmsh(filename, world.getEngine()->getVDFSIndex());
+
+    // Failed?
+    if (zmsh.getNumSubmeshes() == 0)
+        return Handle::MeshHandle::makeInvalidHandle();
+
+    // Pack the mesh
+    zmsh.packMesh(packed, 1.0f / 100.0f);
+
+    applyAlphaFadeToDomeColorPart(packed);
+
+    return world.getStaticMeshAllocator().loadFromPacked(packed, filename);
+}
+
+
+
+void Sky::setupDomeMeshTexturesForCurrentTime()
+{
+    for(size_t i = 0; i < m_DomeMeshesByLayer.size(); i++)
+    {
+        if (!m_DomeMeshesByLayer[i].isValid())
+            continue;
+
+        Meshes::WorldStaticMesh& dome = m_World.getStaticMeshAllocator().getMesh(m_DomeMeshesByLayer[i]);
+
+        for(Materials::TexturedMaterial& mat : dome.mesh.m_SubmeshMaterials)
+        {
+            mat.m_TextureHandle = m_MasterState.layers[i].texture;
+        }
+    }
+}
+
+void Sky::setupPlaneMeshTexturesForCurrentTime()
+{
+    for(size_t i = 0; i < m_PlaneMeshesByLayer.size(); i++)
+    {
+        if (!m_PlaneMeshesByLayer[i].isValid())
+            continue;
+
+        Meshes::WorldStaticMesh& plane = m_World.getStaticMeshAllocator().getMesh(m_PlaneMeshesByLayer[i]);
+
+        for(Materials::TexturedMaterial& mat : plane.mesh.m_SubmeshMaterials)
+        {
+            mat.m_TextureHandle = m_MasterState.layers[i].texture;
+        }
+    }
+}
+
+const std::array<Handle::MeshHandle, Sky::NUM_SKY_LAYERS>& Sky::getDomeMeshes() const
+{
+    return m_DomeMeshesByLayer;
+}
+
+
+const std::array<Handle::MeshHandle, Sky::NUM_SKY_LAYERS>& Sky::getSkyPlaneMeshes() const
+{
+    return m_PlaneMeshesByLayer;
+}
+
+
+std::string Sky::getDomeLayerMeshFileName(size_t layerIdx)
+{
+    return "SKYDOME_LAYER" + std::to_string(layerIdx + 1) + ".MRM";
+}
+
+
+void Sky::createSkyPlaneMeshes()
+{
+    for(size_t i = 0; i < m_PlaneMeshesByLayer.size(); i++)
+    {
+        m_PlaneMeshesByLayer[i] = createSkyPlaneMesh(m_World, i);
+    }
+}
+
+
+static Handle::MeshHandle createSkyPlaneMesh(World::WorldInstance& world, size_t layerIdx)
+{
+    ZenLoad::PackedMesh packed;
+
+    const float PLANE_HALF_LENGTH_SIDE = 500;
+    const float PLANE_HEIGHT = 10;
+
+    packed.vertices.resize(4);
+    packed.vertices[0].Position = { PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT, -PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[1].Position = { PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT,  PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[2].Position = {-PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT,  PLANE_HALF_LENGTH_SIDE};
+    packed.vertices[3].Position = {-PLANE_HALF_LENGTH_SIDE, PLANE_HEIGHT, -PLANE_HALF_LENGTH_SIDE};
+
+    /*
+     * 3 --- 0
+     * |   / |
+     * | /   |
+     * 2 --- 1
+     */
+
+    packed.vertices[0].Color = 0xFFFFFFFF;
+    packed.vertices[1].Color = 0xFFFFFFFF;
+    packed.vertices[2].Color = 0xFFFFFFFF;
+    packed.vertices[3].Color = 0xFFFFFFFF;
+
+    packed.vertices[0].TexCoord = {0.0f, 0.0f};
+    packed.vertices[1].TexCoord = {1.0f, 0.0f};
+    packed.vertices[2].TexCoord = {1.0f, 1.0f};
+    packed.vertices[3].TexCoord = {0.0f, 1.0f};
+
+    packed.subMeshes.emplace_back();
+    packed.subMeshes[0].indices = {
+            3,2,0,
+            0,2,1
+    };
+
+    return world.getStaticMeshAllocator().loadFromPacked(packed, "SKYPLANE_LAYER" + std::to_string(layerIdx) + ".MRM");
+}
+
+
+void Sky::loadSkyConfig()
+{
+    const std::string configfile = m_World.getEngine()->getContentBasePath() + "sky.json";
+
+    if(!Utils::fileExists(configfile))
+    {
+        LogError() << "Could not find sky-config at: " << configfile;
+        return;
+    }
+
+    // TODO: Maybe move this file into an archive that can be loaded via PhysFS
+    std::string contents = Utils::readFileContents(configfile);
+
+    SkyConfig::SkyGametype gametype;
+    switch(m_World.getBasicGameType())
+    {
+        case Daedalus::GameType::GT_Gothic1:
+            gametype = SkyConfig::SkyGametype::Gothic1;
+            break;
+
+        case Daedalus::GameType::GT_Gothic2:
+        default:
+            gametype = SkyConfig::SkyGametype::Gothic2;
+            break;
+    }
+
+    SkyConfig config(contents, gametype);
+
+    if(!config.isValid())
+    {
+        LogError() << "Failed Sky-Config contains invalid data!";
+        return;
+    }
+
+    fillColorsFromSkyConfig(config);
+
+    LogInfo() << "Sky: Successfully loaded sky-config from: " << configfile;
+}
+
+void Sky::fillColorsFromSkyConfig(const SkyConfig& config)
+{
+    const SkyConfig::SkyDayColorSet& set = config.findColorSetOfWorld(m_World.getWorldName());
+
+    m_SkyStates[ESPT_Day0].fogColor = set.colors[0];
+    m_SkyStates[ESPT_Day1].fogColor = set.colors[0];
+    m_SkyStates[ESPT_Day2].fogColor = set.colors[0];
+
+    // Note: Color #0 seems to be the only one actually used by the game. w/e.
+}
+
+void Sky::getDomeColors(Math::float3& color0, Math::float3& color1)
+{
+    // Beware! Many magic numbers ahead to match gothics sky calculation!
+
+    const float GOTHIC_COLOR_SUBTRACTION = 25.0f / 255.0f;
+
+    color0 = m_MasterState.fogColor;
+    color1 = m_MasterState.fogColor;
+
+    color1.x = (color1.x * 0.4f) - GOTHIC_COLOR_SUBTRACTION;
+    color1.y = (color1.y * 0.7f) - GOTHIC_COLOR_SUBTRACTION;
+    color1.z = (color1.z * 0.9f) - GOTHIC_COLOR_SUBTRACTION;
+
+    if(m_MasterState.time >= TIME_KEY_1 && m_MasterState.time <= TIME_KEY_2)
+    {
+        color0.x *= 20.0f;
+        color0.y *= 20.0f;
+        color0.z *= 2;
+    }
+    else
+    {
+        color0.x *= 10.0f;
+        color0.y *= 10.0f;
+        color0.z *= 8.0f;
+    }
+
+    color0.x = Math::clamp(color0.x, 0.0f, 1.0f);
+    color0.y = Math::clamp(color0.y, 0.0f, 1.0f);
+    color0.z = Math::clamp(color0.z, 0.0f, 1.0f);
+    color1.x = Math::clamp(color1.x, 0.0f, 1.0f);
+    color1.y = Math::clamp(color1.y, 0.0f, 1.0f);
+    color1.z = Math::clamp(color1.z, 0.0f, 1.0f);
+}
+
+bool Sky::isNightTime() const
+{
+    return m_MasterState.time >= TIME_KEY_1 && m_MasterState.time <= TIME_KEY_7;
+}
+
+Math::float3 Sky::getPolyCloudsLayerColor()
+{
+    Math::float3 color;
+
+    if(isNightTime())
+        color = {1.0f, 1.0f, 1.0f};
+    else
+        color = getMasterState().domeColorUpper;
+
+    if(m_MasterState.time >= TIME_KEY_3 && m_MasterState.time <= TIME_KEY_5)
+    {
+        color = 0.5f * (color + Math::float3(1.0f, 1.0f, 1.0f));
+    }
+
+    return color;
 }
 
 

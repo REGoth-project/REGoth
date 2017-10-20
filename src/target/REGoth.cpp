@@ -147,7 +147,7 @@ void REGoth::init(int _argc, char** _argv)
 
     initConsole();
 
-    imguiCreate(nullptr, 0, fontSize);
+    imguiCreate(fontSize);
     m_ImgUiCreated = true;
     m_scrollArea = 0;
 }
@@ -271,6 +271,12 @@ void REGoth::initConsole()
         auto& scriptEngine = worldInstance.getScriptEngine();
         auto& datFile = scriptEngine.getVM().getDATFile();
         return "Hello World!";
+    });
+
+    console.registerCommand("reloadshaders", [this](const std::vector<std::string>& args) -> std::string {
+        m_pEngine->getDefaultRenderSystem().loadShaders();
+
+        return "Reloaded shaders";
     });
 
     console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
@@ -1167,7 +1173,7 @@ void REGoth::showSplash()
     float proj[16];
 
     bx::mtxIdentity(view);
-    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f);
+    bx::mtxOrtho(proj, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 100.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
 
     bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 

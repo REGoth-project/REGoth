@@ -1,0 +1,43 @@
+attribute vec4 a_color0;
+attribute vec3 a_normal;
+attribute vec3 a_position;
+attribute vec2 a_texcoord0;
+attribute vec4 i_data0;
+attribute vec4 i_data1;
+attribute vec4 i_data2;
+attribute vec4 i_data3;
+attribute vec4 i_data4;
+varying vec4 v_color;
+varying vec2 v_texcoord0;
+varying vec3 v_view_pos;
+uniform mat4 u_view;
+uniform mat4 u_viewProj;
+uniform vec4 SKY_CLUT[256];
+void main ()
+{
+  mat4 model_1;
+  model_1[0] = i_data0;
+  model_1[1] = i_data1;
+  model_1[2] = i_data2;
+  model_1[3] = i_data3;
+  vec4 tmpvar_2;
+  tmpvar_2.w = 1.0;
+  tmpvar_2.xyz = a_position;
+  gl_Position = ((u_viewProj * model_1) * tmpvar_2);
+  v_texcoord0 = a_texcoord0;
+  mat3 tmpvar_3;
+  tmpvar_3[0] = model_1[0].xyz;
+  tmpvar_3[1] = model_1[1].xyz;
+  tmpvar_3[2] = model_1[2].xyz;
+  v_color.xyz = (min (1.0, (
+    (max (0.0, dot ((tmpvar_3 * a_normal), vec3(-0.5773503, 0.5773503, 0.5773503))) * i_data4.x)
+   + 
+    (i_data4.x * 0.5)
+  )) * a_color0.xyz);
+  v_color.xyz = SKY_CLUT[ivec4((v_color * 255.0)).x].xyz;
+  vec4 tmpvar_4;
+  tmpvar_4.w = 1.0;
+  tmpvar_4.xyz = a_position;
+  v_view_pos = ((u_view * model_1) * tmpvar_4).xyz;
+}
+

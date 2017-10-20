@@ -505,24 +505,20 @@ bool WorldInstance::init(const std::string& zen,
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
-        LogInfo() << "Running startup-scripts";
-
-        // Init script-engine
-        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
-        {
-            LogInfo() << "Failed to initialize script engine for zen world";
-            delete m_ClassContents->audioWorld;
-            m_ClassContents->audioWorld = nullptr;
-            return false;
-        }
-        //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
-
-        m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
-
         // Load script engine if one is provided. Always the case except "start new game"
         if (!scriptEngine.empty())
         {
-            m_ClassContents->scriptEngine.importScriptEngine(scriptEngine);
+            getScriptEngine().importScriptEngine(scriptEngine);
+        }
+
+        LogInfo() << "Initialize dialog manager";
+        // Initialize dialog manager
+        if (!getDialogManager().init())
+        {
+            LogError() << "Failed to initialize dialog manager";
+            delete m_ClassContents->audioWorld; // TODO use unique_ptr instead
+            m_ClassContents->audioWorld = nullptr;
+            return false;
         }
         // Load dialogManager if one is provided. Only after loading a savegame
         if (!dialogManager.empty())
@@ -534,6 +530,13 @@ bool WorldInstance::init(const std::string& zen,
         {
             engine.getSession().getLogManager().importLogManager(logManager);
         }
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
+
+        LogInfo() << "Running startup-scripts";
+
+        // Init script-engine
+        initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer);
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);
 
@@ -553,15 +556,10 @@ bool WorldInstance::init(const std::string& zen,
         }
 
         LogInfo() << "ZEN-Files found in the currently loaded Archives: " << zenFiles;
-
-        if (!initializeScriptEngineForZenWorld(""))
-        {
-            return false;
-        }
     }
 
     // Initialize the sky, so it will get the right values
-    m_ClassContents->sky.fillSkyStates();
+    m_ClassContents->sky.onWorldNameChanged(getWorldName());
 
     /*Handle::EntityHandle e = VobTypes::initNPCFromScript(*this, "");
 
@@ -598,24 +596,14 @@ bool WorldInstance::init(const std::string& zen,
     return true;
 }
 
-bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
+void WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart)
 {
     if (!worldName.empty())
     {
         LogInfo() << "Initializing scripts for world: " << worldName;
-        m_ClassContents->scriptEngine.initForWorld(worldName, firstStart);
+        getScriptEngine().initForWorld(worldName, firstStart);
     }
-
-    LogInfo() << "Initialize dialog manager";
-    // Initialize dialog manager
-    if (!m_ClassContents->dialogManager.init())
-    {
-        LogWarn() << "Failed to initialize dialog manager";
-        return false;
-    }
-
     LogInfo() << "Script-initialization done!";
-    return true;
 }
 
 Handle::EntityHandle WorldInstance::addEntity(Components::ComponentMask components)
@@ -1103,6 +1091,11 @@ const std::map<std::string, Handle::EntityHandle>& WorldInstance::getFreepoints(
 const Waynet::WaynetInstance& WorldInstance::getWaynet()
 {
     return m_ClassContents->waynet;
+}
+
+std::string WorldInstance::getWorldName()
+{
+    return Utils::stripExtension(m_ZenFile);
 }
 
 Logic::ScriptEngine& WorldInstance::getScriptEngine()

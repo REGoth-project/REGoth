@@ -106,10 +106,10 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
         view = Math::Matrix::CreateIdentity();
 
     // Set view and projection matrix for view 0.
-    float farPlane = 1000.0f;
+    float farPlane = 600.0f;
 
     float proj[16];
-    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane);
+    bx::mtxProj(proj, 60.0f, float(width) / float(height), 0.1f, farPlane, bgfx::getCaps()->homogeneousDepth);
 
     // Set for every view
     for (uint8_t i = 0; i < 255; i++)

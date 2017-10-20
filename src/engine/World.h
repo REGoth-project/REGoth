@@ -348,7 +348,7 @@ namespace World
          * Will load the .DAT-Files and setup the VM.
          * @param firstStart Whether this is the initial load. If true, all NPCs will be put in here.
          */
-        bool initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
+        void initializeScriptEngineForZenWorld(const std::string& worldName, bool firstStart = true);
 
 
         TransientEntityFeatures m_TransientEntityFeatures;
