@@ -20,6 +20,7 @@ Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle en
     , m_spawnPosition(0.0f)
 {
     Components::Actions::initComponent<Components::PfxComponent>(m_World.getComponentAllocator(), entity);
+    Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), entity);
 }
 
 Logic::PfxVisual::~PfxVisual()
@@ -136,6 +137,10 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
         m_TimeSinceLastSpawn = 0.0f;
     }
 
+    // Reset BBox, so we can fit it around the current state of the system
+    m_BBox.min = { FLT_MAX,  FLT_MAX,  FLT_MAX};
+    m_BBox.max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
+
     // Update particle values
     for (Components::PfxComponent::Particle& p : pfx.m_Particles)
         updateParticle(p, deltaTime);
@@ -155,6 +160,14 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
             i--;
         }
     }
+
+    m_BBox.min -= getEntityTransform().Translation();
+    m_BBox.max -= getEntityTransform().Translation();
+
+    Components::BBoxComponent& bbox = m_World.getEntity<Components::BBoxComponent>(m_Entity);
+    bbox.m_BBox3D = m_BBox;
+    //bbox.m_DebugColor = 0xFFFFFFFF;
+    bbox.m_SphereRadius = (m_BBox.min * 0.5f + m_BBox.max * 0.5f).length() + fabs((m_BBox.max - m_BBox.min).length()) * 0.5f;
 }
 
 void Logic::PfxVisual::spawnParticle()
@@ -306,4 +319,18 @@ void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, flo
                                                     alpha);  // Need to modulate color on ADD-mode
 
     p.particleColorU8 = particleColor.toRGBA8();
+
+    updateBBoxForParticle(p);
+}
+
+void Logic::PfxVisual::updateBBoxForParticle(Components::PfxComponent::Particle& p)
+{
+    float sizeMax = std::max(p.size.x, p.size.y);
+    m_BBox.min.x = std::min(m_BBox.min.x, p.position.x - sizeMax);
+    m_BBox.min.y = std::min(m_BBox.min.y, p.position.y - sizeMax);
+    m_BBox.min.z = std::min(m_BBox.min.z, p.position.z - sizeMax);
+
+    m_BBox.max.x = std::max(m_BBox.max.x, p.position.x + sizeMax);
+    m_BBox.max.y = std::max(m_BBox.max.y, p.position.y + sizeMax);
+    m_BBox.max.z = std::max(m_BBox.max.z, p.position.z + sizeMax);
 }

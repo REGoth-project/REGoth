@@ -44,6 +44,11 @@ namespace Logic
         void updateParticle(Components::PfxComponent::Particle& p, float deltaTime);
 
         /**
+         * Updates the bbox around the whole system to contain the given particle
+         */
+        void updateBBoxForParticle(Components::PfxComponent::Particle& p);
+
+        /**
          * @return Reference to the underlaying PFX component
          */
         Components::PfxComponent& getPfxComponent();
@@ -68,5 +73,10 @@ namespace Logic
          * Current location on the spawning line or circle
          */
         float m_spawnPosition;
+
+        /**
+         * BBox around the particles
+         */
+        Utils::BBox3D m_BBox;
     };
 }
