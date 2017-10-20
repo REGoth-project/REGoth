@@ -90,7 +90,7 @@ float Pathfinder::findCeilingHeightAtPosition(const Math::float3& position)
 
 size_t Pathfinder::getGroundTriangleIndexAt(const Math::float3& position)
 {
-    Math::float3 worldBottom = Math::float3(position.x, FLT_MIN, position.y);
+    Math::float3 worldBottom = Math::float3(position.x, -FLT_MAX, position.y);
     Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(position, worldBottom, Physics::CollisionShape::CT_WorldMesh);
 
     if(!hit.hasHit)
