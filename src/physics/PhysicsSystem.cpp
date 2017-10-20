@@ -156,7 +156,7 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Mes
     return csh;
 }
 
-Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std::vector<ZenLoad::WorldTriangle> triangles,
+Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std::vector<ZenLoad::WorldTriangle>& triangles,
                                                                        CollisionShape::ECollisionType type,
                                                                        const std::string& name)
 {

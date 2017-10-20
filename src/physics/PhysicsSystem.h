@@ -123,7 +123,7 @@ namespace Physics
          * @return Static collision-shape using this mesh
          */
         Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const Meshes::WorldStaticMesh& mesh, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
-        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const std::vector<ZenLoad::WorldTriangle> triangles, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
+        Handle::CollisionShapeHandle makeCollisionShapeFromMesh(const std::vector<ZenLoad::WorldTriangle>& triangles, CollisionShape::ECollisionType type = CollisionShape::CT_Any, const std::string& name = "");
 
         /**
          * Creates a box-like collision-shape
