@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # git pre-commit hook that runs an clang-format stylecheck.
 # Features:
@@ -32,7 +32,9 @@ PARSE_EXTS=true
 FILE_EXTS=".c .h .cpp .hpp .cc .hh .cxx .m"
 
 ##################################################################
-# There should be no need to change anything below this line.
+# bash error codes
+EXIT_ERROR=1
+EXIT_SUCCESS=0
 
 # Reference: http://stackoverflow.com/questions/1055671/how-can-i-get-the-behavior-of-gnus-readlink-f-on-a-mac
 canonicalize_filename () {
@@ -90,7 +92,7 @@ fi
 if [ ! -x "$CLANG_FORMAT_BIN" ] ; then
     printf "Error: clang-format executable not found.\n"
     printf "Set the correct path in $(canonicalize_filename "$0").\n"
-    exit 1
+    exit $EXIT_ERROR
 fi
 
 # create a random filename to store our generated patch
@@ -110,6 +112,21 @@ do
         continue;
     fi
 
+    
+    # abort commit if staged file differs from workspace file
+    # need to unset bash error checking, because diff returns 1 if different
+    set +e
+    git show :"$file" | diff -u "$file" - >/dev/null
+    diff_return_code=$?
+    set -e
+    if [ $diff_return_code -eq 1 ];then
+        echo "Error: Cannot check/apply formatting. Staged files and workspace differ for file:"
+        printf "\t$file\n"
+        exit $EXIT_ERROR
+    elif [ $diff_return_code -eq 2 ];then
+        exit $EXIT_ERROR
+    fi
+
     # clang-format our sourcefile, create a patch with diff and append it to our $patch
     # The sed call is necessary to transform the patch from
     #    --- $file timestamp
@@ -125,18 +142,43 @@ done
 if [ ! -s "$patch" ] ; then
     printf "Files in this commit comply with the clang-format rules.\n"
     rm -f "$patch"
-    exit 0
+    exit $EXIT_SUCCESS
 fi
 
-# a patch has been created, notify the user and exit
-printf "\nThe following differences were found between the code to commit "
-printf "and the clang-format rules:\n\n"
+# some files are not properly formatted
+printf "\nThe following files do not match the clang-format rules:\n\n"
+lsdiff "$patch" --strip=1 | sed 's/^/\t/'
+printf "\nDifferences:\n\n"
+echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
 cat "$patch"
+echo "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<"
 
-printf "\nYou can apply these changes with:\n git apply $patch\n"
-printf "(may need to be called from the root directory of your repository)\n"
-printf "Aborting commit. Apply changes and commit again or skip checking with"
-printf " --no-verify (not recommended).\n"
+echo ""
+echo "Should the changes be added to the commit (y/n/abort)?"
+echo " - (y)es : apply formatting and proceed with commit"
+echo " - (n)o : proceed with commit (do not apply formatting)"
+echo " - (a)bort : abort commit"
 
-exit 1
+# Allows us to read user input below, assigns stdin to keyboard
+exec < /dev/tty
+read answer
+# close STDIN
+exec <&-
 
+if echo "$answer" | grep -iq "^y" ;then
+    formatted_files=$(lsdiff "$patch" --strip=1)
+    echo "Applying formatting on files:"
+    echo "$formatted_files"
+    git apply $patch
+    git add "$formatted_files"
+    exit $EXIT_SUCCESS
+elif echo "$answer" | grep -iq "^n" ;then
+    echo "No formatting applied. Proceeding with commit."
+    exit $EXIT_SUCCESS
+else
+    echo "Aborting commit"
+    printf "You may apply these changes manually with:\n\t git apply $patch\n"
+    printf "(may need to be called from the root directory of your repository)\n"
+    printf "(pre-commit can be disabled by committing with --no-verify)\n"
+    exit $EXIT_ERROR
+fi
