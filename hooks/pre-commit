@@ -168,7 +168,7 @@ exec <&-
 if echo "$answer" | grep -iq "^y" ;then
     formatted_files=$(lsdiff "$patch" --strip=1)
     echo "Applying formatting on files:"
-    echo "$formatted_files"
+    echo "$formatted_files" | sed 's/^/\t/'
     git apply $patch
     git add "$formatted_files"
     exit $EXIT_SUCCESS
@@ -177,7 +177,7 @@ elif echo "$answer" | grep -iq "^n" ;then
     exit $EXIT_SUCCESS
 else
     echo "Aborting commit"
-    printf "You may apply these changes manually with:\n\t git apply $patch\n"
+    printf "You may apply these changes manually with:\n git apply $patch\n"
     printf "(may need to be called from the root directory of your repository)\n"
     printf "(pre-commit can be disabled by committing with --no-verify)\n"
     exit $EXIT_ERROR
