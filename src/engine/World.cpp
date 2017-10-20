@@ -478,24 +478,21 @@ bool WorldInstance::init(const std::string& zen,
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
-        LogInfo() << "Running startup-scripts";
-
-        // Init script-engine
-        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
-        {
-            LogInfo() << "Failed to initialize script engine for zen world";
-            delete m_AudioWorld;
-            m_AudioWorld = nullptr;
-            return false;
-        }
-        //initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), false);
-
-        m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
 
         // Load script engine if one is provided. Always the case except "start new game"
         if (!scriptEngine.empty())
         {
             m_ScriptEngine.importScriptEngine(scriptEngine);
+        }
+
+        LogInfo() << "Initialize dialog manager";
+        // Initialize dialog manager
+        if (!m_DialogManager.init())
+        {
+            LogError() << "Failed to initialize dialog manager";
+            delete m_AudioWorld; // TODO use unique_ptr instead
+            m_AudioWorld = nullptr;
+            return false;
         }
         // Load dialogManager if one is provided. Only after loading a savegame
         if (!dialogManager.empty())
@@ -507,6 +504,20 @@ bool WorldInstance::init(const std::string& zen,
         {
             engine.getSession().getLogManager().importLogManager(logManager);
         }
+
+        m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
+
+        LogInfo() << "Running startup-scripts";
+
+        // Init script-engine
+        if (!initializeScriptEngineForZenWorld(zen.substr(0, zen.find('.')), worldUnknownToPlayer))
+        {
+            LogInfo() << "Failed to initialize script engine for zen world";
+            delete m_AudioWorld; // TODO use unique_ptr instead
+            m_AudioWorld = nullptr;
+            return false;
+        }
+
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(100);
 
@@ -577,14 +588,6 @@ bool WorldInstance::initializeScriptEngineForZenWorld(const std::string& worldNa
     {
         LogInfo() << "Initializing scripts for world: " << worldName;
         m_ScriptEngine.initForWorld(worldName, firstStart);
-    }
-
-    LogInfo() << "Initialize dialog manager";
-    // Initialize dialog manager
-    if (!m_DialogManager.init())
-    {
-        LogWarn() << "Failed to initialize dialog manager";
-        return false;
     }
 
     LogInfo() << "Script-initialization done!";
