@@ -11,8 +11,8 @@ NpcAIHandler::~NpcAIHandler()
 }
 
 NpcAIHandler::NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hostVob)
-        : m_World(world)
-        , m_HostVob(hostVob)
+    : m_World(world)
+    , m_HostVob(hostVob)
 {
     unbindKeys();
     m_ActiveMovementState = EMovementState::None;
