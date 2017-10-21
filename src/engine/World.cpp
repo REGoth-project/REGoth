@@ -57,7 +57,7 @@ public:
     Logic::ScriptEngine scriptEngine;
     Physics::PhysicsSystem physicsSystem;
     Animations::AnimationLibrary animationLibrary;
-    World::AudioWorld* audioWorld;
+    std::unique_ptr<World::AudioWorld> audioWorld;
     Content::Sky sky;
     Logic::DialogManager dialogManager;
     Logic::PfxManager pfxManager;
@@ -120,9 +120,6 @@ WorldInstance::~WorldInstance()
             }
         }
     }
-
-
-    delete m_ClassContents->audioWorld;
 }
 
 bool WorldInstance::init(const std::string& zen,
@@ -296,10 +293,6 @@ bool WorldInstance::init(const std::string& zen,
             Components::StaticMeshComponent& sm = getEntity<Components::StaticMeshComponent>(e);
             sm.m_InstanceDataIndex = (uint32_t)-2;  // Disable instancing
         }
-
-        LogInfo() << "Creating AudioWorld";
-        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_ClassContents->audioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
 
         // TODO: Refractor. Make a map of all vobs by classes or something.
         ZenLoad::zCVobData startPoint;
@@ -491,7 +484,9 @@ bool WorldInstance::init(const std::string& zen,
 
         LogInfo() << "Creating AudioWorld";
         // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_ClassContents->audioWorld = new World::AudioWorld(*m_pEngine, m_pEngine->getAudioEngine(), engine.getVDFSIndex());
+        m_ClassContents->audioWorld = std::make_unique<World::AudioWorld>(*m_pEngine,
+                                                                          m_pEngine->getAudioEngine(),
+                                                                          engine.getVDFSIndex());
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
@@ -506,8 +501,6 @@ bool WorldInstance::init(const std::string& zen,
         if (!getDialogManager().init())
         {
             LogError() << "Failed to initialize dialog manager";
-            delete m_ClassContents->audioWorld; // TODO use unique_ptr instead
-            m_ClassContents->audioWorld = nullptr;
             return false;
         }
         // Load dialogManager if one is provided. Only after loading a savegame
