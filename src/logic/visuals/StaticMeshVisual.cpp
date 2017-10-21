@@ -48,6 +48,11 @@ bool StaticMeshVisual::load(const std::string& visual)
         // Copy world-matrix
         Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
         pos = hostPos;
+
+        Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), e);
+        Components::BBoxComponent& bbox = m_World.getEntity<Components::BBoxComponent>(e);
+        bbox.m_SphereRadius = mdata.boundingSphereRadius;
+        bbox.m_BBox3D = mdata.bBox3D;
     }
 
     updateCollision();

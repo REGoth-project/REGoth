@@ -9,8 +9,8 @@
 using namespace Logic;
 
 NpcAnimationHandler::NpcAnimationHandler(World::WorldInstance& world, Handle::EntityHandle hostVob)
-    : m_World(world)
-    , m_HostVob(hostVob)
+        : m_World(world)
+        , m_HostVob(hostVob)
 {
     m_WalkMode = WalkMode::Run;
 }
@@ -102,6 +102,18 @@ void NpcAnimationHandler::Action_FightForward()
 {
     startAni_FightForward();
 }
+void NpcAnimationHandler::Action_FightLeft()
+{
+    startAni_FightLeft();
+}
+void NpcAnimationHandler::Action_FightRight()
+{
+    startAni_FightRight();
+}
+void NpcAnimationHandler::Action_FightParry()
+{
+    startAni_FightParry();
+}
 
 bool NpcAnimationHandler::playAnimationTrans(const std::string& anim)
 {
@@ -158,6 +170,10 @@ bool NpcAnimationHandler::isAnimationActive(const std::string& anim)
     }
 
     return false;
+}
+bool NpcAnimationHandler::isFightAnimationActive(){
+
+    return isFightAnimationPlaying();
 }
 
 bool NpcAnimationHandler::isStanding(bool allowTurning)
@@ -613,7 +629,33 @@ void NpcAnimationHandler::stopTurningAnimations()
 void NpcAnimationHandler::startAni_FightForward()
 {
     std::string anim = buildStateAnimationNameBasedOnWeapon("ATTACK");
-    if (!isAnimationActive(anim))
+    if(!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+
+void NpcAnimationHandler::startAni_FightLeft()
+{
+    std::string anim = "T_"+ getWeaponAniTag(getController().getWeaponMode()) + "ATTACKL";
+    if(!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+void NpcAnimationHandler::startAni_FightRight()
+{
+    std::string anim = "T_"+ getWeaponAniTag(getController().getWeaponMode()) + "ATTACKR";
+    if(!isAnimationActive(anim))
+    {
+        playAnimation(anim);
+    }
+}
+void NpcAnimationHandler::startAni_FightParry()
+{
+    //TODO there is also an animation called PARADE_JUMPB
+    std::string anim = "T_" + getWeaponAniTag(getController().getWeaponMode())+ "PARADE_0";
+    if(!isAnimationActive(anim))
     {
         playAnimation(anim);
     }
@@ -775,5 +817,14 @@ bool NpcAnimationHandler::isSubStateAnimationPlaying()
         return true;
 
     return false;
+}
+
+bool NpcAnimationHandler::isFightAnimationPlaying()
+{
+    const std::string weaponAniTag = getWeaponAniTag(getController().getWeaponMode());
+    return isAnimationActive("T_"+ weaponAniTag  + "ATTACKR")
+           || isAnimationActive("T_"+ weaponAniTag  + "ATTACKL")
+           ||isAnimationActive("S_"+ weaponAniTag  + "ATTACK")
+           || isAnimationActive("T_"+ weaponAniTag  + "PARADE_0");
 }
 

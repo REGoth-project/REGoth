@@ -118,12 +118,14 @@ namespace Components
 
         Utils::BBox3D m_BBox3D;
         uint32_t m_DebugColor;
+        float m_SphereRadius;
 
         static void init(BBoxComponent& c)
         {
             c.m_BBox3D.min = Math::float3(0, 0, 0);
             c.m_BBox3D.max = Math::float3(0, 0, 0);
             c.m_DebugColor = 0;
+            c.m_SphereRadius = 0.0f;
         }
     };
 

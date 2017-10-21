@@ -206,7 +206,7 @@ bool WorldInstance::init(const std::string& zen,
         // Init worldmesh-wrapper
         m_ClassContents->worldMesh.load(packedWorldMesh);
 
-        for (auto& sm : packedWorldMesh.subMeshes)
+        /*for (auto& sm : packedWorldMesh.subMeshes)
         {
             size_t k = 0;
             for (auto& lm : sm.triangleLightmapIndices)
@@ -220,7 +220,7 @@ bool WorldInstance::init(const std::string& zen,
 
                 k++;
             }
-        }
+        }*/
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
 
@@ -270,22 +270,12 @@ bool WorldInstance::init(const std::string& zen,
             phys.m_PhysicsObject = m_StaticWorldMeshCollsionShape;
             phys.m_IsStatic = true;
 
-            // Create triangle-array
-            std::vector<Math::float3> triangles;
-            triangles.reserve(packedWorldMesh.vertices.size());  // Note: there are likely more
-
-            for (auto& tri : packedWorldMesh.triangles)
-            {
-                triangles.push_back(tri.vertices[0].Position.v);
-                triangles.push_back(tri.vertices[1].Position.v);
-                triangles.push_back(tri.vertices[2].Position.v);
-            }
-
             m_pEngine->getHud().getLoadingScreen().setSectionProgress(50);
 
             // Add world-mesh collision
-            Handle::CollisionShapeHandle wmch = m_ClassContents->physicsSystem.makeCollisionShapeFromMesh(triangles, Physics::CollisionShape::CT_WorldMesh);
-            m_ClassContents->physicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
+            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(packedWorldMesh.triangles, Physics::CollisionShape::CT_WorldMesh);
+            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
+
         }
 
         // Make sure static collision is initialized before adding the VOBs

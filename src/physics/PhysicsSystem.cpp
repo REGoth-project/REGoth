@@ -156,7 +156,7 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const Mes
     return csh;
 }
 
-Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std::vector<Math::float3> triangles,
+Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std::vector<ZenLoad::WorldTriangle>& triangles,
                                                                        CollisionShape::ECollisionType type,
                                                                        const std::string& name)
 {
@@ -166,12 +166,15 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std
     // Init collision
     btTriangleMesh* wm = new btTriangleMesh;
 
-    for (size_t i = 0; i < triangles.size(); i += 3)
+    wm->preallocateVertices((int)triangles.size() * 3);
+    for (size_t i = 0; i < triangles.size(); i++)
     {
         // Convert to btvector
-        btVector3 v[] = {{triangles[i].x, triangles[i].y, triangles[i].z},
-                         {triangles[i + 1].x, triangles[i + 1].y, triangles[i + 1].z},
-                         {triangles[i + 2].x, triangles[i + 2].y, triangles[i + 2].z}};
+        const btVector3 v[] = {
+                {triangles[i].vertices[0].Position.x, triangles[i].vertices[0].Position.y, triangles[i].vertices[0].Position.z},
+                {triangles[i].vertices[1].Position.x, triangles[i].vertices[1].Position.y, triangles[i].vertices[1].Position.z},
+                {triangles[i].vertices[2].Position.x, triangles[i].vertices[2].Position.y, triangles[i].vertices[2].Position.z}
+        };
 
         wm->addTriangle(v[0], v[1], v[2]);
     }

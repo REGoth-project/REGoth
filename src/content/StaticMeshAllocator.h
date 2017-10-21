@@ -7,6 +7,7 @@
 #include "memory/Config.h"
 #include <handle/Handle.h>
 #include <handle/HandleDef.h>
+#include <utils/Utils.h>
 
 namespace Engine
 {
@@ -27,6 +28,9 @@ namespace Meshes
         }
 
         WorldStaticMeshData mesh;
+
+        Utils::BBox3D bBox3D;
+        float boundingSphereRadius;
 
         // Slot where the instance-buffer for meshes of these kind is. Needs to be initialized manually.
         uint32_t instanceDataBufferIndex;

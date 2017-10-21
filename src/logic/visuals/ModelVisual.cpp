@@ -173,6 +173,12 @@ bool ModelVisual::load(const std::string& visual)
 
         // Assign the main-vob as animation controller
         anim.m_ParentAnimHandler = m_Entity;
+
+        Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), e);
+        Components::BBoxComponent& bbox = m_World.getEntity<Components::BBoxComponent>(e);
+        bbox.m_SphereRadius = m_World.getSkeletalMeshAllocator().getMeshBoundingSphereRadius(m_MainMeshHandle);
+        bbox.m_BBox3D = m_World.getSkeletalMeshAllocator().getMeshBBox3d(m_MainMeshHandle);
+
     }
 
     /****
@@ -217,7 +223,7 @@ bool ModelVisual::load(const std::string& visual)
             if (!amh.isValid())
                 continue;
 
-            Meshes::WorldStaticMesh amdata = m_World.getStaticMeshAllocator().getMesh(amh);
+            Meshes::WorldStaticMesh& amdata = m_World.getStaticMeshAllocator().getMesh(amh);
 
             // Add the entities to our lists
             std::vector<Handle::EntityHandle> tmp = Content::entitifyMesh(m_World, amh, amdata.mesh);
@@ -240,6 +246,11 @@ bool ModelVisual::load(const std::string& visual)
                 // Important: Apply draw distance, and every other setting from the host
                 Components::PositionComponent& pos = m_World.getEntity<Components::PositionComponent>(e);
                 pos = hostPos;
+
+                Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), e);
+                Components::BBoxComponent& bbox = m_World.getEntity<Components::BBoxComponent>(e);
+                bbox.m_SphereRadius = amdata.boundingSphereRadius;
+                bbox.m_BBox3D = amdata.bBox3D;
             }
         }
 

@@ -72,6 +72,18 @@ namespace Logic
          * Plays the fight-forward animation (with transitions)
          */
         void Action_FightForward();
+        /**
+        * Plays the fight-left animation (with transitions)
+        */
+        void Action_FightLeft();
+        /**
+        * Plays the fight-right animation (with transitions)
+        */
+        void Action_FightRight();
+        /**
+        * Plays the parry animation (with transitions)
+        */
+        void Action_FightParry();
 
         /**
          * Goes back to the standing-state, when possible
@@ -90,6 +102,11 @@ namespace Logic
          */
         bool isAnimationActive(Handle::AnimationHandle anim);
         bool isAnimationActive(const std::string& anim);
+
+        /**
+         * @return Whether fighting/parade animation is currently played (1h, 2h, fist)
+         */
+        bool isFightAnimationActive();
 
         /**
          * @return Whether the model is currently standing around
@@ -141,6 +158,9 @@ namespace Logic
         void startAni_DrawWeapon(int part);
         void startAni_UndrawWeapon();
         void startAni_FightForward();
+        void startAni_FightLeft();
+        void startAni_FightRight();
+        void startAni_FightParry();
 
         /**
          * Starts the turning-animations and does the physical turn
@@ -219,6 +239,11 @@ namespace Logic
          */
         bool isTurningAnimationPlaying();
         bool isSubStateAnimationPlaying();
+
+        /**
+         * @return Whether a attack/parry animation is playing. At the moment only fist/1h/2h weapons
+         */
+        bool isFightAnimationPlaying();
 
         /**
          * Goblins use the "fist"-modes like all other monsters, even though they are holding a 1h-weapon.
