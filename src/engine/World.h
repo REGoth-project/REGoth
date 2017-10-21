@@ -65,7 +65,7 @@ namespace World
 {
     class AudioWorld;
     class WorldMesh;
-    class WorldAllocators;
+    struct WorldAllocators;
 
     namespace Waynet
     {

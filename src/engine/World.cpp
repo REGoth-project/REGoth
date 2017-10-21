@@ -273,8 +273,8 @@ bool WorldInstance::init(const std::string& zen,
             m_pEngine->getHud().getLoadingScreen().setSectionProgress(50);
 
             // Add world-mesh collision
-            Handle::CollisionShapeHandle wmch = m_PhysicsSystem.makeCollisionShapeFromMesh(packedWorldMesh.triangles, Physics::CollisionShape::CT_WorldMesh);
-            m_PhysicsSystem.compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
+            Handle::CollisionShapeHandle wmch = getPhysicsSystem().makeCollisionShapeFromMesh(packedWorldMesh.triangles, Physics::CollisionShape::CT_WorldMesh);
+            getPhysicsSystem().compoundShapeAddChild(m_StaticWorldMeshCollsionShape, wmch);
 
         }
 
