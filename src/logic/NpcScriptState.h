@@ -2,6 +2,7 @@
 #include <string>
 #include <engine/World.h>
 #include <handle/HandleDef.h>
+#include <daedalus/DaedalusGameState.h>
 
 namespace Logic
 {

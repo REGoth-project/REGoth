@@ -10,8 +10,12 @@
 #include <utils/logger.h>
 
 #include <logic/Controller.h>
-#include <engine/BaseEngine.h>
+#include <content/Sky.h>
 #include "SkyRendering.h"
+#include <content/SkeletalMeshAllocator.h>
+#include <content/StaticMeshAllocator.h>
+#include <components/AnimHandler.h>
+#include <engine/BaseEngine.h>
 
 enum class ECameraClipType
 {

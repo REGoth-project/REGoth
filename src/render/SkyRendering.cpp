@@ -7,6 +7,7 @@
 #include <content/Sky.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
+#include <content/StaticMeshAllocator.h>
 
 static bool isSkyDomeAvailable(const Content::Sky& sky);
 static void drawSkyDomeOf(World::WorldInstance& world, const Render::RenderConfig& renderConfig);

@@ -56,7 +56,7 @@ namespace Engine
         std::shared_future<T> m_SharedFuture;
     };
 
-    struct AsyncAction
+    class AsyncAction
     {
     public:
         template <class T>
@@ -98,8 +98,10 @@ namespace Engine
                         assert(engine->isMainThread());
                         future.wait();  // blocks until execution finished
                         finished = true;
+                        break;
                     case std::launch::async:
                         finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
+                        break;
                 }
                 if (finished)
                 {

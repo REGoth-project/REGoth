@@ -12,6 +12,8 @@
 #include <logic/visuals/ModelVisual.h>
 #include <ui/PrintScreenMessages.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
 
 void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose)
 {

@@ -13,6 +13,7 @@
 #include <logic/mobs/Container.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 Handle::EntityHandle VobTypes::initNPCFromScript(World::WorldInstance& world, Daedalus::GameState::NpcHandle scriptInstance)
 {

@@ -13,6 +13,9 @@
 #include <utils/Utils.h>
 #include <utils/cli.h>
 #include <utils/logger.h>
+#include <engine/WorldMesh.h>
+#include <ZenLib/zenload/zCProgMeshProto.h>
+#include <content/StaticMeshAllocator.h>
 
 using namespace Content;
 

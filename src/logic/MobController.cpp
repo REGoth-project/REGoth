@@ -11,6 +11,7 @@
 #include <logic/mobs/Bed.h>
 #include <logic/mobs/Container.h>
 #include <logic/mobs/Ladder.h>
+#include <logic/ScriptEngine.h>
 
 using namespace Logic;
 

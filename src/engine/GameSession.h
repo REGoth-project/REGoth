@@ -11,6 +11,7 @@
 #include <handle/HandleDef.h>
 #include <logic/LogManager.h>
 #include <json/json.hpp>
+#include <engine/Input.h>
 
 namespace Engine
 {

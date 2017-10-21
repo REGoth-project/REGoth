@@ -17,7 +17,7 @@ namespace Logic
 {
     namespace EventMessages
     {
-        class EventMessage;
+        struct EventMessage;
     }
 
     class Controller

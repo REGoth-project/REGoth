@@ -7,6 +7,9 @@
 #include <debugdraw/debugdraw.h>
 #include <stdlib.h>
 #include <utils/cli.h>
+#include <physics/PhysicsSystem.h>
+#include <engine/WorldMesh.h>
+#include <components/Vob.h>
 
 using namespace Logic;
 

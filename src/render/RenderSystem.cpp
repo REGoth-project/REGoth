@@ -4,6 +4,8 @@
 #include <engine/BaseEngine.h>
 #include <utils/logger.h>
 #include <zenload/zTypes.h>
+#include <content/VertexTypes.h>
+#include <content/StaticMeshAllocator.h>
 
 #if BX_PLATFORM_EMSCRIPTEN
 #include <emscripten.h>

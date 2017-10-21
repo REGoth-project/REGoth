@@ -34,6 +34,10 @@
 #include <zenload/zenParser.h>
 #include <zenload/ztex2dds.h>
 #include <utils/GLFW_Keys.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
+#include <content/StaticMeshAllocator.h>
+#include <content/SkeletalMeshAllocator.h>
 
 using json = nlohmann::json;
 

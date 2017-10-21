@@ -9,6 +9,8 @@
 #include <engine/World.h>
 #include <utils/logger.h>
 #include <zenload/zCModelMeshLib.h>
+#include <content/AnimationAllocator.h>
+#include <components/AnimHandler.h>
 
 using namespace Logic;
 

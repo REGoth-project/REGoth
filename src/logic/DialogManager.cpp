@@ -14,6 +14,7 @@
 #include <ui/PrintScreenMessages.h>
 #include <ui/SubtitleBox.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 /**
  * File containing the dialouges

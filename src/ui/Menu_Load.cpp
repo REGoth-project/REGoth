@@ -4,6 +4,7 @@
 #include <logic/SavegameManager.h>
 #include <utils/Utils.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 using namespace UI;
 

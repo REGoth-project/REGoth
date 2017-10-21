@@ -9,6 +9,7 @@
 #include <zenload/zenParser.h>
 
 #include "content/AnimationLibrary.h"
+#include <content/AnimationAllocator.h>
 
 using namespace Animations;
 using namespace VDFS;

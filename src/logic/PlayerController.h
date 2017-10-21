@@ -15,6 +15,11 @@ namespace UI
     class Menu_Status;
 }
 
+namespace Physics
+{
+    struct RayTestResult;
+}
+
 namespace Logic
 {
     class ModelVisual;

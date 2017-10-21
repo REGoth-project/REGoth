@@ -8,8 +8,8 @@
 #include <zenload/zCModelPrototype.h>
 
 #include "AnimHandler.h"
-
-
+#include <content/AnimationLibrary.h>
+#include <content/AnimationAllocator.h>
 
 using namespace Components;
 using namespace ZenLoad;

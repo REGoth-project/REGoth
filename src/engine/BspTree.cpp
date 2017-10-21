@@ -2,6 +2,7 @@
 #include <debugdraw/debugdraw.h>
 #include <engine/World.h>
 #include <utils/logger.h>
+#include <logic/ScriptEngine.h>
 
 using namespace World;
 
