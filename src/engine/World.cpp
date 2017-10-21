@@ -493,6 +493,8 @@ bool WorldInstance::init(const std::string& zen,
         // Load script engine if one is provided. Always the case except "start new game"
         if (!scriptEngine.empty())
         {
+            // TODO move the importScriptEngine above NPC/ITEM/PARTICLE import
+            // no script function should run before importScriptEngine
             getScriptEngine().importScriptEngine(scriptEngine);
         }
 
