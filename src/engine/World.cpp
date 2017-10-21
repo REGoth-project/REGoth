@@ -33,6 +33,7 @@
 #include <logic/PfxManager.h>
 #include <logic/ScriptEngine.h>
 #include "WorldAllocators.h"
+#include "AsyncAction.h"
 
 using namespace World;
 
@@ -94,32 +95,42 @@ WorldInstance::~WorldInstance()
         VobTypes::Wld_RemoveNpc(*this, player);
     */
 
-    // Destroy all allocated components
-    // Loop because some destructor may create more entities
-    while(getComponentAllocator().getNumObtainedElements() != 0)
-    {
-        auto ents = getComponentAllocator().getDataBundle();
-        Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
-
-        // Need to make a list of all entites because some destructors could remove some entites inside
-        std::vector<Handle::EntityHandle> allEntities;
-        for (size_t i = 0; i < ents.m_NumElements; i++)
+    // Destructor might get called from different thread
+    auto destroyComponents = [this](Engine::BaseEngine* engine){
+        // Destroy all allocated components
+        // Loop because some destructor may create more entities
+        while(getComponentAllocator().getNumObtainedElements() != 0)
         {
-            allEntities.push_back(entityComponents[i].m_ThisEntity);
-        }
+            auto ents = getComponentAllocator().getDataBundle();
+            Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
 
-        for (Handle::EntityHandle e : allEntities)
-        {
-            if (isEntityValid(e))
+            // Need to make a list of all entites because some destructors could remove some entites inside
+            std::vector<Handle::EntityHandle> allEntities;
+            for (size_t i = 0; i < ents.m_NumElements; i++)
             {
-                Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
-                    Components::Actions::destroyComponent(v);
-                });
+                allEntities.push_back(entityComponents[i].m_ThisEntity);
+            }
 
-                getComponentAllocator().removeObject(e);
+            for (Handle::EntityHandle e : allEntities)
+            {
+                if (isEntityValid(e))
+                {
+                    Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
+                        Components::Actions::destroyComponent(v);
+                    });
+
+                    getComponentAllocator().removeObject(e);
+                }
             }
         }
-    }
+        // explicitly call destructors (containing bgfx calls) in main-thread
+        m_ClassContents = nullptr;
+        m_Allocators = nullptr;
+    };
+    Engine::AsyncAction::executeInThread(destroyComponents,
+                                         this->getEngine(),
+                                         Engine::ExecutionPolicy::MainThread,
+                                         false).wait();
 }
 
 bool WorldInstance::init(const std::string& zen,
