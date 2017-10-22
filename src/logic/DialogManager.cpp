@@ -358,8 +358,7 @@ bool DialogManager::init()
         engine->getRootUIView().addChild(m_ActiveSubtitleBox);
         m_ActiveSubtitleBox->setHidden(true);
     };
-    Engine::AsyncAction::executeInThread(createSubtitleBox, m_World.getEngine(), Engine::ExecutionPolicy::MainThread)
-        .wait();
+    m_World.getEngine()->executeInThread(createSubtitleBox, Engine::ExecutionPolicy::MainThread).wait();
 
     LogInfo() << "Done initializing DialogManager!";
     return true;

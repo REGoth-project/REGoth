@@ -231,37 +231,37 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
     auto timePlayed = info.timePlayed;
     auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine) {
         auto resetSession = [](BaseEngine* engine) {
-            gameEngine->resetSession();
-            gameEngine->getHud().getLoadingScreen().reset();
-            gameEngine->getHud().getLoadingScreen().setHidden(false);
+            engine->resetSession();
+            engine->getHud().getLoadingScreen().reset();
+            engine->getHud().getLoadingScreen().setHidden(false);
         };
-        AsyncAction::executeInThread(resetSession, gameEngine, ExecutionPolicy::MainThread).wait();
+        engine->executeInThread(resetSession, ExecutionPolicy::MainThread).wait();
 
         json worldJson = json::parse(worldFileData);
         // TODO: catch json exception when emtpy file is parsed or parser crashes
         json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
         json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
         json logManager = json::parse(SavegameManager::readFileInSlot(index, "logmanager.json"));
-        gameEngine->getSession().setCurrentSlot(index);
-        gameEngine->getGameClock().setTotalSeconds(timePlayed);
+        engine->getSession().setCurrentSlot(index);
+        engine->getGameClock().setTotalSeconds(timePlayed);
         using UniqueWorld = std::unique_ptr<World::WorldInstance>;
         std::shared_ptr<UniqueWorld> pWorld;
-        pWorld = std::make_shared<UniqueWorld>(gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager));
+        pWorld = std::make_shared<UniqueWorld>(engine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager));
 
         auto registerWorld = [index, pWorld](BaseEngine * engine)
         {
-            Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(*pWorld));
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(*pWorld));
             if (worldHandle.isValid())
             {
-                gameEngine->getSession().setMainWorld(worldHandle);
+                engine->getSession().setMainWorld(worldHandle);
                 json playerJson = json::parse(readPlayer(index, "player"));
-                gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
+                engine->getMainWorld().get().importVobAndTakeControl(playerJson);
             }
-            gameEngine->getHud().getLoadingScreen().setHidden(true);
+            engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld), gameEngine, ExecutionPolicy::MainThread);
+        engine->executeInThread(std::move(registerWorld), ExecutionPolicy::MainThread);
     };
-    AsyncAction::executeInThread(loadSave, gameEngine, ExecutionPolicy::NewThread);
+    gameEngine->executeInThread(loadSave, ExecutionPolicy::NewThread);
     return "";
 }
 

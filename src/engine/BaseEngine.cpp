@@ -40,6 +40,7 @@ namespace Flags
 
 BaseEngine::BaseEngine()
     : m_MainThreadID(std::this_thread::get_id())
+    , m_EnableMultiThreading(true)
     , m_RootUIView(*this)
     , m_Console(*this)
     , m_EngineTextureAlloc(*this)
@@ -287,7 +288,7 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(AsyncAction::JobType<void> job, bool forceQueue)
+void BaseEngine::executeInMainThread(std::function<void(BaseEngine*)> job, bool forceQueue)
 {
     if (!forceQueue && isMainThread())
     {

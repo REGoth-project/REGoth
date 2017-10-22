@@ -10,6 +10,7 @@
 #include <memory/StaticReferencedAllocator.h>
 #include <ui/View.h>
 #include <vdfs/fileIndex.h>
+#include "AsyncAction.h"
 
 namespace UI
 {
@@ -34,6 +35,9 @@ namespace Engine
         MainThreadQueued,
         NewThread
     };
+
+    template <class ReturnType>
+    using JobType = std::function<ReturnType(BaseEngine* engine)>;
 
     class BaseEngine
     {
@@ -183,6 +187,19 @@ namespace Engine
         void processMessageQueue();
 
         /**
+         * Executes the job in the specified thread
+         * @param job the job to be executed
+         * @param executionPolicy defines which thread should execute the job
+         * @return SafeFuture on which any thread may call wait() or get()
+         */
+        template <class ReturnType=void>
+        std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy);
+        std::future<void> executeInThread(JobType<void> job, ExecutionPolicy policy)
+        {
+            return executeInThread<void>(std::move(job), policy);
+        }
+
+        /**
          * Called when a world was added
          * TODO onWorld... should be protected, but currently need to call this function from GameSession
          */
@@ -190,6 +207,12 @@ namespace Engine
         virtual void onWorldRemoved(Handle::WorldHandle world){};
 
     protected:
+        /**
+         * wraps the job into a new functor, that puts the job's return value into the promise
+         */
+        template <class ReturnType>
+        JobType<void> wrapJob(JobType<ReturnType> job, std::shared_ptr<std::promise<ReturnType>> promise);
+
         /**
          * Update-method for subclasses
          */
@@ -202,9 +225,14 @@ namespace Engine
         virtual void loadArchives();
 
         /**
-         * ID of the main thread (bgfx thread)
+         * ID of the main thread (bgfx thread), must be initialized first
          */
         std::thread::id m_MainThreadID;
+
+        /**
+         * Whether multi-threading is enabled
+         */
+        bool m_EnableMultiThreading;
 
         /**
          * Enum with values for Gothic I and Gothic II
@@ -256,11 +284,18 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-    public:
-        std::list<std::function<void(BaseEngine*)>> m_MessageQueue; // TODO make private again
-        std::list<std::shared_future<void>> m_AsyncJobs;
-    private:
+
+        /**
+         * list of jobs to be executed at frame-end
+         */
+        std::list<std::function<void(BaseEngine*)>> m_MessageQueue;
         std::mutex m_MessageQueueMutex;
+
+        /**
+         * futures created by std::async block in their destructors
+         * that's why they are kept alive in this list
+         */
+        std::list<std::shared_future<void>> m_AsyncJobs;
         std::mutex m_AsyncJobsMutex;
 
         /**
@@ -306,4 +341,55 @@ namespace Engine
         // for handling overlapping or nested excluders
         static size_t m_ReferenceCounter;
     };
+}
+
+namespace Engine
+{
+    template <class ReturnType>
+    inline JobType<void> BaseEngine::wrapJob(JobType<ReturnType> job, std::shared_ptr<std::promise<ReturnType>> promise)
+    {
+        return [promise, job = std::move(job)](BaseEngine* engine){
+            promise->set_value(job(engine));
+        };
+    }
+
+    // template specialization needed, because of promise<void>::set_value() specialization
+    template <>
+    inline JobType<void> BaseEngine::wrapJob(JobType<void> job, std::shared_ptr<std::promise<void>> promise)
+    {
+        return [promise, job = std::move(job)](BaseEngine* engine){
+            job(engine);
+            promise->set_value();
+        };
+    }
+
+    template <class ReturnType>
+    inline std::future<ReturnType> BaseEngine::executeInThread(JobType<ReturnType> job, ExecutionPolicy policy)
+    {
+        if (!m_EnableMultiThreading && policy == ExecutionPolicy::NewThread)
+            policy = ExecutionPolicy::MainThreadQueued;
+
+        std::shared_ptr<std::promise<ReturnType>> promise = std::make_shared<std::promise<ReturnType>>();
+        std::future<ReturnType> waitableFuture = promise->get_future();
+
+        auto wrappedJob = wrapJob(std::move(job), promise);
+
+        switch (policy)
+        {
+            case ExecutionPolicy::MainThread:
+                executeInMainThread(std::move(wrappedJob), false);
+                break;
+            case ExecutionPolicy::MainThreadQueued:
+                executeInMainThread(std::move(wrappedJob), true);
+                break;
+            case ExecutionPolicy::NewThread:
+            {
+                std::future<void> keepAliveFuture = std::async(std::launch::async, std::move(wrappedJob), this);
+                std::lock_guard<std::mutex> guard(m_AsyncJobsMutex);
+                m_AsyncJobs.push_back(std::move(keepAliveFuture));
+            }
+                break;
+        }
+        return waitableFuture;
+    }
 }

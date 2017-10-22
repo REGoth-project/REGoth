@@ -181,7 +181,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
                 }
             }
         };
-        AsyncAction::executeInThread(exportData, engine, ExecutionPolicy::MainThread).wait();
+        engine->executeInThread(exportData, ExecutionPolicy::MainThread).wait();
 
         /**
          * asynchronous part
@@ -213,9 +213,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(registerWorld_, engine, ExecutionPolicy::MainThread);
+        engine->executeInThread(registerWorld_, ExecutionPolicy::MainThread);
     };
-    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread);
+    m_Engine.executeInThread(switchToWorld_, ExecutionPolicy::NewThread);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
@@ -238,14 +238,14 @@ Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
 
 void GameSession::startNewGame(const std::string& worldFile)
 {
-    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine) {
+    auto addWorld = [worldFile](Engine::BaseEngine* engine) {
 
         auto prolog = [](Engine::BaseEngine* engine) {
             engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
         };
-        AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
+        engine->executeInThread(prolog, ExecutionPolicy::MainThread).wait();
 
         using UniqueWorld = std::unique_ptr<World::WorldInstance>;
         std::shared_ptr<UniqueWorld> world;
@@ -267,9 +267,9 @@ void GameSession::startNewGame(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(registerWorld, engine, ExecutionPolicy::MainThread);
+        engine->executeInThread(registerWorld, ExecutionPolicy::MainThread);
     };
-    AsyncAction::executeInThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
+    m_Engine.executeInThread(addWorld, ExecutionPolicy::NewThread);
 }
 
 void GameSession::setupKeyBindings()
