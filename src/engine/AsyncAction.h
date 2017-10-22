@@ -11,112 +11,68 @@ namespace Engine
 {
     class BaseEngine;
 
-    template <class T>
+    template <class ReturnType>
     class SafeFuture
     {
     public:
-        SafeFuture(BaseEngine* pBaseEngine, std::shared_future<T> f)
-            : m_pBaseEngine(pBaseEngine)
-            , m_SharedFuture(f)
+        ReturnType wait()
         {
+            return m_Future.get();
         }
-
-        /**
-         * Safely waits for the future to be started and finished
-         * If the calling thread is the main thread, the execution will be triggered additionally
-         * It is safe call this function from any thread
-         * @return result of the future
-         */
-        std::shared_future<T>& getFuture()
-        {
-            wait();
-            return m_SharedFuture;
-        }
-
-        /**
-         * Safely waits for the future to be started and finished
-         * If the calling thread is the main thread, the execution will be triggered additionally
-         * It is safe to call this function from any thread
-         */
-        void wait()
-        {
-            if (!m_pBaseEngine->isMainThread())
-            {
-                // wait until the main thread has started the execution
-                // timespan doesn't matter, since it is ignored if the status is deferred
-                while (m_SharedFuture.wait_for(std::chrono::seconds(0)) == std::future_status::deferred)
-                {
-                }
-            }
-            m_SharedFuture.wait();
-        }
-
-    private:
-        BaseEngine* m_pBaseEngine;
-        std::shared_future<T> m_SharedFuture;
+        std::shared_future<ReturnType> m_Future;
     };
 
-    class AsyncAction
+    namespace AsyncAction
     {
-    public:
-        template <class T>
-        using JobType = std::function<T(BaseEngine* engine)>;
 
-        template <class Callable>
-        using ReturnType = decltype(std::declval<Callable>()(std::declval<BaseEngine*>()));
 
         /**
          * Executes the job in the specified thread
-         * @tparam Callable any callable type that accepts BaseEngine pointer. i.e. std::function<T(BaseEngine* engine)>
-         * @param job a callable object. Unlike BaseEngine::onMessage also accepts non-copyable objects
-         * @param engine
+         * @tparam job job to execute
+         * @param job the job to be executed
          * @param executionPolicy defines which thread should execute the job
-         * @param forceQueueing if false and if called from main thread the job will be executed right away
-         *        (only relevant for main thread -> main thread jobs)
          * @return SafeFuture on which any thread may call wait() or get()
          */
-        template <class Callable>
-        static SafeFuture<ReturnType<Callable>>
-        executeInThread(Callable job, BaseEngine* engine, ExecutionPolicy executionPolicy, bool forceQueueing = false)
+
+        template <class ReturnType>
+        using JobType = std::function<ReturnType(BaseEngine* engine)>;
+
+        static SafeFuture<void> executeInThread(const JobType<void>& job, BaseEngine* engine, ExecutionPolicy policy)
         {
-            std::launch policy;
-            switch (executionPolicy)
+            using ReturnType = void;
+
+            bool disableMultithreading = false;
+            if (disableMultithreading && policy == ExecutionPolicy::NewThread)
+                policy = ExecutionPolicy::MainThreadQueued;
+
+            std::shared_ptr<std::promise<ReturnType>> promise = std::make_shared<std::promise<ReturnType>>();
+            std::shared_future<ReturnType> resultFuture = promise->get_future();
+
+            auto wrapperJob = [job = std::move(job), promise, engine](BaseEngine* engine) mutable {
+                job(engine);
+                promise->set_value();
+                // no need to set_exception of promise.
+                // MainThread and MainThreadQueued will be invoked directly and thrown in main thread
+                // std::async (NewThread) will set_exception automatically and processMessageQueue will rethrow with .get()
+            };
+
+            switch (policy)
             {
                 case ExecutionPolicy::MainThread:
-                    policy = std::launch::deferred;
+                    engine->executeInMainThread(std::move(wrapperJob), false);
+                    break;
+                case ExecutionPolicy::MainThreadQueued:
+                    engine->executeInMainThread(std::move(wrapperJob), true);
                     break;
                 case ExecutionPolicy::NewThread:
-                    policy = std::launch::async;
+                {
+                    std::future<ReturnType> keepAliveFuture = std::async(std::launch::async, std::move(wrapperJob), engine);
+                    // TODO lock m_AsyncJobsMutex
+                    engine->m_AsyncJobs.push_back(std::move(keepAliveFuture));
+                }
                     break;
             }
-            std::shared_future<AsyncAction::ReturnType<Callable>> future = std::async(policy, std::forward<Callable>(job), engine);
-            std::function<bool(BaseEngine * engine)> wrapperJob = [future, policy](BaseEngine* engine) -> bool {
-                bool finished = false;
-                switch (policy)
-                {
-                    case std::launch::deferred:
-                        assert(engine->isMainThread());
-                        future.wait();  // blocks until execution finished
-                        finished = true;
-                        break;
-                    case std::launch::async:
-                        finished = future.wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
-                        break;
-                }
-                if (finished)
-                {
-                    // calling .get() will rethrow any exception, that occurred while executing the future
-                    future.get();
-                }
-                return finished;
-            };
-            // executeInMainThreadUntilTrue makes the job stay in the queue until the future is ready
-            engine->executeInMainThreadUntilTrue(wrapperJob, forceQueueing);
-            return SafeFuture<ReturnType<Callable>>(engine, future);
+            return SafeFuture<ReturnType>{resultFuture};
         }
-
-        bool run(BaseEngine& engine);
-
-        JobType<bool> m_Job;
-    };
+    }
 }

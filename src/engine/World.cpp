@@ -129,8 +129,7 @@ WorldInstance::~WorldInstance()
     };
     Engine::AsyncAction::executeInThread(destroyComponents,
                                          this->getEngine(),
-                                         Engine::ExecutionPolicy::MainThread,
-                                         false).wait();
+                                         Engine::ExecutionPolicy::MainThread).wait();
 }
 
 bool WorldInstance::init(const std::string& zen,

@@ -244,11 +244,13 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         json logManager = json::parse(SavegameManager::readFileInSlot(index, "logmanager.json"));
         gameEngine->getSession().setCurrentSlot(index);
         gameEngine->getGameClock().setTotalSeconds(timePlayed);
-        std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> pWorld;
+        pWorld = std::make_shared<UniqueWorld>(gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager));
 
-        auto registerWorld = [ index, w = std::move(pWorld) ](BaseEngine * engine) mutable
+        auto registerWorld = [index, pWorld](BaseEngine * engine)
         {
-            Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(*pWorld));
             if (worldHandle.isValid())
             {
                 gameEngine->getSession().setMainWorld(worldHandle);
@@ -259,7 +261,7 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         };
         AsyncAction::executeInThread(std::move(registerWorld), gameEngine, ExecutionPolicy::MainThread);
     };
-    AsyncAction::executeInThread(loadSave, gameEngine, ExecutionPolicy::NewThread, true);
+    AsyncAction::executeInThread(loadSave, gameEngine, ExecutionPolicy::NewThread);
     return "";
 }
 

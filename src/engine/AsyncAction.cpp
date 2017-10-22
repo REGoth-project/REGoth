@@ -7,7 +7,3 @@
 
 using namespace Engine;
 
-bool Engine::AsyncAction::run(Engine::BaseEngine& engine)
-{
-    return m_Job(&engine);
-}

@@ -186,14 +186,16 @@ void GameSession::switchToWorld(const std::string& worldFile)
         /**
          * asynchronous part
          */
-        std::unique_ptr<World::WorldInstance> pNewWorld = engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> world;
+        world = std::make_shared<UniqueWorld>(engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine));
 
         /**
          * epilog
          */
-        auto registerWorld_ = [ w = std::move(pNewWorld), exportedPlayer ](BaseEngine * engine) mutable
+        auto registerWorld_ = [world, exportedPlayer ](BaseEngine* engine)
         {
-            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(*world));
             engine->getSession().setMainWorld(newWorld);
             auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
 
@@ -211,9 +213,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
+        AsyncAction::executeInThread(registerWorld_, engine, ExecutionPolicy::MainThread);
     };
-    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread, true);
+    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
@@ -245,11 +247,13 @@ void GameSession::startNewGame(const std::string& worldFile)
         };
         AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
 
-        std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> world;
+        world = std::make_shared<UniqueWorld>(engine->getSession().createWorld(worldFile));
 
-        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine * engine) mutable
+        auto registerWorld = [world](Engine::BaseEngine* engine)
         {
-            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(*world));
             if (worldHandle.isValid())
             {
                 engine->getSession().setMainWorld(worldHandle);
@@ -263,13 +267,9 @@ void GameSession::startNewGame(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
+        AsyncAction::executeInThread(registerWorld, engine, ExecutionPolicy::MainThread);
     };
-    bool synchronous = false;
-    auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
-    // we never want to execute it right away (if it is on MainThread)
-    bool forceQueue = true;
-    AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
+    AsyncAction::executeInThread(addWorld, &m_Engine, ExecutionPolicy::NewThread);
 }
 
 void GameSession::setupKeyBindings()

@@ -330,10 +330,13 @@ void DialogManager::endDialog()
 
 bool DialogManager::init()
 {
-    std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
-
-    if (ou.empty())
-        ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
+    std::string ou;
+    for (const auto& outFile : {OU_FILE, OU_FILE_2})
+    {
+        ou = Utils::getCaseSensitivePath(outFile, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
+        if (!ou.empty())
+            break;
+    }
 
     if (ou.empty())
     {

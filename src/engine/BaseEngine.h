@@ -26,12 +26,12 @@ namespace Audio
 namespace Engine
 {
     class GameSession;
-    class AsyncAction;
     const int MAX_NUM_WORLDS = 4;
 
     enum class ExecutionPolicy
     {
         MainThread,
+        MainThreadQueued,
         NewThread
     };
 
@@ -175,13 +175,7 @@ namespace Engine
          * @param forceQueueing if false AND if called from main thread: executes the job right away
          * 		  instead of queueing and does not acquire the lock.
          */
-        void executeInMainThread(const std::function<void(BaseEngine* engine)>& job, bool forceQueueing = false);
-
-        /**
-         * Execute the given job on the main thread one time per frame update until it returns true
-         */
-        void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine* engine)>& job,
-                                          bool forceQueueing = false);
+        void executeInMainThread(std::function<void(BaseEngine*)> job, bool forceQueueing = false);
 
         /**
          * executes all jobs in the queue and removes the ones, that return true
@@ -262,9 +256,12 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-
-        std::list<AsyncAction> m_MessageQueue;
+    public:
+        std::list<std::function<void(BaseEngine*)>> m_MessageQueue; // TODO make private again
+        std::list<std::shared_future<void>> m_AsyncJobs;
+    private:
         std::mutex m_MessageQueueMutex;
+        std::mutex m_AsyncJobsMutex;
 
         /**
          * amount of time for the next frame that should not be considered as elapsed

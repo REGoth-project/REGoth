@@ -34,8 +34,6 @@ bool Menu_Main::onInputAction(EInputAction action)
 void Menu_Main::onCustomAction(const std::string& action)
 {
     Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
-    using Engine::AsyncAction;
-    using Engine::ExecutionPolicy;
     if (action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";

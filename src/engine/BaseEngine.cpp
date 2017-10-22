@@ -235,21 +235,38 @@ void BaseEngine::setPaused(bool paused)
 
 void BaseEngine::processMessageQueue()
 {
-    m_MessageQueueMutex.lock();
-    auto current = m_MessageQueue.begin();
-    while (current != m_MessageQueue.end())
     {
-        auto& action = *current;
-        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
-        m_MessageQueueMutex.unlock();
-        bool finished = action.run(*this);
         m_MessageQueueMutex.lock();
-        if (finished)
-            current = m_MessageQueue.erase(current);  // erase returns next iterator
-        else
-            std::advance(current, 1);
+        while (!m_MessageQueue.empty())
+        {
+            // if the job queues a new job it would create a deadlock, so we need to release the mutex before
+            m_MessageQueueMutex.unlock();
+            m_MessageQueue.front()(this);
+            m_MessageQueueMutex.lock();
+
+            m_MessageQueue.pop_front();
+        }
+        m_MessageQueueMutex.unlock();
     }
-    m_MessageQueueMutex.unlock();
+
+    {
+        std::lock_guard<std::mutex> lock(m_AsyncJobsMutex);
+        auto it = m_AsyncJobs.begin();
+        while (it != m_AsyncJobs.end())
+        {
+            // test if execution finished
+            bool finished = it->wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
+            if (finished)
+            {
+                // calling .get() will rethrow any exception, that occurred while executing the future
+                it->get();
+            }
+            if (finished)
+                it = m_AsyncJobs.erase(it);  // erase returns next iterator
+            else
+                std::advance(it, 1);
+        }
+    }
 }
 
 void BaseEngine::resetSession()
@@ -270,27 +287,16 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
-{
-    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
-        job(engine);
-        return true;
-    };
-    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
-}
-
-void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
+void BaseEngine::executeInMainThread(AsyncAction::JobType<void> job, bool forceQueue)
 {
     if (!forceQueue && isMainThread())
     {
         // execute right away
-        bool success = job(this);
-        if (success)
-            return;
-        // else job returned false -> queue the job
+        job(this);
+        return;
     }
     std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-    m_MessageQueue.emplace_back(AsyncAction{job});
+    m_MessageQueue.push_back(std::move(job));
 }
 
 bool BaseEngine::isMainThread()
