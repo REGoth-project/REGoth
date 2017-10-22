@@ -1,6 +1,5 @@
 #include "BaseEngine.h"
 #include <fstream>
-#include "AsyncAction.h"
 #include "World.h"
 #include "audio/AudioEngine.h"
 #include <bx/commandline.h>

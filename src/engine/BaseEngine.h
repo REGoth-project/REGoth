@@ -10,7 +10,6 @@
 #include <memory/StaticReferencedAllocator.h>
 #include <ui/View.h>
 #include <vdfs/fileIndex.h>
-#include "AsyncAction.h"
 
 namespace UI
 {

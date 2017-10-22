@@ -4,7 +4,6 @@
 
 #include "DialogManager.h"
 #include <components/VobClasses.h>
-#include <engine/AsyncAction.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <logic/PlayerController.h>

@@ -33,7 +33,6 @@
 #include <logic/PfxManager.h>
 #include <logic/ScriptEngine.h>
 #include "WorldAllocators.h"
-#include "AsyncAction.h"
 
 using namespace World;
 

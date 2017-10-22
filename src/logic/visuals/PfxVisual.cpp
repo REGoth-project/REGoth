@@ -8,7 +8,6 @@
 #include <bx/math.h>
 #include <components/EntityActions.h>
 #include <debugdraw/debugdraw.h>
-#include <engine/AsyncAction.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <logic/PfxManager.h>
