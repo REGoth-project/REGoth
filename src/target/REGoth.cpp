@@ -591,10 +591,10 @@ void REGoth::initConsole()
             saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
         }
 
-        bool forceQueue = true; // better do saving at frame end and not between entity updates
-        this->m_pEngine->executeInMainThread([index, saveGameName](Engine::BaseEngine* engine){
+        // better do saving at frame end and not between entity updates
+        this->m_pEngine->queueMainThreadJob([index, saveGameName](Engine::BaseEngine* engine){
             Engine::SavegameManager::saveToSlot(index, saveGameName);
-        }, forceQueue);
+        });
 
         return "Saving world to slot: " + std::to_string(index) + "...";
     });

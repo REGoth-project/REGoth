@@ -31,7 +31,6 @@ namespace Engine
     enum class ExecutionPolicy
     {
         MainThread,
-        MainThreadQueued,
         NewThread
     };
 
@@ -173,23 +172,23 @@ namespace Engine
         bool isMainThread();
 
         /**
-         * Guarantees execution of the given function in the main thread
+         * Guarantees execution of the given function in the main thread at frame-end
+         * May be called from any thread
          * @param job function to execute in the main thread
-         * @param forceQueueing if false AND if called from main thread: executes the job right away
-         * 		  instead of queueing and does not acquire the lock.
          */
-        void executeInMainThread(std::function<void(BaseEngine*)> job, bool forceQueueing = false);
+        void queueMainThreadJob(std::function<void(BaseEngine*)> job);
 
         /**
-         * executes all jobs in the queue and removes the ones, that return true
+         * executes all jobs in the queue
          */
         void processMessageQueue();
 
         /**
          * Executes the job in the specified thread
+         * May be called from any thread
          * @param job the job to be executed
          * @param executionPolicy defines which thread should execute the job
-         * @return SafeFuture on which any thread may call wait() or get()
+         * @return future, which contains the result
          */
         template <class ReturnType=void>
         std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy);
@@ -366,7 +365,7 @@ namespace Engine
     inline std::future<ReturnType> BaseEngine::executeInThread(JobType<ReturnType> job, ExecutionPolicy policy)
     {
         if (!m_EnableMultiThreading && policy == ExecutionPolicy::NewThread)
-            policy = ExecutionPolicy::MainThreadQueued;
+            policy = ExecutionPolicy::MainThread;
 
         std::shared_ptr<std::promise<ReturnType>> promise = std::make_shared<std::promise<ReturnType>>();
         std::future<ReturnType> waitableFuture = promise->get_future();
@@ -376,10 +375,10 @@ namespace Engine
         switch (policy)
         {
             case ExecutionPolicy::MainThread:
-                executeInMainThread(std::move(wrappedJob), false);
-                break;
-            case ExecutionPolicy::MainThreadQueued:
-                executeInMainThread(std::move(wrappedJob), true);
+                if (isMainThread())
+                    wrappedJob(this); // if caller is main thread, execute right away
+                else
+                    queueMainThreadJob(std::move(wrappedJob));
                 break;
             case ExecutionPolicy::NewThread:
             {

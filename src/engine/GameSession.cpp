@@ -300,10 +300,10 @@ void GameSession::setupKeyBindings()
     registerAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
         if (triggered)
         {
-            bool forceQueue = true; // better do saving at frame end and not between entity updates
-            baseEngine->executeInMainThread([](Engine::BaseEngine* engine){
+            // better do saving at frame end and not between entity updates
+            baseEngine->queueMainThreadJob([](Engine::BaseEngine* engine){
                 Engine::SavegameManager::saveToSlot(0, "");
-            }, forceQueue);
+            });
         }
     });
 

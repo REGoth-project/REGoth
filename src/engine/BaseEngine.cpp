@@ -287,14 +287,8 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(std::function<void(BaseEngine*)> job, bool forceQueue)
+void BaseEngine::queueMainThreadJob(std::function<void(BaseEngine*)> job)
 {
-    if (!forceQueue && isMainThread())
-    {
-        // execute right away
-        job(this);
-        return;
-    }
     std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
     m_MessageQueue.push_back(std::move(job));
 }
