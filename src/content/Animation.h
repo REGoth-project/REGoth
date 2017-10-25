@@ -79,6 +79,7 @@ namespace Animations
         Effect m_Effects[MAX_ANIM_EFFECTS];
 
         std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFX;
+        std::vector<ZenLoad::zCModelScriptEventPfx> m_EventsPFX;
         std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFXGround;
         std::vector<ZenLoad::zCModelScriptEventTag> m_EventTags;
     };

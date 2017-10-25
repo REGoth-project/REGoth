@@ -46,7 +46,9 @@ bool Logic::PfxVisual::load(const std::string& visual)
     m_Emitter = m_World.getPfxManager().getParticleFX(sym);
 
     // Need that one. Or should give a default value of 1?
-    assert(!m_Emitter.ppsScaleKeys.empty());
+    //assert(!m_Emitter.ppsScaleKeys.empty());
+    if(m_Emitter.ppsScaleKeys.empty())
+        m_Emitter.ppsScaleKeys.push_back(1.0f);
 
     // Init particle-systems dynamic vertex-buffer
     // Needs to happen on the mainthread
@@ -100,7 +102,9 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
 void Logic::PfxVisual::onUpdate(float deltaTime)
 {
     Components::PfxComponent& pfx = getPfxComponent();
-
+    if(!m_Emitter.visTexAniIsLooping){
+        LogInfo() << "Playing one-shot animation" + m_Emitter.visName;
+    }
     Controller::onUpdate(deltaTime);
 
     // Spawn new particles. Need to accumulate deltaTime so the floor doesn't keep us from spawning any particles
@@ -145,22 +149,32 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     for (Components::PfxComponent::Particle& p : pfx.m_Particles)
         updateParticle(p, deltaTime);
 
-    for (int i = 0; i < static_cast<int>(pfx.m_Particles.size()); i++)
-    {
-        Components::PfxComponent::Particle& p = pfx.m_Particles[i];
+    std::vector<Components::PfxComponent::Particle>::iterator it = pfx.m_Particles.begin();
+    for (; it != pfx.m_Particles.end();) {
+        Components::PfxComponent::Particle &p = *it;
 
-        if (p.lifetime < 0)
-        {
-            // Kill particle. Move the last one into the free slot and reduce the vector size
-            // to keep the memory continuous
-            pfx.m_Particles[i] = pfx.m_Particles.back();
-            pfx.m_Particles.pop_back();
+        if (p.lifetime < 0) {
+            if(!m_Emitter.visTexAniIsLooping){
+                //Not safe to iterate like that
+                it = pfx.m_Particles.erase(it);
+                if(pfx.m_Particles.size() == 0){
+                    LogInfo() << "Lifetime < 0";
+                    m_Entity.invalidate();
+                    return;
+                }
+            }else {
+                // Kill particle. Move the last one into the free slot and reduce the vector size
+                // to keep the memory continuous
+                pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
+                pfx.m_Particles.pop_back();
 
-            // Do one step back, since we have a new particle in this slot now
-            i--;
+                // Do one step back, since we have a new particle in this slot now
+                //--it;
+            }
+        }else{
+            ++it;
         }
     }
-
     m_BBox.min -= getEntityTransform().Translation();
     m_BBox.max -= getEntityTransform().Translation();
 

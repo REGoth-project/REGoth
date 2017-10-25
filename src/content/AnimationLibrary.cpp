@@ -148,6 +148,12 @@ namespace Animations
         anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
     }
 
+    static void animationAddEventPFX(Animation* anim, const zCModelScriptEventPfx& pfx){
+
+        anim->m_EventsPFX.push_back(pfx);
+
+    }
+
     static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEventSfx& sfx)
     {
         anim->m_EventsSFXGround.push_back(sfx);
@@ -262,7 +268,16 @@ namespace Animations
                     p.sfxGround().clear();
                 }
                 break;
-
+                case ModelScriptParser::CHUNK_EVENT_PFX:
+                {
+                    //FIXME textfile parse
+                    std::string qname = name + '-' + p.ani().m_Name;
+                    auto h = m_World.getAnimationAllocator().getAnimation(qname);
+                    anim = &m_World.getAnimationAllocator().getAnimation(h);
+                    animationAddEventPFX(anim, p.pfx().back());
+                    p.pfx().clear();
+                }
+                break;
                 case ModelScriptParser::CHUNK_ERROR:
                     return false;
             }

@@ -272,7 +272,7 @@ namespace Logic
         void attackRight();
 
         /**
-         * @return True, if this is the currently controlled charakter
+         * @return True, if this is the currently controlled character
          */
         bool isPlayerControlled();
 
@@ -457,6 +457,8 @@ namespace Logic
         void AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx);
         void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
         void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
+
+        void AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx);
 
         void exportPart(json& j) override;
 

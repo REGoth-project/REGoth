@@ -30,6 +30,7 @@
 #include <logic/DialogManager.h>
 #include <engine/WorldMesh.h>
 
+
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
 using json = nlohmann::json;
@@ -764,6 +765,9 @@ void PlayerController::onVisualChanged()
 
     getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag) {
         AniEvent_Tag(tag);
+    });
+    getModelVisual()->getAnimationHandler().setCallbackEventPfx([this](const ZenLoad::zCModelScriptEventPfx& pfx) {
+        AniEvent_PFX(pfx);
     });
 }
 
@@ -2469,6 +2473,23 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 {
     //if(tag.m_Tag == )
+}
+void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
+{
+    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
+    {
+        return;
+    }
+    LogInfo() << "PFX with animation " +getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
+    Handle::EntityHandle e = Vob::constructVob(m_World);
+    Vob::VobInformation vob = Vob::asVob(m_World, e);
+    auto& boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+    auto& transform = getEntityTransform();
+    size_t nodeIndex = getModelVisual()->findNodeIndex(pfx.m_Pos);
+    //LogInfo() << pfx.m_Pos + "Index " + std::to_string(nodeIndex);
+    auto position = transform * boneTransforms[nodeIndex];
+    Vob::setTransform(vob, position);
+    Vob::setVisual(vob, pfx.m_Name+".PFX");
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
