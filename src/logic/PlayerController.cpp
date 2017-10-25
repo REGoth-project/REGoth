@@ -29,6 +29,7 @@
 #include <logic/ScriptEngine.h>
 #include <logic/DialogManager.h>
 #include <engine/WorldMesh.h>
+#include <logic/PfxManager.h>
 
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
@@ -2476,7 +2477,7 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 }
 void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
 {
-    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
+    if(!m_World.getPfxManager().hasPFX(pfx.m_Name)) //.hasPFX(pfx.m_Name))
     {
         return;
     }
