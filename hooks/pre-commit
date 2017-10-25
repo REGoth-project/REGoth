@@ -170,7 +170,7 @@ if echo "$answer" | grep -iq "^y" ;then
     echo "Applying formatting on files:"
     echo "$formatted_files" | sed 's/^/\t/'
     git apply $patch
-    git add "$formatted_files"
+    git add $formatted_files
     exit $EXIT_SUCCESS
 elif echo "$answer" | grep -iq "^n" ;then
     echo "No formatting applied. Proceeding with commit."
