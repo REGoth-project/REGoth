@@ -1,3 +1,7 @@
 <resources>
-
+    <!-- the theme applied to the application or activity -->
+    <style name="REGothTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>

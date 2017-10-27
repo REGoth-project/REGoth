@@ -185,9 +185,8 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 {
     static int activePointerIdx;
 
-    switch(AInputEvent_getSource(event))
+    if (AInputEvent_getSource(event) & AINPUT_SOURCE_TOUCHSCREEN)
 	{
-	case AINPUT_SOURCE_TOUCHSCREEN:
 		int action = AKeyEvent_getAction(event) & AMOTION_EVENT_ACTION_MASK;
 		int pointer = (AKeyEvent_getAction(event) & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
 
@@ -305,8 +304,7 @@ int PlatformAndroid::onInputEvent(struct android_app* app, AInputEvent* event)
 			return 1;
 			break;
 		}
-		break;
-	} // end switch
+	}
 
     return 1;
 }

@@ -30,7 +30,7 @@
             android:name=".LoadLibraries"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+            android:theme="@style/REGothTheme">
 
             <meta-data
                 android:name="android.app.lib_name"
