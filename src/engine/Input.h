@@ -93,6 +93,13 @@ namespace Engine
         UI_END,
 
         Inventory_Show_Hide,
+        Inventory_Up,
+        Inventory_Down,
+        Inventory_Left,
+        Inventory_Right,
+        Inventory_Use,
+        Inventory_Drop,
+        Inventory_Alternate,
 
         Count
     };

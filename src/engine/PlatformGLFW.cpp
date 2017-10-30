@@ -220,7 +220,12 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, true);
     bindMouseAxis(MouseAxis::CursorX, ActionType::PlayerRotate, true, false);
 
+    // Inventory bindings
     bindKey(GLFW_KEY_TAB, ActionType::Inventory_Show_Hide, false);
+    bindKey(GLFW_KEY_UP, ActionType::Inventory_Up, false);
+    bindKey(GLFW_KEY_DOWN, ActionType::Inventory_Down, false);
+    bindKey(GLFW_KEY_LEFT, ActionType::Inventory_Left, false);
+    bindKey(GLFW_KEY_RIGHT, ActionType::Inventory_Right, false);
 
     bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);
     bindKey(GLFW_KEY_F9, ActionType::Quickload, false);

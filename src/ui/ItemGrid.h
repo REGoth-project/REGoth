@@ -10,7 +10,6 @@ namespace Logic
 
 namespace UI
 {
-    //class ImageView;
     class ItemGrid : public View
     {
     public:
@@ -21,6 +20,8 @@ namespace UI
 
         void probeGridSize(int &rows, int &columns, uint32_t width, uint32_t height);
 
+        void getGridSize(int &rows, int &columns);
+
         /**
          * Updates/draws the UI-Views
          * @param dt time since last frame
@@ -28,18 +29,21 @@ namespace UI
          */
         void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
+        void drawInventory(double dt, Render::RenderConfig& config, const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
+                           const std::vector<int> &indices, int selected);
+
     private:
         // width and height of a slot (square slots hard coded)
         int m_SlotSize;
+        int m_Rows;
+        int m_Columns;
 
         void calculateAlignedOrigin(int &xOrigin, int &yOrigin, int numRows, int numColumns);
 
         Handle::TextureHandle m_TexSlot;
-        Handle::TextureHandle m_TexSlotSelected;
+        Handle::TextureHandle m_TexSlotHighlighted;
+        Handle::TextureHandle m_TexInvBack;
 
-        const std::vector<Daedalus::GEngineClasses::C_Item> *m_pItemList;
-        int m_SelectedItem;
-
-        Math::Matrix applyGothic2Rotations(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected);
+        Math::Matrix applyRotationsAnsScale(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected);
     };
 }
