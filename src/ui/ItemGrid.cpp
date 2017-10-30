@@ -19,17 +19,17 @@ UI::ItemGrid::ItemGrid(Engine::BaseEngine& e)
 {
     Textures::TextureAllocator& texAlloc = m_Engine.getEngineTextureAlloc();
     m_TexSlot = texAlloc.loadTextureVDF("INV_SLOT.TGA");
-    m_TexSlotSelected = texAlloc.loadTextureVDF("INV_SLOT_HIGHLIGHTED.TGA");
+    m_TexSlotHighlighted = texAlloc.loadTextureVDF("INV_SLOT_HIGHLIGHTED.TGA");
+    m_TexInvBack.invalidate();
+    //m_Engine.getBasicGameType();
+    //if(m_Engine.getBasicGameType() == Daedalus::GameType::GT_Gothic1)
+        //m_TexInvBack = texAlloc.loadTextureVDF("DLG_AMBIENT.TGA");
+    //else
+    //    m_TexInvBack = texAlloc.loadTextureVDF("INV_BACK.TGA");
 }
 
 UI::ItemGrid::~ItemGrid()
 {
-}
-
-void UI::ItemGrid::setItemList(const std::vector<Daedalus::GEngineClasses::C_Item> *itemList, int selectedItem)
-{
-    m_pItemList = itemList;
-    m_SelectedItem = selectedItem;
 }
 
 void UI::ItemGrid::probeGridSize(int &rows, int &columns, uint32_t width, uint32_t height)
@@ -37,6 +37,14 @@ void UI::ItemGrid::probeGridSize(int &rows, int &columns, uint32_t width, uint32
     // The grid has always a size of at least 1x1
     columns = std::max(1, Math::ifloor(m_Size.x / m_SlotSize));
     rows = std::max(1, Math::ifloor(m_Size.y / m_SlotSize));
+    m_Columns = columns;
+    m_Rows = rows;
+}
+
+void UI::ItemGrid::getGridSize(int &rows, int &columns)
+{
+    rows = m_Rows;
+    columns = m_Columns;
 }
 
 void UI::ItemGrid::calculateAlignedOrigin(int &xOrigin, int &yOrigin, int numRows, int numColumns)
@@ -54,68 +62,49 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
     if(m_IsHidden)
         return;
 
-    World::WorldInstance &world = m_Engine.getMainWorld().get();
-
-    // Just some debug things
-    static bool isFirstTime = true;
-    if(isFirstTime)
+    View::update(dt, mstate, config);
+}
+void UI::ItemGrid::drawInventory(double dt, Render::RenderConfig& config, const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
+                                 const std::vector<int> &indices, int selected)
+{
+    if(!m_TexInvBack.isValid())
     {
-        isFirstTime = false;
-        //g1
-        m_Engine.getConsole().submitCommand("giveitem ALTESSCHWERT");
-        m_Engine.getConsole().submitCommand("giveitem HEILTRANK");
-        m_Engine.getConsole().submitCommand("giveitem CRONOS_BRIEF");
-        m_Engine.getConsole().submitCommand("giveitem CORDS_SPALTER");
-        m_Engine.getConsole().submitCommand("giveitem ITAMARROW");
-        m_Engine.getConsole().submitCommand("giveitem HEALTHWATER");
-        m_Engine.getConsole().submitCommand("giveitem ASTRONOMIE");
-        m_Engine.getConsole().submitCommand("giveitem ITARRUNEFIREBOLT");
-        // g2
-        m_Engine.getConsole().submitCommand("giveitem ITFO_POTION_MANA_02");
-        m_Engine.getConsole().submitCommand("giveitem ITRI_ADDON_HEALTH_01");
-        m_Engine.getConsole().submitCommand("giveitem ITAM_ADDON_HEALTH");
-        m_Engine.getConsole().submitCommand("giveitem ITWR_STONEPLATECOMMON_ADDON");
-        m_Engine.getConsole().submitCommand("giveitem ITMW_ADDON_PIR1HAXE");
-        m_Engine.getConsole().submitCommand("giveitem ITFO_BEER");
-        m_Engine.getConsole().submitCommand("giveitem ITRU_ARMYOFDARKNESS");
-        m_Engine.getConsole().submitCommand("giveitem ITPO_HEALTH_01");
-        m_Engine.getConsole().submitCommand("giveitem ITFO_APPLE");
-        m_Engine.getConsole().submitCommand("giveitem ITKE_BROMOR");
-        m_Engine.getConsole().submitCommand("giveitem ITPL_MUSHROOM_01");
-        m_Engine.getConsole().submitCommand("giveitem ITPL_MUSHROOM_02");
-        m_Engine.getConsole().submitCommand("giveitem ITFO_CHEESE");
-        m_Engine.getConsole().submitCommand("giveitem ITKE_LOCKPICK");
-        m_Engine.getConsole().submitCommand("giveitem ITWR_MAP_NEWWORLD_CITY");
-        m_Engine.getConsole().submitCommand("giveitem ITMI_PANFULL");
-        m_Engine.getConsole().submitCommand("giveitem ITAT_WARANFIRETONGUE");
-        m_Engine.getConsole().submitCommand("giveitem ITLSTORCH");
-        m_Engine.getConsole().submitCommand("giveitem ITAR_PAL_H");
-        m_Engine.getConsole().submitCommand("giveitem ITPL_STRENGTH_HERB_01");
-        m_Engine.getConsole().submitCommand("giveitem ITMI_GOLD");
-        m_Engine.getConsole().submitCommand("giveitem ITRI_DEX_01");
+        Textures::TextureAllocator& texAlloc = m_Engine.getEngineTextureAlloc();
+        if(m_Engine.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
+            m_TexInvBack = texAlloc.loadTextureVDF("INV_BACK.TGA");
+        //else if(m_Engine.getBasicGameType() == Daedalus::GameType::GT_Gothic2)
+        //    m_TexInvBack = texAlloc.loadTextureVDF("DLG_AMBIENT.TGA");
     }
 
+    World::WorldInstance &world = m_Engine.getMainWorld().get();
 
     // Probably not necessary to call this each frame
     bgfx::setViewClear(RenderViewList::INVENTORY, BGFX_CLEAR_DEPTH, 0x00000000);
 
     const float farPlane = 10000.0f;
     Math::Matrix projection;
-    bx::mtxOrtho(projection.mv, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, farPlane, 0.0f);
+    bx::mtxOrtho(projection.mv, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, farPlane, 0.0f, 0.0f, false);
     // View matrix is the identity
     bgfx::setViewTransform(RenderViewList::INVENTORY, nullptr, projection.m);
     bgfx::setViewRect(RenderViewList::INVENTORY, 0, 0, uint16_t(config.state.viewWidth), uint16_t(config.state.viewHeight));
 
     int numColumns, numRows;
-    probeGridSize(numRows, numColumns, config.state.viewWidth, config.state.viewWidth);
+    probeGridSize(numRows, numColumns, config.state.viewWidth, config.state.viewHeight);
     int numSlots = numColumns * numRows;
     int xOrigin, yOrigin;
     calculateAlignedOrigin(xOrigin, yOrigin, numRows, numColumns);
 
     // slot background texture
     Textures::Texture& texSlot = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlot);
-    Textures::Texture& texSlotSelected = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlotSelected);
+    Textures::Texture& texSlotHighlighted = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlotHighlighted);
 
+    if(m_TexInvBack.isValid())
+    {
+        Textures::Texture &texInvBack = m_Engine.getEngineTextureAlloc().getTexture(m_TexInvBack);
+        drawTexture(RenderViewList::INVENTORY_BG, xOrigin, yOrigin, m_SlotSize * numColumns, m_SlotSize * numRows,
+                    config.state.viewWidth, config.state.viewHeight, texInvBack.m_TextureHandle,
+                    config.programs.imageProgram, config.uniforms.diffuseTexture);
+    }
 
     for(int slot = 0; slot < numSlots; ++slot)
     {
@@ -132,17 +121,17 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
                     config.state.viewWidth, config.state.viewHeight, texSlot.m_TextureHandle,
                     config.programs.imageProgram, config.uniforms.diffuseTexture);
 
-        if(slot >= m_pItemList->size())
+        if(slot >= indices.size())
             continue;
 
-        if(slot == m_SelectedItem)
+        if(slot == selected)
         {
             drawTexture(RenderViewList::UI, xPos, yPos, m_SlotSize, m_SlotSize,
-                        config.state.viewWidth, config.state.viewHeight, texSlotSelected.m_TextureHandle,
+                        config.state.viewWidth, config.state.viewHeight, texSlotHighlighted.m_TextureHandle,
                         config.programs.imageProgram, config.uniforms.diffuseTexture);
         }
 
-        const Daedalus::GEngineClasses::C_Item &itemData = m_pItemList->at(slot);
+        const Daedalus::GEngineClasses::C_Item &itemData = itemList[indices[slot]];
         Handle::MeshHandle itemMeshHandle = world.getStaticMeshAllocator().loadMeshVDF(Utils::toUpper(itemData.visual));
         Meshes::WorldStaticMesh &itemMesh = world.getStaticMeshAllocator().getMesh(itemMeshHandle);
 
@@ -178,7 +167,7 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         Math::float3 translation(xPos + (float)m_SlotSize / 2, yPos + (float)m_SlotSize / 2, farPlane / 2);
 
         // Apply rotations for gothic 2 inventory
-        Math::Matrix transform = applyGothic2Rotations(itemCenter, itemData, false);
+        Math::Matrix transform = applyRotationsAnsScale(itemCenter, itemData, slot == selected);
         // Apply bounding box scale
         transform = Math::Matrix::CreateScale(Math::float3(scale, scale, scale)) * transform;
         // Apply slot translation
@@ -201,16 +190,16 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
 
             bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
 
-            if (itemMesh.mesh.m_IndexBufferHandle.idx != bgfx::invalidHandle)
+            if (itemMesh.mesh.m_IndexBufferHandle.idx != bgfx::kInvalidHandle)
             {
-                bgfx::setVertexBuffer(itemMesh.mesh.m_VertexBufferHandle);
+                bgfx::setVertexBuffer(0, itemMesh.mesh.m_VertexBufferHandle);
                 bgfx::setIndexBuffer(itemMesh.mesh.m_IndexBufferHandle,
                                      itemMesh.mesh.m_SubmeshStarts[subMesh].m_StartIndex,
                                      itemMesh.mesh.m_SubmeshStarts[subMesh].m_NumIndices);
             }
             else
             {
-                bgfx::setVertexBuffer(itemMesh.mesh.m_VertexBufferHandle,
+                bgfx::setVertexBuffer(0, itemMesh.mesh.m_VertexBufferHandle,
                                       itemMesh.mesh.m_SubmeshStarts[subMesh].m_StartIndex,
                                       itemMesh.mesh.m_SubmeshStarts[subMesh].m_NumIndices);
             }
@@ -223,11 +212,9 @@ void UI::ItemGrid::update(double dt, Engine::Input::MouseState& mstate, Render::
         }
 
     }
-
-    View::update(dt, mstate, config);
 }
 
-Math::Matrix UI::ItemGrid::applyGothic2Rotations(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected)
+Math::Matrix UI::ItemGrid::applyRotationsAnsScale(Math::float3 centerPos, const Daedalus::GEngineClasses::C_Item &itemData, bool selected)
 {
     using Daedalus::GEngineClasses::C_Item;
     using namespace Math;
