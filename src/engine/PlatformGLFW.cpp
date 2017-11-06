@@ -226,6 +226,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_DOWN, ActionType::Inventory_Down, false);
     bindKey(GLFW_KEY_LEFT, ActionType::Inventory_Left, false);
     bindKey(GLFW_KEY_RIGHT, ActionType::Inventory_Right, false);
+    bindKey(GLFW_KEY_C, ActionType::Inventory_Use, false);
+    bindKey(GLFW_KEY_V, ActionType::Inventory_Drop, false);
 
     bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);
     bindKey(GLFW_KEY_F9, ActionType::Quickload, false);

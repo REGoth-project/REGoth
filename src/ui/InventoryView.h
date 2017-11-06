@@ -1,7 +1,7 @@
 #pragma once
 #include "View.h"
-#include "ItemGrid.h"
-#include "ItemInfobox.h"
+#include <content/Texture.h>
+#include <daedalus/DaedalusGameState.h>
 
 namespace UI
 {
@@ -25,17 +25,39 @@ public:
     void setEnabled(bool enabled);
 
 protected:
-    int m_SelectedItemID;
-    int m_SelectedSlot;
+    size_t m_SelectedItemID;
+    int m_LastTimeSelectedItemSlot;
     int m_DisplayedRowsStart;
     int m_DeltaRows;
     int m_DeltaColumns;
 
-    ItemGrid m_SelfItemGrid;
-    //ItemGrid m_TradeItemGrid;
-    //ItemGrid m_LootItemGrid;
+    //int m_SlotSize;
 
-    ItemInfobox m_ItemInfobox;
+    // Applies the rotations and scale typical for Gothic 1 & 2 inventory view. centerPos is
+    // an offset relative to the item's mesh origin, it is the center positions for rotations
+    // and scale. If selected is true the item will be scaled up a bit.
+    Math::Matrix applyRotationsAndScale(Math::float3 centerPos,
+                                        const Daedalus::GEngineClasses::C_Item &itemData,
+                                        bool selected);
+
+    // Renders the item into a square with the dimensions of size x size. The item's largest
+    // bounding box is scaled to fit that size. Position denotes the upper left corner of that
+    // square.
+    void drawItem(Render::RenderConfig &config,
+                  const Daedalus::GEngineClasses::C_Item &itemData,
+                  Math::float2 position, float size, bool selected);
+
+    void drawItemGrid(Render::RenderConfig& config, Math::float2 position,
+                      Math::float2 size, UI::EAlign alignment, float slotSize,
+                      const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
+                      const std::vector<int> &indices, int selected);
+
+    void drawItemInfobox(Render::RenderConfig& config, const Daedalus::GEngineClasses::C_Item &item,
+                         Math::float2 position, Math::float2 size);
+
+    Handle::TextureHandle m_TexSlot;
+    Handle::TextureHandle m_TexSlotHighlighted;
+    Handle::TextureHandle m_TexInvBack;
 
     Engine::ManagedActionBinding m_InputUp;
     Engine::ManagedActionBinding m_InputDown;
@@ -44,7 +66,6 @@ protected:
     Engine::ManagedActionBinding m_InputUse;
     Engine::ManagedActionBinding m_InputDrop;
     Engine::ManagedActionBinding m_InputAlternate;
-
 };
 
 } // namespace UI
