@@ -180,6 +180,15 @@ namespace Logic
         }
 
         /**
+         * @brief getEquippedItems Returns the equipped items in a list
+         * @return List of item handles
+         */
+        const std::set<Daedalus::GameState::ItemHandle>& getEquippedItems()
+        {
+            return m_EquipmentState.equippedItemsAll;
+        }
+
+        /**
          * (Un)Equips the item with the given handle
          * Note: Be careful that this is actually inside the inventory of the player
          */
