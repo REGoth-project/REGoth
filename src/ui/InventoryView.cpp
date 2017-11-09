@@ -4,6 +4,10 @@
 #include <logic/PlayerController.h>
 #include <logic/visuals/StaticMeshVisual.h>
 #include <logic/ScriptEngine.h>
+#include <logic/ItemController.h>
+#include <components/Vob.h>
+
+#include <bitset>
 
 const float FARPLANE = 1000.0f;
 
@@ -13,6 +17,9 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
     Textures::TextureAllocator& texAlloc = m_Engine.getEngineTextureAlloc();
     m_TexSlot = texAlloc.loadTextureVDF("INV_SLOT.TGA");
     m_TexSlotHighlighted = texAlloc.loadTextureVDF("INV_SLOT_HIGHLIGHTED.TGA");
+    m_TexSlotEquipped = texAlloc.loadTextureVDF("INV_SLOT_EQUIPPED.TGA");
+    // this texture depends on the game and gets loaded when we know whether g1
+    // or g2 is being played
     m_TexInvBack.invalidate();
 
     m_SelectedItemID = 0;
@@ -47,6 +54,46 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
             m_DeltaColumns += 1;
     });
     m_InputRight.getAction().setEnabled(false);
+    m_InputDrop = Engine::Input::RegisterAction(Engine::ActionType::Inventory_Drop, [this](bool triggered, float)
+    {
+        if (triggered)
+        {
+            World::WorldInstance &world = m_Engine.getMainWorld().get();
+            Logic::PlayerController* playerController = reinterpret_cast<Logic::PlayerController*>(
+                        world.getEntity<Components::LogicComponent>(world.getScriptEngine().getPlayerEntity()).m_pLogicController);
+
+            Logic::Inventory &playerInv = playerController->getInventory();
+            const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerInv.getItems();
+
+            for(auto &itItem : itemHandleList)
+            {
+                Daedalus::GEngineClasses::C_Item itemData = world.getScriptEngine().getGameState().getItem(itItem);
+                if(itemData.instanceSymbol == m_SelectedItemID)
+                {
+                    //TODO play drop animation, mabye add some gravity
+                    playerInv.removeItem(itItem);
+
+                    Handle::EntityHandle e = Vob::constructVob(world);
+
+                    // Setup itemcontroller
+                    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+                    logic.m_pLogicController = new Logic::ItemController(world, e, itemData.instanceSymbol);
+
+                    Vob::VobInformation vob = Vob::asVob(world, e);
+
+                    Math::Matrix playerPosition = world.getEntity<Components::PositionComponent>(world.getScriptEngine().getPlayerEntity()).m_WorldMatrix;
+
+                    // forward is behind the player for some reason
+                    Vob::setPosition(vob, playerPosition.Translation() - 1.0f * playerPosition.Forward());
+
+                    Vob::setVisual(vob, itemData.visual);
+
+                    break;
+                }
+            }
+        }
+    });
+    m_InputDrop.getAction().setEnabled(false);
     m_InputUse = Engine::Input::RegisterAction(Engine::ActionType::Inventory_Use, [this](bool triggered, float)
     {
         if (triggered)
@@ -57,15 +104,29 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
 
             Logic::Inventory &playerInv = playerController->getInventory();
             const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerInv.getItems();
-            /*
-            if( 0 < itemHandleList.size() && m_SelectedSlot < itemHandleList.size())
+
+            for(auto &itItem : itemHandleList)
             {
-                // Removes one item
-                auto it = itemHandleList.begin();
-                std::advance(it, m_SelectedSlot);
-                playerInv.removeItem(*it);
+                Daedalus::GEngineClasses::C_Item itemData = world.getScriptEngine().getGameState().getItem(itItem);
+                if(itemData.instanceSymbol == m_SelectedItemID)
+                {
+                    //TODO play use animation
+                    //playerInv.removeItem(itItem);
+
+                    if(Daedalus::GEngineClasses::C_Item::Categories::ITM_CAT_EQUIPABLE & itemData.mainflag)
+                    {
+                        const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
+                        if(equippedItems.find(itItem) != equippedItems.end())
+                            playerController->unequipItem(itItem);
+                        else
+                            playerController->useItem(itItem);
+                    }
+                    else
+                        playerController->useItem(itItem);
+
+                    break;
+                }
             }
-            */
         }
     });
     m_InputUse.getAction().setEnabled(false);
@@ -243,7 +304,7 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
     // Apply slot translation
     transform = Math::Matrix::CreateTranslation(translation) * transform;
 
-    for( int subMesh = 0; subMesh < itemMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
+    for( size_t subMesh = 0; subMesh < itemMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
     {
         std::string &materialName = itemMesh.mesh.m_SubmeshMaterialNames[subMesh];
         Handle::TextureHandle textureHandle = world.getTextureAllocator().loadTextureVDF(materialName);
@@ -286,7 +347,8 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
 void UI::InventoryView::drawItemGrid(Render::RenderConfig& config, Math::float2 position,
                                      Math::float2 size, UI::EAlign alignment, float slotSize,
                   const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
-                  const std::vector<int> &indices, int selected)
+                  const std::vector<ItemDrawState> &itemsToDraw)
+                  //const std::vector<int> &indices, int selected, const std::vector<int> &equipped)
 {
     if(!m_TexInvBack.isValid())
     {
@@ -316,6 +378,7 @@ void UI::InventoryView::drawItemGrid(Render::RenderConfig& config, Math::float2 
     // slot background texture
     Textures::Texture& texSlot = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlot);
     Textures::Texture& texSlotHighlighted = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlotHighlighted);
+    Textures::Texture& texSlotEquipped = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlotEquipped);
 
     if(m_TexInvBack.isValid())
     {
@@ -340,25 +403,31 @@ void UI::InventoryView::drawItemGrid(Render::RenderConfig& config, Math::float2 
                     config.state.viewWidth, config.state.viewHeight, texSlot.m_TextureHandle,
                     config.programs.imageProgram, config.uniforms.diffuseTexture);
 
-        if(slot >= indices.size())
+        if(slot >= itemsToDraw.size())
             continue;
 
-        if(slot == selected)
-        {
+        bool isSelected = ItemDrawFlags::Selected & itemsToDraw[slot].flags;
+        bool isEquipped = ItemDrawFlags::Equipped & itemsToDraw[slot].flags;
+
+        if(isSelected)
             drawTexture(RenderViewList::UI, xPos, yPos, slotSize, slotSize,
                         config.state.viewWidth, config.state.viewHeight, texSlotHighlighted.m_TextureHandle,
                         config.programs.imageProgram, config.uniforms.diffuseTexture);
-        }
 
-        const Daedalus::GEngineClasses::C_Item &itemData = itemList[indices[slot]];
+        if(isEquipped)
+            drawTexture(RenderViewList::INVENTORY_BG, xPos, yPos, slotSize, slotSize,
+                        config.state.viewWidth, config.state.viewHeight, texSlotEquipped.m_TextureHandle,
+                        config.programs.imageProgram, config.uniforms.diffuseTexture);
+
+
+        const Daedalus::GEngineClasses::C_Item &itemData = itemList[itemsToDraw[slot].index];
 
         // Draw the item amount number in the lower right corner
         drawText(std::to_string(itemData.amount), xPos + slotSize - 15, yPos + slotSize - 5,
                  A_BottomRight, config, UI::DEFAULT_FONT_LARGE);
 
-        drawItem(config, itemData, Math::float2(xPos, yPos), slotSize, slot == selected);
+        drawItem(config, itemData, Math::float2(xPos, yPos), slotSize, isSelected);
     }
-
 }
 
 void UI::InventoryView::drawItemInfobox(Render::RenderConfig &config, const Daedalus::GEngineClasses::C_Item &item,
@@ -389,6 +458,9 @@ void UI::InventoryView::drawItemInfobox(Render::RenderConfig &config, const Daed
     }
     float itemSize = 150.0f;
     drawItem(config, item, Math::float2(position.x + size.x - 200.0f, position.y + (size.y - itemSize) / 2), itemSize, false);
+
+    drawText(std::bitset<32>(item.mainflag).to_string(), 200, 200, EAlign::A_TopLeft, config);
+    drawText(std::bitset<32>(item.flags).to_string(), 200, 250, EAlign::A_TopLeft, config);
 }
 
 void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Render::RenderConfig &config)
@@ -445,11 +517,14 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
                 world.getEntity<Components::LogicComponent>(world.getScriptEngine().getPlayerEntity()).m_pLogicController);
 
     const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerController->getInventory().getItems();
+    const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
     std::vector<Daedalus::GEngineClasses::C_Item> itemList(itemHandleList.size());
+    std::vector<bool> isItemEquipped(itemList.size());
     std::list<Daedalus::GameState::ItemHandle>::const_iterator itItem = itemHandleList.begin();
     for(uint32_t index = 0; index < itemList.size(); ++index)
     {
         itemList[index] = world.getScriptEngine().getGameState().getItem(*itItem);
+        isItemEquipped[index] = equippedItems.find(*itItem) != equippedItems.end();
         ++itItem;
     }
 
@@ -461,7 +536,13 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     const auto &constItemList = itemList;
     std::sort(indices.begin(), indices.end(), [&constItemList](const int &a, const int &b)
     {
-        return constItemList[a].value > constItemList[b].value;
+        const Daedalus::GEngineClasses::C_Item &l = constItemList[a], &r = constItemList[b];
+        if(l.mainflag != r.mainflag)
+            return l.mainflag < r.mainflag;
+        else
+        {
+            return l.value > r.value;
+        }
     });
 
     int selectedSlot = -1;
@@ -477,6 +558,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     if(selectedSlot < 0)
         selectedSlot = std::max(0, std::min(m_LastTimeSelectedItemSlot, int(indices.size())));
 
+    m_LastTimeSelectedItemSlot = selectedSlot;
     Math::float2 inventoryPosition = Math::float2(0.7f * config.state.viewWidth, 0.1f * config.state.viewHeight);
     Math::float2 inventorySize = Math::float2(0.3f * config.state.viewWidth, 0.8f * config.state.viewHeight);
 
@@ -494,8 +576,10 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     // and adjusts column by input
     // This is the actual index for the item in itemList which we want to select
     int itemIndex = std::max(0, std::min(currentRow * numColumns + currentColumn + m_DeltaColumns, int(itemList.size()) - 1));
-    m_SelectedItemID = itemList[indices[itemIndex]].instanceSymbol;
-    //m_SelectedSlot = itemIndex;
+    if(itemList.size() > 0)
+        m_SelectedItemID = itemList[indices[itemIndex]].instanceSymbol;
+    else
+        m_SelectedItemID = -1;
     // Reset for next input
     m_DeltaRows = 0;
     m_DeltaColumns = 0;
@@ -515,13 +599,23 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     int numVisibleItems = std::min(numSlots, int(itemList.size() - offsetSlots));
 
     // only display visible items
-    std::vector<int> displayIndices(indices.begin() + offsetSlots, indices.begin() + offsetSlots + numVisibleItems);
+    std::vector<ItemDrawState> itemsToDraw(numVisibleItems);
+    for(int i = 0; i < numVisibleItems; ++i)
+    {
+        itemsToDraw[i].index = indices[i + offsetSlots];
+        itemsToDraw[i].flags = 0;
+        if( isItemEquipped[itemsToDraw[i].index] )
+            itemsToDraw[i].flags |= ItemDrawFlags::Equipped;
+    }
+    if(itemsToDraw.size() > 0)
+        itemsToDraw[itemIndex - offsetSlots].flags |= ItemDrawFlags::Selected;
 
     drawItemGrid(config, inventoryPosition, inventorySize, EAlign::A_TopRight,
-                 slotSize, itemList, displayIndices, itemIndex - offsetSlots);
+                 slotSize, itemList, itemsToDraw);
 
     if(indices.size() > 0)
-        drawItemInfobox(config, itemList[indices[itemIndex]], Math::float2(0.5f * config.state.viewWidth - 300, config.state.viewHeight - 140 - 10),
+        drawItemInfobox(config, itemList[indices[itemIndex]],
+                Math::float2(0.5f * config.state.viewWidth - 300, config.state.viewHeight - 140 - 10),
                 Math::float2(600, 140));
 
     View::update(dt, mstate, config);
@@ -537,6 +631,7 @@ void UI::InventoryView::setEnabled(bool enabled)
         m_InputLeft.getAction().setEnabled(true);
         m_InputRight.getAction().setEnabled(true);
         m_InputUse.getAction().setEnabled(true);
+        m_InputDrop.getAction().setEnabled(true);
     }
     else
     {
@@ -545,5 +640,6 @@ void UI::InventoryView::setEnabled(bool enabled)
         m_InputLeft.getAction().setEnabled(false);
         m_InputRight.getAction().setEnabled(false);
         m_InputUse.getAction().setEnabled(false);
+        m_InputDrop.getAction().setEnabled(false);
     }
 }

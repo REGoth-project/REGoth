@@ -18,10 +18,16 @@ public:
      */
     void update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config) override;
 
-    // Enabled is synonymous with not being hidden
+    /**
+     * @brief enabled Enabled is synonymous with not being hidden
+     * @return Whether the inventory is enabled
+     */
     bool enabled() { return !m_IsHidden;}
 
-    // Acticates / deactivates input bindings and hides / unhides the view
+    /**
+     * @brief setEnabled Acticates / deactivates input bindings and hides / unhides the view
+     * @param enabled Desired enable - state
+     */
     void setEnabled(bool enabled);
 
 protected:
@@ -31,7 +37,19 @@ protected:
     int m_DeltaRows;
     int m_DeltaColumns;
 
-    //int m_SlotSize;
+    enum ItemDrawFlags
+    {
+        Selected = 1 << 0,
+        Equipped = 1 << 1
+    };
+
+    struct ItemDrawState
+    {
+        // Index into an array of items
+        int index;
+        // Additional information for rendering the item or it's slot
+        int flags; // ItemDrawFlags
+    };
 
     // Applies the rotations and scale typical for Gothic 1 & 2 inventory view. centerPos is
     // an offset relative to the item's mesh origin, it is the center positions for rotations
@@ -50,13 +68,16 @@ protected:
     void drawItemGrid(Render::RenderConfig& config, Math::float2 position,
                       Math::float2 size, UI::EAlign alignment, float slotSize,
                       const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
-                      const std::vector<int> &indices, int selected);
+                      const std::vector<ItemDrawState> &itemsToDraw);
+                      //const std::vector<int> &indices, int selected,
+                      //const std::vector<int> &equipped);
 
     void drawItemInfobox(Render::RenderConfig& config, const Daedalus::GEngineClasses::C_Item &item,
                          Math::float2 position, Math::float2 size);
 
     Handle::TextureHandle m_TexSlot;
     Handle::TextureHandle m_TexSlotHighlighted;
+    Handle::TextureHandle m_TexSlotEquipped;
     Handle::TextureHandle m_TexInvBack;
 
     Engine::ManagedActionBinding m_InputUp;
