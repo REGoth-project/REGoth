@@ -32,6 +32,8 @@ namespace Logic
          */
         bool load(const std::string& visual) override;
 
+        void killPfx(){m_dead = true;};
+
     private:
         /**
          * Spawns a single particle after the rules of the emitter
@@ -73,6 +75,13 @@ namespace Logic
          * Current location on the spawning line or circle
          */
         float m_spawnPosition;
+
+        /**
+         * True if no more particles should be spawned (one shot)
+         */
+        bool m_dead;
+
+
 
         /**
          * BBox around the particles

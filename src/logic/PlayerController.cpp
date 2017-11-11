@@ -30,6 +30,7 @@
 #include <logic/DialogManager.h>
 #include <engine/WorldMesh.h>
 #include <logic/PfxManager.h>
+#include <logic/visuals/PfxVisual.h>
 
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
@@ -195,7 +196,8 @@ void PlayerController::onUpdate(float deltaTime)
             m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
         }
     }
-
+    //Update pfx events
+    updatePfxPositions();
     // Run extra stuff if this is the controlled character
     if (isPlayerControlled())
     {
@@ -769,6 +771,9 @@ void PlayerController::onVisualChanged()
     });
     getModelVisual()->getAnimationHandler().setCallbackEventPfx([this](const ZenLoad::zCModelScriptEventPfx& pfx) {
         AniEvent_PFX(pfx);
+    });
+    getModelVisual()->getAnimationHandler().setCallbackEventPfxStop([this](const ZenLoad::zCModelScriptEventPfxStop& pfxStop) {
+        AniEvent_PFXStop(pfxStop);
     });
 }
 
@@ -2392,6 +2397,20 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
+void PlayerController::updatePfxPositions() {
+    for (auto &pfx : m_PfxEvents) {
+        if(not pfx.isAttached){
+            continue;
+        }
+        Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+        auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+        auto &transform = getEntityTransform();
+        size_t nodeIndex = getModelVisual()->findNodeIndex(pfx.bodyPosition);
+        auto position = transform * boneTransforms[nodeIndex];
+        Vob::setTransform(vob, position);
+
+    }
+}
 
 void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 {
@@ -2477,20 +2496,30 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 }
 void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
 {
-    if(!m_World.getPfxManager().hasPFX(pfx.m_Name)) //.hasPFX(pfx.m_Name))
+    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
     {
         return;
     }
     LogInfo() << "PFX with animation " +getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
-    Handle::EntityHandle e = Vob::constructVob(m_World);
-    Vob::VobInformation vob = Vob::asVob(m_World, e);
+    m_PfxEvents.push_back({Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached=="ATTACH"});
+    Vob::VobInformation vob = Vob::asVob(m_World, m_PfxEvents.back().entity);
     auto& boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
     auto& transform = getEntityTransform();
     size_t nodeIndex = getModelVisual()->findNodeIndex(pfx.m_Pos);
-    //LogInfo() << pfx.m_Pos + "Index " + std::to_string(nodeIndex);
     auto position = transform * boneTransforms[nodeIndex];
     Vob::setTransform(vob, position);
     Vob::setVisual(vob, pfx.m_Name+".PFX");
+}
+void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
+{
+    if(m_PfxEvents.empty())
+    {
+        return;
+    }
+    Vob::VobInformation vob = Vob::asVob(m_World, m_PfxEvents[0].entity);
+    PfxVisual* visual = (PfxVisual*)vob.visual;
+    visual->killPfx();
+    m_PfxEvents.erase(m_PfxEvents.begin());
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()

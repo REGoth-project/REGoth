@@ -135,8 +135,30 @@ namespace Animations
         return h;
     }
 
+    /*
+     * This weird function scales the frame when an event occurs according to m_FrameCount (header)
+     * FIXME there are cases when m_LastFrame, m_FirstFrame and other values are obviously incorrect (high values)
+     * I checked for overflows/weird arithmetic with unsigned/signed stuff but the numbers are not even
+     * close to maximum/minimum numbers. m_FrameCount doesn't have this Problem, thats why animations are played
+     * "correctly" ingame. In many cases m_LastFrame, m_FirstFrame and m_FrameCount don't match.
+     */
+    static int32_t scaleToHeaderFrameRate(Animation* anim, int32_t frame){
+        if(anim->m_LastFrame < anim->m_FirstFrame){
+            return frame;
+        }
+        auto diff = anim->m_LastFrame - anim->m_FirstFrame;
+        float pos = 0.0f;
+        if(diff == 0){
+            return anim->m_FrameCount;
+        }
+        pos = frame/(float)diff;
+        return static_cast<int32_t >(pos * anim->m_FrameCount);
+
+    }
+
     static void animationAddEventSFX(Animation* anim, const zCModelScriptEventSfx& sfx)
     {
+
         anim->m_EventsSFX.push_back(sfx);
 
         if (anim->m_EventsSFX.back().m_Frame == -1)
@@ -145,13 +167,34 @@ namespace Animations
         }
 
         // Normalize to range specified in the MDS
-        anim->m_EventsSFX.back().m_Frame -= anim->m_FirstFrame;
+        anim->m_EventsSFX.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsSFX.back().m_Frame);
     }
 
     static void animationAddEventPFX(Animation* anim, const zCModelScriptEventPfx& pfx){
 
         anim->m_EventsPFX.push_back(pfx);
+        if (anim->m_EventsPFX.back().m_Frame == -1)
+        {
+            anim->m_EventsPFX.back().m_Frame = anim->m_LastFrame - 1;
+        }
 
+        // Normalize to range specified in the MDS
+        //anim->m_EventsPFX.back().m_Frame -= anim->m_FirstFrame;
+        //In a weird case that first frame > lastframe is should overflow and get negative (unsigned)
+        anim->m_EventsPFX.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsPFX.back().m_Frame);
+
+    }
+    static void animationAddEventPFXStop(Animation* anim, const zCModelScriptEventPfxStop& pfxStop){
+
+        anim->m_EventsPFXStop.push_back(pfxStop);
+        if (anim->m_EventsPFXStop.back().m_Frame == -1)
+        {
+            //anim->m_EventsPFXStop.back().m_Frame = anim->m_LastFrame - 1;
+        }
+
+        // Normalize to range specified in the MDS
+        //TODO CHECK FOR weird arithmetic
+        anim->m_EventsPFXStop.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsPFXStop.back().m_Frame);
     }
 
     static void animationAddEventSFXGround(Animation* anim, const zCModelScriptEventSfx& sfx)
@@ -164,7 +207,7 @@ namespace Animations
         }
 
         // Normalize to range specified in the MDS
-        anim->m_EventsSFXGround.back().m_Frame -= anim->m_FirstFrame;
+        anim->m_EventsSFXGround.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsSFXGround.back().m_Frame);
     }
 
     static void animationAddEventTag(Animation* anim, const zCModelScriptEventTag& tag)
@@ -177,7 +220,7 @@ namespace Animations
         }
 
         // Normalize to range specified in the MDS
-        anim->m_EventTags.back().m_Frame -= anim->m_FirstFrame;
+        anim->m_EventTags.back().m_Frame = scaleToHeaderFrameRate(anim,anim->m_EventsSFXGround.back().m_Frame);
     }
 
     bool AnimationLibrary::loadModelScript(const std::string& file_name, ModelScriptParser& p)
@@ -240,6 +283,17 @@ namespace Animations
                         animationAddEventTag(anim, tag);
                     }
                     p.tag().clear();
+                    for (auto& pfx : p.pfx())
+                    {
+                        animationAddEventPFX(anim, pfx);
+                    }
+                    p.pfx().clear();
+                    for (auto& pfxStop : p.pfxStop())
+                    {
+                        animationAddEventPFXStop(anim, pfxStop);
+                    }
+                    p.pfxStop().clear();
+
                 }
                 break;
 
@@ -270,7 +324,6 @@ namespace Animations
                 break;
                 case ModelScriptParser::CHUNK_EVENT_PFX:
                 {
-                    //FIXME textfile parse
                     std::string qname = name + '-' + p.ani().m_Name;
                     auto h = m_World.getAnimationAllocator().getAnimation(qname);
                     anim = &m_World.getAnimationAllocator().getAnimation(h);
@@ -278,6 +331,15 @@ namespace Animations
                     p.pfx().clear();
                 }
                 break;
+                case ModelScriptParser::CHUNK_EVENT_PFX_STOP:
+                {
+                    std::string qname = name + '-' + p.ani().m_Name;
+                    auto h = m_World.getAnimationAllocator().getAnimation(qname);
+                    anim = &m_World.getAnimationAllocator().getAnimation(h);
+                    animationAddEventPFXStop(anim, p.pfxStop().back());
+                    p.pfxStop().clear();
+                }
+                    break;
                 case ModelScriptParser::CHUNK_ERROR:
                     return false;
             }
