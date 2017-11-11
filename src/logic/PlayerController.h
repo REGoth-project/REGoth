@@ -459,7 +459,7 @@ namespace Logic
         void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
 
         void AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx);
-
+        void AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop);
         void exportPart(json& j) override;
 
         /**
@@ -624,6 +624,25 @@ namespace Logic
         bool m_isStrafeRight;
         bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
+
+        /**
+         * Struct that stores information about one shot pfxEvents  of this player
+         */
+        struct pfxEvent
+        {
+            Handle::EntityHandle entity;
+            std::string bodyPosition;
+            bool isAttached;
+        };
+        /**
+        * Stores active pfx handler associated with this PlayerController (one shot)
+        */
+        std::vector<pfxEvent> m_PfxEvents;
+
+        /**
+         * Upates the position of pfx for this player. Used when PFXEvents use the "ATTACH" keyword
+         */
+        void updatePfxPositions();
 
         void resetKeyStates();
 

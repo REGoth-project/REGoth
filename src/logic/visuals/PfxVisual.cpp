@@ -17,7 +17,9 @@ Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle en
     : VisualController(world, entity)
     , m_TimeSinceLastSpawn(0.0f)
     , m_ppsScaleKey(0.0f)
+    , m_shpScaleKey(0.0f)
     , m_spawnPosition(0.0f)
+    , m_dead(false)
 {
     Components::Actions::initComponent<Components::PfxComponent>(m_World.getComponentAllocator(), entity);
     Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), entity);
@@ -99,11 +101,11 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
     return m_World.getEntity<Components::PfxComponent>(m_Entity);
 }
 
-void Logic::PfxVisual::onUpdate(float deltaTime)
-{
-    Components::PfxComponent& pfx = getPfxComponent();
-    if(!m_Emitter.visTexAniIsLooping){
-        LogInfo() << "Playing one-shot animation" + m_Emitter.visName;
+void Logic::PfxVisual::onUpdate(float deltaTime) {
+    Components::PfxComponent &pfx = getPfxComponent();
+    if (!m_Emitter.ppsIsLooping) {
+        LogInfo() << "Playing one-shot animation" + m_Emitter.visName << m_ppsScaleKey << " "
+                  << m_Emitter.ppsScaleKeys.size() << "ppFPS " << m_Emitter.ppsFPS;
     }
     Controller::onUpdate(deltaTime);
 
@@ -116,15 +118,17 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     m_shpScaleKey += deltaTime * m_Emitter.shpScaleFPS;
 
     // Loop ppsScaleKeys if wanted
-    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()) && !m_Emitter.ppsIsLooping)
-        m_ppsScaleKey = static_cast<float>(m_Emitter.ppsScaleKeys.size()) + 0.5f;  // Keep on high value
-    else
-        m_ppsScaleKey = 0.0f;
+    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size())) { //&& !m_Emitter.ppsIsLooping) {
 
-    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()) && !m_Emitter.shpScaleIsLooping)
-        m_shpScaleKey = static_cast<float>(m_Emitter.shpScaleKeys.size()) + 0.5f;  // Keep on high value
-    else
+        m_ppsScaleKey = 0.0f;
+        if (!m_Emitter.ppsIsLooping) {
+            m_dead = true;
+        }
+    }
+    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size())){ //&& !m_Emitter.shpScaleIsLooping){
         m_shpScaleKey = 0.0f;
+    }
+    //FIXME There is still a case when no scale keys are given and ppsIsLooping is false. See world of gothic
 
     // Perform spawning rate modulation
     float ppsKeyFrac = fmod(m_ppsScaleKey, 1.0f);  // For interpolation
@@ -133,8 +137,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     float ppsModTotal = m_Emitter.ppsIsSmooth ? bx::flerp(ppsMod1, ppsMod2, ppsKeyFrac) : ppsMod1;
 
     int toSpawn = Math::ifloor(m_Emitter.ppsValue * m_TimeSinceLastSpawn * ppsModTotal);
-    if (toSpawn > 1)
-    {
+    if (toSpawn > 1 && !m_dead) {
         for (int i = 0; i < toSpawn; i++)
             spawnParticle();
 
@@ -142,38 +145,35 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     }
 
     // Reset BBox, so we can fit it around the current state of the system
-    m_BBox.min = { FLT_MAX,  FLT_MAX,  FLT_MAX};
+    m_BBox.min = {FLT_MAX, FLT_MAX, FLT_MAX};
     m_BBox.max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
     // Update particle values
-    for (Components::PfxComponent::Particle& p : pfx.m_Particles)
+    for (Components::PfxComponent::Particle &p : pfx.m_Particles)
         updateParticle(p, deltaTime);
 
-    std::vector<Components::PfxComponent::Particle>::iterator it = pfx.m_Particles.begin();
-    for (; it != pfx.m_Particles.end();) {
+    //Notice that iterator is not incremented in for loop
+    for (auto it = pfx.m_Particles.begin(); it != pfx.m_Particles.end(); ) {
         Components::PfxComponent::Particle &p = *it;
 
         if (p.lifetime < 0) {
-            if(!m_Emitter.visTexAniIsLooping){
-                //Not safe to iterate like that
+            // Kill particle. Move the last one into the free slot and reduce the vector size
+            // to keep the memory continuous
+            if(m_dead){
                 it = pfx.m_Particles.erase(it);
-                if(pfx.m_Particles.size() == 0){
-                    LogInfo() << "Lifetime < 0";
-                    m_Entity.invalidate();
-                    return;
-                }
-            }else {
-                // Kill particle. Move the last one into the free slot and reduce the vector size
-                // to keep the memory continuous
+            }
+            else{
                 pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
                 pfx.m_Particles.pop_back();
-
-                // Do one step back, since we have a new particle in this slot now
-                //--it;
+                // No need to increase iterator, since we have a new particle in this slot now
             }
-        }else{
+        }else {
             ++it;
         }
+    }
+    if(pfx.m_Particles.size() == 0 && m_dead){
+        m_World.removeEntity(m_Entity);
+        return;
     }
     m_BBox.min -= getEntityTransform().Translation();
     m_BBox.max -= getEntityTransform().Translation();
