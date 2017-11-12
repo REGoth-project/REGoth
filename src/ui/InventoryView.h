@@ -75,6 +75,9 @@ protected:
     void drawItemInfobox(Render::RenderConfig& config, const Daedalus::GEngineClasses::C_Item &item,
                          Math::float2 position, Math::float2 size);
 
+    static int32_t getPrimarySortValue(const Daedalus::GEngineClasses::C_Item &item);
+    bool compareItems(const Daedalus::GEngineClasses::C_Item &l, const Daedalus::GEngineClasses::C_Item &r);
+
     Handle::TextureHandle m_TexSlot;
     Handle::TextureHandle m_TexSlotHighlighted;
     Handle::TextureHandle m_TexSlotEquipped;
