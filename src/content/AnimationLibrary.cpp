@@ -142,23 +142,25 @@ namespace Animations
      * close to maximum/minimum numbers. m_FrameCount doesn't have this Problem, thats why animations are played
      * "correctly" ingame. In many cases m_LastFrame, m_FirstFrame and m_FrameCount don't match.
      */
-    static int32_t scaleToHeaderFrameRate(Animation* anim, int32_t frame){
-        if(anim->m_LastFrame < anim->m_FirstFrame){
+    static int32_t scaleToHeaderFrameRate(Animation* anim, int32_t frame)
+    {
+        if(anim->m_LastFrame < anim->m_FirstFrame)
+        {
             return frame;
         }
         auto diff = anim->m_LastFrame - anim->m_FirstFrame;
         float pos = 0.0f;
-        if(diff == 0){
+        if(diff == 0)
+        {
             return anim->m_FrameCount;
         }
         pos = frame/(float)diff;
-        return static_cast<int32_t >(pos * anim->m_FrameCount);
+        return static_cast<int32_t>(pos * anim->m_FrameCount);
 
     }
 
     static void animationAddEventSFX(Animation* anim, const zCModelScriptEventSfx& sfx)
     {
-
         anim->m_EventsSFX.push_back(sfx);
 
         if (anim->m_EventsSFX.back().m_Frame == -1)
@@ -170,8 +172,8 @@ namespace Animations
         anim->m_EventsSFX.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsSFX.back().m_Frame);
     }
 
-    static void animationAddEventPFX(Animation* anim, const zCModelScriptEventPfx& pfx){
-
+    static void animationAddEventPFX(Animation* anim, const zCModelScriptEventPfx& pfx)
+    {
         anim->m_EventsPFX.push_back(pfx);
         if (anim->m_EventsPFX.back().m_Frame == -1)
         {
@@ -179,21 +181,16 @@ namespace Animations
         }
 
         // Normalize to range specified in the MDS
-        //anim->m_EventsPFX.back().m_Frame -= anim->m_FirstFrame;
-        //In a weird case that first frame > lastframe is should overflow and get negative (unsigned)
         anim->m_EventsPFX.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsPFX.back().m_Frame);
 
     }
-    static void animationAddEventPFXStop(Animation* anim, const zCModelScriptEventPfxStop& pfxStop){
-
+    static void animationAddEventPFXStop(Animation* anim, const zCModelScriptEventPfxStop& pfxStop)
+    {
         anim->m_EventsPFXStop.push_back(pfxStop);
         if (anim->m_EventsPFXStop.back().m_Frame == -1)
         {
-            //anim->m_EventsPFXStop.back().m_Frame = anim->m_LastFrame - 1;
+            anim->m_EventsPFXStop.back().m_Frame = anim->m_LastFrame - 1;
         }
-
-        // Normalize to range specified in the MDS
-        //TODO CHECK FOR weird arithmetic
         anim->m_EventsPFXStop.back().m_Frame = scaleToHeaderFrameRate(anim, anim->m_EventsPFXStop.back().m_Frame);
     }
 
@@ -339,7 +336,7 @@ namespace Animations
                     animationAddEventPFXStop(anim, p.pfxStop().back());
                     p.pfxStop().clear();
                 }
-                    break;
+                break;
                 case ModelScriptParser::CHUNK_ERROR:
                     return false;
             }

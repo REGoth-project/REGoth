@@ -2398,7 +2398,8 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed2 = false;
 }
 
-void PlayerController::updatePfxPosition(const pfxEvent &e){
+void PlayerController::updatePfxPosition(const pfxEvent &e)
+{
     Vob::VobInformation vob = Vob::asVob(m_World, e.entity);
     auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
     auto &transform = getEntityTransform();

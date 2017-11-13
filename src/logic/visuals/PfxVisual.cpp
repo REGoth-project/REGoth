@@ -101,7 +101,8 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
     return m_World.getEntity<Components::PfxComponent>(m_Entity);
 }
 
-void Logic::PfxVisual::onUpdate(float deltaTime) {
+void Logic::PfxVisual::onUpdate(float deltaTime)
+{
     Components::PfxComponent &pfx = getPfxComponent();
     Controller::onUpdate(deltaTime);
 
@@ -114,16 +115,19 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
     m_shpScaleKey += deltaTime * m_Emitter.shpScaleFPS;
 
     // Loop ppsScaleKeys if wanted
-    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size())) { //&& !m_Emitter.ppsIsLooping) {
-
+    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()))
+    { //&& !m_Emitter.ppsIsLooping) {
         m_ppsScaleKey = 0.0f;
-        if (!m_Emitter.ppsIsLooping) {
+        if (!m_Emitter.ppsIsLooping)
+        {
             m_dead = true;
         }
     }
-    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size())){ //&& !m_Emitter.shpScaleIsLooping){
+    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()))
+    { //&& !m_Emitter.shpScaleIsLooping){
         m_shpScaleKey = 0.0f;
-        if (!m_Emitter.shpScaleIsLooping) {
+        if (!m_Emitter.shpScaleIsLooping)
+        {
             m_dead = true;
         }
     }
@@ -136,7 +140,8 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
     float ppsModTotal = m_Emitter.ppsIsSmooth ? bx::flerp(ppsMod1, ppsMod2, ppsKeyFrac) : ppsMod1;
 
     int toSpawn = Math::ifloor(m_Emitter.ppsValue * m_TimeSinceLastSpawn * ppsModTotal);
-    if (toSpawn > 1 && !m_dead) {
+    if (toSpawn > 1 && !m_dead)
+    {
         for (int i = 0; i < toSpawn; i++)
             spawnParticle();
 
@@ -152,25 +157,31 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
         updateParticle(p, deltaTime);
 
     //Notice that iterator is not incremented in for loop
-    for (auto it = pfx.m_Particles.begin(); it != pfx.m_Particles.end(); ) {
+    for (auto it = pfx.m_Particles.begin(); it != pfx.m_Particles.end(); )
+    {
         Components::PfxComponent::Particle &p = *it;
 
-        if (p.lifetime <= 0) {
+        if (p.lifetime <= 0)
+        {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
-            if(m_dead){
+            if(m_dead)
+            {
                 it = pfx.m_Particles.erase(it);
             }
-            else{
+            else
+            {
                 pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
                 pfx.m_Particles.pop_back();
                 // No need to increase iterator, since we have a new particle in this slot now
             }
-        }else {
+        }else
+        {
             ++it;
         }
     }
-    if(pfx.m_Particles.size() == 0 && m_dead){
+    if(pfx.m_Particles.size() == 0 && m_dead)
+    {
         m_canBeRemoved = true;
     }
     m_BBox.min -= getEntityTransform().Translation();

@@ -546,21 +546,22 @@ void AnimHandler::triggerEvents(int frameLast, int frameNow)
     }
     for (const ZenLoad::zCModelScriptEventPfx& pfx : anim->m_EventsPFX)
     {
-        if(pfx.m_Frame > frameLast && pfx.m_Frame <= frameNow){
-            if(m_CallbackTriggerPFX) {
-                LogInfo() << anim->m_Name + " using " +  pfx.m_Name;
+        if(pfx.m_Frame > frameLast && pfx.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerPFX)
+            {
                 m_CallbackTriggerPFX(pfx);
             }
         }
     }
     for (const ZenLoad::zCModelScriptEventPfxStop& pfxStop : anim->m_EventsPFXStop)
     {
-        LogInfo() << pfxStop.m_Frame << " " << frameLast << " " << frameNow;
-        if(pfxStop.m_Frame > frameLast && pfxStop.m_Frame <= frameNow){
-            if(m_CallbackTriggerPFXStop) {
-                LogInfo() << "Size of pfxstp " << anim->m_EventsPFXStop.size();
+        if(pfxStop.m_Frame > frameLast && pfxStop.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerPFXStop)
+            {
                 m_CallbackTriggerPFXStop(pfxStop);
-             }
+            }
         }
     }
 

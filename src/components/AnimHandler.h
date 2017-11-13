@@ -220,7 +220,7 @@ namespace Components
             m_CallbackTriggerPFX = cb;
         }
         void setCallbackEventPfxStop(std::function<void(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)> cb)
-            {
+        {
             m_CallbackTriggerPFXStop = cb;
         }
 
