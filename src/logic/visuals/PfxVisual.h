@@ -32,7 +32,19 @@ namespace Logic
          */
         bool load(const std::string& visual) override;
 
+        /**
+         * Stops emitting particles. canBeRemoved() is true when all particles are finished playing
+         */
         void killPfx(){m_dead = true;};
+
+        /**
+         * Returns whether pfx visual is finished and can be removed (one shot)
+         */
+        bool canBeRemoved(){return m_canBeRemoved;};
+        /**
+        * Returns whether pfx visual is dead (doesn't spawn new particles)
+        */
+        bool isDead(){return m_dead;};
 
     private:
         /**
@@ -79,7 +91,12 @@ namespace Logic
         /**
          * True if no more particles should be spawned (one shot)
          */
-        bool m_dead;
+        bool m_dead=false;
+
+        /**
+         * True if visual can be removed (all particles are dead)
+         */
+        bool m_canBeRemoved =false;
 
 
 

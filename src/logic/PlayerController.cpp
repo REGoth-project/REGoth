@@ -197,7 +197,7 @@ void PlayerController::onUpdate(float deltaTime)
         }
     }
     //Update pfx events
-    updatePfxPositions();
+    updatePfx();
     // Run extra stuff if this is the controlled character
     if (isPlayerControlled())
     {
@@ -2397,18 +2397,34 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
-void PlayerController::updatePfxPositions() {
-    for (auto &pfx : m_PfxEvents) {
-        if(not pfx.isAttached){
-            continue;
-        }
-        Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
-        auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
-        auto &transform = getEntityTransform();
-        size_t nodeIndex = getModelVisual()->findNodeIndex(pfx.bodyPosition);
-        auto position = transform * boneTransforms[nodeIndex];
-        Vob::setTransform(vob, position);
 
+void PlayerController::updatePfxPosition(const pfxEvent &e){
+    Vob::VobInformation vob = Vob::asVob(m_World, e.entity);
+    auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+    auto &transform = getEntityTransform();
+    size_t nodeIndex = getModelVisual()->findNodeIndex(e.bodyPosition);
+    auto position = transform * boneTransforms[nodeIndex];
+    Vob::setTransform(vob, std::move(position));
+}
+
+void PlayerController::updatePfx()
+{
+    //First remove all invalid handles / emitter that are in "canBeRemoved" state (all particles are dead)
+    for(auto it = m_activePfxEvents.begin(); it<m_activePfxEvents.end();)
+    {
+        if(((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
+        {
+            m_World.removeEntity((*it).entity);
+            it = m_activePfxEvents.erase(it);
+        }
+        else
+        {
+            //If pfx is attached to body, update the position
+            if((*it).isAttached)
+                updatePfxPosition(*it);
+
+            ++it;
+        }
     }
 }
 
@@ -2500,26 +2516,33 @@ void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
     {
         return;
     }
-    LogInfo() << "PFX with animation " +getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
-    m_PfxEvents.push_back({Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached=="ATTACH"});
-    Vob::VobInformation vob = Vob::asVob(m_World, m_PfxEvents.back().entity);
-    auto& boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
-    auto& transform = getEntityTransform();
-    size_t nodeIndex = getModelVisual()->findNodeIndex(pfx.m_Pos);
-    auto position = transform * boneTransforms[nodeIndex];
-    Vob::setTransform(vob, position);
+    pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached};
+    //From world of gothic animation events
+    if(event.bodyPosition == "")
+    {
+        event.bodyPosition = "BIP01";
+    }
+    m_activePfxEvents.push_back(std::move(event));
+    Vob::VobInformation vob = Vob::asVob(m_World, m_activePfxEvents.back().entity);
     Vob::setVisual(vob, pfx.m_Name+".PFX");
 }
 void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
 {
-    if(m_PfxEvents.empty())
+    assert(!m_activePfxEvents.empty());
+
+    //Kill first pfx that is not in dead state
+    for (auto &pfx : m_activePfxEvents)
     {
-        return;
+        Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+        PfxVisual* visual = (PfxVisual*)vob.visual;
+        if(visual->isDead())
+        {
+            continue;
+        }
+        visual->killPfx();
+        break;
     }
-    Vob::VobInformation vob = Vob::asVob(m_World, m_PfxEvents[0].entity);
-    PfxVisual* visual = (PfxVisual*)vob.visual;
-    visual->killPfx();
-    m_PfxEvents.erase(m_PfxEvents.begin());
+
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
