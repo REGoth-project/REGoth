@@ -637,12 +637,23 @@ namespace Logic
         /**
         * Stores active pfx handler associated with this PlayerController (one shot)
         */
-        std::vector<pfxEvent> m_PfxEvents;
+        std::vector<pfxEvent> m_activePfxEvents;
+        /**
+        * Stores ended pfx handler (emitter don't spawn new particles)
+        * After all particles are dead, updatePfx() will remove these elements from this vector
+        */
+        std::vector<pfxEvent> m_endedPfxEvents;
 
         /**
-         * Upates the position of pfx for this player. Used when PFXEvents use the "ATTACH" keyword
+         * Updates the position of the pfxEvent
+         * @param e pfxEvent
          */
-        void updatePfxPositions();
+        void updatePfxPosition(const pfxEvent &e);
+        /**
+         * Upates the pfx for this player (removes dead emitter)
+         * When "ATTACH" keyword is used, the position is also changed.
+         */
+        void updatePfx();
 
         void resetKeyStates();
 

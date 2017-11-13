@@ -103,10 +103,6 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
 
 void Logic::PfxVisual::onUpdate(float deltaTime) {
     Components::PfxComponent &pfx = getPfxComponent();
-    if (!m_Emitter.ppsIsLooping) {
-        LogInfo() << "Playing one-shot animation" + m_Emitter.visName << m_ppsScaleKey << " "
-                  << m_Emitter.ppsScaleKeys.size() << "ppFPS " << m_Emitter.ppsFPS;
-    }
     Controller::onUpdate(deltaTime);
 
     // Spawn new particles. Need to accumulate deltaTime so the floor doesn't keep us from spawning any particles
@@ -127,6 +123,9 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
     }
     if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size())){ //&& !m_Emitter.shpScaleIsLooping){
         m_shpScaleKey = 0.0f;
+        if (!m_Emitter.shpScaleIsLooping) {
+            m_dead = true;
+        }
     }
     //FIXME There is still a case when no scale keys are given and ppsIsLooping is false. See world of gothic
 
@@ -156,7 +155,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
     for (auto it = pfx.m_Particles.begin(); it != pfx.m_Particles.end(); ) {
         Components::PfxComponent::Particle &p = *it;
 
-        if (p.lifetime < 0) {
+        if (p.lifetime <= 0) {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
             if(m_dead){
@@ -172,8 +171,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime) {
         }
     }
     if(pfx.m_Particles.size() == 0 && m_dead){
-        m_World.removeEntity(m_Entity);
-        return;
+        m_canBeRemoved = true;
     }
     m_BBox.min -= getEntityTransform().Translation();
     m_BBox.max -= getEntityTransform().Translation();
