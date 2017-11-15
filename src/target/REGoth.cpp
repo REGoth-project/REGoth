@@ -884,12 +884,8 @@ void REGoth::initConsole()
         auto& world = m_pEngine->getMainWorld().get();
         VobTypes::NpcVobInformation player = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
         player.playerController->getNpcAnimationHandler().getAnimHandler().stopAnimation();
-        if(player.playerController->getNpcAnimationHandler().getAnimHandler().hasAnimation(args[1])){
-            player.playerController->getNpcAnimationHandler().getAnimHandler().playAnimation(args[1]);
-            return "Played animation " + args[1];
-        }
-        return "Animation not found";
-
+        player.playerController->getNpcAnimationHandler().getAnimHandler().playAnimation(args[1]);
+        return "Played animation " + args[1];
     });
 
     console.registerCommand("volume", [this](const std::vector<std::string>& args) -> std::string {
