@@ -282,6 +282,8 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/libdmusic/include)
 set(DMUSIC_BUILD_DMRENDER OFF CACHE BOOL "" FORCE)
 set(DMUSIC_BUILD_DMPLAY OFF CACHE BOOL "" FORCE)
 
+target_link_libraries(engine dmusic)
+
 # ------------------ Other ------------------
 
 include_directories(src)
