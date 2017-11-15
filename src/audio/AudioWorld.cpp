@@ -1,10 +1,18 @@
 #include <cstddef>
 #include <functional>
+#include <vector>
+#include <cstdint>
 
 #ifdef RE_USE_SOUND
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+
+#include <dmusic/PlayingContext.h>
+#ifndef DMUSIC_TSF_SUPPORT
+#define DMUSIC_TSF_SUPPORT 1
+#endif
+#include <dmusic/SoundFontPlayer.h>
 #endif
 
 #include <adpcm/adpcm-lib.h>
@@ -23,6 +31,32 @@
 #include "WavReader.h"
 
 using namespace Audio;
+
+#ifdef RE_USE_SOUND
+class MusicLoader : public DirectMusic::Loader
+{
+private:
+    std::string m_musicPath;
+public:
+    MusicLoader(std::string musicPath)
+        : m_musicPath(musicPath)
+    {};
+
+    std::vector<std::uint8_t> loadFile(const std::string& name) const
+    {
+        const auto search = Utils::lowered(name);
+        for (const auto& file : Utils::getFilesInDirectory(m_musicPath))
+        {
+            const auto lowercaseName = Utils::lowered(Utils::stripFilePath(file));
+            if (lowercaseName == search)
+            {
+                return DirectMusic::Loader::loadFile(file);
+            }
+        }
+        return std::vector<std::uint8_t>();
+    };
+};
+#endif
 
 namespace World
 {
@@ -55,8 +89,63 @@ namespace World
         alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 
         createSounds();
+
+        // DirectMusic initialization
+        std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music/", m_Engine.getEngineArgs().gameBaseDirectory);
+        const auto sfFactory = DirectMusic::SoundFontPlayer::createFactory("Orchestra.sf2");
+        MusicLoader loader(musicPath);
+        m_MusicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
+        m_MusicContext->provideLoader(loader);
+        
+        for (const auto& segment : Utils::getFilesInDirectory(musicPath, "sgt"))
+        {
+            const auto lowercaseName = Utils::lowered(Utils::stripFilePath(segment));
+            m_Segments[lowercaseName] = m_MusicContext->prepareSegment(*m_MusicContext->loadSegment(segment));
+        }
+
+        alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+        alGenSources(1, &m_musicSource);
+
+        m_musicRenderThread = std::thread(&AudioWorld::musicRenderFunction, this);
 #endif
     }
+
+#ifdef RE_USE_SOUND
+    void AudioWorld::musicRenderFunction() {
+        std::int16_t* buf = new std::int16_t[RE_MUSIC_BUFFER_LEN];
+        for (int i = 0; i < RE_NUM_MUSIC_BUFFERS; i++) {
+            m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN, 44100);
+        }
+
+        alSourceQueueBuffers(m_musicSource, RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+
+        while (true) {
+            ALint val;
+            alGetSourcei(m_musicSource, AL_BUFFERS_PROCESSED, &val);
+            if (val <= 0) {
+                continue;
+            }
+
+            while (val--) {
+                ALuint buffer;
+                m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+                alSourceUnqueueBuffers(m_musicSource, 1, &buffer);
+                alBufferData(buffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN, 44100);
+                alSourceQueueBuffers(m_musicSource, 1, &buffer);
+
+                if (alGetError() != AL_NO_ERROR) {
+                    LogError() << "Error while buffering\n";
+                    return;
+                }
+
+                alGetSourcei(m_musicSource, AL_SOURCE_STATE, &val);
+                if (val != AL_PLAYING)
+                    alSourcePlay(m_musicSource);
+            }
+        }
+    }
+#endif
 
     AudioWorld::~AudioWorld()
     {
@@ -554,5 +643,9 @@ namespace World
                 return;
             }
         }
+    }
+
+    void AudioWorld::playSegment(const std::string& name) {
+        m_MusicContext->playSegment(m_Segments.at(name));
     }
 }

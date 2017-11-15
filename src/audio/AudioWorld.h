@@ -2,6 +2,7 @@
 
 #include <list>
 #include <map>
+#include <thread>
 
 #include <glm/glm.hpp>
 
@@ -12,6 +13,11 @@
 #include <vdfs/fileIndex.h>
 
 typedef struct ALCcontext_struct ALCcontext;
+
+#ifdef RE_USE_SOUND
+#define RE_NUM_MUSIC_BUFFERS 4
+#define RE_MUSIC_BUFFER_LEN 256
+#endif
 
 namespace Audio
 {
@@ -36,6 +42,12 @@ namespace Daedalus
 namespace Logic
 {
     class ScriptEngine;
+}
+
+namespace DirectMusic
+{
+    class PlayingContext;
+    class SegmentInfo;
 }
 
 namespace World
@@ -84,6 +96,8 @@ namespace World
         Utils::Ticket<AudioWorld> playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+
+        void playSegment(const std::string& name);
 
         /**
          * Sets the maximum distance this sound can be heard
@@ -172,6 +186,21 @@ namespace World
          * List of currently playing sounds or sounds that have been playing
          */
         std::list<Source> m_Sources;
+
+        /**
+         * Holds the music state
+         */
+        std::unique_ptr<DirectMusic::PlayingContext> m_MusicContext;
+
+        /**
+         * Contains all the music segments that can be played in the instance
+         */
+        std::map<std::string, std::shared_ptr<DirectMusic::SegmentInfo>> m_Segments;
+
+        void musicRenderFunction();
+
+        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
+        std::thread m_musicRenderThread;
 #endif
 
         /**
