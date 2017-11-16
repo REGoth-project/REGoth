@@ -351,20 +351,3 @@ void UI::Hud::popAllMenus()
     while (!m_MenuChain.empty())
         popMenu();
 }
-
-void UI::Hud::toggleInventory()
-{
-    if(m_pInventoryView->isHidden())
-    {
-
-        m_pInventoryView->setHidden(false);
-        m_pInventoryView->setEnabled(true);
-    }
-    else
-    {
-        m_pInventoryView->setHidden(true);
-        m_pInventoryView->setEnabled(false);
-    }
-
-
-}
