@@ -7,6 +7,7 @@
 #include "AsyncAction.h"
 #include "ui/Hud.h"
 #include "ui/LoadingScreen.h"
+#include "ui/InventoryView.h"
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
 #include <logic/ScriptEngine.h>
@@ -321,9 +322,21 @@ void GameSession::setupKeyBindings()
     });
 
     registerAction(Engine::ActionType::Inventory_Show_Hide, [baseEngine](bool triggered, float){
-        // Toggle inventory
         if(triggered)
-            baseEngine->getHud().toggleInventory();
+        {
+            UI::InventoryView &inventoryView = baseEngine->getHud().getInventoryView();
+            switch(inventoryView.getState())
+            {
+            case UI::InventoryView::State::Disabled:
+                inventoryView.setState(UI::InventoryView::State::Normal);
+                break;
+            case UI::InventoryView::State::Normal:
+                inventoryView.setState(UI::InventoryView::State::Disabled);
+                break;
+            case UI::InventoryView::State::Loot:
+                inventoryView.setState(UI::InventoryView::State::Disabled);
+            }
+        }
     });
 
     {

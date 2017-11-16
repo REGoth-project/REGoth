@@ -77,6 +77,12 @@ namespace UI
         void onTextInput(const std::string& text);
 
         /**
+         * @brief getInventoryView
+         * @return InventoryView
+         */
+        UI::InventoryView& getInventoryView() {return *m_pInventoryView;}
+
+        /**
          * @return Console-Box
          */
         UI::ConsoleBox& getConsoleBox() { return *m_pConsoleBox; }
@@ -123,8 +129,6 @@ namespace UI
          * @return Whether a menu is currently active
          */
         bool isMenuActive() { return !m_MenuChain.empty(); }
-
-        void toggleInventory();
 
     protected:
         /**

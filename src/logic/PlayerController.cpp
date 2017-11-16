@@ -23,6 +23,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
+#include <ui/InventoryView.h>
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
 #include <physics/PhysicsSystem.h>
@@ -296,46 +297,47 @@ void PlayerController::onDebugDraw()
     //     }
     // }
 
-    if (isPlayerControlled())
-    {
-        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
-        Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
+    // Debug print of inventory
+//    if (isPlayerControlled())
+//    {
+//        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
+//        Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
 
-        if (!getInventory().getItems().empty())
-        {
-            // Print inventory
-            const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
-            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
+//        if (!getInventory().getItems().empty())
+//        {
+//            // Print inventory
+//            const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
+//            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
-            uint16_t idx = 27;
-            bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
-            for (Daedalus::GameState::ItemHandle i : items)
-            {
-                Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
+//            uint16_t idx = 27;
+//            bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
+//            for (Daedalus::GameState::ItemHandle i : items)
+//            {
+//                Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
-                std::string displayName;
-                {
-                    if (!idata.description.empty())
-                    {
-                        displayName = idata.description;
-                    }
-                    else if (!idata.name.empty())
-                    {
-                        displayName = idata.name;
-                    }
-                    else
-                    {
-                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
-                    }
-                }
+//                std::string displayName;
+//                {
+//                    if (!idata.description.empty())
+//                    {
+//                        displayName = idata.description;
+//                    }
+//                    else if (!idata.name.empty())
+//                    {
+//                        displayName = idata.name;
+//                    }
+//                    else
+//                    {
+//                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
+//                    }
+//                }
 
-                if (idata.amount > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]", displayName.c_str(), idata.amount);
-                else
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
-            }
-        }
-    }
+//                if (idata.amount > 1)
+//                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]", displayName.c_str(), idata.amount);
+//                else
+//                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
+//            }
+//        }
+//    }
 }
 
 void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
@@ -2693,6 +2695,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                     else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
                     {
+                        m_World.getEngine()->getHud().getInventoryView().setState(UI::InventoryView::State::Loot, nearestNPC);
+                        /*
                         // Take all his items
                         auto& inv = npc.playerController->getInventory();
                         for (auto h : inv.getItems())
@@ -2704,6 +2708,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         }
 
                         inv.clear();
+                        */
                     }
 
                     return;
@@ -2727,6 +2732,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     vob.playerController->teleportToWaypoint(targetWP);*/
 
                 // Use item last picked up
+                /*
                 if (!getInventory().getItems().empty())
                 {
                     Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
@@ -2735,7 +2741,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         if (useItem(lastItem))
                             getInventory().removeItem(lastItem);
                     }
-                }
+                }*/
             }
         }
             break;
