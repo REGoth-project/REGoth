@@ -15,8 +15,8 @@
 typedef struct ALCcontext_struct ALCcontext;
 
 #ifdef RE_USE_SOUND
-#define RE_NUM_MUSIC_BUFFERS 4
-#define RE_MUSIC_BUFFER_LEN 256
+#define RE_NUM_MUSIC_BUFFERS 128
+#define RE_MUSIC_BUFFER_LEN 16384
 #endif
 
 namespace Audio
@@ -97,7 +97,7 @@ namespace World
         Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
 
-        void playSegment(const std::string& name);
+        bool playSegment(const std::string& name);
 
         /**
          * Sets the maximum distance this sound can be heard
@@ -197,10 +197,26 @@ namespace World
          */
         std::map<std::string, std::shared_ptr<DirectMusic::SegmentInfo>> m_Segments;
 
+        /**
+         * Background thread that puts music data into the soundbuffer(s)
+         */
         void musicRenderFunction();
-
-        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
         std::thread m_musicRenderThread;
+
+        /**
+         * Contain music buffers and source
+         */
+        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
+
+        /**
+         * Used to signal when the music rendering thread should stop
+        */
+        bool m_exiting;
+
+        /**
+         * Music loading routine
+         */
+        void initializeMusic();
 #endif
 
         /**
