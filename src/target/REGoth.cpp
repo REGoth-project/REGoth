@@ -1012,6 +1012,21 @@ void REGoth::initConsole()
 
     console.registerCommand("giveitem", giveitemCallback).registerAutoComplete(itemNamesGen);
     console.registerCommand("removeitem", removeitemCallback).registerAutoComplete(itemNamesGen);
+
+    console.registerCommand("playsegment", [this](const auto& args) -> std::string {
+        if (args.size() < 2)
+            return "Usage: playsegment [segmentname]";
+
+        auto& world = m_pEngine->getMainWorld().get().getAudioWorld();
+        if (world.playSegment(args[1]))
+        {
+            return "Segment enqueued";
+        }
+        else
+        {
+            return "Couldn't find segment";
+        }
+    });
 }
 
 int REGoth::shutdown()
