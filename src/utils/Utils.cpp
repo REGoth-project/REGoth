@@ -287,6 +287,18 @@ std::string Utils::readFileContents(const std::string& file)
     return ss.str();
 }
 
+std::vector<std::uint8_t> Utils::readBinaryFileContents(const std::string& file) {
+    std::ifstream inputStream(file, std::ios::binary | std::ios::ate);
+    if (!inputStream.is_open()) {
+        return std::vector<std::uint8_t>();
+    }
+    std::vector<std::uint8_t> buffer(inputStream.tellg());
+    inputStream.seekg(0);
+    inputStream.read((char*)buffer.data(), buffer.size());
+    inputStream.close();
+    return buffer;
+}
+
 bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::vector<uint8_t>& data)
 {
     std::string sep = (path.back() == '/' || path.back() == '\\') ? "" : "/";
