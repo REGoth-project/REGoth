@@ -1026,6 +1026,15 @@ void REGoth::initConsole()
         {
             return "Couldn't find segment";
         }
+    }).registerAutoComplete([this]() {
+        std::vector<Suggestion> suggestions;
+        for (const auto& suggestion : this->m_pEngine->getMainWorld().get().getAudioWorld().getLoadedSegments())
+        {
+            std::vector<std::string> s;
+            s.push_back(suggestion);
+            suggestions.push_back(std::make_shared<SuggestionBase>(s));
+        }
+        return suggestions;
     });
 }
 

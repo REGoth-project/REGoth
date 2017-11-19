@@ -101,6 +101,7 @@ namespace World
             LogInfo() << "Loading " + segment;
             m_Segments[lowercaseName] = m_MusicContext->prepareSegment(*segm);
         }
+        LogInfo() << "All segments loaded.";
 
         alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
         alGenSources(1, &m_musicSource);
@@ -672,6 +673,7 @@ namespace World
 
     bool AudioWorld::playSegment(const std::string& name)
     {
+#ifdef RE_USE_SOUND
         std::string loweredName = Utils::lowered(name);
         if (m_Segments.find(loweredName) == m_Segments.end())
         {
@@ -682,5 +684,19 @@ namespace World
             m_MusicContext->playSegment(m_Segments.at(loweredName));
             return true;
         }
+#endif RE_USE_SOUND
+        return false;
+    }
+
+    const std::vector<std::string> AudioWorld::getLoadedSegments() const
+    {
+        std::vector<std::string> vect;
+#ifdef RE_USE_SOUND
+        for (const auto& kvp : m_Segments)
+        {
+            vect.push_back(kvp.first);
+        }
+#endif
+        return vect;
     }
 }

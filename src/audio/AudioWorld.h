@@ -97,7 +97,15 @@ namespace World
         Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
         Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
 
+        /**
+         * Plays the segment identified by a name
+         */
         bool playSegment(const std::string& name);
+
+        /**
+         * Returns the names of the currently loaded segments
+         */
+        const std::vector<std::string> getLoadedSegments() const;
 
         /**
          * Sets the maximum distance this sound can be heard
