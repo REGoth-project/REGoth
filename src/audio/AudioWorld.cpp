@@ -118,11 +118,12 @@ namespace World
     void AudioWorld::musicRenderFunction()
     {
         ALenum error;
-        std::int16_t* buf = new std::int16_t[RE_MUSIC_BUFFER_LEN];
+        std::int16_t buf[RE_MUSIC_BUFFER_LEN];
+        for (int i = 0; i < RE_MUSIC_BUFFER_LEN; i++) buf[i] = 0;
+
         for (int i = 0; i < RE_NUM_MUSIC_BUFFERS; i++)
         {
-            m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
-            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN, 44100);
+            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
         }
 
         alSourceQueueBuffers(m_musicSource, RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
@@ -134,12 +135,13 @@ namespace World
             return;
         }
 
+        m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+
         while (!m_exiting)
         {
             ALint val;
             int n = 0;
             alGetSourcei(m_musicSource, AL_BUFFERS_PROCESSED, &val);
-            error = alGetError();
             if (val <= 0)
             {
                 continue;
@@ -148,9 +150,8 @@ namespace World
             for(int i = 0; i < val; i++)
             {
                 ALuint buffer;
-                m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
                 alSourceUnqueueBuffers(m_musicSource, 1, &buffer);
-                alBufferData(buffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN, 44100);
+                alBufferData(buffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
                 alSourceQueueBuffers(m_musicSource, 1, &buffer);
                 error = alGetError();
                 if (error != AL_NO_ERROR)
@@ -158,6 +159,7 @@ namespace World
                     LogError() << "Error while buffering: " << AudioEngine::getErrorString(error);
                     return;
                 }
+                m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
             }
 
             alGetSourcei(m_musicSource, AL_SOURCE_STATE, &val);
@@ -684,7 +686,7 @@ namespace World
             m_MusicContext->playSegment(m_Segments.at(loweredName));
             return true;
         }
-#endif RE_USE_SOUND
+#endif
         return false;
     }
 

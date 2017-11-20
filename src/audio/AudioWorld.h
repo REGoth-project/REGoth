@@ -15,8 +15,8 @@
 typedef struct ALCcontext_struct ALCcontext;
 
 #ifdef RE_USE_SOUND
-#define RE_NUM_MUSIC_BUFFERS 128
-#define RE_MUSIC_BUFFER_LEN 16384
+#define RE_NUM_MUSIC_BUFFERS 3
+#define RE_MUSIC_BUFFER_LEN 1024
 #endif
 
 namespace Audio

@@ -279,9 +279,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/libdmusic)
 include_directories(${CMAKE_SOURCE_DIR}/lib/libdmusic/include)
 
 # Disable unused utilities
-set(DMUSIC_BUILD_UTILS OFF CACHE BOOL "" FORCE)
-# FIXME: We need dls2sf for now, but including it here breaks the build.
-# Further investigation is needed.
+set(DMUSIC_BUILD_DMRENDER OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DMPLAY OFF CACHE BOOL "" FORCE)
 
 target_link_libraries(engine dmusic)
 
