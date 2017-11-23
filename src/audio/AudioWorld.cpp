@@ -75,7 +75,7 @@ namespace World
         // DirectMusic initialization
         std::string baseDir = m_Engine.getEngineArgs().gameBaseDirectory;
         std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music", baseDir);
-        const auto sfFactory = DirectMusic::SoundFontPlayer::createFactory("Orchestra.sf2");
+        const auto sfFactory = DirectMusic::SoundFontPlayer::createMultiFactory("./soundfonts/");
         m_MusicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
 
         auto loader = [musicPath, baseDir](const std::string& name)
