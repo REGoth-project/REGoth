@@ -7,6 +7,7 @@ mkdir -p build-libsndfile
 mkdir -p $TRAVIS_BUILD_DIR/sndfile_install
 cd build-libsndfile
 cmake -DCMAKE_INSTALL_PREFIX=$TRAVIS_BUILD_DIR/sndfile_install ../lib/libdmusic/utils/dls2sf/lib/libsndfile
+make -j4
 cd ../
 
 mkdir -p build
