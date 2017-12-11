@@ -75,44 +75,44 @@ namespace World
         // DirectMusic initialization
         std::string baseDir = m_Engine.getEngineArgs().gameBaseDirectory;
         std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music", baseDir);
-        const auto sfFactory = DirectMusic::SoundFontPlayer::createMultiFactory("./soundfonts/");
-        m_MusicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
+        try {
+            const auto sfFactory = DirectMusic::SoundFontPlayer::createMultiFactory("./soundfonts/");
+            m_musicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
 
-        auto loader = [musicPath, baseDir](const std::string& name)
-        {
-            const auto search = Utils::lowered(Utils::stripFilePath(name));
-            for (const auto& file : Utils::getFilesInDirectory(musicPath))
-            {
-                const auto lowercaseName = Utils::lowered(Utils::stripFilePath(file));
-                if (lowercaseName == search)
-                {
-                    return Utils::readBinaryFileContents(Utils::getCaseSensitivePath(file));
+            auto loader = [musicPath, baseDir](const std::string& name) {
+                const auto search = Utils::lowered(Utils::stripFilePath(name));
+                for (const auto& file : Utils::getFilesInDirectory(musicPath)) {
+                    const auto lowercaseName = Utils::lowered(Utils::stripFilePath(file));
+                    if (lowercaseName == search) {
+                        return Utils::readBinaryFileContents(Utils::getCaseSensitivePath(file));
+                    }
                 }
+                return std::vector<std::uint8_t>();
+            };
+
+            m_musicContext->provideLoader(loader);
+
+            for (const auto& segment : Utils::getFilesInDirectory(musicPath, "sgt")) {
+                const auto lowercaseName = Utils::lowered(Utils::stripFilePath(segment));
+                const auto segm = m_musicContext->loadSegment(segment);
+                LogInfo() << "Loading " + segment;
+                m_Segments[lowercaseName] = m_musicContext->prepareSegment(*segm);
             }
-            return std::vector<std::uint8_t>();
-        };
+            LogInfo() << "All segments loaded.";
 
-        m_MusicContext->provideLoader(loader);
+            alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+            alGenSources(1, &m_musicSource);
 
-        for (const auto& segment : Utils::getFilesInDirectory(musicPath, "sgt"))
-        {
-            const auto lowercaseName = Utils::lowered(Utils::stripFilePath(segment));
-            const auto segm = m_MusicContext->loadSegment(segment);
-            LogInfo() << "Loading " + segment;
-            m_Segments[lowercaseName] = m_MusicContext->prepareSegment(*segm);
+            // Set the default volume
+            alSourcef(m_musicSource, AL_GAIN, 1);
+
+            // Set the default position of the sound
+            alSource3f(m_musicSource, AL_POSITION, 0, 0, 0);
+
+            m_musicRenderThread = std::thread(&AudioWorld::musicRenderFunction, this);
+        } catch (const std::exception& exc) {
+            LogError() << "Couldn't initialize music system: " << exc.what();
         }
-        LogInfo() << "All segments loaded.";
-
-        alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
-        alGenSources(1, &m_musicSource);
-
-        // Set the default volume
-        alSourcef(m_musicSource, AL_GAIN, 1);
-
-        // Set the default position of the sound
-        alSource3f(m_musicSource, AL_POSITION, 0, 0, 0);
-
-        m_musicRenderThread = std::thread(&AudioWorld::musicRenderFunction, this);
     }
 
     void AudioWorld::musicRenderFunction()
@@ -135,7 +135,7 @@ namespace World
             return;
         }
 
-        m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+        m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
 
         while (!m_exiting)
         {
@@ -159,7 +159,7 @@ namespace World
                     LogError() << "Error while buffering: " << AudioEngine::getErrorString(error);
                     return;
                 }
-                m_MusicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+                m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
             }
 
             alGetSourcei(m_musicSource, AL_SOURCE_STATE, &val);
@@ -677,13 +677,13 @@ namespace World
     {
 #ifdef RE_USE_SOUND
         std::string loweredName = Utils::lowered(name);
-        if (m_Segments.find(loweredName) == m_Segments.end())
+        if (m_musicContext == nullptr || m_Segments.find(loweredName) == m_Segments.end())
         {
             return false;
         }
         else
         {
-            m_MusicContext->playSegment(m_Segments.at(loweredName));
+            m_musicContext->playSegment(m_Segments.at(loweredName));
             return true;
         }
 #endif

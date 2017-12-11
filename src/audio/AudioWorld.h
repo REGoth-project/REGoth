@@ -198,7 +198,7 @@ namespace World
         /**
          * Holds the music state
          */
-        std::unique_ptr<DirectMusic::PlayingContext> m_MusicContext;
+        std::unique_ptr<DirectMusic::PlayingContext> m_musicContext;
 
         /**
          * Contains all the music segments that can be played in the instance
