@@ -9,10 +9,10 @@
 #include <AL/alext.h>
 
 #include <dmusic/PlayingContext.h>
-#ifndef DMUSIC_TSF_SUPPORT
-#define DMUSIC_TSF_SUPPORT 1
+#ifndef DMUSIC_DLS_PLAYER
+#define DMUSIC_DLS_PLAYER 1
 #endif
-#include <dmusic/SoundFontPlayer.h>
+#include <dmusic/DlsPlayer.h>
 #endif
 
 #include <adpcm/adpcm-lib.h>
@@ -76,7 +76,7 @@ namespace World
         std::string baseDir = m_Engine.getEngineArgs().gameBaseDirectory;
         std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music", baseDir);
         try {
-            const auto sfFactory = DirectMusic::SoundFontPlayer::createMultiFactory("./soundfonts/");
+            const auto sfFactory = DirectMusic::DlsPlayer::createFactory();
             m_musicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
 
             auto loader = [musicPath, baseDir](const std::string& name) {
