@@ -63,5 +63,8 @@ matrix:
     - os: osx
       env: PLATFORM=osx
       compiler: clang
+      before-install:
+        - brew update
+        - brew install libsndfile
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
