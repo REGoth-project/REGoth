@@ -51,7 +51,7 @@ matrix:
             - autogen
             - autoconf
             - automake
-            - libtool-bin
+            - libtool
             - pkg-config
       android:
         components:
