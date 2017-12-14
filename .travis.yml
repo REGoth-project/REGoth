@@ -45,6 +45,14 @@ matrix:
     - os: linux
       language: android
       env: PLATFORM=android
+      addons:
+        apt:
+          packages:
+            - autogen
+            - autoconf
+            - automake
+            - libtool-bin
+            - pkg-config
       android:
         components:
           - tools
@@ -55,6 +63,13 @@ matrix:
           - android-21
         licenses:
           - '.+'
+      before_install:
+        - rm -fr $HOME/android-ndk-r16b
+        - curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
+        - unzip -oq android-ndk-r16b-linux-x86_64.zip
+        - rm android-ndk-r16b-linux-x86_64.zip
+        - export ANDROID_NDK_HOME=$HOME/android-ndk-r16b
+        - export ANDROID_NDK_VER=r16b
       install:
         - "yes | sdkmanager ndk-bundle"
         - "yes | sdkmanager \"extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2\""
