@@ -68,8 +68,8 @@ matrix:
         - curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
         - unzip -oq android-ndk-r16b-linux-x86_64.zip
         - rm android-ndk-r16b-linux-x86_64.zip
-        - export ANDROID_NDK_HOME=$HOME/android-ndk-r16b
-        - export ANDROID_TOOLCHAIN_HOME=$HOME
+        - export ANDROID_NDK_HOME=`pwd`/android-ndk-r16b
+        - export ANDROID_TOOLCHAIN_HOME=`pwd`
         - export ANDROID_NDK_VER=r16b
       install:
         - "yes | sdkmanager ndk-bundle"
