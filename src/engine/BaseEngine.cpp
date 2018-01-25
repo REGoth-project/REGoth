@@ -38,12 +38,12 @@ namespace Flags
 }
 
 BaseEngine::BaseEngine()
-    : m_MainThreadID(std::this_thread::get_id())
-    , m_EnableMultiThreading(true)
+    : m_JobManager(this)
     , m_RootUIView(*this)
     , m_Console(*this)
     , m_EngineTextureAlloc(*this)
 {
+    // m_JobManager.setMultiThreading(false); // useful for debugging exceptions from other threads
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
 
@@ -233,42 +233,6 @@ void BaseEngine::setPaused(bool paused)
     }
 }
 
-void BaseEngine::processMessageQueue()
-{
-    {
-        m_MessageQueueMutex.lock();
-        while (!m_MessageQueue.empty())
-        {
-            // if the job queues a new job it would create a deadlock, so we need to release the mutex before
-            m_MessageQueueMutex.unlock();
-            m_MessageQueue.front()(this);
-            m_MessageQueueMutex.lock();
-
-            m_MessageQueue.pop_front();
-        }
-        m_MessageQueueMutex.unlock();
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(m_AsyncJobsMutex);
-        auto it = m_AsyncJobs.begin();
-        while (it != m_AsyncJobs.end())
-        {
-            // test if execution finished
-            bool finished = it->wait_for(std::chrono::nanoseconds(0)) == std::future_status::ready;
-            if (finished)
-            {
-                // calling .get() will rethrow any exception, that occurred while executing the future
-                it->get();
-            }
-            if (finished)
-                it = m_AsyncJobs.erase(it);  // erase returns next iterator
-            else
-                std::advance(it, 1);
-        }
-    }
-}
-
 void BaseEngine::resetSession()
 {
     // the order is important: first destroy old session
@@ -287,15 +251,9 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::queueMainThreadJob(std::function<void(BaseEngine*)> job)
-{
-    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-    m_MessageQueue.push_back(std::move(job));
-}
-
 bool BaseEngine::isMainThread()
 {
-    return std::this_thread::get_id() == m_MainThreadID;
+    return m_JobManager.isSameThread();
 }
 
 size_t ExcludeFrameTime::m_ReferenceCounter = 0;

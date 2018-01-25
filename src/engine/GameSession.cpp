@@ -301,7 +301,7 @@ void GameSession::setupKeyBindings()
         if (triggered)
         {
             // better do saving at frame end and not between entity updates
-            baseEngine->queueMainThreadJob([](Engine::BaseEngine* engine){
+            baseEngine->m_JobManager.queueJob([](Engine::BaseEngine* engine){
                 Engine::SavegameManager::saveToSlot(0, "");
             });
         }

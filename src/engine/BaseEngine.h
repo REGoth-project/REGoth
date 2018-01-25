@@ -1,6 +1,7 @@
 #pragma once
 #include <future>
 #include "World.h"
+#include "JobManager.h"
 #include <bx/commandline.h>
 #include <engine/GameClock.h>
 #include <engine/GameSession.h>
@@ -27,12 +28,6 @@ namespace Engine
 {
     class GameSession;
     const int MAX_NUM_WORLDS = 4;
-
-    enum class ExecutionPolicy
-    {
-        MainThread,
-        NewThread
-    };
 
     template <class ReturnType>
     using JobType = std::function<ReturnType(BaseEngine* engine)>;
@@ -166,37 +161,35 @@ namespace Engine
         void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
         int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
         void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
+
         /**
-         * @return true if the calling thread is the main thread
+         * @return true if caller is main thread
          */
         bool isMainThread();
 
         /**
-         * Guarantees execution of the given function in the main thread at frame-end
-         * May be called from any thread
-         * @param job function to execute in the main thread
-         */
-        void queueMainThreadJob(std::function<void(BaseEngine*)> job);
-
-        /**
-         * executes all jobs in the queue
-         */
-        void processMessageQueue();
-
-        /**
          * Executes the job in the specified thread
          * May be called from any thread
-         * @param job the job to be executed
+         * @param job the function to be executed
          * @param executionPolicy defines which thread should execute the job
-         * @return future, which contains the result
+         * @return future, which will contain the result
          */
-        template <class ReturnType=void>
-        std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy);
+        template <class ReturnType = void>
+        std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy)
+        {
+            return m_JobManager.executeInThread(std::move(job), policy);
+        }
 
-        template <class ReturnType=void>
+        /**
+         * Executes the job in the main thread
+         * May be called from any thread
+         * @param job the function to be executed
+         * @return future, which will contain the result
+         */
+        template <class ReturnType = void>
         std::future<ReturnType> executeInMainThread(JobType<ReturnType> job)
         {
-            return executeInThread(std::move(job), ExecutionPolicy::MainThread);
+            return m_JobManager.executeInMainThread(std::move(job));
         }
 
         /**
@@ -206,12 +199,13 @@ namespace Engine
         virtual void onWorldCreated(Handle::WorldHandle world);
         virtual void onWorldRemoved(Handle::WorldHandle world){};
 
-    protected:
         /**
-         * wraps the job into a new functor, that puts the job's return value into the promise
+         * Handles delegation of function calls to main thread and starting of asynchronous operations
+         * contains ID of the main thread (bgfx thread), MUST BE initialized first
          */
-        template <class ReturnType>
-        JobType<void> wrapJob(JobType<ReturnType> job, std::shared_ptr<std::promise<ReturnType>> promise);
+        JobManager m_JobManager;
+
+    protected:
 
         /**
          * Update-method for subclasses
@@ -223,16 +217,6 @@ namespace Engine
          *		  Overwrite to load your own default archives
          */
         virtual void loadArchives();
-
-        /**
-         * ID of the main thread (bgfx thread), must be initialized first
-         */
-        std::thread::id m_MainThreadID;
-
-        /**
-         * Whether multi-threading is enabled
-         */
-        bool m_EnableMultiThreading;
 
         /**
          * Enum with values for Gothic I and Gothic II
@@ -286,19 +270,6 @@ namespace Engine
         bool m_Paused;
 
         /**
-         * list of jobs to be executed at frame-end
-         */
-        std::list<std::function<void(BaseEngine*)>> m_MessageQueue;
-        std::mutex m_MessageQueueMutex;
-
-        /**
-         * futures created by std::async block in their destructors
-         * that's why they are kept alive in this list
-         */
-        std::list<std::shared_future<void>> m_AsyncJobs;
-        std::mutex m_AsyncJobsMutex;
-
-        /**
          * amount of time for the next frame that should not be considered as elapsed
          */
         int64_t m_ExcludedFrameTime;
@@ -341,55 +312,4 @@ namespace Engine
         // for handling overlapping or nested excluders
         static size_t m_ReferenceCounter;
     };
-}
-
-namespace Engine
-{
-    template <class ReturnType>
-    inline JobType<void> BaseEngine::wrapJob(JobType<ReturnType> job, std::shared_ptr<std::promise<ReturnType>> promise)
-    {
-        return [promise, job = std::move(job)](BaseEngine* engine){
-            promise->set_value(job(engine));
-        };
-    }
-
-    // template specialization needed, because of promise<void>::set_value() specialization
-    template <>
-    inline JobType<void> BaseEngine::wrapJob(JobType<void> job, std::shared_ptr<std::promise<void>> promise)
-    {
-        return [promise, job = std::move(job)](BaseEngine* engine){
-            job(engine);
-            promise->set_value();
-        };
-    }
-
-    template <class ReturnType>
-    inline std::future<ReturnType> BaseEngine::executeInThread(JobType<ReturnType> job, ExecutionPolicy policy)
-    {
-        if (!m_EnableMultiThreading && policy == ExecutionPolicy::NewThread)
-            policy = ExecutionPolicy::MainThread;
-
-        std::shared_ptr<std::promise<ReturnType>> promise = std::make_shared<std::promise<ReturnType>>();
-        std::future<ReturnType> waitableFuture = promise->get_future();
-
-        auto wrappedJob = wrapJob(std::move(job), promise);
-
-        switch (policy)
-        {
-            case ExecutionPolicy::MainThread:
-                if (isMainThread())
-                    wrappedJob(this); // if caller is main thread, execute right away
-                else
-                    queueMainThreadJob(std::move(wrappedJob));
-                break;
-            case ExecutionPolicy::NewThread:
-            {
-                std::future<void> keepAliveFuture = std::async(std::launch::async, std::move(wrappedJob), this);
-                std::lock_guard<std::mutex> guard(m_AsyncJobsMutex);
-                m_AsyncJobs.push_back(std::move(keepAliveFuture));
-            }
-                break;
-        }
-        return waitableFuture;
-    }
 }
