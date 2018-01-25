@@ -208,7 +208,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
 
 std::string Engine::SavegameManager::loadSaveGameSlot(int index)
 {
-    ExcludeFrameTime exclude(*gameEngine);
+    Utils::RecursiveStopWatch excludeFrameTime(gameEngine->m_ExcludedFrameTime);
     // Lock to number of savegames
     assert(index >= 0 && index < maxSlots());
 
@@ -282,7 +282,7 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
     if (!gameEngine->getMainWorld().isValid() || gameEngine->getMainWorld().get().getDialogManager().isDialogActive())
         return; // only save while not in Dialog
 
-    ExcludeFrameTime exclude(*gameEngine);
+    Utils::RecursiveStopWatch excludeFrameTime(gameEngine->m_ExcludedFrameTime);
     assert(index >= 0 && index < SavegameManager::maxSlots());
 
     if (savegameName.empty())

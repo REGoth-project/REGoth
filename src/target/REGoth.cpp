@@ -1067,8 +1067,8 @@ bool REGoth::update()
         // Notify bgfx about framebuffer resize
         bgfx::reset(m_Width, m_Height);
     }
-    int64_t excludedFrameTime = m_pEngine->getExludedFrameTime();
-    m_pEngine->resetExludedFrameTime();
+    int64_t excludedFrameTime = m_pEngine->m_ExcludedFrameTime.getAndReset();
+
     // TODO: toogle this in multiplayer mode or disable via ExcludeFrameTime's constructor arg
     const bool isMultiplayer = false;
     if (isMultiplayer)

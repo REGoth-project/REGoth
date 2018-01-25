@@ -49,7 +49,6 @@ BaseEngine::BaseEngine()
 
     m_BasicGameType = Daedalus::GameType::GT_Gothic2;
     m_Paused = false;
-    m_ExcludedFrameTime = 0;
     // allocate and init default session
     resetSession();
 }
@@ -256,4 +255,3 @@ bool BaseEngine::isMainThread()
     return m_JobManager.isSameThread();
 }
 
-size_t ExcludeFrameTime::m_ReferenceCounter = 0;

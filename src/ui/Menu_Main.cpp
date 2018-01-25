@@ -32,7 +32,7 @@ bool Menu_Main::onInputAction(EInputAction action)
 
 void Menu_Main::onCustomAction(const std::string& action)
 {
-    Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
+    Utils::RecursiveStopWatch excludeFrameTime(m_Engine.m_ExcludedFrameTime);
     if (action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";

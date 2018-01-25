@@ -155,12 +155,6 @@ namespace Engine
          * Pauses or continues the game. Depending on the current state
          */
         void togglePaused() { setPaused(!m_Paused); }
-        /**
-         * increase the time, which the current frame should not treat as elapsed
-         */
-        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
-        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
-        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
 
         /**
          * @return true if caller is main thread
@@ -205,8 +199,12 @@ namespace Engine
          */
         JobManager m_JobManager;
 
-    protected:
+        /**
+         * amount of time for the next frame that should not be considered as elapsed
+         */
+        Utils::TimeSpan m_ExcludedFrameTime;
 
+    protected:
         /**
          * Update-method for subclasses
          */
@@ -268,48 +266,5 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-
-        /**
-         * amount of time for the next frame that should not be considered as elapsed
-         */
-        int64_t m_ExcludedFrameTime;
-    };
-
-    /**
-     * instances of this class shall only be created/destroyed in one thread
-     */
-    class ExcludeFrameTime
-    {
-    public:
-        ExcludeFrameTime(BaseEngine& baseEngine, bool enabled = true)
-            : m_Engine(baseEngine)
-            , m_Enabled(enabled)
-            , m_Start(bx::getHPCounter())
-        {
-            if (m_Enabled)
-                m_ReferenceCounter++;
-        }
-
-        ~ExcludeFrameTime()
-        {
-            if (m_Enabled)
-            {
-                m_ReferenceCounter--;
-                if (m_ReferenceCounter == 0)
-                {
-                    auto elapsed = bx::getHPCounter() - m_Start;
-                    m_Engine.addToExludedFrameTime(elapsed);
-                }
-            }
-        }
-
-    private:
-        BaseEngine& m_Engine;
-        // used to dynamically enable/disable this excluder at runtime
-        int64_t m_Enabled;
-        int64_t m_Start;
-        // number of excluders currently alive
-        // for handling overlapping or nested excluders
-        static size_t m_ReferenceCounter;
     };
 }
