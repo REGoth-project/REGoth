@@ -234,7 +234,7 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
             engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
         };
-        engine->executeInThread(resetSession, ExecutionPolicy::MainThread).wait();
+        engine->executeInMainThread<void>(resetSession).wait();
 
         json worldJson = json::parse(worldFileData);
         // TODO: catch json exception when emtpy file is parsed or parser crashes
@@ -258,9 +258,9 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        engine->executeInThread(std::move(registerWorld), ExecutionPolicy::MainThread);
+        engine->executeInMainThread<void>(std::move(registerWorld));
     };
-    gameEngine->executeInThread(loadSave, ExecutionPolicy::NewThread);
+    gameEngine->executeInThread<void>(loadSave, ExecutionPolicy::NewThread);
     return "";
 }
 

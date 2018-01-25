@@ -192,9 +192,11 @@ namespace Engine
          */
         template <class ReturnType=void>
         std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy);
-        std::future<void> executeInThread(JobType<void> job, ExecutionPolicy policy)
+
+        template <class ReturnType=void>
+        std::future<ReturnType> executeInMainThread(JobType<ReturnType> job)
         {
-            return executeInThread<void>(std::move(job), policy);
+            return executeInThread(std::move(job), ExecutionPolicy::MainThread);
         }
 
         /**

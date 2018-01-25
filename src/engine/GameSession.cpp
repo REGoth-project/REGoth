@@ -180,7 +180,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
                 }
             }
         };
-        engine->executeInThread(exportData, ExecutionPolicy::MainThread).wait();
+        engine->executeInMainThread<void>(exportData).wait();
 
         /**
          * asynchronous part
@@ -212,9 +212,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        engine->executeInThread(registerWorld_, ExecutionPolicy::MainThread);
+        engine->executeInMainThread<void>(registerWorld_);
     };
-    m_Engine.executeInThread(switchToWorld_, ExecutionPolicy::NewThread);
+    m_Engine.executeInThread<void>(switchToWorld_, ExecutionPolicy::NewThread);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
@@ -244,7 +244,7 @@ void GameSession::startNewGame(const std::string& worldFile)
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
         };
-        engine->executeInThread(prolog, ExecutionPolicy::MainThread).wait();
+        engine->executeInMainThread<void>(prolog).wait();
 
         using UniqueWorld = std::unique_ptr<World::WorldInstance>;
         std::shared_ptr<UniqueWorld> world;
@@ -266,9 +266,9 @@ void GameSession::startNewGame(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        engine->executeInThread(registerWorld, ExecutionPolicy::MainThread);
+        engine->executeInMainThread<void>(registerWorld);
     };
-    m_Engine.executeInThread(addWorld, ExecutionPolicy::NewThread);
+    m_Engine.executeInThread<void>(addWorld, ExecutionPolicy::NewThread);
 }
 
 void GameSession::setupKeyBindings()

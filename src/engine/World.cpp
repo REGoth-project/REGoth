@@ -126,7 +126,7 @@ WorldInstance::~WorldInstance()
         m_ClassContents = nullptr;
         m_Allocators = nullptr;
     };
-    getEngine()->executeInThread(destroyComponents, Engine::ExecutionPolicy::MainThread).wait();
+    getEngine()->executeInMainThread<void>(destroyComponents).wait();
 }
 
 bool WorldInstance::init(const std::string& zen,

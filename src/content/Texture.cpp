@@ -162,9 +162,9 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         h = loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
     }
 
-    m_Engine.executeInThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
         finalizeLoad(h);
-    }, Engine::ExecutionPolicy::MainThread);
+    });
 
     return h;
 }
