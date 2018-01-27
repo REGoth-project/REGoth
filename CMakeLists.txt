@@ -87,8 +87,8 @@ if (CMAKE_COMPILER_IS_GNUCC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type") # missing return is error
 
     # Fix up C++ standard
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-        message(WARNING "Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
+        message(WARNING "Compilation wasn't tested on GCC versions prior to 5.4 and might not be successful!")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
     endif()
 endif()
