@@ -94,10 +94,16 @@ namespace Engine
          * @return GameSession
          */
         GameSession& getSession() { return *m_Session; }
+
         /**
          * drop all information bound to the current session
          */
         void resetSession();
+
+        /**
+         * Access for executing/queueing tasks that should be done synchronously or asynchronously
+         */
+        JobManager& getJobManager();
 
         /**
          * @return Console
@@ -157,36 +163,6 @@ namespace Engine
         void togglePaused() { setPaused(!m_Paused); }
 
         /**
-         * @return true if caller is main thread
-         */
-        bool isMainThread();
-
-        /**
-         * Executes the job in the specified thread
-         * May be called from any thread
-         * @param job the function to be executed
-         * @param executionPolicy defines which thread should execute the job
-         * @return future, which will contain the result
-         */
-        template <class ReturnType = void>
-        std::future<ReturnType> executeInThread(JobType<ReturnType> job, ExecutionPolicy policy)
-        {
-            return m_JobManager.executeInThread(std::move(job), policy);
-        }
-
-        /**
-         * Executes the job in the main thread
-         * May be called from any thread
-         * @param job the function to be executed
-         * @return future, which will contain the result
-         */
-        template <class ReturnType = void>
-        std::future<ReturnType> executeInMainThread(JobType<ReturnType> job)
-        {
-            return m_JobManager.executeInMainThread(std::move(job));
-        }
-
-        /**
          * Called when a world was added
          * TODO onWorld... should be protected, but currently need to call this function from GameSession
          */
@@ -194,17 +170,18 @@ namespace Engine
         virtual void onWorldRemoved(Handle::WorldHandle world){};
 
         /**
-         * Handles delegation of function calls to main thread and starting of asynchronous operations
-         * contains ID of the main thread (bgfx thread), MUST BE initialized first
-         */
-        JobManager m_JobManager;
-
-        /**
          * amount of time for the next frame that should not be considered as elapsed
          */
         Utils::TimeSpan m_ExcludedFrameTime;
 
     protected:
+
+        /**
+         * Handles delegation of function calls to main thread and starting of asynchronous operations
+         * contains ID of the main thread (bgfx thread), MUST BE initialized first
+         */
+        JobManager m_JobManager;
+
         /**
          * Update-method for subclasses
          */

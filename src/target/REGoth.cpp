@@ -592,7 +592,7 @@ void REGoth::initConsole()
         }
 
         // better do saving at frame end and not between entity updates
-        this->m_pEngine->m_JobManager.queueJob([index, saveGameName](Engine::BaseEngine* engine){
+        this->m_pEngine->getJobManager().queueJob([index, saveGameName](Engine::BaseEngine* engine){
             Engine::SavegameManager::saveToSlot(index, saveGameName);
         });
 
@@ -1157,7 +1157,7 @@ bool REGoth::update()
         Engine::Input::clearTriggered();
     }
 
-    m_pEngine->m_JobManager.processJobs();
+    m_pEngine->getJobManager().processJobs();
 
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.

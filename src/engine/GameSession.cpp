@@ -180,7 +180,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
                 }
             }
         };
-        engine->executeInMainThread<void>(exportData).wait();
+        engine->getJobManager().executeInMainThread<void>(exportData).wait();
 
         /**
          * asynchronous part
@@ -212,9 +212,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        engine->executeInMainThread<void>(registerWorld_);
+        engine->getJobManager().executeInMainThread<void>(registerWorld_);
     };
-    m_Engine.executeInThread<void>(switchToWorld_, ExecutionPolicy::NewThread);
+    m_Engine.getJobManager().executeInThread<void>(switchToWorld_, ExecutionPolicy::NewThread);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
@@ -244,7 +244,7 @@ void GameSession::startNewGame(const std::string& worldFile)
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
         };
-        engine->executeInMainThread<void>(prolog).wait();
+        engine->getJobManager().executeInMainThread<void>(prolog).wait();
 
         using UniqueWorld = std::unique_ptr<World::WorldInstance>;
         std::shared_ptr<UniqueWorld> world;
@@ -266,9 +266,9 @@ void GameSession::startNewGame(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        engine->executeInMainThread<void>(registerWorld);
+        engine->getJobManager().executeInMainThread<void>(registerWorld);
     };
-    m_Engine.executeInThread<void>(addWorld, ExecutionPolicy::NewThread);
+    m_Engine.getJobManager().executeInThread<void>(addWorld, ExecutionPolicy::NewThread);
 }
 
 void GameSession::setupKeyBindings()
@@ -301,7 +301,7 @@ void GameSession::setupKeyBindings()
         if (triggered)
         {
             // better do saving at frame end and not between entity updates
-            baseEngine->m_JobManager.queueJob([](Engine::BaseEngine* engine){
+            baseEngine->getJobManager().queueJob([](Engine::BaseEngine* engine){
                 Engine::SavegameManager::saveToSlot(0, "");
             });
         }

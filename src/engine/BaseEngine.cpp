@@ -250,8 +250,8 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-bool BaseEngine::isMainThread()
+JobManager& BaseEngine::getJobManager()
 {
-    return m_JobManager.isSameThread();
+    return m_JobManager;
 }
 

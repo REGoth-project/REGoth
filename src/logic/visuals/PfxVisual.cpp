@@ -54,7 +54,7 @@ bool Logic::PfxVisual::load(const std::string& visual)
                                                                          Meshes::WorldStaticMeshVertex::ms_decl,  // FIXME: May want to use a smaller one
                                                                          BGFX_BUFFER_ALLOW_RESIZE);
     };
-    m_World.getEngine()->executeInMainThread<void>(job).wait();
+    m_World.getEngine()->getJobManager().executeInMainThread<void>(job).wait();
 
     getPfxComponent().m_Texture = m_World.getTextureAllocator().loadTextureVDF(m_Emitter.visName);
 
