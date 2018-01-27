@@ -439,6 +439,7 @@ Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(con
 
     // Init collision
     btTriangleMesh* wm = new btTriangleMesh;
+    // TODO fix memory leak: wm is never freed. FIX: move tmpShape to heap and add tmpShape to m_CollisionShapeAllocator?
 
     for (size_t s = 0; s < mesh.mesh.m_SubmeshStarts.size(); s++)
     {
