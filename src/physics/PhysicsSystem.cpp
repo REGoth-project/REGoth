@@ -171,10 +171,9 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std
     {
         // Convert to btvector
         const btVector3 v[] = {
-                {triangles[i].vertices[0].Position.x, triangles[i].vertices[0].Position.y, triangles[i].vertices[0].Position.z},
-                {triangles[i].vertices[1].Position.x, triangles[i].vertices[1].Position.y, triangles[i].vertices[1].Position.z},
-                {triangles[i].vertices[2].Position.x, triangles[i].vertices[2].Position.y, triangles[i].vertices[2].Position.z}
-        };
+            {triangles[i].vertices[0].Position.x, triangles[i].vertices[0].Position.y, triangles[i].vertices[0].Position.z},
+            {triangles[i].vertices[1].Position.x, triangles[i].vertices[1].Position.y, triangles[i].vertices[1].Position.z},
+            {triangles[i].vertices[2].Position.x, triangles[i].vertices[2].Position.y, triangles[i].vertices[2].Position.z}};
 
         wm->addTriangle(v[0], v[1], v[2]);
     }
@@ -460,14 +459,14 @@ Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(con
         }
     }
 
-    btConvexShape* tmpShape = new btConvexTriangleMeshShape(wm);
-    btShapeHull* hull = new btShapeHull(tmpShape);
+    btConvexTriangleMeshShape tmpShape(wm);
+    btShapeHull hull(&tmpShape);
 
-    btScalar margin = tmpShape->getMargin();
-    hull->buildHull(margin);
-    tmpShape->setUserPointer(hull);
+    btScalar margin = tmpShape.getMargin();
+    hull.buildHull(margin);
+    tmpShape.setUserPointer(&hull);
 
-    btConvexHullShape* simplifiedConvexShape = new btConvexHullShape((btScalar*)hull->getVertexPointer(), hull->numVertices());
+    btConvexHullShape* simplifiedConvexShape = new btConvexHullShape((btScalar*)hull.getVertexPointer(), hull.numVertices());
 
     Handle::CollisionShapeHandle csh = m_CollisionShapeAllocator.createObject();
     CollisionShape& cs = getCollisionShape(csh);
@@ -475,9 +474,6 @@ Handle::CollisionShapeHandle PhysicsSystem::makeConvexCollisionShapeFromMesh(con
     cs.shapeType = CollisionShape::ConvexMesh;
 
     cs.collisionShape->setUserIndex(-1);
-
-    delete tmpShape;
-    delete hull;
 
     if (!name.empty())
         m_ShapeCache[name] = csh;
