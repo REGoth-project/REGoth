@@ -29,9 +29,6 @@ namespace Engine
     class GameSession;
     const int MAX_NUM_WORLDS = 4;
 
-    template <class ReturnType>
-    using JobType = std::function<ReturnType(BaseEngine* engine)>;
-
     class BaseEngine
     {
     public:
