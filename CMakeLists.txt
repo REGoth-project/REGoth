@@ -301,5 +301,6 @@ endif()
 add_subdirectory(lib/adpcm)
 
 add_subdirectory(src/target)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
 
 file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")
