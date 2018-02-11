@@ -4,7 +4,6 @@
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
-#include "engine/AsyncAction.h"
 #include <engine/BaseEngine.h>
 #include <engine/Platform.h>
 #include <ui/LoadingScreen.h>
@@ -33,9 +32,7 @@ bool Menu_Main::onInputAction(EInputAction action)
 
 void Menu_Main::onCustomAction(const std::string& action)
 {
-    Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
-    using Engine::AsyncAction;
-    using Engine::ExecutionPolicy;
+    Utils::RecursiveStopWatch excludeFrameTime(m_Engine.m_ExcludedFrameTime);
     if (action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";

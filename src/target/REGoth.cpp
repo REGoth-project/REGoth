@@ -591,10 +591,10 @@ void REGoth::initConsole()
             saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
         }
 
-        bool forceQueue = true; // better do saving at frame end and not between entity updates
-        this->m_pEngine->executeInMainThread([index, saveGameName](Engine::BaseEngine* engine){
+        // better do saving at frame end and not between entity updates
+        this->m_pEngine->getJobManager().queueJob([index, saveGameName](Engine::BaseEngine* engine){
             Engine::SavegameManager::saveToSlot(index, saveGameName);
-        }, forceQueue);
+        });
 
         return "Saving world to slot: " + std::to_string(index) + "...";
     });
@@ -1067,8 +1067,8 @@ bool REGoth::update()
         // Notify bgfx about framebuffer resize
         bgfx::reset(m_Width, m_Height);
     }
-    int64_t excludedFrameTime = m_pEngine->getExludedFrameTime();
-    m_pEngine->resetExludedFrameTime();
+    int64_t excludedFrameTime = m_pEngine->m_ExcludedFrameTime.getAndReset();
+
     // TODO: toogle this in multiplayer mode or disable via ExcludeFrameTime's constructor arg
     const bool isMultiplayer = false;
     if (isMultiplayer)
@@ -1157,10 +1157,11 @@ bool REGoth::update()
         Engine::Input::clearTriggered();
     }
 
+    m_pEngine->getJobManager().processJobs();
+
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.
     bgfx::frame();
-    m_pEngine->processMessageQueue();
 
     return true;
 }

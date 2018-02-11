@@ -4,7 +4,6 @@
 
 #include "DialogManager.h"
 #include <components/VobClasses.h>
-#include <engine/AsyncAction.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <logic/PlayerController.h>
@@ -330,10 +329,13 @@ void DialogManager::endDialog()
 
 bool DialogManager::init()
 {
-    std::string ou = Utils::getCaseSensitivePath(OU_FILE, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
-
-    if (ou.empty())
-        ou = Utils::getCaseSensitivePath(OU_FILE_2, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
+    std::string ou;
+    for (const auto& outFile : {OU_FILE, OU_FILE_2})
+    {
+        ou = Utils::getCaseSensitivePath(outFile, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
+        if (!ou.empty())
+            break;
+    }
 
     if (ou.empty())
     {
@@ -355,8 +357,7 @@ bool DialogManager::init()
         engine->getRootUIView().addChild(m_ActiveSubtitleBox);
         m_ActiveSubtitleBox->setHidden(true);
     };
-    Engine::AsyncAction::executeInThread(createSubtitleBox, m_World.getEngine(), Engine::ExecutionPolicy::MainThread)
-        .wait();
+    m_World.getEngine()->getJobManager().executeInMainThread<void>(createSubtitleBox).wait();
 
     LogInfo() << "Done initializing DialogManager!";
     return true;

@@ -66,7 +66,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedSubmesh(const ZenLoad::Pac
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::kInvalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::kInvalidHandle;
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
         finalizeLoad(h);
     });
 
@@ -148,7 +148,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     mesh.mesh.m_IndexBufferHandle.idx = bgfx::kInvalidHandle;
     mesh.mesh.m_VertexBufferHandle.idx = bgfx::kInvalidHandle;
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
         bgfx::frame();  // Flush the pipeline to prevent an overflow
         finalizeLoad(h);
     });

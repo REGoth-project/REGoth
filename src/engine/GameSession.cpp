@@ -4,7 +4,6 @@
 
 #include "GameSession.h"
 #include <fstream>
-#include "AsyncAction.h"
 #include "ui/Hud.h"
 #include "ui/LoadingScreen.h"
 #include <components/VobClasses.h>
@@ -181,19 +180,21 @@ void GameSession::switchToWorld(const std::string& worldFile)
                 }
             }
         };
-        AsyncAction::executeInThread(exportData, engine, ExecutionPolicy::MainThread).wait();
+        engine->getJobManager().executeInMainThread<void>(exportData).wait();
 
         /**
          * asynchronous part
          */
-        std::unique_ptr<World::WorldInstance> pNewWorld = engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> world;
+        world = std::make_shared<UniqueWorld>(engine->getSession().createWorld(worldFile, newWorldJson, scriptEngine));
 
         /**
          * epilog
          */
-        auto registerWorld_ = [ w = std::move(pNewWorld), exportedPlayer ](BaseEngine * engine) mutable
+        auto registerWorld_ = [world, exportedPlayer ](BaseEngine* engine)
         {
-            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle newWorld = engine->getSession().registerWorld(std::move(*world));
             engine->getSession().setMainWorld(newWorld);
             auto playerNew = newWorld.get().importVobAndTakeControl(exportedPlayer);
 
@@ -211,9 +212,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld_), engine, ExecutionPolicy::MainThread);
+        engine->getJobManager().executeInMainThread<void>(registerWorld_);
     };
-    AsyncAction::executeInThread(switchToWorld_, &m_Engine, ExecutionPolicy::NewThread, true);
+    m_Engine.getJobManager().executeInThread<void>(switchToWorld_, ExecutionPolicy::NewThread);
 }
 
 void GameSession::putWorldToSleep(Handle::WorldHandle worldHandle)
@@ -236,20 +237,22 @@ Handle::WorldHandle GameSession::addWorld(const std::string& worldFile,
 
 void GameSession::startNewGame(const std::string& worldFile)
 {
-    Engine::AsyncAction::JobType<void> addWorld = [worldFile](Engine::BaseEngine* engine) {
+    auto addWorld = [worldFile](Engine::BaseEngine* engine) {
 
         auto prolog = [](Engine::BaseEngine* engine) {
             engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
             engine->resetSession();
         };
-        AsyncAction::executeInThread(prolog, engine, ExecutionPolicy::MainThread).wait();
+        engine->getJobManager().executeInMainThread<void>(prolog).wait();
 
-        std::unique_ptr<World::WorldInstance> uniqueWorld = engine->getSession().createWorld(worldFile);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> world;
+        world = std::make_shared<UniqueWorld>(engine->getSession().createWorld(worldFile));
 
-        auto registerWorld = [w = std::move(uniqueWorld)](Engine::BaseEngine * engine) mutable
+        auto registerWorld = [world](Engine::BaseEngine* engine)
         {
-            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(*world));
             if (worldHandle.isValid())
             {
                 engine->getSession().setMainWorld(worldHandle);
@@ -263,13 +266,9 @@ void GameSession::startNewGame(const std::string& worldFile)
             }
             engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld), engine, ExecutionPolicy::MainThread);
+        engine->getJobManager().executeInMainThread<void>(registerWorld);
     };
-    bool synchronous = false;
-    auto policy = synchronous ? ExecutionPolicy::MainThread : ExecutionPolicy::NewThread;
-    // we never want to execute it right away (if it is on MainThread)
-    bool forceQueue = true;
-    AsyncAction::executeInThread(addWorld, &m_Engine, policy, forceQueue);
+    m_Engine.getJobManager().executeInThread<void>(addWorld, ExecutionPolicy::NewThread);
 }
 
 void GameSession::setupKeyBindings()
@@ -301,10 +300,10 @@ void GameSession::setupKeyBindings()
     registerAction(ActionType::Quicksave, [baseEngine](bool triggered, float) {
         if (triggered)
         {
-            bool forceQueue = true; // better do saving at frame end and not between entity updates
-            baseEngine->executeInMainThread([](Engine::BaseEngine* engine){
+            // better do saving at frame end and not between entity updates
+            baseEngine->getJobManager().queueJob([](Engine::BaseEngine* engine){
                 Engine::SavegameManager::saveToSlot(0, "");
-            }, forceQueue);
+            });
         }
     });
 
