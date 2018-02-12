@@ -21,6 +21,16 @@ namespace Math
      */
     float radiansToDegree(float radians);
 
+    /*
+     * linear interpolation between start and end
+     */
+    template <class T>
+    inline float lerp(T start, T end, T fraction)
+    {
+        // equivalent to 'start + (end - start) * fraction' but more stable
+        return (start * (static_cast<T>(1.0) - fraction)) + (end * fraction);
+    }
+
     inline float sinusEase(float t)
     {
         return glm::sin(((t * PI - PI * 0.5f) + 1.0f) / 2.0f);

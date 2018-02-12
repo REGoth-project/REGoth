@@ -83,7 +83,7 @@ void SoundController::setNextPlayingTimeRandomized()
 {
     // See when we need to play this sound the next time
     float totalSeconds = (float)m_World.getEngine()->getGameClock().getTotalSecondsRealtime();
-    float offset = m_SoundPlayDelay + bx::flerp(-m_SoundDelayRandomness, m_SoundDelayRandomness, Utils::frand());
+    float offset = m_SoundPlayDelay + Math::lerp<float>(-m_SoundDelayRandomness, m_SoundDelayRandomness, Utils::frand());
 
     m_SoundTimePlayNextRandom = totalSeconds + offset;
 }

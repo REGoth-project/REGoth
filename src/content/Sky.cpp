@@ -133,8 +133,8 @@ void Sky::interpolate()
     {
         // TODO: I guess we have to interpolate here...
         m_MasterState.layers[i] = s0.layers[i];
-        m_MasterState.layers[i].textureAlpha = bx::flerp(s0.layers[i].textureAlpha, s1.layers[i].textureAlpha, t);
-        m_MasterState.layers[i].textureScale = bx::flerp(s0.layers[i].textureScale, s1.layers[i].textureScale, t);
+        m_MasterState.layers[i].textureAlpha = Math::lerp<float>(s0.layers[i].textureAlpha, s1.layers[i].textureAlpha, t);
+        m_MasterState.layers[i].textureScale = Math::lerp<float>(s0.layers[i].textureScale, s1.layers[i].textureScale, t);
     }
 
     // FIXME: There is some stuff about levelchanges here. Like, "turn off rain when on dragonisland"
@@ -541,9 +541,9 @@ static void applyAlphaFadeToDomeColorPart(ZenLoad::PackedMesh& mesh)
 
         float alpha;
         if(vertexHeightRatio < fadeout_offset)
-            alpha = bx::flerp(0.0f, 0.8f, Math::sinusSlowEnd(vertexHeightRatio  / fadeout_offset));
+            alpha = Math::lerp<float>(0.0f, 0.8f, Math::sinusSlowEnd(vertexHeightRatio  / fadeout_offset));
         else
-            alpha = bx::flerp(0.8f, 0.0f, Math::sinusSlowEnd(vertexHeightRatio) - fadeout_offset);
+            alpha = Math::lerp<float>(0.8f, 0.0f, Math::sinusSlowEnd(vertexHeightRatio) - fadeout_offset);
 
         Math::float4 color = Math::float4(1.0f, 1.0f, 1.0f, alpha);
         vx.Color = color.toRGBA8();

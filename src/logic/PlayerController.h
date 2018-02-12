@@ -636,7 +636,7 @@ namespace Logic
         /**
          * Contstants
          */
-        static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
-        static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
+        static constexpr float m_swimThreshold = 1.3f;  // TODO Adjust the value to reflect original game experiece
+        static constexpr float m_wadeThreshold = 0.5f;  // TODO Adjust the value to reflect original game experiece
     };
 }

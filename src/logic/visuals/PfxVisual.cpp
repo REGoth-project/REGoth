@@ -125,7 +125,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     float ppsKeyFrac = fmod(m_ppsScaleKey, 1.0f);  // For interpolation
     float ppsMod1 = m_Emitter.ppsScaleKeys[Math::ifloor(m_ppsScaleKey)];
     float ppsMod2 = m_Emitter.ppsScaleKeys[(Math::ifloor(m_ppsScaleKey) + 1) % m_Emitter.ppsScaleKeys.size()];
-    float ppsModTotal = m_Emitter.ppsIsSmooth ? bx::flerp(ppsMod1, ppsMod2, ppsKeyFrac) : ppsMod1;
+    float ppsModTotal = m_Emitter.ppsIsSmooth ? Math::lerp<float>(ppsMod1, ppsMod2, ppsKeyFrac) : ppsMod1;
 
     int toSpawn = Math::ifloor(m_Emitter.ppsValue * m_TimeSinceLastSpawn * ppsModTotal);
     if (toSpawn > 1)
@@ -180,7 +180,7 @@ void Logic::PfxVisual::spawnParticle()
     float shpKeyFrac = fmod(m_ppsScaleKey, 1.0f);  // For interpolation
     float shpMod1 = m_Emitter.ppsScaleKeys[Math::ifloor(m_ppsScaleKey)];
     float shpMod2 = m_Emitter.ppsScaleKeys[(Math::ifloor(m_ppsScaleKey) + 1) % m_Emitter.ppsScaleKeys.size()];
-    float shpModTotal = m_Emitter.ppsIsSmooth ? bx::flerp(shpMod1, shpMod2, shpKeyFrac) : shpMod1;
+    float shpModTotal = m_Emitter.ppsIsSmooth ? Math::lerp<float>(shpMod1, shpMod2, shpKeyFrac) : shpMod1;
 
     Math::float3 dir(0, 0, 0);
     switch (m_Emitter.dirMode)

@@ -94,12 +94,12 @@ void UI::LoadingScreen::update(double dt, Engine::Input::MouseState& mstate, Ren
     setSectionProgress(p);
 
     // Convert section progress to global progress
-    float value = bx::flerp(start, end, p / 100.0f);
+    float value = Math::lerp<float>(start, end, p / 100.0f);
 
     // Don't smooth if we reached 100% so we can start the game with the progress-bar being full
     if (value <= 99.0f)
     {
-        m_VisibleProgress = bx::flerp(m_VisibleProgress, value, (float)dt * PROGRESS_BAR_SOFT_SPEED);
+        m_VisibleProgress = Math::lerp<float>(m_VisibleProgress, value, (float)dt * PROGRESS_BAR_SOFT_SPEED);
         m_VisibleProgress = std::min(value, m_VisibleProgress);  // Faked value should never overshoot the real one
     }
     else

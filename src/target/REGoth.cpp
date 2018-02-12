@@ -277,7 +277,7 @@ void REGoth::initConsole()
         m_pEngine->getDefaultRenderSystem().loadShaders();
 
         return "Reloaded shaders";
-    });
+    }).setRequiresWorld(false);
 
     console.registerCommand("set day", [this](const std::vector<std::string>& args) -> std::string {
         // modifies the day
@@ -1157,11 +1157,15 @@ bool REGoth::update()
         Engine::Input::clearTriggered();
     }
 
-    m_pEngine->getJobManager().processJobs();
-
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.
+    bgfx::touch(RenderViewList::PRE_WORLD_SKY);
+    bgfx::touch(RenderViewList::DEFAULT);
+    bgfx::touch(RenderViewList::ALPHA_1);
+    bgfx::touch(RenderViewList::ALPHA_2);
     bgfx::frame();
+
+    m_pEngine->getJobManager().processJobs();
 
     return true;
 }
