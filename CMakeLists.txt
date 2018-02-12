@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.1)
 cmake_policy(SET CMP0042 NEW)
 project(REGoth)
 
+# make CMAKE_BUILD_TYPE default to RelWithDebInfo
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+        "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
+        FORCE)
+ENDIF()
+
 set(CMAKE_CXX_STANDARD 14)
 
 
@@ -303,4 +310,4 @@ add_subdirectory(lib/adpcm)
 add_subdirectory(src/target)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
 
-file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")
+file(COPY "content/shaders" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
