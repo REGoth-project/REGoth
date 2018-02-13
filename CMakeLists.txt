@@ -309,4 +309,36 @@ add_subdirectory(lib/adpcm)
 add_subdirectory(src/target)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
 
-file(COPY "content/shaders" DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+# ------------------ Shaders and shader compiler ------------------
+add_custom_target(shaders) # meta target
+
+add_custom_target(copy_shaders
+                  ${CMAKE_COMMAND} -E copy_directory
+                  ${CMAKE_SOURCE_DIR}/content/shaders/ ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaders/)
+
+add_dependencies(shaders copy_shaders)
+
+set(COMPILE_SHADERS FALSE)
+
+if (${COMPILE_SHADERS} AND (UNIX OR APPLE OR WINDOWS))
+    # TODO windows
+    set(SHADER_COMPILE_SCRIPT "compile_shaders.sh")
+    set(COMMAND_BUILD_SHADERS 
+        SHADERC="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaderc"
+        BUILD_DIR="${CMAKE_CURRENT_SOURCE_DIR}/content/"
+        "${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.sh" "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*s_*.sc"
+    )
+    add_custom_target(compile_shaders ${CMAKE_COMMAND}
+        -E env  SHADERC="\"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaderc\""
+                BUILD_DIR="\"${CMAKE_CURRENT_SOURCE_DIR}/content/\""
+        ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER_COMPILE_SCRIPT}
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*s_*.sc)
+
+    add_dependencies(compile_shaders shaderc)
+    add_dependencies(copy_shaders compile_shaders)
+else()
+endif()
+
+
+add_dependencies(REGoth shaders)
+
