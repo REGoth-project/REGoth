@@ -157,7 +157,6 @@ endif()
 configure_file(src/rgconfig.h.in ${PROJECT_BINARY_DIR}/src/rgconfig.h)
 include_directories(${PROJECT_BINARY_DIR}/src)
 
-add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
 
