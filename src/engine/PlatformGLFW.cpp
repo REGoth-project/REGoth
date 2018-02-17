@@ -234,6 +234,11 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_D, ActionType::UI_Right, false);
     bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
+    bindKey(GLFW_KEY_F10, ActionType::UI_ToggleConsole, false);
+    bindKey(GLFW_KEY_L, ActionType::UI_ToggleLogMenu, false);
+    bindKey(GLFW_KEY_B, ActionType::UI_ToggleStatusMenu, false);
+    bindKey(GLFW_KEY_HOME, ActionType::UI_HOME, false);
+    bindKey(GLFW_KEY_END, ActionType::UI_END, false);
 
     //    // special keys test
     //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);

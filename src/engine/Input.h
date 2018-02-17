@@ -73,6 +73,11 @@ namespace Engine
         UI_Left,
         UI_Right,
         UI_Confirm,
+        UI_ToggleConsole,
+        UI_ToggleLogMenu,
+        UI_ToggleStatusMenu,
+        UI_HOME,
+        UI_END,
 
         Count
     };
