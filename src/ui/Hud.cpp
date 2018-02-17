@@ -15,7 +15,6 @@
 #include "PrintScreenMessages.h"
 #include "TextView.h"
 #include <components/VobClasses.h>
-#include <engine/BaseEngine.h>
 #include <logic/PlayerController.h>
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
@@ -102,10 +101,15 @@ UI::Hud::Hud(Engine::BaseEngine& e)
         m_pClock->setTranslation(Math::float2(0.99f, 0.01f));
         m_pClock->setAlignment(A_TopRight);
     }
+
+    setupKeyBindings();
+    enableKeyBindings(true); //TODO(lena) probably not the right place here
 }
 
 UI::Hud::~Hud()
 {
+    clearKeyBindings();
+
     removeChild(m_pHealthBar);
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
@@ -177,42 +181,75 @@ void UI::Hud::onTextInput(const std::string& text)
         m_MenuChain.back()->onTextInput(text);
 }
 
-void UI::Hud::onInputAction(UI::EInputAction action)
+void UI::Hud::setupKeyBindings() {
+
+    using Engine::ActionType;
+
+    std::cout << "HUD: Binding HUD keys..." << std::endl;
+
+    auto registerAction = [this](ActionType actionType, auto functor){
+        m_HudBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
+    registerAction(ActionType::UI_Down, [](bool triggered, float) {
+        if (triggered) {
+            std::cout << "MENU BUTTON DOWN WAS PRESSED!" << std::endl;
+        }
+    });
+
+}
+
+void UI::Hud::clearKeyBindings() {
+    m_HudBindings.clear();
+}
+
+void UI::Hud::enableKeyBindings(bool enabled) {
+    for (auto& managedBinding : m_HudBindings)
+    {
+        managedBinding.getAction().setEnabled(enabled);
+    }
+}
+
+void UI::Hud::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     if (!m_pLoadingScreen->isHidden())
         return;
 
     if (m_Engine.getConsole().isOpen())
     {
-        if (action == IA_Close || action == IA_ToggleConsole)
+        if (action == ActionType::UI_Close || action == ActionType::UI_ToggleConsole)
             m_Engine.getConsole().setOpen(false);
         return;
     }
     else if (!m_MenuChain.empty())
     {
         // Notify last menu in chain
-        bool close = m_MenuChain.back()->onInputAction(action);
+        //TODO(lena) uncomment this
+        /*bool close = m_MenuChain.back()->onInputAction(action);
         if (close)
             popMenu();
-        return;
+        return;*/
     }
     else if (m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {
-        m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
+        //TODO(lena) uncomment this
+        //m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
         return;
     }
 
     // case: Nothing is open right now.
     switch (action)
     {
-        case IA_Close:
+        case ActionType::UI_Close:
             // Show main-menu
             pushMenu<UI::Menu_Main>();
             return;
-        case IA_ToggleConsole:
+        case ActionType::UI_ToggleConsole:
             m_Engine.getConsole().setOpen(true);
             return;
-        case IA_ToggleStatusMenu:
+        case ActionType::UI_ToggleStatusMenu:
         {
             UI::Menu_Status& statsScreen = pushMenu<UI::Menu_Status>();
             // TODO: Refactor move this into menu_status.create/new function?
@@ -222,7 +259,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             player.playerController->updateStatusScreen(statsScreen);
             return;
         }
-        case IA_ToggleLogMenu:
+        case ActionType::UI_ToggleLogMenu:
         {
             LogInfo() << "Open log";
             pushMenu<UI::Menu_Log>();

@@ -1,7 +1,9 @@
 #pragma once
 #include "Menu.h"
 #include "View.h"
+#include <engine/PlatformGLFW.h>
 #include <engine/BaseEngine.h>
+#include <engine/Input.h>
 #include <logic/Console.h>
 
 // HACK: Work around windows.h messing this up with its define
@@ -64,10 +66,25 @@ namespace UI
         void setDateTimeDisplay(const std::string& timeStr);
 
         /**
+         * Registers all key bindings for the HUD
+         */
+        void setupKeyBindings();
+
+        /**
+         * Un-registers all key bindings for the HUD
+         */
+        void clearKeyBindings();
+
+        /**
+         * Enables/Disables the key bindings for the HUD
+         */
+        void enableKeyBindings(bool enabled);
+
+        /**
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        void onInputAction(EInputAction action);
+        void onInputAction(Engine::ActionType action);
 
         /**
          * To be called when there was text input since the last frame
@@ -154,6 +171,11 @@ namespace UI
          * All menus registered here
          */
         std::vector<Menu*> m_RegisteredMenus;
+
+        /**
+         * stored hud key bindings
+         */
+        std::vector<Engine::ManagedActionBinding> m_HudBindings;
     };
 
     template <typename T>
