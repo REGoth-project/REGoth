@@ -271,11 +271,13 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
     return outMap;
 }
 
-bool UI::Menu::onInputAction(EInputAction action)
+bool UI::Menu::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     switch (action)
     {
-        case IA_Up:
+        case ActionType::UI_Up:
             if (!m_SelectableItems.empty())
             {
                 // Make sure we really do have a selectable item active
@@ -288,7 +290,7 @@ bool UI::Menu::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Down:
+        case ActionType::UI_Down:
             if (!m_SelectableItems.empty())
             {
                 // Skip all items which are no longer selectable
@@ -299,11 +301,11 @@ bool UI::Menu::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Accept:
+        case ActionType::UI_Confirm: // TODO(lena) Used to be AI_Accepted
             if (!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
             break;
 
-        case IA_Close:
+        case ActionType::UI_Close:
             return true;
 
         default:

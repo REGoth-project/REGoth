@@ -54,6 +54,11 @@ std::map<int, UI::EInputAction> keyMap = {
     {GLFW_KEY_LEFT, UI::IA_Left},
     {GLFW_KEY_RIGHT, UI::IA_Right},
     {GLFW_KEY_ENTER, UI::IA_Accept},
+    {GLFW_KEY_W, UI::IA_Up},    // TODO(lena) This is just temporary (but its already nice)
+    {GLFW_KEY_S, UI::IA_Down},
+    {GLFW_KEY_A, UI::IA_Left},
+    {GLFW_KEY_D, UI::IA_Right},
+    {GLFW_KEY_LEFT_CONTROL, UI::IA_Accept},
     {GLFW_KEY_ESCAPE, UI::IA_Close},
     {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
     {GLFW_KEY_0, UI::IA_0},
@@ -1047,14 +1052,14 @@ bool REGoth::update()
 
         if (m_pEngine->getConsole().isOpen())
             m_pEngine->getConsole().onKeyDown(i, mods);
-        if (keyMap.find(i) != keyMap.end())
-            m_pEngine->getHud().onInputAction(keyMap[i]);
+        //if (keyMap.find(i) != keyMap.end())
+        //    m_pEngine->getHud().onInputAction(keyMap[i]);
     }
 
     // Pass text input from this frame
     m_pEngine->getHud().onTextInput(frameInputText);
 
-    bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
+    bool disableBindings = m_pEngine->getConsole().isOpen(); //TODO(lena) this is temporary || m_pEngine->getHud().isMenuActive();
     if (!disableBindings)
         Engine::Input::fireBindings();
 

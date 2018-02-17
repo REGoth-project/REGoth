@@ -83,9 +83,9 @@ void Menu_Status::setExperienceNext(int xpNext)
     getItemScriptData("MENU_ITEM_LEVEL_NEXT").text[0] = std::to_string(xpNext);
 }
 
-bool Menu_Status::onInputAction(EInputAction action)
+bool Menu_Status::onInputAction(Engine::ActionType action)
 {
     bool baseclassClose = Menu::onInputAction(action);
     // close this menu if either the parent function wants to close or this function
-    return baseclassClose || (action == IA_ToggleStatusMenu);
+    return baseclassClose || (action == Engine::ActionType::UI_ToggleStatusMenu);
 }

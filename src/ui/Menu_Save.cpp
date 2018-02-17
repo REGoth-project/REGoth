@@ -91,24 +91,26 @@ void Menu_Save::onCustomAction(const std::string& action)
     }
 }
 
-bool Menu_Save::onInputAction(EInputAction action)
+bool Menu_Save::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     if (!m_isWaitingForSaveName)
         return Menu::onInputAction(action);
     else
     {
         switch (action)
         {
-            case IA_Accept:
+            case ActionType::UI_Confirm:
                 if (!m_SelectableItems.empty())
                     performSelectAction(m_SelectableItems[m_SelectedItem]);
                 break;
-
-            case IA_Backspace:
+                //TODO(lena) UI_Backspace does not exist yet...
+            /*case ActionType::UI_Backspace:
                 if (m_SaveName.size() > 0)
                     m_SaveName.pop_back();
-                break;
-            case IA_Close:
+                break;*/
+            case ActionType::UI_Close:
                 m_isWaitingForSaveName = false;
                 // restore displayname of current slot
                 gatherAvailableSavegames();

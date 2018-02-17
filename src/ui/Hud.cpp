@@ -185,17 +185,32 @@ void UI::Hud::setupKeyBindings() {
 
     using Engine::ActionType;
 
-    std::cout << "HUD: Binding HUD keys..." << std::endl;
-
     auto registerAction = [this](ActionType actionType, auto functor){
         m_HudBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
     };
 
-    registerAction(ActionType::UI_Down, [](bool triggered, float) {
-        if (triggered) {
-            std::cout << "MENU BUTTON DOWN WAS PRESSED!" << std::endl;
+    {
+        std::vector<ActionType> hudActions = {  ActionType::UI_Confirm,
+                                                ActionType::UI_Close,
+                                                ActionType::UI_Up,
+                                                ActionType::UI_Down,
+                                                ActionType::UI_Left,
+                                                ActionType::UI_Right,
+                                                ActionType::UI_ToggleConsole,
+                                                ActionType::UI_ToggleLogMenu,
+                                                ActionType::UI_ToggleStatusMenu,
+                                                ActionType::UI_END,
+                                                ActionType::UI_HOME};
+
+        for (auto action : hudActions)
+        {
+            registerAction(action, [this, action](bool triggered, float) {
+                if (triggered) {
+                    onInputAction(action);
+                }
+            });
         }
-    });
+    }
 
 }
 
@@ -226,11 +241,10 @@ void UI::Hud::onInputAction(Engine::ActionType action)
     else if (!m_MenuChain.empty())
     {
         // Notify last menu in chain
-        //TODO(lena) uncomment this
-        /*bool close = m_MenuChain.back()->onInputAction(action);
+        bool close = m_MenuChain.back()->onInputAction(action);
         if (close)
             popMenu();
-        return;*/
+        return;
     }
     else if (m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {

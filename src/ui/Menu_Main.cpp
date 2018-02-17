@@ -25,7 +25,7 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
     return s;
 }
 
-bool Menu_Main::onInputAction(EInputAction action)
+bool Menu_Main::onInputAction(Engine::ActionType action)
 {
     return Menu::onInputAction(action);
 }

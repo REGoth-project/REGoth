@@ -108,13 +108,15 @@ MenuItem* UI::Menu_Log::findMenuItem(const std::string& instance)
     return menuItem;
 }
 
-bool Menu_Log::onInputAction(EInputAction action)
+bool Menu_Log::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     bool baseclassClose = false;
 
     // Only effect the selection of the menu if the listbox
     // is not in focus or the content viewer open
-    if ((m_LogStatus == EMenuLogStatus::CategorySelection) || (action == IA_Close))
+    if ((m_LogStatus == EMenuLogStatus::CategorySelection) || (action == ActionType::UI_Close))
         baseclassClose = Menu::onInputAction(action);
 
     // Separate the keywords from the current selected action
@@ -143,7 +145,7 @@ bool Menu_Log::onInputAction(EInputAction action)
     // React on input action
     switch (action)
     {
-        case IA_Up:
+        case ActionType::UI_Up:
             if (m_LogStatus == EMenuLogStatus::TopicSelection)
             {
                 listbox->selectPreviousItem();
@@ -156,7 +158,7 @@ bool Menu_Log::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Down:
+        case ActionType::UI_Down:
             if (m_LogStatus == EMenuLogStatus::TopicSelection)
             {
                 listbox->selectNextItem();
@@ -169,7 +171,7 @@ bool Menu_Log::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Left:
+        case ActionType::UI_Left:
             if (m_LogStatus != EMenuLogStatus::ContentViewer)
             {
                 m_LogStatus = EMenuLogStatus::CategorySelection;
@@ -177,7 +179,7 @@ bool Menu_Log::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Right:
+        case ActionType::UI_Right:
             if (listbox->hasTopics() && (m_LogStatus != EMenuLogStatus::ContentViewer))
             {
                 m_LogStatus = EMenuLogStatus::TopicSelection;
@@ -185,7 +187,7 @@ bool Menu_Log::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Accept:
+        case ActionType::UI_Confirm:
             if (m_LogStatus == EMenuLogStatus::TopicSelection)
             {
                 std::vector<std::string> entries = listbox->getSelectedTopicEntries();
@@ -199,7 +201,7 @@ bool Menu_Log::onInputAction(EInputAction action)
             }
             break;
 
-        case IA_Close:
+        case ActionType::UI_Close:
             MenuItem* menu_item = findMenuItem("MENU_ITEM_CONTENT_VIEWER");
             if (!menu_item->isHidden())
             {
@@ -210,5 +212,5 @@ bool Menu_Log::onInputAction(EInputAction action)
     }
 
     // Close this menu if either the parent function wants to close or this function
-    return baseclassClose || (action == IA_ToggleLogMenu);
+    return baseclassClose || (action == ActionType::UI_ToggleLogMenu);
 }
