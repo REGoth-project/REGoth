@@ -248,8 +248,7 @@ void UI::Hud::onInputAction(Engine::ActionType action)
     }
     else if (m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
     {
-        //TODO(lena) uncomment this
-        //m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
+        m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
         return;
     }
 
