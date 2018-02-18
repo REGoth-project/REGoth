@@ -105,11 +105,10 @@ bool Menu_Save::onInputAction(Engine::ActionType action)
                 if (!m_SelectableItems.empty())
                     performSelectAction(m_SelectableItems[m_SelectedItem]);
                 break;
-                //TODO(lena) UI_Backspace does not exist yet...
-            /*case ActionType::UI_Backspace:
+            case ActionType::UI_Backspace:
                 if (m_SaveName.size() > 0)
                     m_SaveName.pop_back();
-                break;*/
+                break;
             case ActionType::UI_Close:
                 m_isWaitingForSaveName = false;
                 // restore displayname of current slot

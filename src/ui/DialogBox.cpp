@@ -128,24 +128,21 @@ void DialogBox::onInputAction(Engine::ActionType action)
             break;
         case ActionType::UI_Right:
             break;
-        // TODO(lena) these numbers might need their own ActionType enums...
-        /*
-        case IA_0:
+        case ActionType::UI_0:
             break;
-        case IA_1:
-        case IA_2:
-        case IA_3:
-        case IA_4:
-        case IA_5:
-        case IA_6:
-        case IA_7:
-        case IA_8:
-        case IA_9:
+        case ActionType::UI_1:
+        case ActionType::UI_2:
+        case ActionType::UI_3:
+        case ActionType::UI_4:
+        case ActionType::UI_5:
+        case ActionType::UI_6:
+        case ActionType::UI_7:
+        case ActionType::UI_8:
+        case ActionType::UI_9:
         {
-            int index = action - IA_1;
+            int index = static_cast<int>(action) - static_cast<int>(ActionType::UI_1);
             m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
         }
-         */
         break;
         case ActionType::UI_HOME:
             m_CurrentlySelected = 0;

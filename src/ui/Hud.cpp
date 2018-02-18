@@ -103,7 +103,6 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     }
 
     setupKeyBindings();
-    enableKeyBindings(true); //TODO(lena) probably not the right place here
 }
 
 UI::Hud::~Hud()
@@ -200,7 +199,18 @@ void UI::Hud::setupKeyBindings() {
                                                 ActionType::UI_ToggleLogMenu,
                                                 ActionType::UI_ToggleStatusMenu,
                                                 ActionType::UI_END,
-                                                ActionType::UI_HOME};
+                                                ActionType::UI_0,
+                                                ActionType::UI_1,
+                                                ActionType::UI_2,
+                                                ActionType::UI_3,
+                                                ActionType::UI_4,
+                                                ActionType::UI_5,
+                                                ActionType::UI_6,
+                                                ActionType::UI_7,
+                                                ActionType::UI_8,
+                                                ActionType::UI_9,
+                                                ActionType::UI_HOME,
+                                                ActionType::UI_Backspace};
 
         for (auto action : hudActions)
         {
@@ -211,6 +221,9 @@ void UI::Hud::setupKeyBindings() {
             });
         }
     }
+
+    // Immediately enable key bindings
+    enableKeyBindings(true);
 
 }
 

@@ -234,11 +234,22 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_D, ActionType::UI_Right, false);
     bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
+    bindKey(GLFW_KEY_0, ActionType::UI_0, false);
+    bindKey(GLFW_KEY_1, ActionType::UI_1, false);
+    bindKey(GLFW_KEY_2, ActionType::UI_2, false);
+    bindKey(GLFW_KEY_3, ActionType::UI_3, false);
+    bindKey(GLFW_KEY_4, ActionType::UI_4, false);
+    bindKey(GLFW_KEY_5, ActionType::UI_5, false);
+    bindKey(GLFW_KEY_6, ActionType::UI_6, false);
+    bindKey(GLFW_KEY_7, ActionType::UI_7, false);
+    bindKey(GLFW_KEY_8, ActionType::UI_8, false);
+    bindKey(GLFW_KEY_9, ActionType::UI_9, false);
     bindKey(GLFW_KEY_F10, ActionType::UI_ToggleConsole, false);
     bindKey(GLFW_KEY_L, ActionType::UI_ToggleLogMenu, false);
     bindKey(GLFW_KEY_N, ActionType::UI_ToggleLogMenu, false);
     bindKey(GLFW_KEY_B, ActionType::UI_ToggleStatusMenu, false);
     bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_ToggleStatusMenu, false);
+    bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_Backspace, false);
     bindKey(GLFW_KEY_HOME, ActionType::UI_HOME, false);
     bindKey(GLFW_KEY_END, ActionType::UI_END, false);
 

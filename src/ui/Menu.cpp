@@ -301,7 +301,7 @@ bool UI::Menu::onInputAction(Engine::ActionType action)
             }
             break;
 
-        case ActionType::UI_Confirm: // TODO(lena) Used to be AI_Accepted
+        case ActionType::UI_Confirm:
             if (!m_SelectableItems.empty()) performSelectAction(m_SelectableItems[m_SelectedItem]);
             break;
 
