@@ -202,17 +202,17 @@ void Logic::CameraController::setupKeybinds()
     }
 
     // Disable all at first and wait until one is enabled.
-    disableActions();
+    enableActions(false);
 }
 
-void Logic::CameraController::disableActions()
+void Logic::CameraController::enableActions(bool enable)
 {
-    Engine::Input::setMouseLock(false);
+    Engine::Input::setMouseLock(enable);
     for (auto& pair : m_ActionBindings)
     {
         for (auto& managedBinding : pair.second)
         {
-            managedBinding.getAction().setEnabled(false);
+            managedBinding.getAction().setEnabled(enable);
         }
     }
 }

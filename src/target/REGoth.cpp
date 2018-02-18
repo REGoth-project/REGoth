@@ -1025,9 +1025,11 @@ bool REGoth::update()
     // Pass text input from this frame
     m_pEngine->getHud().onTextInput(frameInputText);
 
-    // Disable player character bindings when console or menus are open
+    // Disable player and camera character bindings when console or menus are open
     bool enableBindings = !(m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive());
     m_pEngine->getSession().enablePlayerBindings(enableBindings);
+    if (m_pEngine->getMainWorld().isValid())
+        m_pEngine->getMainWorld().get().getCameraController()->enableActions(enableBindings);
 
     Engine::Input::fireBindings();
 

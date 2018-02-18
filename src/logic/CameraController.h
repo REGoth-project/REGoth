@@ -145,6 +145,12 @@ namespace Logic
         void setupKeybinds();
 
         /**
+         * Enables/Disables the key bindings for the HUD
+         * @param enable
+         */
+        void enableActions(bool enable);
+
+        /**
          * Sets the transform of this camera
          */
         void setTransforms(const Math::float3& position, float yaw = 0.0f, float pitch = 0.0f);
@@ -201,7 +207,6 @@ namespace Logic
          */
         bool m_Active;
 
-        void disableActions();
 
         /**
          * How the camera should behave regarding the followed entity
