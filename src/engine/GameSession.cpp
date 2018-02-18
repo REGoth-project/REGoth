@@ -375,6 +375,11 @@ void GameSession::setupKeyBindings()
 
 void GameSession::enablePlayerBindings(bool enabled)
 {
+    using ECameraMode = Logic::CameraController::ECameraMode;
+    ECameraMode cameraMode = m_Engine.getMainWorld().get().getCameraController()->getCameraMode();
+    enabled = enabled && ( cameraMode == ECameraMode::FirstPerson ||
+                           cameraMode == ECameraMode::ThirdPerson ||
+                           cameraMode == ECameraMode::Static);
     for (auto& managedBinding : m_PlayerBindings)
     {
         managedBinding.getAction().setEnabled(enabled);

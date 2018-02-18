@@ -116,6 +116,14 @@ namespace Logic
         void setCameraMode(ECameraMode mode);
 
         /**
+         * Returns current camera mode
+         * @return ECameraMode camera mode
+         */
+        ECameraMode getCameraMode() {
+         return m_CameraMode;
+        }
+
+        /**
          * @brief Sets whether this controller should read input
          */
         void setActive(bool active)
@@ -145,10 +153,16 @@ namespace Logic
         void setupKeybinds();
 
         /**
-         * Enables/Disables the key bindings for the HUD
+         * Enables/Disables key bindings for current camera mode
          * @param enable
          */
         void enableActions(bool enable);
+
+        /**
+         * Enables key bindings for given mode, disables for other modes
+         * @param mode determines what keybindigns are enabled
+         */
+        void enableActions(ECameraMode mode);
 
         /**
          * Sets the transform of this camera
