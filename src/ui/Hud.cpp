@@ -188,6 +188,15 @@ void UI::Hud::setupKeyBindings() {
         m_HudBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
     };
 
+    registerAction(ActionType::UI_Mousewheel, [this](bool triggered, float intensity){
+        if (triggered) {
+            if (intensity == 1.f)
+                onInputAction(ActionType::UI_Up);
+            else if (intensity == -1.f)
+                onInputAction(ActionType::UI_Down);
+        }
+    });
+
     {
         std::vector<ActionType> hudActions = {  ActionType::UI_Confirm,
                                                 ActionType::UI_Close,
@@ -221,10 +230,6 @@ void UI::Hud::setupKeyBindings() {
             });
         }
     }
-
-    // Immediately enable key bindings
-    enableKeyBindings(true);
-
 }
 
 void UI::Hud::clearKeyBindings() {

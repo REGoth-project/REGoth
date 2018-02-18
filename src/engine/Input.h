@@ -74,6 +74,7 @@ namespace Engine
         UI_Left,
         UI_Right,
         UI_Confirm,
+        UI_Mousewheel,
         UI_ToggleConsole,
         UI_ToggleLogMenu,
         UI_ToggleStatusMenu,

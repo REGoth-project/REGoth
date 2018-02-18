@@ -252,6 +252,9 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_Backspace, false);
     bindKey(GLFW_KEY_HOME, ActionType::UI_HOME, false);
     bindKey(GLFW_KEY_END, ActionType::UI_END, false);
+    bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::UI_Confirm, false);
+    bindMouseButton(GLFW_MOUSE_BUTTON_RIGHT, ActionType::UI_Close, false);
+    bindMouseAxis(MouseAxis::ScrollY, ActionType::UI_Mousewheel, false);
 
     //    // special keys test
     //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);

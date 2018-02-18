@@ -77,6 +77,7 @@ namespace UI
 
         /**
          * Enables/Disables the key bindings for the HUD
+         * @param enable
          */
         void enableKeyBindings(bool enabled);
 
