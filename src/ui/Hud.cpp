@@ -16,6 +16,7 @@
 #include "TextView.h"
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
+#include <logic/CameraController.h>
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
 
@@ -150,6 +151,15 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
     m_pMenuBackground->setHidden(isWorldLoaded || !m_pLoadingScreen->isHidden());
 
     View::update(dt, mstate, config);
+
+    if (isWorldLoaded) {
+        // Deactivate camera controls when menu or dialog is open
+        bool disable = !(isMenuActive() || m_Engine.getMainWorld().get().getDialogManager().isDialogActive());
+        for (auto &managedBinding : m_HudBindings) {
+            // TODO set camera mode to dialog, once implemented (which also should toggle playerBindings)
+            m_Engine.getMainWorld().get().getCameraController()->enableActions(disable);
+        }
+    }
 }
 
 void UI::Hud::setHealth(int32_t value, int32_t maxValue)
@@ -236,13 +246,6 @@ void UI::Hud::clearKeyBindings() {
     m_HudBindings.clear();
 }
 
-void UI::Hud::enableKeyBindings(bool enabled) {
-    for (auto& managedBinding : m_HudBindings)
-    {
-        managedBinding.getAction().setEnabled(enabled);
-    }
-}
-
 void UI::Hud::onInputAction(Engine::ActionType action)
 {
     using Engine::ActionType;
@@ -275,6 +278,7 @@ void UI::Hud::onInputAction(Engine::ActionType action)
     {
         case ActionType::UI_Close:
             // Show main-menu
+            // TODO(lena) not on right click though
             pushMenu<UI::Menu_Main>();
             return;
         case ActionType::UI_ToggleConsole:

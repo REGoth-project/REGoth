@@ -202,19 +202,20 @@ void Logic::CameraController::setupKeybinds()
     }
 
     // Disable all at first and wait until one is enabled.
-    Engine::Input::setMouseLock(false);
     enableActions(false);
+    Engine::Input::setMouseLock(false);
 }
 
 void Logic::CameraController::enableActions(bool enable)
 {
+    setActive(enable);
     for (auto& pair : m_ActionBindings)
     {
-        // Only affect current camera mode
-        enable = enable && (pair.first == m_CameraMode);
-        for (auto& managedBinding : pair.second)
-        {
-            managedBinding.getAction().setEnabled(enable);
+        if (pair.first == ECameraMode::ThirdPerson || pair.first == ECameraMode::FirstPerson) {
+            for (auto& managedBinding : pair.second)
+            {
+                managedBinding.getAction().setEnabled(enable);
+            }
         }
     }
 }
@@ -417,7 +418,7 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
 void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode mode)
 {
     m_CameraMode = mode;
-    enableActions(m_CameraMode);
+    enableActions(mode);
     switch (mode)
     {
         case ECameraMode::FirstPerson:
@@ -441,6 +442,11 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(false);
             break;
     }
+    bool enablePlayerBindings = false
+                                || (mode == ECameraMode::FirstPerson)
+                                || (mode == ECameraMode::ThirdPerson)
+                                || (mode == ECameraMode::Static);
+    m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings);
     #ifndef NDEBUG
     Engine::Input::setMouseLock(false);
     #endif

@@ -153,14 +153,14 @@ namespace Logic
         void setupKeybinds();
 
         /**
-         * Enables/Disables key bindings for current camera mode
+         * Enables/Disables key bindings for firstPerson and thirdPerson camera mode
          * @param enable
          */
         void enableActions(bool enable);
 
         /**
          * Enables key bindings for given mode, disables for other modes
-         * @param mode determines what keybindigns are enabled
+         * @param mode determines what keybindings are enabled
          */
         void enableActions(ECameraMode mode);
 

@@ -76,12 +76,6 @@ namespace UI
         void clearKeyBindings();
 
         /**
-         * Enables/Disables the key bindings for the HUD
-         * @param enable
-         */
-        void enableKeyBindings(bool enabled);
-
-        /**
          * To be called when one of the given actions were triggered
          * @param action Input action
          */

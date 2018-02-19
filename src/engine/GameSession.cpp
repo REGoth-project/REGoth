@@ -338,7 +338,8 @@ void GameSession::setupKeyBindings()
         {
             registerPlayerAction(action, [this, action, getPlayerVob](bool triggered, float intensity) {
                 auto vob = getPlayerVob();
-                if (vob.isValid() && !this->getMainWorld().get().getDialogManager().isDialogActive())
+                if (vob.isValid() && !this->getMainWorld().get().getDialogManager().isDialogActive()
+                        && !this->m_Engine.getHud().isMenuActive())
                     vob.playerController->onAction(action, triggered, intensity);
             });
         }
@@ -375,11 +376,6 @@ void GameSession::setupKeyBindings()
 
 void GameSession::enablePlayerBindings(bool enabled)
 {
-    using ECameraMode = Logic::CameraController::ECameraMode;
-    ECameraMode cameraMode = m_Engine.getMainWorld().get().getCameraController()->getCameraMode();
-    enabled = enabled && ( cameraMode == ECameraMode::FirstPerson ||
-                           cameraMode == ECameraMode::ThirdPerson ||
-                           cameraMode == ECameraMode::Static);
     for (auto& managedBinding : m_PlayerBindings)
     {
         managedBinding.getAction().setEnabled(enabled);
