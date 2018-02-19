@@ -135,9 +135,9 @@ namespace Meshes
         Math::float3 Normal;
         Math::float2 TexCoord;
         uint32_t Color;
-        Math::float3 localPositions[4];
-        unsigned char boneIndices[4];
-        float weights[4];
+        std::array<Math::float3, 4> localPositions;
+        std::array<uint8_t, 4> boneIndices;
+        std::array<float, 4> weights;
 
         static void init()
         {

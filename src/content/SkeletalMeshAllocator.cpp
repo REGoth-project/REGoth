@@ -117,18 +117,20 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     mesh.m_Vertices.resize(packed.vertices.size());
     for (size_t i = 0, end = packed.vertices.size(); i < end; i++)
     {
-        mesh.m_Vertices[i].TexCoord = Math::float2(packed.vertices[i].TexCoord.x, packed.vertices[i].TexCoord.y);
-        mesh.m_Vertices[i].Color = packed.vertices[i].Color;
-        mesh.m_Vertices[i].Normal = Math::float3(packed.vertices[i].Normal.x, packed.vertices[i].Normal.y, packed.vertices[i].Normal.z);
-        memcpy(mesh.m_Vertices[i].weights, packed.vertices[i].Weights, sizeof(float) * 4);
-        memcpy(mesh.m_Vertices[i].boneIndices, packed.vertices[i].BoneIndices, sizeof(char) * 4);
+        auto& source = packed.vertices[i];
+        auto& destination = mesh.m_Vertices[i];
+        destination.TexCoord = Math::float2(source.TexCoord.x, source.TexCoord.y);
+        destination.Color = source.Color;
+        destination.Normal = Math::float3(source.Normal.x, source.Normal.y, source.Normal.z);
+        std::copy(source.Weights.begin(), source.Weights.end(), destination.weights.begin());
+        std::copy(source.BoneIndices.begin(), source.BoneIndices.end(), destination.boneIndices.begin());
 
-        mesh.m_Vertices[i].Color = 0xFFFFFFFF;
+        destination.Color = 0xFFFFFFFF;
 
         for (size_t j = 0; j < 4; j++)
-            mesh.m_Vertices[i].localPositions[j] = Math::float3(packed.vertices[i].LocalPositions[j].x,
-                                                                packed.vertices[i].LocalPositions[j].y,
-                                                                packed.vertices[i].LocalPositions[j].z);
+            destination.localPositions[j] = Math::float3(source.LocalPositions[j].x,
+                                                         source.LocalPositions[j].y,
+                                                         source.LocalPositions[j].z);
     }
 
     // Put all indices into one continuous chunk of memory
