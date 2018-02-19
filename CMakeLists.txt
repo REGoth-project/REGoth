@@ -320,14 +320,13 @@ add_dependencies(shaders copy_shaders)
 
 set(COMPILE_SHADERS FALSE)
 
-if (${COMPILE_SHADERS} AND (UNIX OR APPLE OR WINDOWS))
-    # TODO windows
-    set(SHADER_COMPILE_SCRIPT "compile_shaders.sh")
-    set(COMMAND_BUILD_SHADERS 
-        SHADERC="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaderc"
-        BUILD_DIR="${CMAKE_CURRENT_SOURCE_DIR}/content/"
-        "${CMAKE_CURRENT_SOURCE_DIR}/compile_shaders.sh" "${CMAKE_CURRENT_SOURCE_DIR}/src/shaders/*s_*.sc"
-    )
+if (${COMPILE_SHADERS})
+    if (WIN32)
+        set(SHADER_COMPILE_SCRIPT "compile_shaders.bat")
+    else()
+        set(SHADER_COMPILE_SCRIPT "compile_shaders.sh")
+    endif()
+    message("SHADER_COMPILE_SCRIPT=${SHADER_COMPILE_SCRIPT}")
     add_custom_target(compile_shaders ${CMAKE_COMMAND}
         -E env  SHADERC="\"${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/shaderc\""
                 BUILD_DIR="\"${CMAKE_CURRENT_SOURCE_DIR}/content/\""

@@ -51,7 +51,7 @@ void main()
 
     v_texcoord0 = a_texcoord0;
 
-    vec3 normalWorld = mat3(u_model[0]) * a_normal;
+    vec3 normalWorld = mul(u_model[0], vec4(a_normal, 0)).xyz;
     float ndl = max(0.0, dot(normalWorld, normalize(vec3(-1,1,1))));
     v_color = min(1, (ndl * u_color.r + u_color.r * 0.5)) *  a_color0;
 

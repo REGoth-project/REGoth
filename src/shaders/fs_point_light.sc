@@ -12,16 +12,16 @@ uniform vec4 u_LightColor;
 uniform vec4 u_FogColor;
 uniform vec4 u_FogNearFar;
 
-vec4 diffuseColor()
+vec4 diffuseColor(vec2 tex_coordinates, vec3 view_pos)
 {
-	vec4 diffuse = texture2D(s_texColor, v_texcoord0);
+	vec4 diffuse = texture2D(s_texColor, tex_coordinates);
 	vec4 color = diffuse;
 	
 	if(color.a < 0.6)
         discard;
         
     // Apply linear fog
-    color.rgb = computeLinearFog(length(v_view_pos), u_FogNearFar.x, u_FogNearFar.y, color.rgb, u_FogColor.xyz);
+    color.rgb = computeLinearFog(length(view_pos), u_FogNearFar.x, u_FogNearFar.y, color.rgb, u_FogColor.xyz);
     color.a = 1.0f;
     
     return color;
@@ -42,6 +42,6 @@ void main()
     }
     
     //gl_FragColor = vec4(1,1,1,1);
-    gl_FragColor = vec4(diffuseColor().rgb * u_LightColor.rgb * att * intensity, 1.0);
+    gl_FragColor = vec4(diffuseColor(v_texcoord0, v_view_pos).rgb * u_LightColor.rgb * att * intensity, 1.0);
 }
  

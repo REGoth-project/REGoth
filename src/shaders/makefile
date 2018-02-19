@@ -19,10 +19,12 @@ include $(BGFX_DIR)/scripts/shader.mk
 
 .PHONY: rebuild-all
 rebuild-all:
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=1 rebuild
 	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=3 rebuild
 	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=4 rebuild
 
 .PHONY: clean-all
 clean-all:
+	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=1 clean
 	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=3 clean
 	@make -s --no-print-directory -f $(MAKEFILE_NAME) TARGET=4 clean
