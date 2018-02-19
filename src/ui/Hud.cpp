@@ -209,6 +209,7 @@ void UI::Hud::setupKeyBindings() {
 
     {
         std::vector<ActionType> hudActions = {  ActionType::UI_Confirm,
+                                                ActionType::UI_ToggleMainMenu,
                                                 ActionType::UI_Close,
                                                 ActionType::UI_Up,
                                                 ActionType::UI_Down,
@@ -276,9 +277,8 @@ void UI::Hud::onInputAction(Engine::ActionType action)
     // case: Nothing is open right now.
     switch (action)
     {
-        case ActionType::UI_Close:
+        case ActionType::UI_ToggleMainMenu:
             // Show main-menu
-            // TODO(lena) not on right click though
             pushMenu<UI::Menu_Main>();
             return;
         case ActionType::UI_ToggleConsole:

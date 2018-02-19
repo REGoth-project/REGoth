@@ -78,6 +78,7 @@ namespace Engine
         UI_ToggleConsole,
         UI_ToggleLogMenu,
         UI_ToggleStatusMenu,
+        UI_ToggleMainMenu,
         UI_0,
         UI_1,
         UI_2,

@@ -27,6 +27,10 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
 
 bool Menu_Main::onInputAction(Engine::ActionType action)
 {
+    if (action == Engine::ActionType::UI_Close)
+        return false;
+    else if (action == Engine::ActionType::UI_ToggleMainMenu)
+        return true;
     return Menu::onInputAction(action);
 }
 
