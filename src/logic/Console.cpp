@@ -6,6 +6,7 @@
 #include <utils/Utils.h>
 #include <utils/logger.h>
 #include <utils/naturalcompare.h>
+#include <locale>
 
 using Logic::Console;
 
@@ -299,7 +300,7 @@ void Console::invalidateSuggestions()
 std::vector<std::string> Console::tokenized(const std::string& line)
 {
     std::vector<std::string> tokens = Utils::splitAndRemoveEmpty(line, ' ');
-    if (tokens.empty() || isspace(line.back()))
+    if (tokens.empty() || std::isspace(line.back(), std::locale::classic()))
     {
         // append empty pseudo token to trigger lookahead for the next token
         tokens.push_back("");
