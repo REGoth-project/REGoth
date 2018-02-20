@@ -27,6 +27,10 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
 
 bool Menu_Main::onInputAction(Engine::ActionType action)
 {
+    /**
+     * Ignore UI_Close, since when a key both bound to UI_Close and UI_ToggleMainMenu,
+     * like escape, is pressed, the menu will be immediately re-opened after closing.
+     */
     if (action == Engine::ActionType::UI_Close)
         return false;
     else if (action == Engine::ActionType::UI_ToggleMainMenu)

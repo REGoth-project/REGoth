@@ -1121,8 +1121,7 @@ bool REGoth::update()
 
     imguiEndFrame();
 
-    bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
-    if (!disableBindings)
+    if (!(m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive()))
     {
         Engine::Input::clearTriggered();
     }
