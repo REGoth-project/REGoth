@@ -18,7 +18,11 @@ option (REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR "Compile with library to extract s
 # Vim - You Complete Me
 set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
 
-set(BGFX_DEBUG 1)
+string(TOLOWER ${CMAKE_BUILD_TYPE} CMAKE_BUILD_TYPE_LOWER)
+if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug" OR CMAKE_BUILD_TYPE_LOWER STREQUAL "relwithdebinfo")
+    set(BGFX_DEBUG 1)
+endif()
+
 add_definitions(-D__STDC_CONSTANT_MACROS)
 add_definitions(-D__STDC_LIMIT_MACROS)
 

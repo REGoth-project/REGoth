@@ -136,7 +136,7 @@ namespace Meshes
         Math::float2 TexCoord;
         uint32_t Color;
         std::array<Math::float3, 4> localPositions;
-        std::array<uint8_t, 4> boneIndices;
+        std::array<float, 4> boneIndices;
         std::array<float, 4> weights;
 
         static void init()
@@ -150,7 +150,7 @@ namespace Meshes
                 .add(bgfx::Attrib::TexCoord2, 3, bgfx::AttribType::Float)
                 .add(bgfx::Attrib::TexCoord3, 3, bgfx::AttribType::Float)
                 .add(bgfx::Attrib::TexCoord4, 3, bgfx::AttribType::Float)
-                .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Uint8)
+                .add(bgfx::Attrib::TexCoord5, 4, bgfx::AttribType::Float)
                 .add(bgfx::Attrib::TexCoord6, 4, bgfx::AttribType::Float)
                 .end();
         };

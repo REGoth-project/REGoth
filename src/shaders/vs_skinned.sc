@@ -42,10 +42,12 @@ void main()
 
     //position += MulBone4(vec4(a_normal, 1.0f), 10, 1.0);
 
-    position =  mul(u_model[1 + int(BONE_INDICES.x)], vec4(LOCAL_POSITIONS_1, 1.0)).xyz * WEIGHTS.x;
-    position += mul(u_model[1 + int(BONE_INDICES.y)], vec4(LOCAL_POSITIONS_2, 1.0)).xyz * WEIGHTS.y;
-    position += mul(u_model[1 + int(BONE_INDICES.z)], vec4(LOCAL_POSITIONS_3, 1.0)).xyz * WEIGHTS.z;
-    position += mul(u_model[1 + int(BONE_INDICES.w)], vec4(LOCAL_POSITIONS_4, 1.0)).xyz * WEIGHTS.w;
+    vec4 BONE_INDICES2 = BONE_INDICES + vec4(0.5, 0.5, 0.5, 0.5);
+
+    position =  mul(u_model[1 + int(BONE_INDICES2.x)], vec4(LOCAL_POSITIONS_1, 1.0)).xyz * WEIGHTS.x;
+    position += mul(u_model[1 + int(BONE_INDICES2.y)], vec4(LOCAL_POSITIONS_2, 1.0)).xyz * WEIGHTS.y;
+    position += mul(u_model[1 + int(BONE_INDICES2.z)], vec4(LOCAL_POSITIONS_3, 1.0)).xyz * WEIGHTS.z;
+    position += mul(u_model[1 + int(BONE_INDICES2.w)], vec4(LOCAL_POSITIONS_4, 1.0)).xyz * WEIGHTS.w;
 
 	gl_Position = mul(u_modelViewProj, vec4(position, 1.0) );
 
