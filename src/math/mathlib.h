@@ -26,6 +26,14 @@ namespace Math
         return glm::sin(((t * PI - PI * 0.5f) + 1.0f) / 2.0f);
     }
 
+    inline float sinusSmooth(float t)
+    {
+      if(t < 0.5f)
+        return sinusEase(t * 2.0f);
+      else
+        return 1.0f - sinusEase((t - 0.5f) * 2.0f);
+    }
+
     inline float sinusSlowStart(float t)
     {
         return 1.0f - glm::cos(t * (PI * 0.5f));
