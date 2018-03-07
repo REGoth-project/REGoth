@@ -202,18 +202,17 @@ void Logic::CameraController::setupKeybinds()
     }
 
     // Disable all at first and wait until one is enabled.
-    enableActionsFirstandThirdPerson(false);
+    enableActions(false);
     Engine::Input::setMouseLock(false);
 }
 
-void Logic::CameraController::enableActionsFirstandThirdPerson(bool enable)
+void Logic::CameraController::enableActions(bool enable)
 {
-    setActive(enable);
     for (auto& pair : m_ActionBindings)
     {
-        if (pair.first == ECameraMode::ThirdPerson || pair.first == ECameraMode::FirstPerson) {
-            for (auto& managedBinding : pair.second)
-            {
+        if (pair.first == m_CameraMode)
+        {
+            for (auto &managedBinding : pair.second) {
                 managedBinding.getAction().setEnabled(enable);
             }
         }

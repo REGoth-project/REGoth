@@ -154,11 +154,13 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
 
     if (isWorldLoaded) {
         // Deactivate camera controls when menu or dialog is open
-        bool disable = !(isMenuActive() || m_Engine.getMainWorld().get().getDialogManager().isDialogActive());
-        for (auto &managedBinding : m_HudBindings) {
-            // TODO set camera mode to dialog, once implemented (which also should toggle playerBindings)
-            m_Engine.getMainWorld().get().getCameraController()->enableActionsFirstandThirdPerson(disable);
-        }
+        bool disable = !(isMenuActive()
+                         || m_Engine.getMainWorld().get().getDialogManager().isDialogActive()
+                         || m_Engine.getConsole().isOpen());
+        // TODO set camera mode to dialog, once implemented (which also should toggle playerBindings)
+        m_Engine.getMainWorld().get().getCameraController()->setActive(disable);
+        m_Engine.getMainWorld().get().getCameraController()->enableActions(disable);
+        m_Engine.getSession().enableActionBindings(disable);
     }
 }
 

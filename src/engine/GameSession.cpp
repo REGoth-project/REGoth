@@ -358,7 +358,7 @@ void GameSession::setupKeyBindings()
         for (auto cameraMode : cameraModes)
         {
             registerAction(cameraMode.first, [baseEngine, mode = cameraMode.second](bool triggered, float) {
-                if (triggered && baseEngine->getMainWorld().isValid())
+                if (triggered && baseEngine->getMainWorld().isValid() && !baseEngine->getConsole().isOpen())
                 {
                     baseEngine->getMainWorld().get().getCameraController()->setCameraMode(mode);
                 }
@@ -374,11 +374,26 @@ void GameSession::setupKeyBindings()
     }
 }
 
-void GameSession::enablePlayerBindings(bool enabled)
+void GameSession::enableActionBindings(bool enabled)
 {
-    for (auto& managedBinding : m_PlayerBindings)
+    for (auto& managedBinding : m_ActionBindings)
     {
         managedBinding.getAction().setEnabled(enabled);
+    }
+}
+
+void GameSession::enablePlayerBindings(bool enabled, bool respectCameraMode)
+{
+    if (m_Engine.getMainWorld().isValid())
+    {
+        if (!respectCameraMode ||
+                m_Engine.getMainWorld().get().getCameraController()->getCameraMode() != Logic::CameraController::ECameraMode::Free)
+        {
+            for (auto& managedBinding : m_PlayerBindings)
+            {
+                managedBinding.getAction().setEnabled(enabled);
+            }
+        }
     }
 }
 

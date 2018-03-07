@@ -156,7 +156,7 @@ namespace Logic
          * Enables/Disables key bindings for firstPerson and thirdPerson camera mode
          * @param enable
          */
-        void enableActionsFirstandThirdPerson(bool enable);
+        void enableActions(bool enable);
 
         /**
          * Enables key bindings for given mode, disables for other modes
