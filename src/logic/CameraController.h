@@ -126,10 +126,7 @@ namespace Logic
         /**
          * @brief Sets whether this controller should read input
          */
-        void setActive(bool active)
-        {
-            m_Active = active;
-        }
+        void setActive(bool active);
 
         /**
          * Sets the entity to follow in the first/third person camera modes
@@ -151,18 +148,6 @@ namespace Logic
          * Registers all inputs inside the engine
          */
         void setupKeybinds();
-
-        /**
-         * Enables/Disables key bindings for firstPerson and thirdPerson camera mode
-         * @param enable
-         */
-        void enableActions(bool enable);
-
-        /**
-         * Enables key bindings for given mode, disables for other modes
-         * @param mode determines what keybindings are enabled
-         */
-        void switchModeActions(ECameraMode mode);
 
         /**
          * Sets the transform of this camera
@@ -215,6 +200,18 @@ namespace Logic
          * @return pair of (forward, right)
          */
         std::pair<Math::float3, Math::float3> getDirectionVectors(float yaw, float pitch);
+
+        /**
+         * Enables/Disables key bindings for firstPerson and thirdPerson camera mode
+         * @param enable
+         */
+        void enableActions(bool enable);
+
+        /**
+         * Enables key bindings for given mode, disables for other modes
+         * @param mode determines what keybindings are enabled
+         */
+        void switchModeActions(ECameraMode mode);
 
         /**
          * Whether this controller should read player input

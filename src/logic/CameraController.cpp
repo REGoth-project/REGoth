@@ -206,6 +206,12 @@ void Logic::CameraController::setupKeybinds()
     Engine::Input::setMouseLock(false);
 }
 
+void Logic::CameraController::setActive(bool active)
+{
+    m_Active = active;
+    enableActions(active);
+}
+
 void Logic::CameraController::enableActions(bool enable)
 {
     for (auto& pair : m_ActionBindings)
