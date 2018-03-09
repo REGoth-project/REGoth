@@ -159,7 +159,6 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
                          || m_Engine.getConsole().isOpen());
         // TODO set camera mode to dialog, once implemented (which also should toggle playerBindings)
         m_Engine.getMainWorld().get().getCameraController()->setActive(disable);
-        m_Engine.getSession().enableActionBindings(disable);
     }
 }
 
@@ -258,7 +257,10 @@ void UI::Hud::onInputAction(Engine::ActionType action)
     if (m_Engine.getConsole().isOpen())
     {
         if (action == ActionType::UI_Close || action == ActionType::UI_ToggleConsole)
+        {
             m_Engine.getConsole().setOpen(false);
+            m_Engine.getSession().enableActionBindings(true);
+        }
         return;
     }
     else if (!m_MenuChain.empty())
@@ -284,6 +286,7 @@ void UI::Hud::onInputAction(Engine::ActionType action)
             return;
         case ActionType::UI_ToggleConsole:
             m_Engine.getConsole().setOpen(true);
+            m_Engine.getSession().enableActionBindings(false);
             return;
         case ActionType::UI_ToggleStatusMenu:
         {
