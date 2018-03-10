@@ -165,16 +165,9 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
         {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
-            if(m_dead)
-            {
-                it = pfx.m_Particles.erase(it);
-            }
-            else
-            {
-                pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
-                pfx.m_Particles.pop_back();
-                // No need to increase iterator, since we have a new particle in this slot now
-            }
+			pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
+			pfx.m_Particles.pop_back();
+			// No need to increase iterator, since we have a new particle in this slot now
         }else
         {
             ++it;

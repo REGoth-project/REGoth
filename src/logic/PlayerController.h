@@ -633,6 +633,7 @@ namespace Logic
             Handle::EntityHandle entity;
             std::string bodyPosition;
             bool isAttached;
+			int32_t m_Num;
         };
         /**
         * Stores active pfx handler associated with this PlayerController (one shot)
