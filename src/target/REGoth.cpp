@@ -1121,11 +1121,6 @@ bool REGoth::update()
 
     imguiEndFrame();
 
-    if (!(m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive()))
-    {
-        Engine::Input::clearTriggered();
-    }
-
     m_pEngine->getJobManager().processJobs();
 
     // Advance to next frame. Rendering thread will be kicked to
