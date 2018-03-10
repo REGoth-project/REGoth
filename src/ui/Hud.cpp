@@ -152,12 +152,12 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
 
     View::update(dt, mstate, config);
 
+    // TODO Camera should not be enabled/disabled every frame.
     if (isWorldLoaded) {
         // Deactivate camera controls when menu or dialog is open
         bool disable = !(isMenuActive()
                          || m_Engine.getMainWorld().get().getDialogManager().isDialogActive()
                          || m_Engine.getConsole().isOpen());
-        // TODO set camera mode to dialog, once implemented (which also should toggle playerBindings)
         m_Engine.getMainWorld().get().getCameraController()->setActive(disable);
     }
 }
