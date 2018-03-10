@@ -2517,7 +2517,7 @@ void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
     {
         return;
     }
-    pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached};
+    pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached, pfx.m_Num};
     //From world of gothic animation events
     if(event.bodyPosition == "")
     {
@@ -2532,17 +2532,18 @@ void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop
     assert(!m_activePfxEvents.empty());
 
     //Kill first pfx that is not in dead state
-    for (auto &pfx : m_activePfxEvents)
-    {
-        Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
-        PfxVisual* visual = (PfxVisual*)vob.visual;
-        if(visual->isDead())
-        {
-            continue;
-        }
-        visual->killPfx();
-        break;
-    }
+    for (auto &pfx : m_activePfxEvents) {
+		if (pfx.m_Num == pfxStop.m_Num) {
+			Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+			PfxVisual *visual = (PfxVisual *) vob.visual;
+			if (visual->isDead()) {
+				continue;
+			}
+			visual->killPfx();
+			break;
+		}
+	}
+
 
 }
 
