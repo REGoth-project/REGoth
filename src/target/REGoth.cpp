@@ -839,7 +839,7 @@ void REGoth::initConsole()
         return "Interrupted player, cleared EM";
     });
 
-    console.registerCommand("playsound", [this](const std::vector<std::string>& args) -> std::string {
+    auto& playsound = console.registerCommand("playsound", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 2)
             return "Missing argument. Usage: playsound <soundfile>";
 
@@ -848,6 +848,19 @@ void REGoth::initConsole()
 
         return "Played sound " + args[1];
     });
+
+
+    std::vector<std::string> playSoundFiles;
+    for (const auto& fileName : m_pEngine->getVDFSIndex().getKnownFiles())
+    {
+      if (Utils::endsWith(Utils::lowered(fileName), ".wav"))
+      {
+        playSoundFiles.push_back(fileName);
+        LogInfo() << "FOUND WAV: " << fileName;
+      }
+    }
+
+    playsound.registerAutoComplete(simpleStringGenGen(playSoundFiles));
 
     console.registerCommand("volume", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 2)
