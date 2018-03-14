@@ -461,14 +461,16 @@ void DialogManager::importDialogManager(const json& j)
     }
 }
 
-void DialogManager::onInputAction(UI::EInputAction action)
+void DialogManager::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     auto& dialogBox = m_World.getEngine()->getHud().getDialogBox();
     if (!dialogBox.isHidden())
     {
         dialogBox.onInputAction(action);
     }
-    else if (isTalking() && action == UI::EInputAction::IA_Close)
+    else if (isTalking() && action == ActionType::UI_Close)
     {
         cancelTalk();
     }

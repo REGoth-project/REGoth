@@ -336,6 +336,7 @@ void Console::setTypedLine(const std::string& newLine, bool triggerSuggestions)
 void Console::setOpen(bool open)
 {
     m_Open = open;
+    m_BaseEngine.getSession().enablePlayerBindings(!open, true);
     if (!open)
         invalidateSuggestions();
 }
