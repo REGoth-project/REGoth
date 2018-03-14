@@ -26,7 +26,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14 -Wno-format-security"
-                arguments '-DANDROID_STL=c++_shared', '-DCMAKE_BUILD_TYPE=RelWithDebInfo'
+                arguments '-DANDROID_STL=c++_shared', '-DCMAKE_BUILD_TYPE=RelWithDebInfo', '-DCMAKE_PREFIX_PATH=/opt/'
             }
         }
     }
