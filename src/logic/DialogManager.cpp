@@ -3,6 +3,7 @@
 //
 
 #include "DialogManager.h"
+#include "CameraController.h"
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
@@ -325,6 +326,8 @@ void DialogManager::endDialog()
 
     if (targetVob.isValid())
         targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+    m_World.getCameraController()->restoreCameraMode();
 }
 
 bool DialogManager::init()
@@ -519,6 +522,7 @@ void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
     m_Interaction.target = npc;
     m_ProcessInfos = true;
     m_DialogActive = true;
+    m_World.getCameraController()->setCameraMode(CameraController::ECameraMode::Dialog);
     m_World.getEngine()->getHud().setGameplayHudVisible(false);
     updateChoices(npc);
 }

@@ -13,6 +13,7 @@ namespace Logic
         {
             ThirdPerson,
             FirstPerson,
+            Dialog,
             Free,
             Viewer, // name is open to change
             Static,
@@ -120,8 +121,17 @@ namespace Logic
          * @return ECameraMode camera mode
          */
         ECameraMode getCameraMode() {
-         return m_CameraMode;
+            return m_CameraMode;
         }
+
+        /**
+         * Sets camera mode to mode before last setCameraMode() call
+         */
+        void restoreCameraMode()
+        {
+            setCameraMode(m_savedCameraMode);
+        }
+
 
         /**
          * @brief Sets whether this controller should read input
@@ -171,6 +181,8 @@ namespace Logic
          * Plays all stored keyframes
          */
         void playKeyframes(float duration = 1.0f);
+
+
     protected:
 
         /**
@@ -213,16 +225,21 @@ namespace Logic
          */
         void switchModeActions(ECameraMode mode);
 
+
         /**
          * Whether this controller should read player input
          */
         bool m_Active;
 
-
         /**
          * How the camera should behave regarding the followed entity
          */
         ECameraMode m_CameraMode;
+
+        /**
+         * Remember camera mode (i.e. for dialog) to restore it later
+         */
+        ECameraMode m_savedCameraMode;
 
         /**
          * Entity this is attached to
@@ -268,9 +285,12 @@ namespace Logic
         float m_KeyframeActive;
         float m_KeyframeDuration;
 
-	/**
-         * Direction to use during locked camera while using mobs
-         */
+
+        Daedalus::GameState::NpcHandle m_DialogTarget;
+
+        /**
+             * Direction to use during locked camera while using mobs
+             */
         Math::float3 m_savedPdir;
     };
 }
