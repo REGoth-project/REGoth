@@ -273,7 +273,6 @@ void DialogManager::performChoice(size_t choice)
     {
         m_Interaction.currentInfo = infoHandle;
     }
-
 }
 
 void DialogManager::assessTalk(NpcHandle target)

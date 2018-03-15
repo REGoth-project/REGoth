@@ -41,7 +41,7 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
     m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3(0, 0, 0);
     m_CameraSettings.thirdPersonCameraSettings.zoomExponent = 3.2f; // initial zoom pos, feel free to modify
-    m_CameraSettings.thirdPersonCameraSettings.pitch = Math::degreeToRadians(20.0f); // initial camera angle, feel free to modify
+    m_CameraSettings.thirdPersonCameraSettings.pitch = Math::degreeToRadians(0.0f); // initial camera angle, feel free to modify
     // if you want to see more of the hero's legs, decrease this value
     m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f);
     m_CameraSettings.thirdPersonCameraSettings.deltaPhi = 0;
@@ -236,7 +236,6 @@ void Logic::CameraController::switchModeActions(ECameraMode mode)
         }
     }
 }
-
 
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {

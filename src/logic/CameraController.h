@@ -202,8 +202,6 @@ namespace Logic
          * Plays all stored keyframes
          */
         void playKeyframes(float duration = 1.0f);
-
-
     protected:
 
         /**
@@ -246,11 +244,11 @@ namespace Logic
          */
         void switchModeActions(ECameraMode mode);
 
-
         /**
          * Whether this controller should read player input
          */
         bool m_Active;
+
 
         /**
          * How the camera should behave regarding the followed entity
