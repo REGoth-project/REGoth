@@ -328,6 +328,7 @@ void DialogManager::endDialog()
         targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
 
     m_World.getCameraController()->restoreCameraMode();
+    m_World.getEngine()->getSession().enableActionBindings(true);
 }
 
 bool DialogManager::init()
@@ -496,5 +497,6 @@ void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
     m_World.getCameraController()->setCameraMode(CameraController::ECameraMode::Dialogue);
     m_World.getCameraController()->setNPCTarget(npc);
     m_World.getEngine()->getHud().setGameplayHudVisible(false);
+    m_World.getEngine()->getSession().enableActionBindings(false);
     updateChoices(npc);
 }

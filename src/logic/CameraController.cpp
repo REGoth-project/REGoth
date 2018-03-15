@@ -269,25 +269,23 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                 mirror_modifier = 1.0;
             }
 
-            m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
-
             // This is (roughly) the same as the full shot from the original
             switch(m_ShotType)
             {
                 case EDialogueShotType::Full:
                 {
-
                     // TODO make camera LOOK-AT target character
-                    m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0 * mirror_modifier,0.5,-1.0); // right, up, back
-                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
+                    m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(1.5 * mirror_modifier,0.5,-0.3); // right, up, back
+                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -1.0 * mirror_modifier);
                 }
                 break;
                 case EDialogueShotType ::OverTheShoulder:
                 {
                     // TODO make camera LOOK-AT target character
+                    m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0.15);
                     m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * mirror_modifier,0.65,-0.5);
-                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.45 * mirror_modifier);
-                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Right(), 0.15);
+                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), targetTrans.Up(), -0.45 * mirror_modifier);
                 }
                 break;
                 case EDialogueShotType ::CloseUp:
