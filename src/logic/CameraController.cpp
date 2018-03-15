@@ -242,35 +242,54 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
     switch (m_CameraMode) {
         case ECameraMode::Dialog:
         {
-            // Get the npc you're talking to
             const std::string npc_name = m_World.getScriptEngine().getGameState().getNpc(m_NPCTarget).name[0];
             Handle::EntityHandle npc_handle = m_World.getScriptEngine().findWorldNPC(npc_name);
             VobTypes::NpcVobInformation npc_vob = VobTypes::asNpcVob(m_World, npc_handle);
 
-            // Get Player entity
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
                                                                     m_World.getScriptEngine().getPlayerEntity());
 
             Math::Matrix pTrans = player.playerController->getEntityTransform();
             Math::Matrix npcTrans = npc_vob.playerController->getEntityTransform();
-            Math::Matrix targetTrans;
+            Math::Matrix targetTrans, otherTrans;
+            float mirror_modifier;
 
             if (m_dialogName == player.playerController->getScriptInstance().name[0])
             {
                 // The PC is talking
                 targetTrans = npcTrans;
+                otherTrans = pTrans;
+                mirror_modifier = -1.0;
             }
             else
             {
                 // The character the PC is talking to is talking now
                 targetTrans = pTrans;
+                otherTrans = npcTrans;
+                mirror_modifier = 1.0;
             }
 
-            // Since NPC is rotated towards the player, just move camera forward in relation to the NPC
             m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
-            m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0,0.5,-1.0); // right, up, back
-            m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
 
+            // This is (roughly) the same as the full shot from the original
+            if (false)
+            {
+                // TODO make camera LOOK-AT target character
+                m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0 * mirror_modifier,0.5,-1.0); // right, up, back
+                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
+            }
+
+            // This is (roughly) the same as the over-the-shoulder shot from the original
+            if (false)
+            {
+                // TODO make camera LOOK-AT target character
+                m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * mirror_modifier,0.65,-0.5);
+                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.45 * mirror_modifier);
+                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Right(), 0.15);
+            }
+
+            m_ViewMatrix = otherTrans.RotatedAroundLine(otherTrans.Translation(), otherTrans.Up(), Math::PI);
+            m_ViewMatrix *= Math::Matrix::CreateTranslation(0.0, 0.5, -1.0);
 
             // Set camera transform to new position
             setEntityTransform(m_ViewMatrix);
