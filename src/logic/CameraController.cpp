@@ -243,33 +243,34 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
         case ECameraMode::Dialog:
         {
             // Get the npc you're talking to
-            const std::string npc_name = m_World.getScriptEngine().getGameState().getNpc(m_DialogTarget).name[0];
+            const std::string npc_name = m_World.getScriptEngine().getGameState().getNpc(m_NPCTarget).name[0];
             Handle::EntityHandle npc_handle = m_World.getScriptEngine().findWorldNPC(npc_name);
             VobTypes::NpcVobInformation npc_vob = VobTypes::asNpcVob(m_World, npc_handle);
-            //TODO Calculate a position between you and the NPC, to the side
+
             // Get Player entity
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
                                                                     m_World.getScriptEngine().getPlayerEntity());
 
             Math::Matrix pTrans = player.playerController->getEntityTransform();
             Math::Matrix npcTrans = npc_vob.playerController->getEntityTransform();
+            Math::Matrix targetTrans;
 
-            Math::float3 npcCenter = npcTrans.Translation();
-
-            // Stablelize (put upright)
-            //m_ViewMatrix = npcTrans.RotatedAroundLine(npcTrans.Translation(), npcTrans.Right(), m_CameraSettings.firstPersonCameraSettings.pitch);
+            if (m_dialogName == player.playerController->getScriptInstance().name[0])
+            {
+                // The PC is talking
+                targetTrans = npcTrans;
+            }
+            else
+            {
+                // The character the PC is talking to is talking now
+                targetTrans = pTrans;
+            }
 
             // Since NPC is rotated towards the player, just move camera forward in relation to the NPC
-
-            m_ViewMatrix = pTrans.RotatedAroundLine(pTrans.Translation(), pTrans.Right(), m_CameraSettings.firstPersonCameraSettings.pitch);
+            m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
             m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0,0.5,-1.0); // right, up, back
             m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
-            // "Look-at" the NPC
-            //m_ViewMatrix = Math::Matrix::CreateLookAt(camTrans.Translation(), npcCenter, Math::float3(0, 1, 0));
-            // Set Camera up "straight" again
-            //m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(pTrans.Translation(), pTrans.Right(), m_CameraSettings.firstPersonCameraSettings.pitch);
 
-            // TODO change target of this, depending on who's talking
 
             // Set camera transform to new position
             setEntityTransform(m_ViewMatrix);
@@ -462,7 +463,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::Dialog:
-            Engine::Input::setMouseLock(false); // TODO debate whether this should be the case (instead of true)
+            Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::KeyedAnimation:
             m_KeyframeActive = 0.0f;
