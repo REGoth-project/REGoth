@@ -139,19 +139,19 @@ namespace Logic
             setCameraMode(m_savedCameraMode);
         }
 
-        void setDialogTarget(std::string& target)
+        void setDialogueTargetName(std::string &target)
         {
-            m_dialogName = target;
+            m_dialogueTargetName = target;
         }
 
-        void setNPCTarget(Daedalus::GameState::NpcHandle npc)
+        void setDialogueTargetNPCHandle(Daedalus::GameState::NpcHandle npc)
         {
-            m_NPCTarget = npc;
+            m_dialogueTargetNPCHandle = npc;
         }
 
-        void newDialogShot()
+        void nextDialogueShot()
         {
-            m_ShotType = (EDialogueShotType)(rand() % 3);
+            m_DialogueShotType = (EDialogueShotType)(rand() % 3);
         }
 
         /**
@@ -260,14 +260,14 @@ namespace Logic
         /**
          * What camera angle is used during dialog
          */
-        EDialogueShotType  m_ShotType;
+        EDialogueShotType  m_DialogueShotType;
 
         /**
          * Remember camera mode (i.e. for dialog) to restore it later
          */
         ECameraMode m_savedCameraMode;
 
-        std::string m_dialogName;
+        std::string m_dialogueTargetName;
 
         /**
          * Entity this is attached to
@@ -314,7 +314,7 @@ namespace Logic
         float m_KeyframeDuration;
 
 
-        Daedalus::GameState::NpcHandle m_NPCTarget;
+        Daedalus::GameState::NpcHandle m_dialogueTargetNPCHandle;
 
         /**
              * Direction to use during locked camera while using mobs

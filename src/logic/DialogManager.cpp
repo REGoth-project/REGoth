@@ -234,6 +234,10 @@ void DialogManager::performChoice(size_t choice)
         // case: we are in a subdialog
         info.removeChoice(choice);
     }
+    else
+    {
+        m_World.getCameraController()->nextDialogueShot();
+    }
 
     // Set instances again, since they could have been changed across the frames
     // C_Info's callback needs global self/other
@@ -269,6 +273,7 @@ void DialogManager::performChoice(size_t choice)
     {
         m_Interaction.currentInfo = infoHandle;
     }
+
 }
 
 void DialogManager::assessTalk(NpcHandle target)
@@ -495,7 +500,8 @@ void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
     m_ProcessInfos = true;
     m_DialogActive = true;
     m_World.getCameraController()->setCameraMode(CameraController::ECameraMode::Dialogue);
-    m_World.getCameraController()->setNPCTarget(npc);
+    m_World.getCameraController()->setDialogueTargetNPCHandle(npc);
+    m_World.getCameraController()->nextDialogueShot();
     m_World.getEngine()->getHud().setGameplayHudVisible(false);
     m_World.getEngine()->getSession().enableActionBindings(false);
     updateChoices(npc);
