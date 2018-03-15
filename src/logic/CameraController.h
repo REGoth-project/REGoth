@@ -139,16 +139,27 @@ namespace Logic
             setCameraMode(m_savedCameraMode);
         }
 
+        /**
+         * Sets the name of the character that is speaking
+         * @param target name of NPC
+         */
         void setDialogueTargetName(std::string &target)
         {
             m_dialogueTargetName = target;
         }
 
+        /**
+         * Sets the NPC handle of the character the player is talking to
+         * @param npc NPCHandle of NPC
+         */
         void setDialogueTargetNPCHandle(Daedalus::GameState::NpcHandle npc)
         {
             m_dialogueTargetNPCHandle = npc;
         }
 
+        /**
+         * Randomly chooses one of the dialogue shot types to cut to
+         */
         void nextDialogueShot()
         {
             m_DialogueShotType = (EDialogueShotType)(rand() % 3);
