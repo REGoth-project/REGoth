@@ -149,6 +149,11 @@ namespace Logic
             m_NPCTarget = npc;
         }
 
+        void newDialogShot()
+        {
+            m_ShotType = (EDialogueShotType)(rand() % 3);
+        }
+
         /**
          * @brief Sets whether this controller should read input
          */
@@ -251,6 +256,11 @@ namespace Logic
          * How the camera should behave regarding the followed entity
          */
         ECameraMode m_CameraMode;
+
+        /**
+         * What camera angle is used during dialog
+         */
+        EDialogueShotType  m_ShotType;
 
         /**
          * Remember camera mode (i.e. for dialog) to restore it later

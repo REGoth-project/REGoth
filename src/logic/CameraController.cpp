@@ -272,24 +272,31 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
 
             // This is (roughly) the same as the full shot from the original
-            if (false)
+            switch(m_ShotType)
             {
-                // TODO make camera LOOK-AT target character
-                m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0 * mirror_modifier,0.5,-1.0); // right, up, back
-                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
-            }
+                case EDialogueShotType::Full:
+                {
 
-            // This is (roughly) the same as the over-the-shoulder shot from the original
-            if (false)
-            {
-                // TODO make camera LOOK-AT target character
-                m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * mirror_modifier,0.65,-0.5);
-                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.45 * mirror_modifier);
-                m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Right(), 0.15);
+                    // TODO make camera LOOK-AT target character
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(2.0 * mirror_modifier,0.5,-1.0); // right, up, back
+                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.75);
+                }
+                break;
+                case EDialogueShotType ::OverTheShoulder:
+                {
+                    // TODO make camera LOOK-AT target character
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * mirror_modifier,0.65,-0.5);
+                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), -0.45 * mirror_modifier);
+                    m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Right(), 0.15);
+                }
+                break;
+                case EDialogueShotType ::CloseUp:
+                {
+                    m_ViewMatrix = otherTrans.RotatedAroundLine(otherTrans.Translation(), otherTrans.Up(), Math::PI);
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(0.0, 0.5, -1.0);
+                }
+                break;
             }
-
-            m_ViewMatrix = otherTrans.RotatedAroundLine(otherTrans.Translation(), otherTrans.Up(), Math::PI);
-            m_ViewMatrix *= Math::Matrix::CreateTranslation(0.0, 0.5, -1.0);
 
             // Set camera transform to new position
             setEntityTransform(m_ViewMatrix);
@@ -482,6 +489,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::Dialogue:
+            newDialogShot();
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::KeyedAnimation:
