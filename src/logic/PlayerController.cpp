@@ -8,6 +8,7 @@
 #include <json.hpp>
 #include <stdlib.h>
 #include "visuals/ModelVisual.h"
+#include "CameraController.h"
 #include <audio/AudioEngine.h>
 #include <components/Entities.h>
 #include <components/Vob.h>
@@ -1008,6 +1009,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 {
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
+                    m_World.getCameraController()->setDialogTarget(getScriptInstance().name[0]); //TODO refactor so that name[0] only gets accessed once
                     subtitleBox.setScaling(0.0);
                     subtitleBox.setGrowDirection(+1.0f);
                 }

@@ -132,6 +132,15 @@ namespace Logic
             setCameraMode(m_savedCameraMode);
         }
 
+        void setDialogTarget(std::string& target)
+        {
+            m_dialogName = target;
+        }
+
+        void setNPCTarget(Daedalus::GameState::NpcHandle npc)
+        {
+            m_NPCTarget = npc;
+        }
 
         /**
          * @brief Sets whether this controller should read input
@@ -241,6 +250,8 @@ namespace Logic
          */
         ECameraMode m_savedCameraMode;
 
+        std::string m_dialogName;
+
         /**
          * Entity this is attached to
          */
@@ -286,7 +297,7 @@ namespace Logic
         float m_KeyframeDuration;
 
 
-        Daedalus::GameState::NpcHandle m_DialogTarget;
+        Daedalus::GameState::NpcHandle m_NPCTarget;
 
         /**
              * Direction to use during locked camera while using mobs

@@ -523,6 +523,7 @@ void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
     m_ProcessInfos = true;
     m_DialogActive = true;
     m_World.getCameraController()->setCameraMode(CameraController::ECameraMode::Dialog);
+    m_World.getCameraController()->setNPCTarget(npc);
     m_World.getEngine()->getHud().setGameplayHudVisible(false);
     updateChoices(npc);
 }
