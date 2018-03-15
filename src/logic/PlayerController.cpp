@@ -1010,8 +1010,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                     m_World.getDialogManager().setCurrentMessage(sharedMessage);
                     std::string characterName = getScriptInstance().name[0];
                     m_World.getDialogManager().displaySubtitle(message.text, characterName);
-                    m_World.getCameraController()->setDialogTarget(characterName);
-                    m_World.getCameraController()->newDialogShot();
+                    m_World.getCameraController()->setDialogueTargetName(characterName);
                     subtitleBox.setScaling(0.0);
                     subtitleBox.setGrowDirection(+1.0f);
                 }
