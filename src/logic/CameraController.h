@@ -13,11 +13,18 @@ namespace Logic
         {
             ThirdPerson,
             FirstPerson,
-            Dialog,
+            Dialogue,
             Free,
             Viewer, // name is open to change
             Static,
             KeyedAnimation,
+        };
+
+        enum class EDialogueShotType
+        {
+            Full,
+            OverTheShoulder,
+            CloseUp,
         };
 
         struct CameraSettings

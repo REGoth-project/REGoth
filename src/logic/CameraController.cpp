@@ -240,7 +240,7 @@ void Logic::CameraController::switchModeActions(ECameraMode mode)
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {
     switch (m_CameraMode) {
-        case ECameraMode::Dialog:
+        case ECameraMode::Dialogue:
         {
             const std::string npc_name = m_World.getScriptEngine().getGameState().getNpc(m_NPCTarget).name[0];
             Handle::EntityHandle npc_handle = m_World.getScriptEngine().findWorldNPC(npc_name);
@@ -481,7 +481,7 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
         case ECameraMode::ThirdPerson:
             Engine::Input::setMouseLock(true);
             break;
-        case ECameraMode::Dialog:
+        case ECameraMode::Dialogue:
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::KeyedAnimation:
