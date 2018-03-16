@@ -4,7 +4,6 @@
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
-#include "engine/AsyncAction.h"
 #include <engine/BaseEngine.h>
 #include <engine/Platform.h>
 #include <ui/LoadingScreen.h>
@@ -26,16 +25,22 @@ Menu_Main* Menu_Main::create(Engine::BaseEngine& e)
     return s;
 }
 
-bool Menu_Main::onInputAction(EInputAction action)
+bool Menu_Main::onInputAction(Engine::ActionType action)
 {
+    /**
+     * Ignore UI_Close, since when a key both bound to UI_Close and UI_ToggleMainMenu,
+     * like escape, is pressed, the menu will be immediately re-opened after closing.
+     */
+    if (action == Engine::ActionType::UI_Close)
+        return false;
+    else if (action == Engine::ActionType::UI_ToggleMainMenu)
+        return true;
     return Menu::onInputAction(action);
 }
 
 void Menu_Main::onCustomAction(const std::string& action)
 {
-    Engine::ExcludeFrameTime excludeFrameTime(m_Engine);
-    using Engine::AsyncAction;
-    using Engine::ExecutionPolicy;
+    Utils::RecursiveStopWatch excludeFrameTime(m_Engine.m_ExcludedFrameTime);
     if (action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";

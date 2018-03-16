@@ -175,6 +175,7 @@ const Logic::PfxManager::Emitter& Logic::PfxManager::getParticleFX(const std::st
     e.visTexIsQuadPoly = fx.visTexIsQuadPoly != 0;
     e.visTexAniFPS = fx.visTexAniFPS;
     e.visTexAniIsLooping = fx.visTexAniIsLooping != 0;
+    e.visSoftAlpha = fx.visTexAniIsLooping == 2; // Special case for Gothic 2
     e.visTexColorStart = parseFloat3(fx.visTexColorStart_S) * 1.0f / 255.0f;
     e.visTexColorEnd = parseFloat3(fx.visTexColorEnd_S) * 1.0f / 255.0f;
     e.visSizeStart = parseFloat2(fx.visSizeStart_S) * 0.01f;

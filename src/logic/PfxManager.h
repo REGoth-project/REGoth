@@ -147,6 +147,7 @@ namespace Logic
             bool visTexIsQuadPoly;            // Whether to draw a complete polygon (Always the case in REGoth)
             float visTexAniFPS;               // Number of texture-animation frames per second
             bool visTexAniIsLooping;          // Whether to loop the texture animation
+            bool visSoftAlpha;                // Was encoded in visTexAniIsLooping=2, got it's own flag now. Whether to use sine-ease to soften the alpha-value.
             Math::float3 visTexColorStart;    // Start of texture color-modulation interpolation
             Math::float3 visTexColorEnd;      // End of texture color-modulation interpolation
             Math::float2 visSizeStart;        // Size of the particle on start. (visOrientation == None: Screen axis. X = Target direction otherwise)

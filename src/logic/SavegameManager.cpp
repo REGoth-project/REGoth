@@ -3,7 +3,6 @@
 #include "engine/GameEngine.h"
 #include "ui/Hud.h"
 #include "ui/LoadingScreen.h"
-#include <engine/AsyncAction.h>
 #include <json/json.hpp>
 #include <utils/Utils.h>
 #include <utils/logger.h>
@@ -209,7 +208,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
 
 std::string Engine::SavegameManager::loadSaveGameSlot(int index)
 {
-    ExcludeFrameTime exclude(*gameEngine);
+    Utils::RecursiveStopWatch excludeFrameTime(gameEngine->m_ExcludedFrameTime);
     // Lock to number of savegames
     assert(index >= 0 && index < maxSlots());
 
@@ -231,35 +230,37 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
     auto timePlayed = info.timePlayed;
     auto loadSave = [worldFileData, index, timePlayed](BaseEngine* engine) {
         auto resetSession = [](BaseEngine* engine) {
-            gameEngine->resetSession();
-            gameEngine->getHud().getLoadingScreen().reset();
-            gameEngine->getHud().getLoadingScreen().setHidden(false);
+            engine->resetSession();
+            engine->getHud().getLoadingScreen().reset();
+            engine->getHud().getLoadingScreen().setHidden(false);
         };
-        AsyncAction::executeInThread(resetSession, gameEngine, ExecutionPolicy::MainThread).wait();
+        engine->getJobManager().executeInMainThread<void>(resetSession).wait();
 
         json worldJson = json::parse(worldFileData);
         // TODO: catch json exception when emtpy file is parsed or parser crashes
         json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
         json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
         json logManager = json::parse(SavegameManager::readFileInSlot(index, "logmanager.json"));
-        gameEngine->getSession().setCurrentSlot(index);
-        gameEngine->getGameClock().setTotalSeconds(timePlayed);
-        std::unique_ptr<World::WorldInstance> pWorld = gameEngine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager);
+        engine->getSession().setCurrentSlot(index);
+        engine->getGameClock().setTotalSeconds(timePlayed);
+        using UniqueWorld = std::unique_ptr<World::WorldInstance>;
+        std::shared_ptr<UniqueWorld> pWorld;
+        pWorld = std::make_shared<UniqueWorld>(engine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager));
 
-        auto registerWorld = [ index, w = std::move(pWorld) ](BaseEngine * engine) mutable
+        auto registerWorld = [index, pWorld](BaseEngine * engine)
         {
-            Handle::WorldHandle worldHandle = gameEngine->getSession().registerWorld(std::move(w));
+            Handle::WorldHandle worldHandle = engine->getSession().registerWorld(std::move(*pWorld));
             if (worldHandle.isValid())
             {
-                gameEngine->getSession().setMainWorld(worldHandle);
+                engine->getSession().setMainWorld(worldHandle);
                 json playerJson = json::parse(readPlayer(index, "player"));
-                gameEngine->getMainWorld().get().importVobAndTakeControl(playerJson);
+                engine->getMainWorld().get().importVobAndTakeControl(playerJson);
             }
-            gameEngine->getHud().getLoadingScreen().setHidden(true);
+            engine->getHud().getLoadingScreen().setHidden(true);
         };
-        AsyncAction::executeInThread(std::move(registerWorld), gameEngine, ExecutionPolicy::MainThread);
+        engine->getJobManager().executeInMainThread<void>(std::move(registerWorld));
     };
-    AsyncAction::executeInThread(loadSave, gameEngine, ExecutionPolicy::NewThread, true);
+    gameEngine->getJobManager().executeInThread<void>(loadSave, ExecutionPolicy::NewThread);
     return "";
 }
 
@@ -281,7 +282,7 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
     if (!gameEngine->getMainWorld().isValid() || gameEngine->getMainWorld().get().getDialogManager().isDialogActive())
         return; // only save while not in Dialog
 
-    ExcludeFrameTime exclude(*gameEngine);
+    Utils::RecursiveStopWatch excludeFrameTime(gameEngine->m_ExcludedFrameTime);
     assert(index >= 0 && index < SavegameManager::maxSlots());
 
     if (savegameName.empty())

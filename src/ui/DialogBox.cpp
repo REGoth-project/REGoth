@@ -109,52 +109,54 @@ void DialogBox::clearChoices()
     m_CurrentlySelected = -1;
 }
 
-void DialogBox::onInputAction(EInputAction action)
+void DialogBox::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     if (m_Choices.empty())
         return;
 
     switch (action)
     {
-        case IA_Up:
+        case ActionType::UI_Up:
             m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size());
             break;
-        case IA_Down:
+        case ActionType::UI_Down:
             m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size());
             break;
-        case IA_Left:
+        case ActionType::UI_Left:
             break;
-        case IA_Right:
+        case ActionType::UI_Right:
             break;
-        case IA_0:
+        case ActionType::UI_0:
             break;
-        case IA_1:
-        case IA_2:
-        case IA_3:
-        case IA_4:
-        case IA_5:
-        case IA_6:
-        case IA_7:
-        case IA_8:
-        case IA_9:
+        case ActionType::UI_1:
+        case ActionType::UI_2:
+        case ActionType::UI_3:
+        case ActionType::UI_4:
+        case ActionType::UI_5:
+        case ActionType::UI_6:
+        case ActionType::UI_7:
+        case ActionType::UI_8:
+        case ActionType::UI_9:
         {
-            int index = action - IA_1;
+            int index = static_cast<int>(action) - static_cast<int>(ActionType::UI_1);
             m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
         }
         break;
-        case IA_HOME:
+        case ActionType::UI_HOME:
             m_CurrentlySelected = 0;
             break;
-        case IA_END:
+        case ActionType::UI_END:
             m_CurrentlySelected = static_cast<int>(m_Choices.size()) - 1;
             break;
-        case IA_Close:
+        case ActionType::UI_Close:
             // closing Dialog-Option-Box when pressing Escape
             //m_Engine.getMainWorld().get().getDialogManager().performChoice(m_Choices.size()-1);break;
             // selecting last option in Dialog-Option-Box when pressing Escape
             //m_CurrentlySelected = m_Choices.size()-1;break;
             break;
-        case IA_Accept:
+        case ActionType::UI_Confirm:
             if (m_CurrentlySelected != -1)
                 m_Engine.getMainWorld().get().getDialogManager().performChoice(static_cast<size_t>(m_CurrentlySelected));
             break;
