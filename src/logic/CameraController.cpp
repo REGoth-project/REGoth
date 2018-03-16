@@ -277,7 +277,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                     // TODO Pull further back based on distance between characters
                 }
                 break;
-                case EDialogueShotType ::OverTheShoulder:
+                case EDialogueShotType::OverTheShoulder:
                 {
                     m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0.2);
                     m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * reverseShotModifier,0.8,-0.6);
@@ -285,10 +285,16 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                     m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), targetTrans.Up(), -0.55 * reverseShotModifier);
                 }
                 break;
-                case EDialogueShotType ::CloseUp:
+                case EDialogueShotType::Neutral:
+                {
+                    m_ViewMatrix = npcTrans.RotatedAroundLine(npcTrans.Translation(), npcTrans.Up(), Math::PI/2);
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(-0.8/*in the middle of them*/,0.5,-2.0/*pull back until both characters are in frame*/); // right, up, front
+                }
+                break;
+                case EDialogueShotType::CloseUp:
                 {
                     m_ViewMatrix = otherTrans.RotatedAroundLine(otherTrans.Translation(), otherTrans.Up(), Math::PI);
-                    m_ViewMatrix *= Math::Matrix::CreateTranslation(-0.2 * reverseShotModifier, 0.8, -1.5);
+                    m_ViewMatrix *= Math::Matrix::CreateTranslation(-0.3 * reverseShotModifier, 0.8, -1.5);
                     m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0.2);
                     m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), targetTrans.Up(), 0.2 * reverseShotModifier);
                 }
