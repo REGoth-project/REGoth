@@ -23,6 +23,7 @@ namespace Logic
         enum class EDialogueShotType
         {
             Full,
+            Neutral,
             OverTheShoulder,
             CloseUp,
         };
@@ -162,7 +163,7 @@ namespace Logic
          */
         void nextDialogueShot()
         {
-            m_DialogueShotType = (EDialogueShotType)(rand() % 3);
+            m_DialogueShotType = (EDialogueShotType)(rand() % 4);
         }
 
         /**
