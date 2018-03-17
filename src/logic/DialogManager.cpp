@@ -269,6 +269,8 @@ void DialogManager::performChoice(size_t choice)
     {
         m_Interaction.currentInfo = infoHandle;
     }
+
+    m_World.getCameraController()->resetCameraProgression();
 }
 
 void DialogManager::assessTalk(NpcHandle target)

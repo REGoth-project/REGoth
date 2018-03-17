@@ -49,6 +49,10 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.firstPersonCameraSettings.pitch = 0;
     m_CameraSettings.firstPersonCameraSettings.yaw = 0;
 
+    m_CameraSettings.dialogueCameraSettings.dialogueShotCounter = 0;
+    m_CameraSettings.dialogueCameraSettings.dialogueShotLimit = 2;
+    m_CameraSettings.dialogueCameraSettings.dontShowHeroChance = 4;
+
     m_KeyframeDuration = 1.0f;
     setupKeybinds();
 }
@@ -239,16 +243,30 @@ void Logic::CameraController::switchModeActions(ECameraMode mode)
 
 void Logic::CameraController::nextDialogueShot()
 {
-    // TODO rule: use close-up and neutral only after at least two fulls or shoulders
-    if (m_DialogueShotType == EDialogueShotType::Full || m_DialogueShotType == EDialogueShotType::OverTheShoulder)
-    {
-        m_DialogueShotType = (EDialogueShotType)(rand() % 4);
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
+                                                            m_World.getScriptEngine().getPlayerEntity());
+    bool playerTalking = m_dialogueTargetName == player.playerController->getScriptInstance().name[0];
+
+    // Rule: use close-up and neutral only after at least two fulls or shoulders
+    // Rule: Only full or over-the-shoulder shot for PC_Hero
+    if (playerTalking || m_CameraSettings.dialogueCameraSettings.dialogueShotCounter <= m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
+        // Rule: don't always cut to the hero. Leave chance for camera to stay on target NPC
+        m_dontShowHero = rand() % m_CameraSettings.dialogueCameraSettings.dontShowHeroChance != 0;
+        if (m_CameraSettings.dialogueCameraSettings.dialogueShotCounter == 0 || m_CameraSettings.dialogueCameraSettings.dialogueShotCounter > m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
+            m_DialogueShotType = (EDialogueShotType) (rand() %
+                                                      2); // Only choose from first two (Full and OverTheShoulder)
+            m_CameraSettings.dialogueCameraSettings.dialogueShotCounter = m_CameraSettings.dialogueCameraSettings.dialogueShotLimit - 1; // Keep this shot for at least two dialogue bits
+        }
+    } else {
+        // Rule: After a neutral shot should only come a close-up
+        if (m_DialogueShotType == EDialogueShotType::Neutral && rand() % 4 == 0)
+            m_DialogueShotType = EDialogueShotType::CloseUp;
+        // Rule: No shot should come after a close-up
+        else if (m_DialogueShotType != EDialogueShotType::CloseUp)
+            m_DialogueShotType = (EDialogueShotType) (rand() % 4);
     }
-    else
-    {
-        m_DialogueShotType = (EDialogueShotType)(rand() % 2); // Only choose from first two (Full and OverTheShoulder)
-    }
-    // TODO rule: don't always cut to the hero. Leave chance for camera to stay on target NPC
+
+    m_CameraSettings.dialogueCameraSettings.dialogueShotCounter++;
 }
 
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
@@ -266,7 +284,7 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
             Math::Matrix targetTrans, otherTrans;
             float reverseShotModifier; // Makes the camera not cross the line when cutting between characters
 
-            if (m_dialogueTargetName == player.playerController->getScriptInstance().name[0])
+            if (m_dialogueTargetName == player.playerController->getScriptInstance().name[0] && m_dontShowHero)
             {
                 // The PC is talking
                 targetTrans = npcTrans;
