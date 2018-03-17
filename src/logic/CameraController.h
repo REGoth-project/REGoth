@@ -23,8 +23,8 @@ namespace Logic
         enum class EDialogueShotType
         {
             Full,
-            Neutral,
             OverTheShoulder,
+            Neutral,
             CloseUp,
         };
 
@@ -161,10 +161,7 @@ namespace Logic
         /**
          * Randomly chooses one of the dialogue shot types to cut to
          */
-        void nextDialogueShot()
-        {
-            m_DialogueShotType = (EDialogueShotType)(rand() % 4);
-        }
+        void nextDialogueShot();
 
         /**
          * @brief Sets whether this controller should read input
