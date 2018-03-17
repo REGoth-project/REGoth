@@ -237,6 +237,20 @@ void Logic::CameraController::switchModeActions(ECameraMode mode)
     }
 }
 
+void Logic::CameraController::nextDialogueShot()
+{
+    // TODO rule: use close-up and neutral only after at least two fulls or shoulders
+    if (m_DialogueShotType == EDialogueShotType::Full || m_DialogueShotType == EDialogueShotType::OverTheShoulder)
+    {
+        m_DialogueShotType = (EDialogueShotType)(rand() % 4);
+    }
+    else
+    {
+        m_DialogueShotType = (EDialogueShotType)(rand() % 2); // Only choose from first two (Full and OverTheShoulder)
+    }
+    // TODO rule: don't always cut to the hero. Leave chance for camera to stay on target NPC
+}
+
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {
     switch (m_CameraMode) {
@@ -275,6 +289,8 @@ void Logic::CameraController::onUpdateExplicit(float deltaTime)
                     m_ViewMatrix *= Math::Matrix::CreateTranslation(-1.5 * reverseShotModifier,0.5,1.8); // right, up, front
                     m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(), (Math::PI -1.0) * reverseShotModifier);
                     // TODO Pull further back based on distance between characters
+                    // Calculate distance
+                    //float dist = (Vob::getTransform(vob1).Translation() - Vob::getTransform(vob2).Translation()).length();
                 }
                 break;
                 case EDialogueShotType::OverTheShoulder:
