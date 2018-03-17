@@ -102,6 +102,13 @@ namespace Logic
                 Math::float3 up, right, in;
                 float yaw, pitch, zoom;
             } viewerCameraSettings;
+
+            struct
+            {
+                int dialogueShotCounter;
+                int dialogueShotLimit;
+                int dontShowHeroChance;
+            } dialogueCameraSettings;
         };
 
         /**
@@ -139,6 +146,11 @@ namespace Logic
         {
             setCameraMode(m_savedCameraMode);
         }
+
+        /**
+         * Reset m_neutralShotCounter to 0 in order to begin camera progression from start
+         */
+        void resetCameraProgression() {m_CameraSettings.dialogueCameraSettings.dialogueShotCounter = 0;}
 
         /**
          * Sets the name of the character that is speaking
@@ -265,15 +277,23 @@ namespace Logic
         ECameraMode m_CameraMode;
 
         /**
-         * What camera angle is used during dialog
+         * What camera angle is used during dialogue
          */
         EDialogueShotType  m_DialogueShotType;
 
         /**
-         * Remember camera mode (i.e. for dialog) to restore it later
+         * Tracks whether camera should show PC_hero when talking, or other character
+         */
+        bool m_dontShowHero;
+
+        /**
+         * Remember camera mode (i.e. for dialogue) to restore it later
          */
         ECameraMode m_savedCameraMode;
 
+        /**
+         * Name of NPC the dialogue camera should point at
+         */
         std::string m_dialogueTargetName;
 
         /**
