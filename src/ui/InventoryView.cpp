@@ -344,6 +344,7 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
         // Apply slot translation
         transform = Math::Matrix::CreateTranslation(translation) * transform;
 
+
         for( size_t subMesh = 0; subMesh < itemMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
         {
             std::string &materialName = itemMesh.mesh.m_SubmeshMaterialNames[subMesh];
@@ -382,20 +383,21 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
             bgfx::submit(RenderViewList::INVENTORY, config.programs.mainWorldProgram);
         }
     }
-    else
+    else // armor
     {
+        VobTypes::NpcVobInformation playerVobInfo = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
+        Logic::PlayerController *playerController = playerVobInfo.playerController;
+        Logic::ModelVisual *playerModelVisual = playerController->getModelVisual();
+        const Logic::ModelVisual::BodyState &bodyState = playerModelVisual->getBodyState();
+        //drawText(bodyState.bodyVisual, 250, 100, EAlign::A_TopLeft, config);
+        //drawText(bodyState.headVisual, 250, 120, EAlign::A_TopLeft, config);
+
         std::string mdmVisual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
         Handle::MeshHandle itemMeshHandleSkeletal = world.getSkeletalMeshAllocator().loadMeshVDF(Utils::toUpper(mdmVisual));
         Meshes::WorldSkeletalMesh& itemMeshSkeletal = world.getSkeletalMeshAllocator().getMesh(itemMeshHandleSkeletal);
 
-        VobTypes::NpcVobInformation playerVobInfo = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
-        //playerVobInfo.visual->
-        Logic::PlayerController *playerController = playerVobInfo.playerController;
-        const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerController->getInventory().getItems();
-        const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
-
         // Hard coded values for armor. This works because all humans (and all armor) have essentially the same size
-        Math::float3 itemCenter = Math::float3(0, -0.15f, 0);
+        Math::float3 itemCenter = Math::float3(0, -0.05f, 0);
         const float itemSize = 2.8;
 
         // Scale required for the bounding box to exactly fit into the slot
@@ -411,9 +413,25 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
         // Apply slot translation
         transform = Math::Matrix::CreateTranslation(translation) * transform;
 
+        Components::AnimHandler animHandler;
+        animHandler.setWorld(world);
+        animHandler.loadMeshLibFromVDF("HUMANS", m_Engine.getVDFSIndex());
+        animHandler.playAnimation(Logic::ModelVisual::getAnimationName(Logic::ModelVisual::EModelAnimType::Idle));
+
+        Math::Matrix nodeMat[ZenLoad::MAX_NUM_SKELETAL_NODES + 1];
+        animHandler.updateSkeletalMeshInfo(nodeMat + 1, ZenLoad::MAX_NUM_SKELETAL_NODES);
+        nodeMat[0] = transform;
+
         for( size_t subMesh = 0; subMesh < itemMeshSkeletal.m_SubmeshMaterialNames.size(); ++subMesh)
         {
-            const std::string &materialName = itemMeshSkeletal.m_SubmeshMaterialNames[subMesh];
+            std::string materialName = itemMeshSkeletal.m_SubmeshMaterialNames[subMesh];
+            if(materialName.find("_BODY") != std::string::npos)
+            {
+                if(bodyState.bodyTextureIdx != 0)
+                    Utils::replace(materialName, "_V0", "_V" + std::to_string(bodyState.bodyTextureIdx));
+                if(bodyState.bodySkinColorIdx != 0)
+                    Utils::replace(materialName, "_C0", "_C" + std::to_string(bodyState.bodySkinColorIdx));
+            }
             Handle::TextureHandle textureHandle = world.getTextureAllocator().loadTextureVDF(materialName);
             Textures::Texture &texture = world.getTextureAllocator().getTexture(textureHandle);
 
@@ -431,14 +449,6 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
             Math::float4 fogNearFar = Math::float4(FLT_MAX, FLT_MAX, 0, 0);
             bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
 
-            Components::AnimHandler animHandler;
-            animHandler.setWorld(world);
-            animHandler.loadMeshLibFromVDF("HUMANS", m_Engine.getVDFSIndex());
-            animHandler.playAnimation(Logic::ModelVisual::getAnimationName(Logic::ModelVisual::EModelAnimType::Idle));
-
-            Math::Matrix nodeMat[ZenLoad::MAX_NUM_SKELETAL_NODES + 1];
-            animHandler.updateSkeletalMeshInfo(nodeMat + 1, ZenLoad::MAX_NUM_SKELETAL_NODES);
-            nodeMat[0] = transform;
             bgfx::setTransform(nodeMat, static_cast<uint16_t>(animHandler.getNumNodes() + 1));
 
             bgfx::setVertexBuffer(0, itemMeshSkeletal.m_VertexBufferHandle);
@@ -447,6 +457,66 @@ void UI::InventoryView::drawItem(Render::RenderConfig& config,
                                  itemMeshSkeletal.m_SubmeshStarts[subMesh].m_NumIndices);
 
             bgfx::submit(RenderViewList::INVENTORY, config.programs.mainSkinnedMeshProgram);
+        }
+
+        // Head rendering
+
+        Handle::MeshHandle headMeshHandle = world.getStaticMeshAllocator().loadMeshVDF(Utils::toUpper(bodyState.headVisual));
+        Meshes::WorldStaticMesh &headMesh = world.getStaticMeshAllocator().getMesh(headMeshHandle);
+        // I do not know why the helmet node is required rather than the HEAD node but it works.
+        Math::Matrix headTransform = transform * nodeMat[playerModelVisual->findNodeIndex("ZS_HELMET")];
+
+        // Get head-texture of current character
+        // TODO also correct mouth and teeth textures
+        std::vector<std::string> headTxParts = Utils::split(headMesh.mesh.m_SubmeshMaterialNames[0], "0123456789");
+        std::string correctedHeadTexture;
+
+        // TODO ugly code, improve it!
+        if(headTxParts.size() == 3)
+            correctedHeadTexture = headTxParts[0] + std::to_string(bodyState.headTextureIdx) + headTxParts[1] + std::to_string(bodyState.bodySkinColorIdx) + headTxParts[2];
+        else if(headTxParts.size() == 2)
+            correctedHeadTexture = headTxParts[0] + std::to_string(bodyState.headTextureIdx) + headTxParts[1];
+        else if(headTxParts.size() == 1)
+            correctedHeadTexture = headTxParts[0];
+        else // There is no meaningful head to render
+            return;
+
+        for( size_t subMesh = 0; subMesh < headMesh.mesh.m_SubmeshMaterialNames.size(); ++subMesh)
+        {
+            const std::string &materialName = (subMesh == 0 ? correctedHeadTexture : headMesh.mesh.m_SubmeshMaterialNames[subMesh]);
+            Handle::TextureHandle textureHandle = world.getTextureAllocator().loadTextureVDF(materialName);
+            Textures::Texture &texture = world.getTextureAllocator().getTexture(textureHandle);
+
+            // Following render code is essentially copy & paste from render/WorldRender.cpp
+            bgfx::setState(BGFX_STATE_DEFAULT);
+
+            // I don't know what this uniform does but just passing white seems to work
+            Math::float4 color;
+            color.fromRGBA8(0xFFFFFFFF);
+            bgfx::setUniform(config.uniforms.objectColor, color.v);
+
+            bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+
+            // TODO changing fog uniform. should be fixed in shader
+            Math::float4 fogNearFar = Math::float4(FLT_MAX, FLT_MAX, 0, 0);
+            bgfx::setUniform(config.uniforms.fogNearFar, fogNearFar.v);
+
+            bgfx::setTransform(headTransform.m);
+            if (headMesh.mesh.m_IndexBufferHandle.idx != bgfx::kInvalidHandle)
+            {
+                bgfx::setVertexBuffer(0, headMesh.mesh.m_VertexBufferHandle);
+                bgfx::setIndexBuffer(headMesh.mesh.m_IndexBufferHandle,
+                                     headMesh.mesh.m_SubmeshStarts[subMesh].m_StartIndex,
+                                     headMesh.mesh.m_SubmeshStarts[subMesh].m_NumIndices);
+            }
+            else
+            {
+                bgfx::setVertexBuffer(0, headMesh.mesh.m_VertexBufferHandle,
+                                      headMesh.mesh.m_SubmeshStarts[subMesh].m_StartIndex,
+                                      headMesh.mesh.m_SubmeshStarts[subMesh].m_NumIndices);
+            }
+
+            bgfx::submit(RenderViewList::INVENTORY, config.programs.mainWorldProgram);
         }
     }
 }
@@ -653,6 +723,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             m_Engine.getConsole().submitCommand("giveitem HEALTHWATER");
             m_Engine.getConsole().submitCommand("giveitem ASTRONOMIE");
             m_Engine.getConsole().submitCommand("giveitem ITARRUNEFIREBOLT");
+            m_Engine.getConsole().submitCommand("giveitem GRD_ARMOR_L");
         }
         else if( Daedalus::GameType::GT_Gothic2 == m_Engine.getBasicGameType())
         {
@@ -661,7 +732,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             {
                 const std::string startsWith = "ITAR";
                 std::string itemName = Utils::toUpper(g2Items[i]);
-                if(itemName.compare(0, startsWith.length(), startsWith) == 0)
+                if(true || itemName.compare(0, startsWith.length(), startsWith) == 0)
                 {
                     std::string command = std::string("giveitem ") + itemName;
                     console.submitCommand(command);
@@ -753,7 +824,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
         const std::list<Daedalus::GameState::ItemHandle> &otherItemHandleList = npcController->getInventory().getItems();
         std::vector<Daedalus::GEngineClasses::C_Item> otherItemList(otherItemHandleList.size());
         std::list<Daedalus::GameState::ItemHandle>::const_iterator itOtherItem = otherItemHandleList.begin();
-        for(uint32_t index = 0; index < otherItemList.size(); ++index)
+        for(size_t index = 0; index < otherItemList.size(); ++index)
         {
             otherItemList[index] = world.getScriptEngine().getGameState().getItem(*itOtherItem);
             ++itOtherItem;
@@ -950,8 +1021,13 @@ bool UI::InventoryView::compareItems(const Daedalus::GEngineClasses::C_Item &l, 
             else if(r.flags & Daedalus::GEngineClasses::C_Item::ITEM_BELT)
                 return true;
             else
-                l.flags > r.flags;
+                return l.flags > r.flags;
         }
+    case Daedalus::GEngineClasses::C_Item::ITM_CAT_NONE:
+        bool lMI = (l.flags & Daedalus::GEngineClasses::C_Item::ITEM_MISSION) != 0;
+        bool rMI = (r.flags & Daedalus::GEngineClasses::C_Item::ITEM_MISSION) != 0;
+        if(lMI != rMI)
+            return lMI > rMI;
         break;
     }
 
