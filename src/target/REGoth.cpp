@@ -18,6 +18,7 @@
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
 #include <logic/SavegameManager.h>
+#include <logic/visuals/ModelVisual.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
 #include <target/REGoth.h>
@@ -36,6 +37,7 @@
 #include <utils/GLFW_Keys.h>
 #include <logic/ScriptEngine.h>
 #include <logic/DialogManager.h>
+#include <content/AnimationAllocator.h>
 #include <content/StaticMeshAllocator.h>
 #include <content/SkeletalMeshAllocator.h>
 
@@ -611,6 +613,18 @@ void REGoth::initConsole()
         return suggestions;
     };
 
+    CandidateListGenerator animationNamesGen = [this]() {
+        auto& worldInstance = m_pEngine->getMainWorld().get();
+
+        std::vector<Suggestion> suggestions;
+        for (const auto& aniName : worldInstance.getAnimationAllocator().getAnimationNames())
+        {
+            Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{aniName}});
+            suggestions.push_back(suggestion);
+        }
+        return suggestions;
+    };
+
     console.registerCommand("control", [this, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
                if (args.size() < 2)
                    return "Missing argument. Usage: control <npc>";
@@ -849,6 +863,55 @@ void REGoth::initConsole()
         return "Played sound " + args[1];
     });
 
+    auto& playAnimation = console.registerCommand("playanimation",[this, animationNamesGen, worlddNpcNamesGen]
+        (const std::vector<std::string>& args) -> std::string {
+        if (args.size() < 2)
+            return "Missing argument(s). Usage: playanimation <animation> [<npc:default=player>]";
+
+        auto& worldInstance = m_pEngine->getMainWorld().get();
+        auto& scriptEngine = worldInstance.getScriptEngine();
+        auto& datFile = scriptEngine.getVM().getDATFile();
+
+        std::string animationName = args[1];
+        std::string npcName;
+        if (args.size() >= 3)
+        {
+            npcName = args[2];
+        }
+
+        auto suggestions = worlddNpcNamesGen();
+
+        Handle::EntityHandle entityHandle = Handle::EntityHandle::makeInvalidHandle();
+        if (!npcName.empty())
+        {
+            auto baseSuggestion = Logic::Console::findSuggestion(suggestions, npcName);
+            auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
+            if (suggestion != nullptr)
+                entityHandle = suggestion->npcHandle;
+        }
+        else
+        {
+            // case: no argument given
+            entityHandle = scriptEngine.getPlayerEntity();
+        }
+        if (entityHandle.isValid())
+        {
+            VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, entityHandle);
+            if (npcVobInfo.isValid())
+            {
+                std::string aniName = animationName.substr(animationName.find('-') + 1);
+                npcVobInfo.playerController->getModelVisual()->setAnimation(aniName);
+                Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
+                const std::string& npcDisplayName = npcScriptObject.name[0];
+                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                std::string fullName = npcDisplayName + " (" + npcDatFileName + ")";
+                return "Playing animation " + animationName + " on " + fullName;
+            }
+        }
+        return "Could not find NPC " + npcName;
+    });
+
+    playAnimation.registerAutoComplete(animationNamesGen).registerAutoComplete(worlddNpcNamesGen);
 
     std::vector<std::string> playSoundFiles;
     for (const auto& fileName : m_pEngine->getVDFSIndex().getKnownFiles())
