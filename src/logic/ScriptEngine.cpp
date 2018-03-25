@@ -210,10 +210,11 @@ void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item,
         //LogInfo() << "Equiping armor... " << itemData.visual_change;
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
-        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
+        vob.playerController->equipItem(item);
+        //std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
 
         // Only switch the body-armor
-        VobTypes::NPC_SetBodyMesh(vob, visual);
+        //VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
     if ((itemData.mainflag & (Daedalus::GEngineClasses::C_Item::ITM_CAT_NF | Daedalus::GEngineClasses::C_Item::ITM_CAT_FF)) != 0)

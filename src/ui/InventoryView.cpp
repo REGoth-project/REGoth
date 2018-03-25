@@ -113,11 +113,24 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
             Logic::Inventory &playerInv = playerController->getInventory();
             const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerInv.getItems();
 
+            // VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
+
             for(auto &itItem : itemHandleList)
             {
                 Daedalus::GEngineClasses::C_Item itemData = world.getScriptEngine().getGameState().getItem(itItem);
                 if(itemData.instanceSymbol == m_ThisCursorState.selectedItemSymbol)
                 {
+                    const auto &equippedItems = playerController->getEquippedItems();
+                    if( equippedItems.find(itItem) != equippedItems.end() )
+                        playerController->unequipItem(itItem);
+                    else
+                    {
+                        if(playerController->useItem(itItem))
+                            playerInv.removeItem(itItem);
+                    }
+                    // If the item was removed we have to stop the iteration otherwise we will crash
+                    break;
+                    /*
                     //TODO play use animation
                     //playerInv.removeItem(itItem);
 
@@ -133,6 +146,7 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
                         playerController->useItem(itItem);
 
                     break;
+                    */
                 }
             }
         }
@@ -635,6 +649,7 @@ void UI::InventoryView::drawItemInfobox(Render::RenderConfig &config, const Daed
     float itemSize = 150.0f;
     drawItem(config, item, Math::float2(position.x + size.x - 200.0f, position.y + (size.y - itemSize) / 2), itemSize, false, m_SelectedItemRotation);
 
+    /*
     auto simpleDraw = [this, &config](int row, std::string name, std::string value)
     {
         drawText(name, 250, 100 + 15 * row, EAlign::A_TopLeft, config);
@@ -665,7 +680,7 @@ void UI::InventoryView::drawItemInfobox(Render::RenderConfig &config, const Daed
         }
 
     std::string symbolName = m_Engine.getMainWorld().get().getScriptEngine().getVM().getDATFile().getSymbolByIndex(item.instanceSymbol).name;
-
+    */
     /*
     simpleDraw(-2, "symbolName", symbolName);
     simpleDraw(-1, "flagString", flagString);
@@ -707,6 +722,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     if(m_IsHidden)
         return;
 
+    /*
     // Just some debug things
     static bool isFirstTime = true;
     if(isFirstTime)
@@ -765,6 +781,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             m_Engine.getConsole().submitCommand("giveitem ITMI_GOLD 42");
         }
     }
+    */
 
     World::WorldInstance &world = m_Engine.getMainWorld().get();
     VobTypes::NpcVobInformation playerVobInfo = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());

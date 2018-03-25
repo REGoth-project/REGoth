@@ -356,7 +356,11 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
     // Put into set of all equipped items first, then differentiate between the item-types
     m_EquipmentState.equippedItemsAll.erase(item);
 
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
+    {
+        node = EModelNode::Torso;
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
         node = EModelNode::Longsword;
 
@@ -441,7 +445,12 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     // Put into set of all equipped items first, then differentiate between the item-types
     m_EquipmentState.equippedItemsAll.insert(item);
 
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
+    {
+        node = EModelNode::Torso;
+        // Nothing else to do, just override current armor
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
         node = EModelNode::Longsword;
 
@@ -1839,18 +1848,28 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
 
     // Food?
-    if ((data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
+    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
     {
         // Nutrition doesn't seem to be used anywhere...
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
+        // tell caller that the item was consumed and must be deleted from inventory
+        return true;
     }
 
     // Weapon?
-    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    if (    (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
         // FIXME: Hack to only allow equipping when no weapon is drawn
         if (getWeaponMode() == EWeaponMode::WeaponNone)
-            equipItem(item);
+        {
+            //if( m_EquipmentState.equippedItemsAll.find(item) != m_EquipmentState.equippedItemsAll.end() )
+            //    unequipItem(item);
+            //else
+                equipItem(item);
+        }
         return false;
     }
 
