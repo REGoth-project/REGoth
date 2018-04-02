@@ -74,7 +74,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
         symIdx = dat.getSymbolIndexByName(s_PRGStates[symIdx]);
     }
 
-    // LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
+    LogInfo() << "AISTATE-START: " << m_NextState.name << " on NPC: " << VobTypes::getScriptObject(vob).name[0] << " (WP: " << VobTypes::getScriptObject(vob).wp << ")";
 
     // Check if this is just a usual action (ZS = German "Zustand" = State, B = German "Befehl" = Instruction)
     if (m_NextState.name.substr(0, 3) != "ZS_")
