@@ -683,7 +683,11 @@ namespace World
         }
         else
         {
-            m_musicContext->playSegment(m_Segments.at(loweredName));
+            if (m_playingSegment != loweredName)
+            {
+                m_musicContext->playSegment(m_Segments.at(loweredName));
+                m_playingSegment = loweredName;
+            }
             return true;
         }
 #endif

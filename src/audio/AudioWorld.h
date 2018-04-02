@@ -206,6 +206,11 @@ namespace World
         std::map<std::string, std::shared_ptr<DirectMusic::SegmentInfo>> m_Segments;
 
         /**
+         * Contains the name of the currently playing music segment
+        */
+        std::string m_playingSegment;
+
+        /**
          * Background thread that puts music data into the soundbuffer(s)
          */
         void musicRenderFunction();

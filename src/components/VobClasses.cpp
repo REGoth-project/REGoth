@@ -10,6 +10,7 @@
 #include <logic/MobController.h>
 #include <logic/PlayerController.h>
 #include <logic/SoundController.h>
+#include <logic/MusicController.h>
 #include <logic/mobs/Container.h>
 #include <logic/visuals/ModelVisual.h>
 #include <utils/logger.h>
@@ -99,6 +100,17 @@ Handle::EntityHandle VobTypes::createSound(World::WorldInstance& world)
     // Setup controller
     Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
     logic.m_pLogicController = new Logic::SoundController(world, e);
+
+    return e;
+}
+
+
+Handle::EntityHandle VobTypes::createMusic(World::WorldInstance& world) {
+    Handle::EntityHandle e = Vob::constructVob(world);
+
+    // Setup controller
+    Components::LogicComponent& logic = world.getEntity<Components::LogicComponent>(e);
+    logic.m_pLogicController = new Logic::MusicController(world, e);
 
     return e;
 }
@@ -197,6 +209,26 @@ VobTypes::SoundVobInformation VobTypes::asSoundVob(World::WorldInstance& world, 
     snd.soundController = reinterpret_cast<Logic::SoundController*>(snd.logic);
 
     return snd;
+}
+
+VobTypes::MusicVobInformation VobTypes::asMusicVob(World::WorldInstance& world, Handle::EntityHandle e) {
+    Vob::VobInformation v = Vob::asVob(world, e);
+    MusicVobInformation mus;
+
+    // Check the controller
+    if (v.logic && v.logic->getControllerType() != Logic::EControllerType::MusicController) {
+        // Invalidate instance and return
+        mus = {};
+        return mus;
+    }
+
+    // Copy over everything from the subclass. This is safe, as VobInformation is just a POD.
+    memcpy(&mus, &v, sizeof(v));
+
+    // Enter new information
+    mus.musicController = reinterpret_cast<Logic::MusicController*>(mus.logic);
+
+    return mus;
 }
 
 Handle::EntityHandle VobTypes::getEntityFromScriptInstance(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc)

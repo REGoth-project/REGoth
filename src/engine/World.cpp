@@ -18,6 +18,7 @@
 #include <logic/MobController.h>
 #include <logic/PlayerController.h>
 #include <logic/SoundController.h>
+#include <logic/MusicController.h>
 #include <ui/Hud.h>
 #include <ui/LoadingScreen.h>
 #include <ui/PrintScreenMessages.h>
@@ -314,6 +315,7 @@ bool WorldInstance::init(const std::string& zen,
                 // Check for special vobs // FIXME: Should be somewhere else
                 Vob::VobInformation vob;
                 Handle::EntityHandle e;
+
                 if (v.objectClass == "oCItem:zCVob")
                 {
                     // Get item instance
@@ -344,6 +346,15 @@ bool WorldInstance::init(const std::string& zen,
 
                     VobTypes::SoundVobInformation snd = VobTypes::asSoundVob(*this, e);
                     snd.soundController->initFromVobDescriptor(v);
+
+                    vob = Vob::asVob(*this, e);
+                }
+                else if (v.objectClass == "oCZoneMusic:zCVob")
+                {
+                    e = VobTypes::createMusic(*this);
+
+                    VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
+                    mus.musicController->initFromVobDescriptor(v);
 
                     vob = Vob::asVob(*this, e);
                 }
