@@ -166,11 +166,11 @@ void DialogManager::onAIOutput(NpcHandle self, NpcHandle target, const ZenLoad::
     bool isDialogMessage = isDialogActive() &&
                            ((m_Interaction.target == self && m_Interaction.player == target) || (m_Interaction.target == target && m_Interaction.player == self));
 
-    if (target.isValid())
-        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
+    if (target.isValid()) {}
+        //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " to " << getGameState().getNpc(target).name[0];
     else
     {
-        LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
+        //LogInfo() << "AIOutput: From " << getGameState().getNpc(self).name[0] << " (no target)";
         if (isDialogMessage)
         {
             LogError() << "Error: conversation target is invalid";

@@ -72,6 +72,25 @@ namespace World
 #ifdef RE_USE_SOUND
     void AudioWorld::initializeMusic()
     {
+        std::string datPath = "/_work/data/Scripts/_compiled/MUSIC.DAT";
+        std::string datFile = Utils::getCaseSensitivePath(datPath, m_Engine.getEngineArgs().gameBaseDirectory);
+
+        if (!Utils::fileExists(datFile)) {
+            LogError() << "Failed to find MUSIC.DAT at: " << datFile;
+            return;
+        }
+
+        m_MusicVM = new Daedalus::DaedalusVM(datFile);
+        Daedalus::registerGothicEngineClasses(*m_MusicVM);
+
+        m_MusicVM->getDATFile().iterateSymbolsOfClass("C_MUSICTHEME", [&](size_t i, Daedalus::PARSymbol& s) {
+            Daedalus::GameState::MusicThemeHandle h = m_MusicVM->getGameState().createMusicTheme();
+            Daedalus::GEngineClasses::C_MusicTheme& mt = m_MusicVM->getGameState().getMusicTheme(h);
+            m_MusicVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_MusicTheme);
+
+            m_musicThemeSegments[s.name] = mt.file;
+        });
+
         // DirectMusic initialization
         std::string baseDir = m_Engine.getEngineArgs().gameBaseDirectory;
         std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music", baseDir);
@@ -191,7 +210,8 @@ namespace World
         if (m_Context)
             alcDestroyContext(m_Context);
 
-        delete m_VM;
+        delete m_SoundVM;
+        delete m_MusicVM;
 #endif
     }
 
@@ -423,15 +443,15 @@ namespace World
             return;
         }
 
-        m_VM = new Daedalus::DaedalusVM(datFile);
-        Daedalus::registerGothicEngineClasses(*m_VM);
+        m_SoundVM = new Daedalus::DaedalusVM(datFile);
+        Daedalus::registerGothicEngineClasses(*m_SoundVM);
 
         size_t count = 0;
-        m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s) {
+        m_SoundVM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s) {
 
-            Daedalus::GameState::SfxHandle h = m_VM->getGameState().createSfx();
-            Daedalus::GEngineClasses::C_SFX& sfx = m_VM->getGameState().getSfx(h);
-            m_VM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_Sfx);
+            Daedalus::GameState::SfxHandle h = m_SoundVM->getGameState().createSfx();
+            Daedalus::GEngineClasses::C_SFX& sfx = m_SoundVM->getGameState().getSfx(h);
+            m_SoundVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_Sfx);
 
             createSound(s.name, sfx);
 
@@ -689,6 +709,17 @@ namespace World
                 m_playingSegment = loweredName;
             }
             return true;
+        }
+#endif
+        return false;
+    }
+
+    bool AudioWorld::playMusicTheme(const std::string& name)
+    {
+#ifdef RE_USE_SOUND
+        if (m_musicThemeSegments.find(name) != m_musicThemeSegments.end())
+        {
+            return playSegment(m_musicThemeSegments.at(name));
         }
 #endif
         return false;

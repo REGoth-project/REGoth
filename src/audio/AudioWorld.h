@@ -103,6 +103,11 @@ namespace World
         bool playSegment(const std::string& name);
 
         /**
+         * Plays the segment identified by the theme name
+         */
+        bool playMusicTheme(const std::string& name);
+
+        /**
          * Returns the names of the currently loaded segments
          */
         const std::vector<std::string> getLoadedSegments() const;
@@ -149,7 +154,7 @@ namespace World
 
         ALCcontext* m_Context = nullptr;
 
-        Daedalus::DaedalusVM* m_VM = nullptr;
+        Daedalus::DaedalusVM* m_SoundVM = nullptr, *m_MusicVM = nullptr;
 
         struct Source
         {
@@ -204,6 +209,11 @@ namespace World
          * Contains all the music segments that can be played in the instance
          */
         std::map<std::string, std::shared_ptr<DirectMusic::SegmentInfo>> m_Segments;
+
+        /**
+         * Convert a musictheme instance to segment name
+         */
+        std::map<std::string, std::string> m_musicThemeSegments;
 
         /**
          * Contains the name of the currently playing music segment

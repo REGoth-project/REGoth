@@ -50,5 +50,18 @@ namespace Logic {
         bool m_isPlaying;
 
         std::string m_zoneName, m_instancePrefix;
+
+        enum EMusicTime {
+            MT_Day = 0,
+            MT_Ngt = 3,
+        };
+
+        enum EMusicType {
+            MT_Std = 0,
+            MT_Thr = 1,
+            MT_Fgt = 2,
+        };
+
+        static const std::array<const std::string, 6> m_instanceSuffixes;
     };
 }

@@ -6,10 +6,19 @@
 
 using namespace Logic;
 
+const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
+{
+    "_DAY_STD",
+    "_DAY_THR",
+    "_DAY_FGT",
+    "_NGT_STD",
+    "_NGT_THR",
+    "_NGT_FGT",
+};
+
 MusicController::MusicController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
-    , m_isPlaying(false)
-{}
+    , m_isPlaying(false) {}
 
 void MusicController::importObject(const json& j)
 {
@@ -41,13 +50,16 @@ void MusicController::onUpdate(float deltaTime)
     if (!m_isPlaying && isInBoundingBox())
     {
         m_isPlaying = true;
-        // Play segment
-        LogInfo() << "Music: entering " << m_zoneName << " (" << m_instancePrefix << "_Day_Std)";
+        int index = MT_Day + MT_Std; // FIXME: Should use the correct index based on time and situation
+
+        m_World.getAudioWorld().playMusicTheme(m_instancePrefix + m_instanceSuffixes[index]);
+
+        LogInfo() << "Music: entering " << m_zoneName;
     }
     else if (m_isPlaying && !isInBoundingBox())
     {
         m_isPlaying = false;
-        LogInfo() << "Music: exiting " << m_zoneName << " (" << m_instancePrefix << "_Day_Std)";
+        LogInfo() << "Music: exiting " << m_zoneName;
     }
 }
 
