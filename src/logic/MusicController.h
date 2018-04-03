@@ -35,6 +35,9 @@ namespace Logic {
         bool shouldExport() override { return false; }
         void importObject(const json& j) override;
 
+        static void toggleDebugDraw() { m_debugDraw = !m_debugDraw; }
+        static void disableDebugDraw() { m_debugDraw = false; }
+
     protected:
         /**
         * @return True, if the current camera is in the bounding box of the zone
@@ -63,5 +66,7 @@ namespace Logic {
         };
 
         static const std::array<const std::string, 6> m_instanceSuffixes;
+
+        static bool m_debugDraw;
     };
 }

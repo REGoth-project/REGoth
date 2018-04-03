@@ -17,6 +17,7 @@
 #include <logic/Console.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
+#include <logic/MusicController.h>
 #include <logic/SavegameManager.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
@@ -1035,6 +1036,11 @@ void REGoth::initConsole()
             suggestions.push_back(std::make_shared<SuggestionBase>(s));
         }
         return suggestions;
+    });
+
+    console.registerCommand("togglemusiczonedraw", [this](const auto& args) -> std::string {
+        Logic::MusicController::toggleDebugDraw();
+        return "Ok";
     });
 }
 

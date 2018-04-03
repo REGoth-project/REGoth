@@ -3,6 +3,7 @@
 #include <engine/BaseEngine.h>
 #include <logic/ScriptEngine.h>
 #include <engine/World.h>
+#include <debugdraw/debugdraw.h>
 
 using namespace Logic;
 
@@ -15,6 +16,8 @@ const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
     "_NGT_THR",
     "_NGT_FGT",
 };
+
+bool MusicController::m_debugDraw = false;
 
 MusicController::MusicController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
@@ -47,6 +50,15 @@ void MusicController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 
 void MusicController::onUpdate(float deltaTime)
 {
+    if (m_debugDraw)
+    {
+        Aabb box = { m_bbox[0].x, m_bbox[0].y, m_bbox[0].z, m_bbox[1].x, m_bbox[1].y, m_bbox[1].z };
+        ddPush();
+        ddSetColor(0xFF0000FF);
+        ddDraw(box);
+        ddPop();
+    }
+
     if (!m_isPlaying && isInBoundingBox())
     {
         m_isPlaying = true;
