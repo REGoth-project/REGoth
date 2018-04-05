@@ -269,7 +269,7 @@ if(NOT EMSCRIPTEN)
         endif()
         target_link_libraries(engine openal)
     elseif(WIN32)
-        target_link_libraries(engine OpenAL32)
+        target_link_libraries(engine common OpenAL)
     endif()
 endif()
 
