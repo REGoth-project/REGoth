@@ -2,6 +2,8 @@
 #include <daedalus/DaedalusVM.h>
 #include <utils/logger.h>
 
+#include <media/Video.h>
+
 void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verbose)
 {
     vm.registerExternalFunction("npc_getequippedarmor", [=](Daedalus::DaedalusVM& vm) {
@@ -839,9 +841,7 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
     });
 
     vm.registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "playvideo";
-        std::string filename = vm.popString();
-        if (verbose) LogInfo() << "filename: " << filename;
+        Video::playVideo(vm.popString());
         // this function is actually declared as int, but the return value is never used in the original scripts
         // and the Gothic compiler doesn't pop unused expressions
         vm.setReturn(0);

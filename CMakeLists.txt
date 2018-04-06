@@ -194,6 +194,8 @@ file(GLOB ENGINE_SRC
         "src/utils/*.h"
         "src/math/*.cpp"
         "src/math/*.h"
+        "src/media/*.cpp"
+        "src/media/*.h"
         "src/ui/*.cpp"
         "src/ui/*.h"
         "src/logic/*.cpp"
