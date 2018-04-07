@@ -42,6 +42,7 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
     m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::Unknown;
     m_Allocator.getElement(h).imageData = data;
     //m_Allocator.getElement(h).m_TextureHandle = bth;
+    m_Allocator.getElement(h).m_TextureHandle.idx = bgfx::kInvalidHandle;
     m_Allocator.getElement(h).m_TextureName = name;
 
     ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(data);
@@ -80,6 +81,7 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
     m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
     m_Allocator.getElement(h).imageData = data;
     //m_Allocator.getElement(h).m_TextureHandle = bth;
+    m_Allocator.getElement(h).m_TextureHandle.idx = bgfx::kInvalidHandle;
     m_Allocator.getElement(h).m_TextureName = name;
     m_Allocator.getElement(h).m_Width = width;
     m_Allocator.getElement(h).m_Height = height;
@@ -185,6 +187,12 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 {
     Texture& tx = m_Allocator.getElement(h);
 
+    // if there's already a texture loaded for the object, destroy it
+    if (tx.m_TextureHandle.idx != bgfx::kInvalidHandle) {
+        bgfx::destroy(tx.m_TextureHandle);
+        tx.m_TextureHandle.idx = bgfx::kInvalidHandle;
+    }
+
     std::uint32_t textureFlags = BGFX_TEXTURE_NONE;
 
     if (this->m_Engine.getEngineArgs().noTextureFiltering)
@@ -204,8 +212,10 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
         //stbi_image_free(out);
 
         // Couldn't load this one?
-        if (bth.idx == bgfx::kInvalidHandle)
+        if (bth.idx == bgfx::kInvalidHandle) {
+            LogWarn() << "Could not finalize texture load";
             return false;
+        }
 
         tx.m_TextureHandle = bth;
     }

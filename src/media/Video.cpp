@@ -236,7 +236,7 @@ namespace Media {
                     if (!texture.isValid())
                         texture = alloc.loadTextureRGBA8(data, videoCodecContext->width, videoCodecContext->height);
                     else
-                        alloc.getTexture(texture).imageData = data;
+                        std::swap(alloc.getTexture(texture).imageData, data);
                     alloc.asyncFinalizeLoad(texture);
                     view->setImage(texture, videoCodecContext->width, videoCodecContext->height);
                 }
