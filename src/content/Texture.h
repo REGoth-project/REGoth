@@ -57,6 +57,8 @@ namespace Textures
          * @return Rough estimation about how much memory the loaded textures need on the GPU in bytes
          */
         size_t getEstimatedGPUMemoryConsumption() { return m_EstimatedGPUBytes; }
+
+        void asyncFinalizeLoad(Handle::TextureHandle h);
     protected:
         /**
          * Pushes the loaded data to the GPU. Needs to run on the main-thread.

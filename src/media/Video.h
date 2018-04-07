@@ -3,11 +3,27 @@
 //
 
 #pragma once
-
+#include <memory>
 #include <string>
+#include <render/ViewList.h>
 
-namespace Video {
+namespace Engine {
+    class BaseEngine;
+}
 
-void playVideo(const std::string &fileName);
+namespace Media {
+    class Video;
+    class VideoPlayer
+    {
+    public:
+        VideoPlayer(Engine::BaseEngine &engine);
+        ~VideoPlayer();
+        void play(const std::string &fileName);
+        void frameUpdate(double dt, uint16_t width, uint16_t height);
+        bool active();
 
+    private:
+        Engine::BaseEngine &engine;
+        std::unique_ptr<Video> currentVideo;
+    };
 }

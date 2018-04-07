@@ -174,6 +174,13 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const std::string& name)
     return loadTextureVDF(m_Engine.getVDFSIndex(), name);
 }
 
+void TextureAllocator::asyncFinalizeLoad(Handle::TextureHandle h)
+{
+    m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
+        finalizeLoad(h);
+    });
+}
+
 bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 {
     Texture& tx = m_Allocator.getElement(h);

@@ -181,7 +181,7 @@ bool UI::Menu::loadMenuDAT()
     Daedalus::registerGothicEngineClasses(*m_pVM);
 
     m_pVM->registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM &vm){
-        Video::playVideo(vm.popString());
+        m_Engine.getVideoPlayer().play(vm.popString());
         vm.setReturn(0);
     });
 
