@@ -24,6 +24,6 @@ namespace Media {
 
     private:
         Engine::BaseEngine &engine;
-        std::unique_ptr<Video> currentVideo;
+        std::shared_ptr<Video> currentVideo;
     };
 }

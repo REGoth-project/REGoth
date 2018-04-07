@@ -66,28 +66,44 @@ using AVFrameRefPtr = std::unique_ptr<AVFrame, deleteAVFrameRef>;
 }
 
 namespace Media {
-    class Video
+    class Video: public std::enable_shared_from_this<Video>
     {
     public:
         Video(VideoPlayer &player, Engine::BaseEngine &engine, const std::string &fileName)
                 : player{player}, engine{engine}, fileName{fileName}
         {
             av_register_all();
-
-            view = new UI::ImageView(engine);
-            view->setHidden(true);
-            view->setRelativeSize(false);
-
-            engine.getRootUIView().addChild(view);
         }
 
         ~Video()
         {
-            view->setHidden(true);
+            engine.getJobManager().executeInMainThread<void>([videoPtr = std::weak_ptr<Video>{shared_from_this()}](Engine::BaseEngine *engine) {
+                auto video = videoPtr.lock();
+                if (!video) {
+                    LogWarn() << "Video object disappeared";
+                    return;
+                }
+
+                video->view->setHidden(true);
+            }).wait();
         }
 
         bool init(const uint16_t width, const uint16_t height)
         {
+            engine.getJobManager().executeInMainThread<void>([videoPtr = std::weak_ptr<Video>{shared_from_this()}](Engine::BaseEngine *engine){
+                auto video = videoPtr.lock();
+                if (!video) {
+                    LogWarn() << "Video object disappeared";
+                    return;
+                }
+
+                video->view = new UI::ImageView(*engine);
+                video->view->setHidden(true);
+                video->view->setRelativeSize(false);
+
+                engine->getRootUIView().addChild(video->view);
+            }).wait();
+
             av_init_packet(&packet);
             packet.data = nullptr;
             packet.size = 0;
@@ -280,17 +296,25 @@ namespace Media {
             // TODO: this can be probably accelerated by doing conversion within the fragment shader
             auto data = yuv420pToRGBA(frame);
 
-            view->setHidden(false);
-            view->setSize(Math::float2(1,1));
+            engine.getJobManager().executeInMainThread<void>([videoPtr = std::weak_ptr<Video>{shared_from_this()}, data](Engine::BaseEngine *engine) mutable {
+                auto video = videoPtr.lock();
+                if (!video) {
+                    LogWarn() << "Video object disappeared";
+                    return;
+                }
 
-            Textures::TextureAllocator& alloc = engine.getEngineTextureAlloc();
+                video->view->setHidden(false);
+                video->view->setSize(Math::float2(1, 1));
 
-            if (!texture.isValid())
-                texture = alloc.loadTextureRGBA8(data, videoCodecContext->width, videoCodecContext->height);
-            else
-                std::swap(alloc.getTexture(texture).imageData, data);
-            alloc.asyncFinalizeLoad(texture);
-            view->setImage(texture, videoCodecContext->width, videoCodecContext->height);
+                Textures::TextureAllocator &alloc = engine->getEngineTextureAlloc();
+
+                if(!video->texture.isValid())
+                    video->texture = alloc.loadTextureRGBA8(data, video->videoCodecContext->width, video->videoCodecContext->height);
+                else
+                    std::swap(alloc.getTexture(video->texture).imageData, data);
+                alloc.asyncFinalizeLoad(video->texture);
+                video->view->setImage(video->texture, video->videoCodecContext->width, video->videoCodecContext->height);
+            }).wait();
         }
 
 public:
@@ -343,7 +367,7 @@ void Media::VideoPlayer::play(const std::string &fileName)
 {
     std::cout << "playVideo(" << fileName << ")" << std::endl;
 #ifdef RE_ENABLE_FFMPEG
-    currentVideo = std::make_unique<Video>(*this, engine, fileName);
+    currentVideo = std::make_shared<Video>(*this, engine, fileName);
 #else
     LogWarn() << "No libavcodec support compiled, won't play" << fileName;
 #endif
