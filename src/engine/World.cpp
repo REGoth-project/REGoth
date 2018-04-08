@@ -210,7 +210,7 @@ bool WorldInstance::init(const std::string& zen,
         // Init worldmesh-wrapper
         m_ClassContents->worldMesh.load(packedWorldMesh);
 
-        /*for (auto& sm : packedWorldMesh.subMeshes)
+        for (auto& sm : packedWorldMesh.subMeshes)
         {
             size_t k = 0;
             for (auto& lm : sm.triangleLightmapIndices)
@@ -224,7 +224,7 @@ bool WorldInstance::init(const std::string& zen,
 
                 k++;
             }
-        }*/
+        }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
 
