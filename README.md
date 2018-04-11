@@ -94,10 +94,10 @@ The compiled files are inside the `build/bin` directory.
 Make sure to copy the `content/shaders` folder to the working directory of the compiled `REGoth`-Executable.
 Then, run the program with the following flags:
 ```sh
-REGoth -g "path/to/gothic1or2" -g1/g2
+REGoth -g "path/to/gothic1or2" OR -g1/g2
 ```
 
-Where `path/to/gothic1or2` points to the root of a Gothic I or II installation. Use either '-g1' to start Gothic I or '-g2' to start Gothic II.
+Where `path/to/gothic1or2` points to the root of a Gothic I or II installation. Once you've given ReGoth a valid path to an Gothic I installation it is possible to simply start the game using the -g1 flag without having to supply the entire path, as the path will be saved inside a config file. The same is true for an installation of Gothic II and the -g2 flag. Using the -g1/g2 flags is the recommended way.
 
 > It is recommended to run this from the commandline, to see the debug-output of the program.
 
