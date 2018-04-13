@@ -19,6 +19,8 @@ const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
 
 bool MusicController::m_debugDraw = false;
 
+std::string MusicController::m_defaultZone = "DEF";
+
 MusicController::MusicController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
     , m_isPlaying(false) {}
@@ -48,6 +50,17 @@ void MusicController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
     LogInfo() << "Music: controller created for " << m_zoneName;
 }
 
+void MusicController::playZone(const std::string& prefix, EMusicTime time, EMusicType type)
+{
+    if (!m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[time + type]))
+    {
+        if (!m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + type]))
+        {
+            m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + MT_Std]);
+        }
+    }
+}
+
 void MusicController::onUpdate(float deltaTime)
 {
     if (m_debugDraw)
@@ -59,18 +72,31 @@ void MusicController::onUpdate(float deltaTime)
         ddPop();
     }
 
-    if (!m_isPlaying && isInBoundingBox())
+    EMusicTime time = m_World.getEngine()->getGameClock().isDaytime() ? MT_Day : MT_Ngt;
+
+    // We need to play a new segment in either one of two scenarios:
+    // if the character has just entered the zone or
+    // if the character was already in the zone but the time of day
+    // changed.
+    // FIXME: It'll also be needed to check if the character is
+    // threatened or fighting to play the correct music.
+    if ((!m_isPlaying && isInBoundingBox())
+        || (m_isPlaying && m_currentTime != time))
     {
         m_isPlaying = true;
-        int index = MT_Day + MT_Std; // FIXME: Should use the correct index based on time and situation
 
-        m_World.getAudioWorld().playMusicTheme(m_instancePrefix + m_instanceSuffixes[index]);
+        playZone(m_instancePrefix, time, MT_Std);
+        m_currentTime = time;
 
         LogInfo() << "Music: entering " << m_zoneName;
     }
     else if (m_isPlaying && !isInBoundingBox())
     {
         m_isPlaying = false;
+
+        playZone(m_defaultZone, time, MT_Std);
+        m_currentTime = time;
+
         LogInfo() << "Music: exiting " << m_zoneName;
     }
 }

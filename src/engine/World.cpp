@@ -358,6 +358,13 @@ bool WorldInstance::init(const std::string& zen,
 
                     vob = Vob::asVob(*this, e);
                 }
+                else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
+                {
+                    std::string zoneName = v.vobName.substr(v.vobName.find('_') + 1);
+                    Logic::MusicController::setDefaultZone(zoneName);
+
+                    LogInfo() << "Found default music zone: " << v.vobName;
+                }
                 else
                 {
                     // Normal zCVob or not implemented subclass

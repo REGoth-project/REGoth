@@ -32,6 +32,18 @@
 
 using namespace Audio;
 
+static DirectMusic::SegmentTiming getTiming(std::uint32_t v) {
+    switch (v) {
+    case Daedalus::GEngineClasses::TRANSITION_SUB_TYPE_BEAT:
+        return DirectMusic::SegmentTiming::Beat;
+    case Daedalus::GEngineClasses::TRANSITION_SUB_TYPE_MEASURE:
+        return DirectMusic::SegmentTiming::Measure;
+
+    default:
+        return DirectMusic::SegmentTiming::Immediate;
+    }
+}
+
 namespace World
 {
     AudioWorld::AudioWorld(Engine::BaseEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
@@ -693,7 +705,7 @@ namespace World
         }
     }
 
-    bool AudioWorld::playSegment(const std::string& name)
+    bool AudioWorld::playSegment(const std::string& name, DirectMusic::SegmentTiming timing)
     {
 #ifdef RE_USE_SOUND
         std::string loweredName = Utils::lowered(name);
@@ -705,7 +717,7 @@ namespace World
         {
             if (m_playingSegment != loweredName)
             {
-                m_musicContext->playSegment(m_Segments.at(loweredName));
+                m_musicContext->playSegment(m_Segments.at(loweredName), timing);
                 m_playingSegment = loweredName;
             }
             return true;
@@ -717,9 +729,14 @@ namespace World
     bool AudioWorld::playMusicTheme(const std::string& name)
     {
 #ifdef RE_USE_SOUND
-        if (m_musicThemeSegments.find(name) != m_musicThemeSegments.end())
+        if (m_MusicVM->getDATFile().hasSymbolName(Utils::uppered(name)))
         {
-            return playSegment(m_musicThemeSegments.at(name));
+            size_t i = m_MusicVM->getDATFile().getSymbolIndexByName(Utils::uppered(name));
+            Daedalus::GameState::MusicThemeHandle h = m_MusicVM->getGameState().createMusicTheme();
+            Daedalus::GEngineClasses::C_MusicTheme& mt = m_MusicVM->getGameState().getMusicTheme(h);
+            m_MusicVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_MusicTheme);
+
+            return playSegment(mt.file, getTiming(mt.transSubType));
         }
 #endif
         return false;

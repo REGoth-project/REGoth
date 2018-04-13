@@ -6,6 +6,7 @@
 
 #include <glm/glm.hpp>
 
+#include <dmusic/PlayingContext.h>
 #include <daedalus/DaedalusStdlib.h>
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
@@ -42,12 +43,6 @@ namespace Daedalus
 namespace Logic
 {
     class ScriptEngine;
-}
-
-namespace DirectMusic
-{
-    class PlayingContext;
-    class SegmentInfo;
 }
 
 namespace World
@@ -100,7 +95,7 @@ namespace World
         /**
          * Plays the segment identified by a name
          */
-        bool playSegment(const std::string& name);
+        bool playSegment(const std::string& name, DirectMusic::SegmentTiming timing = DirectMusic::SegmentTiming::Immediate);
 
         /**
          * Plays the segment identified by the theme name

@@ -38,6 +38,9 @@ namespace Logic {
         static void toggleDebugDraw() { m_debugDraw = !m_debugDraw; }
         static void disableDebugDraw() { m_debugDraw = false; }
 
+        static void setDefaultZone(const std::string& name) { m_defaultZone = name; }
+        static const std::string& getDefaultZone() { return m_defaultZone; }
+
     protected:
         /**
         * @return True, if the current camera is in the bounding box of the zone
@@ -65,8 +68,19 @@ namespace Logic {
             MT_Fgt = 2,
         };
 
+        /**
+        * Tries to play the segment associated with the specified prefix according to
+        * the current time of day and character condition.
+        * Falls back to day and standard variants if the requested ones are not found
+        */
+        void playZone(const std::string& prefix, EMusicTime time, EMusicType type);
+
+        EMusicTime m_currentTime;
+
         static const std::array<const std::string, 6> m_instanceSuffixes;
 
         static bool m_debugDraw;
+
+        static std::string m_defaultZone;
     };
 }
