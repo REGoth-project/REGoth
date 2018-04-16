@@ -40,6 +40,14 @@ namespace Logic {
 
         static void setDefaultZone(const std::string& name) { m_defaultZone = name; }
         static const std::string& getDefaultZone() { return m_defaultZone; }
+        static void playDefaultMusic(World::WorldInstance& world);
+        static bool isMusicPlaying() { return m_playingMusic; }
+
+        static void resetDefaults()
+        {
+            m_playingMusic = false;
+            m_defaultZone = "DEF";
+        }
 
     protected:
         /**
@@ -73,13 +81,13 @@ namespace Logic {
         * the current time of day and character condition.
         * Falls back to day and standard variants if the requested ones are not found
         */
-        void playZone(const std::string& prefix, EMusicTime time, EMusicType type);
+        static void playZone(World::WorldInstance& world, const std::string& prefix, EMusicTime time, EMusicType type);
 
         EMusicTime m_currentTime;
 
         static const std::array<const std::string, 6> m_instanceSuffixes;
 
-        static bool m_debugDraw;
+        static bool m_debugDraw, m_playingMusic;
 
         static std::string m_defaultZone;
     };

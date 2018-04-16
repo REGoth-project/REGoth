@@ -83,6 +83,7 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     , m_Allocators(std::make_unique<WorldAllocators>(engine))
     , m_ClassContents(std::make_unique<ClassContents>(*this))
 {
+    Logic::MusicController::resetDefaults();
 }
 
 WorldInstance::~WorldInstance()
@@ -722,6 +723,11 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         Math::float3 fpPosition = getEntity<Components::PositionComponent>(fp.second).m_WorldMatrix.Translation();
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
     }*/
+
+    if (!Logic::MusicController::isMusicPlaying())
+    {
+        Logic::MusicController::playDefaultMusic(*this);
+    }
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)

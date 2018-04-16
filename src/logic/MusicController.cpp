@@ -18,6 +18,7 @@ const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
 };
 
 bool MusicController::m_debugDraw = false;
+bool MusicController::m_playingMusic = false;
 
 std::string MusicController::m_defaultZone = "DEF";
 
@@ -50,14 +51,22 @@ void MusicController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
     LogInfo() << "Music: controller created for " << m_zoneName;
 }
 
-void MusicController::playZone(const std::string& prefix, EMusicTime time, EMusicType type)
+void MusicController::playZone(World::WorldInstance& world, const std::string& prefix, EMusicTime time, EMusicType type)
 {
-    if (!m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[time + type]))
+    if (!world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[time + type]))
     {
-        if (!m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + type]))
+        if (!world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + type]))
         {
-            m_World.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + MT_Std]);
+            m_playingMusic = world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + MT_Std]) || m_playingMusic;
         }
+        else
+        {
+            m_playingMusic = true;
+        }
+    }
+    else
+    {
+        m_playingMusic = true;
     }
 }
 
@@ -85,7 +94,7 @@ void MusicController::onUpdate(float deltaTime)
     {
         m_isPlaying = true;
 
-        playZone(m_instancePrefix, time, MT_Std);
+        playZone(m_World, m_instancePrefix, time, MT_Std);
         m_currentTime = time;
 
         LogInfo() << "Music: entering " << m_zoneName;
@@ -94,7 +103,7 @@ void MusicController::onUpdate(float deltaTime)
     {
         m_isPlaying = false;
 
-        playZone(m_defaultZone, time, MT_Std);
+        playZone(m_World, m_defaultZone, time, MT_Std);
         m_currentTime = time;
 
         LogInfo() << "Music: exiting " << m_zoneName;
@@ -113,4 +122,10 @@ bool MusicController::isInBoundingBox()
     }
 
     return false;
+}
+
+void MusicController::playDefaultMusic(World::WorldInstance& world)
+{
+    EMusicTime time = world.getEngine()->getGameClock().isDaytime() ? MT_Day : MT_Ngt;
+    playZone(world, m_defaultZone, time, MT_Std);
 }
