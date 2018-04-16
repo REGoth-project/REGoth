@@ -153,17 +153,32 @@ bool WorldInstance::init(const std::string& zen,
         LOAD_SECTION_LOADSCRIPTS.p2,
         LOAD_SECTION_LOADSCRIPTS.info);
 
-    // Init daedalus-vm
-    std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
-    std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
+    bool hasScriptsInVDF = m_pEngine->getVDFSIndex().hasFile("GOTHIC.DAT");
 
-    if (Utils::fileExists(datFile))
+    if (hasScriptsInVDF)
     {
-        m_ClassContents->scriptEngine.loadDAT(datFile);
+      LogInfo() << "Loading GOTHIC.DAT from VDFS-Archive!";
+
+      std::vector<uint8_t> datfile;
+      m_pEngine->getVDFSIndex().getFileData("GOTHIC.DAT", datfile);
+
+      m_ClassContents->scriptEngine.loadDAT(datfile.data(), datfile.size());
     }
     else
     {
-        LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
+      LogInfo() << "Loading GOTHIC.DAT from _work-folder!";
+
+      std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
+      std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
+
+      if (Utils::fileExists(datFile))
+      {
+          m_ClassContents->scriptEngine.loadDAT(datFile);
+      }
+      else
+      {
+          LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
+      }
     }
 
     // Load world
