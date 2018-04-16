@@ -151,6 +151,13 @@ void BaseEngine::loadArchives()
 
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
+    // Load explicit modfile with even higher priority
+    if (!m_Args.modfile.empty())
+    {
+      LogInfo() << "Reading Mod-File from Commandline: " << m_Args.modfile;
+      m_FileIndex.loadVDF(m_Args.modfile, 2);
+    }
+
     LogInfo() << "Loading VDF-Archives: " << vdfArchives;
     for (std::string& s : vdfArchives)
     {
@@ -169,21 +176,27 @@ void BaseEngine::loadArchives()
     // Load mod archives with higher priority
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
 
+    LogInfo() << "Loading MOD-Archives: " << modArchives;
     if (!modArchives.empty())
     {
-        LogInfo() << "Loading MOD-Archives: " << modArchives;
         for (std::string& s : modArchives)
         {
             m_FileIndex.loadVDF(s, 1);
         }
     }
 
-    // Load explicit modfile with even higher priority
-    if (!m_Args.modfile.empty())
-    {
-        m_FileIndex.loadVDF(m_Args.modfile, 2);
-    }
-    
+    // Load zip archives with yet higher priority
+    std::list<std::string> zipArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "zip", false);
+
+    LogInfo() << "Loading ZIP-Archives: " << zipArchives;
+    if (!zipArchives.empty())
+      {
+        for (std::string& s : zipArchives)
+          {
+            m_FileIndex.loadVDF(s, 1);
+          }
+      }
+
     m_FileIndex.finalizeLoad();
 }
 

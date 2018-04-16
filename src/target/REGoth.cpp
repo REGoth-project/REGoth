@@ -10,20 +10,14 @@
 #include <ZenLib/utils/logger.h>
 #include <bx/uint32_t.h>
 #include <components/VobClasses.h>
-#include <content/AnimationAllocator.h>
-#include <content/SkeletalMeshAllocator.h>
 #include <content/StaticLevelMesh.h>
-#include <content/StaticMeshAllocator.h>
 #include <content/VertexTypes.h>
 #include <debugdraw/debugdraw.h>
 #include <imgui/imgui.h>
 #include <logic/Console.h>
-#include <logic/DialogManager.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
 #include <logic/SavegameManager.h>
-#include <logic/ScriptEngine.h>
-#include <logic/visuals/ModelVisual.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
 #include <target/REGoth.h>
@@ -33,13 +27,17 @@
 #include <ui/ImageView.h>
 #include <ui/Menu.h>
 #include <ui/Menu_Main.h>
-#include <utils/GLFW_Keys.h>
 #include <utils/cli.h>
 #include <utils/zTools.h>
 #include <vdfs/fileIndex.h>
 #include <zenload/zCMesh.h>
 #include <zenload/zenParser.h>
 #include <zenload/ztex2dds.h>
+#include <utils/GLFW_Keys.h>
+#include <logic/ScriptEngine.h>
+#include <logic/DialogManager.h>
+#include <content/StaticMeshAllocator.h>
+#include <content/SkeletalMeshAllocator.h>
 
 using json = nlohmann::json;
 
@@ -142,8 +140,8 @@ void REGoth::initConsole()
 
     // creates simple suggestion generator from iterables of string
     // deprecated, use registerAutoComplete(const std::vector<std::string>&) overload instead
-    auto simpleStringGenGen = [](const auto& stringContainer) {
-        return [stringContainer]() {
+    auto simpleStringGenGen = [](const auto& stringContainer){
+        return [stringContainer](){
             std::vector<Suggestion> suggestions;
             for (auto& token : stringContainer)
                 suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::move(token)}}));
@@ -169,31 +167,32 @@ void REGoth::initConsole()
            << "Largest SkeletalMesh: " << nameLargestSkel << " (" << sizeLargestSkel / 1024 << " kb)" << std::endl
            << "Largest StaticMesh:   " << nameLargestStatic << " (" << sizeLargestStatic / 1024 << " kb)" << std::endl;
 
-        LogInfo() << ss.str();
-        return ss.str();
-    });
+            LogInfo() << ss.str();
+            return ss.str();
+        });
 
-    console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
-        if (args.size() < 2)
-            return "Missing argument. Usage: kf <idx>";
+        console.registerCommand("kf", [&](const std::vector<std::string>& args) -> std::string {
+            if(args.size() < 2)
+                return "Missing argument. Usage: kf <idx>";
 
-        m_pEngine->getMainWorld().get().getCameraController()->storeKeyframe(atoi(args[1].c_str()));
-        return "Saved keyframe";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->storeKeyframe(atoi(args[1].c_str()));
+            return "Saved keyframe";
+        });
 
     console.registerCommand("ckf", [&](const std::vector<std::string>& args) -> std::string {
-        m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
-        return "Cleared keyframe";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->clearKeyframes();
+            return "Cleared keyframe";
+        });
 
     console.registerCommand("pkf", [&](const std::vector<std::string>& args) -> std::string {
 
-        if (args.size() < 2)
-            return "Missing argument. Usage: pkf <duration>";
+            if(args.size() < 2)
+                return "Missing argument. Usage: pkf <duration>";
 
-        m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
-        return "Playing keyed animation";
-    });
+            m_pEngine->getMainWorld().get().getCameraController()->playKeyframes(atof(args[1].c_str()));
+            return "Playing keyed animation";
+        });
+
 
     console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
         static bool s_Stats = false;
@@ -201,23 +200,21 @@ void REGoth::initConsole()
 
         bgfx::setDebug(s_Stats ? BGFX_DEBUG_STATS : 0);
         return "Toggled stats";
-    });
+        });
 
     console.registerCommand("hud", [this](const std::vector<std::string>& args) -> std::string {
 
-        if (args.size() < 2)
-            return "Missing argument. Usage: hud <mode> | (0=None, 1=Gameplay, 2=Full)";
+            if(args.size() < 2)
+                return "Missing argument. Usage: hud <mode> | (0=None, 1=Gameplay, 2=Full)";
 
-        m_HUDMode = std::min(2, std::stoi(args[1]));
+            m_HUDMode = std::min(2, std::stoi(args[1]));
 
         return "Toggled hud";
     });
 
     std::map<std::string, Logic::CameraController::ECameraMode> camModes = {
         {"ThirdPerson", Logic::CameraController::ECameraMode::ThirdPerson},
-        {
-            "FirstPerson", Logic::CameraController::ECameraMode::FirstPerson,
-        },
+        {"FirstPerson", Logic::CameraController::ECameraMode::FirstPerson, },
         {"Free", Logic::CameraController::ECameraMode::Free},
         {"Viewer", Logic::CameraController::ECameraMode::Viewer},
         {"Static", Logic::CameraController::ECameraMode::Static},
@@ -312,12 +309,12 @@ void REGoth::initConsole()
     });
 
     const std::map<std::string, Logic::EventMessages::MovementMessage::WalkMode> walkModes = {
-        {"RUN", Logic::EventMessages::MovementMessage::WalkMode::Run},
-        {"WALK", Logic::EventMessages::MovementMessage::WalkMode::Walk},
-        {"SNEAK", Logic::EventMessages::MovementMessage::WalkMode::Sneak},
-        {"WATER", Logic::EventMessages::MovementMessage::WalkMode::Water},
-        {"SWIM", Logic::EventMessages::MovementMessage::WalkMode::Swim},
-        {"DIVE", Logic::EventMessages::MovementMessage::WalkMode::Dive},
+            {"RUN", Logic::EventMessages::MovementMessage::WalkMode::Run},
+            {"WALK", Logic::EventMessages::MovementMessage::WalkMode::Walk},
+            {"SNEAK", Logic::EventMessages::MovementMessage::WalkMode::Sneak},
+            {"WATER", Logic::EventMessages::MovementMessage::WalkMode::Water},
+            {"SWIM", Logic::EventMessages::MovementMessage::WalkMode::Swim},
+            {"DIVE", Logic::EventMessages::MovementMessage::WalkMode::Dive},
     };
 
     auto& setWalkmode = console.registerCommand("set walkmode", [this, walkModes](const std::vector<std::string>& args) -> std::string {
@@ -332,7 +329,7 @@ void REGoth::initConsole()
 
         WalkMode mode = WalkMode::Run;
 
-        if (walkModes.find(modestr) != walkModes.end())
+        if(walkModes.find(modestr) != walkModes.end())
             mode = walkModes.find(modestr)->second;
         else
             return "Invalid walkmode: " + modestr;
@@ -340,7 +337,7 @@ void REGoth::initConsole()
         auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
         VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_pEngine->getMainWorld().get(), s.getPlayerEntity());
 
-        if (!player.isValid())
+        if(!player.isValid())
             return "No valid player found!";
 
         MovementMessage msg;
@@ -351,6 +348,7 @@ void REGoth::initConsole()
 
         return "Set Walkmode to " + modestr + " (" + std::to_string((int)mode) + ")";
     });
+
 
     std::vector<std::string> walkModeNames;
     for (const auto& pair : walkModes)
@@ -398,7 +396,7 @@ void REGoth::initConsole()
     auto spawnpointNamesGen = [waypointNamesGen, freepointNamesGen]() -> std::vector<Suggestion> {
         auto spawnpoints = waypointNamesGen();
         auto freepoints = freepointNamesGen();
-        spawnpoints.insert(spawnpoints.end(), freepoints.begin(), freepoints.end());
+        spawnpoints.insert(spawnpoints.end(), freepoints.begin(), freepoints.end() );
         return spawnpoints;
     };
 
@@ -440,12 +438,11 @@ void REGoth::initConsole()
         if (!player.isValid())
             return "Error: There is no valid player in the world";
 
-        if (world.doesFreepointExist(freepoint))
+        if(world.doesFreepointExist(freepoint))
         {
             player.playerController->teleportToPosition(world.getFreepointPosition(freepoint));
             return "Player moved to freepoint " + freepoint;
-        }
-        else
+        } else
         {
             return "Error: freepoint " + freepoint + " not found";
         }
@@ -567,7 +564,7 @@ void REGoth::initConsole()
         }
 
         // better do saving at frame end and not between entity updates
-        this->m_pEngine->getJobManager().queueJob([index, saveGameName](Engine::BaseEngine* engine) {
+        this->m_pEngine->getJobManager().queueJob([index, saveGameName](Engine::BaseEngine* engine){
             Engine::SavegameManager::saveToSlot(index, saveGameName);
         });
 
@@ -612,18 +609,6 @@ void REGoth::initConsole()
             Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{parSymbol.name}});
             suggestions.push_back(suggestion);
         });
-        return suggestions;
-    };
-
-    CandidateListGenerator animationNamesGen = [this]() {
-        auto& worldInstance = m_pEngine->getMainWorld().get();
-
-        std::vector<Suggestion> suggestions;
-        for (const auto& aniName : worldInstance.getAnimationAllocator().getAnimationNames())
-        {
-            Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{aniName}});
-            suggestions.push_back(suggestion);
-        }
         return suggestions;
     };
 
@@ -865,63 +850,14 @@ void REGoth::initConsole()
         return "Played sound " + args[1];
     });
 
-    auto& playAnimation = console.registerCommand("playanimation", [this, animationNamesGen, worlddNpcNamesGen](const std::vector<std::string>& args) -> std::string {
-        if (args.size() < 2)
-            return "Missing argument(s). Usage: playanimation <animation> [<npc:default=player>]";
-
-        auto& worldInstance = m_pEngine->getMainWorld().get();
-        auto& scriptEngine = worldInstance.getScriptEngine();
-        auto& datFile = scriptEngine.getVM().getDATFile();
-
-        std::string animationName = args[1];
-        std::string npcName;
-        if (args.size() >= 3)
-        {
-            npcName = args[2];
-        }
-
-        auto suggestions = worlddNpcNamesGen();
-
-        Handle::EntityHandle entityHandle = Handle::EntityHandle::makeInvalidHandle();
-        if (!npcName.empty())
-        {
-            auto baseSuggestion = Logic::Console::findSuggestion(suggestions, npcName);
-            auto suggestion = std::dynamic_pointer_cast<Logic::Console::NPCSuggestion>(baseSuggestion);
-            if (suggestion != nullptr)
-                entityHandle = suggestion->npcHandle;
-        }
-        else
-        {
-            // case: no argument given
-            entityHandle = scriptEngine.getPlayerEntity();
-        }
-        if (entityHandle.isValid())
-        {
-            VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, entityHandle);
-            if (npcVobInfo.isValid())
-            {
-                std::string aniName = animationName.substr(animationName.find('-') + 1);
-                npcVobInfo.playerController->getModelVisual()->setAnimation(aniName);
-                Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
-                const std::string& npcDisplayName = npcScriptObject.name[0];
-                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
-                std::string fullName = npcDisplayName + " (" + npcDatFileName + ")";
-                return "Playing animation " + animationName + " on " + fullName;
-            }
-        }
-        return "Could not find NPC " + npcName;
-    });
-
-    playAnimation.registerAutoComplete(animationNamesGen).registerAutoComplete(worlddNpcNamesGen);
 
     std::vector<std::string> playSoundFiles;
     for (const auto& fileName : m_pEngine->getVDFSIndex().getKnownFiles())
     {
-        if (Utils::endsWith(Utils::lowered(fileName), ".wav"))
-        {
-            playSoundFiles.push_back(fileName);
-            LogInfo() << "FOUND WAV: " << fileName;
-        }
+      if (Utils::endsWith(Utils::lowered(fileName), ".wav"))
+      {
+        playSoundFiles.push_back(fileName);
+      }
     }
 
     playsound.registerAutoComplete(playSoundFiles);
@@ -1138,12 +1074,12 @@ bool REGoth::update()
     // Use debug font to print information about this example.
     bgfx::dbgTextClear();
 
-    if (m_HUDMode >= 2)
-    {
-        uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
-        bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
-        bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
-    }
+        if(m_HUDMode >= 2)
+        {
+            uint16_t xOffset = static_cast<uint16_t>(m_pEngine->getConsole().isOpen() ? 100 : 0);
+            bgfx::dbgTextPrintf(xOffset, 1, 0x4f, "REGoth-Engine (%s)", m_pEngine->getEngineArgs().startupZEN.c_str());
+            bgfx::dbgTextPrintf(xOffset, 2, 0x0f, "Frame: % 7.3f[ms] %.1f[fps]", 1000.0 * dt, 1.0f / (double(dt)));
+        }
 
     // This dummy draw call is here to make sure that view 0 is cleared
     // if no other draw callvm.getDATFile().getSymbolByIndex(self)s are submitted to view 0.
@@ -1155,23 +1091,22 @@ bool REGoth::update()
 
     ddBegin(0);
 
-    m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
-    // Draw and process all UI-Views
-    // Set render states.
+        m_pEngine->frameUpdate(dt, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
+        // Draw and process all UI-Views
+        // Set render states.
 
-    {
-        auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
-        float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
-        if (m_HUDMode == 0)
         {
-            // draw console even if HUD is disabled
-            m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
+            auto& cfg = m_pEngine->getDefaultRenderSystem().getConfig();
+            float gameSpeed = m_pEngine->getGameClock().getGameEngineSpeedFactor();
+            if(m_HUDMode == 0)
+            {
+                // draw console even if HUD is disabled
+                m_pEngine->getHud().getConsoleBox().update(dt * gameSpeed, ms, cfg);
+            } else if(m_HUDMode >= 1)
+            {
+                m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
+            }
         }
-        else if (m_HUDMode >= 1)
-        {
-            m_pEngine->getRootUIView().update(dt * gameSpeed, ms, cfg);
-        }
-    }
 
     // debug draw
     {
@@ -1207,6 +1142,8 @@ bool REGoth::update()
 
     return true;
 }
+
+
 
 void REGoth::showSplash()
 {
