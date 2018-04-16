@@ -70,10 +70,29 @@ namespace Logic
             // whether this command is disabled while no world is loaded
             bool requiresWorld;
 
+            /**
+             * A commands, that requires a world will not be visible/available when no world is loaded
+             */
             Command& setRequiresWorld(bool value)
             {
                 requiresWorld = value;
                 return *this;
+            }
+
+            /**
+             * creates simple suggestion generator from vector of string
+             * @param rows suggestions
+             * @return reference to Command
+             */
+            Command& registerAutoComplete(const std::vector<std::string>& rows)
+            {
+                auto generator = [rows]() {
+                    std::vector<Suggestion> suggestions;
+                    for (auto& row : rows)
+                        suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::move(row)}}));
+                    return suggestions;
+                };
+                return registerAutoComplete(generator);
             }
 
             Command& registerAutoComplete(CandidateListGenerator generator)
@@ -160,7 +179,6 @@ namespace Logic
         const std::list<std::string>& getOutputLines() { return m_Output; }
         const std::string& getTypedLine() { return m_TypedLine; }
         const std::vector<std::vector<Logic::Console::Suggestion>>& getSuggestions() { return m_SuggestionsList; }
-
     private:
         /**
          * clears the suggestion list and sets the current selection index to 0
