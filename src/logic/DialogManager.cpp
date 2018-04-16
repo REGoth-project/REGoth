@@ -330,25 +330,54 @@ void DialogManager::endDialog()
 bool DialogManager::init()
 {
     std::string ou;
-    for (const auto& outFile : {OU_FILE, OU_FILE_2})
+
+    m_ScriptDialogMananger = nullptr;
+
+    // Try to find the file in a VDFS-Archive
+    VDFS::FileIndex& fileIndex = m_World.getEngine()->getVDFSIndex();
+    for (const auto& outFile : {"OU.BIN", "OU.DAT"})
     {
-        ou = Utils::getCaseSensitivePath(outFile, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
-        if (!ou.empty())
-            break;
+      if (fileIndex.hasFile(outFile))
+      {
+        LogInfo() << "Creating script-side dialog-manager from VDFS";
+        m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(),
+                                                                                outFile,
+                                                                                fileIndex,
+                                                                                m_World.getEngine()->getSession().getKnownInfoMap());
+
+        break;
+      }
     }
 
-    if (ou.empty())
+    // Try to use the file from _work-dir
+    if (!m_ScriptDialogMananger)
     {
-        LogError() << "Failed to read OU-file!";
-        return false;
-    }
-    else
-        LogInfo() << "Loading OU-file from: " << ou;
+      for (const auto& outFile : {OU_FILE, OU_FILE_2})
+      {
+          ou = Utils::getCaseSensitivePath(outFile, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
+          if (!ou.empty())
+              break;
+      }
 
-    LogInfo() << "Creating script-side dialog-manager";
-    m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(),
-                                                                            ou,
-                                                                            m_World.getEngine()->getSession().getKnownInfoMap());
+      if (ou.empty())
+      {
+          LogError() << "Failed to read OU-file!";
+          return false;
+      }
+      else
+          LogInfo() << "Loading OU-file from: " << ou;
+
+      LogInfo() << "Creating script-side dialog-manager from _WORK";
+      m_ScriptDialogMananger = new Daedalus::GameState::DaedalusDialogManager(getVM(),
+                                                                              ou,
+                                                                              m_World.getEngine()->getSession().getKnownInfoMap());
+    }
+
+    if (!m_ScriptDialogMananger)
+    {
+      LogError() << "Failed to find OU.BIN/OU.DAT!";
+      return false;
+    }
 
     LogInfo() << "Adding dialog-UI to root view";
     auto createSubtitleBox = [this](Engine::BaseEngine* engine) {
