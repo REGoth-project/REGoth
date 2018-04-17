@@ -158,10 +158,27 @@ void BaseEngine::loadArchives()
       m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
 
-    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
+    // Load addon archives before the default archives and
+    // therefore with a higher priority
+    LogInfo() << "Loading Addon VDF-Archives: ";
     for (std::string& s : vdfArchives)
     {
-        m_FileIndex.loadVDF(s);
+        if (s.find("Addon") != std::string::npos)
+        {
+            LogInfo() << s;
+            m_FileIndex.loadVDF(s);
+        }
+    }
+
+    // Load default archives
+    LogInfo() << "Loading VDF-Archives: ";
+    for (std::string& s : vdfArchives)
+    {
+        if (s.find("Addon") == std::string::npos)
+        {
+            LogInfo() << s;
+            m_FileIndex.loadVDF(s);
+        }
     }
 
     // Happens on modded games
