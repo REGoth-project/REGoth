@@ -67,6 +67,12 @@ matrix:
       before_install:
         - export ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle
       install:
+        - apt-get purge cmake
+        - mkdir /opt
+        - curl -o cmake_install.sh https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh
+        - chmod +x ./cmake_install.sh
+        - ./cmake_install.sh --prefix=/opt/cmake --exclude-subdir --skip-license
+        - export PATH=/opt/bin/:$PATH
         - "yes | sdkmanager ndk-bundle"
         - "yes | sdkmanager \"extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2\""
       script: ./bin/build_android.sh
