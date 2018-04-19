@@ -53,6 +53,7 @@ matrix:
             - automake
             - libtool
             - pkg-config
+            - ninja-build
       android:
         components:
           - tools
