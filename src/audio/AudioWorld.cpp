@@ -115,7 +115,7 @@ namespace World
                 for (const auto& file : Utils::getFilesInDirectory(musicPath)) {
                     const auto lowercaseName = Utils::lowered(Utils::stripFilePath(file));
                     if (lowercaseName == search) {
-                        return Utils::readBinaryFileContents(Utils::getCaseSensitivePath(file));
+                        return Utils::readBinaryFileContents(file);
                     }
                 }
                 return std::vector<std::uint8_t>();
