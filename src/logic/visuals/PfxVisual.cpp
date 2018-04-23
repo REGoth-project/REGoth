@@ -8,7 +8,6 @@
 #include <bx/math.h>
 #include <components/EntityActions.h>
 #include <debugdraw/debugdraw.h>
-#include <engine/AsyncAction.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <logic/PfxManager.h>
@@ -55,7 +54,7 @@ bool Logic::PfxVisual::load(const std::string& visual)
                                                                          Meshes::WorldStaticMeshVertex::ms_decl,  // FIXME: May want to use a smaller one
                                                                          BGFX_BUFFER_ALLOW_RESIZE);
     };
-    Engine::AsyncAction::executeInThread(job, m_World.getEngine(), Engine::ExecutionPolicy::MainThread).wait();
+    m_World.getEngine()->getJobManager().executeInMainThread<void>(job).wait();
 
     getPfxComponent().m_Texture = m_World.getTextureAllocator().loadTextureVDF(m_Emitter.visName);
 
@@ -301,8 +300,21 @@ void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, flo
     p.size += p.sizeVel * deltaTime;
     p.alpha += p.alphaVel * deltaTime;
 
+
+    float alphaFinal;
+
+    if(m_Emitter.visSoftAlpha)
+    {
+      float alphaRatio = (p.alpha - m_Emitter.visAlphaStart) / (m_Emitter.visAlphaEnd - m_Emitter.visAlphaStart);
+      alphaFinal = Math::sinusSmooth(alphaRatio) * p.alpha;
+    }
+    else
+    {
+      alphaFinal = p.alpha; 
+    }
+
     // Compute actual color for this frame
-    float alpha = std::max(0.0f, std::min(1.0f, p.alpha)) * 0.5f;  // FIXME: Hack! * 0.5f is just here because particles would be too bright for some strange reason...
+    alphaFinal = std::max(0.0f, std::min(1.0f, alphaFinal)) * 0.5f;  // FIXME: Hack! * 0.5f is just here because particles would be too bright for some strange reason...
     Math::float3 color = Math::float3(std::max(0.0f, std::min(1.0f, p.color.x)),
                                       std::max(0.0f, std::min(1.0f, p.color.y)),
                                       std::max(0.0f, std::min(1.0f, p.color.z)));
@@ -312,11 +324,11 @@ void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, flo
                                      ? Math::float4(color.x,
                                                     color.y,
                                                     color.z,
-                                                    alpha)
-                                     : Math::float4(color.x * alpha,
-                                                    color.y * alpha,
-                                                    color.z * alpha,
-                                                    alpha);  // Need to modulate color on ADD-mode
+                                                    alphaFinal)
+                                     : Math::float4(color.x * alphaFinal,
+                                                    color.y * alphaFinal,
+                                                    color.z * alphaFinal,
+                                                    alphaFinal);  // Need to modulate color on ADD-mode
 
     p.particleColorU8 = particleColor.toRGBA8();
 

@@ -26,7 +26,7 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        bool onInputAction(EInputAction action) override;
+        bool onInputAction(Engine::ActionType action) override;
 
         /**
          * To be called when there was text input since the last frame

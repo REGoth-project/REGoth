@@ -11,6 +11,7 @@
 #include <logic/scriptExternals/Stubs.h>
 #include <ui/PrintScreenMessages.h>
 #include <utils/logger.h>
+#include <utils/Utils.h>
 
 using namespace Logic;
 
@@ -29,14 +30,28 @@ ScriptEngine::~ScriptEngine()
     delete m_pVM;
 }
 
+bool ScriptEngine::loadDAT(const uint8_t* pDatFile, size_t numBytes)
+{
+  delete m_pVM;
+
+  m_pVM = new Daedalus::DaedalusVM(pDatFile, numBytes);
+
+  return initVMWithLoadedDAT();
+}
+
+
 bool ScriptEngine::loadDAT(const std::string& file)
 {
     delete m_pVM;  // FIXME: Should support merging DATS?
 
-    LogInfo() << "Loading Daedalus compiled script file: " << file;
-
     m_pVM = new Daedalus::DaedalusVM(file);
 
+    return initVMWithLoadedDAT();
+}
+
+
+bool ScriptEngine::initVMWithLoadedDAT()
+{
     // Register externals
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
@@ -210,10 +225,11 @@ void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item,
         //LogInfo() << "Equiping armor... " << itemData.visual_change;
         VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
 
-        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
+        vob.playerController->equipItem(item);
+        //std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
 
         // Only switch the body-armor
-        VobTypes::NPC_SetBodyMesh(vob, visual);
+        //VobTypes::NPC_SetBodyMesh(vob, visual);
     }
 
     if ((itemData.mainflag & (Daedalus::GEngineClasses::C_Item::ITM_CAT_NF | Daedalus::GEngineClasses::C_Item::ITM_CAT_FF)) != 0)

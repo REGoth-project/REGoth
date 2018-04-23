@@ -62,7 +62,7 @@ namespace Logic
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        void onInputAction(UI::EInputAction action);
+        void onInputAction(Engine::ActionType action);
 
         /**
          * calls B_AssessTalk

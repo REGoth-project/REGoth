@@ -14,9 +14,11 @@
 #include "Menu_Status.h"
 #include "PrintScreenMessages.h"
 #include "TextView.h"
+//#include "ItemGrid.h"
+#include "InventoryView.h"
 #include <components/VobClasses.h>
-#include <engine/BaseEngine.h>
 #include <logic/PlayerController.h>
+#include <logic/CameraController.h>
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
 
@@ -40,6 +42,10 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pMenuBackground->setHidden(true);
     m_pMenuBackground->setRelativeSize(false);
 
+    m_pInventoryView = new InventoryView(m_Engine);
+    m_pInventoryView->setHidden(true);
+
+
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
@@ -49,6 +55,7 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     addChild(m_pLoadingScreen);
     addChild(m_pMenuBackground);
     addChild(m_pConsoleBox);
+    addChild(m_pInventoryView);
 
     // Initialize status bars
     {
@@ -102,10 +109,14 @@ UI::Hud::Hud(Engine::BaseEngine& e)
         m_pClock->setTranslation(Math::float2(0.99f, 0.01f));
         m_pClock->setAlignment(A_TopRight);
     }
+
+    setupKeyBindings();
 }
 
 UI::Hud::~Hud()
 {
+    clearKeyBindings();
+
     removeChild(m_pHealthBar);
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
@@ -115,6 +126,7 @@ UI::Hud::~Hud()
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
     removeChild(m_pMenuBackground);
+    removeChild(m_pInventoryView);
 
     popAllMenus();
 
@@ -126,6 +138,7 @@ UI::Hud::~Hud()
     delete m_pClock;
     delete m_pLoadingScreen;
     delete m_pConsoleBox;
+    delete m_pInventoryView;
 }
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
@@ -147,6 +160,15 @@ void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::Rende
     m_pMenuBackground->setHidden(isWorldLoaded || !m_pLoadingScreen->isHidden());
 
     View::update(dt, mstate, config);
+
+    // TODO Camera should not be enabled/disabled every frame.
+    if (isWorldLoaded) {
+        // Deactivate camera controls when menu or dialog is open
+        bool disable = !(isMenuActive()
+                         || m_Engine.getMainWorld().get().getDialogManager().isDialogActive()
+                         || m_Engine.getConsole().isOpen());
+        m_Engine.getMainWorld().get().getCameraController()->setActive(disable);
+    }
 }
 
 void UI::Hud::setHealth(int32_t value, int32_t maxValue)
@@ -177,15 +199,77 @@ void UI::Hud::onTextInput(const std::string& text)
         m_MenuChain.back()->onTextInput(text);
 }
 
-void UI::Hud::onInputAction(UI::EInputAction action)
+void UI::Hud::setupKeyBindings() {
+
+    using Engine::ActionType;
+
+    auto registerAction = [this](ActionType actionType, auto functor){
+        m_HudBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    };
+
+    registerAction(ActionType::UI_Mousewheel, [this](bool triggered, float intensity){
+        if (triggered) {
+            if (intensity == 1.f)
+                onInputAction(ActionType::UI_Up);
+            else if (intensity == -1.f)
+                onInputAction(ActionType::UI_Down);
+        }
+    });
+
+    {
+        std::vector<ActionType> hudActions = {  ActionType::UI_Confirm,
+                                                ActionType::UI_ToggleMainMenu,
+                                                ActionType::UI_Close,
+                                                ActionType::UI_Up,
+                                                ActionType::UI_Down,
+                                                ActionType::UI_Left,
+                                                ActionType::UI_Right,
+                                                ActionType::UI_ToggleConsole,
+                                                ActionType::UI_ToggleLogMenu,
+                                                ActionType::UI_ToggleStatusMenu,
+                                                ActionType::UI_END,
+                                                ActionType::UI_0,
+                                                ActionType::UI_1,
+                                                ActionType::UI_2,
+                                                ActionType::UI_3,
+                                                ActionType::UI_4,
+                                                ActionType::UI_5,
+                                                ActionType::UI_6,
+                                                ActionType::UI_7,
+                                                ActionType::UI_8,
+                                                ActionType::UI_9,
+                                                ActionType::UI_HOME,
+                                                ActionType::UI_Backspace};
+
+        for (auto action : hudActions)
+        {
+            registerAction(action, [this, action](bool triggered, float) {
+                if (triggered) {
+                    onInputAction(action);
+                }
+            });
+        }
+    }
+}
+
+void UI::Hud::clearKeyBindings() {
+    m_HudBindings.clear();
+}
+
+void UI::Hud::onInputAction(Engine::ActionType action)
 {
+    using Engine::ActionType;
+
     if (!m_pLoadingScreen->isHidden())
         return;
 
     if (m_Engine.getConsole().isOpen())
     {
-        if (action == IA_Close || action == IA_ToggleConsole)
+        if (action == ActionType::UI_Close || action == ActionType::UI_ToggleConsole)
+        {
             m_Engine.getConsole().setOpen(false);
+            m_Engine.getSession().enableActionBindings(true);
+        }
         return;
     }
     else if (!m_MenuChain.empty())
@@ -205,14 +289,15 @@ void UI::Hud::onInputAction(UI::EInputAction action)
     // case: Nothing is open right now.
     switch (action)
     {
-        case IA_Close:
+        case ActionType::UI_ToggleMainMenu:
             // Show main-menu
             pushMenu<UI::Menu_Main>();
             return;
-        case IA_ToggleConsole:
+        case ActionType::UI_ToggleConsole:
             m_Engine.getConsole().setOpen(true);
+            m_Engine.getSession().enableActionBindings(false);
             return;
-        case IA_ToggleStatusMenu:
+        case ActionType::UI_ToggleStatusMenu:
         {
             UI::Menu_Status& statsScreen = pushMenu<UI::Menu_Status>();
             // TODO: Refactor move this into menu_status.create/new function?
@@ -222,7 +307,7 @@ void UI::Hud::onInputAction(UI::EInputAction action)
             player.playerController->updateStatusScreen(statsScreen);
             return;
         }
-        case IA_ToggleLogMenu:
+        case ActionType::UI_ToggleLogMenu:
         {
             LogInfo() << "Open log";
             pushMenu<UI::Menu_Log>();

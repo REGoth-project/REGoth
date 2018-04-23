@@ -2,6 +2,7 @@
 #include "Menu.h"
 #include "View.h"
 #include <engine/BaseEngine.h>
+#include <engine/Input.h>
 #include <logic/Console.h>
 
 // HACK: Work around windows.h messing this up with its define
@@ -26,6 +27,7 @@ namespace UI
     class Menu;
     class DialogBox;
     class LoadingScreen;
+    class InventoryView;
 
     class Hud : public View
     {
@@ -64,16 +66,32 @@ namespace UI
         void setDateTimeDisplay(const std::string& timeStr);
 
         /**
+         * Registers all key bindings for the HUD
+         */
+        void setupKeyBindings();
+
+        /**
+         * Un-registers all key bindings for the HUD
+         */
+        void clearKeyBindings();
+
+        /**
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        void onInputAction(EInputAction action);
+        void onInputAction(Engine::ActionType action);
 
         /**
          * To be called when there was text input since the last frame
          * @param text Characters input since the last frame
          */
         void onTextInput(const std::string& text);
+
+        /**
+         * @brief getInventoryView
+         * @return InventoryView
+         */
+        UI::InventoryView& getInventoryView() {return *m_pInventoryView;}
 
         /**
          * @return Console-Box
@@ -143,6 +161,7 @@ namespace UI
         LoadingScreen* m_pLoadingScreen;
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
+        InventoryView* m_pInventoryView;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed
@@ -154,6 +173,11 @@ namespace UI
          * All menus registered here
          */
         std::vector<Menu*> m_RegisteredMenus;
+
+        /**
+         * stored hud key bindings
+         */
+        std::vector<Engine::ManagedActionBinding> m_HudBindings;
     };
 
     template <typename T>

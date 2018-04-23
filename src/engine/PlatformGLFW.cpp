@@ -217,12 +217,24 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerActionContinous, true);
     bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::PlayerAction, false);
     bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::PlayerActionContinous, true);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::PlayerAction, true);
     bindMouseAxis(MouseAxis::CursorX, ActionType::PlayerRotate, true, false);
+
+    // Inventory bindings
+    bindKey(GLFW_KEY_ESCAPE, ActionType::Inventory_Back, false);
+    bindKey(GLFW_KEY_TAB, ActionType::Inventory_Show_Hide, false);
+    bindKey(GLFW_KEY_UP, ActionType::Inventory_Up, false);
+    bindKey(GLFW_KEY_DOWN, ActionType::Inventory_Down, false);
+    bindKey(GLFW_KEY_LEFT, ActionType::Inventory_Left, false);
+    bindKey(GLFW_KEY_RIGHT, ActionType::Inventory_Right, false);
+    bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::Inventory_Use, false);
+    bindKey(GLFW_KEY_LEFT_ALT, ActionType::Inventory_Drop, false);
 
     bindKey(GLFW_KEY_F5, ActionType::Quicksave, false);
     bindKey(GLFW_KEY_F9, ActionType::Quickload, false);
     bindKey(GLFW_KEY_P, ActionType::PauseGame, false);
 
+    bindKey(GLFW_KEY_ESCAPE, ActionType::UI_ToggleMainMenu, false);
     bindKey(GLFW_KEY_ESCAPE, ActionType::UI_Close, false);
     bindKey(GLFW_KEY_UP, ActionType::UI_Up, false);
     bindKey(GLFW_KEY_DOWN, ActionType::UI_Down, false);
@@ -234,6 +246,27 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_D, ActionType::UI_Right, false);
     bindKey(GLFW_KEY_ENTER, ActionType::UI_Confirm, false);
     bindKey(GLFW_KEY_LEFT_CONTROL, ActionType::UI_Confirm, false);
+    bindKey(GLFW_KEY_0, ActionType::UI_0, false);
+    bindKey(GLFW_KEY_1, ActionType::UI_1, false);
+    bindKey(GLFW_KEY_2, ActionType::UI_2, false);
+    bindKey(GLFW_KEY_3, ActionType::UI_3, false);
+    bindKey(GLFW_KEY_4, ActionType::UI_4, false);
+    bindKey(GLFW_KEY_5, ActionType::UI_5, false);
+    bindKey(GLFW_KEY_6, ActionType::UI_6, false);
+    bindKey(GLFW_KEY_7, ActionType::UI_7, false);
+    bindKey(GLFW_KEY_8, ActionType::UI_8, false);
+    bindKey(GLFW_KEY_9, ActionType::UI_9, false);
+    bindKey(GLFW_KEY_F10, ActionType::UI_ToggleConsole, false);
+    bindKey(GLFW_KEY_L, ActionType::UI_ToggleLogMenu, false);
+    bindKey(GLFW_KEY_N, ActionType::UI_ToggleLogMenu, false);
+    bindKey(GLFW_KEY_B, ActionType::UI_ToggleStatusMenu, false);
+    bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_ToggleStatusMenu, false);
+    bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_Backspace, false);
+    bindKey(GLFW_KEY_HOME, ActionType::UI_HOME, false);
+    bindKey(GLFW_KEY_END, ActionType::UI_END, false);
+    bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::UI_Confirm, false);
+    bindMouseButton(GLFW_MOUSE_BUTTON_RIGHT, ActionType::UI_Close, false);
+    bindMouseAxis(MouseAxis::ScrollY, ActionType::UI_Mousewheel, false);
 
     //    // special keys test
     //    bindKey(GLFW_KEY_LEFT_SHIFT, ActionType::PlayerForward, true);

@@ -44,7 +44,7 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        bool onInputAction(EInputAction action) override;
+        bool onInputAction(Engine::ActionType action) override;
 
         /**
          * Creates an instance of this class and appends it to the root UI-View

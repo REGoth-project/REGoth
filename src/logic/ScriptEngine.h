@@ -31,6 +31,7 @@ namespace Logic
          * Loads a compiled script data-file
          */
         bool loadDAT(const std::string& file);
+        bool loadDAT(const uint8_t* pDatFile, size_t numBytes);
 
         /**
          * Initializes for the world with the given name (startup_x, init_x)
@@ -196,6 +197,12 @@ namespace Logic
         void onLogEntryAdded(const std::string& topic, const std::string& entry);
 
     protected:
+
+        /**
+         * Initializes the VM with the current DaedalusVM stored in m_pVM
+         */
+        bool initVMWithLoadedDAT();
+
         /**
          * Starts/stops profiling on the given function-symbol
          */

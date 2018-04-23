@@ -96,32 +96,39 @@ WorldInstance::~WorldInstance()
         VobTypes::Wld_RemoveNpc(*this, player);
     */
 
-    // Destroy all allocated components
-    // Loop because some destructor may create more entities
-    while(getComponentAllocator().getNumObtainedElements() != 0)
-    {
-        auto ents = getComponentAllocator().getDataBundle();
-        Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
-
-        // Need to make a list of all entites because some destructors could remove some entites inside
-        std::vector<Handle::EntityHandle> allEntities;
-        for (size_t i = 0; i < ents.m_NumElements; i++)
+    // Destructor might get called from different thread
+    auto destroyComponents = [this](Engine::BaseEngine* engine){
+        // Destroy all allocated components
+        // Loop because some destructor may create more entities
+        while(getComponentAllocator().getNumObtainedElements() != 0)
         {
-            allEntities.push_back(entityComponents[i].m_ThisEntity);
-        }
+            auto ents = getComponentAllocator().getDataBundle();
+            Components::EntityComponent* entityComponents = std::get<Components::EntityComponent*>(ents.m_Data);
 
-        for (Handle::EntityHandle e : allEntities)
-        {
-            if (isEntityValid(e))
+            // Need to make a list of all entites because some destructors could remove some entites inside
+            std::vector<Handle::EntityHandle> allEntities;
+            for (size_t i = 0; i < ents.m_NumElements; i++)
             {
-                Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
-                    Components::Actions::destroyComponent(v);
-                });
+                allEntities.push_back(entityComponents[i].m_ThisEntity);
+            }
 
-                getComponentAllocator().removeObject(e);
+            for (Handle::EntityHandle e : allEntities)
+            {
+                if (isEntityValid(e))
+                {
+                    Components::Actions::forAllComponents(getComponentAllocator(), e, [&](auto& v) {
+                        Components::Actions::destroyComponent(v);
+                    });
+
+                    getComponentAllocator().removeObject(e);
+                }
             }
         }
-    }
+        // explicitly call destructors (containing bgfx calls) in main-thread
+        m_ClassContents = nullptr;
+        m_Allocators = nullptr;
+    };
+    getEngine()->getJobManager().executeInMainThread<void>(destroyComponents).wait();
 }
 
 bool WorldInstance::init(const std::string& zen,
@@ -148,17 +155,32 @@ bool WorldInstance::init(const std::string& zen,
         LOAD_SECTION_LOADSCRIPTS.p2,
         LOAD_SECTION_LOADSCRIPTS.info);
 
-    // Init daedalus-vm
-    std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
-    std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
+    bool hasScriptsInVDF = m_pEngine->getVDFSIndex().hasFile("GOTHIC.DAT");
 
-    if (Utils::fileExists(datFile))
+    if (hasScriptsInVDF)
     {
-        m_ClassContents->scriptEngine.loadDAT(datFile);
+      LogInfo() << "Loading GOTHIC.DAT from VDFS-Archive!";
+
+      std::vector<uint8_t> datfile;
+      m_pEngine->getVDFSIndex().getFileData("GOTHIC.DAT", datfile);
+
+      m_ClassContents->scriptEngine.loadDAT(datfile.data(), datfile.size());
     }
     else
     {
-        LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
+      LogInfo() << "Loading GOTHIC.DAT from _work-folder!";
+
+      std::string datPath = "/_work/data/Scripts/_compiled/GOTHIC.DAT";
+      std::string datFile = Utils::getCaseSensitivePath(datPath, m_pEngine->getEngineArgs().gameBaseDirectory);
+
+      if (Utils::fileExists(datFile))
+      {
+          m_ClassContents->scriptEngine.loadDAT(datFile);
+      }
+      else
+      {
+          LogError() << "Failed to find GOTHIC.DAT at: " << datFile;
+      }
     }
 
     // Load world
@@ -205,7 +227,7 @@ bool WorldInstance::init(const std::string& zen,
         // Init worldmesh-wrapper
         m_ClassContents->worldMesh.load(packedWorldMesh);
 
-        /*for (auto& sm : packedWorldMesh.subMeshes)
+        for (auto& sm : packedWorldMesh.subMeshes)
         {
             size_t k = 0;
             for (auto& lm : sm.triangleLightmapIndices)
@@ -219,7 +241,7 @@ bool WorldInstance::init(const std::string& zen,
 
                 k++;
             }
-        }*/
+        }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
 

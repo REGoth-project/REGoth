@@ -144,7 +144,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
 
         // find start of token which is currently auto-completed
         std::string strBefore = console.getTypedLine();
-        if (!strBefore.empty() && !isspace(strBefore.back()))
+        if (!strBefore.empty() && !isspace(strBefore.back(), std::locale::classic()))
         {
             auto lastSpaceIt = std::find(strBefore.rbegin(), strBefore.rend(), ' ');
             if (lastSpaceIt == strBefore.rend())

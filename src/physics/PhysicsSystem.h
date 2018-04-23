@@ -45,7 +45,11 @@ namespace Physics
 
         static void clean(CollisionShape& s)
         {
+            auto btTriangleMeshShape = dynamic_cast<btBvhTriangleMeshShape*>(s.collisionShape);
+            btStridingMeshInterface* mesh = btTriangleMeshShape ? btTriangleMeshShape->getMeshInterface() : nullptr;
+            // delete in reverse order of creation
             delete s.collisionShape;
+            delete mesh;
         }
     };
 
@@ -62,7 +66,7 @@ namespace Physics
         Math::float3 hitPosition;
 
         /**
-         * @brief Index of the trianlge the ray has potentially hit
+         * @brief Index of the triangle the ray has potentially hit
          */
         uint32_t hitTriangleIndex;
 

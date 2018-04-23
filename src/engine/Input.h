@@ -67,12 +67,40 @@ namespace Engine
         Quicksave,
         Quickload,
         Escape,
+        UI_Backspace,
         UI_Up,
         UI_Down,
         UI_Close,
         UI_Left,
         UI_Right,
         UI_Confirm,
+        UI_Mousewheel,
+        UI_ToggleConsole,
+        UI_ToggleLogMenu,
+        UI_ToggleStatusMenu,
+        UI_ToggleMainMenu,
+        UI_0,
+        UI_1,
+        UI_2,
+        UI_3,
+        UI_4,
+        UI_5,
+        UI_6,
+        UI_7,
+        UI_8,
+        UI_9,
+        UI_HOME,
+        UI_END,
+
+        Inventory_Back,
+        Inventory_Show_Hide,
+        Inventory_Up,
+        Inventory_Down,
+        Inventory_Left,
+        Inventory_Right,
+        Inventory_Use,
+        Inventory_Drop,
+        Inventory_Alternate,
 
         Count
     };
@@ -204,8 +232,9 @@ namespace Engine
         static std::map<ActionBinding, MouseAxis> actionBindingToMouseAxisMap;
 
         static std::multimap<ActionType, Action> actionTypeToActionMap;
-
+    public: // TODO REMOVE THIS! for debugging only
         static std::bitset<NUM_KEYS> keyState;
+    private:
         static std::bitset<NUM_KEYS> keyTriggered;
         static std::vector<int32_t> modsTriggered;
 

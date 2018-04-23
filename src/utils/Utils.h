@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
+#include <bx/timer.h>
 
 namespace Utils
 {
@@ -615,4 +616,38 @@ namespace Utils
      * @returns pair of filename without extension and extension
      */
     std::pair<std::string, std::string> splitExtension(const std::string& filename);
+
+    class TimeSpan
+    {
+    public:
+        TimeSpan();
+
+        void enter();
+
+        void leave(size_t elapsed);
+
+        size_t getAndReset();
+
+    private:
+        size_t m_elapsed;
+        // for handling nested StopWatches
+        size_t m_depth;
+    };
+
+    /**
+     * Stopwatch, that can be nested analog to recursive_mutex. Overlapping intervals will not be counted more than once
+     */
+    class RecursiveStopWatch
+    {
+    public:
+        RecursiveStopWatch(TimeSpan& timeSpan, bool enabled = true);
+
+        ~RecursiveStopWatch();
+
+    private:
+        TimeSpan& m_TimeSpan;
+        // used to dynamically enable/disable this excluder at runtime
+        int64_t m_Enabled;
+        int64_t m_Start;
+    };
 }

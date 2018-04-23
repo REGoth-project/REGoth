@@ -23,6 +23,7 @@
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
+#include <ui/InventoryView.h>
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
 #include <physics/PhysicsSystem.h>
@@ -296,46 +297,47 @@ void PlayerController::onDebugDraw()
     //     }
     // }
 
-    if (isPlayerControlled())
-    {
-        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
-        Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
+    // Debug print of inventory
+//    if (isPlayerControlled())
+//    {
+//        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
+//        Daedalus::GEngineClasses::C_Npc& scriptnpc = VobTypes::getScriptObject(npc);
 
-        if (!getInventory().getItems().empty())
-        {
-            // Print inventory
-            const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
-            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
+//        if (!getInventory().getItems().empty())
+//        {
+//            // Print inventory
+//            const std::list<Daedalus::GameState::ItemHandle>& items = m_Inventory.getItems();
+//            Daedalus::DATFile& datFile = m_World.getScriptEngine().getVM().getDATFile();
 
-            uint16_t idx = 27;
-            bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
-            for (Daedalus::GameState::ItemHandle i : items)
-            {
-                Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
+//            uint16_t idx = 27;
+//            bgfx::dbgTextPrintf(0, idx++, 0x0f, "Inventory:");
+//            for (Daedalus::GameState::ItemHandle i : items)
+//            {
+//                Daedalus::GEngineClasses::C_Item idata = m_World.getScriptEngine().getGameState().getItem(i);
 
-                std::string displayName;
-                {
-                    if (!idata.description.empty())
-                    {
-                        displayName = idata.description;
-                    }
-                    else if (!idata.name.empty())
-                    {
-                        displayName = idata.name;
-                    }
-                    else
-                    {
-                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
-                    }
-                }
+//                std::string displayName;
+//                {
+//                    if (!idata.description.empty())
+//                    {
+//                        displayName = idata.description;
+//                    }
+//                    else if (!idata.name.empty())
+//                    {
+//                        displayName = idata.name;
+//                    }
+//                    else
+//                    {
+//                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
+//                    }
+//                }
 
-                if (idata.amount > 1)
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]", displayName.c_str(), idata.amount);
-                else
-                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
-            }
-        }
-    }
+//                if (idata.amount > 1)
+//                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s [%d]", displayName.c_str(), idata.amount);
+//                else
+//                    bgfx::dbgTextPrintf(0, idx++, 0x0f, " %s", displayName.c_str());
+//            }
+//        }
+//    }
 }
 
 void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
@@ -354,7 +356,11 @@ void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
     // Put into set of all equipped items first, then differentiate between the item-types
     m_EquipmentState.equippedItemsAll.erase(item);
 
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
+    {
+        node = EModelNode::Torso;
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
         node = EModelNode::Longsword;
 
@@ -439,7 +445,17 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     // Put into set of all equipped items first, then differentiate between the item-types
     m_EquipmentState.equippedItemsAll.insert(item);
 
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
+    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
+    {
+        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
+        //Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, m_Entity);
+        // Only switch the body-armor
+        VobTypes::NPC_SetBodyMesh(vob, visual);
+        //node = EModelNode::Torso;
+        // Nothing else to do, just override current armor
+    }
+    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
     {
         node = EModelNode::Longsword;
 
@@ -1837,18 +1853,28 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
 
     // Food?
-    if ((data.flags & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
+    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FOOD) != 0)
     {
         // Nutrition doesn't seem to be used anywhere...
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
+        // tell caller that the item was consumed and must be deleted from inventory
+        return true;
     }
 
     // Weapon?
-    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    if (    (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0
+         || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
     {
         // FIXME: Hack to only allow equipping when no weapon is drawn
         if (getWeaponMode() == EWeaponMode::WeaponNone)
-            equipItem(item);
+        {
+            //if( m_EquipmentState.equippedItemsAll.find(item) != m_EquipmentState.equippedItemsAll.end() )
+            //    unequipItem(item);
+            //else
+                equipItem(item);
+        }
         return false;
     }
 
@@ -2693,6 +2719,9 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                     else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
                     {
+                        if(m_World.getEngine()->getHud().getInventoryView().getState() != UI::InventoryView::State::Loot)
+                            m_World.getEngine()->getHud().getInventoryView().setState(UI::InventoryView::State::Loot, nearestNPC);
+                        /*
                         // Take all his items
                         auto& inv = npc.playerController->getInventory();
                         for (auto h : inv.getItems())
@@ -2704,6 +2733,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         }
 
                         inv.clear();
+                        */
                     }
 
                     return;
@@ -2727,6 +2757,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     vob.playerController->teleportToWaypoint(targetWP);*/
 
                 // Use item last picked up
+                /*
                 if (!getInventory().getItems().empty())
                 {
                     Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
@@ -2735,7 +2766,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         if (useItem(lastItem))
                             getInventory().removeItem(lastItem);
                     }
-                }
+                }*/
             }
         }
             break;
