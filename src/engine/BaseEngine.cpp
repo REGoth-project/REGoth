@@ -1,6 +1,5 @@
 #include "BaseEngine.h"
 #include <fstream>
-#include "AsyncAction.h"
 #include "World.h"
 #include "audio/AudioEngine.h"
 #include <bx/commandline.h>
@@ -39,17 +38,17 @@ namespace Flags
 }
 
 BaseEngine::BaseEngine()
-    : m_MainThreadID(std::this_thread::get_id())
+    : m_JobManager(this)
     , m_RootUIView(*this)
     , m_Console(*this)
     , m_EngineTextureAlloc(*this)
 {
+    // m_JobManager.setMultiThreading(false); // useful for debugging exceptions from other threads
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
 
     m_BasicGameType = Daedalus::GameType::GT_Gothic2;
     m_Paused = false;
-    m_ExcludedFrameTime = 0;
     // allocate and init default session
     resetSession();
 }
@@ -152,6 +151,13 @@ void BaseEngine::loadArchives()
 
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
 
+    // Load explicit modfile with even higher priority
+    if (!m_Args.modfile.empty())
+    {
+      LogInfo() << "Reading Mod-File from Commandline: " << m_Args.modfile;
+      m_FileIndex.loadVDF(m_Args.modfile, 2);
+    }
+
     LogInfo() << "Loading VDF-Archives: " << vdfArchives;
     for (std::string& s : vdfArchives)
     {
@@ -170,21 +176,27 @@ void BaseEngine::loadArchives()
     // Load mod archives with higher priority
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
 
+    LogInfo() << "Loading MOD-Archives: " << modArchives;
     if (!modArchives.empty())
     {
-        LogInfo() << "Loading MOD-Archives: " << modArchives;
         for (std::string& s : modArchives)
         {
             m_FileIndex.loadVDF(s, 1);
         }
     }
 
-    // Load explicit modfile with even higher priority
-    if (!m_Args.modfile.empty())
-    {
-        m_FileIndex.loadVDF(m_Args.modfile, 2);
-    }
-    
+    // Load zip archives with yet higher priority
+    std::list<std::string> zipArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "zip", false);
+
+    LogInfo() << "Loading ZIP-Archives: " << zipArchives;
+    if (!zipArchives.empty())
+      {
+        for (std::string& s : zipArchives)
+          {
+            m_FileIndex.loadVDF(s, 1);
+          }
+      }
+
     m_FileIndex.finalizeLoad();
 }
 
@@ -233,25 +245,6 @@ void BaseEngine::setPaused(bool paused)
     }
 }
 
-void BaseEngine::processMessageQueue()
-{
-    m_MessageQueueMutex.lock();
-    auto current = m_MessageQueue.begin();
-    while (current != m_MessageQueue.end())
-    {
-        auto& action = *current;
-        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
-        m_MessageQueueMutex.unlock();
-        bool finished = action.run(*this);
-        m_MessageQueueMutex.lock();
-        if (finished)
-            current = m_MessageQueue.erase(current);  // erase returns next iterator
-        else
-            std::advance(current, 1);
-    }
-    m_MessageQueueMutex.unlock();
-}
-
 void BaseEngine::resetSession()
 {
     // the order is important: first destroy old session
@@ -270,32 +263,8 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
+JobManager& BaseEngine::getJobManager()
 {
-    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
-        job(engine);
-        return true;
-    };
-    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
+    return m_JobManager;
 }
 
-void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
-{
-    if (!forceQueue && isMainThread())
-    {
-        // execute right away
-        bool success = job(this);
-        if (success)
-            return;
-        // else job returned false -> queue the job
-    }
-    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-    m_MessageQueue.emplace_back(AsyncAction{job});
-}
-
-bool BaseEngine::isMainThread()
-{
-    return std::this_thread::get_id() == m_MainThreadID;
-}
-
-size_t ExcludeFrameTime::m_ReferenceCounter = 0;

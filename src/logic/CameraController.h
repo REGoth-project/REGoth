@@ -116,12 +116,17 @@ namespace Logic
         void setCameraMode(ECameraMode mode);
 
         /**
+         * Returns current camera mode
+         * @return ECameraMode camera mode
+         */
+        ECameraMode getCameraMode() {
+         return m_CameraMode;
+        }
+
+        /**
          * @brief Sets whether this controller should read input
          */
-        void setActive(bool active)
-        {
-            m_Active = active;
-        }
+        void setActive(bool active);
 
         /**
          * Sets the entity to follow in the first/third person camera modes
@@ -197,11 +202,22 @@ namespace Logic
         std::pair<Math::float3, Math::float3> getDirectionVectors(float yaw, float pitch);
 
         /**
+         * Enables/Disables key bindings for firstPerson and thirdPerson camera mode
+         * @param enable
+         */
+        void enableActions(bool enable);
+
+        /**
+         * Enables key bindings for given mode, disables for other modes
+         * @param mode determines what keybindings are enabled
+         */
+        void switchModeActions(ECameraMode mode);
+
+        /**
          * Whether this controller should read player input
          */
         bool m_Active;
 
-        void disableActions();
 
         /**
          * How the camera should behave regarding the followed entity

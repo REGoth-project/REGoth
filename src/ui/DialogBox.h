@@ -50,7 +50,7 @@ namespace UI
          * To be called when one of the given actions were triggered
          * @param action Input action
          */
-        void onInputAction(EInputAction action);
+        void onInputAction(Engine::ActionType action);
 
     private:
         /**

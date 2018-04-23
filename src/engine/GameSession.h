@@ -144,8 +144,14 @@ namespace Engine
 
         /**
          * Enables/Disables bindings that control the player
+         * @param respectCameraMode if true, will only set bindings if camera mode is not ECameramode::Free
          */
-        void enablePlayerBindings(bool enabled);
+        void enablePlayerBindings(bool enabled, bool respectCameraMode = false);
+
+        /**
+         * Enables/Disables bindings for session control (save/load/pause/...)
+         */
+        void enableActionBindings(bool enabled);
 
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;

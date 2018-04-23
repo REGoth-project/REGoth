@@ -104,7 +104,7 @@ namespace ViewUtil
 View::View(Engine::BaseEngine& e)
     : m_Engine(e)
 {
-    assert(e.isMainThread());
+    assert(e.getJobManager().isSameThread());
     m_IsHidden = false;
     m_pParent = nullptr;
 

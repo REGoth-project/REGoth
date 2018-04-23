@@ -2,6 +2,7 @@
 #pragma once
 #include <cctype>
 #include <algorithm>
+#include <locale>
 
 namespace NaturalCompare
 {
@@ -45,7 +46,7 @@ namespace NaturalCompare
         bool firstIsDigit = begin != end && std::isdigit(*begin);
         // finds first not of digit/non-digit
         auto groupEnd = std::find_if(begin, end, [firstIsDigit](const auto& value) -> bool {
-            return firstIsDigit ^ std::isdigit(value);
+            return firstIsDigit != std::isdigit(value, std::locale::classic());
         });
         return {begin, groupEnd, firstIsDigit};
     }
