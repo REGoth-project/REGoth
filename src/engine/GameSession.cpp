@@ -12,6 +12,7 @@
 #include <logic/ScriptEngine.h>
 #include <logic/DialogManager.h>
 #include <logic/CameraController.h>
+#include <logic/MusicController.h>
 
 using namespace Engine;
 
@@ -20,6 +21,7 @@ GameSession::GameSession(BaseEngine& engine)
 {
     m_CurrentSlotIndex = -1;
     setupKeyBindings();
+    Logic::MusicController::disableDebugDraw();
 }
 
 GameSession::~GameSession()

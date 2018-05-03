@@ -331,6 +331,15 @@ Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::strin
     return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
 }
 
+Daedalus::GameState::MusicThemeHandle ScriptEngine::getMusicThemeFromSymbol(const std::string& symName) {
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if (sym.instanceDataClass != Daedalus::IC_MusicTheme)
+        return Daedalus::GameState::MusicThemeHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::MusicThemeHandle>(sym.instanceDataHandle);
+}
+
 void ScriptEngine::registerItem(Handle::EntityHandle e)
 {
     m_WorldItems.insert(e);

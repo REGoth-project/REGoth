@@ -45,6 +45,15 @@ matrix:
     - os: linux
       language: android
       env: PLATFORM=android
+      addons:
+        apt:
+          packages:
+            - autogen
+            - autoconf
+            - automake
+            - libtool
+            - pkg-config
+            - ninja-build
       android:
         components:
           - tools
@@ -55,7 +64,14 @@ matrix:
           - android-21
         licenses:
           - '.+'
+      before_install:
+        - export ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle
       install:
+        - sudo apt-get purge cmake
+        - curl -o cmake_install.sh https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh
+        - sudo chmod +x ./cmake_install.sh
+        - sudo ./cmake_install.sh --prefix=/opt/ --exclude-subdir --skip-license
+        - export PATH=/opt/bin/:$PATH
         - "yes | sdkmanager ndk-bundle"
         - "yes | sdkmanager \"extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2\""
       script: ./bin/build_android.sh
@@ -63,5 +79,8 @@ matrix:
     - os: osx
       env: PLATFORM=osx
       compiler: clang
+      before_install:
+        - brew update
+        - brew install libsndfile
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh

@@ -12,6 +12,7 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <cstdint>
 #include <stdlib.h>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
@@ -422,6 +423,13 @@ namespace Utils
      * @return contents of the given textfile
      */
     std::string readFileContents(const std::string& file);
+
+    /**
+    * Reads the whole contents of a binary file into a buffer
+    * @param file File to read
+    * @return contents of the given binary file
+    */
+    std::vector<std::uint8_t> readBinaryFileContents(const std::string& file);
 
     /**
      * @return Size of the given file in bytes. 0 is not found or emtpy.

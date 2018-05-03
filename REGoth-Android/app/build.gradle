@@ -3,23 +3,20 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 21
     buildToolsVersion '25.0.0'
+    flavorDimensions "tier"
 
     productFlavors {
-        /*x86 {
-            ndk {
-                abiFilters "x86"
-            }
-        }*/
         arm {
             ndk {
                 abiFilters "armeabi-v7a"
+                dimension "tier"
             }
         }
     }
 
     defaultConfig {
         applicationId "com.regothproject.regoth"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
