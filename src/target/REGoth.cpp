@@ -17,6 +17,7 @@
 #include <logic/Console.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
+#include <logic/MusicController.h>
 #include <logic/SavegameManager.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
@@ -995,6 +996,35 @@ void REGoth::initConsole()
 
     console.registerCommand("giveitem", giveitemCallback).registerAutoComplete(itemNamesGen);
     console.registerCommand("removeitem", removeitemCallback).registerAutoComplete(itemNamesGen);
+
+    console.registerCommand("playsegment", [this](const auto& args) -> std::string {
+        if (args.size() < 2)
+            return "Usage: playsegment [segmentname]";
+
+        auto& world = m_pEngine->getMainWorld().get().getAudioWorld();
+        if (world.playSegment(args[1]))
+        {
+            return "Segment enqueued";
+        }
+        else
+        {
+            return "Couldn't find segment";
+        }
+    }).registerAutoComplete([this]() {
+        std::vector<Suggestion> suggestions;
+        for (const auto& suggestion : this->m_pEngine->getMainWorld().get().getAudioWorld().getLoadedSegments())
+        {
+            std::vector<std::string> s;
+            s.push_back(suggestion);
+            suggestions.push_back(std::make_shared<SuggestionBase>(s));
+        }
+        return suggestions;
+    });
+
+    console.registerCommand("togglemusiczonedraw", [this](const auto& args) -> std::string {
+        Logic::MusicController::toggleDebugDraw();
+        return "Ok";
+    });
 }
 
 int REGoth::shutdown()
