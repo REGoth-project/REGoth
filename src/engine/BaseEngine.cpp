@@ -160,14 +160,6 @@ void BaseEngine::loadArchives()
     for (std::string& s : vdfArchives)
         m_FileIndex.loadVDF(s);
 
-    // Happens on modded games
-    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
-    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
-    for (std::string& s : vdfArchivesDisabled)
-    {
-        m_FileIndex.loadVDF(s);
-    }
-
     m_FileIndex.finalizeLoad();
 }
 
