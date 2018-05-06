@@ -151,6 +151,7 @@ namespace Logic
          */
         Daedalus::GameState::NpcHandle getNPCFromSymbol(const std::string& symName);
         Daedalus::GameState::ItemHandle getItemFromSymbol(const std::string& symName);
+        Daedalus::GameState::MusicThemeHandle getMusicThemeFromSymbol(const std::string& symName);
 
         /**
          * (Un)Registers an item-instance currently sitting inside the world

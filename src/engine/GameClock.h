@@ -148,6 +148,11 @@ namespace Engine
             return m_TotalSecondsRunning;
         }
 
+        /**
+         * @return Whether the clock is between 6:30 and 18:30
+         */
+        bool isDaytime() const;
+
         static constexpr unsigned int SECONDS_IN_A_DAY = 24 * 60 * 60;
 
         // Defines how much faster the ingame clock runs compared to the real time clock. Don't change this value

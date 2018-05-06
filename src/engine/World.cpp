@@ -18,6 +18,7 @@
 #include <logic/MobController.h>
 #include <logic/PlayerController.h>
 #include <logic/SoundController.h>
+#include <logic/MusicController.h>
 #include <ui/Hud.h>
 #include <ui/LoadingScreen.h>
 #include <ui/PrintScreenMessages.h>
@@ -82,6 +83,7 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     , m_Allocators(std::make_unique<WorldAllocators>(engine))
     , m_ClassContents(std::make_unique<ClassContents>(*this))
 {
+    Logic::MusicController::resetDefaults();
 }
 
 WorldInstance::~WorldInstance()
@@ -336,6 +338,7 @@ bool WorldInstance::init(const std::string& zen,
                 // Check for special vobs // FIXME: Should be somewhere else
                 Vob::VobInformation vob;
                 Handle::EntityHandle e;
+
                 if (v.objectClass == "oCItem:zCVob")
                 {
                     // Get item instance
@@ -368,6 +371,22 @@ bool WorldInstance::init(const std::string& zen,
                     snd.soundController->initFromVobDescriptor(v);
 
                     vob = Vob::asVob(*this, e);
+                }
+                else if (v.objectClass == "oCZoneMusic:zCVob")
+                {
+                    e = VobTypes::createMusic(*this);
+
+                    VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
+                    mus.musicController->initFromVobDescriptor(v);
+
+                    vob = Vob::asVob(*this, e);
+                }
+                else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
+                {
+                    std::string zoneName = v.vobName.substr(v.vobName.find('_') + 1);
+                    Logic::MusicController::setDefaultZone(zoneName);
+
+                    LogInfo() << "Found default music zone: " << v.vobName;
                 }
                 else
                 {
@@ -726,6 +745,11 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         Math::float3 fpPosition = getEntity<Components::PositionComponent>(fp.second).m_WorldMatrix.Translation();
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
     }*/
+
+    if (!Logic::MusicController::isMusicPlaying())
+    {
+        Logic::MusicController::playDefaultMusic(*this);
+    }
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
