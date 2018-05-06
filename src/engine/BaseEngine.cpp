@@ -149,8 +149,6 @@ void BaseEngine::loadArchives()
 	m_FileIndex.loadVDF("vdf/g1/textures.VDF");
 	m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
 
-    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
-
     // Load explicit modfile with even higher priority
     if (!m_Args.modfile.empty())
     {
@@ -158,28 +156,13 @@ void BaseEngine::loadArchives()
       m_FileIndex.loadVDF(m_Args.modfile, 2);
     }
 
-    // Load addon archives before the default archives and
-    // therefore with a higher priority
-    LogInfo() << "Loading Addon VDF-Archives: ";
+    // Load vdf archives
+    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
+    vdfArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
     for (std::string& s : vdfArchives)
-    {
-        if (s.find("Addon") != std::string::npos)
-        {
-            LogInfo() << s;
-            m_FileIndex.loadVDF(s);
-        }
-    }
-
-    // Load default archives
-    LogInfo() << "Loading VDF-Archives: ";
-    for (std::string& s : vdfArchives)
-    {
-        if (s.find("Addon") == std::string::npos)
-        {
-            LogInfo() << s;
-            m_FileIndex.loadVDF(s);
-        }
-    }
+        m_FileIndex.loadVDF(s);
 
     // Happens on modded games
     std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
