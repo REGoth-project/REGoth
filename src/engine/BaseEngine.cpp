@@ -35,6 +35,8 @@ namespace Flags
     Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
+
+    Cli::Flag noTextureFiltering("nf", "disable-filtering", 0, "Disables texture filtering");
 }
 
 BaseEngine::BaseEngine()
@@ -111,6 +113,8 @@ void BaseEngine::initEngine(int argc, char** argv)
     std::string snd_device;
     if (Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
+
+    m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
 
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 
