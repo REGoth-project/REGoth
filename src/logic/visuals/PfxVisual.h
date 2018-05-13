@@ -41,12 +41,23 @@ namespace Logic
          * Returns whether pfx visual is finished and can be removed (one shot)
          */
         bool canBeRemoved(){return m_canBeRemoved;};
+
         /**
         * Returns whether pfx visual is dead (doesn't spawn new particles)
         */
         bool isDead(){return m_dead;};
 
+        /**
+         * @brief Called when something else modified the transform of the underlaying entity
+         */
+        void onTransformChanged() override;
+
     private:
+        /**
+         * Updates all render-object transforms
+         */
+        void updateRenderObjectTransforms();
+
         /**
          * Spawns a single particle after the rules of the emitter
          */
@@ -104,5 +115,10 @@ namespace Logic
          * BBox around the particles
          */
         Utils::BBox3D m_BBox;
+
+        /**
+         * Renderhandle of the particlesystem (which is basically a dynamic vertex buffer)
+         */
+        Handle::RenderHandle m_MainRenderHandle;
     };
 }
