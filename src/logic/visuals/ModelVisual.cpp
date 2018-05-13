@@ -11,6 +11,7 @@
 #include <zenload/zCModelMeshLib.h>
 #include <content/AnimationAllocator.h>
 #include <components/AnimHandler.h>
+#include <render/Render.h>
 
 using namespace Logic;
 
@@ -434,6 +435,18 @@ void ModelVisual::onTransformChanged()
 
     // Update attachments with the last state of the animation-handler
     updateAttachmentTransforms();
+    updateRenderObjectTransforms();
+}
+
+void ModelVisual::updateRenderObjectTransforms()
+{
+    Math::Matrix transform = getEntityTransform();
+
+    if(m_MainRenderHandle.isValid())
+    {
+        // Set all created visuals to the same transform as our entity
+        Render::setTransformOn(m_MainRenderHandle, transform);
+    }
 }
 
 Handle::EntityHandle ModelVisual::setNodeVisual(const std::string& visual, const std::string& nodeName)
@@ -764,3 +777,5 @@ bool ModelVisual::isAnimPlaying(const std::string& name)
 {
     return getAnimationHandler().getActiveAnimationPtr() && getAnimationHandler().getActiveAnimationPtr()->m_Name == name;
 }
+
+

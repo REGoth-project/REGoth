@@ -67,10 +67,25 @@ namespace Logic
          */
         void setShadowValue(float shadow) override;
 
+        /**
+         * @brief Called when something else modified the transform of the underlaying entity
+         */
+        void onTransformChanged() override;
+
     protected:
+        /**
+         * Updates all render-object transforms
+         */
+        void updateRenderObjectTransforms();
+
         /**
          * Mesh this is using
          */
         Handle::MeshHandle m_MeshHandle;
+
+        /**
+         * Renderhandles for each submesh
+         */
+        std::vector<Handle::RenderHandle> m_SubmeshesRenderHandles;
     };
 }
