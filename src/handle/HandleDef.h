@@ -27,6 +27,7 @@ namespace Handle
     typedef Memory::GenericHandle<16, 16, 11> PhysicsObjectHandle;
     typedef Memory::GenericHandle<16, 16, 11> CollisionShapeHandle;  // TODO: Should not be the same as PhysicsObjectHandle
     typedef Memory::GenericHandle<16, 16, 12> SfxHandle;
+    typedef Memory::GenericHandle<16, 16, 13> RenderHandle;
     typedef PtrHandle<World::WorldInstance> WorldHandle;
 
     // Internal handle-types (API specific)
