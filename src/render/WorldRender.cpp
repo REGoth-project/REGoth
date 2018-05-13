@@ -12,6 +12,7 @@
 #include <logic/Controller.h>
 #include <content/Sky.h>
 #include "SkyRendering.h"
+#include "Render.h"
 #include <content/SkeletalMeshAllocator.h>
 #include <content/StaticMeshAllocator.h>
 #include <components/AnimHandler.h>
@@ -136,6 +137,9 @@ namespace Render
             k.instances.clear();
             k.entityKinds.clear();
         }
+
+        Render::draw();
+        return;
 
         size_t numDrawcalls = 0;
         size_t numIndices = 0;
