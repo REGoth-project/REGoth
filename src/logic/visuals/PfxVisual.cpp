@@ -11,6 +11,7 @@
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
 #include <logic/PfxManager.h>
+#include <render/Render.h>
 
 Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle entity)
     : VisualController(world, entity)
@@ -345,4 +346,22 @@ void Logic::PfxVisual::updateBBoxForParticle(Components::PfxComponent::Particle&
     m_BBox.max.x = std::max(m_BBox.max.x, p.position.x + sizeMax);
     m_BBox.max.y = std::max(m_BBox.max.y, p.position.y + sizeMax);
     m_BBox.max.z = std::max(m_BBox.max.z, p.position.z + sizeMax);
+}
+
+void Logic::PfxVisual::onTransformChanged()
+{
+    VisualController::onTransformChanged();
+
+    updateRenderObjectTransforms();
+}
+
+void Logic::PfxVisual::updateRenderObjectTransforms()
+{
+    Math::Matrix transform = getEntityTransform();
+
+    if(m_MainRenderHandle.isValid())
+    {
+        // Set all created visuals to the same transform as our entity
+        Render::setTransformOn(m_MainRenderHandle, transform);
+    }
 }

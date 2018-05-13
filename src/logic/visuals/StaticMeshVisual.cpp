@@ -6,6 +6,7 @@
 #include <engine/World.h>
 #include <utils/logger.h>
 #include <physics/PhysicsSystem.h>
+#include <render/Render.h>
 
 using namespace Logic;
 
@@ -56,6 +57,14 @@ bool StaticMeshVisual::load(const std::string& visual)
     }
 
     updateCollision();
+
+    for(const auto& submesh : mdata.mesh.m_SubmeshMaterials)
+    {
+        Handle::RenderHandle h = Render::addRenderObject(Render::ERenderClass::StaticMesh);
+
+        if(h.isValid())
+            m_SubmeshesRenderHandles.push_back(h);
+    }
 
     return true;
 }
@@ -180,4 +189,20 @@ void StaticMeshVisual::setInstancingEnabled(bool value)
 
         sm.m_InstanceDataIndex = value ? (uint32_t)-1 : (uint32_t)-2;
     }
+}
+
+void StaticMeshVisual::onTransformChanged()
+{
+    VisualController::onTransformChanged();
+
+    updateRenderObjectTransforms();
+}
+
+void StaticMeshVisual::updateRenderObjectTransforms()
+{
+    Math::Matrix transform = getEntityTransform();
+
+    // Set all created visuals to the same transform as our entity
+    for (Handle::RenderHandle h : m_SubmeshesRenderHandles)
+        Render::setTransformOn(h, transform);
 }

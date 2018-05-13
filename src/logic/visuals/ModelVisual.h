@@ -267,6 +267,12 @@ namespace Logic
         bool isAnimPlaying(const std::string& name);
 
     protected:
+
+        /**
+         * Updates all render-object transforms
+         */
+        void updateRenderObjectTransforms();
+
         /**
          * Replaces the current body mesh of this model from the current body-state
          */
@@ -291,6 +297,11 @@ namespace Logic
          * Handle to the main-mesh and it's skeleton information
          */
         Handle::MeshHandle m_MainMeshHandle;
+
+        /**
+         * Renderhandle of the main skeletal mesh (which has no submeshes)
+         */
+        Handle::RenderHandle m_MainRenderHandle;
 
         /**
          * Vectors of the entities created for the different parts of a model
