@@ -85,6 +85,12 @@ void StaticMeshVisual::setDiffuseTexture(size_t index, const std::string& textur
 {
     assert(index < m_VisualEntities.size());
 
+    Render::Content::MeshMaterial material;
+    material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
+                                                       m_World.getTextureAllocator().loadTextureVDF(texture));
+    Render::setMeshMaterialOn(m_SubmeshesRenderHandles[index], material);
+
+    // TODO: Remove old rendering code
     Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(m_VisualEntities[index]);
 
     Handle::TextureHandle tx = m_World.getTextureAllocator().loadTextureVDF(m_World.getEngine()->getVDFSIndex(), texture);
@@ -98,6 +104,7 @@ void StaticMeshVisual::setDiffuseTexture(size_t index, const std::string& textur
 
 std::string StaticMeshVisual::getDiffuseTexture(size_t index)
 {
+    // TODO: Implement for new rendering code
     Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(m_VisualEntities[index]);
 
     if (sm.m_Texture.isValid())
