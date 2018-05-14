@@ -86,6 +86,6 @@ namespace Logic
         /**
          * Renderhandles for each submesh
          */
-        std::vector<Handle::RenderHandle> m_SubmeshesRenderHandles;
+        std::vector<Handle::StaticMeshRenderHandle> m_SubmeshesRenderHandles;
     };
 }

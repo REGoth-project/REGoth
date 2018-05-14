@@ -5,6 +5,7 @@
 #pragma once
 
 #include <math/mathlib.h>
+#include <handle/HandleDef.h>
 
 namespace RenderObject
 {
@@ -16,22 +17,30 @@ namespace RenderObject
         std::string debugTag; // ie. file this was loaded from
     };
 
-    struct StaticMesh : Base
+    struct StaticMesh
+            : Base,
+              public Handle::HandleTypeDescriptor<Handle::StaticMeshRenderHandle>
     {
 
     };
 
-    struct PointLight : Base
+    struct PointLight
+            : Base,
+              public Handle::HandleTypeDescriptor<Handle::PointLightRenderHandle>
     {
 
     };
 
-    struct SkeletalMesh : Base
+    struct SkeletalMesh
+            : Base,
+              public Handle::HandleTypeDescriptor<Handle::SkeletalMeshRenderHandle>
     {
 
     };
 
-    struct ParticleEffect : Base
+    struct ParticleEffect
+            : Base,
+              public Handle::HandleTypeDescriptor<Handle::ParticleSystemRenderHandle>
     {
 
     };

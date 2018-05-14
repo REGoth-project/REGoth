@@ -92,6 +92,6 @@ namespace Logic
         /**
          * Renderhandle of the particlesystem (which is basically a dynamic vertex buffer)
          */
-        Handle::RenderHandle m_MainRenderHandle;
+        Handle::ParticleSystemRenderHandle m_MainRenderHandle;
     };
 }
