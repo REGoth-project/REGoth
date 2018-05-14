@@ -133,6 +133,8 @@ void GameEngine::drawFrame(uint16_t width, uint16_t height)
     m_DefaultRenderSystem.getConfig().state.viewHeight = height;
     m_DefaultRenderSystem.getConfig().state.viewProj = Math::Matrix(proj) * view;
 
+    buildFrustumPlanes(m_DefaultRenderSystem.getConfig().state.frustumPlanes,
+                       m_DefaultRenderSystem.getConfig().state.viewProj.mv);
 
     bgfx::touch(0);
 
