@@ -24,7 +24,7 @@ namespace Render
             Handle::TextureHandle handle;
             std::string debugTag; // ie. file-name
 
-            tl::optional<Textures::Texture &> get()
+            tl::optional<Textures::Texture &> get() const
             {
                 if (handle.isValid())
                 {
@@ -41,9 +41,16 @@ namespace Render
 
         struct MeshMaterial
         {
+            MeshMaterial()
+            {
+                diffusePanningSpeed = { 0.0f, 0.0f };
+            }
+
             tl::optional<Texture> diffuseTexture;
             tl::optional<Texture> lightmapTexture;
             Math::float2 diffusePanningSpeed;
+
+            void bind() const;
         };
     }
 };
