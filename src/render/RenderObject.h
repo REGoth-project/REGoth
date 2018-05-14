@@ -6,54 +6,63 @@
 
 #include <math/mathlib.h>
 #include <handle/HandleDef.h>
+#include "Material.h"
+#include "Mesh.h"
 
-namespace RenderObject
+namespace Render
 {
-    struct Base
-    {
-        Math::Matrix transform;
-        bool isHidden;
-        bool showLocator;
-        std::string debugTag; // ie. file this was loaded from
-    };
-
-    struct StaticMesh
-            : Base,
-              public Handle::HandleTypeDescriptor<Handle::StaticMeshRenderHandle>
+    namespace RenderObject
     {
 
-    };
+        struct Base {
+            Math::Matrix transform;
+            bool isHidden;
+            bool showLocator;
+            std::string debugTag; // ie. file this was loaded from
+        };
 
-    struct PointLight
-            : Base,
-              public Handle::HandleTypeDescriptor<Handle::PointLightRenderHandle>
-    {
+        struct StaticMesh
+                : Base,
+                  public Handle::HandleTypeDescriptor<Handle::StaticMeshRenderHandle>
+        {
+            tl::optional<Content::MeshMaterial> material;
+            tl::optional<Content::StaticMesh> mesh;
+        };
 
-    };
+        struct PointLight
+                : Base,
+                  public Handle::HandleTypeDescriptor<Handle::PointLightRenderHandle>
+        {
 
-    struct SkeletalMesh
-            : Base,
-              public Handle::HandleTypeDescriptor<Handle::SkeletalMeshRenderHandle>
-    {
+        };
 
-    };
+        struct SkeletalMesh
+                : Base,
+                  public Handle::HandleTypeDescriptor<Handle::SkeletalMeshRenderHandle>
+        {
+            tl::optional<Content::MeshMaterial> material;
+        };
 
-    struct ParticleEffect
-            : Base,
-              public Handle::HandleTypeDescriptor<Handle::ParticleSystemRenderHandle>
-    {
+        struct ParticleEffect
+                : Base,
+                  public Handle::HandleTypeDescriptor<Handle::ParticleSystemRenderHandle>
+        {
 
-    };
+        };
 
-    void draw(const StaticMesh& renderObject);
-    void draw(const PointLight& renderObject);
-    void draw(const SkeletalMesh& renderObject);
-    void draw(const ParticleEffect& renderObject);
+        void draw(const StaticMesh &renderObject);
 
-    /**
-     * Dummy, for non-implemented types
-     */
-    void draw(const Base& renderObject);
+        void draw(const PointLight &renderObject);
+
+        void draw(const SkeletalMesh &renderObject);
+
+        void draw(const ParticleEffect &renderObject);
+
+        /**
+         * Dummy, for non-implemented types
+         */
+        void draw(const Base &renderObject);
+    }
 }
 
 

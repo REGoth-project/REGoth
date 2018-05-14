@@ -5,6 +5,7 @@
 #include "RenderObject.h"
 #include "RenderUtils.h"
 
+using namespace Render;
 using namespace RenderObject;
 
 void RenderObject::draw(const StaticMesh& renderObject)
