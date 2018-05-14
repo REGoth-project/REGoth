@@ -210,7 +210,7 @@ file(GLOB ENGINE_SRC
         "src/logic/mobs/*.h"
         )
 
-add_library(engine STATIC ${ENGINE_SRC})
+add_library(engine STATIC ${ENGINE_SRC} src/render/Material.cpp src/render/Material.h src/render/Mesh.cpp src/render/Mesh.h)
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
@@ -295,6 +295,7 @@ include_directories(lib/ZenLib)
 include_directories(lib/glm)
 include_directories(lib/tinydir)
 include_directories(lib/json)
+include_directories(lib/optional/tl)
 include_directories(lib/CAB-Installer-Extractor/include)
 
 if(NOT ANDROID)
