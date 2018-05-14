@@ -301,7 +301,7 @@ namespace Logic
         /**
          * Renderhandle of the main skeletal mesh (which has no submeshes)
          */
-        Handle::RenderHandle m_MainRenderHandle;
+        Handle::SkeletalMeshRenderHandle m_MainRenderHandle;
 
         /**
          * Vectors of the entities created for the different parts of a model
