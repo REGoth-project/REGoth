@@ -206,22 +206,26 @@ void Render::draw()
 
     for(size_t i = 0; i < Allocators::staticMeshes.getNumObtainedElements(); i++)
     {
-        RenderObject::draw(pStaticMeshes[i]);
+        if(RenderObject::isVisible(pStaticMeshes[i]))
+            RenderObject::draw(pStaticMeshes[i]);
     }
 
     for(size_t i = 0; i < Allocators::skeletalMeshes.getNumObtainedElements(); i++)
     {
-        RenderObject::draw(pSkeletalMeshes[i]);
+        if(RenderObject::isVisible(pSkeletalMeshes[i]))
+            RenderObject::draw(pSkeletalMeshes[i]);
     }
 
     for(size_t i = 0; i < Allocators::particleSystems.getNumObtainedElements(); i++)
     {
-        RenderObject::draw(pParticleEffects[i]);
+        if(RenderObject::isVisible(pParticleEffects[i]))
+            RenderObject::draw(pParticleEffects[i]);
     }
 
     for(size_t i = 0; i < Allocators::pointLights.getNumObtainedElements(); i++)
     {
-        RenderObject::draw(pPointLights[i]);
+        if(RenderObject::isVisible(pPointLights[i]))
+            RenderObject::draw(pPointLights[i]);
     }
 }
 
@@ -237,6 +241,10 @@ void Render::setMeshMaterialOn(Handle::StaticMeshRenderHandle obj, const Content
 
 void Render::setMeshOn(Handle::StaticMeshRenderHandle obj, const Content::StaticMesh &mesh)
 {
+    if(!mesh.get())
+        return;
+
     Allocators::staticMeshes.getElement(obj).mesh = mesh;
+    Allocators::staticMeshes.getElement(obj).boundingRadius = mesh.get()->boundingSphereRadius;
 }
 

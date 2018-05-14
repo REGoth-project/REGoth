@@ -7,13 +7,26 @@
 #include "ViewList.h"
 #include "RenderSystem.h"
 #include "Render.h"
+#include <bounds.h>
 
 using namespace Render;
 using namespace RenderObject;
 
+enum class ECameraClipType
+{
+    In,
+    Out,
+    Crossing
+};
+
+static ECameraClipType frustrumContainsSphere(const Plane* frustumPlanes, const Math::float3& sphereCenter, float sphereRadius);
+static bool isRenderObjectInFrustum(const Base& renderObject);
+static bool isRenderObjectVisibleByDistance(const Base& renderObject);
+
 void RenderObject::draw(const StaticMesh& renderObject)
 {
-    RenderUtils::drawLocator(renderObject.transform, 0xFFFFFFFF);
+    if(renderObject.showLocator)
+        RenderUtils::drawLocator(renderObject.transform, 0xFFFFFFFF);
 
     if(!renderObject.mesh)
         return;
@@ -75,4 +88,65 @@ void RenderObject::draw(const ParticleEffect& renderObject)
 void RenderObject::draw(const Base& renderObject)
 {
     RenderUtils::drawLocator(renderObject.transform, 0xFF0000FF);
+}
+
+bool RenderObject::isVisible(const Base &renderObject)
+{
+    if(!isRenderObjectVisibleByDistance(renderObject))
+        return false;
+
+    if(!isRenderObjectInFrustum(renderObject))
+        return false;
+
+    return true;
+}
+
+static bool isRenderObjectInFrustum(const Base& renderObject)
+{
+    assert(Render::getConfig().has_value());
+
+    Math::float3 position =  renderObject.transform.Translation();
+
+    float boundingRadius = renderObject.boundingRadius;
+
+    return frustrumContainsSphere(Render::getConfig()->state.frustumPlanes, position, boundingRadius) != ECameraClipType::Out;
+}
+
+
+static ECameraClipType frustrumContainsSphere(const Plane* frustumPlanes, const Math::float3& sphereCenter, float sphereRadius)
+{
+    // various distances
+    float fDistance;
+
+    // calculate our distances to each of the planes
+    for(int i = 0; i < 6; ++i) {
+
+        // find the distance to this plane
+        fDistance = Math::float3(frustumPlanes[i].m_normal).dot(sphereCenter) + frustumPlanes[i].m_dist;
+
+        // if this distance is < -sphere.radius, we are outside
+        if(fDistance < -sphereRadius)
+            return ECameraClipType::Out;
+
+        // else if the distance is between +- radius, then we intersect
+        if((float)fabs(fDistance) < sphereRadius)
+            return ECameraClipType::Crossing;
+    }
+
+    // otherwise we are fully in view
+    return ECameraClipType::In;
+}
+
+static bool isRenderObjectVisibleByDistance(const Base& renderObject)
+{
+    assert(Render::getConfig().has_value());
+
+    Math::float3 camera = Render::getConfig()->state.cameraWorld.Translation();
+    Math::float3 position =  renderObject.transform.Translation();
+
+    float drawDistanceSq = Render::getConfig()->state.drawDistanceSquared;
+    float boundingRadiusSq = renderObject.boundingRadius * renderObject.boundingRadius;
+    float distanceSq = (position - camera).lengthSquared() - boundingRadiusSq;
+
+    return distanceSq < drawDistanceSq;
 }

@@ -3,6 +3,7 @@
 #include <vector>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
+#include <bounds.h>
 
 namespace Engine
 {
@@ -42,6 +43,7 @@ namespace Render
         {
             Math::Matrix cameraWorld;
             Math::Matrix viewProj;
+            Plane frustumPlanes[6];
             float drawDistanceSquared;
             float farPlane;
             uint32_t viewWidth;
