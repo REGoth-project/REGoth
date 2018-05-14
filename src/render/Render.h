@@ -5,6 +5,7 @@
 #pragma once
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
+#include "Material.h"
 
 namespace Render
 {
@@ -71,6 +72,12 @@ namespace Render
     void showDrawLocatorOn(Handle::ParticleSystemRenderHandle obj, bool showLocator);
     void showDrawLocatorOn(Handle::SkeletalMeshRenderHandle obj, bool showLocator);
     void showDrawLocatorOn(Handle::PointLightRenderHandle obj, bool showLocator);
+
+    /**
+     * Sets the material shown on the main-mesh for the given render-object
+     */
+    void setMeshMaterialOn(Handle::StaticMeshRenderHandle obj, const Content::MeshMaterial& material);
+    void setMeshMaterialOn(Handle::SkeletalMeshRenderHandle obj, const Content::MeshMaterial& material);
 };
 
 

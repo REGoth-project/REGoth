@@ -19,19 +19,8 @@ namespace Allocators
 
 static void setDebugTagOfBase(RenderObject::Base& base, const std::string& debugTag);
 static void setTransformOnBase(RenderObject::Base& base, const Math::Matrix& transform);
-
-static RenderObject::Base* newRenderObjectFromClass(ERenderClass renderClass)
-{
-    switch(renderClass)
-    {
-        case ERenderClass::StaticMesh: return new RenderObject::StaticMesh;
-        case ERenderClass::ParticleEffect: return new RenderObject::ParticleEffect;
-        case ERenderClass::SkeletalMesh: return new RenderObject::SkeletalMesh;
-        case ERenderClass::PointLight: return new RenderObject::PointLight;
-        default: return nullptr;
-    }
-}
-
+static void setHiddenOnBase(RenderObject::Base& base, bool hide);
+static void setDrawLocatorOnBase(RenderObject::Base& base, bool showLocator);
 
 Handle::SkeletalMeshRenderHandle Render::addSkeletalMesh()
 {
@@ -136,31 +125,94 @@ static void setTransformOnBase(RenderObject::Base& base, const Math::Matrix& tra
 /**
  * Sets whether the given render-object should be invisible
  */
-void Render::setHidden(Handle::StaticMeshRenderHandle obj, bool hide) {}
-void Render::setHidden(Handle::ParticleSystemRenderHandle obj, bool hide) {}
-void Render::setHidden(Handle::SkeletalMeshRenderHandle obj, bool hide) {}
-void Render::setHidden(Handle::PointLightRenderHandle obj, bool hide) {}
+void Render::setHidden(Handle::StaticMeshRenderHandle obj, bool hide)
+{
+    setHiddenOnBase(Allocators::staticMeshes.getElement(obj), hide);
+}
+
+void Render::setHidden(Handle::ParticleSystemRenderHandle obj, bool hide)
+{
+    setHiddenOnBase(Allocators::particleSystems.getElement(obj), hide);
+}
+
+void Render::setHidden(Handle::SkeletalMeshRenderHandle obj, bool hide)
+{
+    setHiddenOnBase(Allocators::skeletalMeshes.getElement(obj), hide);
+}
+
+void Render::setHidden(Handle::PointLightRenderHandle obj, bool hide)
+{
+    setHiddenOnBase(Allocators::pointLights.getElement(obj), hide);
+}
+
+static void setHiddenOnBase(RenderObject::Base& base, bool hide)
+{
+    base.isHidden = hide;
+}
 
 /**
  * Sets whether a debug-locator should be shown in the objects center
  */
-void Render::showDrawLocatorOn(Handle::StaticMeshRenderHandle obj, bool showLocator) {}
-void Render::showDrawLocatorOn(Handle::ParticleSystemRenderHandle obj, bool showLocator) {}
-void Render::showDrawLocatorOn(Handle::SkeletalMeshRenderHandle obj, bool showLocator) {}
-void Render::showDrawLocatorOn(Handle::PointLightRenderHandle obj, bool showLocator) {}
+void Render::showDrawLocatorOn(Handle::StaticMeshRenderHandle obj, bool showLocator)
+{
+    setDrawLocatorOnBase(Allocators::staticMeshes.getElement(obj), showLocator);
+}
 
+void Render::showDrawLocatorOn(Handle::ParticleSystemRenderHandle obj, bool showLocator)
+{
+    setDrawLocatorOnBase(Allocators::particleSystems.getElement(obj), showLocator);
+}
+
+void Render::showDrawLocatorOn(Handle::SkeletalMeshRenderHandle obj, bool showLocator)
+{
+    setDrawLocatorOnBase(Allocators::skeletalMeshes.getElement(obj), showLocator);
+}
+
+void Render::showDrawLocatorOn(Handle::PointLightRenderHandle obj, bool showLocator)
+{
+    setDrawLocatorOnBase(Allocators::pointLights.getElement(obj), showLocator);
+}
+
+static void setDrawLocatorOnBase(RenderObject::Base& base, bool showLocator)
+{
+    base.showLocator = showLocator;
+}
 
 void Render::draw()
 {
-    /*RenderObjectWrapper* pRenderObjects = renderObjects.getElements();
+    RenderObject::StaticMesh* pStaticMeshes = Allocators::staticMeshes.getElements();
+    RenderObject::SkeletalMesh* pSkeletalMeshes = Allocators::skeletalMeshes.getElements();
+    RenderObject::ParticleEffect* pParticleEffects = Allocators::particleSystems.getElements();
+    RenderObject::PointLight* pPointLights = Allocators::pointLights.getElements();
 
-    for(size_t i = 0; i < renderObjects.getNumObtainedElements(); i++)
+    for(size_t i = 0; i < Allocators::staticMeshes.getNumObtainedElements(); i++)
     {
-        if(pRenderObjects[i].pObject)
-        {
-            RenderObject::draw(*pRenderObjects[i].pObject);
-        }
-    }*/
+        RenderObject::draw(pStaticMeshes[i]);
+    }
 
+    for(size_t i = 0; i < Allocators::skeletalMeshes.getNumObtainedElements(); i++)
+    {
+        RenderObject::draw(pSkeletalMeshes[i]);
+    }
+
+    for(size_t i = 0; i < Allocators::particleSystems.getNumObtainedElements(); i++)
+    {
+        RenderObject::draw(pParticleEffects[i]);
+    }
+
+    for(size_t i = 0; i < Allocators::pointLights.getNumObtainedElements(); i++)
+    {
+        RenderObject::draw(pPointLights[i]);
+    }
+}
+
+void Render::setMeshMaterialOn(Handle::SkeletalMeshRenderHandle obj, const Content::MeshMaterial &material)
+{
+    Allocators::skeletalMeshes.getElement(obj).material = material;
+}
+
+void Render::setMeshMaterialOn(Handle::StaticMeshRenderHandle obj, const Content::MeshMaterial &material)
+{
+    Allocators::staticMeshes.getElement(obj).material = material;
 }
 
