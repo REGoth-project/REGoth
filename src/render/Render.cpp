@@ -17,7 +17,7 @@ namespace Allocators
     static Memory::StaticReferencedAllocator<RenderObject::PointLight, 0xFFFF> pointLights;
 }
 
-static void setDebugTagOf(RenderObject::Base& base, const std::string& debugTag);
+static void setDebugTagOfBase(RenderObject::Base& base, const std::string& debugTag);
 static void setTransformOnBase(RenderObject::Base& base, const Math::Matrix& transform);
 
 static RenderObject::Base* newRenderObjectFromClass(ERenderClass renderClass)
@@ -33,22 +33,22 @@ static RenderObject::Base* newRenderObjectFromClass(ERenderClass renderClass)
 }
 
 
-Handle::SkeletalMeshRenderHandle addSkeletalMesh()
+Handle::SkeletalMeshRenderHandle Render::addSkeletalMesh()
 {
     return Allocators::skeletalMeshes.createObject();
 }
 
-Handle::PointLightRenderHandle addPointLight()
+Handle::PointLightRenderHandle Render::addPointLight()
 {
     return Allocators::pointLights.createObject();
 }
 
-Handle::ParticleSystemRenderHandle addParticleEffect()
+Handle::ParticleSystemRenderHandle Render::addParticleEffect()
 {
     return Allocators::particleSystems.createObject();
 }
 
-Handle::StaticMeshRenderHandle addStaticMesh()
+Handle::StaticMeshRenderHandle Render::addStaticMesh()
 {
     return Allocators::staticMeshes.createObject();
 }
@@ -56,27 +56,27 @@ Handle::StaticMeshRenderHandle addStaticMesh()
 /**
  * Sets the debug-tag of the given render-object
  */
-void setDebugTagOf(Handle::StaticMeshRenderHandle obj, const std::string& debugTag)
+void Render::setDebugTagOf(Handle::StaticMeshRenderHandle obj, const std::string& debugTag)
 {
-    setDebugTagOf(Allocators::staticMeshes.getElement(obj), debugTag);
+    setDebugTagOfBase(Allocators::staticMeshes.getElement(obj), debugTag);
 }
 
-void setDebugTagOf(Handle::ParticleSystemRenderHandle obj, const std::string& debugTag)
+void Render::setDebugTagOf(Handle::ParticleSystemRenderHandle obj, const std::string& debugTag)
 {
-    setDebugTagOf(Allocators::particleSystems.getElement(obj), debugTag);
+    setDebugTagOfBase(Allocators::particleSystems.getElement(obj), debugTag);
 }
 
-void setDebugTagOf(Handle::SkeletalMeshRenderHandle obj, const std::string& debugTag)
+void Render::setDebugTagOf(Handle::SkeletalMeshRenderHandle obj, const std::string& debugTag)
 {
-    setDebugTagOf(Allocators::skeletalMeshes.getElement(obj), debugTag);
+    setDebugTagOfBase(Allocators::skeletalMeshes.getElement(obj), debugTag);
 }
 
-void setDebugTagOf(Handle::PointLightRenderHandle obj, const std::string& debugTag)
+void Render::setDebugTagOf(Handle::PointLightRenderHandle obj, const std::string& debugTag)
 {
-    setDebugTagOf(Allocators::pointLights.getElement(obj), debugTag);
+    setDebugTagOfBase(Allocators::pointLights.getElement(obj), debugTag);
 }
 
-static void setDebugTagOf(RenderObject::Base& base, const std::string& debugTag)
+static void setDebugTagOfBase(RenderObject::Base& base, const std::string& debugTag)
 {
     base.debugTag = debugTag;
 }
@@ -84,22 +84,22 @@ static void setDebugTagOf(RenderObject::Base& base, const std::string& debugTag)
 /**
  * Removes the given Render-Object from the internal renderer.
  */
-void remove(Handle::StaticMeshRenderHandle obj)
+void Render::remove(Handle::StaticMeshRenderHandle obj)
 {
     Allocators::staticMeshes.removeObject(obj);
 }
 
-void remove(Handle::ParticleSystemRenderHandle obj)
+void Render::remove(Handle::ParticleSystemRenderHandle obj)
 {
     Allocators::particleSystems.removeObject(obj);
 }
 
-void remove(Handle::SkeletalMeshRenderHandle obj)
+void Render::remove(Handle::SkeletalMeshRenderHandle obj)
 {
     Allocators::skeletalMeshes.removeObject(obj);
 }
 
-void remove(Handle::PointLightRenderHandle obj)
+void Render::remove(Handle::PointLightRenderHandle obj)
 {
     Allocators::pointLights.removeObject(obj);
 }
@@ -108,22 +108,22 @@ void remove(Handle::PointLightRenderHandle obj)
 /**
  * Sets the main transform of the given render-object.
  */
-void setTransformOn(Handle::StaticMeshRenderHandle obj, const Math::Matrix& transform)
+void Render::setTransformOn(Handle::StaticMeshRenderHandle obj, const Math::Matrix& transform)
 {
     setTransformOnBase(Allocators::staticMeshes.getElement(obj), transform);
 }
 
-void setTransformOn(Handle::ParticleSystemRenderHandle obj, const Math::Matrix& transform)
+void Render::setTransformOn(Handle::ParticleSystemRenderHandle obj, const Math::Matrix& transform)
 {
     setTransformOnBase(Allocators::particleSystems.getElement(obj), transform);
 }
 
-void setTransformOn(Handle::SkeletalMeshRenderHandle obj, const Math::Matrix& transform)
+void Render::setTransformOn(Handle::SkeletalMeshRenderHandle obj, const Math::Matrix& transform)
 {
     setTransformOnBase(Allocators::skeletalMeshes.getElement(obj), transform);
 }
 
-void setTransformOn(Handle::PointLightRenderHandle obj, const Math::Matrix& transform)
+void Render::setTransformOn(Handle::PointLightRenderHandle obj, const Math::Matrix& transform)
 {
     setTransformOnBase(Allocators::pointLights.getElement(obj), transform);
 }
@@ -136,18 +136,18 @@ static void setTransformOnBase(RenderObject::Base& base, const Math::Matrix& tra
 /**
  * Sets whether the given render-object should be invisible
  */
-void setHidden(Handle::StaticMeshRenderHandle obj, bool hide);
-void setHidden(Handle::ParticleSystemRenderHandle obj, bool hide);
-void setHidden(Handle::SkeletalMeshRenderHandle obj, bool hide);
-void setHidden(Handle::PointLightRenderHandle obj, bool hide);
+void Render::setHidden(Handle::StaticMeshRenderHandle obj, bool hide) {}
+void Render::setHidden(Handle::ParticleSystemRenderHandle obj, bool hide) {}
+void Render::setHidden(Handle::SkeletalMeshRenderHandle obj, bool hide) {}
+void Render::setHidden(Handle::PointLightRenderHandle obj, bool hide) {}
 
 /**
  * Sets whether a debug-locator should be shown in the objects center
  */
-void showDrawLocatorOn(Handle::StaticMeshRenderHandle obj, bool showLocator);
-void showDrawLocatorOn(Handle::ParticleSystemRenderHandle obj, bool showLocator);
-void showDrawLocatorOn(Handle::SkeletalMeshRenderHandle obj, bool showLocator);
-void showDrawLocatorOn(Handle::PointLightRenderHandle obj, bool showLocator);
+void Render::showDrawLocatorOn(Handle::StaticMeshRenderHandle obj, bool showLocator) {}
+void Render::showDrawLocatorOn(Handle::ParticleSystemRenderHandle obj, bool showLocator) {}
+void Render::showDrawLocatorOn(Handle::SkeletalMeshRenderHandle obj, bool showLocator) {}
+void Render::showDrawLocatorOn(Handle::PointLightRenderHandle obj, bool showLocator) {}
 
 
 void Render::draw()
