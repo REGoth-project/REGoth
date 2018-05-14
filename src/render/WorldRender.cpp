@@ -37,7 +37,7 @@ namespace Render
      */
     void setupSky(World::WorldInstance& world, const RenderConfig& config)
     {
-        const Content::Sky::SkyState& masterState = world.getSky().getMasterState();
+        const ::Content::Sky::SkyState& masterState = world.getSky().getMasterState();
 
         world.getSky().setFarPlane(config.state.farPlane);
 
