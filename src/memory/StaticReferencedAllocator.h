@@ -43,7 +43,7 @@ namespace Memory
             generation = 0;
         }
 
-        inline bool isValid()
+        inline bool isValid() const
         {
             return index != INVALID_HANDLE;
         }
