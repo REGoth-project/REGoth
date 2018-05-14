@@ -26,7 +26,7 @@ namespace Render
             size_t submeshIdx;
             std::string debugTag; // ie. file-name
 
-            tl::optional<Meshes::WorldStaticMesh &> get()
+            tl::optional<Meshes::WorldStaticMesh &> get() const
             {
                 if (handle.isValid())
                 {

@@ -58,13 +58,25 @@ bool StaticMeshVisual::load(const std::string& visual)
 
     updateCollision();
 
-    for(const auto& submesh : mdata.mesh.m_SubmeshMaterials)
+    for(size_t i = 0; i < mdata.mesh.m_SubmeshStarts.size(); i++)
     {
         Handle::StaticMeshRenderHandle h = Render::addStaticMesh();
 
         if(h.isValid())
+        {
+            Render::Content::StaticMesh mesh(m_World.getStaticMeshAllocator(), m_MeshHandle, i);
+            Render::setMeshOn(h, mesh);
+
+            Render::Content::MeshMaterial material;
+            material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
+                                                               m_World.getTextureAllocator().loadTextureVDF(mdata.mesh.m_SubmeshMaterials[i].m_TextureName));
+            Render::setMeshMaterialOn(h, material);
+
             m_SubmeshesRenderHandles.push_back(h);
+        }
     }
+
+    updateRenderObjectTransforms();
 
     return true;
 }
