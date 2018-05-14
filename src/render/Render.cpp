@@ -17,10 +17,26 @@ namespace Allocators
     static Memory::StaticReferencedAllocator<RenderObject::PointLight, 0xFFFF> pointLights;
 }
 
+namespace Module
+{
+    tl::optional<const RenderConfig&> config;
+}
+
 static void setDebugTagOfBase(RenderObject::Base& base, const std::string& debugTag);
 static void setTransformOnBase(RenderObject::Base& base, const Math::Matrix& transform);
 static void setHiddenOnBase(RenderObject::Base& base, bool hide);
 static void setDrawLocatorOnBase(RenderObject::Base& base, bool showLocator);
+
+
+tl::optional<const RenderConfig&> Render::getConfig()
+{
+    return Module::config;
+}
+
+void Render::switchConfig(const RenderConfig& config)
+{
+    Module::config = config;
+}
 
 Handle::SkeletalMeshRenderHandle Render::addSkeletalMesh()
 {
@@ -180,6 +196,9 @@ static void setDrawLocatorOnBase(RenderObject::Base& base, bool showLocator)
 
 void Render::draw()
 {
+    if(!Module::config)
+        return;
+
     RenderObject::StaticMesh* pStaticMeshes = Allocators::staticMeshes.getElements();
     RenderObject::SkeletalMesh* pSkeletalMeshes = Allocators::skeletalMeshes.getElements();
     RenderObject::ParticleEffect* pParticleEffects = Allocators::particleSystems.getElements();
@@ -214,5 +233,10 @@ void Render::setMeshMaterialOn(Handle::SkeletalMeshRenderHandle obj, const Conte
 void Render::setMeshMaterialOn(Handle::StaticMeshRenderHandle obj, const Content::MeshMaterial &material)
 {
     Allocators::staticMeshes.getElement(obj).material = material;
+}
+
+void Render::setMeshOn(Handle::StaticMeshRenderHandle obj, const Content::StaticMesh &mesh)
+{
+    Allocators::staticMeshes.getElement(obj).mesh = mesh;
 }
 

@@ -6,6 +6,8 @@
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
 #include "Material.h"
+#include "RenderSystem.h"
+#include "Mesh.h"
 
 namespace Render
 {
@@ -16,6 +18,12 @@ namespace Render
         SkeletalMesh,
         PointLight,
     };
+
+    /**
+     * Clears all caches and switches to a different render-system
+     */
+    void switchConfig(const RenderConfig& system);
+    tl::optional<const RenderConfig&> getConfig();
 
     /**
      * Draws the scene, as it currently is
@@ -78,6 +86,11 @@ namespace Render
      */
     void setMeshMaterialOn(Handle::StaticMeshRenderHandle obj, const Content::MeshMaterial& material);
     void setMeshMaterialOn(Handle::SkeletalMeshRenderHandle obj, const Content::MeshMaterial& material);
+
+    /**
+     * Sets the shown mesh on the given render-object
+     */
+    void setMeshOn(Handle::StaticMeshRenderHandle obj, const Content::StaticMesh& mesh);
 };
 
 

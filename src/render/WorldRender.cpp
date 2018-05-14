@@ -138,6 +138,7 @@ namespace Render
             k.entityKinds.clear();
         }
 
+        Render::switchConfig(config);
         Render::draw();
         return;
 
