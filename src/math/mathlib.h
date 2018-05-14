@@ -289,7 +289,7 @@ namespace Math
         t_vector() {}
         t_vector(const void* v)
         {
-            memcpy(this, v, sizeof(T));
+            memcpy(T::v, v, sizeof(T));
         }
 
         t_vector(const T& v)
@@ -470,7 +470,7 @@ namespace Math
         // Assignment operators
         Matrix& operator=(const Matrix& M)
         {
-            memcpy(this, &M, sizeof(float) * 16);
+            memcpy(m, &M, sizeof(float) * 16);
             return *this;
         }
         Matrix& operator+=(const Matrix& M)
