@@ -15,9 +15,10 @@ namespace Render
     {
 
         struct Base {
-            Math::Matrix transform;
-            bool isHidden;
-            bool showLocator;
+            Math::Matrix transform = Math::Matrix::CreateIdentity();
+            float boundingRadius = 0.0f;
+            bool isHidden = false;
+            bool showLocator = false;
             std::string debugTag; // ie. file this was loaded from
         };
 
@@ -51,17 +52,19 @@ namespace Render
         };
 
         void draw(const StaticMesh &renderObject);
-
         void draw(const PointLight &renderObject);
-
         void draw(const SkeletalMesh &renderObject);
-
         void draw(const ParticleEffect &renderObject);
 
         /**
          * Dummy, for non-implemented types
          */
         void draw(const Base &renderObject);
+
+        /**
+         * @return Whether this object is visible from the current camera position
+         */
+        bool isVisible(const Base& renderObject);
     }
 }
 
