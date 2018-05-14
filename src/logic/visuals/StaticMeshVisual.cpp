@@ -60,7 +60,7 @@ bool StaticMeshVisual::load(const std::string& visual)
 
     for(const auto& submesh : mdata.mesh.m_SubmeshMaterials)
     {
-        Handle::RenderHandle h = Render::addRenderObject(Render::ERenderClass::StaticMesh);
+        Handle::StaticMeshRenderHandle h = Render::addStaticMesh();
 
         if(h.isValid())
             m_SubmeshesRenderHandles.push_back(h);
@@ -203,6 +203,6 @@ void StaticMeshVisual::updateRenderObjectTransforms()
     Math::Matrix transform = getEntityTransform();
 
     // Set all created visuals to the same transform as our entity
-    for (Handle::RenderHandle h : m_SubmeshesRenderHandles)
+    for (Handle::StaticMeshRenderHandle h : m_SubmeshesRenderHandles)
         Render::setTransformOn(h, transform);
 }
