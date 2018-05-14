@@ -222,6 +222,11 @@ bool WorldInstance::init(const std::string& zen,
         ZenLoad::PackedMesh packedWorldMesh;
         worldMesh->packMesh(packedWorldMesh, 0.01f, false);
 
+        // Hack: The worldmesh doesn't store a bbox and needs to be visible always anyways
+        //       This can be improved once the worldmesh is split into parts
+        packedWorldMesh.bbox[0] = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
+        packedWorldMesh.bbox[1] = { FLT_MAX, FLT_MAX, FLT_MAX };
+
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         // Init worldmesh-wrapper
@@ -251,12 +256,13 @@ bool WorldInstance::init(const std::string& zen,
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(80);
 
-        /*Handle::EntityHandle eh = Vob::constructVob(*this);
+        Handle::EntityHandle eh = Vob::constructVob(*this);
         Vob::VobInformation wvob = Vob::asVob(*this, eh);
-        wvob.position->m_DrawDistanceFactor = 0.0f;
+        wvob.position->m_DrawDistanceFactor = -1.0f;
+        Vob::setCollisionEnabled(wvob, false); // Create collision later
         Vob::setVisual(wvob, "WORLDMESH.3DS");
         Vob::setTransform(wvob, Math::Matrix::CreateIdentity());
-*/
+
 
         Meshes::WorldStaticMesh& worldMeshData = getStaticMeshAllocator().getMesh(worldMeshHandle);
 
@@ -312,7 +318,8 @@ bool WorldInstance::init(const std::string& zen,
             Components::PositionComponent& pos = getEntity<Components::PositionComponent>(e);
             pos.m_WorldMatrix = Math::Matrix::CreateIdentity();
             pos.m_WorldMatrix.Translation(pos.m_WorldMatrix.Translation() * (1.0f / 100.0f));
-            pos.m_DrawDistanceFactor = -1.0f;  // Always draw the worldmesh
+            //pos.m_DrawDistanceFactor = -1.0f;  // Always draw the worldmesh
+            pos.m_DrawDistanceFactor = 0.0f;  // Never draw this // FIXME: Hack, remove these "ents" and put the worldmesh into proper visuals
 
             Components::StaticMeshComponent& sm = getEntity<Components::StaticMeshComponent>(e);
             sm.m_InstanceDataIndex = (uint32_t)-2;  // Disable instancing
