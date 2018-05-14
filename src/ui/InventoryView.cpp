@@ -38,6 +38,25 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
     m_DeltaRows = 0;
     m_DeltaColumns = 0;
 
+    m_InputUp = Engine::Input::RegisterAction(Engine::ActionType::Inventory_Back, [this](bool triggered, float)
+    {
+        if (triggered)
+        {
+            switch (this->getState())
+            {
+            case State::Disabled:
+                break;
+            case State::Normal:
+                setState(State::Disabled);
+                break;
+            case State::Loot:
+                setState(State::Normal);
+                break;
+            default:
+                break;
+            }
+        }
+    });
     m_InputUp = Engine::Input::RegisterAction(Engine::ActionType::Inventory_Up, [this](bool triggered, float)
     {
         if (triggered)
@@ -114,40 +133,73 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
             const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerInv.getItems();
 
             // VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, e);
-
-            for(auto &itItem : itemHandleList)
+            switch(m_State)
             {
-                Daedalus::GEngineClasses::C_Item itemData = world.getScriptEngine().getGameState().getItem(itItem);
-                if(itemData.instanceSymbol == m_ThisCursorState.selectedItemSymbol)
+            case State::Normal:
+                for(auto &itItem : itemHandleList)
                 {
-                    const auto &equippedItems = playerController->getEquippedItems();
-                    if( equippedItems.find(itItem) != equippedItems.end() )
-                        playerController->unequipItem(itItem);
-                    else
+                    Daedalus::GEngineClasses::C_Item itemData = world.getScriptEngine().getGameState().getItem(itItem);
+                    if(itemData.instanceSymbol == m_ThisCursorState.selectedItemSymbol)
                     {
-                        if(playerController->useItem(itItem))
-                            playerInv.removeItem(itItem);
-                    }
-                    // If the item was removed we have to stop the iteration otherwise we will crash
-                    break;
-                    /*
-                    //TODO play use animation
-                    //playerInv.removeItem(itItem);
-
-                    if(Daedalus::GEngineClasses::C_Item::Categories::ITM_CAT_EQUIPABLE & itemData.mainflag)
-                    {
-                        const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
-                        if(equippedItems.find(itItem) != equippedItems.end())
+                        const auto &equippedItems = playerController->getEquippedItems();
+                        if( equippedItems.find(itItem) != equippedItems.end() )
                             playerController->unequipItem(itItem);
                         else
-                            playerController->useItem(itItem);
-                    }
-                    else
-                        playerController->useItem(itItem);
+                        {
+                            if(playerController->useItem(itItem))
+                                playerInv.removeItem(itItem);
+                        }
+                        // If the item was removed we have to stop the iteration otherwise we will crash
+                        break;
+                        /*
+                        //TODO play use animation
+                        //playerInv.removeItem(itItem);
 
-                    break;
-                    */
+                        if(Daedalus::GEngineClasses::C_Item::Categories::ITM_CAT_EQUIPABLE & itemData.mainflag)
+                        {
+                            const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
+                            if(equippedItems.find(itItem) != equippedItems.end())
+                                playerController->unequipItem(itItem);
+                            else
+                                playerController->useItem(itItem);
+                        }
+                        else
+                            playerController->useItem(itItem);
+
+                        break;
+                        */
+                    }
                 }
+                break;
+
+            case State::Loot:
+                if(!m_Other.isValid())
+                    break;
+                // When looting we move the selected item from one inventory to another inventory
+                Logic::PlayerController* otherPlayerController = reinterpret_cast<Logic::PlayerController*>(
+                            world.getEntity<Components::LogicComponent>(m_Other).m_pLogicController);
+                Logic::Inventory &otherInv = otherPlayerController->getInventory();
+                Logic::Inventory *moveFromInv, *moveToInv;
+                int moveItemSymbol;
+                if(m_IsPlayerInvActive)
+                {
+                    moveFromInv = &playerInv;
+                    moveToInv = &otherInv;
+                    moveItemSymbol = m_ThisCursorState.selectedItemSymbol;
+                }
+                else
+                {
+                    moveFromInv = &otherInv;
+                    moveToInv = &playerInv;
+                    moveItemSymbol = m_OtherCursorState.selectedItemSymbol;
+                }
+
+                if(moveItemSymbol >= 0)
+                {
+                    moveToInv->addItem(moveItemSymbol, 1);
+                    moveFromInv->removeItem(moveItemSymbol, 1);
+                }
+                break;
             }
         }
     });
@@ -158,6 +210,7 @@ UI::InventoryView::~InventoryView() = default;
 
 void UI::InventoryView::setState(State state, Handle::EntityHandle other)
 {
+    m_IsPlayerInvActive = true;
     m_State = state;
     m_Other = other;
     m_IsHidden = m_State == State::Disabled;
@@ -784,24 +837,45 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     */
 
     World::WorldInstance &world = m_Engine.getMainWorld().get();
+    Logic::ScriptEngine &sE = world.getScriptEngine();
     VobTypes::NpcVobInformation playerVobInfo = VobTypes::asNpcVob(world, world.getScriptEngine().getPlayerEntity());
     Logic::PlayerController *playerController = playerVobInfo.playerController;
     const std::list<Daedalus::GameState::ItemHandle> &itemHandleList = playerController->getInventory().getItems();
     const std::set<Daedalus::GameState::ItemHandle> &equippedItems = playerController->getEquippedItems();
     std::vector<Daedalus::GEngineClasses::C_Item> itemList(itemHandleList.size());
     std::vector<bool> isItemEquipped(itemList.size());
+
+    // In g1 this refers to 'Ore'
+    // ITMINUGGET
+    std::string testSymbol;
+    if(m_Engine.getBasicGameType() == Daedalus::GameType::GT_Gothic1)
+    {
+        //testSymbol = sE.getVM().getDATFile().getSymbolByName("ITMINUGGET").getString();
+        testSymbol = "ITMINUGGET";
+    }
+    else
+    {
+        testSymbol = sE.getVM().getDATFile().getSymbolByName("TRADE_CURRENCY_INSTANCE").getString();
+    }
+    size_t currencySymbol = sE.getVM().getDATFile().getSymbolIndexByName(testSymbol);
+    Daedalus::GameState::ItemHandle dummyHandle = sE.getVM().getGameState().createItem();
+    sE.getVM().initializeInstance(ZMemory::toBigHandle(dummyHandle), currencySymbol, Daedalus::IC_Item);
+    Daedalus::GEngineClasses::C_Item& goldItem = sE.getVM().getGameState().getItem(dummyHandle);
+    std::string currencyName = goldItem.name;
+    sE.getVM().getGameState().removeItem(dummyHandle);
+    //world.getEngine()->
+    //Daedalus::GameState::ItemHandle testHandle = sE.getItemFromSymbol(testSymbol);
+    //const Daedalus::GEngineClasses::C_Item &goldItem = sE.getGameState().getItem(testHandle);
     size_t goldAmount = 0; // The amount of gold (ore) the player has
-    std::string goldName; // The localized name of gold (ore)
+
+    //TODO copying the item object is not necessary
     std::list<Daedalus::GameState::ItemHandle>::const_iterator itItem = itemHandleList.begin();
     for(uint32_t index = 0; index < itemList.size(); ++index)
     {
-        //TODO copying the item object is not necessary
         itemList[index] = world.getScriptEngine().getGameState().getItem(*itItem);
-        if(itemList[index].instanceSymbol == 6929)
-        {
+        if(itemList[index].instanceSymbol == currencySymbol)
             goldAmount = itemList[index].amount;
-            goldName = itemList[index].name;
-        }
+
         Daedalus::GEngineClasses::C_Item &debugItem = itemList[index];
         isItemEquipped[index] = equippedItems.find(*itItem) != equippedItems.end();
         ++itItem;
@@ -823,7 +897,11 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
     Math::float2 otherInventoryPosition = Math::float2(0.02f * config.state.viewWidth, 100);
     Math::float2 otherInventorySize = inventorySize;
 
-    calculateCursorState(m_ThisCursorState, slotSize, inventorySize, itemList, indices);
+    bool toggleInventoryLater = false;
+
+    if(m_IsPlayerInvActive)
+        toggleInventoryLater = calculateCursorState(m_ThisCursorState, slotSize, inventorySize, itemList, indices,
+                               (m_State == State::Loot && m_Other.isValid()) ? OpenBoundary::Left : OpenBoundary::None);
 
     if(m_ThisCursorState.selectedItemSymbol == m_SelectedItemSymbol)
         m_SelectedItemRotation += dt;
@@ -855,7 +933,12 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             return compareItems(otherItemList[a], otherItemList[b]);
         });
 
-        calculateCursorState(m_OtherCursorState, slotSize, otherInventorySize, otherItemList, otherIndices);
+        {
+            bool temp = calculateCursorState(m_OtherCursorState, slotSize, otherInventorySize,
+                                             otherItemList, otherIndices, OpenBoundary::Right);
+            if(!m_IsPlayerInvActive)
+                toggleInventoryLater = temp;
+        }
 
         std::vector<ItemDrawState> otherItemsToDraw(m_OtherCursorState.numVisibleItems);
         for(int i = 0; i < otherItemsToDraw.size(); ++i)
@@ -863,7 +946,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             otherItemsToDraw[i].index = otherIndices[i + m_OtherCursorState.offsetItems];
             otherItemsToDraw[i].flags = 0;
         }
-        if(otherItemsToDraw.size() > 0)
+        if(otherItemsToDraw.size() > 0 && !m_IsPlayerInvActive)
             otherItemsToDraw[m_OtherCursorState.itemIndex - m_OtherCursorState.offsetItems].flags |= ItemDrawFlags::Selected;
 
         drawItemGrid(config, otherInventoryPosition, otherInventorySize, EAlign::A_TopLeft,
@@ -879,13 +962,13 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
         if( isItemEquipped[itemsToDraw[i].index] )
             itemsToDraw[i].flags |= ItemDrawFlags::Equipped;
     }
-    if(itemsToDraw.size() > 0)
+    if(itemsToDraw.size() > 0 && m_IsPlayerInvActive)
         itemsToDraw[m_ThisCursorState.itemIndex - m_ThisCursorState.offsetItems].flags |= ItemDrawFlags::Selected;
 
     drawItemGrid(config, inventoryPosition, inventorySize, EAlign::A_TopRight,
                  slotSize, itemList, itemsToDraw);
 
-    drawText(goldName + ": " + std::to_string(goldAmount), inventoryPosition.x + inventorySize.x - slotSize, inventoryPosition.y - 15,
+    drawText(currencyName + ": " + std::to_string(goldAmount), inventoryPosition.x + inventorySize.x - slotSize, inventoryPosition.y - 15,
              EAlign::A_BottomCenter, config);
     Textures::Texture &texSlot = m_Engine.getEngineTextureAlloc().getTexture(m_TexSlot);
 
@@ -907,15 +990,19 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
                 Math::float2(0.5f * config.state.viewWidth - 300, config.state.viewHeight - 140 - 10),
                 Math::float2(600, 140));
 
+    if(toggleInventoryLater)
+        toggleActiveInventory();
+
     View::update(dt, mstate, config);
 }
 
-void UI::InventoryView::calculateCursorState(CursorState &cursorState, float slotSize, Math::float2 inventorySize,
-                                             const std::vector<Daedalus::GEngineClasses::C_Item> &itemList, const std::vector<int> &indices)
+bool UI::InventoryView::calculateCursorState(CursorState &cursorState, float slotSize, Math::float2 inventorySize,
+                                             const std::vector<Daedalus::GEngineClasses::C_Item> &itemList, const std::vector<int> &indices,
+                                             UI::InventoryView::OpenBoundary openBoundary)
 {
     int selectedSlot = -1;
     // Search the sorted list for the selected item
-    for( int index = 0; index < indices.size(); ++index)
+    for( int index = 0; index < (int)indices.size(); ++index)
     {
         if(itemList[indices[index]].instanceSymbol == cursorState.selectedItemSymbol)
         {
@@ -928,20 +1015,32 @@ void UI::InventoryView::calculateCursorState(CursorState &cursorState, float slo
 
     cursorState.lastTimeSelectedItemSlot = selectedSlot;
 
+    int numItems = (int)itemList.size();
     int numColumns = std::max(1, Math::ifloor(inventorySize.x / slotSize));
     int numRows = std::max(1, Math::ifloor(inventorySize.y / slotSize));
     int numSlots = numRows * numColumns;
 
-    int maxRowsByItemCount = itemList.size() / numColumns;
-    // Get old row and column
+    int maxRowsByItemCount = numItems / numColumns;
+    // Get old row and column, this is stable under window resizing
     int currentRow = selectedSlot / numColumns;
     int currentColumn = selectedSlot % numColumns;
+
+    bool ret = false;
+    if (   (openBoundary == OpenBoundary::Left  && currentColumn + m_DeltaColumns < 0)
+        || (openBoundary == OpenBoundary::Right && (
+               (currentColumn + m_DeltaColumns >= numColumns)
+            || (currentRow * numColumns + currentColumn + m_DeltaColumns >= numItems) ) ) )
+    {
+        ret = true;
+        m_DeltaColumns = 0;
+    }
+
     // Adjust row by input
     currentRow = std::max(0, std::min(currentRow + m_DeltaRows, maxRowsByItemCount));
     // and adjusts column by input
     // This is the actual index for the item in itemList which we want to select
-    cursorState.itemIndex = std::max(0, std::min(currentRow * numColumns + currentColumn + m_DeltaColumns, int(itemList.size()) - 1));
-    if(itemList.size() > 0)
+    cursorState.itemIndex = std::max(0, std::min(currentRow * numColumns + currentColumn + m_DeltaColumns, numItems - 1));
+    if(numItems > 0)
         cursorState.selectedItemSymbol = itemList[indices[cursorState.itemIndex]].instanceSymbol;
     else
         cursorState.selectedItemSymbol = -1;
@@ -961,7 +1060,8 @@ void UI::InventoryView::calculateCursorState(CursorState &cursorState, float slo
         cursorState.displayedRowsStart = 0;
 
     cursorState.offsetItems = cursorState.displayedRowsStart * numColumns;
-    cursorState.numVisibleItems = std::min(numSlots, int(itemList.size() - cursorState.offsetItems));
+    cursorState.numVisibleItems = std::min(numSlots, numItems - cursorState.offsetItems);
+    return ret;
 }
 
 int32_t UI::InventoryView::getPrimarySortValue(const Daedalus::GEngineClasses::C_Item &item)
@@ -1040,6 +1140,7 @@ bool UI::InventoryView::compareItems(const Daedalus::GEngineClasses::C_Item &l, 
             else
                 return l.flags > r.flags;
         }
+        break;
     case Daedalus::GEngineClasses::C_Item::ITM_CAT_NONE:
         bool lMI = (l.flags & Daedalus::GEngineClasses::C_Item::ITEM_MISSION) != 0;
         bool rMI = (r.flags & Daedalus::GEngineClasses::C_Item::ITEM_MISSION) != 0;

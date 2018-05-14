@@ -333,7 +333,10 @@ void GameSession::setupKeyBindings()
                 inventoryView.setState(UI::InventoryView::State::Disabled);
                 break;
             case UI::InventoryView::State::Loot:
-                inventoryView.setState(UI::InventoryView::State::Disabled);
+                inventoryView.toggleActiveInventory();
+                //inventoryView.setState(UI::InventoryView::State::Disabled);
+                inventoryView.setState(UI::InventoryView::State::Normal);
+                break;
             }
         }
     });

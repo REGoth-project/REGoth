@@ -447,7 +447,12 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
     if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0)
     {
-        node = EModelNode::Torso;
+        std::string visual = itemData.visual_change.substr(0, itemData.visual_change.size() - 4) + ".MDM";
+        //Handle::EntityHandle e = VobTypes::getEntityFromScriptInstance(m_World, npc);
+        VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, m_Entity);
+        // Only switch the body-armor
+        VobTypes::NPC_SetBodyMesh(vob, visual);
+        //node = EModelNode::Torso;
         // Nothing else to do, just override current armor
     }
     else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
@@ -2714,7 +2719,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                     else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
                     {
-                        m_World.getEngine()->getHud().getInventoryView().setState(UI::InventoryView::State::Loot, nearestNPC);
+                        if(m_World.getEngine()->getHud().getInventoryView().getState() != UI::InventoryView::State::Loot)
+                            m_World.getEngine()->getHud().getInventoryView().setState(UI::InventoryView::State::Loot, nearestNPC);
                         /*
                         // Take all his items
                         auto& inv = npc.playerController->getInventory();

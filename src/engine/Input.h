@@ -92,6 +92,7 @@ namespace Engine
         UI_HOME,
         UI_END,
 
+        Inventory_Back,
         Inventory_Show_Hide,
         Inventory_Up,
         Inventory_Down,

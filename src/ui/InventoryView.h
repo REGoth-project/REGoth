@@ -31,6 +31,9 @@ public:
 
     void setState(State state, Handle::EntityHandle other = Handle::EntityHandle::makeInvalidHandle());
 
+    // Toggles the cursor position between player inventory and loot inventory
+    void toggleActiveInventory() { m_IsPlayerInvActive = !m_IsPlayerInvActive; }
+
     /**
      * @brief enabled Enabled is synonymous with not being hidden
      * @return Whether the inventory is enabled
@@ -68,6 +71,13 @@ protected:
         int flags; // ItemDrawFlags
     };
 
+    enum class OpenBoundary
+    {
+        None, // for normal inventory view
+        Left, // For player inventory (Loot / Trade)
+        Right // For other inventory (Loot / Trade)
+    };
+
     // Holds information about the display and cursor state of an item grid
     struct CursorState
     {
@@ -99,11 +109,15 @@ protected:
     CursorState m_ThisCursorState;
     // CursorState of loot body or container
     CursorState m_OtherCursorState;
+    // true if the cursor is in the player inventory false if it
+    // is in the loot inventory
+    bool m_IsPlayerInvActive;
 
     // Consumes m_DeltaRows and m_DeltaColumns to calculate the cursor state
-    void calculateCursorState(CursorState &cursorState, float slotSize, Math::float2 inventorySize,
+    // Returns true if the open boundary has been crossed
+    bool calculateCursorState(CursorState &cursorState, float slotSize, Math::float2 inventorySize,
                               const std::vector<Daedalus::GEngineClasses::C_Item> &itemList,
-                              const std::vector<int> &indices);
+                              const std::vector<int> &indices, OpenBoundary OpenBoundary = OpenBoundary::None);
 
     // Applies the rotations and scale typical for Gothic 1 & 2 inventory view. centerPos is
     // an offset relative to the item's mesh origin, it is the center positions for rotations
@@ -137,6 +151,7 @@ protected:
     Handle::TextureHandle m_TexSlotEquipped;
     Handle::TextureHandle m_TexInvBack;
 
+    Engine::ManagedActionBinding m_InputBack;
     Engine::ManagedActionBinding m_InputUp;
     Engine::ManagedActionBinding m_InputDown;
     Engine::ManagedActionBinding m_InputLeft;
