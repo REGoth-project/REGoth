@@ -196,8 +196,9 @@ UI::InventoryView::InventoryView(Engine::BaseEngine& e)
 
                 if(moveItemSymbol >= 0)
                 {
-                    moveToInv->addItem(moveItemSymbol, 1);
-                    moveFromInv->removeItem(moveItemSymbol, 1);
+                    unsigned int count = moveFromInv->getItemCount(moveItemSymbol);
+                    moveToInv->addItem(moveItemSymbol, count);
+                    moveFromInv->removeItem(moveItemSymbol, count);
                 }
                 break;
             }
@@ -939,6 +940,7 @@ void UI::InventoryView::update(double dt, Engine::Input::MouseState &mstate, Ren
             if(!m_IsPlayerInvActive)
                 toggleInventoryLater = temp;
         }
+        calculateCursorState(m_ThisCursorState, slotSize, inventorySize, itemList, indices);
 
         std::vector<ItemDrawState> otherItemsToDraw(m_OtherCursorState.numVisibleItems);
         for(int i = 0; i < otherItemsToDraw.size(); ++i)
