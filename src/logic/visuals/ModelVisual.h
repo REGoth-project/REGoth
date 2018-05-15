@@ -269,6 +269,12 @@ namespace Logic
     protected:
 
         /**
+         * Selects the correct texture variant of the texture registered inside the skeletal
+         * mesh.
+         */
+        std::string getCorrectTextureDependingOnSkinValues(size_t submesh);
+
+        /**
          * Updates all render-object transforms
          */
         void updateRenderObjectTransforms();
@@ -301,7 +307,7 @@ namespace Logic
         /**
          * Renderhandle of the main skeletal mesh (which has no submeshes)
          */
-        Handle::SkeletalMeshRenderHandle m_MainRenderHandle;
+        std::vector<Handle::SkeletalMeshRenderHandle> m_SkeletalRenderHandles;
 
         /**
          * Vectors of the entities created for the different parts of a model

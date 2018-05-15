@@ -254,7 +254,7 @@ void Render::setMeshOn(Handle::SkeletalMeshRenderHandle obj, const Content::Skel
         return;
 
     Allocators::skeletalMeshes.getElement(obj).mesh = mesh;
-    Allocators::skeletalMeshes.getElement(obj).boundingRadius = FLT_MAX; // TODO: Get proper value for this
+    Allocators::skeletalMeshes.getElement(obj).boundingRadius = mesh.getBoundingSphereRadius().value_or(1.0f);
 }
 
 void Render::setBoneTransformsOn(Handle::SkeletalMeshRenderHandle obj, const std::vector<Math::Matrix> &transforms)

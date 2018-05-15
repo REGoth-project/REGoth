@@ -286,20 +286,24 @@ bool ModelVisual::load(const std::string& visual)
 
 
     // ----- Create render-object
-    if(!mdata.m_SubmeshStarts.empty())
+    for(size_t i = 0; i < mdata.m_SubmeshStarts.size(); i++)
     {
-        m_MainRenderHandle = Render::addSkeletalMesh();
+        auto h = Render::addSkeletalMesh();
 
-        if (m_MainRenderHandle.isValid())
+        if (h.isValid())
         {
-            Render::Content::SkeletalMesh mesh(m_World.getSkeletalMeshAllocator(), m_MainMeshHandle);
-            Render::setMeshOn(m_MainRenderHandle, mesh);
+            Render::Content::SkeletalMesh mesh(m_World.getSkeletalMeshAllocator(), m_MainMeshHandle, i);
+            Render::setMeshOn(h, mesh);
 
             Render::Content::MeshMaterial material;
+
+            std::string correctedTexture = getCorrectTextureDependingOnSkinValues(i);
             material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
                                                                m_World.getTextureAllocator().loadTextureVDF(
-                                                                       mdata.m_SubmeshMaterialNames[0]));
-            Render::setMeshMaterialOn(m_MainRenderHandle, material);
+                                                                       correctedTexture));
+            Render::setMeshMaterialOn(h, material);
+
+            m_SkeletalRenderHandles.push_back(h);
         }
     }
     /*Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
@@ -319,6 +323,29 @@ bool ModelVisual::load(const std::string& visual)
     updateAttachmentVisuals();
 
     return true;
+}
+
+std::string ModelVisual::getCorrectTextureDependingOnSkinValues(size_t submesh)
+{
+    Meshes::WorldSkeletalMesh& mdata = m_World.getSkeletalMeshAllocator().getMesh(m_MainMeshHandle);
+
+    // Get texture parts
+    const std::string& textureName = mdata.m_SubmeshMaterialNames[submesh];
+    std::string newTextureName = textureName;
+
+    bool isBodyTexture = textureName.find("_BODY") != std::string::npos;
+
+    // Only modify if that is the core body texture (not armor)
+    if (isBodyTexture)
+    {
+        if (m_BodyState.bodyTextureIdx != 0)
+            Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
+
+        if (m_BodyState.bodySkinColorIdx != 0)
+            Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
+    }
+
+    return newTextureName;
 }
 
 void ModelVisual::setHeadMesh(const std::string& head, int headTextureIdx, int teethTextureIdx)
@@ -460,17 +487,17 @@ void ModelVisual::updateRenderObjectTransforms()
 {
     Math::Matrix transform = getEntityTransform();
 
-    if(m_MainRenderHandle.isValid())
+    for (auto h : m_SkeletalRenderHandles)
     {
         // Set all created visuals to the same transform as our entity
-        Render::setTransformOn(m_MainRenderHandle, transform);
+        Render::setTransformOn(h, transform);
 
         static std::vector<Math::Matrix> bones(ZenLoad::MAX_NUM_SKELETAL_NODES + 1);
         getAnimationHandler().updateSkeletalMeshInfo(&bones[1], bones.size() - 1);
 
         bones[0] = transform;
 
-        Render::setBoneTransformsOn(m_MainRenderHandle, bones);
+        Render::setBoneTransformsOn(h, bones);
 
     }
 }
@@ -651,52 +678,12 @@ void ModelVisual::updateBodyMesh()
 
     m_PartEntities.mainSkelMeshEntities.clear();
 
+    for (auto h : m_SkeletalRenderHandles)
+        Render::remove(h);
+
+    m_SkeletalRenderHandles.clear();
+
     load(m_BodyState.bodyVisual);
-
-    // Fix body-texture and skin-color
-    if (!m_PartEntities.mainSkelMeshEntities.empty())
-    {
-        for (size_t i = 0; i < m_PartEntities.mainSkelMeshEntities.size(); i++)
-        {
-            Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[i];
-
-            Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
-            if (Components::hasComponent<Components::StaticMeshComponent>(ent))
-            {
-                Components::StaticMeshComponent& sm = m_World.getEntity<Components::StaticMeshComponent>(bodyMain);
-
-                //if(m_BodyState.bodySkinColorIdx > 0 || m_BodyState.bodyTextureIdx > 0)
-                {
-                    if (sm.m_Texture.isValid())
-                    {
-                        // Get texture parts
-                        const std::string& textureName = m_World.getTextureAllocator().getTexture(sm.m_Texture).m_TextureName;
-                        std::string newTextureName = textureName;
-
-                        bool isBodyTexture = textureName.find("_BODY") != std::string::npos;
-                        // Only modify if that is the core body texture (not armor)
-                        if (isBodyTexture)
-                        {
-                            if (m_BodyState.bodyTextureIdx != 0)
-                                Utils::replace(newTextureName, "_V0", "_V" + std::to_string(m_BodyState.bodyTextureIdx));
-
-                            if (m_BodyState.bodySkinColorIdx != 0)
-                                Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
-                        }
-
-                        // TODO: Remove old render code!
-                        sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newTextureName);
-
-                        Render::Content::MeshMaterial material;
-                        material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
-                                                                           m_World.getTextureAllocator().loadTextureVDF(
-                                                                                   newTextureName));
-                        Render::setMeshMaterialOn(m_MainRenderHandle, material);
-                    }
-                }
-            }
-        }
-    }
 }
 
 void ModelVisual::updateHeadMesh()

@@ -55,14 +55,27 @@ namespace Render
                        Handle::MeshHandle handle = Handle::MeshHandle::makeInvalidHandle(),
                        size_t submeshIdx = 0)
                     : pAllocator(&allocator),
-                      handle(handle)
+                      handle(handle),
+                      submeshIdx(submeshIdx)
             {}
 
             Handle::MeshHandle handle;
+            size_t submeshIdx;
             std::string debugTag; // ie. file-name
 
             bool isLoaded() const {
                 return pAllocator->isLoaded(handle);
+            }
+
+            tl::optional<float> getBoundingSphereRadius() const
+            {
+                if (handle.isValid())
+                {
+                    return pAllocator->getMeshBoundingSphereRadius(handle);
+                } else
+                {
+                    return tl::nullopt;
+                }
             }
 
             tl::optional<Meshes::WorldSkeletalMesh &> get() const

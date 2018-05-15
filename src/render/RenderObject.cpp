@@ -104,10 +104,16 @@ void RenderObject::draw(const SkeletalMesh& renderObject)
 
     renderObject.material.map(&Content::MeshMaterial::bind);
 
-    bgfx::setTransform(renderObject.boneTransforms.data(), renderObject.boneTransforms.size());
+    // TODO: Maybe copy this into the render-object instead of risking a cache miss
+    const Meshes::SubmeshVxInfo& submesh = mesh->m_SubmeshStarts[renderObject.mesh->submeshIdx];
+
+    bgfx::setTransform(renderObject.boneTransforms.data(),
+                       renderObject.boneTransforms.size());
 
     bgfx::setVertexBuffer(0, mesh->m_VertexBufferHandle);
-    bgfx::setIndexBuffer(mesh->m_IndexBufferHandle);
+    bgfx::setIndexBuffer(mesh->m_IndexBufferHandle,
+                         submesh.m_StartIndex,
+                         submesh.m_NumIndices);
 
     bgfx::submit(RenderViewList::DEFAULT, Render::getConfig()->programs.mainSkinnedMeshProgram);
 }
