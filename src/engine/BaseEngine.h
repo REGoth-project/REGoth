@@ -45,6 +45,7 @@ namespace Engine
             bool startNewGame;
             std::string testVisual;
             std::string modfile;
+            bool noTextureFiltering;
             bx::CommandLine cmdline;
         };
 
