@@ -91,6 +91,12 @@ namespace Render
      * Sets the shown mesh on the given render-object
      */
     void setMeshOn(Handle::StaticMeshRenderHandle obj, const Content::StaticMesh& mesh);
+    void setMeshOn(Handle::SkeletalMeshRenderHandle obj, const Content::SkeletalMesh& mesh);
+
+    /**
+     * Sets the boneTransforms for the given skeletal mesh
+     */
+    void setBoneTransformsOn(Handle::SkeletalMeshRenderHandle obj, const std::vector<Math::Matrix>& transforms);
 };
 
 
