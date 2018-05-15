@@ -39,7 +39,7 @@ void RenderObject::draw(const StaticMesh& renderObject)
     if(!mesh)
         return;
 
-    if(!mesh->loaded)
+    if(!renderObject.mesh->isLoaded())
         return;
 
     tl::optional<const RenderConfig&> config = Render::getConfig();
@@ -77,7 +77,39 @@ void RenderObject::draw(const PointLight& renderObject)
 
 void RenderObject::draw(const SkeletalMesh& renderObject)
 {
-    RenderUtils::drawLocator(renderObject.transform, 0xFFFF0000);
+    if(renderObject.showLocator)
+        RenderUtils::drawLocator(renderObject.transform, 0xFFFF0000);
+
+    if(!renderObject.mesh)
+        return;
+
+    if(!renderObject.material)
+        return;
+
+    tl::optional<Meshes::WorldSkeletalMesh&> mesh = renderObject.mesh->get();
+
+    if(!mesh)
+        return;
+
+    if(!renderObject.mesh->isLoaded())
+        return;
+
+    tl::optional<const RenderConfig&> config = Render::getConfig();
+
+    if(!config)
+        return;
+
+    if(renderObject.boneTransforms.empty())
+        return;
+
+    renderObject.material.map(&Content::MeshMaterial::bind);
+
+    bgfx::setTransform(renderObject.boneTransforms.data(), renderObject.boneTransforms.size());
+
+    bgfx::setVertexBuffer(0, mesh->m_VertexBufferHandle);
+    bgfx::setIndexBuffer(mesh->m_IndexBufferHandle);
+
+    bgfx::submit(RenderViewList::DEFAULT, Render::getConfig()->programs.mainSkinnedMeshProgram);
 }
 
 void RenderObject::draw(const ParticleEffect& renderObject)

@@ -248,3 +248,17 @@ void Render::setMeshOn(Handle::StaticMeshRenderHandle obj, const Content::Static
     Allocators::staticMeshes.getElement(obj).boundingRadius = mesh.get()->boundingSphereRadius;
 }
 
+void Render::setMeshOn(Handle::SkeletalMeshRenderHandle obj, const Content::SkeletalMesh &mesh)
+{
+    if(!mesh.get())
+        return;
+
+    Allocators::skeletalMeshes.getElement(obj).mesh = mesh;
+    Allocators::skeletalMeshes.getElement(obj).boundingRadius = FLT_MAX; // TODO: Get proper value for this
+}
+
+void Render::setBoneTransformsOn(Handle::SkeletalMeshRenderHandle obj, const std::vector<Math::Matrix> &transforms)
+{
+    Allocators::skeletalMeshes.getElement(obj).boneTransforms = transforms;
+}
+

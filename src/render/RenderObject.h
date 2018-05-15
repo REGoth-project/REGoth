@@ -42,6 +42,8 @@ namespace Render
                   public Handle::HandleTypeDescriptor<Handle::SkeletalMeshRenderHandle>
         {
             tl::optional<Content::MeshMaterial> material;
+            tl::optional<Content::SkeletalMesh> mesh;
+            std::vector<Math::Matrix> boneTransforms;
         };
 
         struct ParticleEffect

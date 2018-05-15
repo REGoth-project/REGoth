@@ -284,6 +284,24 @@ bool ModelVisual::load(const std::string& visual)
         updateAttachmentTransforms(m_BindPoseTransforms);
     }
 
+
+    // ----- Create render-object
+    if(!mdata.m_SubmeshStarts.empty())
+    {
+        m_MainRenderHandle = Render::addSkeletalMesh();
+
+        if (m_MainRenderHandle.isValid())
+        {
+            Render::Content::SkeletalMesh mesh(m_World.getSkeletalMeshAllocator(), m_MainMeshHandle);
+            Render::setMeshOn(m_MainRenderHandle, mesh);
+
+            Render::Content::MeshMaterial material;
+            material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
+                                                               m_World.getTextureAllocator().loadTextureVDF(
+                                                                       mdata.m_SubmeshMaterialNames[0]));
+            Render::setMeshMaterialOn(m_MainRenderHandle, material);
+        }
+    }
     /*Handle::EntityHandle e = m_World.addEntity(Components::BBoxComponent::MASK);
     m_World.getEntity<Components::BBoxComponent>(e).m_DebugColor = 0xFFFFFFFF;
 
@@ -446,6 +464,14 @@ void ModelVisual::updateRenderObjectTransforms()
     {
         // Set all created visuals to the same transform as our entity
         Render::setTransformOn(m_MainRenderHandle, transform);
+
+        static std::vector<Math::Matrix> bones(ZenLoad::MAX_NUM_SKELETAL_NODES + 1);
+        getAnimationHandler().updateSkeletalMeshInfo(&bones[1], bones.size() - 1);
+
+        bones[0] = transform;
+
+        Render::setBoneTransformsOn(m_MainRenderHandle, bones);
+
     }
 }
 
@@ -657,7 +683,15 @@ void ModelVisual::updateBodyMesh()
                             if (m_BodyState.bodySkinColorIdx != 0)
                                 Utils::replace(newTextureName, "_C0", "_C" + std::to_string(m_BodyState.bodySkinColorIdx));
                         }
+
+                        // TODO: Remove old render code!
                         sm.m_Texture = m_World.getTextureAllocator().loadTextureVDF(newTextureName);
+
+                        Render::Content::MeshMaterial material;
+                        material.diffuseTexture = Render::Content::Texture(m_World.getTextureAllocator(),
+                                                                           m_World.getTextureAllocator().loadTextureVDF(
+                                                                                   newTextureName));
+                        Render::setMeshMaterialOn(m_MainRenderHandle, material);
                     }
                 }
             }
