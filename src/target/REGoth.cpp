@@ -866,7 +866,6 @@ void REGoth::initConsole()
       if (Utils::endsWith(Utils::lowered(fileName), ".wav"))
       {
         playSoundFiles.push_back(fileName);
-        LogInfo() << "FOUND WAV: " << fileName;
       }
     }
 
