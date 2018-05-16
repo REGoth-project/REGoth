@@ -58,12 +58,40 @@ Currently supported/tested are:
  - MinGW
  - Visual Studio 2015, 2017
 
+You will also need a copy of `libsndfile` installed on your computer.
+
+## Obtaining `libsndfile`
+
+### *nix systems (Linux, BSD, macOS)
+On most *nix systems, this can be obtained using a package manager, for example on Debian/Ubuntu:
+
+```sh
+$ sudo apt install libsndfile1-dev
+```
+
+Or on macOS
+
+```sh
+$ brew install libsndfile # Needs Homebrew
+```
+
+### Windows
+`libsndfile` will need to be compiled separately. Create a directory somewhere on your system to store the compiled files, then run
+
+    mkdir build-libsndfile
+    cd build-libsndfile
+    cmake -D CMAKE_INSTALL_PREFIX=compiled/files/folder path/to/REGoth/lib/libdmusic/utils/dls2sf/lib/libsndfile
+    cmake --build . --target install --config Release
+
+## Compiling REGoth
+
 Then:
 ```sh
 cd path/to/REGoth
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release .. # On *nix systems this is sufficient
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=compiled/files/folder .. # On Windows
 ```
 > If CMake complains about some folders missing a CMakeLists.txt, you most likely forgot to clone with the `--recursive`-flag!
 > Simple do `git submodule update --init --recursive` and it should work.

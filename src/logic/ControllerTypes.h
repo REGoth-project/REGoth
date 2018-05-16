@@ -16,5 +16,6 @@ namespace Logic
         ItemController,
         MobController,
         SoundController,
+        MusicController,
     };
 }

@@ -35,6 +35,8 @@ namespace Flags
     Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
+
+    Cli::Flag noTextureFiltering("nf", "disable-filtering", 0, "Disables texture filtering");
 }
 
 BaseEngine::BaseEngine()
@@ -112,6 +114,8 @@ void BaseEngine::initEngine(int argc, char** argv)
     if (Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
 
+    m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
+
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 
     // Init HUD
@@ -127,75 +131,38 @@ void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 
 void BaseEngine::loadArchives()
 {
-    //m_FileIndex.loadVDF("vdf/Worlds_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Textures.vdf");
-    //m_FileIndex.loadVDF("vdf/Textures_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Meshes_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Meshes.vdf");
-    //m_FileIndex.loadVDF("vdf/Anims.vdf");
-    //m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
-
-    /*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
-	m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
-	m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures.VDF");
-	m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
-
-    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
-
-    // Load explicit modfile with even higher priority
+    // Load explicit modfile with highest priority
     if (!m_Args.modfile.empty())
     {
-      LogInfo() << "Reading Mod-File from Commandline: " << m_Args.modfile;
-      m_FileIndex.loadVDF(m_Args.modfile, 2);
+        LogInfo() << "Reading Mod-File from Commandline: " << m_Args.modfile;
+        m_FileIndex.loadVDF(m_Args.modfile);
     }
 
-    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
-    for (std::string& s : vdfArchives)
-    {
-        m_FileIndex.loadVDF(s);
-    }
-
-    // Happens on modded games
-    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
-
-    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
-    for (std::string& s : vdfArchivesDisabled)
-    {
-        m_FileIndex.loadVDF(s);
-    }
-
-    // Load mod archives with higher priority
+    // Load mod archives
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
-
+    modArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
     LogInfo() << "Loading MOD-Archives: " << modArchives;
     if (!modArchives.empty())
-    {
         for (std::string& s : modArchives)
-        {
-            m_FileIndex.loadVDF(s, 1);
-        }
-    }
+            m_FileIndex.loadVDF(s);
 
-    // Load zip archives with yet higher priority
+    // Load zip archives
     std::list<std::string> zipArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "zip", false);
-
+    zipArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
     LogInfo() << "Loading ZIP-Archives: " << zipArchives;
     if (!zipArchives.empty())
-      {
         for (std::string& s : zipArchives)
-          {
-            m_FileIndex.loadVDF(s, 1);
-          }
-      }
+            m_FileIndex.loadVDF(s);
+
+    // Load vdf archives
+    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
+    vdfArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
+    for (std::string& s : vdfArchives)
+        m_FileIndex.loadVDF(s);
 
     m_FileIndex.finalizeLoad();
 }
