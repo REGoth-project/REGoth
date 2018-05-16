@@ -2529,9 +2529,11 @@ void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
 }
 void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
 {
-    assert(!m_activePfxEvents.empty());
+	//FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
+	if(m_activePfxEvents.empty())
+		LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
 
-    //Kill first pfx that is not in dead state
+    //Kill pfx with the corresponding number
     for (auto &pfx : m_activePfxEvents) {
 		if (pfx.m_Num == pfxStop.m_Num) {
 			Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
