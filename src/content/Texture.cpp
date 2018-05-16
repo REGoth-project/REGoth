@@ -162,7 +162,7 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         h = loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
     }
 
-    m_Engine.executeInMainThread([this, h](Engine::BaseEngine* pEngine) {
+    m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
         finalizeLoad(h);
     });
 
@@ -178,11 +178,18 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
 {
     Texture& tx = m_Allocator.getElement(h);
 
+    std::uint32_t textureFlags = BGFX_TEXTURE_NONE;
+
+    if (this->m_Engine.getEngineArgs().noTextureFiltering)
+    {
+        textureFlags = BGFX_TEXTURE_MIN_POINT | BGFX_TEXTURE_MAG_POINT | BGFX_TEXTURE_MIP_POINT;
+    }
+
     if (tx.textureFormat == bgfx::TextureFormat::RGBA8)
     {
         const bgfx::Memory* mem = bgfx::alloc(tx.imageData.size());
         memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
-        bgfx::TextureHandle bth = bgfx::createTexture2D(tx.m_Width, tx.m_Height, false, 1, bgfx::TextureFormat::RGBA8, BGFX_TEXTURE_NONE, mem);
+        bgfx::TextureHandle bth = bgfx::createTexture2D(tx.m_Width, tx.m_Height, false, 1, bgfx::TextureFormat::RGBA8, textureFlags, mem);
 
         m_EstimatedGPUBytes += tx.imageData.size();
 
@@ -201,7 +208,7 @@ bool TextureAllocator::finalizeLoad(Handle::TextureHandle h)
         //TODO: Avoid the second copy here
         const bgfx::Memory* mem = bgfx::alloc(tx.imageData.size());
         memcpy(mem->data, tx.imageData.data(), tx.imageData.size());
-        bgfx::TextureHandle bth = bgfx::createTexture(mem);
+        bgfx::TextureHandle bth = bgfx::createTexture(mem, textureFlags);
 
         m_EstimatedGPUBytes += tx.imageData.size();
 

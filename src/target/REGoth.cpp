@@ -17,6 +17,7 @@
 #include <logic/Console.h>
 #include <logic/NpcScriptState.h>
 #include <logic/PlayerController.h>
+#include <logic/MusicController.h>
 #include <logic/SavegameManager.h>
 #include <render/RenderSystem.h>
 #include <render/WorldRender.h>
@@ -46,35 +47,6 @@ namespace Flags
     Cli::Flag help("h", "help", 0, "Prints this message");
     Cli::Flag vsync("vsync", "vertical-sync", 0, "Enables vertical sync", {"0"}, "Rendering");
 }
-
-// TODO: Keymap should be loaded from config
-std::map<int, UI::EInputAction> keyMap = {
-    {GLFW_KEY_UP, UI::IA_Up},
-    {GLFW_KEY_DOWN, UI::IA_Down},
-    {GLFW_KEY_LEFT, UI::IA_Left},
-    {GLFW_KEY_RIGHT, UI::IA_Right},
-    {GLFW_KEY_ENTER, UI::IA_Accept},
-    {GLFW_KEY_ESCAPE, UI::IA_Close},
-    {GLFW_KEY_BACKSPACE, UI::IA_Backspace},
-    {GLFW_KEY_0, UI::IA_0},
-    {GLFW_KEY_1, UI::IA_1},
-    {GLFW_KEY_2, UI::IA_2},
-    {GLFW_KEY_3, UI::IA_3},
-    {GLFW_KEY_4, UI::IA_4},
-    {GLFW_KEY_5, UI::IA_5},
-    {GLFW_KEY_6, UI::IA_6},
-    {GLFW_KEY_7, UI::IA_7},
-    {GLFW_KEY_8, UI::IA_8},
-    {GLFW_KEY_9, UI::IA_9},
-    {GLFW_KEY_HOME, UI::IA_HOME},
-    {GLFW_KEY_END, UI::IA_END},
-    {GLFW_KEY_PAGE_UP, UI::IA_Up},
-    {GLFW_KEY_PAGE_DOWN, UI::IA_Down},
-    {GLFW_KEY_B, UI::IA_ToggleStatusMenu},
-    {GLFW_KEY_F10, UI::IA_ToggleConsole},
-    {GLFW_KEY_BACKSPACE, UI::IA_ToggleStatusMenu},
-    {GLFW_KEY_N, UI::IA_ToggleLogMenu},
-    {GLFW_KEY_L, UI::IA_ToggleLogMenu}};
 
 void REGoth::init(int _argc, char** _argv)
 {
@@ -591,10 +563,10 @@ void REGoth::initConsole()
             saveGameName = Engine::SavegameManager::readSavegameInfo(index).name;
         }
 
-        bool forceQueue = true; // better do saving at frame end and not between entity updates
-        this->m_pEngine->executeInMainThread([index, saveGameName](Engine::BaseEngine* engine){
+        // better do saving at frame end and not between entity updates
+        this->m_pEngine->getJobManager().queueJob([index, saveGameName](Engine::BaseEngine* engine){
             Engine::SavegameManager::saveToSlot(index, saveGameName);
-        }, forceQueue);
+        });
 
         return "Saving world to slot: " + std::to_string(index) + "...";
     });
@@ -868,7 +840,7 @@ void REGoth::initConsole()
         return "Interrupted player, cleared EM";
     });
 
-    console.registerCommand("playsound", [this](const std::vector<std::string>& args) -> std::string {
+    auto& playsound = console.registerCommand("playsound", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 2)
             return "Missing argument. Usage: playsound <soundfile>";
 
@@ -887,6 +859,18 @@ void REGoth::initConsole()
         player.playerController->getNpcAnimationHandler().getAnimHandler().playAnimation(args[1]);
         return "Played animation " + args[1];
     });
+
+
+    std::vector<std::string> playSoundFiles;
+    for (const auto& fileName : m_pEngine->getVDFSIndex().getKnownFiles())
+    {
+      if (Utils::endsWith(Utils::lowered(fileName), ".wav"))
+      {
+        playSoundFiles.push_back(fileName);
+      }
+    }
+
+    playsound.registerAutoComplete(simpleStringGenGen(playSoundFiles));
 
     console.registerCommand("volume", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 2)
@@ -1022,6 +1006,35 @@ void REGoth::initConsole()
 
     console.registerCommand("giveitem", giveitemCallback).registerAutoComplete(itemNamesGen);
     console.registerCommand("removeitem", removeitemCallback).registerAutoComplete(itemNamesGen);
+
+    console.registerCommand("playsegment", [this](const auto& args) -> std::string {
+        if (args.size() < 2)
+            return "Usage: playsegment [segmentname]";
+
+        auto& world = m_pEngine->getMainWorld().get().getAudioWorld();
+        if (world.playSegment(args[1]))
+        {
+            return "Segment enqueued";
+        }
+        else
+        {
+            return "Couldn't find segment";
+        }
+    }).registerAutoComplete([this]() {
+        std::vector<Suggestion> suggestions;
+        for (const auto& suggestion : this->m_pEngine->getMainWorld().get().getAudioWorld().getLoadedSegments())
+        {
+            std::vector<std::string> s;
+            s.push_back(suggestion);
+            suggestions.push_back(std::make_shared<SuggestionBase>(s));
+        }
+        return suggestions;
+    });
+
+    console.registerCommand("togglemusiczonedraw", [this](const auto& args) -> std::string {
+        Logic::MusicController::toggleDebugDraw();
+        return "Ok";
+    });
 }
 
 int REGoth::shutdown()
@@ -1057,16 +1070,14 @@ bool REGoth::update()
 
         if (m_pEngine->getConsole().isOpen())
             m_pEngine->getConsole().onKeyDown(i, mods);
-        if (keyMap.find(i) != keyMap.end())
-            m_pEngine->getHud().onInputAction(keyMap[i]);
+        //if (keyMap.find(i) != keyMap.end())
+        //    m_pEngine->getHud().onInputAction(keyMap[i]);
     }
 
     // Pass text input from this frame
     m_pEngine->getHud().onTextInput(frameInputText);
 
-    bool disableBindings = m_pEngine->getConsole().isOpen() || m_pEngine->getHud().isMenuActive();
-    if (!disableBindings)
-        Engine::Input::fireBindings();
+    Engine::Input::fireBindings();
 
     // Check for resize
     if (m_Width != getWindowWidth() || m_Height != getWindowHeight())
@@ -1077,8 +1088,8 @@ bool REGoth::update()
         // Notify bgfx about framebuffer resize
         bgfx::reset(m_Width, m_Height);
     }
-    int64_t excludedFrameTime = m_pEngine->getExludedFrameTime();
-    m_pEngine->resetExludedFrameTime();
+    int64_t excludedFrameTime = m_pEngine->m_ExcludedFrameTime.getAndReset();
+
     // TODO: toogle this in multiplayer mode or disable via ExcludeFrameTime's constructor arg
     const bool isMultiplayer = false;
     if (isMultiplayer)
@@ -1162,15 +1173,11 @@ bool REGoth::update()
 
     imguiEndFrame();
 
-    if (disableBindings)
-    {
-        Engine::Input::clearTriggered();
-    }
+    m_pEngine->getJobManager().processJobs();
 
     // Advance to next frame. Rendering thread will be kicked to
     // process submitted rendering primitives.
     bgfx::frame();
-    m_pEngine->processMessageQueue();
 
     return true;
 }

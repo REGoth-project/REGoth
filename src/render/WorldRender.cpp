@@ -140,6 +140,15 @@ namespace Render
         size_t numDrawcalls = 0;
         size_t numIndices = 0;
         size_t numSubmeshesDrawn = 0;
+
+        std::uint32_t textureFlags = BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC;
+
+        // Disables anisotropic filtering and enables nearest-neighbour
+        if (world.getEngine()->getEngineArgs().noTextureFiltering)
+        {
+            textureFlags = BGFX_TEXTURE_MIN_POINT | BGFX_TEXTURE_MAG_POINT;
+        }
+
         for (size_t i = 0; i < num; i++)
         {
             // Simple distance-check // TODO: Frustum/Occlusion-Culling
@@ -219,7 +228,7 @@ namespace Render
                     if (sms[i].m_Texture.isValid())
                     {
                         Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
-                        bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+                        bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, textureFlags);
                     }
 
                     // Set object-color
@@ -323,7 +332,7 @@ namespace Render
                         if (sms[i].m_Texture.isValid())
                         {
                             Textures::Texture& texture = world.getTextureAllocator().getTexture(sms[i].m_Texture);
-                            bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, BGFX_TEXTURE_MIN_ANISOTROPIC | BGFX_TEXTURE_MAG_ANISOTROPIC);
+                            bgfx::setTexture(0, config.uniforms.diffuseTexture, texture.m_TextureHandle, textureFlags);
                         }
 
                         // Set object-color

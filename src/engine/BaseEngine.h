@@ -1,6 +1,7 @@
 #pragma once
 #include <future>
 #include "World.h"
+#include "JobManager.h"
 #include <bx/commandline.h>
 #include <engine/GameClock.h>
 #include <engine/GameSession.h>
@@ -26,14 +27,7 @@ namespace Audio
 namespace Engine
 {
     class GameSession;
-    class AsyncAction;
     const int MAX_NUM_WORLDS = 4;
-
-    enum class ExecutionPolicy
-    {
-        MainThread,
-        NewThread
-    };
 
     class BaseEngine
     {
@@ -51,6 +45,7 @@ namespace Engine
             bool startNewGame;
             std::string testVisual;
             std::string modfile;
+            bool noTextureFiltering;
             bx::CommandLine cmdline;
         };
 
@@ -97,10 +92,16 @@ namespace Engine
          * @return GameSession
          */
         GameSession& getSession() { return *m_Session; }
+
         /**
          * drop all information bound to the current session
          */
         void resetSession();
+
+        /**
+         * Access for executing/queueing tasks that should be done synchronously or asynchronously
+         */
+        JobManager& getJobManager();
 
         /**
          * @return Console
@@ -158,35 +159,6 @@ namespace Engine
          * Pauses or continues the game. Depending on the current state
          */
         void togglePaused() { setPaused(!m_Paused); }
-        /**
-         * increase the time, which the current frame should not treat as elapsed
-         */
-        void addToExludedFrameTime(int64_t milliseconds) { m_ExcludedFrameTime += milliseconds; };
-        int64_t getExludedFrameTime() { return m_ExcludedFrameTime; };
-        void resetExludedFrameTime() { m_ExcludedFrameTime = 0; };
-        /**
-         * @return true if the calling thread is the main thread
-         */
-        bool isMainThread();
-
-        /**
-         * Guarantees execution of the given function in the main thread
-         * @param job function to execute in the main thread
-         * @param forceQueueing if false AND if called from main thread: executes the job right away
-         * 		  instead of queueing and does not acquire the lock.
-         */
-        void executeInMainThread(const std::function<void(BaseEngine* engine)>& job, bool forceQueueing = false);
-
-        /**
-         * Execute the given job on the main thread one time per frame update until it returns true
-         */
-        void executeInMainThreadUntilTrue(const std::function<bool(BaseEngine* engine)>& job,
-                                          bool forceQueueing = false);
-
-        /**
-         * executes all jobs in the queue and removes the ones, that return true
-         */
-        void processMessageQueue();
 
         /**
          * Called when a world was added
@@ -195,7 +167,19 @@ namespace Engine
         virtual void onWorldCreated(Handle::WorldHandle world);
         virtual void onWorldRemoved(Handle::WorldHandle world){};
 
+        /**
+         * amount of time for the next frame that should not be considered as elapsed
+         */
+        Utils::TimeSpan m_ExcludedFrameTime;
+
     protected:
+
+        /**
+         * Handles delegation of function calls to main thread and starting of asynchronous operations
+         * contains ID of the main thread (bgfx thread), MUST BE initialized first
+         */
+        JobManager m_JobManager;
+
         /**
          * Update-method for subclasses
          */
@@ -206,11 +190,6 @@ namespace Engine
          *		  Overwrite to load your own default archives
          */
         virtual void loadArchives();
-
-        /**
-         * ID of the main thread (bgfx thread)
-         */
-        std::thread::id m_MainThreadID;
 
         /**
          * Enum with values for Gothic I and Gothic II
@@ -262,51 +241,5 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
-
-        std::list<AsyncAction> m_MessageQueue;
-        std::mutex m_MessageQueueMutex;
-
-        /**
-         * amount of time for the next frame that should not be considered as elapsed
-         */
-        int64_t m_ExcludedFrameTime;
-    };
-
-    /**
-     * instances of this class shall only be created/destroyed in one thread
-     */
-    class ExcludeFrameTime
-    {
-    public:
-        ExcludeFrameTime(BaseEngine& baseEngine, bool enabled = true)
-            : m_Engine(baseEngine)
-            , m_Enabled(enabled)
-            , m_Start(bx::getHPCounter())
-        {
-            if (m_Enabled)
-                m_ReferenceCounter++;
-        }
-
-        ~ExcludeFrameTime()
-        {
-            if (m_Enabled)
-            {
-                m_ReferenceCounter--;
-                if (m_ReferenceCounter == 0)
-                {
-                    auto elapsed = bx::getHPCounter() - m_Start;
-                    m_Engine.addToExludedFrameTime(elapsed);
-                }
-            }
-        }
-
-    private:
-        BaseEngine& m_Engine;
-        // used to dynamically enable/disable this excluder at runtime
-        int64_t m_Enabled;
-        int64_t m_Start;
-        // number of excluders currently alive
-        // for handling overlapping or nested excluders
-        static size_t m_ReferenceCounter;
     };
 }

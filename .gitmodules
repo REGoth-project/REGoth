@@ -25,3 +25,6 @@
 [submodule "lib/CAB-Installer-Extractor"]
 	path = lib/CAB-Installer-Extractor
 	url = https://github.com/REGoth-project/CAB-Installer-Extractor.git
+[submodule "lib/libdmusic"]
+	path = lib/libdmusic
+	url = https://github.com/frabert/libdmusic.git

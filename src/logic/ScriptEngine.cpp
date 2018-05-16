@@ -11,6 +11,7 @@
 #include <logic/scriptExternals/Stubs.h>
 #include <ui/PrintScreenMessages.h>
 #include <utils/logger.h>
+#include <utils/Utils.h>
 
 using namespace Logic;
 
@@ -29,14 +30,28 @@ ScriptEngine::~ScriptEngine()
     delete m_pVM;
 }
 
+bool ScriptEngine::loadDAT(const uint8_t* pDatFile, size_t numBytes)
+{
+  delete m_pVM;
+
+  m_pVM = new Daedalus::DaedalusVM(pDatFile, numBytes);
+
+  return initVMWithLoadedDAT();
+}
+
+
 bool ScriptEngine::loadDAT(const std::string& file)
 {
     delete m_pVM;  // FIXME: Should support merging DATS?
 
-    LogInfo() << "Loading Daedalus compiled script file: " << file;
-
     m_pVM = new Daedalus::DaedalusVM(file);
 
+    return initVMWithLoadedDAT();
+}
+
+
+bool ScriptEngine::initVMWithLoadedDAT()
+{
     // Register externals
     const bool verbose = false;
     Logic::ScriptExternals::registerStubs(*m_pVM, verbose);
@@ -313,6 +328,15 @@ Daedalus::GameState::ItemHandle ScriptEngine::getItemFromSymbol(const std::strin
         return Daedalus::GameState::ItemHandle();
 
     return ZMemory::handleCast<Daedalus::GameState::ItemHandle>(sym.instanceDataHandle);
+}
+
+Daedalus::GameState::MusicThemeHandle ScriptEngine::getMusicThemeFromSymbol(const std::string& symName) {
+    Daedalus::PARSymbol& sym = m_pVM->getDATFile().getSymbolByName(symName);
+
+    if (sym.instanceDataClass != Daedalus::IC_MusicTheme)
+        return Daedalus::GameState::MusicThemeHandle();
+
+    return ZMemory::handleCast<Daedalus::GameState::MusicThemeHandle>(sym.instanceDataHandle);
 }
 
 void ScriptEngine::registerItem(Handle::EntityHandle e)

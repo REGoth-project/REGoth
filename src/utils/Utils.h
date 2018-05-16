@@ -12,9 +12,11 @@
 #include <memory>
 #include <sstream>
 #include <vector>
+#include <cstdint>
 #include <stdlib.h>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
+#include <bx/timer.h>
 
 namespace Utils
 {
@@ -423,6 +425,13 @@ namespace Utils
     std::string readFileContents(const std::string& file);
 
     /**
+    * Reads the whole contents of a binary file into a buffer
+    * @param file File to read
+    * @return contents of the given binary file
+    */
+    std::vector<std::uint8_t> readBinaryFileContents(const std::string& file);
+
+    /**
      * @return Size of the given file in bytes. 0 is not found or emtpy.
      */
     size_t getFileSize(const std::string& file);
@@ -607,4 +616,38 @@ namespace Utils
      * @returns pair of filename without extension and extension
      */
     std::pair<std::string, std::string> splitExtension(const std::string& filename);
+
+    class TimeSpan
+    {
+    public:
+        TimeSpan();
+
+        void enter();
+
+        void leave(size_t elapsed);
+
+        size_t getAndReset();
+
+    private:
+        size_t m_elapsed;
+        // for handling nested StopWatches
+        size_t m_depth;
+    };
+
+    /**
+     * Stopwatch, that can be nested analog to recursive_mutex. Overlapping intervals will not be counted more than once
+     */
+    class RecursiveStopWatch
+    {
+    public:
+        RecursiveStopWatch(TimeSpan& timeSpan, bool enabled = true);
+
+        ~RecursiveStopWatch();
+
+    private:
+        TimeSpan& m_TimeSpan;
+        // used to dynamically enable/disable this excluder at runtime
+        int64_t m_Enabled;
+        int64_t m_Start;
+    };
 }

@@ -122,3 +122,13 @@ double GameClock::getLastDt()
 {
     return m_LastFrameDeltaTime;
 }
+
+bool GameClock::isDaytime() const
+{
+    double a = hmToDayTime(6, 30);
+    double b = hmToDayTime(18, 30);
+
+    double timeOfDay = getTimeOfDay();
+
+    return timeOfDay >= a && timeOfDay <= b;
+}

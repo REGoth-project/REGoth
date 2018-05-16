@@ -287,6 +287,18 @@ std::string Utils::readFileContents(const std::string& file)
     return ss.str();
 }
 
+std::vector<std::uint8_t> Utils::readBinaryFileContents(const std::string& file) {
+    std::ifstream inputStream(file, std::ios::binary | std::ios::ate);
+    if (!inputStream.is_open()) {
+        return std::vector<std::uint8_t>();
+    }
+    std::vector<std::uint8_t> buffer(inputStream.tellg());
+    inputStream.seekg(0);
+    inputStream.read((char*)buffer.data(), buffer.size());
+    inputStream.close();
+    return buffer;
+}
+
 bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::vector<uint8_t>& data)
 {
     std::string sep = (path.back() == '/' || path.back() == '\\') ? "" : "/";
@@ -462,4 +474,47 @@ float Utils::fmod(float a, float b)
 double Utils::fmod(double a, double b)
 {
     return std::fmod(std::fmod(a, b) + b, b);
+}
+
+Utils::TimeSpan::TimeSpan()
+    : m_elapsed(0)
+    , m_depth(0)
+{
+}
+
+void Utils::TimeSpan::enter()
+{
+    ++m_depth;
+}
+
+void Utils::TimeSpan::leave(size_t elapsed)
+{
+    --m_depth;
+    if (m_depth == 0)
+        m_elapsed += elapsed;
+}
+
+size_t Utils::TimeSpan::getAndReset()
+{
+    auto elapsed = m_elapsed;
+    m_elapsed = 0;
+    return elapsed;
+}
+
+Utils::RecursiveStopWatch::RecursiveStopWatch(Utils::TimeSpan& timeSpan, bool enabled)
+    : m_TimeSpan(timeSpan)
+    , m_Enabled(enabled)
+    , m_Start(bx::getHPCounter())
+{
+    if (m_Enabled)
+        m_TimeSpan.enter();
+}
+
+Utils::RecursiveStopWatch::~RecursiveStopWatch()
+{
+    if (m_Enabled)
+    {
+        auto elapsed = bx::getHPCounter() - m_Start;
+        m_TimeSpan.leave(elapsed);
+    }
 }

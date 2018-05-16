@@ -1,10 +1,18 @@
 #include <cstddef>
 #include <functional>
+#include <vector>
+#include <cstdint>
 
 #ifdef RE_USE_SOUND
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+
+#include <dmusic/PlayingContext.h>
+#ifndef DMUSIC_DLS_PLAYER
+#define DMUSIC_DLS_PLAYER 1
+#endif
+#include <dmusic/DlsPlayer.h>
 #endif
 
 #include <adpcm/adpcm-lib.h>
@@ -24,11 +32,24 @@
 
 using namespace Audio;
 
+static DirectMusic::SegmentTiming getTiming(std::uint32_t v) {
+    switch (v) {
+    case Daedalus::GEngineClasses::TRANSITION_SUB_TYPE_BEAT:
+        return DirectMusic::SegmentTiming::Beat;
+    case Daedalus::GEngineClasses::TRANSITION_SUB_TYPE_MEASURE:
+        return DirectMusic::SegmentTiming::Measure;
+
+    default:
+        return DirectMusic::SegmentTiming::Immediate;
+    }
+}
+
 namespace World
 {
     AudioWorld::AudioWorld(Engine::BaseEngine& engine, AudioEngine& audio_engine, const VDFS::FileIndex& vdfidx)
         : m_Engine(engine)
         , m_VDFSIndex(vdfidx)
+        , m_exiting(false)
     {
 #ifdef RE_USE_SOUND
         if (!audio_engine.getDevice())
@@ -55,12 +76,139 @@ namespace World
         alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
 
         createSounds();
+
+        initializeMusic();
 #endif
     }
+
+#ifdef RE_USE_SOUND
+    void AudioWorld::initializeMusic()
+    {
+        std::string datPath = "/_work/data/Scripts/_compiled/MUSIC.DAT";
+        std::string datFile = Utils::getCaseSensitivePath(datPath, m_Engine.getEngineArgs().gameBaseDirectory);
+
+        if (!Utils::fileExists(datFile)) {
+            LogError() << "Failed to find MUSIC.DAT at: " << datFile;
+            return;
+        }
+
+        m_MusicVM = new Daedalus::DaedalusVM(datFile);
+        Daedalus::registerGothicEngineClasses(*m_MusicVM);
+
+        m_MusicVM->getDATFile().iterateSymbolsOfClass("C_MUSICTHEME", [&](size_t i, Daedalus::PARSymbol& s) {
+            Daedalus::GameState::MusicThemeHandle h = m_MusicVM->getGameState().createMusicTheme();
+            Daedalus::GEngineClasses::C_MusicTheme& mt = m_MusicVM->getGameState().getMusicTheme(h);
+            m_MusicVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_MusicTheme);
+
+            m_musicThemeSegments[s.name] = mt.file;
+        });
+
+        // DirectMusic initialization
+        std::string baseDir = m_Engine.getEngineArgs().gameBaseDirectory;
+        std::string musicPath = Utils::getCaseSensitivePath("/_work/data/Music", baseDir);
+        try {
+            const auto sfFactory = DirectMusic::DlsPlayer::createFactory();
+            m_musicContext = std::make_unique<DirectMusic::PlayingContext>(44100, 2, sfFactory);
+
+            auto loader = [musicPath, baseDir](const std::string& name) {
+                const auto search = Utils::lowered(Utils::stripFilePath(name));
+                for (const auto& file : Utils::getFilesInDirectory(musicPath)) {
+                    const auto lowercaseName = Utils::lowered(Utils::stripFilePath(file));
+                    if (lowercaseName == search) {
+                        return Utils::readBinaryFileContents(file);
+                    }
+                }
+                return std::vector<std::uint8_t>();
+            };
+
+            m_musicContext->provideLoader(loader);
+
+            for (const auto& segment : Utils::getFilesInDirectory(musicPath, "sgt")) {
+                const auto lowercaseName = Utils::lowered(Utils::stripFilePath(segment));
+                const auto segm = m_musicContext->loadSegment(segment);
+                LogInfo() << "Loading " + segment;
+                m_Segments[lowercaseName] = m_musicContext->prepareSegment(*segm);
+            }
+            LogInfo() << "All segments loaded.";
+
+            alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+            alGenSources(1, &m_musicSource);
+
+            // Set the default volume
+            alSourcef(m_musicSource, AL_GAIN, 1);
+
+            // Set the default position of the sound
+            alSource3f(m_musicSource, AL_POSITION, 0, 0, 0);
+
+            m_musicRenderThread = std::thread(&AudioWorld::musicRenderFunction, this);
+        } catch (const std::exception& exc) {
+            LogError() << "Couldn't initialize music system: " << exc.what();
+        }
+    }
+
+    void AudioWorld::musicRenderFunction()
+    {
+        ALenum error;
+        std::int16_t buf[RE_MUSIC_BUFFER_LEN];
+        for (int i = 0; i < RE_MUSIC_BUFFER_LEN; i++) buf[i] = 0;
+
+        for (int i = 0; i < RE_NUM_MUSIC_BUFFERS; i++)
+        {
+            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
+        }
+
+        alSourceQueueBuffers(m_musicSource, RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+        alSourcePlay(m_musicSource);
+        error = alGetError();
+        if (error != AL_NO_ERROR)
+        {
+            LogError() << "Cannot start playing music: " << AudioEngine::getErrorString(error);
+            return;
+        }
+
+        m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+
+        while (!m_exiting)
+        {
+            ALint val;
+            int n = 0;
+            alGetSourcei(m_musicSource, AL_BUFFERS_PROCESSED, &val);
+            if (val <= 0)
+            {
+                continue;
+            }
+
+            for(int i = 0; i < val; i++)
+            {
+                ALuint buffer;
+                alSourceUnqueueBuffers(m_musicSource, 1, &buffer);
+                alBufferData(buffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
+                alSourceQueueBuffers(m_musicSource, 1, &buffer);
+                error = alGetError();
+                if (error != AL_NO_ERROR)
+                {
+                    LogError() << "Error while buffering: " << AudioEngine::getErrorString(error);
+                    return;
+                }
+                m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
+            }
+
+            alGetSourcei(m_musicSource, AL_SOURCE_STATE, &val);
+            if (val != AL_PLAYING)
+                alSourcePlay(m_musicSource);
+        }
+    }
+#endif
 
     AudioWorld::~AudioWorld()
     {
 #ifdef RE_USE_SOUND
+        m_exiting = true;
+        m_musicRenderThread.join();
+
+        alDeleteBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
+        alDeleteSources(1, &m_musicSource);
+
         for (int i = 0; i < Config::MAX_NUM_LEVEL_AUDIO_FILES; i++)
         {
             Sound& snd = m_Allocator.getElements()[i];
@@ -74,7 +222,8 @@ namespace World
         if (m_Context)
             alcDestroyContext(m_Context);
 
-        delete m_VM;
+        delete m_SoundVM;
+        delete m_MusicVM;
 #endif
     }
 
@@ -306,15 +455,15 @@ namespace World
             return;
         }
 
-        m_VM = new Daedalus::DaedalusVM(datFile);
-        Daedalus::registerGothicEngineClasses(*m_VM);
+        m_SoundVM = new Daedalus::DaedalusVM(datFile);
+        Daedalus::registerGothicEngineClasses(*m_SoundVM);
 
         size_t count = 0;
-        m_VM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s) {
+        m_SoundVM->getDATFile().iterateSymbolsOfClass("C_SFX", [&](size_t i, Daedalus::PARSymbol& s) {
 
-            Daedalus::GameState::SfxHandle h = m_VM->getGameState().createSfx();
-            Daedalus::GEngineClasses::C_SFX& sfx = m_VM->getGameState().getSfx(h);
-            m_VM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_Sfx);
+            Daedalus::GameState::SfxHandle h = m_SoundVM->getGameState().createSfx();
+            Daedalus::GEngineClasses::C_SFX& sfx = m_SoundVM->getGameState().getSfx(h);
+            m_SoundVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_Sfx);
 
             createSound(s.name, sfx);
 
@@ -554,5 +703,54 @@ namespace World
                 return;
             }
         }
+    }
+
+    bool AudioWorld::playSegment(const std::string& name, DirectMusic::SegmentTiming timing)
+    {
+#ifdef RE_USE_SOUND
+        std::string loweredName = Utils::lowered(name);
+        if (m_musicContext == nullptr || m_Segments.find(loweredName) == m_Segments.end())
+        {
+            return false;
+        }
+        else
+        {
+            if (m_playingSegment != loweredName)
+            {
+                m_musicContext->playSegment(m_Segments.at(loweredName), timing);
+                m_playingSegment = loweredName;
+            }
+            return true;
+        }
+#endif
+        return false;
+    }
+
+    bool AudioWorld::playMusicTheme(const std::string& name)
+    {
+#ifdef RE_USE_SOUND
+        if (m_MusicVM->getDATFile().hasSymbolName(Utils::uppered(name)))
+        {
+            size_t i = m_MusicVM->getDATFile().getSymbolIndexByName(Utils::uppered(name));
+            Daedalus::GameState::MusicThemeHandle h = m_MusicVM->getGameState().createMusicTheme();
+            Daedalus::GEngineClasses::C_MusicTheme& mt = m_MusicVM->getGameState().getMusicTheme(h);
+            m_MusicVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_MusicTheme);
+
+            return playSegment(mt.file, getTiming(mt.transSubType));
+        }
+#endif
+        return false;
+    }
+
+    const std::vector<std::string> AudioWorld::getLoadedSegments() const
+    {
+        std::vector<std::string> vect;
+#ifdef RE_USE_SOUND
+        for (const auto& kvp : m_Segments)
+        {
+            vect.push_back(kvp.first);
+        }
+#endif
+        return vect;
     }
 }

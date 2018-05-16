@@ -1,6 +1,5 @@
 #include "BaseEngine.h"
 #include <fstream>
-#include "AsyncAction.h"
 #include "World.h"
 #include "audio/AudioEngine.h"
 #include <bx/commandline.h>
@@ -36,20 +35,22 @@ namespace Flags
     Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
+
+    Cli::Flag noTextureFiltering("nf", "disable-filtering", 0, "Disables texture filtering");
 }
 
 BaseEngine::BaseEngine()
-    : m_MainThreadID(std::this_thread::get_id())
+    : m_JobManager(this)
     , m_RootUIView(*this)
     , m_Console(*this)
     , m_EngineTextureAlloc(*this)
 {
+    // m_JobManager.setMultiThreading(false); // useful for debugging exceptions from other threads
     m_pHUD = nullptr;
     m_pFontCache = nullptr;
 
     m_BasicGameType = Daedalus::GameType::GT_Gothic2;
     m_Paused = false;
-    m_ExcludedFrameTime = 0;
     // allocate and init default session
     resetSession();
 }
@@ -113,6 +114,8 @@ void BaseEngine::initEngine(int argc, char** argv)
     if (Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
 
+    m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
+
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 
     // Init HUD
@@ -128,63 +131,39 @@ void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 
 void BaseEngine::loadArchives()
 {
-    //m_FileIndex.loadVDF("vdf/Worlds_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Textures.vdf");
-    //m_FileIndex.loadVDF("vdf/Textures_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Meshes_Addon.vdf");
-    //m_FileIndex.loadVDF("vdf/Meshes.vdf");
-    //m_FileIndex.loadVDF("vdf/Anims.vdf");
-    //m_FileIndex.loadVDF("vdf/Anims_Addon.vdf");
-
-    /*m_FileIndex.loadVDF("vdf/g1/anims.VDF");
-	m_FileIndex.loadVDF("vdf/g1/fonts.VDF");
-	m_FileIndex.loadVDF("vdf/g1/meshes.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/sound.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech_patch2.VDF");
-	m_FileIndex.loadVDF("vdf/g1/speech.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_apostroph_patch_neu.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_choicebox_32pixel_modialpha.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_patch.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures_Startscreen_ohne_Logo.VDF");
-	m_FileIndex.loadVDF("vdf/g1/textures.VDF");
-	m_FileIndex.loadVDF("vdf/g1/worlds.VDF");*/
-
-    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
-
-    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
-    for (std::string& s : vdfArchives)
-    {
-        m_FileIndex.loadVDF(s);
-    }
-
-    // Happens on modded games
-    std::list<std::string> vdfArchivesDisabled = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "disabled");
-
-    LogInfo() << "Loading VDF-Archives: " << vdfArchivesDisabled;
-    for (std::string& s : vdfArchivesDisabled)
-    {
-        m_FileIndex.loadVDF(s);
-    }
-
-    // Load mod archives with higher priority
-    std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
-
-    if (!modArchives.empty())
-    {
-        LogInfo() << "Loading MOD-Archives: " << modArchives;
-        for (std::string& s : modArchives)
-        {
-            m_FileIndex.loadVDF(s, 1);
-        }
-    }
-
-    // Load explicit modfile with even higher priority
+    // Load explicit modfile with highest priority
     if (!m_Args.modfile.empty())
     {
-        m_FileIndex.loadVDF(m_Args.modfile, 2);
+        LogInfo() << "Reading Mod-File from Commandline: " << m_Args.modfile;
+        m_FileIndex.loadVDF(m_Args.modfile);
     }
-    
+
+    // Load mod archives
+    std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
+    modArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    LogInfo() << "Loading MOD-Archives: " << modArchives;
+    if (!modArchives.empty())
+        for (std::string& s : modArchives)
+            m_FileIndex.loadVDF(s);
+
+    // Load zip archives
+    std::list<std::string> zipArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "zip", false);
+    zipArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    LogInfo() << "Loading ZIP-Archives: " << zipArchives;
+    if (!zipArchives.empty())
+        for (std::string& s : zipArchives)
+            m_FileIndex.loadVDF(s);
+
+    // Load vdf archives
+    std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
+    vdfArchives.sort([](const std::string &lhs, const std::string &rhs)
+    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    LogInfo() << "Loading VDF-Archives: " << vdfArchives;
+    for (std::string& s : vdfArchives)
+        m_FileIndex.loadVDF(s);
+
     m_FileIndex.finalizeLoad();
 }
 
@@ -233,25 +212,6 @@ void BaseEngine::setPaused(bool paused)
     }
 }
 
-void BaseEngine::processMessageQueue()
-{
-    m_MessageQueueMutex.lock();
-    auto current = m_MessageQueue.begin();
-    while (current != m_MessageQueue.end())
-    {
-        auto& action = *current;
-        // if the job queues a new job it would create a deadlock, so we need to release the mutex before
-        m_MessageQueueMutex.unlock();
-        bool finished = action.run(*this);
-        m_MessageQueueMutex.lock();
-        if (finished)
-            current = m_MessageQueue.erase(current);  // erase returns next iterator
-        else
-            std::advance(current, 1);
-    }
-    m_MessageQueueMutex.unlock();
-}
-
 void BaseEngine::resetSession()
 {
     // the order is important: first destroy old session
@@ -270,32 +230,8 @@ Handle::WorldHandle BaseEngine::getMainWorld()
     return getSession().getMainWorld();
 }
 
-void BaseEngine::executeInMainThread(const AsyncAction::JobType<void>& job, bool forceQueue)
+JobManager& BaseEngine::getJobManager()
 {
-    auto wrappedJob = [job](Engine::BaseEngine* engine) -> bool {
-        job(engine);
-        return true;
-    };
-    executeInMainThreadUntilTrue(wrappedJob, forceQueue);
+    return m_JobManager;
 }
 
-void BaseEngine::executeInMainThreadUntilTrue(const AsyncAction::JobType<bool>& job, bool forceQueue)
-{
-    if (!forceQueue && isMainThread())
-    {
-        // execute right away
-        bool success = job(this);
-        if (success)
-            return;
-        // else job returned false -> queue the job
-    }
-    std::lock_guard<std::mutex> guard(m_MessageQueueMutex);
-    m_MessageQueue.emplace_back(AsyncAction{job});
-}
-
-bool BaseEngine::isMainThread()
-{
-    return std::this_thread::get_id() == m_MainThreadID;
-}
-
-size_t ExcludeFrameTime::m_ReferenceCounter = 0;

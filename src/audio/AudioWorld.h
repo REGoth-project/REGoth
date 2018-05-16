@@ -2,9 +2,11 @@
 
 #include <list>
 #include <map>
+#include <thread>
 
 #include <glm/glm.hpp>
 
+#include <dmusic/PlayingContext.h>
 #include <daedalus/DaedalusStdlib.h>
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
@@ -12,6 +14,11 @@
 #include <vdfs/fileIndex.h>
 
 typedef struct ALCcontext_struct ALCcontext;
+
+#ifdef RE_USE_SOUND
+#define RE_NUM_MUSIC_BUFFERS 3
+#define RE_MUSIC_BUFFER_LEN 1024
+#endif
 
 namespace Audio
 {
@@ -86,6 +93,21 @@ namespace World
         Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
 
         /**
+         * Plays the segment identified by a name
+         */
+        bool playSegment(const std::string& name, DirectMusic::SegmentTiming timing = DirectMusic::SegmentTiming::Immediate);
+
+        /**
+         * Plays the segment identified by the theme name
+         */
+        bool playMusicTheme(const std::string& name);
+
+        /**
+         * Returns the names of the currently loaded segments
+         */
+        const std::vector<std::string> getLoadedSegments() const;
+
+        /**
          * Sets the maximum distance this sound can be heard
          * @param maxDist Distance in meters
          */
@@ -127,7 +149,7 @@ namespace World
 
         ALCcontext* m_Context = nullptr;
 
-        Daedalus::DaedalusVM* m_VM = nullptr;
+        Daedalus::DaedalusVM* m_SoundVM = nullptr, *m_MusicVM = nullptr;
 
         struct Source
         {
@@ -172,6 +194,47 @@ namespace World
          * List of currently playing sounds or sounds that have been playing
          */
         std::list<Source> m_Sources;
+
+        /**
+         * Holds the music state
+         */
+        std::unique_ptr<DirectMusic::PlayingContext> m_musicContext;
+
+        /**
+         * Contains all the music segments that can be played in the instance
+         */
+        std::map<std::string, std::shared_ptr<DirectMusic::SegmentInfo>> m_Segments;
+
+        /**
+         * Convert a musictheme instance to segment name
+         */
+        std::map<std::string, std::string> m_musicThemeSegments;
+
+        /**
+         * Contains the name of the currently playing music segment
+        */
+        std::string m_playingSegment;
+
+        /**
+         * Background thread that puts music data into the soundbuffer(s)
+         */
+        void musicRenderFunction();
+        std::thread m_musicRenderThread;
+
+        /**
+         * Contain music buffers and source
+         */
+        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
+
+        /**
+         * Used to signal when the music rendering thread should stop
+        */
+        bool m_exiting;
+
+        /**
+         * Music loading routine
+         */
+        void initializeMusic();
 #endif
 
         /**

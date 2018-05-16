@@ -5,6 +5,7 @@
 #pragma once
 
 #include "View.h"
+#include <engine/Input.h>
 #include <ZenLib/daedalus/DaedalusGameState.h>
 
 namespace Daedalus
@@ -57,7 +58,7 @@ namespace UI
          * @param action Input action
          * @return returns true if the menu should be closed after this function
          */
-        virtual bool onInputAction(EInputAction action);
+        virtual bool onInputAction(Engine::ActionType action);
 
         /**
          * To be called when there was text input since the last frame

@@ -87,8 +87,8 @@ if (CMAKE_COMPILER_IS_GNUCC)
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror=return-type") # missing return is error
 
     # Fix up C++ standard
-    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6.0)
-        message(WARNING "Compilation wasn't tested on GCC versions prior to 6.x and might not be successful!")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
+        message(WARNING "Compilation wasn't tested on GCC versions prior to 5.4 and might not be successful!")
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
     endif()
 endif()
@@ -267,11 +267,25 @@ if(NOT EMSCRIPTEN)
           set(ALSOFT_BACKEND_SNDIO ON CACHE BOOL "" FORCE)
           set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
         endif()
-        target_link_libraries(engine openal)
+        target_link_libraries(engine OpenAL)
     elseif(WIN32)
-        target_link_libraries(engine OpenAL32)
+        target_link_libraries(engine common OpenAL)
     endif()
 endif()
+
+# ---------------- libdmusic ----------------
+
+# Disable unused utilities
+set(DMUSIC_BUILD_UTILS OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DMRENDER OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DMPLAY OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DLS2SF OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_SAMPLEDUMP OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/libdmusic)
+include_directories(${CMAKE_SOURCE_DIR}/lib/libdmusic/include)
+
+target_link_libraries(engine dmusic)
 
 # ------------------ Other ------------------
 
@@ -301,5 +315,6 @@ endif()
 add_subdirectory(lib/adpcm)
 
 add_subdirectory(src/target)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
 
 file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")
