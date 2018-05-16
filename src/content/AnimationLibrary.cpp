@@ -217,7 +217,7 @@ namespace Animations
         }
 
         // Normalize to range specified in the MDS
-        anim->m_EventTags.back().m_Frame = scaleToHeaderFrameRate(anim,anim->m_EventsSFXGround.back().m_Frame);
+        anim->m_EventTags.back().m_Frame = scaleToHeaderFrameRate(anim,anim->m_EventTags.back().m_Frame);
     }
 
     bool AnimationLibrary::loadModelScript(const std::string& file_name, ModelScriptParser& p)
