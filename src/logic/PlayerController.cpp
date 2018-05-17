@@ -2519,13 +2519,14 @@ void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
     }
     pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached, pfx.m_Num};
     //From world of gothic animation events
-    if(event.bodyPosition == "")
+    if(event.bodyPosition.empty())
     {
         event.bodyPosition = "BIP01";
     }
     m_activePfxEvents.push_back(std::move(event));
     Vob::VobInformation vob = Vob::asVob(m_World, m_activePfxEvents.back().entity);
     Vob::setVisual(vob, pfx.m_Name+".PFX");
+	Vob::setTransform(vob, getEntityTransform());
 }
 void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
 {
