@@ -18,14 +18,11 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - george-edison55-precise-backports
             - sourceline: 'deb http://archive.getdeb.net/ubuntu precise-getdeb games'
               key_url: 'http://archive.getdeb.net/getdeb-archive.key'
           packages:
             - g++-6
             - gcc-6
-            - cmake
-            - cmake-data
             - libx11-xcb-dev
             - libxinerama-dev
             - libxcursor-dev
@@ -44,6 +41,12 @@ matrix:
             - libasound2-dev
             - alsa-utils
             - alsa-oss
+          install:
+            - sudo apt-get purge cmake
+            - curl -o cmake_install.sh https://cmake.org/files/v3.11/cmake-3.11.1-Linux-x86_64.sh
+            - sudo chmod +x ./cmake_install.sh
+            - sudo ./cmake_install.sh --prefix=/opt/ --exclude-subdir --skip-license
+            - export PATH=/opt/bin/:$PATH
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
     - os: linux
