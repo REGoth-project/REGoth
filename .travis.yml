@@ -18,7 +18,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'ppa:keithw/glfw3'
             - sourceline: 'deb http://archive.getdeb.net/ubuntu precise-getdeb games'
               key_url: 'http://archive.getdeb.net/getdeb-archive.key'
           packages:
@@ -32,7 +31,6 @@ matrix:
             - libudev-dev
             - libopenal-dev
             - libbullet-dev
-            - libglfw3-dev
             - freeglut3-dev
             - libjpeg-dev
             - libfreetype6-dev
@@ -48,6 +46,11 @@ matrix:
             - sudo chmod +x ./cmake_install.sh
             - sudo ./cmake_install.sh --prefix=/opt/ --exclude-subdir --skip-license
             - export PATH=/opt/bin/:$PATH
+            - git clone https://github.com/glfw/glfw
+            - cd glfw
+            - cmake -DBUILD_SHARED_LIBS=OFF -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF .
+            - make -j4
+            - sudo make install
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
     - os: linux
