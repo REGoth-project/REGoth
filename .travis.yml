@@ -19,6 +19,8 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
             - george-edison55-precise-backports
+            - sourceline: 'deb http://archive.getdeb.net/ubuntu precise-getdeb games'
+              key_url: 'http://archive.getdeb.net/getdeb-archive.key'
           packages:
             - g++-6
             - gcc-6
