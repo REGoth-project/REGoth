@@ -3,7 +3,7 @@ cmake_policy(SET CMP0042 NEW)
 project(REGoth)
 
 set(CMAKE_CXX_STANDARD 14)
-
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 option (REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR "Compile with library to extract some installers of Gothic" OFF) 
 
@@ -17,6 +17,9 @@ add_definitions(-D__STDC_LIMIT_MACROS)
 
 # clang-format
 include(cmake/clang-format.cmake)
+
+find_package(OpenAL REQUIRED)
+find_package(Bullet REQUIRED)
 
 if(EMSCRIPTEN)
 
@@ -154,27 +157,6 @@ add_definitions(-DBGFX_CONFIG_DEBUG=${BGFX_DEBUG})
 add_subdirectory(lib/bgfx-cmake)
 add_subdirectory(lib/ZenLib)
 
-# Set up bullet
-set(USE_GRAPHICAL_BENCHMARK OFF CACHE STRING "" FORCE)
-set(USE_MSVC_RUNTIME_LIBRARY_DLL ON CACHE STRING "" FORCE) # Don't statically link this
-set(BUILD_BULLET2_DEMOS OFF CACHE STRING "" FORCE) # No samples
-set(BUILD_OPENGL3_DEMOS OFF CACHE STRING "" FORCE) # No samples
-set(BUILD_UNIT_TESTS OFF CACHE STRING "" FORCE) # No tests
-set(BUILD_CPU_DEMOS OFF CACHE STRING "" FORCE) # No samples
-set(GLFW_BUILD_EXAMPLES OFF CACHE STRING "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE STRING "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE STRING "" FORCE)
-
-
-set(BUILD_BULLET3 OFF CACHE STRING "" FORCE) # Can use bullet2, bullet3 wants to build examples...
-
-add_subdirectory(lib/bullet3)
-include_directories(lib/bullet3/src)
-
-set(BULLET_LIBRARIES BulletSoftBody BulletDynamics BulletCollision LinearMath)
-set(BULLET_MISC Bullet3Dynamics Bullet2FileLoader Bullet3Collision Bullet3Geometry Bullet3OpenCL_clew BulletFileLoader BulletWorldImporter BulletXmlWorldImporter ConvexDecomposition GIMPACTUtils HACD Test_BulletDynamics Test_BulletInverseDynamics Test_Collision)
-
-
 # ------------------ Engine lib ------------------
 file(GLOB ENGINE_SRC
         "src/audio/*.cpp"
@@ -212,65 +194,12 @@ file(GLOB ENGINE_SRC
 
 add_library(engine STATIC ${ENGINE_SRC})
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
-target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
+target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty adpcm)
 
 if(REGOTH_BUILD_WITH_INSTALLER_EXTRACTOR)
     add_subdirectory(lib/CAB-Installer-Extractor)
     add_definitions(-DRE_WITH_INSTALLER_EXTRACTOR)
     target_link_libraries(engine gextract)
-endif()
-
-# ------------------ OpenAL ------------------
-
-# Set up OpenAL
-
-set(ALSOFT_CONFIG OFF CACHE BOOL "" FORCE)
-set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(ALSOFT_INSTALL OFF CACHE BOOL "" FORCE)
-
-if (UNIX)
-    set(LIBTYPE STATIC CACHE STRING "" FORCE)
-    if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-        set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-    elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
-        set(ALSOFT_REQUIRE_ALSA OFF CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_OSS ON CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_SNDIO OFF CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
-    elseif(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
-        set(ALSOFT_REQUIRE_ALSA OFF CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_SNDIO ON CACHE BOOL "" FORCE)
-        set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
-    endif()
-else()
-    set(LIBTYPE SHARED CACHE STRING "" FORCE)
-endif()
-
-if(NOT EMSCRIPTEN)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/lib/openal-soft)
-    include_directories(${CMAKE_SOURCE_DIR}/lib/openal-soft/include)
-
-    if (UNIX)
-        if (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-          set(ALSOFT_REQUIRE_ALSA ON CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
-          set(ALSOFT_REQUIRE_ALSA OFF CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_OSS ON CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_SNDIO OFF CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
-        elseif(${CMAKE_SYSTEM_NAME} STREQUAL "OpenBSD")
-          set(ALSOFT_REQUIRE_ALSA OFF CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_OSS OFF CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_SNDIO ON CACHE BOOL "" FORCE)
-          set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
-        endif()
-        target_link_libraries(engine OpenAL)
-    elseif(WIN32)
-        target_link_libraries(engine common OpenAL)
-    endif()
 endif()
 
 # ---------------- libdmusic ----------------
@@ -297,24 +226,41 @@ include_directories(lib/tinydir)
 include_directories(lib/json)
 include_directories(lib/CAB-Installer-Extractor/include)
 
+add_subdirectory(lib/adpcm)
+
+add_subdirectory(src/target)
+
+
+# ------------------ Bullet ------------------
+
+target_include_directories(engine PRIVATE ${BULLET_INCLUDE_DIRS})
+target_link_libraries(engine ${BULLET_LIBRARIES})
+
+# ------------------ OpenAL ------------------
+
+target_link_libraries(engine ${OPENAL_LIBRARY})
+target_include_directories(engine PRIVATE ${OPENAL_INCLUDE_DIR})
+
+# ------------------ GLFW --------------------
+
+if(NOT WIN32)
+    target_link_libraries(engine ${CMAKE_DL_LIBS})
+endif()
+
 if(NOT ANDROID)
 
-
-    include_directories(lib/glfw/include)
+    find_package(GLFW3 REQUIRED)
 
     if(NOT EMSCRIPTEN)
         add_definitions(-DRE_USE_SOUND)
-        add_subdirectory(lib/glfw)
-        target_link_libraries(engine glfw)
+        target_include_directories(engine PRIVATE ${GLFW3_INCLUDE_PATH})
+        target_link_libraries(engine ${GLFW3_LIBRARY})
     endif()
 else()
     add_definitions(-DRE_USE_SOUND)
     target_link_libraries(engine android_glue)
 endif()
 
-add_subdirectory(lib/adpcm)
-
-add_subdirectory(src/target)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
 
 file(COPY "content/shaders" DESTINATION "${CMAKE_BINARY_DIR}/bin")

@@ -31,6 +31,8 @@ matrix:
             - libxcb-randr0-dev
             - libudev-dev
             - libopenal-dev
+            - libbullet-dev
+            - libglfw3-dev
             - freeglut3-dev
             - libjpeg-dev
             - libfreetype6-dev
@@ -81,6 +83,6 @@ matrix:
       compiler: clang
       before_install:
         - brew update
-        - brew install libsndfile
+        - brew install libsndfile bullet glfw
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
