@@ -18,6 +18,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - sourceline: 'ppa:keithw/glfw3'
             - sourceline: 'deb http://archive.getdeb.net/ubuntu precise-getdeb games'
               key_url: 'http://archive.getdeb.net/getdeb-archive.key'
           packages:
