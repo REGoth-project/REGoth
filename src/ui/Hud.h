@@ -1,6 +1,7 @@
 #pragma once
 #include "Menu.h"
 #include "View.h"
+#include "VideoView.h"
 #include <engine/BaseEngine.h>
 #include <engine/Input.h>
 #include <logic/Console.h>
@@ -108,6 +109,13 @@ namespace UI
         void setGameplayHudVisible(bool value);
 
         /**
+         * Plays a fullscreen-video.
+         * @param video Videofile to play
+         * @param onPlaybackFinished Function to call when the video is done playing
+         */
+        void playVideo(const std::string& video);
+
+        /**
          * Appends a menu to the current menu-chain.
          * @tparam T Type of menu to append. Must have a static 'create' function!
          */
@@ -154,6 +162,7 @@ namespace UI
         LoadingScreen* m_pLoadingScreen;
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
+        VideoView* m_VideoView;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed

@@ -40,6 +40,8 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pMenuBackground->setHidden(true);
     m_pMenuBackground->setRelativeSize(false);
 
+    m_VideoView = new VideoView(m_Engine);
+
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
@@ -49,6 +51,7 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     addChild(m_pLoadingScreen);
     addChild(m_pMenuBackground);
     addChild(m_pConsoleBox);
+    addChild(m_VideoView);
 
     // Initialize status bars
     {
@@ -119,6 +122,7 @@ UI::Hud::~Hud()
     removeChild(m_pLoadingScreen);
     removeChild(m_pConsoleBox);
     removeChild(m_pMenuBackground);
+    removeChild(m_VideoView);
 
     popAllMenus();
 
@@ -341,4 +345,9 @@ void UI::Hud::popAllMenus()
 {
     while (!m_MenuChain.empty())
         popMenu();
+}
+
+void UI::Hud::playVideo(const std::string& video)
+{
+    m_VideoView->enqueueVideo(video);
 }
