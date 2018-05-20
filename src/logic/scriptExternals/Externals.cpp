@@ -14,6 +14,7 @@
 #include <utils/logger.h>
 #include <logic/ScriptEngine.h>
 #include <logic/DialogManager.h>
+#include <ui/Hud.h>
 
 void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& world, Daedalus::DaedalusVM* vm, bool verbose)
 {
@@ -1502,5 +1503,35 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         {
             npc.playerController->drawWeaponMelee(true);
         }
+    });
+
+    vm->registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM& vm) {
+        std::string filename = vm.popString();
+
+        LogInfo() << "Playing video from script: " << filename;
+
+        engine->getJobManager().executeInMainThread<void>([=](Engine::BaseEngine* pEngine) {
+            engine->getHud().playVideo(filename);
+        });
+
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("playvideoex", [=](Daedalus::DaedalusVM& vm) {
+        int exitsession = vm.popDataValue();
+        int screenblend = vm.popDataValue();
+        std::string filename = vm.popString();
+
+        LogInfo() << "Playing video from script (ex): " << filename;
+
+        engine->getJobManager().executeInMainThread<void>([=](Engine::BaseEngine* pEngine) {
+            engine->getHud().playVideo(filename);
+        });
+
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        vm.setReturn(0);
     });
 }

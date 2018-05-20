@@ -347,7 +347,20 @@ void UI::Hud::popAllMenus()
         popMenu();
 }
 
+static std::string findVideoPath(const std::string& gamedir, const std::string& filename)
+{
+    return Utils::getCaseSensitivePath("/_work/data/video/" + filename, gamedir);
+}
+
 void UI::Hud::playVideo(const std::string& video)
 {
-    m_VideoView->enqueueVideo(video);
+    std::string fullVideoPath = findVideoPath(m_Engine.getEngineArgs().gameBaseDirectory, video);
+
+    if(fullVideoPath.empty())
+    {
+        LogWarn() << "Failed to find full path to video file: " << video;
+        return;
+    }
+
+    m_VideoView->enqueueVideo(fullVideoPath);
 }

@@ -68,7 +68,7 @@ void UI::VideoView::playVideo(const std::string& file, Render::RenderConfig& con
     {
         VideoRead::playVideo(file, playerSettings);
     }
-    catch(std::runtime_error err)
+    catch(std::runtime_error& err)
     {
         LogError() << "Failed to play video. Reason: " << err.what();
     }
