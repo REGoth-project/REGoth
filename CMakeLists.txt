@@ -210,7 +210,7 @@ file(GLOB ENGINE_SRC
         "src/logic/mobs/*.h"
         )
 
-add_library(engine STATIC ${ENGINE_SRC})
+add_library(engine STATIC ${ENGINE_SRC} src/ui/VideoView.cpp src/ui/VideoView.h)
 #set_target_properties(engine PROPERTIES LINKER_LANGUAGE C)
 target_link_libraries(engine zenload daedalus vdfs utils bgfx bgfx_common bgfx3rdParty ${BULLET_LIBRARIES} adpcm)
 
@@ -296,6 +296,10 @@ include_directories(lib/glm)
 include_directories(lib/tinydir)
 include_directories(lib/json)
 include_directories(lib/CAB-Installer-Extractor/include)
+
+add_subdirectory(lib/FfmpegVideoPlayer)
+include_directories(lib/FfmpegVideoPlayer/include)
+target_link_libraries(engine ffmpeg_video_player)
 
 if(NOT ANDROID)
 
