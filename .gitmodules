@@ -28,3 +28,6 @@
 [submodule "lib/libdmusic"]
 	path = lib/libdmusic
 	url = https://github.com/frabert/libdmusic.git
+[submodule "lib/FfmpegVideoPlayer"]
+	path = lib/FfmpegVideoPlayer
+	url = https://github.com/REGoth-project/FfmpegVideoPlayer.git
