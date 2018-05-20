@@ -193,6 +193,10 @@ void REGoth::initConsole()
             return "Playing keyed animation";
         });
 
+    console.registerCommand("playintro", [&](const std::vector<std::string>& args) -> std::string {
+        m_pEngine->getHud().playVideo("/home/desktop/.wine/drive_c/GOG Games/Gothic/_work/DATA/video/greatPrayer.bik");
+        return "Played into video";
+    });
 
     console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
         static bool s_Stats = false;
