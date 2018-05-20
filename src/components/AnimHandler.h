@@ -19,6 +19,8 @@ namespace ZenLoad
 {
     struct zCModelScriptEventSfx;
     struct zCModelScriptEventTag;
+    struct zCModelScriptEventPfx;
+    struct zCModelScriptEventPfxStop;
 }
 
 namespace Components
@@ -213,6 +215,14 @@ namespace Components
         {
             m_CallbackTriggerEventTag = cb;
         }
+        void setCallbackEventPfx(std::function<void(const ZenLoad::zCModelScriptEventPfx& pfx)> cb)
+        {
+            m_CallbackTriggerPFX = cb;
+        }
+        void setCallbackEventPfxStop(std::function<void(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)> cb)
+        {
+            m_CallbackTriggerPFXStop = cb;
+        }
 
     private:
         /**
@@ -230,6 +240,17 @@ namespace Components
         std::function<void(const ZenLoad::zCModelScriptEventSfx& sfx)> m_CallbackTriggerSFXGround;
         std::function<void(const ZenLoad::zCModelScriptEventTag& tag)> m_CallbackTriggerEventTag;
 
+        /**
+         * Plays the given PFX-Event
+         * @param PFX to play
+         */
+        std::function<void(const ZenLoad::zCModelScriptEventPfx& pfx)> m_CallbackTriggerPFX;
+
+        /**
+         * Plays the pfx stop event
+         * @param pfxStop event to play
+         */
+        std::function<void(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)> m_CallbackTriggerPFXStop;
         /**
          * @brief Animations by their name
          */

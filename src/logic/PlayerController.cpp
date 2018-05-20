@@ -29,6 +29,9 @@
 #include <logic/ScriptEngine.h>
 #include <logic/DialogManager.h>
 #include <engine/WorldMesh.h>
+#include <logic/PfxManager.h>
+#include <logic/visuals/PfxVisual.h>
+
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -193,7 +196,8 @@ void PlayerController::onUpdate(float deltaTime)
             m_LastAniRootPosUpdatedAniHash = getModelVisual()->getAnimationHandler().getAnimationStateHash();
         }
     }
-
+    //Update pfx events
+    updatePfx();
     // Run extra stuff if this is the controlled character
     if (isPlayerControlled())
     {
@@ -764,6 +768,12 @@ void PlayerController::onVisualChanged()
 
     getModelVisual()->getAnimationHandler().setCallbackEventTag([this](const ZenLoad::zCModelScriptEventTag& tag) {
         AniEvent_Tag(tag);
+    });
+    getModelVisual()->getAnimationHandler().setCallbackEventPfx([this](const ZenLoad::zCModelScriptEventPfx& pfx) {
+        AniEvent_PFX(pfx);
+    });
+    getModelVisual()->getAnimationHandler().setCallbackEventPfxStop([this](const ZenLoad::zCModelScriptEventPfxStop& pfxStop) {
+        AniEvent_PFXStop(pfxStop);
     });
 }
 
@@ -2388,6 +2398,37 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed2 = false;
 }
 
+void PlayerController::updatePfxPosition(const pfxEvent &e)
+{
+    Vob::VobInformation vob = Vob::asVob(m_World, e.entity);
+    auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+    auto &transform = getEntityTransform();
+    size_t nodeIndex = getModelVisual()->findNodeIndex(e.bodyPosition);
+    auto position = transform * boneTransforms[nodeIndex];
+    Vob::setTransform(vob, std::move(position));
+}
+
+void PlayerController::updatePfx()
+{
+    //First remove all invalid handles / emitter that are in "canBeRemoved" state (all particles are dead)
+    for(auto it = m_activePfxEvents.begin(); it<m_activePfxEvents.end();)
+    {
+        if(((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
+        {
+            m_World.removeEntity((*it).entity);
+            it = m_activePfxEvents.erase(it);
+        }
+        else
+        {
+            //If pfx is attached to body, update the position
+            if((*it).isAttached)
+                updatePfxPosition(*it);
+
+            ++it;
+        }
+    }
+}
+
 void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 {
     // FIXME: Workaround. "Whoosh"-sound is used as kill trigger
@@ -2469,6 +2510,44 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 {
     //if(tag.m_Tag == )
+}
+void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
+{
+    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
+    {
+        return;
+    }
+    pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached, pfx.m_Num};
+    //From world of gothic animation events
+    if(event.bodyPosition.empty())
+    {
+        event.bodyPosition = "BIP01";
+    }
+    m_activePfxEvents.push_back(std::move(event));
+    Vob::VobInformation vob = Vob::asVob(m_World, m_activePfxEvents.back().entity);
+    Vob::setVisual(vob, pfx.m_Name+".PFX");
+	Vob::setTransform(vob, getEntityTransform());
+}
+void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
+{
+	//FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
+	if(m_activePfxEvents.empty())
+		LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
+
+    //Kill pfx with the corresponding number
+    for (auto &pfx : m_activePfxEvents) {
+		if (pfx.m_Num == pfxStop.m_Num) {
+			Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+			PfxVisual *visual = (PfxVisual *) vob.visual;
+			if (visual->isDead()) {
+				continue;
+			}
+			visual->killPfx();
+			break;
+		}
+	}
+
+
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
