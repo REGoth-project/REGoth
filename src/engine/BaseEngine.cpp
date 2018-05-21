@@ -1,7 +1,8 @@
-#include "BaseEngine.h"
 #include <fstream>
+#include "BaseEngine.h"
 #include "World.h"
 #include "audio/AudioEngine.h"
+#include "audio/NullAudioEngine.h"
 #include <bx/commandline.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
@@ -58,7 +59,6 @@ BaseEngine::BaseEngine()
 BaseEngine::~BaseEngine()
 {
     getRootUIView().removeChild(m_pHUD);
-    delete m_AudioEngine;
     delete m_pHUD;
     delete m_pFontCache;
 }
@@ -116,10 +116,10 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
 
-    m_AudioEngine = new Audio::AudioEngine(snd_device);
+    m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
 
-    // Init HUD
-    m_pFontCache = new UI::zFontCache(*this);
+        // Init HUD
+        m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
     getRootUIView().addChild(m_pHUD);
 }
@@ -140,8 +140,7 @@ void BaseEngine::loadArchives()
 
     // Load mod archives
     std::list<std::string> modArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "mod", false);
-    modArchives.sort([](const std::string &lhs, const std::string &rhs)
-    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    modArchives.sort([](const std::string& lhs, const std::string& rhs) { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
     LogInfo() << "Loading MOD-Archives: " << modArchives;
     if (!modArchives.empty())
         for (std::string& s : modArchives)
@@ -149,8 +148,7 @@ void BaseEngine::loadArchives()
 
     // Load zip archives
     std::list<std::string> zipArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "zip", false);
-    zipArchives.sort([](const std::string &lhs, const std::string &rhs)
-    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    zipArchives.sort([](const std::string& lhs, const std::string& rhs) { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
     LogInfo() << "Loading ZIP-Archives: " << zipArchives;
     if (!zipArchives.empty())
         for (std::string& s : zipArchives)
@@ -158,8 +156,7 @@ void BaseEngine::loadArchives()
 
     // Load vdf archives
     std::list<std::string> vdfArchives = Utils::getFilesInDirectory(m_Args.gameBaseDirectory + "/Data", "vdf");
-    vdfArchives.sort([](const std::string &lhs, const std::string &rhs)
-    { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
+    vdfArchives.sort([](const std::string& lhs, const std::string& rhs) { return VDFS::FileIndex::getLastModTime(lhs) > VDFS::FileIndex::getLastModTime(rhs); });
     LogInfo() << "Loading VDF-Archives: " << vdfArchives;
     for (std::string& s : vdfArchives)
         m_FileIndex.loadVDF(s);
@@ -234,4 +231,3 @@ JobManager& BaseEngine::getJobManager()
 {
     return m_JobManager;
 }
-

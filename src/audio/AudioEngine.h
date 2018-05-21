@@ -1,66 +1,67 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <glm/glm.hpp>
-
-typedef struct ALCdevice_struct ALCdevice;
+#include "math/mathlib.h"
 
 namespace Audio
 {
-    class AudioWorld;
+    enum class AudioFormat
+    {
+        Mono,
+        Stereo
+    };
+
+    class Sound
+    {
+    public:
+        virtual bool isPlaying() const = 0;
+        virtual bool isLooping() const = 0;
+        virtual bool isPaused() const = 0;
+
+        virtual void stop() = 0;
+        virtual void pause() = 0;
+        virtual void play() = 0;
+
+        const virtual Math::float3& getPosition() const = 0;
+        const virtual Math::float3& getVelocity() const = 0;
+        virtual float getPitch() const = 0;
+        virtual float getMaxDistance() const = 0;
+        virtual float getGain() const = 0;
+        virtual bool isRelative() const = 0;
+
+        virtual void setPosition(const Math::float3& pos) = 0;
+        virtual void setVelocity(const Math::float3& vel) = 0;
+        virtual void setPitch(float pitch) = 0;
+        virtual void setMaxDistance(float dist) = 0;
+        virtual void setGain(float gain) = 0;
+        virtual void setRelative(bool isRelative) = 0;
+        virtual void setLooping(bool looping) = 0;
+    };
 
     /** The AudioEngine represents the target OS sound system.
      *
-     * The engine class matches the OpenAL device level.
-     *
      */
-    class AudioEngine final
+    class AudioEngine
     {
     public:
-        /** Initializes the AudioEngine.
-         *
-         * The @p device param specifies the device to use and can be determined
-         * using enumerateDevices().
-         *
-         * @param device_name The name of the device to use.
-         *
-         * @see AudioEngine::enumerateDevices()
-         *
-         */
-        AudioEngine(const std::string& device_name = std::string());
+        virtual void setListenerPosition(const Math::float3& pos) = 0;
+        virtual void setListenerVelocity(const Math::float3& vel) = 0;
+        virtual void setListenerOrientation(const std::array<float, 6>& orient) = 0;
+        void setListenerOrientation(const Math::float3& at, const Math::float3& up)
+        {
+            setListenerOrientation({at.x, at.y, at.z, up.x, up.y, up.z});
+        }
+        virtual void setListenerGain(float gain) = 0;
 
-        /** Deinitializes the AudioEngine.
-         */
-        ~AudioEngine();
-
-        /** Returns the OpenAL device used by this engine.
-         *
-         * @return The OpenAL device or nullptr when initialization has failed.
-         */
-        ALCdevice* getDevice() const { return m_Device; }
-        /** Enumerates the audio devices available on the current machine.
-         *
-         * Note that not all OpenAL implementations support enumeration. In this case you'll
-         * retrieve a single element list with an empty device name, indicating that it is
-         * the default device.
-         *
-         * @param[out] devices A list of available devices.
-         *
-         */
-        static void enumerateDevices(std::vector<std::string>& devices);
-
-        /** Returns a text representation of an error code.
-         *
-         * @param The error code returned by alGetError() or alcGetError().
-         *
-         * @return The error text.
-         *
-         */
-        static const char* getErrorString(size_t errorCode);
-
-    private:
-        ALCdevice* m_Device = nullptr;
+        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int16_t>& data, AudioFormat format, int samplingRate);
+        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int8_t>& data, AudioFormat format, int samplingRate);
+        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int16_t* buf, int len)> source, AudioFormat format, int samplingRate);
+        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int8_t* buf, int len)> source, AudioFormat format, int samplingRate);
     };
 }

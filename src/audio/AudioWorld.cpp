@@ -3,17 +3,11 @@
 #include <vector>
 #include <cstdint>
 
-#ifdef RE_USE_SOUND
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
-
 #include <dmusic/PlayingContext.h>
 #ifndef DMUSIC_DLS_PLAYER
 #define DMUSIC_DLS_PLAYER 1
 #endif
 #include <dmusic/DlsPlayer.h>
-#endif
 
 #include <adpcm/adpcm-lib.h>
 
@@ -50,38 +44,17 @@ namespace World
         : m_Engine(engine)
         , m_VDFSIndex(vdfidx)
         , m_exiting(false)
+        , m_AudioEngine(audio_engine)
     {
-#ifdef RE_USE_SOUND
-        if (!audio_engine.getDevice())
-            return;
-
-        m_Context = alcCreateContext(audio_engine.getDevice(), nullptr);
-        if (!m_Context)
-        {
-            LogWarn() << "Could not create OpenAL context: "
-                      << AudioEngine::getErrorString(alcGetError(audio_engine.getDevice()));
-            return;
-        }
-
-        alcMakeContextCurrent(m_Context);
-
-        alListener3f(AL_POSITION, 0, 0, 0.0f);
-        // check for errors
-        alListener3f(AL_VELOCITY, 0, 0, 0);
-        // check for errors
-        ALfloat listenerOri[] = {0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f};
-        alListenerfv(AL_ORIENTATION, listenerOri);
-
-        // Need this for AL_MAX_DISTANCE to work
-        alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+        m_AudioEngine.setListenerPosition(Math::float3(0, 0, 0));
+        m_AudioEngine.setListenerVelocity(Math::float3(0, 0, 0));
+        m_AudioEngine.setListenerOrientation({0, 0, 1, 0, 1, 0});
 
         createSounds();
 
         initializeMusic();
-#endif
     }
 
-#ifdef RE_USE_SOUND
     void AudioWorld::initializeMusic()
     {
         std::string datPath = "/_work/data/Scripts/_compiled/MUSIC.DAT";
@@ -131,108 +104,40 @@ namespace World
             }
             LogInfo() << "All segments loaded.";
 
-            alGenBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
-            alGenSources(1, &m_musicSource);
-
-            // Set the default volume
-            alSourcef(m_musicSource, AL_GAIN, 1);
-
-            // Set the default position of the sound
-            alSource3f(m_musicSource, AL_POSITION, 0, 0, 0);
-
-            m_musicRenderThread = std::thread(&AudioWorld::musicRenderFunction, this);
+            m_musicSound = m_AudioEngine.createSound([&](int16_t* buf, int len) -> int {
+                m_musicContext->renderBlock(buf, len);
+                return len;
+            }, Audio::AudioFormat::Stereo, 44100);
+            m_musicSound->setGain(1);
+            m_musicSound->setPosition(Math::float3(0, 0, 0));
+            m_musicSound->play();
         } catch (const std::exception& exc) {
             LogError() << "Couldn't initialize music system: " << exc.what();
         }
     }
 
-    void AudioWorld::musicRenderFunction()
-    {
-        ALenum error;
-        std::int16_t buf[RE_MUSIC_BUFFER_LEN];
-        for (int i = 0; i < RE_MUSIC_BUFFER_LEN; i++) buf[i] = 0;
-
-        for (int i = 0; i < RE_NUM_MUSIC_BUFFERS; i++)
-        {
-            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
-        }
-
-        alSourceQueueBuffers(m_musicSource, RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
-        alSourcePlay(m_musicSource);
-        error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            LogError() << "Cannot start playing music: " << AudioEngine::getErrorString(error);
-            return;
-        }
-
-        m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
-
-        while (!m_exiting)
-        {
-            ALint val;
-            int n = 0;
-            alGetSourcei(m_musicSource, AL_BUFFERS_PROCESSED, &val);
-            if (val <= 0)
-            {
-                continue;
-            }
-
-            for(int i = 0; i < val; i++)
-            {
-                ALuint buffer;
-                alSourceUnqueueBuffers(m_musicSource, 1, &buffer);
-                alBufferData(buffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
-                alSourceQueueBuffers(m_musicSource, 1, &buffer);
-                error = alGetError();
-                if (error != AL_NO_ERROR)
-                {
-                    LogError() << "Error while buffering: " << AudioEngine::getErrorString(error);
-                    return;
-                }
-                m_musicContext->renderBlock(buf, RE_MUSIC_BUFFER_LEN);
-            }
-
-            alGetSourcei(m_musicSource, AL_SOURCE_STATE, &val);
-            if (val != AL_PLAYING)
-                alSourcePlay(m_musicSource);
-        }
-    }
-#endif
-
     AudioWorld::~AudioWorld()
     {
-#ifdef RE_USE_SOUND
         m_exiting = true;
-        m_musicRenderThread.join();
 
-        alDeleteBuffers(RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
-        alDeleteSources(1, &m_musicSource);
+        m_musicSound->stop();
+        m_musicSound = nullptr;
 
         for (int i = 0; i < Config::MAX_NUM_LEVEL_AUDIO_FILES; i++)
         {
             Sound& snd = m_Allocator.getElements()[i];
-            if (snd.m_Handle != 0)
-                alDeleteBuffers(1, &snd.m_Handle);
+            snd.sound = nullptr;
         }
 
         for (Source& src : m_Sources)
-            alDeleteSources(1, &src.m_Handle);
-
-        if (m_Context)
-            alcDestroyContext(m_Context);
+            src.m_Sound = nullptr;
 
         delete m_SoundVM;
         delete m_MusicVM;
-#endif
     }
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return Handle::SfxHandle::makeInvalidHandle();
-
         std::string ucname = name;
         std::transform(ucname.begin(), ucname.end(), ucname.begin(), ::toupper);
 
@@ -251,7 +156,7 @@ namespace World
         else
         {
             snd = &m_Allocator.getElement(h);
-            if (snd->m_Handle)  // already loaded
+            if (snd->sound != nullptr)  // already loaded
                 return h;
         }
 
@@ -266,33 +171,9 @@ namespace World
         if (!wav.open() || !wav.read())
             return Handle::SfxHandle::makeInvalidHandle();
 
-        alGenBuffers(1, &snd->m_Handle);
+        std::vector<std::int16_t> rawData(wav.getDataVector().begin(), wav.getDataVector().end());
 
-        ALenum error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            static bool warned = false;
-            if (!warned)
-            {
-                LogWarn() << "Could not create OpenAL buffer: "
-                          << AudioEngine::getErrorString(error);
-                return Handle::SfxHandle::makeInvalidHandle();
-            }
-            return Handle::SfxHandle::makeInvalidHandle();
-        }
-
-        alBufferData(snd->m_Handle, AL_FORMAT_MONO16, wav.getData(), wav.getDataSize(), wav.getRate());
-        error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            static bool warned = false;
-            if (!warned)
-            {
-                LogWarn() << "Could not set OpenAL buffer data: "
-                          << AudioEngine::getErrorString(error);
-            }
-            return Handle::SfxHandle::makeInvalidHandle();
-        }
+        snd->sound = m_AudioEngine.createSound(rawData, Audio::AudioFormat::Mono, wav.getRate());
 
         // Load other versions, such as randomly played footstep variants
         loadVariants(h);
@@ -300,9 +181,6 @@ namespace World
         m_SoundMap[name] = h;
 
         return h;
-#else
-        return Handle::SfxHandle::makeInvalidHandle();
-#endif
     }
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const std::string& name)
@@ -312,13 +190,6 @@ namespace World
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
     {
-#ifdef RE_USE_SOUND
-
-        if (!m_Context)
-            return Utils::Ticket<AudioWorld>();
-
-        alcMakeContextCurrent(m_Context);
-
         Sound& snd = m_Allocator.getElement(h);
 
         // Get a cached source object
@@ -326,66 +197,31 @@ namespace World
 
         //LogInfo() << "play sound " << snd.sfx.file << " vol " << snd.sfx.vol;
 
-        alSourcef(s.m_Handle, AL_PITCH, m_Engine.getGameClock().getGameEngineSpeedFactor());
-        alSourcef(s.m_Handle, AL_GAIN, snd.sfx.vol / 127.0f);
-        alSource3f(s.m_Handle, AL_POSITION, position.x, position.y, position.z);
-        alSource3f(s.m_Handle, AL_VELOCITY, 0, 0, 0);
-        alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
+        snd.sound->setPitch(m_Engine.getGameClock().getGameEngineSpeedFactor());
+        snd.sound->setGain(snd.sfx.vol / 127.0f);
+        snd.sound->setPosition(position);
+        snd.sound->setVelocity(Math::float3(0, 0, 0));
+        snd.sound->setMaxDistance(maxDist);
 
         // Relative for sources directly attached to the listener
-        alSourcei(s.m_Handle, AL_SOURCE_RELATIVE, relative ? AL_TRUE : AL_FALSE);
+        snd.sound->setRelative(relative);
 
         // TODO: proper looping would require slicing and queueing multiple buffers
         // and setting the source to loop when the non-looping buffer was played.
         // start and end don't seem to be used, thoug?
-        alSourcei(s.m_Handle, AL_LOOPING, snd.sfx.loop ? AL_TRUE : AL_FALSE);
+        snd.sound->setLooping(snd.sfx.loop);
 
-        alSourcei(s.m_Handle, AL_BUFFER, snd.m_Handle);
-        ALenum error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            static bool warned = false;
-            if (!warned)
-            {
-                LogWarn() << "Could not attach buffer to source: " << AudioEngine::getErrorString(error);
-                warned = true;
-            }
-            return Utils::Ticket<AudioWorld>();
-        }
-
-        alSourcePlay(s.m_Handle);
-        error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            static bool warned = false;
-            if (!warned)
-            {
-                LogWarn() << "Could not start source!" << AudioEngine::getErrorString(error);
-                warned = true;
-            }
-            return Utils::Ticket<AudioWorld>();
-        }
+        snd.sound->play();
+        s.m_Sound = snd.sound;
         return s.soundTicket;
-#else
-        return Utils::Ticket<AudioWorld>();
-#endif
     }
 
-#ifdef RE_USE_SOUND
     AudioWorld::Source AudioWorld::getFreeSource()
     {
-        if (!m_Context)
-            return AudioWorld::Source();
-
-        alcMakeContextCurrent(m_Context);
-
         // Check if we could re-use one
         for (Source& s : m_Sources)
         {
-            ALint state;
-            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-
-            if (state != AL_PLAYING && state != AL_PAUSED)
+            if (!s.m_Sound->isPlaying() && !s.m_Sound->isPaused())
             {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
@@ -393,34 +229,9 @@ namespace World
             }
         }
 
-        ALuint source;
-        alGenSources(1, &source);
-
-        ALenum error = alGetError();
-        if (error != AL_NO_ERROR)
-        {
-            static bool warned = false;
-            if (!warned)
-            {
-                LogWarn() << "Could not allocate AL source!";
-                warned = true;
-            }
-            return AudioWorld::Source();
-        }
-
-        alSourcef(source, AL_PITCH, 1);
-        // check for errors
-        alSourcef(source, AL_GAIN, 1);
-        // check for errors
-        alSource3f(source, AL_POSITION, 0, 0, 0);
-        // check for errors
-        alSource3f(source, AL_VELOCITY, 0, 0, 0);
-        // check for errors
-        alSourcei(source, AL_LOOPING, AL_FALSE);
-
         // Nothing to re-use available, make a new entry
         m_Sources.emplace_back();
-        m_Sources.back().m_Handle = source;
+        m_Sources.back().m_Sound = nullptr;
         return m_Sources.back();
     }
 
@@ -432,7 +243,7 @@ namespace World
         Handle::SfxHandle h = m_Allocator.createObject();
         Sound& snd = m_Allocator.getElement(h);
         snd.sfx = sfx;
-        snd.m_Handle = 0;
+        snd.sound = nullptr;
         snd.name = name;
 
         m_SoundMap[name] = h;
@@ -473,101 +284,57 @@ namespace World
         LogInfo() << "created " << count << " sounds";
     }
 
-#endif
 
     void AudioWorld::stopSounds()
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return;
-
-        alcMakeContextCurrent(m_Context);
-
         for (Source& s : m_Sources)
-            alSourceStop(s.m_Handle);
-#endif
+            s.m_Sound->stop();
     }
 
     void AudioWorld::stopSound(Utils::Ticket<AudioWorld> ticket)
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return;
-
-        alcMakeContextCurrent(m_Context);
-
         for (Source& s : m_Sources)
         {
             if (s.soundTicket == ticket)
             {
-                alSourceStop(s.m_Handle);
+                s.m_Sound->stop();
                 return;
             }
         }
-#endif
     }
 
     bool AudioWorld::soundIsPlaying(Utils::Ticket<AudioWorld> ticket)
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return false;
-
-        alcMakeContextCurrent(m_Context);
-
         for (Source& s : m_Sources)
         {
             if (s.soundTicket == ticket)
             {
-                ALint state;
-                alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-                return state == AL_PLAYING || state == AL_PAUSED;
+                return s.m_Sound->isPlaying() || s.m_Sound->isPaused();
             }
         }
         return false;
-#else
-        return false;
-#endif
     }
 
     void AudioWorld::pauseSounds()
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return;
-
-        alcMakeContextCurrent(m_Context);
-
         for (Source& s : m_Sources)
         {
-            ALint state;
-            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-            if (state == AL_PLAYING)
+            if (s.m_Sound->isPlaying())
             {
-                alSourcePause(s.m_Handle);
+                s.m_Sound->pause();
             }
         }
-#endif
     }
 
     void AudioWorld::continueSounds()
     {
-#ifdef RE_USE_SOUND
-        if (!m_Context)
-            return;
-
-        alcMakeContextCurrent(m_Context);
-
         for (Source& s : m_Sources)
         {
-            ALint state;
-            alGetSourcei(s.m_Handle, AL_SOURCE_STATE, &state);
-            if (state == AL_PAUSED)
+            if (s.m_Sound->isPaused())
             {
-                alSourcePlay(s.m_Handle);
+                s.m_Sound->play();
             }
         }
-#endif
     }
 
     void AudioWorld::loadVariants(Handle::SfxHandle sfx)
@@ -594,18 +361,17 @@ namespace World
 
     void AudioWorld::setListenerPosition(const Math::float3& position)
     {
-        alListener3f(AL_POSITION, position.x, position.y, position.z);
+        m_AudioEngine.setListenerPosition(position);
     }
 
     void AudioWorld::setListenerVelocity(const Math::float3& velocity)
     {
-        alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
+        m_AudioEngine.setListenerVelocity(velocity);
     }
 
     void AudioWorld::setListenerOrientation(const Math::float3& at, const Math::float3& up)
     {
-        float v[6] = {at.x, at.y, at.z, up.x, up.y, up.z};
-        alListenerfv(AL_ORIENTATION, v);
+        m_AudioEngine.setListenerOrientation(at, up);
     }
 
     Utils::Ticket<AudioWorld> AudioWorld::playSound(Handle::SfxHandle h)
@@ -690,7 +456,7 @@ namespace World
 
     void AudioWorld::setListenerGain(float gain)
     {
-        alListenerf(AL_GAIN, gain);
+        m_AudioEngine.setListenerGain(gain);
     }
 
     void AudioWorld::setSoundMaxDistance(Utils::Ticket<AudioWorld> sound, float maxDist)
@@ -699,7 +465,7 @@ namespace World
         {
             if (s.soundTicket == sound)
             {
-                alSourcef(s.m_Handle, AL_MAX_DISTANCE, maxDist);
+                s.m_Sound->setMaxDistance(maxDist);
                 return;
             }
         }
@@ -707,7 +473,6 @@ namespace World
 
     bool AudioWorld::playSegment(const std::string& name, DirectMusic::SegmentTiming timing)
     {
-#ifdef RE_USE_SOUND
         std::string loweredName = Utils::lowered(name);
         if (m_musicContext == nullptr || m_Segments.find(loweredName) == m_Segments.end())
         {
@@ -722,13 +487,11 @@ namespace World
             }
             return true;
         }
-#endif
         return false;
     }
 
     bool AudioWorld::playMusicTheme(const std::string& name)
     {
-#ifdef RE_USE_SOUND
         if (m_MusicVM->getDATFile().hasSymbolName(Utils::uppered(name)))
         {
             size_t i = m_MusicVM->getDATFile().getSymbolIndexByName(Utils::uppered(name));
@@ -738,19 +501,16 @@ namespace World
 
             return playSegment(mt.file, getTiming(mt.transSubType));
         }
-#endif
         return false;
     }
 
     const std::vector<std::string> AudioWorld::getLoadedSegments() const
     {
         std::vector<std::string> vect;
-#ifdef RE_USE_SOUND
         for (const auto& kvp : m_Segments)
         {
             vect.push_back(kvp.first);
         }
-#endif
         return vect;
     }
 }

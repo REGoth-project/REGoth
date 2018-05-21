@@ -13,16 +13,10 @@
 #include <utils/Utils.h>
 #include <vdfs/fileIndex.h>
 
-typedef struct ALCcontext_struct ALCcontext;
-
-#ifdef RE_USE_SOUND
-#define RE_NUM_MUSIC_BUFFERS 3
-#define RE_MUSIC_BUFFER_LEN 1024
-#endif
-
 namespace Audio
 {
     class AudioEngine;
+    class Sound;
 }
 
 namespace Engine
@@ -141,19 +135,18 @@ namespace World
 
     private:
         Engine::BaseEngine& m_Engine;
+        Audio::AudioEngine& m_AudioEngine;
 
         /**
          * Pointer to a vdfs-index to work on (can be nullptr)
          */
         const VDFS::FileIndex& m_VDFSIndex;
 
-        ALCcontext* m_Context = nullptr;
-
         Daedalus::DaedalusVM* m_SoundVM = nullptr, *m_MusicVM = nullptr;
 
         struct Source
         {
-            unsigned m_Handle = 0;
+            std::shared_ptr<Audio::Sound> m_Sound = 0;
             Utils::Ticket<AudioWorld> soundTicket;
         };
 
@@ -161,17 +154,17 @@ namespace World
         {
             Daedalus::GEngineClasses::C_SFX sfx;
             std::vector<Handle::SfxHandle> variants;  // Instances ending with "_Ax"
-            unsigned m_Handle = 0;
+            std::shared_ptr<Audio::Sound> sound;
             std::string name;
         };
-
-#ifdef RE_USE_SOUND
 
         void createSounds();
 
         Handle::SfxHandle allocateSound(const std::string& name, const Daedalus::GEngineClasses::C_SFX& sfx);
 
         void createSound(const std::string& name, const Daedalus::GEngineClasses::C_SFX& sfx);
+
+        std::shared_ptr<Audio::Sound> m_musicSound;
 
         /**
          * Checks for sound-instancing ending in the same name, but with "_Ax" appended.
@@ -216,17 +209,6 @@ namespace World
         std::string m_playingSegment;
 
         /**
-         * Background thread that puts music data into the soundbuffer(s)
-         */
-        void musicRenderFunction();
-        std::thread m_musicRenderThread;
-
-        /**
-         * Contain music buffers and source
-         */
-        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
-
-        /**
          * Used to signal when the music rendering thread should stop
         */
         bool m_exiting;
@@ -235,7 +217,6 @@ namespace World
          * Music loading routine
          */
         void initializeMusic();
-#endif
 
         /**
          * Contains all loaded sounds by name

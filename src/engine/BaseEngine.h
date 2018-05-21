@@ -218,7 +218,7 @@ namespace Engine
          */
         EngineArgs m_Args;
 
-        Audio::AudioEngine* m_AudioEngine = nullptr;
+        std::unique_ptr<Audio::AudioEngine> m_AudioEngine = nullptr;
 
         /**
          * Base UI-View
