@@ -59,9 +59,9 @@ namespace Audio
         }
         virtual void setListenerGain(float gain) = 0;
 
-        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int16_t>& data, AudioFormat format, int samplingRate);
-        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int8_t>& data, AudioFormat format, int samplingRate);
-        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int16_t* buf, int len)> source, AudioFormat format, int samplingRate);
-        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int8_t* buf, int len)> source, AudioFormat format, int samplingRate);
+        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int16_t>& data, AudioFormat format, int samplingRate) = 0;
+        virtual std::shared_ptr<Sound> createSound(const std::vector<std::int8_t>& data, AudioFormat format, int samplingRate) = 0;
+        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int16_t* buf, int len)> source, AudioFormat format, int samplingRate) = 0;
+        virtual std::shared_ptr<Sound> createSound(std::function<int(std::int8_t* buf, int len)> source, AudioFormat format, int samplingRate) = 0;
     };
 }

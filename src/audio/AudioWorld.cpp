@@ -221,7 +221,7 @@ namespace World
         // Check if we could re-use one
         for (Source& s : m_Sources)
         {
-            if (!s.m_Sound->isPlaying() && !s.m_Sound->isPaused())
+            if (s.m_Sound == nullptr || (!s.m_Sound->isPlaying() && !s.m_Sound->isPaused()))
             {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
