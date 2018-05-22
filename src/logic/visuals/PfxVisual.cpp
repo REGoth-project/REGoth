@@ -48,7 +48,7 @@ bool Logic::PfxVisual::load(const std::string& visual)
 
     // Need that one. Or should give a default value of 1?
     //assert(!m_Emitter.ppsScaleKeys.empty());
-    if(m_Emitter.ppsScaleKeys.empty())
+    if (m_Emitter.ppsScaleKeys.empty())
         m_Emitter.ppsScaleKeys.push_back(1.0f);
 
     // Init particle-systems dynamic vertex-buffer
@@ -102,7 +102,7 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
 
 void Logic::PfxVisual::onUpdate(float deltaTime)
 {
-    Components::PfxComponent &pfx = getPfxComponent();
+    Components::PfxComponent& pfx = getPfxComponent();
     Controller::onUpdate(deltaTime);
 
     // Spawn new particles. Need to accumulate deltaTime so the floor doesn't keep us from spawning any particles
@@ -115,7 +115,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
 
     // Loop ppsScaleKeys if wanted
     if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()))
-    { //&& !m_Emitter.ppsIsLooping) {
+    {  //&& !m_Emitter.ppsIsLooping) {
         m_ppsScaleKey = 0.0f;
         if (!m_Emitter.ppsIsLooping)
         {
@@ -123,7 +123,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
         }
     }
     if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()))
-    { //&& !m_Emitter.shpScaleIsLooping){
+    {  //&& !m_Emitter.shpScaleIsLooping){
         m_shpScaleKey = 0.0f;
         if (!m_Emitter.shpScaleIsLooping)
         {
@@ -152,27 +152,27 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     m_BBox.max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
     // Update particle values
-    for (Components::PfxComponent::Particle &p : pfx.m_Particles)
+    for (Components::PfxComponent::Particle& p : pfx.m_Particles)
         updateParticle(p, deltaTime);
 
     //Notice that iterator is not incremented in for loop
-    for (size_t i = 0; i < pfx.m_Particles.size(); )
+    for (size_t i = 0; i < pfx.m_Particles.size();)
     {
-        auto p = pfx.m_Particles.at(i);
+        auto& particle = pfx.m_Particles[i];
 
-        if (p.lifetime <= 0)
+        if (particle.lifetime <= 0)
         {
-            // Kill particle. Move the last one into the free slot and reduce the vector size
-            // to keep the memory continuous
-            pfx.m_Particles[i] = pfx.m_Particles.back();
+            // Efficient erasing: Copy the last particle into the free slot and remove it
+            particle = pfx.m_Particles.back();
             pfx.m_Particles.pop_back();
-            // No need to increase iterator, since we have a new particle in this slot now
-        }else
+            // No need to increase the index, since we have a new particle in this slot now
+        }
+        else
         {
             ++i;
         }
     }
-    if(pfx.m_Particles.size() == 0 && m_dead)
+    if (pfx.m_Particles.size() == 0 && m_dead)
     {
         m_canBeRemoved = true;
     }
@@ -316,17 +316,16 @@ void Logic::PfxVisual::updateParticle(Components::PfxComponent::Particle& p, flo
     p.size += p.sizeVel * deltaTime;
     p.alpha += p.alphaVel * deltaTime;
 
-
     float alphaFinal;
 
-    if(m_Emitter.visSoftAlpha)
+    if (m_Emitter.visSoftAlpha)
     {
-      float alphaRatio = (p.alpha - m_Emitter.visAlphaStart) / (m_Emitter.visAlphaEnd - m_Emitter.visAlphaStart);
-      alphaFinal = Math::sinusSmooth(alphaRatio) * p.alpha;
+        float alphaRatio = (p.alpha - m_Emitter.visAlphaStart) / (m_Emitter.visAlphaEnd - m_Emitter.visAlphaStart);
+        alphaFinal = Math::sinusSmooth(alphaRatio) * p.alpha;
     }
     else
     {
-      alphaFinal = p.alpha; 
+        alphaFinal = p.alpha;
     }
 
     // Compute actual color for this frame
