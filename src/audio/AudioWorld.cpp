@@ -295,7 +295,7 @@ namespace World
     {
         for (Source& s : m_Sources)
         {
-            if (s.soundTicket == ticket)
+            if (s.soundTicket == ticket && s.m_Sound != nullptr)
             {
                 s.m_Sound->stop();
                 return;
@@ -309,7 +309,7 @@ namespace World
         {
             if (s.soundTicket == ticket)
             {
-                return s.m_Sound->isPlaying() || s.m_Sound->isPaused();
+                return s.m_Sound != nullptr && (s.m_Sound->isPlaying() || s.m_Sound->isPaused());
             }
         }
         return false;
@@ -319,7 +319,7 @@ namespace World
     {
         for (Source& s : m_Sources)
         {
-            if (s.m_Sound->isPlaying())
+            if (s.m_Sound != nullptr && s.m_Sound->isPlaying())
             {
                 s.m_Sound->pause();
             }
@@ -330,7 +330,7 @@ namespace World
     {
         for (Source& s : m_Sources)
         {
-            if (s.m_Sound->isPaused())
+            if (s.m_Sound != nullptr && s.m_Sound->isPaused())
             {
                 s.m_Sound->play();
             }
