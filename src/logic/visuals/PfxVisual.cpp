@@ -156,20 +156,20 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
         updateParticle(p, deltaTime);
 
     //Notice that iterator is not incremented in for loop
-    for (auto it = pfx.m_Particles.begin(); it != pfx.m_Particles.end(); )
+    for (size_t i = 0; i < pfx.m_Particles.size(); )
     {
-        Components::PfxComponent::Particle &p = *it;
+        auto p = pfx.m_Particles.at(i);
 
         if (p.lifetime <= 0)
         {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
-			pfx.m_Particles[it - pfx.m_Particles.begin()] = pfx.m_Particles.back();
-			pfx.m_Particles.pop_back();
-			// No need to increase iterator, since we have a new particle in this slot now
+            pfx.m_Particles[i] = pfx.m_Particles.back();
+            pfx.m_Particles.pop_back();
+            // No need to increase iterator, since we have a new particle in this slot now
         }else
         {
-            ++it;
+            ++i;
         }
     }
     if(pfx.m_Particles.size() == 0 && m_dead)
