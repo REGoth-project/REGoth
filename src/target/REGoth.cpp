@@ -141,16 +141,6 @@ void REGoth::initConsole()
         return suggestions;
     };
 
-    // creates simple suggestion generator from iterables of string
-    auto simpleStringGenGen = [](const auto& stringContainer){
-        return [stringContainer](){
-            std::vector<Suggestion> suggestions;
-            for (auto& token : stringContainer)
-                suggestions.push_back(std::make_shared<SuggestionBase>(SuggestionBase{{std::move(token)}}));
-            return suggestions;
-        };
-    };
-
     console.registerCommand("estimatedGPUMem", [this](const std::vector<std::string>& args) -> std::string {
         World::WorldInstance& world = m_pEngine->getMainWorld().get();
 
@@ -216,7 +206,7 @@ void REGoth::initConsole()
 
     std::map<std::string, Logic::CameraController::ECameraMode> camModes = {
         {"ThirdPerson", Logic::CameraController::ECameraMode::ThirdPerson},
-        {"FirstPerson", Logic::CameraController::ECameraMode::FirstPerson, },
+        {"FirstPerson", Logic::CameraController::ECameraMode::FirstPerson},
         {"Free", Logic::CameraController::ECameraMode::Free},
         {"Viewer", Logic::CameraController::ECameraMode::Viewer},
         {"Static", Logic::CameraController::ECameraMode::Static},
@@ -238,7 +228,7 @@ void REGoth::initConsole()
     std::vector<std::string> camModeNames;
     for (const auto& pair : camModes)
         camModeNames.push_back(pair.first);
-    commandCamera.registerAutoComplete(simpleStringGenGen(camModeNames));
+    commandCamera.registerAutoComplete(camModeNames);
 
     console.registerCommand("test", [this](const std::vector<std::string>& args) -> std::string {
         auto& worldInstance = m_pEngine->getMainWorld().get();
@@ -356,7 +346,7 @@ void REGoth::initConsole()
     for (const auto& pair : walkModes)
         walkModeNames.push_back(pair.first);
 
-    setWalkmode.registerAutoComplete(simpleStringGenGen(walkModeNames));
+    setWalkmode.registerAutoComplete(walkModeNames);
 
     console.registerCommand("heroexport", [this](const std::vector<std::string>& args) -> std::string {
         auto& s = m_pEngine->getMainWorld().get().getScriptEngine();
@@ -924,7 +914,7 @@ void REGoth::initConsole()
       }
     }
 
-    playsound.registerAutoComplete(simpleStringGenGen(playSoundFiles));
+    playsound.registerAutoComplete(playSoundFiles);
 
     console.registerCommand("volume", [this](const std::vector<std::string>& args) -> std::string {
         if (args.size() < 2)
