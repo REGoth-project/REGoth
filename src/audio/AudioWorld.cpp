@@ -171,7 +171,9 @@ namespace World
         if (!wav.open() || !wav.read())
             return Handle::SfxHandle::makeInvalidHandle();
 
-        std::vector<std::int16_t> rawData(wav.getDataVector().begin(), wav.getDataVector().end());
+        const std::int16_t* dataPtr = static_cast<const std::int16_t*>(wav.getData());
+
+        std::vector<std::int16_t> rawData(dataPtr, dataPtr + wav.getDataSize() / sizeof(std::int16_t));
 
         snd->sound = m_AudioEngine.createSound(rawData, Audio::AudioFormat::Mono, wav.getRate());
 
@@ -221,7 +223,7 @@ namespace World
         // Check if we could re-use one
         for (Source& s : m_Sources)
         {
-            if (s.m_Sound == nullptr || (!s.m_Sound->isPlaying() && !s.m_Sound->isPaused()))
+            if (s.m_Sound == nullptr || !s.m_Sound->isActive())
             {
                 // reusing old source, give new ticket to it
                 s.soundTicket = Utils::Ticket<AudioWorld>();
@@ -309,7 +311,7 @@ namespace World
         {
             if (s.soundTicket == ticket)
             {
-                return s.m_Sound != nullptr && (s.m_Sound->isPlaying() || s.m_Sound->isPaused());
+                return s.m_Sound != nullptr && s.m_Sound->isActive();
             }
         }
         return false;

@@ -38,7 +38,6 @@ public:
      *
      */
     const void* getData() const { return m_Dest.empty() ? nullptr : &m_Dest[0]; }
-    const std::vector<uint8_t>& getDataVector() const { return m_Dest; }
     unsigned getDataSize() const { return m_Dest.size(); }
 private:
     const uint8_t* m_Source = nullptr;

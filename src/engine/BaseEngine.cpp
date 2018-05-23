@@ -1,6 +1,7 @@
 #include <fstream>
 #include "BaseEngine.h"
 #include "World.h"
+#include "audio/OpenAlAudioEngine.h"
 #include "audio/AudioEngine.h"
 #include "audio/NullAudioEngine.h"
 #include <bx/commandline.h>
@@ -116,10 +117,10 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
 
-    m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
+    m_AudioEngine = std::make_unique<Audio::OpenAlAudioEngine>("");
 
-        // Init HUD
-        m_pFontCache = new UI::zFontCache(*this);
+    // Init HUD
+    m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
     getRootUIView().addChild(m_pHUD);
 }

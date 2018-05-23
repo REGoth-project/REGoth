@@ -23,6 +23,10 @@ namespace Audio
         virtual bool isPlaying() const = 0;
         virtual bool isLooping() const = 0;
         virtual bool isPaused() const = 0;
+        virtual bool isActive() const
+        {
+            return isPlaying() || isPaused();
+        }
 
         virtual void stop() = 0;
         virtual void pause() = 0;
@@ -42,6 +46,8 @@ namespace Audio
         virtual void setGain(float gain) = 0;
         virtual void setRelative(bool isRelative) = 0;
         virtual void setLooping(bool looping) = 0;
+
+        ~Sound() {}
     };
 
     /** The AudioEngine represents the target OS sound system.
@@ -59,9 +65,16 @@ namespace Audio
         }
         virtual void setListenerGain(float gain) = 0;
 
+        /// Creates a single-buffer sound with 16bit PCM sample data
         virtual std::shared_ptr<Sound> createSound(const std::vector<std::int16_t>& data, AudioFormat format, int samplingRate) = 0;
+
+        /// Creates a single-buffer sound with 8bit PCM sample data
         virtual std::shared_ptr<Sound> createSound(const std::vector<std::int8_t>& data, AudioFormat format, int samplingRate) = 0;
+
+        /// Creates a streaming sound with 16bit PCM sample data
         virtual std::shared_ptr<Sound> createSound(std::function<int(std::int16_t* buf, int len)> source, AudioFormat format, int samplingRate) = 0;
+
+        /// Creates a streaming sound with 8bit PCM sample data
         virtual std::shared_ptr<Sound> createSound(std::function<int(std::int8_t* buf, int len)> source, AudioFormat format, int samplingRate) = 0;
     };
 }
