@@ -27,6 +27,7 @@ namespace UI
     class Menu;
     class DialogBox;
     class LoadingScreen;
+    class IntroduceChapterView;
 
     class Hud : public View
     {
@@ -103,6 +104,10 @@ namespace UI
          */
         LoadingScreen& getLoadingScreen() { return *m_pLoadingScreen; }
         /**
+         * IntroduceChapterView
+         */
+        IntroduceChapterView& getIntroduceChapterView() { return *m_pIntroduceChapterView; }
+        /**
          * Controls visibility of gameplay-hud
          */
         void setGameplayHudVisible(bool value);
@@ -154,6 +159,7 @@ namespace UI
         LoadingScreen* m_pLoadingScreen;
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
+        IntroduceChapterView* m_pIntroduceChapterView;
 
         /**
          * Chain of opened menus. Only the last one will be rendered and processed
