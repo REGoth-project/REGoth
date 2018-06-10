@@ -257,7 +257,7 @@ void UI::Hud::onInputAction(Engine::ActionType action)
 {
     using Engine::ActionType;
 
-    if (!m_pLoadingScreen->isHidden())
+    if (!m_pLoadingScreen->isHidden() || !m_pIntroduceChapterView->isHidden())
         return;
 
     if (!m_pIntroduceChapterView->isHidden() && action == ActionType::UI_ToggleMainMenu)
