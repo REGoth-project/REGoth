@@ -37,28 +37,23 @@ Handle::TextureHandle TextureAllocator::loadTextureDDS(const std::vector<uint8_t
         return (*it).second;
 
     // Make wrapper-object
-    Handle::TextureHandle h = m_Allocator.createObject();
+    Handle::TextureHandle h = createEmptyTexture(name);
 
+    fillTextureDDS(h, data);
+
+    return h;
+}
+
+void TextureAllocator::fillTextureDDS(Handle::TextureHandle h, const std::vector<uint8_t>& data)
+{
     m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::Unknown;
     m_Allocator.getElement(h).imageData = data;
-    //m_Allocator.getElement(h).m_TextureHandle = bth;
-    m_Allocator.getElement(h).m_TextureName = name;
 
     ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(data);
     m_Allocator.getElement(h).m_Width = desc.dwWidth;
     m_Allocator.getElement(h).m_Height = desc.dwHeight;
-
-    // Add handle to name-map, if it got one
-    if (!name.empty())
-        m_TexturesByName[name] = h;
-
-    // Flush the pipeline
-    // TODO: There must be something better than "frame"?
-    //bgfx::touch(0);
-    //bgfx::frame();
-
-    return h;
 }
+
 
 Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8_t>& data, uint16_t width, uint16_t height, const std::string& name)
 {
@@ -67,34 +62,45 @@ Handle::TextureHandle TextureAllocator::loadTextureRGBA8(const std::vector<uint8
     if (it != m_TexturesByName.end())
         return (*it).second;
 
-    // Load image
-    //int width, height, comp;
-    //void* out = stbi_load_from_memory( data.data(), data.size(), (int*)&width, (int*)&height, &comp, 4);
+    // Make wrapper-object
+    Handle::TextureHandle h = createEmptyTexture(name);
 
-    // Try to load the texture first, so we don't have to clean up if this fails
-    //TODO: Avoid the second copy here
+    fillTextureRGBA8(h, data, width, height);
+
+    return h;
+}
+
+
+void TextureAllocator::fillTextureRGBA8(Handle::TextureHandle h,
+                                        const std::vector<uint8_t>& data,
+                                        uint16_t width,
+                                        uint16_t height)
+{
+    m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
+    m_Allocator.getElement(h).imageData = data;
+    m_Allocator.getElement(h).m_Width = width;
+    m_Allocator.getElement(h).m_Height = height;
+}
+
+
+Handle::TextureHandle TextureAllocator::createEmptyTexture(const std::string& name)
+{
+    // Check if this was already loaded
+    auto it = m_TexturesByName.find(name);
+    if (it != m_TexturesByName.end())
+        return (*it).second;
 
     // Make wrapper-object
     Handle::TextureHandle h = m_Allocator.createObject();
-
-    m_Allocator.getElement(h).textureFormat = bgfx::TextureFormat::RGBA8;
-    m_Allocator.getElement(h).imageData = data;
-    //m_Allocator.getElement(h).m_TextureHandle = bth;
     m_Allocator.getElement(h).m_TextureName = name;
-    m_Allocator.getElement(h).m_Width = width;
-    m_Allocator.getElement(h).m_Height = height;
 
     // Add handle to name-map, if it got one
     if (!name.empty())
         m_TexturesByName[name] = h;
 
-    // Flush the pipeline
-    // TODO: There must be something better than "frame"?
-    //bgfx::touch(0);
-    //bgfx::frame();
-
     return h;
 }
+
 
 Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& idx, const std::string& name)
 {
@@ -104,8 +110,6 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         return (*it).second;
 
     std::string vname = name;
-    std::vector<uint8_t> ztex;
-    std::vector<uint8_t> dds;
 
     // Check if this isn't the compiled version
     if (vname.find("-C") == std::string::npos)
@@ -117,54 +121,61 @@ Handle::TextureHandle TextureAllocator::loadTextureVDF(const VDFS::FileIndex& id
         vname += "-C.TEX";
     }
 
-    // Load from archive
     bool asDDS = true;
-    idx.getFileData(vname, ztex);
-
-    // No compiled version? Try again as TGA
-    if (ztex.empty())
+    if(!idx.hasFile(vname))
     {
+        // No compiled version? Try raw...
         vname = name;
-        idx.getFileData(vname, ztex);
         asDDS = false;
+
+        if(!idx.hasFile(vname))
+            return Handle::TextureHandle::makeInvalidHandle();
     }
 
-    // Failed?
-    if (ztex.empty())
-        return Handle::TextureHandle::makeInvalidHandle();
+    Handle::TextureHandle h = createEmptyTexture(name);
 
-    if (asDDS)
-    {
-        // Convert to usual DDS
-        ZenLoad::convertZTEX2DDS(ztex, dds);
-    }
+    m_Engine.getJobManager().executeInThread<void>([=, &idx](Engine::BaseEngine* pEngine) {
+
+        std::vector<uint8_t> ztex;
+        std::vector<uint8_t> dds;
+
+        // Load from archive
+        idx.getFileData(vname, ztex);
+
+        if (asDDS)
+        {
+            // Convert to usual DDS
+            ZenLoad::convertZTEX2DDS(ztex, dds);
+        }
 
 #if EMSCRIPTEN
-    if (asDDS)
-    {
-        LogInfo() << "Converting DDS to RGBA8 for: " << name;
-        // Android doesn't support DDS for the most part
-        ztex.clear();
-        ZenLoad::convertDDSToRGBA8(dds, ztex);
-        asDDS = false;
-    }
+        if (asDDS)
+        {
+            LogInfo() << "Converting DDS to RGBA8 for: " << name;
+            // Android doesn't support DDS for the most part
+            ztex.clear();
+            ZenLoad::convertDDSToRGBA8(dds, ztex);
+            asDDS = false;
+        }
 #endif
 
-    Handle::TextureHandle h;
-    if (asDDS)
-    {
-        // Proceed to load as usual dds-file and the input-name
-        h = loadTextureDDS(dds, name);
-    }
-    else
-    {
-        ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(dds);
-        h = loadTextureRGBA8(ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight, name);
-    }
+        if (asDDS)
+        {
+            // Proceed to load as usual dds-file and the input-name
+            fillTextureDDS(h, dds);
+        }
+        else
+        {
+            ZenLoad::DDSURFACEDESC2 desc = ZenLoad::getSurfaceDesc(dds);
 
-    m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
-        finalizeLoad(h);
-    });
+            fillTextureRGBA8(h, ztex, (uint16_t)desc.dwWidth, (uint16_t)desc.dwHeight);
+        }
+
+        m_Engine.getJobManager().executeInMainThread<void>([this, h](Engine::BaseEngine* pEngine) {
+            finalizeLoad(h);
+        });
+
+    }, Engine::ExecutionPolicy::NewThread);
 
     return h;
 }

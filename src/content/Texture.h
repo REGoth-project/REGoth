@@ -42,6 +42,7 @@ namespace Textures
          */
         Handle::TextureHandle loadTextureDDS(const std::vector<uint8_t>& data, const std::string& name = "");
         Handle::TextureHandle loadTextureRGBA8(const std::vector<uint8_t>& data, uint16_t width, uint16_t height, const std::string& name = "");
+        Handle::TextureHandle createEmptyTexture(const std::string& name = "");
 
         /**
          * @brief Loads a ZTEX-texture from the given or stored VDFS-FileIndex
@@ -58,6 +59,13 @@ namespace Textures
          */
         size_t getEstimatedGPUMemoryConsumption() { return m_EstimatedGPUBytes; }
     protected:
+
+        /**
+         * Fills the given empty texture with data
+         */
+        void fillTextureDDS(Handle::TextureHandle h, const std::vector<uint8_t>& data);
+        void fillTextureRGBA8(Handle::TextureHandle h, const std::vector<uint8_t>& data, uint16_t width, uint16_t height);
+
         /**
          * Pushes the loaded data to the GPU. Needs to run on the main-thread.
          * @param h Data to finalize
