@@ -141,6 +141,18 @@ void REGoth::initConsole()
         return suggestions;
     };
 
+
+    console.registerCommand("estimatedCPUMem", [this](const std::vector<std::string>& args) -> std::string {
+        World::WorldInstance& world = m_pEngine->getMainWorld().get();
+
+        std::stringstream ss;
+        ss << "Current world CPU Memory Consumption (Rough estimate!):" << std::endl
+           << "   - Entities: " << world.getComponentAllocator().getNumBytesUsed() / 1024 / 1024  << "/" << world.getComponentAllocator().getNumBytesTotal() / 1024 / 1024  << std::endl
+           << "   -";
+
+        return ss.str();
+    });
+
     console.registerCommand("estimatedGPUMem", [this](const std::vector<std::string>& args) -> std::string {
         World::WorldInstance& world = m_pEngine->getMainWorld().get();
 
