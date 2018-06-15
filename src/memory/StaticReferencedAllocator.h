@@ -228,6 +228,22 @@ namespace Memory
         }
 
         /**
+         * @return Number of bytes statically allocated by the allocator
+         */
+        size_t getNumBytesTotal()
+        {
+            return (size_t)NUM;
+        }
+
+        /**
+         * @return Number of bytes used from the statically allocated memory
+         */
+        size_t getNumBytesUsed()
+        {
+            return (size_t)NUM;
+        }
+
+        /**
          * Basically destructs the allocator and makes it unusable (frees memory)
          */
         void kill()

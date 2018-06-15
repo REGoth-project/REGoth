@@ -112,6 +112,32 @@ namespace Memory
         }
 
         /**
+         * @return Number of bytes statically allocated by the allocator
+         */
+        size_t getNumBytesTotal()
+        {
+            size_t sum = 0;
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc) {
+                sum += alloc.getNumBytesTotal();
+            });
+
+            return sum;
+        }
+
+        /**
+         * @return Number of bytes used from the statically allocated memory
+         */
+        size_t getNumBytesUsed()
+        {
+            size_t sum = 0;
+            Utils::for_each_in_tuple(m_Allocators, [&](auto& alloc) {
+                sum += alloc.getNumBytesUsed();
+            });
+
+            return sum;
+        }
+
+        /**
          * Returns all datasets inside a single structure
          */
         DataBundle getDataBundle()
