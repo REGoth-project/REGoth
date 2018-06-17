@@ -3,30 +3,30 @@
 #include "IntroduceChapterView.h"
 #include <engine/BaseEngine.h>
 #include <logic/DialogManager.h>
+#include <audio/AudioWorld.h>
 
 UI::IntroduceChapterView::IntroduceChapterView(Engine::BaseEngine& e)
     : View(e)
 {
     m_pImageView = new ImageView(e);
     addChild(m_pImageView);
-    m_pImageView->setAlignment(EAlign::A_Center);
-    m_pImageView->setTranslation(Math::float2(0.25, 0.20)); //TODO: get this right
     m_pImageView->setRelativeSize(false);
-    m_pImageView->setSize(Math::float2(4.5/8.0, 3.0/4.5));
+    m_pImageView->setSize(Math::float2(1.0f, 1.0f));
+    m_pImageView->setTranslation(Math::float2(.0f, .0f));
 
     m_pTitleTextView = new TextView(e);
     addChild(m_pTitleTextView);
-    m_pTitleTextView->setAlignment(EAlign::A_Center);
-    m_pTitleTextView->setTranslation(Math::float2(0.5, 0.28));  //TODO: get this right
     m_pTitleTextView->setFont(DEFAULT_FONT_LARGE);
+    m_pTitleTextView->setAlignment(A_TopCenter);
+    m_pTitleTextView->setTranslation(Math::float2(.5f, .085f));
 
     m_pSubtitleTextView = new TextView(e);
     addChild(m_pSubtitleTextView);
-    m_pSubtitleTextView->setAlignment(EAlign::A_Center);
-    m_pSubtitleTextView->setTranslation(Math::float2(0.5, 0.78));   //TODO: get this right
     m_pSubtitleTextView->setFont(DEFAULT_FONT);
+    m_pSubtitleTextView->setAlignment(A_TopCenter);
+    m_pSubtitleTextView->setTranslation(Math::float2(.5f, .885f));
 
-    initializeIntroduceChapterView();
+    m_QueueStatus = QueueStatus::Empty;
 }
 
 UI::IntroduceChapterView::~IntroduceChapterView()
@@ -41,23 +41,6 @@ UI::IntroduceChapterView::~IntroduceChapterView()
     delete m_pSubtitleTextView;
 }
 
-void UI::IntroduceChapterView::initializeIntroduceChapterView()
-{
-    m_Title = "";
-    m_Subtitle = "";
-    m_TextureName = ""; //TODO: some default
-    m_SoundName = "";
-    m_WaitTime = 0;
-
-    m_QueueStatus = QueueStatus::Empty;
-
-    setHidden(true);
-
-    m_pImageView->setHidden(true);
-    m_pTitleTextView->setHidden(true);
-    m_pSubtitleTextView->setHidden(true);
-}
-
 void UI::IntroduceChapterView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if ( m_QueueStatus == QueueStatus::Empty || /* Dialog in progess */ m_Engine.getMainWorld().get().getDialogManager().isDialogActive() )
@@ -68,33 +51,38 @@ void UI::IntroduceChapterView::update(double dt, Engine::Input::MouseState& msta
     {
         //Setup ImageView picture
         {
-            Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
-            Handle::TextureHandle image = alloc.loadTextureVDF(m_TextureName);
-            if (image.isValid())
-            {
-                m_pImageView->setImage(image);
-                m_pImageView->setHidden(false);
-            }
+            m_pImageView->setImage(m_Texture);
         }
 
         //Setup Text
         {
             m_pTitleTextView->setText(m_Title);
-            m_pTitleTextView->setHidden(false);
-        }
-        {
+
             m_pSubtitleTextView->setText(m_Subtitle);
-            m_pTitleTextView->setHidden(false);
         }
 
         //Setup Sound
+        World::AudioWorld& audioWorld = m_Engine.getMainWorld().get().getAudioWorld();
+        {
+            audioWorld.playSound(m_Sound);
+        }
 
-        //TODO: Pause Engine?
+        // Pause Engine, but continue Sound
+        m_Engine.setPaused(true);
+        audioWorld.continueSounds(); //FIXME: might need to use OpenAL or AudioRewrite
 
         m_QueueStatus = QueueStatus::Dequeued;
-
         setHidden(false);
     }
+
+    // Size tied to windowsize and default size of 640x480
+    Math::float2 fac = Math::float2(640.0f / config.state.viewWidth, 480.0f / config.state.viewHeight);
+    Math::float2 size = Math::float2(1.0f * fac.x, 1.0f * fac.y);
+    setSize(size);
+
+    // Center the view
+    Math::float2 c = Math::float2(0.5f, 0.5f) - size * 0.5f;
+    setTranslation(c);
 
     View::update(dt, mstate, config);
 
@@ -102,9 +90,10 @@ void UI::IntroduceChapterView::update(double dt, Engine::Input::MouseState& msta
 
     if ( m_WaitTime < 0 )
     {
-        //TODO: unpause Engine?
+        m_Engine.setPaused(false);
 
-        initializeIntroduceChapterView();        
+        m_QueueStatus = QueueStatus::Empty;
+        setHidden(true);
     }
 }
 
@@ -112,9 +101,19 @@ void UI::IntroduceChapterView::enqueueChapterIntroduction(std::string title, std
 {
     m_Title = title;
     m_Subtitle = subtitle;
-    m_TextureName = texture_name;
-    m_SoundName = sound_name;
+
+    Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
+    m_Texture = alloc.loadTextureVDF(texture_name);
+
+    m_Sound = m_Engine.getMainWorld().get().getAudioWorld().loadAudioVDF(sound_name);
+
     m_WaitTime = wait_time/1000;
 
-    m_QueueStatus = QueueStatus::InQueue;
+    if ( m_Texture.isValid() && m_Sound.isValid() && m_WaitTime>0 )
+        m_QueueStatus = QueueStatus::InQueue;
+}
+
+void UI::IntroduceChapterView::close()
+{
+    m_WaitTime = 0;
 }
