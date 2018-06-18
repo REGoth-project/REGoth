@@ -116,10 +116,6 @@ size_t Utils::getFileSize(const std::string& file)
 
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, const std::string& prePath)
 {
-#if defined(WIN32) || defined(_WIN32) || defined(EMSCRIPTEN)
-    return prePath + caseInsensitivePath;
-#else
-
     // Transform input path to lower
     std::string pathLower = caseInsensitivePath;
     std::transform(pathLower.begin(), pathLower.end(), pathLower.begin(), ::tolower);
@@ -189,7 +185,6 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
     }
 
     return result;
-#endif
 }
 
 const bgfx::Memory* Utils::loadFileToMemory(const char* _filePath)
