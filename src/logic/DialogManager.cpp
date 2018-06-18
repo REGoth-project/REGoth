@@ -355,7 +355,7 @@ bool DialogManager::init()
       for (const auto& outFile : {OU_FILE, OU_FILE_2})
       {
           ou = Utils::getCaseSensitivePath(outFile, m_World.getEngine()->getEngineArgs().gameBaseDirectory);
-          if (!ou.empty())
+          if (!ou.empty() && Utils::fileExists(ou))
               break;
       }
 
