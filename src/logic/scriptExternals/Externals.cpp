@@ -1507,12 +1507,15 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("introducechapter", [=](Daedalus::DaedalusVM& vm) {
+
         double waittime = vm.popDataValue();
         std::string sound = vm.popString();
         std::string texture = vm.popString();
         std::string subtitle = vm.popString();
         std::string title = vm.popString();
 
+        LogInfo() << "Queued up chapter introduction " << title;
+        
         engine->getJobManager().executeInMainThread<void>([=](Engine::BaseEngine* pEngine) {
             engine->getHud().getIntroduceChapterView().enqueueChapterIntroduction(title, subtitle, texture, sound, waittime);
         });
