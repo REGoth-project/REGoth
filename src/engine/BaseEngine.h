@@ -9,8 +9,10 @@
 #include <logic/Console.h>
 #include <logic/SavegameManager.h>
 #include <memory/StaticReferencedAllocator.h>
+#include <media/Video.h>
 #include <ui/View.h>
 #include <vdfs/fileIndex.h>
+#include <media/Video.h>
 
 namespace UI
 {
@@ -116,6 +118,9 @@ namespace Engine
          * @return Base-level UI-View. Parent of all other views.
          */
         UI::View& getRootUIView() { return m_RootUIView; }
+
+        Media::VideoPlayer& getVideoPlayer() { return *m_VideoPlayer; }
+
         /**
          * // TODO: Move to GameEngine, or pass GameEngine to world!
          * @return HUD
@@ -219,6 +224,8 @@ namespace Engine
         EngineArgs m_Args;
 
         Audio::AudioEngine* m_AudioEngine = nullptr;
+
+        Media::VideoPlayer* m_VideoPlayer = nullptr;
 
         /**
          * Base UI-View

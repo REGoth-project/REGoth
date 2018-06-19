@@ -1503,4 +1503,26 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
             npc.playerController->drawWeaponMelee(true);
         }
     });
+
+    vm->registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM& vm) {
+        engine->getVideoPlayer().play(vm.popString());
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        vm.setReturn(0);
+    });
+
+    vm->registerExternalFunction("playvideoex", [=](Daedalus::DaedalusVM& vm) {
+        if (verbose) LogInfo() << "playvideoex";
+        int exitsession = vm.popDataValue();
+        if (verbose) LogInfo() << "exitsession: " << exitsession;
+        int screenblend = vm.popDataValue();
+        if (verbose) LogInfo() << "screenblend: " << screenblend;
+        std::string filename = vm.popString();
+        if (verbose) LogInfo() << "filename: " << filename;
+
+        engine->getVideoPlayer().play(filename); // TODO: use exitseesion and screenblend parameters
+        // this function is actually declared as int, but the return value is never used in the original scripts
+        // and the Gothic compiler doesn't pop unused expressions
+        vm.setReturn(0);
+    });
 }

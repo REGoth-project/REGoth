@@ -9,6 +9,7 @@
 #include "MenuItemListbox.h"
 #include "MenuItemScrollableText.h"
 #include "TextView.h"
+#include <media/Video.h>
 #include <ZenLib/utils/logger.h>
 #include <daedalus/DaedalusVM.h>
 #include <engine/BaseEngine.h>
@@ -179,6 +180,11 @@ bool UI::Menu::loadMenuDAT()
     m_pVM = new Daedalus::DaedalusVM(datFile);
     Daedalus::registerGothicEngineClasses(*m_pVM);
 
+    m_pVM->registerExternalFunction("playvideo", [=](Daedalus::DaedalusVM &vm){
+        m_Engine.getVideoPlayer().play(vm.popString());
+        vm.setReturn(0);
+    });
+
     return true;
 }
 
@@ -333,6 +339,14 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
     std::string customFn = iData->getItemScriptData().onSelAction_S[0];
     if (!customFn.empty())
         onCustomAction(customFn);
+
+    for (const auto &eventAction: iData->getItemScriptData().onEventAction)
+    {
+        if (eventAction != 0) { // FIXME: any better way to check if the field was not initialized?
+            m_pVM->prepareRunFunction();
+            m_pVM->runFunctionBySymIndex(eventAction);
+        }
+    }
 }
 UI::Hud& UI::Menu::getHud()
 {

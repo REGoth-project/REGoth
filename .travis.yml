@@ -40,6 +40,7 @@ matrix:
             - libasound2-dev
             - alsa-utils
             - alsa-oss
+            - nasm
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh
     - os: linux
@@ -81,6 +82,6 @@ matrix:
       compiler: clang
       before_install:
         - brew update
-        - brew install libsndfile
+        - brew install libsndfile nasm
       script: ./bin/build_unix.sh
       before_deploy: ./bin/archive_unix.sh

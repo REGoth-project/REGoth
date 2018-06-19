@@ -194,6 +194,8 @@ file(GLOB ENGINE_SRC
         "src/utils/*.h"
         "src/math/*.cpp"
         "src/math/*.h"
+        "src/media/*.cpp"
+        "src/media/*.h"
         "src/ui/*.cpp"
         "src/ui/*.h"
         "src/logic/*.cpp"
@@ -286,6 +288,17 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/libdmusic)
 include_directories(${CMAKE_SOURCE_DIR}/lib/libdmusic/include)
 
 target_link_libraries(engine dmusic)
+
+# ------------------ FFmpeg ------------------
+
+include("cmake/ffmpeg.cmake")
+ffmpeg_build("${CMAKE_CURRENT_SOURCE_DIR}/lib/ffmpeg" "${CMAKE_CURRENT_BINARY_DIR}/lib/ffmpeg"
+        avcodec avutil avformat
+)
+if (FFMPEG_ENABLED)
+    add_definitions(-DRE_ENABLE_FFMPEG)
+    target_link_libraries(engine FFMPEG_avformat FFMPEG_avcodec FFMPEG_avutil)
+endif()
 
 # ------------------ Other ------------------
 

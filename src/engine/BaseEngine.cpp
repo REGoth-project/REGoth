@@ -118,6 +118,8 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     m_AudioEngine = new Audio::AudioEngine(snd_device);
 
+    m_VideoPlayer = new Media::VideoPlayer(*this);
+
     // Init HUD
     m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
@@ -126,7 +128,10 @@ void BaseEngine::initEngine(int argc, char** argv)
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
 {
-    onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
+    if (m_VideoPlayer->active())
+        m_VideoPlayer->frameUpdate(dt, width, height);
+    else
+        onFrameUpdate(dt * getGameClock().getGameEngineSpeedFactor(), width, height);
 }
 
 void BaseEngine::loadArchives()
