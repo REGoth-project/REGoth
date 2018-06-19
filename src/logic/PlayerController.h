@@ -97,8 +97,6 @@ namespace Logic
          */
         EControllerType getControllerType() override { return EControllerType::PlayerController; }
 
-        void setFollowTarget(Handle::EntityHandle e) { m_RoutineState.entityTarget = e; }
-
         /**
          * Called when the models visual changed
          */
@@ -465,18 +463,7 @@ namespace Logic
          * Moves the NPC to the next waypoint of the current path
          */
         void travelPath();
-
-        /**
-         * Current routine state
-         */
-        struct
-        {
-            /**
-             * Target of where the NPC should keep trying to go to
-             */
-            Handle::EntityHandle entityTarget;
-        } m_RoutineState;
-
+        
         struct
         {
             // Waypoint this NPC is closest to/was last positioned at

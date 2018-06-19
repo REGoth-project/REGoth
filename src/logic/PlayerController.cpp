@@ -131,17 +131,6 @@ void PlayerController::onUpdate(float deltaTime)
 
     ModelVisual* model = getModelVisual();
 
-    // Build the route to follow this entity
-    if (m_RoutineState.entityTarget.isValid())
-    {
-        Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
-                                     .m_WorldMatrix.Translation();
-
-        // FIXME: Doing this every frame is too often
-        size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
-
-        gotoWaypoint(targetWP);
-    }
     m_NoAniRootPosHack = false;
 
     if (model)
