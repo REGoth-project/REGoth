@@ -265,13 +265,6 @@ namespace Logic
         Daedalus::GEngineClasses::C_Npc& getScriptInstance();
 
         /**
-         * Front/Right/Left-Attack with the current weapon
-         */
-        void attackFront();
-        void attackLeft();
-        void attackRight();
-
-        /**
          * @return True, if this is the currently controlled character
          */
         bool isPlayerControlled();
