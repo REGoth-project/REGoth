@@ -539,28 +539,11 @@ namespace Logic
                 Daedalus::GameState::ItemHandle equippedAmulet;
             } equippedItems;
         } m_EquipmentState;
-
-        /**
-         * This players inventory
-         */
+        
         Inventory m_Inventory;
-
-        /**
-         * State manager
-         */
         NpcScriptState m_AIStateMachine;
-
-        /**
-         * Animation handler
-         */
         NpcAnimationHandler m_NPCAnimationHandler;
-
-        /**
-         * AI/Input handler
-         */
         NpcAIHandler m_AIHandler;
-
-        // Route-information
         Pathfinder m_PathFinder;
 
         /**
