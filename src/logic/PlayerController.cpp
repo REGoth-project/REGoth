@@ -258,40 +258,6 @@ void PlayerController::travelPath()
 
 void PlayerController::onDebugDraw()
 {
-    /*if (!m_MoveState.currentPath.empty())
-    {
-        Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
-    }*/
-
-    // Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -1.0f, 0.0f);
-    // Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
-    //
-    // Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-    //
-    // if (hit.hasHit)
-    // {
-    //     ddDrawAxis(hit.hitPosition.x, hit.hitPosition.y, hit.hitPosition.z);
-    //
-    //     float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
-    //
-    //     if(getModelVisual())
-    //         getModelVisual()->setShadowValue(shadow);
-    //
-    //     Math::float3 v3[3];
-    //     ZenLoad::zCMaterialData data = m_World.getWorldMesh().GetMatData(hit.hitTriangleIndex);
-    //     uint8_t matgroup;
-    //     m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3, matgroup);
-    //     // if (isPlayerControlled())
-    //     // {
-    //     //    LogInfo() << "matgroup : " << std::bitset<8>(data.matGroup);
-    //     //    LogInfo() << "matname: " << data.matName;
-    //     // }
-    //     for(int i=0;i<3;i++)
-    //     {
-    //         ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
-    //     }
-    // }
-
     if (isPlayerControlled())
     {
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
