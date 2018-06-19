@@ -1455,12 +1455,6 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
     m_AIHandler.standup();
 }
 
-void PlayerController::stopRoute()
-{
-    m_MoveState.currentPath.clear();
-    m_RoutineState.entityTarget.invalidate();
-}
-
 void PlayerController::setRoutineFunc(size_t symRoutine)
 {
     getScriptInstance().daily_routine = static_cast<uint32_t>(symRoutine);
