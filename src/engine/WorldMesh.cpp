@@ -52,3 +52,12 @@ ZenLoad::zCMaterialData WorldMesh::getMatData(size_t triangleIdx) const
     assert(m_WorldMeshData.triangles[triangleIdx].submeshIndex < m_WorldMeshData.subMeshes.size());
     return m_WorldMeshData.subMeshes[m_WorldMeshData.triangles[triangleIdx].submeshIndex].material;
 }
+
+ZenLoad::MaterialGroup WorldMesh::getMaterialGroupOfTriangle(uint32_t triangleIdx)
+{
+    Math::float3 v3[3];
+    uint8_t matgroup;
+    // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
+    getTriangle(triangleIdx, v3, matgroup);
+    return static_cast<ZenLoad::MaterialGroup>(matgroup);
+}

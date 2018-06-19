@@ -39,6 +39,11 @@ namespace World
         void getTriangle(size_t triangleIdx, Math::float3* v3, uint8_t& matgroup);
 
         /**
+         * Returns material group of give triangle index
+         */
+        ZenLoad::MaterialGroup getMaterialGroupOfTriangle(uint32_t triangleIdx);
+
+        /**
          * @return Boundingbox max/min
          */
         const Math::float3& getBBoxMin() { return m_BBox3d[0]; }
