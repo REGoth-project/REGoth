@@ -463,7 +463,7 @@ namespace Logic
          * Moves the NPC to the next waypoint of the current path
          */
         void travelPath();
-        
+
         struct
         {
             // Waypoint this NPC is closest to/was last positioned at
@@ -482,18 +482,6 @@ namespace Logic
 
         struct
         {
-            // Path the NPC is currently trying to take (To m_AIState.targetWaypoint)
-            std::vector<size_t> currentPath;
-
-            // Node the NPC is currently going to on the path
-            size_t targetNode;
-
-            // Percentage of how far the NPC has gotten so far on the current path
-            float currentPathPerc;
-
-            // Length of the current route
-            float currentRouteLength;
-
             // Where the npc currently is
             Math::float3 position;
 
