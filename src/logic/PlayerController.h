@@ -615,14 +615,7 @@ namespace Logic
         /**
          * Key states
          */
-        bool m_isDrawWeaponMelee;
         bool m_isForward;
-        bool m_isBackward;
-        bool m_isTurnLeft;
-        bool m_isTurnRight;
-        bool m_isStrafeLeft;
-        bool m_isStrafeRight;
-        bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
 
         /**

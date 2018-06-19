@@ -110,15 +110,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
 
     m_RefuseTalkTime = 0;
 
-    m_isDrawWeaponMelee = false;
-    m_isForward = false;
-    m_isBackward = false;
-    m_isTurnLeft = false;
-    m_isTurnRight = false;
-    m_isStrafeLeft = false;
-    m_isStrafeRight = false;
-    m_isSwimming = false;
-
     m_LastAniRootPosUpdatedAniHash = 0;
     m_NoAniRootPosHack = false;
 
@@ -725,18 +716,14 @@ void PlayerController::placeOnGround()
             closestResult = newDistance;
         }
     }
-    shallowWater = closestHitGroundSurface.hitPosition.y < waterHitSurface.hitPosition.y && waterHitSurface.hitPosition.y <= highestHitSurface.hitPosition.y;
+
     auto manageState = [&]() {
         if (fellThrough)
         {
             placeOnSurface(highestHitSurface);
             return;
         }
-        if ((m_isSwimming = shallowWater && m_MoveState.ground.waterDepth > m_swimThreshold))
-        {
-            placeOnSurface(waterHitSurface);
-            return;
-        }
+
         placeOnSurface(closestHitGroundSurface);
     };
     manageState();
@@ -791,12 +778,12 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (m_World.getEngine()->getHud().isMenuActive())
         resetKeyStates();
 
-    // Stand up if wounded and forward is pressed
+    // Stand up if wounded
     if (getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
     {
         // Only stand up if the unconscious-state has ended (aka. is not valid anymore)
         // Otherwise, the player would fall down immediately
-        if (m_isForward && m_AIStateMachine.isStateActive())
+        if (m_AIStateMachine.isStateActive())
         {
             // FIXME: End UNCONSCIOUS-state here
 
@@ -2166,12 +2153,7 @@ void PlayerController::traceDownNPCGround()
 
 void PlayerController::resetKeyStates()
 {
-    m_isStrafeLeft = false;
-    m_isStrafeRight = false;
     m_isForward = false;
-    m_isBackward = false;
-    m_isTurnLeft = false;
-    m_isTurnRight = false;
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
@@ -2370,9 +2352,6 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
 
     switch (actionType)
     {
-        case ActionType::PlayerDrawWeaponMelee:
-            m_isDrawWeaponMelee = triggered;
-            break;
         case ActionType::PlayerForward:
         {
             // Increment state, if currently using a mob
@@ -2388,10 +2367,6 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         mob.mobController->useMobIncState(m_Entity, MobController::D_Forward);
                     }
                 }
-            }
-            else
-            {
-                m_isForward = m_isForward || triggered;
             }
         }
             break;
@@ -2411,24 +2386,9 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                 }
             }
-            else
-            {
-                m_isBackward = m_isBackward || triggered;
-            }
         }
             break;
-        case ActionType::PlayerTurnLeft:
-            m_isTurnLeft = m_isTurnLeft || triggered;
-            break;
-        case ActionType::PlayerTurnRight:
-            m_isTurnRight = m_isTurnRight || triggered;
-            break;
-        case ActionType::PlayerStrafeLeft:
-            m_isStrafeLeft = m_isStrafeLeft || triggered;
-            break;
-        case ActionType::PlayerStrafeRight:
-            m_isStrafeRight = m_isStrafeRight || triggered;
-            break;
+
         case ActionType::DebugMoveSpeed:
             m_MoveSpeed1 = m_MoveSpeed1 || triggered;
             break;
@@ -2602,7 +2562,6 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
             break;
 
         default:
-            assert(false);
             break;
     }
 }
