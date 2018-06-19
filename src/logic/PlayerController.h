@@ -501,9 +501,6 @@ namespace Logic
 
         struct
         {
-            // Move speed in m/s
-            float moveSpeed;
-
             // BBox for collision
             Math::float3 collisionBBox[2];
 
