@@ -140,11 +140,6 @@ namespace Logic
         void gotoPosition(const Math::float3& position);
 
         /**
-         * Stops going along the current route
-         */
-        void stopRoute();
-
-        /**
          * Teleports the entity to the given waypoint
          * @param Waypoint index to go to
          */
