@@ -89,7 +89,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_PathFinder(world)
 {
     m_AIState.closestWaypoint = 0;
-    m_MoveState.currentPathPerc = 0;
     m_NPCProperties.moveSpeed = 7.0f;
     m_NPCProperties.enablePhysics = true;
 
