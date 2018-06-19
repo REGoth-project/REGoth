@@ -571,7 +571,6 @@ namespace Logic
         /**
          * Key states
          */
-        bool m_isForward;
         bool m_MoveSpeed1, m_MoveSpeed2;
 
         /**
@@ -584,10 +583,12 @@ namespace Logic
             bool isAttached;
 			int32_t m_Num;
         };
+
         /**
         * Stores active pfx handler associated with this PlayerController (one shot)
         */
         std::vector<pfxEvent> m_activePfxEvents;
+
         /**
         * Stores ended pfx handler (emitter don't spawn new particles)
         * After all particles are dead, updatePfx() will remove these elements from this vector
@@ -599,6 +600,7 @@ namespace Logic
          * @param e pfxEvent
          */
         void updatePfxPosition(const pfxEvent &e);
+
         /**
          * Upates the pfx for this player (removes dead emitter)
          * When "ATTACH" keyword is used, the position is also changed.
@@ -614,11 +616,5 @@ namespace Logic
 
         // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
         Utils::Ticket<World::AudioWorld> m_MainNoiseSoundSlot;
-
-        /**
-         * Contstants
-         */
-        static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
-        static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
     };
 }

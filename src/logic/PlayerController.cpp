@@ -2009,7 +2009,6 @@ void PlayerController::traceDownNPCGround()
 
 void PlayerController::resetKeyStates()
 {
-    m_isForward = false;
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
