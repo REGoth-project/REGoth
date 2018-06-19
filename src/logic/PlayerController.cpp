@@ -578,7 +578,9 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
     if (DEBUG_PLAYER)
     {
-        LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+        LogInfo() << (int)m_World.getWorldMesh().getMaterialGroupOfTriangle(hit.hitTriangleIndex)
+                  << ", Placing hero at position: "
+                  << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
     }
     Math::Matrix m = getEntityTransform();
 
@@ -668,7 +670,7 @@ void PlayerController::placeOnGround()
             highestHitY = result.hitPosition.y;
             highestHitSurface = result;
         }
-        auto material = getMaterial(result.hitTriangleIndex);
+        auto material = m_World.getWorldMesh().getMaterialGroupOfTriangle(result.hitTriangleIndex);
         if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF;  // we don't want underlying worldmesh material in this case
         if (material == ZenLoad::MaterialGroup::WATER)
         {
@@ -1806,7 +1808,7 @@ void PlayerController::importObject(const json& j)
 Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
 {
     unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
-    
+
     // Create npc
     Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
 
@@ -1924,20 +1926,12 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
-ZenLoad::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
-{
-    Math::float3 v3[3];
-    uint8_t matgroup;
-    // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
-    m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
-    return static_cast<ZenLoad::MaterialGroup>(matgroup);
-}
 
 ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
     {
-        return getMaterial(m_MoveState.ground.triangleIndex);
+        return m_World.getWorldMesh().getMaterialGroupOfTriangle(m_MoveState.ground.triangleIndex);
     }
     else
     {
@@ -1979,13 +1973,7 @@ void PlayerController::traceDownNPCGround()
         {
             auto diff = std::abs(entityPos.y - a.hitPosition.y);
 
-            if (ZenLoad::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
-            {
-                resultWater = a;
-                waterSurfacePos = a.hitPosition.y;
-                waterMatFound = true;  // found water material
-            }
-            else if (closestGroundSurfacePos > diff)
+            if (closestGroundSurfacePos > diff)
             {
                 result = a;
                 closestGroundSurfacePos = diff;
@@ -2123,7 +2111,7 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
     if (m_MoveState.ground.successful)
     {
         // Play sound depending on ground type
-        ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
+        ZenLoad::MaterialGroup mat = getSurfaceMaterial();
 
         float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 

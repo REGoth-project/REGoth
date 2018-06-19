@@ -381,10 +381,6 @@ namespace Logic
         ZenLoad::MaterialGroup getSurfaceMaterial();
 
         /**
-         * Returns material data of give triangle index
-         */
-        ZenLoad::MaterialGroup getMaterial(uint32_t triangleIdx);
-        /**
          * @return Item this NPC is currently interacting with
          */
         Daedalus::GameState::ItemHandle getInteractItem() { return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
