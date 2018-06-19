@@ -1811,11 +1811,7 @@ void PlayerController::importObject(const json& j)
 Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
 {
     unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
-
-    /*std::string name = j["scriptObj"]["name"][0];
-    if(name != "Diego" && name != "ich")
-        return Handle::EntityHandle();*/
-
+    
     // Create npc
     Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
 
