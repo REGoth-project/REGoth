@@ -74,11 +74,13 @@ namespace Animations
         float m_FpsRate = 0.0f;
         // TODO: obsolete
         unsigned m_FrameCount = 0;
-        unsigned m_FirstFrame = 0;
-        unsigned m_LastFrame = 0;
+        uint32_t m_FirstFrame = 0;
+        uint32_t m_LastFrame = 0;
         Effect m_Effects[MAX_ANIM_EFFECTS];
 
         std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFX;
+        std::vector<ZenLoad::zCModelScriptEventPfx> m_EventsPFX;
+        std::vector<ZenLoad::zCModelScriptEventPfxStop> m_EventsPFXStop;
         std::vector<ZenLoad::zCModelScriptEventSfx> m_EventsSFXGround;
         std::vector<ZenLoad::zCModelScriptEventTag> m_EventTags;
     };

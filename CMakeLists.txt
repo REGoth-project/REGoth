@@ -267,11 +267,25 @@ if(NOT EMSCRIPTEN)
           set(ALSOFT_BACKEND_SNDIO ON CACHE BOOL "" FORCE)
           set(ALSOFT_BACKEND_SOLARIS OFF CACHE BOOL "" FORCE)
         endif()
-        target_link_libraries(engine openal)
+        target_link_libraries(engine OpenAL)
     elseif(WIN32)
-        target_link_libraries(engine OpenAL32)
+        target_link_libraries(engine common OpenAL)
     endif()
 endif()
+
+# ---------------- libdmusic ----------------
+
+# Disable unused utilities
+set(DMUSIC_BUILD_UTILS OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DMRENDER OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DMPLAY OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_DLS2SF OFF CACHE BOOL "" FORCE)
+set(DMUSIC_BUILD_SAMPLEDUMP OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/libdmusic)
+include_directories(${CMAKE_SOURCE_DIR}/lib/libdmusic/include)
+
+target_link_libraries(engine dmusic)
 
 # ------------------ Other ------------------
 

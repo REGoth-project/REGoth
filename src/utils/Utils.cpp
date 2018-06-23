@@ -116,10 +116,6 @@ size_t Utils::getFileSize(const std::string& file)
 
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, const std::string& prePath)
 {
-#if defined(WIN32) || defined(_WIN32) || defined(EMSCRIPTEN)
-    return prePath + caseInsensitivePath;
-#else
-
     // Transform input path to lower
     std::string pathLower = caseInsensitivePath;
     std::transform(pathLower.begin(), pathLower.end(), pathLower.begin(), ::tolower);
@@ -189,7 +185,6 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
     }
 
     return result;
-#endif
 }
 
 const bgfx::Memory* Utils::loadFileToMemory(const char* _filePath)
@@ -285,6 +280,18 @@ std::string Utils::readFileContents(const std::string& file)
     ss << f.rdbuf();
 
     return ss.str();
+}
+
+std::vector<std::uint8_t> Utils::readBinaryFileContents(const std::string& file) {
+    std::ifstream inputStream(file, std::ios::binary | std::ios::ate);
+    if (!inputStream.is_open()) {
+        return std::vector<std::uint8_t>();
+    }
+    std::vector<std::uint8_t> buffer(inputStream.tellg());
+    inputStream.seekg(0);
+    inputStream.read((char*)buffer.data(), buffer.size());
+    inputStream.close();
+    return buffer;
 }
 
 bool ::Utils::writeFile(const std::string& name, const std::string& path, const std::vector<uint8_t>& data)

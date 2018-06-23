@@ -272,7 +272,7 @@ namespace Logic
         void attackRight();
 
         /**
-         * @return True, if this is the currently controlled charakter
+         * @return True, if this is the currently controlled character
          */
         bool isPlayerControlled();
 
@@ -458,6 +458,8 @@ namespace Logic
         void AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& sfx);
         void AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag);
 
+        void AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx);
+        void AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop);
         void exportPart(json& j) override;
 
         /**
@@ -622,6 +624,37 @@ namespace Logic
         bool m_isStrafeRight;
         bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
+
+        /**
+         * Struct that stores information about one shot pfxEvents  of this player
+         */
+        struct pfxEvent
+        {
+            Handle::EntityHandle entity;
+            std::string bodyPosition;
+            bool isAttached;
+			int32_t m_Num;
+        };
+        /**
+        * Stores active pfx handler associated with this PlayerController (one shot)
+        */
+        std::vector<pfxEvent> m_activePfxEvents;
+        /**
+        * Stores ended pfx handler (emitter don't spawn new particles)
+        * After all particles are dead, updatePfx() will remove these elements from this vector
+        */
+        std::vector<pfxEvent> m_endedPfxEvents;
+
+        /**
+         * Updates the position of the pfxEvent
+         * @param e pfxEvent
+         */
+        void updatePfxPosition(const pfxEvent &e);
+        /**
+         * Upates the pfx for this player (removes dead emitter)
+         * When "ATTACH" keyword is used, the position is also changed.
+         */
+        void updatePfx();
 
         void resetKeyStates();
 

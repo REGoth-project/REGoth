@@ -36,11 +36,21 @@ namespace Animations
         Handle::AnimationHandle getAnimation(const std::string& name) const;
 
         Animation& getAnimation(Handle::AnimationHandle h) { return m_Allocator.getElement(h); }
+
+        std::vector<std::string> getAnimationNames() const;
     private:
         Memory::StaticReferencedAllocator<Animation, Config::MAX_NUM_LEVEL_ANIMATIONS> m_Allocator;
 
         std::map<std::string, Handle::AnimationHandle> m_AnimationsByName;
     };
+
+    inline std::vector<std::string> AnimationAllocator::getAnimationNames() const
+    {
+        std::vector<std::string> animationNames;
+        for (const auto& entry : m_AnimationsByName)
+            animationNames.push_back(entry.first);
+        return animationNames;
+    }
 
     inline Handle::AnimationHandle AnimationAllocator::allocate(const std::string& name)
     {

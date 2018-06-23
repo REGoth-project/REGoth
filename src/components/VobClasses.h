@@ -10,6 +10,7 @@ namespace Logic
     class MobController;
     class ItemController;
     class SoundController;
+    class MusicController;
     class ModelVisual;
 }
 
@@ -44,6 +45,11 @@ namespace VobTypes
         Logic::SoundController* soundController;
     };
 
+    struct MusicVobInformation : Vob::VobInformation
+    {
+        Logic::MusicController* musicController;
+    };
+
     /**
      * Returns an Entity as NPC-Vob
      */
@@ -55,6 +61,7 @@ namespace VobTypes
     ItemVobInformation asItemVob(World::WorldInstance& world, Handle::EntityHandle e);
     MobVobInformation asMobVob(World::WorldInstance& world, Handle::EntityHandle e);
     SoundVobInformation asSoundVob(World::WorldInstance& world, Handle::EntityHandle e);
+    MusicVobInformation asMusicVob(World::WorldInstance& world, Handle::EntityHandle e);
 
     /**
      * Creates a generic vob from script
@@ -75,6 +82,13 @@ namespace VobTypes
      * @return Handle to the newly created mob-vob
      */
     Handle::EntityHandle createMob(World::WorldInstance& world);
+
+    /**
+     * Creates a music controller fromthe given zenlib-info
+     * @param world World to create object in
+     * @return Handle to the newly created object
+    */
+    Handle::EntityHandle createMusic(World::WorldInstance& world);
 
     /**
      * Creates an item of the given instance

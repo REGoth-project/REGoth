@@ -182,7 +182,7 @@ void AnimHandler::updateAnimations(double deltaTime)
     // Increase current timeline-position
     bool reversed = anim->m_Dir != EModelScriptAniDir::MSB_FORWARD;
     float framesPerSecond = anim->m_FpsRate * m_SpeedMultiplier;
-    float numFrames = anim->m_FrameCount;
+    float numFrames = static_cast<float>(anim->m_FrameCount);
     size_t lastFrame = static_cast<size_t>(m_AnimationFrame);
     m_LastProcessedFrame = static_cast<size_t>(m_AnimationFrame);
     m_AnimationFrame += deltaTime * framesPerSecond;
@@ -542,6 +542,26 @@ void AnimHandler::triggerEvents(int frameLast, int frameNow)
         {
             if (m_CallbackTriggerSFXGround)
                 m_CallbackTriggerSFXGround(sfx);
+        }
+    }
+    for (const ZenLoad::zCModelScriptEventPfx& pfx : anim->m_EventsPFX)
+    {
+        if(pfx.m_Frame > frameLast && pfx.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerPFX)
+            {
+                m_CallbackTriggerPFX(pfx);
+            }
+        }
+    }
+    for (const ZenLoad::zCModelScriptEventPfxStop& pfxStop : anim->m_EventsPFXStop)
+    {
+        if(pfxStop.m_Frame > frameLast && pfxStop.m_Frame <= frameNow)
+        {
+            if(m_CallbackTriggerPFXStop)
+            {
+                m_CallbackTriggerPFXStop(pfxStop);
+            }
         }
     }
 

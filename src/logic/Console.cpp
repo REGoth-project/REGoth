@@ -171,18 +171,11 @@ std::string Console::submitCommand(std::string command)
 Logic::Console::Command& Console::registerCommand(const std::string& command, Callback callback)
 {
     auto tokens = Utils::splitAndRemoveEmpty(command, ' ');
-    std::vector<CandidateListGenerator> generators;
-    auto simpleGen = [](std::string token) -> std::vector<Suggestion> {
-        Suggestion suggestion = std::make_shared<SuggestionBase>(SuggestionBase{{token}});
-        return {suggestion};
-    };
-    for (const auto& token : tokens)
-    {
-        generators.push_back(std::bind(simpleGen, token));
-    }
     auto sanitizedCommand = Utils::join(tokens.begin(), tokens.end(), " ");
     bool requiresWorld = true;
-    m_Commands.push_back({sanitizedCommand, generators, callback, generators.size(), requiresWorld});
+    m_Commands.push_back({sanitizedCommand, {}, callback, tokens.size(), requiresWorld});
+    for (auto& token : tokens)
+        m_Commands.back().registerAutoComplete({token});
     return m_Commands.back();
 }
 

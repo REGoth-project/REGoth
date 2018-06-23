@@ -31,6 +31,7 @@ namespace Logic
          * Loads a compiled script data-file
          */
         bool loadDAT(const std::string& file);
+        bool loadDAT(const uint8_t* pDatFile, size_t numBytes);
 
         /**
          * Initializes for the world with the given name (startup_x, init_x)
@@ -150,6 +151,7 @@ namespace Logic
          */
         Daedalus::GameState::NpcHandle getNPCFromSymbol(const std::string& symName);
         Daedalus::GameState::ItemHandle getItemFromSymbol(const std::string& symName);
+        Daedalus::GameState::MusicThemeHandle getMusicThemeFromSymbol(const std::string& symName);
 
         /**
          * (Un)Registers an item-instance currently sitting inside the world
@@ -195,6 +197,12 @@ namespace Logic
         void onLogEntryAdded(const std::string& topic, const std::string& entry);
 
     protected:
+
+        /**
+         * Initializes the VM with the current DaedalusVM stored in m_pVM
+         */
+        bool initVMWithLoadedDAT();
+
         /**
          * Starts/stops profiling on the given function-symbol
          */

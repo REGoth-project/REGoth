@@ -16,7 +16,9 @@ Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle en
     : VisualController(world, entity)
     , m_TimeSinceLastSpawn(0.0f)
     , m_ppsScaleKey(0.0f)
+    , m_shpScaleKey(0.0f)
     , m_spawnPosition(0.0f)
+    , m_dead(false)
 {
     Components::Actions::initComponent<Components::PfxComponent>(m_World.getComponentAllocator(), entity);
     Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), entity);
@@ -45,7 +47,9 @@ bool Logic::PfxVisual::load(const std::string& visual)
     m_Emitter = m_World.getPfxManager().getParticleFX(sym);
 
     // Need that one. Or should give a default value of 1?
-    assert(!m_Emitter.ppsScaleKeys.empty());
+    //assert(!m_Emitter.ppsScaleKeys.empty());
+    if(m_Emitter.ppsScaleKeys.empty())
+        m_Emitter.ppsScaleKeys.push_back(1.0f);
 
     // Init particle-systems dynamic vertex-buffer
     // Needs to happen on the mainthread
@@ -98,8 +102,7 @@ Components::PfxComponent& Logic::PfxVisual::getPfxComponent()
 
 void Logic::PfxVisual::onUpdate(float deltaTime)
 {
-    Components::PfxComponent& pfx = getPfxComponent();
-
+    Components::PfxComponent &pfx = getPfxComponent();
     Controller::onUpdate(deltaTime);
 
     // Spawn new particles. Need to accumulate deltaTime so the floor doesn't keep us from spawning any particles
@@ -111,15 +114,23 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     m_shpScaleKey += deltaTime * m_Emitter.shpScaleFPS;
 
     // Loop ppsScaleKeys if wanted
-    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()) && !m_Emitter.ppsIsLooping)
-        m_ppsScaleKey = static_cast<float>(m_Emitter.ppsScaleKeys.size()) + 0.5f;  // Keep on high value
-    else
+    if (Math::ifloor(m_ppsScaleKey) >= static_cast<int>(m_Emitter.ppsScaleKeys.size()))
+    { //&& !m_Emitter.ppsIsLooping) {
         m_ppsScaleKey = 0.0f;
-
-    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()) && !m_Emitter.shpScaleIsLooping)
-        m_shpScaleKey = static_cast<float>(m_Emitter.shpScaleKeys.size()) + 0.5f;  // Keep on high value
-    else
+        if (!m_Emitter.ppsIsLooping)
+        {
+            m_dead = true;
+        }
+    }
+    if (Math::ifloor(m_shpScaleKey) >= static_cast<int>(m_Emitter.shpScaleKeys.size()))
+    { //&& !m_Emitter.shpScaleIsLooping){
         m_shpScaleKey = 0.0f;
+        if (!m_Emitter.shpScaleIsLooping)
+        {
+            m_dead = true;
+        }
+    }
+    //FIXME There is still a case when no scale keys are given and ppsIsLooping is false. See world of gothic
 
     // Perform spawning rate modulation
     float ppsKeyFrac = fmod(m_ppsScaleKey, 1.0f);  // For interpolation
@@ -128,7 +139,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     float ppsModTotal = m_Emitter.ppsIsSmooth ? bx::flerp(ppsMod1, ppsMod2, ppsKeyFrac) : ppsMod1;
 
     int toSpawn = Math::ifloor(m_Emitter.ppsValue * m_TimeSinceLastSpawn * ppsModTotal);
-    if (toSpawn > 1)
+    if (toSpawn > 1 && !m_dead)
     {
         for (int i = 0; i < toSpawn; i++)
             spawnParticle();
@@ -137,29 +148,34 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
     }
 
     // Reset BBox, so we can fit it around the current state of the system
-    m_BBox.min = { FLT_MAX,  FLT_MAX,  FLT_MAX};
+    m_BBox.min = {FLT_MAX, FLT_MAX, FLT_MAX};
     m_BBox.max = {-FLT_MAX, -FLT_MAX, -FLT_MAX};
 
     // Update particle values
-    for (Components::PfxComponent::Particle& p : pfx.m_Particles)
+    for (Components::PfxComponent::Particle &p : pfx.m_Particles)
         updateParticle(p, deltaTime);
 
-    for (int i = 0; i < static_cast<int>(pfx.m_Particles.size()); i++)
+    //Notice that iterator is not incremented in for loop
+    for (size_t i = 0; i < pfx.m_Particles.size(); )
     {
-        Components::PfxComponent::Particle& p = pfx.m_Particles[i];
+        auto p = pfx.m_Particles.at(i);
 
-        if (p.lifetime < 0)
+        if (p.lifetime <= 0)
         {
             // Kill particle. Move the last one into the free slot and reduce the vector size
             // to keep the memory continuous
             pfx.m_Particles[i] = pfx.m_Particles.back();
             pfx.m_Particles.pop_back();
-
-            // Do one step back, since we have a new particle in this slot now
-            i--;
+            // No need to increase iterator, since we have a new particle in this slot now
+        }else
+        {
+            ++i;
         }
     }
-
+    if(pfx.m_Particles.size() == 0 && m_dead)
+    {
+        m_canBeRemoved = true;
+    }
     m_BBox.min -= getEntityTransform().Translation();
     m_BBox.max -= getEntityTransform().Translation();
 
