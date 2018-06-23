@@ -654,6 +654,10 @@ void ModelVisual::updateBodyMesh()
 
 void ModelVisual::updateHeadMesh()
 {
+    // Prevents head mesh clearing for models with head inside body mesh
+    if (m_BodyState.headVisual.empty())
+        return;
+
     for (Handle::EntityHandle e : m_PartEntities.headMeshEntities)
         m_World.removeEntity(e);
 
