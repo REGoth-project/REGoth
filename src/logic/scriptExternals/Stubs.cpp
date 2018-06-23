@@ -1932,32 +1932,16 @@ void ::Logic::ScriptExternals::registerStubs(Daedalus::DaedalusVM& vm, bool verb
 
     vm.registerExternalFunction("introducechapter", [=](Daedalus::DaedalusVM& vm) {
         if (verbose) LogInfo() << "introducechapter";
-        int i4 = vm.popDataValue();
-        if (verbose) LogInfo() << "i4: " << i4;
-        std::string s3 = vm.popString();
-        if (verbose) LogInfo() << "s3: " << s3;
-        std::string s2 = vm.popString();
-        if (verbose) LogInfo() << "s2: " << s2;
-        std::string s1 = vm.popString();
-        if (verbose) LogInfo() << "s1: " << s1;
-        std::string s0 = vm.popString();
-        if (verbose) LogInfo() << "s0: " << s0;
-
-    });
-
-    vm.registerExternalFunction("introducechapter", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "introducechapter";
-        int waittime = vm.popDataValue();
+        double waittime = vm.popDataValue();
         if (verbose) LogInfo() << "waittime: " << waittime;
         std::string sound = vm.popString();
         if (verbose) LogInfo() << "sound: " << sound;
         std::string texture = vm.popString();
         if (verbose) LogInfo() << "texture: " << texture;
-        std::string untertitel = vm.popString();
-        if (verbose) LogInfo() << "untertitel: " << untertitel;
-        std::string titel = vm.popString();
-        if (verbose) LogInfo() << "titel: " << titel;
-
+        std::string subtitle = vm.popString();
+        if (verbose) LogInfo() << "subtitle: " << subtitle;
+        std::string title = vm.popString();
+        if (verbose) LogInfo() << "title: " << title;
     });
 
     vm.registerExternalFunction("log_addentry", [=](Daedalus::DaedalusVM& vm) {
