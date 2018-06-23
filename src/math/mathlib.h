@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
+#include <ZenLib/utils/mathlib.h>
 
 namespace Math
 {
@@ -105,6 +106,16 @@ namespace Math
             this->x = x;
             this->y = y;
         }
+        t_float2(const ZMath::float2& v)
+        {
+            this->x = v.x;
+            this->y = v.y;
+        }
+        t_float2(float v)
+        {
+            this->x = v;
+            this->y = v;
+        }
 
         union {
             struct
@@ -138,6 +149,18 @@ namespace Math
             this->x = x;
             this->y = y;
             this->z = z;
+        }
+        t_float3(const ZMath::float3& v)
+        {
+            this->x = v.x;
+            this->y = v.y;
+            this->z = v.z;
+        }
+        t_float3(float v)
+        {
+            this->x = v;
+            this->y = v;
+            this->z = v;
         }
 
         union {
@@ -173,6 +196,20 @@ namespace Math
             this->x = x;
             this->y = y;
             this->z = z;
+            this->w = w;
+        }
+        t_float4(const ZMath::float4& v)
+        {
+            this->x = v.x;
+            this->y = v.y;
+            this->z = v.z;
+            this->w = v.w;
+        }
+        t_float4(float v)
+        {
+            this->x = v;
+            this->y = v;
+            this->z = v;
             this->w = w;
         }
 
@@ -289,7 +326,7 @@ namespace Math
         t_vector() {}
         t_vector(const void* v)
         {
-            memcpy(this, v, sizeof(T));
+            memcpy(T::v, v, sizeof(T));
         }
 
         t_vector(const T& v)
@@ -470,7 +507,7 @@ namespace Math
         // Assignment operators
         Matrix& operator=(const Matrix& M)
         {
-            memcpy(this, &M, sizeof(float) * 16);
+            memcpy(m, &M, sizeof(mv));
             return *this;
         }
         Matrix& operator+=(const Matrix& M)
