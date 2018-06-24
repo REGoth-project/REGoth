@@ -19,7 +19,8 @@ void main()
 	vec4 color = diffuse * v_color;
 	        
     // Apply linear fog
-    color.rgb = computeLinearFog(length(v_view_pos), u_FogNearFar.x, u_FogNearFar.y, color.rgb, u_FogColor.xyz);
+    // color.rgb = computeLinearFog(length(v_view_pos), u_FogNearFar.x, u_FogNearFar.y, color.rgb, u_FogColor.xyz);
+    color *= computeLinearFogFactor(length(v_view_pos), u_FogNearFar.x, u_FogNearFar.y);
     
     gl_FragColor = color;
 }
