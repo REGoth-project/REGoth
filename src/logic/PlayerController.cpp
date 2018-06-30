@@ -85,6 +85,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_NPCAnimationHandler(world, entity)
     , m_AIHandler(world, entity)
     , m_PathFinder(world)
+    , m_CharacterEquipment(world, entity)
 {
     m_AIState.closestWaypoint = 0;
     m_NPCProperties.enablePhysics = true;

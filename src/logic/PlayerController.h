@@ -8,6 +8,7 @@
 #include "NpcAnimationHandler.h"
 #include "NpcScriptState.h"
 #include "Pathfinder.h"
+#include "CharacterEquipment.h"
 #include <daedalus/DaedalusGameState.h>
 
 namespace UI
@@ -544,6 +545,7 @@ namespace Logic
         NpcAnimationHandler m_NPCAnimationHandler;
         NpcAIHandler m_AIHandler;
         Pathfinder m_PathFinder;
+        CharacterEquipment m_CharacterEquipment;
 
         /**
          * refuse talk countdown
