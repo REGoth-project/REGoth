@@ -46,6 +46,7 @@ namespace Logic
             RING_RIGHT,
             AMULET,
             BELT,
+            ARMOR,
             COUNT,
         };
 
@@ -57,6 +58,7 @@ namespace Logic
             RING,
             MAGIC,
             BELT,
+            ARMOR,
             OTHER,
         };
 
@@ -152,6 +154,7 @@ namespace Logic
         bool equipRing(ItemHandle item, Slot slot);
         bool equipMagic(ItemHandle item, Slot slot);
         bool equipBelt(ItemHandle item);
+        bool equipArmor(ItemHandle item);
 
         /**
          * @return handle to the underlaying character

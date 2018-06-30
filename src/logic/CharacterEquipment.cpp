@@ -40,6 +40,9 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
         case Kind::BELT:
             return equipBelt(item);
 
+        case Kind::ARMOR:
+            return equipArmor(item);
+
         case Kind::OTHER:
         default:
             return false;
@@ -84,6 +87,12 @@ bool Logic::CharacterEquipment::equipBelt(ItemHandle item)
     return true;
 }
 
+bool Logic::CharacterEquipment::equipArmor(ItemHandle item)
+{
+    setItemInSlot(item, Slot::ARMOR);
+    return true;
+}
+
 tl::optional<CharacterEquipment::Slot> CharacterEquipment::getCorrectSlotForItem(ItemHandle item) const
 {
     switch (getKindOfItem(item))
@@ -98,6 +107,8 @@ tl::optional<CharacterEquipment::Slot> CharacterEquipment::getCorrectSlotForItem
             return Slot::RING_LEFT;
         case Kind::MAGIC:
             return Slot::MAGIC_0;
+        case Kind::ARMOR:
+            return Slot::ARMOR;
         case Kind::BELT:
             return Slot::BELT;
         case Kind::OTHER:
@@ -116,12 +127,15 @@ CharacterEquipment::Kind CharacterEquipment::getKindOfItem(ItemHandle item) cons
 
     auto& itemData = *itemDataOpt;
 
-    // Magic can only be identified through the mainflags
+    // Magic and armor can only be identified through the mainflags
     if ((itemData.mainflag & C_Item::ITM_CAT_RUNE) != 0)
         return Kind::MAGIC;
 
     if ((itemData.mainflag & C_Item::ITM_CAT_MAGIC) != 0)
         return Kind::MAGIC;
+
+    if ((itemData.mainflag & C_Item::ITM_CAT_ARMOR) != 0)
+        return Kind::ARMOR;
 
     std::pair<C_Item::Flags, Kind> pairs[] = {
         {C_Item::Flags::ITEM_DAG, Kind::MELEE},
@@ -256,6 +270,9 @@ bool CharacterEquipment::isItemTypeCorrectForSlot(ItemHandle item, Slot slot) co
         case Kind::BELT:
             return slot == Slot::BELT;
 
+        case Kind::ARMOR:
+            return slot == Slot::ARMOR;
+
         case Kind::OTHER:
         default:
             return false;
@@ -269,7 +286,7 @@ bool Logic::CharacterEquipment::isItemOfKind(ItemHandle item, Kind kind) const
 
 bool Logic::CharacterEquipment::isItemEquipable(ItemHandle item) const
 {
-    return !isItemOfKind(item, Kind::OTHER); // All but OTHER can be equipped
+    return !isItemOfKind(item, Kind::OTHER);  // All but OTHER can be equipped
 }
 
 bool CharacterEquipment::doAttributesAllowUse(ItemHandle item) const
