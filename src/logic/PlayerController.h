@@ -39,7 +39,7 @@ namespace Logic
         const char* const PLAYER_MOB_ANOTHER_IS_USING = "PLAYER_MOB_ANOTHER_IS_USING";
         const char* const PLAYER_PLUNDER_IS_EMPTY = "PLAYER_PLUNDER_IS_EMPTY";
         const char* const PLAYER_RANGED_NO_AMMO = "PLAYER_RANGED_NO_AMMO";
-    }
+    }  // namespace PlayerScriptInfo
 
     /**
      * All kinds of things an NPC can do
@@ -83,7 +83,6 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
-
         using WalkMode = EventMessages::MovementMessage::WalkMode;
 
         /**
@@ -539,7 +538,7 @@ namespace Logic
                 Daedalus::GameState::ItemHandle equippedAmulet;
             } equippedItems;
         } m_EquipmentState;
-        
+
         Inventory m_Inventory;
         NpcScriptState m_AIStateMachine;
         NpcAnimationHandler m_NPCAnimationHandler;
@@ -564,7 +563,7 @@ namespace Logic
             Handle::EntityHandle entity;
             std::string bodyPosition;
             bool isAttached;
-			int32_t m_Num;
+            int32_t m_Num;
         };
 
         /**
@@ -582,7 +581,7 @@ namespace Logic
          * Updates the position of the pfxEvent
          * @param e pfxEvent
          */
-        void updatePfxPosition(const pfxEvent &e);
+        void updatePfxPosition(const pfxEvent& e);
 
         /**
          * Upates the pfx for this player (removes dead emitter)
@@ -600,4 +599,4 @@ namespace Logic
         // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
         Utils::Ticket<World::AudioWorld> m_MainNoiseSoundSlot;
     };
-}
+}  // namespace Logic
