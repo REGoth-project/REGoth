@@ -105,6 +105,16 @@ namespace Logic
         bool isItemTypeCorrectForSlot(ItemHandle item, Slot slot) const;
 
         /**
+         * @return Whether the given item is of the given kind
+         */
+        bool isItemOfKind(ItemHandle item, Kind kind) const;
+
+        /**
+         * @return Whether this item is possible equippable (not checking attributes)
+         */
+        bool isItemEquipable(ItemHandle item) const;
+
+        /**
          * Whether the underlaying characters attributes are high enough to
          * equip or use the given item.
          *

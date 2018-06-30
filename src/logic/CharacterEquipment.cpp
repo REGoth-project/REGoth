@@ -196,9 +196,9 @@ bool CharacterEquipment::hasBowEquipped() const
 
 bool Logic::CharacterEquipment::hasItemEquipped(ItemHandle item) const
 {
-    for(auto h: m_ItemsBySlot)
+    for (auto h : m_ItemsBySlot)
     {
-        if(h == item)
+        if (h == item)
             return true;
     }
 
@@ -260,6 +260,16 @@ bool CharacterEquipment::isItemTypeCorrectForSlot(ItemHandle item, Slot slot) co
         default:
             return false;
     }
+}
+
+bool Logic::CharacterEquipment::isItemOfKind(ItemHandle item, Kind kind) const
+{
+    return getKindOfItem(item) == kind;
+}
+
+bool Logic::CharacterEquipment::isItemEquipable(ItemHandle item) const
+{
+    return !isItemOfKind(item, Kind::OTHER); // All but OTHER can be equipped
 }
 
 bool CharacterEquipment::doAttributesAllowUse(ItemHandle item) const
