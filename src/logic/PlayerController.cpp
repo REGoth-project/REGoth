@@ -1484,8 +1484,8 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
     }
 
-    // Weapon?
-    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    // Equipment?
+    if (m_CharacterEquipment.isItemEquipable(item))
     {
         // FIXME: Hack to only allow equipping when no weapon is drawn
         if (getWeaponMode() == EWeaponMode::WeaponNone)
