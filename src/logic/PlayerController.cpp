@@ -17,21 +17,19 @@
 #include <engine/Input.h>
 #include <engine/Waynet.h>
 #include <engine/World.h>
+#include <engine/WorldMesh.h>
 #include <entry/input.h>
+#include <logic/DialogManager.h>
+#include <logic/PfxManager.h>
 #include <logic/SavegameManager.h>
+#include <logic/ScriptEngine.h>
+#include <logic/visuals/PfxVisual.h>
+#include <physics/PhysicsSystem.h>
 #include <render/WorldRender.h>
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
 #include <utils/logger.h>
-#include <logic/ScriptEngine.h>
-#include <physics/PhysicsSystem.h>
-#include <logic/ScriptEngine.h>
-#include <logic/DialogManager.h>
-#include <engine/WorldMesh.h>
-#include <logic/PfxManager.h>
-#include <logic/visuals/PfxVisual.h>
-
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -59,12 +57,12 @@ namespace BodyNodes
     const char* NPC_NODE_HELMET = "ZS_HELMET";
     const char* NPC_NODE_JAWS = "ZS_JAWS";
     const char* NPC_NODE_TORSO = "ZS_TORSO";
-}
+}  // namespace BodyNodes
 
 /**
  * Default soundrange for SFX which doesn't specify a range. Gothic uses a default value of 35 meters.
  */
-static const float DEFAULT_CHARACTER_SOUND_RANGE = 35; // Meters
+static const float DEFAULT_CHARACTER_SOUND_RANGE = 35;  // Meters
 
 #define SINGLE_ACTION_KEY(key, fn)               \
     {                                            \
@@ -180,7 +178,8 @@ void PlayerController::onUpdate(float deltaTime)
     if (isPlayerControlled())
     {
         onUpdateForPlayer(deltaTime);
-    }else
+    }
+    else
     {
         m_AIHandler.npcUpdate(deltaTime);
     }
@@ -208,12 +207,10 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
     //getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
-
 void PlayerController::gotoWaypoint(World::Waynet::WaypointIndex wp)
 {
     m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), wp);
 }
-
 
 void PlayerController::gotoVob(Handle::EntityHandle vob)
 {
@@ -231,7 +228,7 @@ void PlayerController::travelPath()
 
     Pathfinder::Instruction inst = m_PathFinder.updateToNextInstructionToTarget(positionNow);
 
-    if(!m_PathFinder.isTargetReachedByPosition(positionNow, inst.targetPosition))
+    if (!m_PathFinder.isTargetReachedByPosition(positionNow, inst.targetPosition))
     {
         // Turn towards target
         setDirection(inst.targetPosition - positionNow);
@@ -240,7 +237,6 @@ void PlayerController::travelPath()
     // Start running
     m_AIHandler.setTargetMovementState(EMovementState::Forward);
 }
-
 
 void PlayerController::onDebugDraw()
 {
@@ -765,7 +761,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
     m_AIHandler.playerUpdate(deltaTime);
 }
 
-
 void PlayerController::onMessage(SharedEMessage message, Handle::EntityHandle sourceVob)
 {
     Controller::onMessage(message, sourceVob);
@@ -844,7 +839,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             break;
         case EventMessages::MovementMessage::ST_GotoFP:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 using namespace Components;
 
@@ -863,7 +858,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -875,7 +870,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
         case EventMessages::MovementMessage::ST_GotoVob:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 Math::float3 pos;
 
@@ -886,7 +881,8 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
                 if (wp != World::Waynet::INVALID_WAYPOINT)
                 {
                     gotoWaypoint(wp);
-                } else
+                }
+                else
                 {
                     // This must be an actual vob
                     Handle::EntityHandle v = message.targetVob;
@@ -905,7 +901,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -917,13 +913,13 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
         case EventMessages::MovementMessage::ST_GotoPos:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 gotoPosition(message.targetPosition);
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -1913,7 +1909,6 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
-
 ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
@@ -2008,11 +2003,11 @@ void PlayerController::resetKeyStates()
     m_MoveSpeed2 = false;
 }
 
-void PlayerController::updatePfxPosition(const pfxEvent &e)
+void PlayerController::updatePfxPosition(const pfxEvent& e)
 {
     Vob::VobInformation vob = Vob::asVob(m_World, e.entity);
-    auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
-    auto &transform = getEntityTransform();
+    auto& boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+    auto& transform = getEntityTransform();
     size_t nodeIndex = getModelVisual()->findNodeIndex(e.bodyPosition);
     auto position = transform * boneTransforms[nodeIndex];
     Vob::setTransform(vob, std::move(position));
@@ -2021,9 +2016,9 @@ void PlayerController::updatePfxPosition(const pfxEvent &e)
 void PlayerController::updatePfx()
 {
     //First remove all invalid handles / emitter that are in "canBeRemoved" state (all particles are dead)
-    for(auto it = m_activePfxEvents.begin(); it<m_activePfxEvents.end();)
+    for (auto it = m_activePfxEvents.begin(); it < m_activePfxEvents.end();)
     {
-        if(((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
+        if (((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
         {
             m_World.removeEntity((*it).entity);
             it = m_activePfxEvents.erase(it);
@@ -2031,7 +2026,7 @@ void PlayerController::updatePfx()
         else
         {
             //If pfx is attached to body, update the position
-            if((*it).isAttached)
+            if ((*it).isAttached)
                 updatePfxPosition(*it);
 
             ++it;
@@ -2070,7 +2065,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
     }
 
-    if(!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+    if (!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
     {
         // If emptyslot is not set, the currently played sound shall be stopped
         m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
@@ -2081,11 +2076,11 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 
     auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 
-    if(!sfx.m_EmptySlot)
+    if (!sfx.m_EmptySlot)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
 
-        if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+        if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
             m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
 
         m_MainNoiseSoundSlot = ticket;
@@ -2105,11 +2100,11 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
 
-        if(!sfx.m_EmptySlot)
+        if (!sfx.m_EmptySlot)
         {
             // If emptyslot is not set, the currently played sound shall be stopped
 
-            if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+            if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
                 m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
 
             m_MainNoiseSoundSlot = ticket;
@@ -2123,41 +2118,42 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 }
 void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
 {
-    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
+    if (!m_World.getPfxManager().hasPFX(pfx.m_Name))
     {
         return;
     }
     pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached, pfx.m_Num};
     //From world of gothic animation events
-    if(event.bodyPosition.empty())
+    if (event.bodyPosition.empty())
     {
         event.bodyPosition = "BIP01";
     }
     m_activePfxEvents.push_back(std::move(event));
     Vob::VobInformation vob = Vob::asVob(m_World, m_activePfxEvents.back().entity);
-    Vob::setVisual(vob, pfx.m_Name+".PFX");
-	Vob::setTransform(vob, getEntityTransform());
+    Vob::setVisual(vob, pfx.m_Name + ".PFX");
+    Vob::setTransform(vob, getEntityTransform());
 }
 void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
 {
-	//FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
-	if(m_activePfxEvents.empty())
-		LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
+    //FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
+    if (m_activePfxEvents.empty())
+        LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
 
     //Kill pfx with the corresponding number
-    for (auto &pfx : m_activePfxEvents) {
-		if (pfx.m_Num == pfxStop.m_Num) {
-			Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
-			PfxVisual *visual = (PfxVisual *) vob.visual;
-			if (visual->isDead()) {
-				continue;
-			}
-			visual->killPfx();
-			break;
-		}
-	}
-
-
+    for (auto& pfx : m_activePfxEvents)
+    {
+        if (pfx.m_Num == pfxStop.m_Num)
+        {
+            Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+            PfxVisual* visual = (PfxVisual*)vob.visual;
+            if (visual->isDead())
+            {
+                continue;
+            }
+            visual->killPfx();
+            break;
+        }
+    }
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
@@ -2187,7 +2183,7 @@ World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
         float l2 = (position - waynet.waypoints[i].position).lengthSquared();
         distances.emplace_back(l2, i);
     }
-    auto compare = [](const auto& pair1, const auto& pair2){
+    auto compare = [](const auto& pair1, const auto& pair2) {
         return pair1.first < pair2.first;
     };
     std::nth_element(distances.begin(), distances.begin() + 1, distances.end(), compare);
@@ -2219,7 +2215,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                 }
             }
         }
-            break;
+        break;
         case ActionType::PlayerBackward:
         {
             // Increment state, if currently using a mob
@@ -2237,7 +2233,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                 }
             }
         }
-            break;
+        break;
 
         case ActionType::DebugMoveSpeed:
             m_MoveSpeed1 = m_MoveSpeed1 || triggered;
@@ -2248,11 +2244,11 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
         case ActionType::PlayerRotate:
         {
             auto dir = getDirection();
-            auto deltaPhi = 0.02f * intensity; // TODO window width influences this???
+            auto deltaPhi = 0.02f * intensity;  // TODO window width influences this???
             dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, getEntityTransform().Up(), deltaPhi);
             setDirection(dir);
         }
-            break;
+        break;
         case ActionType::PlayerAction:
         {
             if (triggered)
@@ -2272,8 +2268,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
 
                     float dist = (m.Translation() -
-                        getEntityTransform().Translation())
-                        .lengthSquared();
+                                  getEntityTransform().Translation())
+                                     .lengthSquared();
                     if (dist < shortestDistItem && dist < 10.0f * 10.0f)
                     {
                         nearestItem = h;
@@ -2294,8 +2290,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
 
                         float dist = (Vob::getTransform(npc).Translation() -
-                            getEntityTransform().Translation())
-                            .lengthSquared();
+                                      getEntityTransform().Translation())
+                                         .lengthSquared();
                         if (dist < shortestDistNPC)
                         {
                             nearestNPC = h;
@@ -2314,8 +2310,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
 
                     float dist = (Vob::getTransform(vob).Translation() -
-                        getEntityTransform().Translation())
-                        .lengthSquared();
+                                  getEntityTransform().Translation())
+                                     .lengthSquared();
 
                     if (dist < shortestDistMob)
                     {
@@ -2405,8 +2401,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                 }
             }
         }
-            break;
-
+        break;
 
         case ActionType::PlayerActionContinous:
             break;
