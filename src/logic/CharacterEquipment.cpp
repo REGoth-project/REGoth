@@ -127,6 +127,10 @@ CharacterEquipment::Kind CharacterEquipment::getKindOfItem(ItemHandle item) cons
 
     auto& itemData = *itemDataOpt;
 
+    // Only equippable items get a kind
+    if ((itemData.mainflag & C_Item::ITM_CAT_EQUIPABLE) == 0)
+        return Kind::OTHER;
+
     // Magic and armor can only be identified through the mainflags
     if ((itemData.mainflag & C_Item::ITM_CAT_RUNE) != 0)
         return Kind::MAGIC;
