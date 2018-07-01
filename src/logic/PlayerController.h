@@ -422,10 +422,7 @@ namespace Logic
         /**
          * Check if this NPC has equipped any melee weapon
          */
-        bool hasEquippedMeleeWeapon() const
-        {
-            return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
-        };
+        bool hasEquippedMeleeWeapon() const;
 
         /**
          * @param walkMode Whether we should be runnning, sneaking, etc

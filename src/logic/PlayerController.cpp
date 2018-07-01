@@ -293,6 +293,11 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     m_CharacterEquipment.equipItem(item);
 }
 
+bool Logic::PlayerController::hasEquippedMeleeWeapon() const
+{
+    return m_CharacterEquipment.hasMeleeWeaponEquipped();
+}
+
 Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist)
 {
     using Daedalus::GameState::ItemHandle;
@@ -332,7 +337,7 @@ Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist
         }
     }
 
-    if(m_EquipmentState.activeWeapon.isValid())
+    if (m_EquipmentState.activeWeapon.isValid())
         m_CharacterEquipment.putMeleeWeaponInCharactersHand();
 
     return m_EquipmentState.activeWeapon;
