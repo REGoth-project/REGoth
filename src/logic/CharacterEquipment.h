@@ -153,6 +153,12 @@ namespace Logic
         tl::optional<ItemData&> getItemDataInSlot(Slot slot) const;
         ItemHandle getItemInSlot(Slot slot) const;
 
+        /**
+         * Shows the visual of the given item in the players hand
+         */
+        void putItemIntoRightHand(ItemHandle item);
+        void putItemIntoLeftHand(ItemHandle item);
+
     protected:
 
         /**
@@ -190,14 +196,15 @@ namespace Logic
          * Removes the weapons from the characters body and shows them
          * inside their hand
          */
-        void showMeleeWeaponInCharactersHand();
-        void showBowWeaponOnCharactersHand();
+        void putMeleeWeaponInCharactersHand();
+        void putBowWeaponOnCharactersHand();
         void removeItemInCharactersHand();
 
         /**
          * Sets the visual attachment on the character model
          */
         void setCharacterModelAttachment(const std::string& visual, EModelNode node);
+        void setCharacterModelAttachment(ItemHandle item, EModelNode node);
         void removeCharacterModelAttachment(EModelNode node);
 
         /**
