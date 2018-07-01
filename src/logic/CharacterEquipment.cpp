@@ -23,6 +23,8 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
     if (!isItemTypeCorrectForSlot(item, slot))
         return false;
 
+    LogInfo() << "Equipping item: " << getInstanceNameOfItem(item);
+
     switch (getKindOfItem(item))
     {
         case Kind::MELEE:
@@ -206,6 +208,7 @@ void Logic::CharacterEquipment::showMeleeWeaponOnCharacter()
     else
     {
         // What is this?
+        return;
     }
 
     setCharacterModelAttachment(getItemVisual(item), node);
@@ -372,7 +375,9 @@ tl::optional<CharacterEquipment::Slot> CharacterEquipment::findAnyFreeMagicSlot(
         Slot::MAGIC_5,
         Slot::MAGIC_6,
         Slot::MAGIC_7,
-        Slot::MAGIC_8};
+        Slot::MAGIC_8,
+        Slot::MAGIC_9,
+    };
 
     for (Slot s : possibleSlots)
     {
@@ -468,7 +473,8 @@ bool CharacterEquipment::isItemTypeCorrectForSlot(ItemHandle item, Slot slot) co
                 Slot::MAGIC_5,
                 Slot::MAGIC_6,
                 Slot::MAGIC_7,
-                Slot::MAGIC_8};
+                Slot::MAGIC_8,
+                Slot::MAGIC_9};
 
             for (Slot s : possibleSlots)
             {
@@ -613,12 +619,68 @@ void CharacterEquipment::switchCharacterModelArmor(const std::string& visual)
     pVisual->setBodyState(state);
 }
 
-void Logic::CharacterEquipment::putItemIntoRightHand(ItemHandle item)
+void CharacterEquipment::putItemIntoRightHand(ItemHandle item)
 {
     setCharacterModelAttachment(item, EModelNode::Righthand);
 }
 
-void Logic::CharacterEquipment::putItemIntoLeftHand(ItemHandle item)
+void CharacterEquipment::putItemIntoLeftHand(ItemHandle item)
 {
     setCharacterModelAttachment(item, EModelNode::Lefthand);
+}
+
+void CharacterEquipment::exportSlots(json& j) const
+{
+    j["MELEE"] = getInstanceNameOfItem(getItemInSlot(Slot::MELEE));
+    j["BOW"] = getInstanceNameOfItem(getItemInSlot(Slot::BOW));
+    j["MAGIC_0"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_0));
+    j["MAGIC_1"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_1));
+    j["MAGIC_2"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_2));
+    j["MAGIC_3"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_3));
+    j["MAGIC_4"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_4));
+    j["MAGIC_5"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_5));
+    j["MAGIC_6"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_6));
+    j["MAGIC_7"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_7));
+    j["MAGIC_8"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_8));
+    j["MAGIC_9"] = getInstanceNameOfItem(getItemInSlot(Slot::MAGIC_9));
+    j["RING_LEFT"] = getInstanceNameOfItem(getItemInSlot(Slot::RING_LEFT));
+    j["RING_RIGHT"] = getInstanceNameOfItem(getItemInSlot(Slot::RING_RIGHT));
+    j["AMULET"] = getInstanceNameOfItem(getItemInSlot(Slot::AMULET));
+    j["BELT"] = getInstanceNameOfItem(getItemInSlot(Slot::BELT));
+    j["ARMOR"] = getInstanceNameOfItem(getItemInSlot(Slot::ARMOR));
+}
+
+void CharacterEquipment::importSlots(const json& j)
+{
+    auto& inventory = getController().getInventory();
+
+    equipItemToSlot(inventory.getItem(j["MELEE"].get<std::string>()), Slot::MELEE);
+    equipItemToSlot(inventory.getItem(j["BOW"].get<std::string>()), Slot::BOW);
+    equipItemToSlot(inventory.getItem(j["MAGIC_0"].get<std::string>()), Slot::MAGIC_0);
+    equipItemToSlot(inventory.getItem(j["MAGIC_1"].get<std::string>()), Slot::MAGIC_1);
+    equipItemToSlot(inventory.getItem(j["MAGIC_2"].get<std::string>()), Slot::MAGIC_2);
+    equipItemToSlot(inventory.getItem(j["MAGIC_3"].get<std::string>()), Slot::MAGIC_3);
+    equipItemToSlot(inventory.getItem(j["MAGIC_4"].get<std::string>()), Slot::MAGIC_4);
+    equipItemToSlot(inventory.getItem(j["MAGIC_5"].get<std::string>()), Slot::MAGIC_5);
+    equipItemToSlot(inventory.getItem(j["MAGIC_6"].get<std::string>()), Slot::MAGIC_6);
+    equipItemToSlot(inventory.getItem(j["MAGIC_7"].get<std::string>()), Slot::MAGIC_7);
+    equipItemToSlot(inventory.getItem(j["MAGIC_8"].get<std::string>()), Slot::MAGIC_8);
+    equipItemToSlot(inventory.getItem(j["MAGIC_9"].get<std::string>()), Slot::MAGIC_9);
+    equipItemToSlot(inventory.getItem(j["RING_LEFT"].get<std::string>()), Slot::RING_LEFT);
+    equipItemToSlot(inventory.getItem(j["RING_RIGHT"].get<std::string>()), Slot::RING_RIGHT);
+    equipItemToSlot(inventory.getItem(j["AMULET"].get<std::string>()), Slot::AMULET);
+    equipItemToSlot(inventory.getItem(j["BELT"].get<std::string>()), Slot::BELT);
+    equipItemToSlot(inventory.getItem(j["ARMOR"].get<std::string>()), Slot::ARMOR);
+}
+
+std::string Logic::CharacterEquipment::getInstanceNameOfItem(ItemHandle item) const
+{
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return "";
+
+    ScriptEngine& s = m_World.getScriptEngine();
+
+    return s.getSymbolNameByIndex(data->instanceSymbol);
 }

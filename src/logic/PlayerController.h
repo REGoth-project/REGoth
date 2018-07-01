@@ -520,21 +520,6 @@ namespace Logic
             EWeaponMode weaponMode;
             Daedalus::GameState::ItemHandle activeWeapon;
 
-            // All equiped items. Contains weapons, rings, armor...
-            std::set<Daedalus::GameState::ItemHandle> equippedItemsAll;
-
-            // All possible equipped items on an NPC
-            struct
-            {
-                std::set<Daedalus::GameState::ItemHandle> equippedRings;
-                std::set<Daedalus::GameState::ItemHandle> equippedRunes;
-                Daedalus::GameState::ItemHandle equippedWeapon1h;
-                Daedalus::GameState::ItemHandle equippedWeapon2h;
-                Daedalus::GameState::ItemHandle equippedBow;
-                Daedalus::GameState::ItemHandle equippedCrossBow;
-                Daedalus::GameState::ItemHandle equippedBelt;
-                Daedalus::GameState::ItemHandle equippedAmulet;
-            } equippedItems;
         } m_EquipmentState;
 
         Inventory m_Inventory;

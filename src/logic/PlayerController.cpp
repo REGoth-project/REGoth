@@ -1481,16 +1481,17 @@ void PlayerController::exportPart(json& j)
     m_Inventory.exportInventory(j["inventory"]);
 
     // Export equipped items
+    m_CharacterEquipment.exportSlots(j["equipment"]);
     {
-        j["equipped"] = json::array();
-        for (auto item : m_EquipmentState.equippedItemsAll)
-        {
-            // Write instance of the equipped item
-            Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
-            std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+        // j["equipped"] = json::array();
+        // for (auto item : m_EquipmentState.equippedItemsAll)
+        // {
+        //     // Write instance of the equipped item
+        //     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+        //     std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
 
-            j["equipped"].push_back(instanceName);
-        }
+        //     j["equipped"].push_back(instanceName);
+        // }
     }
 
     // export refusetalktime
@@ -1562,18 +1563,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
     m_Inventory.importInventory(j["inventory"]);
 
     // Import equipments
-    {
-        Inventory& inv = m_Inventory;
-
-        for (const std::string& sym : j["equipped"])
-        {
-            Daedalus::GameState::ItemHandle h = inv.getItem(sym);
-
-            assert(h.isValid());  // Item to equip MUST be inside the inventory
-
-            equipItem(h);
-        }
-    }
+    m_CharacterEquipment.importSlots(j["equipment"]);
 
     // import refusetalktime
     this->setRefuseTalkTime(static_cast<float>(j["refusetalktime"]));

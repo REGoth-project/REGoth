@@ -182,6 +182,13 @@ namespace Logic
         void putBowWeaponInCharactersHand();
         void removeItemInCharactersHandAndShowWeaponsOnBody();
 
+
+        /**
+         * Savegame serialization
+         */
+
+        void exportSlots(json& j) const;
+        void importSlots(const json& j);
     protected:
 
         /**
@@ -247,6 +254,11 @@ namespace Logic
          * @return The visual for this item set by the scripts
          */
         std::string getItemVisual(ItemHandle item) const;
+
+        /**
+         * @return The script instance name of the given item
+         */
+        std::string getInstanceNameOfItem(ItemHandle item) const;
 
         World::WorldInstance& m_World;
         Handle::EntityHandle m_CharacterEntity;
