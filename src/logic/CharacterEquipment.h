@@ -180,6 +180,21 @@ namespace Logic
         bool equipArmor(ItemHandle item);
 
         /**
+         * Shows the attachment visuals on the character model for the
+         * currently equiped items
+         */
+        void showMeleeWeaponOnCharacter();
+        void showBowWeaponOnCharacter();
+
+        /**
+         * Removes the weapons from the characters body and shows them
+         * inside their hand
+         */
+        void showMeleeWeaponInCharactersHand();
+        void showBowWeaponOnCharactersHand();
+        void removeItemInCharactersHand();
+
+        /**
          * Sets the visual attachment on the character model
          */
         void setCharacterModelAttachment(const std::string& visual, EModelNode node);

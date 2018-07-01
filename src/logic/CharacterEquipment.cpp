@@ -116,7 +116,7 @@ void Logic::CharacterEquipment::unequipItem(ItemHandle item)
 {
     auto slot = findSlotItemWasEquippedTo(item);
 
-    if(slot)
+    if (slot)
     {
         unequipItemInSlot(*slot);
     }
@@ -124,38 +124,6 @@ void Logic::CharacterEquipment::unequipItem(ItemHandle item)
 
 bool Logic::CharacterEquipment::equipMelee(ItemHandle item)
 {
-    using Daedalus::GEngineClasses::C_Item;
-
-    auto data = getDataOfItem(item);
-
-    if (!data)
-        return false;
-
-    EModelNode node;
-    if (data->flags & C_Item::Flags::ITEM_2HD_AXE)
-    {
-        node = EModelNode::Longsword;
-    }
-    else if (data->flags & C_Item::Flags::ITEM_2HD_SWD)
-    {
-        node = EModelNode::Longsword;
-    }
-    else if (data->flags & C_Item::Flags::ITEM_AXE)
-    {
-        node = EModelNode::Sword;
-    }
-    else if (data->flags & C_Item::Flags::ITEM_SWD)
-    {
-        node = EModelNode::Sword;
-    }
-    else
-    {
-        // What is this?
-        return false;
-    }
-
-    setCharacterModelAttachment(getItemVisual(item), node);
-
     setItemInSlot(item, Slot::MELEE);
 
     return true;
@@ -164,25 +132,6 @@ bool Logic::CharacterEquipment::equipMelee(ItemHandle item)
 bool Logic::CharacterEquipment::equipBow(ItemHandle item)
 {
     using Daedalus::GEngineClasses::C_Item;
-
-    auto data = getDataOfItem(item);
-
-    if (!data)
-        return false;
-
-    if (data->flags & C_Item::Flags::ITEM_CROSSBOW)
-    {
-        setCharacterModelAttachment(getItemVisual(item), EModelNode::Crossbow);
-    }
-    else if (data->flags & C_Item::Flags::ITEM_BOW)
-    {
-        setCharacterModelAttachment(getItemVisual(item), EModelNode::Bow);
-    }
-    else
-    {
-        // What is this?
-        return false;
-    }
 
     setItemInSlot(item, Slot::BOW);
 
@@ -225,6 +174,86 @@ bool Logic::CharacterEquipment::equipArmor(ItemHandle item)
     switchCharacterModelArmor(data->visual_change);
     setItemInSlot(item, Slot::ARMOR);
     return true;
+}
+
+void Logic::CharacterEquipment::showMeleeWeaponOnCharacter()
+{
+    using Daedalus::GEngineClasses::C_Item;
+
+    auto item = getItemInSlot(Slot::MELEE);
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return;
+
+    EModelNode node;
+    if (data->flags & C_Item::Flags::ITEM_2HD_AXE)
+    {
+        node = EModelNode::Longsword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_2HD_SWD)
+    {
+        node = EModelNode::Longsword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_AXE)
+    {
+        node = EModelNode::Sword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_SWD)
+    {
+        node = EModelNode::Sword;
+    }
+    else
+    {
+        // What is this?
+    }
+
+    setCharacterModelAttachment(getItemVisual(item), node);
+}
+
+void Logic::CharacterEquipment::showBowWeaponOnCharacter()
+{
+    using Daedalus::GEngineClasses::C_Item;
+    auto item = getItemInSlot(Slot::BOW);
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return;
+
+    if (data->flags & C_Item::Flags::ITEM_CROSSBOW)
+    {
+        setCharacterModelAttachment(getItemVisual(item), EModelNode::Crossbow);
+    }
+    else if (data->flags & C_Item::Flags::ITEM_BOW)
+    {
+        setCharacterModelAttachment(getItemVisual(item), EModelNode::Bow);
+    }
+    else
+    {
+        // What is this?
+    }
+}
+
+void Logic::CharacterEquipment::showMeleeWeaponInCharactersHand()
+{
+    using Daedalus::GEngineClasses::C_Item;
+    auto item = getItemInSlot(Slot::MELEE);
+
+    setCharacterModelAttachment(getItemVisual(item), EModelNode::Righthand);
+}
+
+void Logic::CharacterEquipment::showBowWeaponOnCharactersHand()
+{
+    using Daedalus::GEngineClasses::C_Item;
+    auto item = getItemInSlot(Slot::BOW);
+
+    setCharacterModelAttachment(getItemVisual(item), EModelNode::Righthand);
+}
+
+void Logic::CharacterEquipment::removeItemInCharactersHand()
+{
+    removeCharacterModelAttachment(EModelNode::Lefthand);
+    removeCharacterModelAttachment(EModelNode::Righthand);
 }
 
 tl::optional<CharacterEquipment::Slot> CharacterEquipment::getCorrectSlotForItem(ItemHandle item) const
@@ -338,7 +367,7 @@ tl::optional<CharacterEquipment::Slot> CharacterEquipment::findAnyFreeRingSlot()
 
 tl::optional<CharacterEquipment::Slot> CharacterEquipment::findSlotItemWasEquippedTo(ItemHandle item) const
 {
-    for(size_t i = 0; i < (size_t)Slot::COUNT; i++)
+    for (size_t i = 0; i < (size_t)Slot::COUNT; i++)
     {
         if (m_ItemsBySlot[i] == item)
             return (Slot)i;
