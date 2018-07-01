@@ -73,6 +73,13 @@ namespace Logic
         bool equipItemToSlot(ItemHandle item, Slot slot);
 
         /**
+         * Equips the item to any free slot avilable for it.
+         * @return True, if a slot has been found and the item could be equipped
+         *         False, if all possible slots are full or the attributes aren't correct
+         */
+        bool equipItem(ItemHandle item);
+
+        /**
          * Takes of the item currently in the given slot
          */
         void unequipItemInSlot(Slot slot);
