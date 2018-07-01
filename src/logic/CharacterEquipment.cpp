@@ -244,7 +244,7 @@ void Logic::CharacterEquipment::putMeleeWeaponInCharactersHand()
     removeCharacterModelAttachment(EModelNode::Longsword);
 }
 
-void Logic::CharacterEquipment::putBowWeaponOnCharactersHand()
+void Logic::CharacterEquipment::putBowWeaponInCharactersHand()
 {
     using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::BOW);
@@ -254,7 +254,7 @@ void Logic::CharacterEquipment::putBowWeaponOnCharactersHand()
     removeCharacterModelAttachment(EModelNode::Crossbow);
 }
 
-void Logic::CharacterEquipment::removeItemInCharactersHandAndShowWeaponsOnBodyAndShowWeaponsOnBody()
+void Logic::CharacterEquipment::removeItemInCharactersHandAndShowWeaponsOnBody()
 {
     removeCharacterModelAttachment(EModelNode::Lefthand);
     removeCharacterModelAttachment(EModelNode::Righthand);
