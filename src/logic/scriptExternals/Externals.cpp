@@ -78,9 +78,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
-    /**
-     * GetDistTo...
-     */
     vm->registerExternalFunction("printdebuginstch", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_npc;
         std::string s = vm.popString();
@@ -176,14 +173,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(npc).instanceDataHandle);
 
         vm.getGameState().createInventoryItem(itemInstance, hnpc);
-
-        /*
-        Daedalus::GEngineClasses::C_Npc& npcData = vm.getGameState().getNpc(hnpc);
-        auto& parsym = vm.getDATFile().getSymbolByIndex(itemInstance);
-        LogInfo() << "1: " << parsym.name;
-        LogInfo() << "2. " << npcData.name[0];
-        LogInfo() << " ##### Created Inventory-Item '" << parsym.name << "' for NPC: " << npcData.name[0];
-         */
     });
 
     vm->registerExternalFunction("createinvitems", [=](Daedalus::DaedalusVM& vm) {
@@ -199,16 +188,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("hlp_getnpc", [=](Daedalus::DaedalusVM& vm) {
         int32_t instancename = vm.popDataValue();
-
-        /*if(!vm.getDATFile().getSymbolByIndex(instancename).instanceDataHandle.isValid())
-        {
-
-        }else
-        {
-            GEngineClasses::C_Npc& npcData = getNpc(ZMemory::handleCast<NpcHandle>(vm.getDATFile().getSymbolByIndex(instancename).instanceDataHandle));
-            if(l) LogInfo() << " [HLP_GETNPC] Name: "
-                  << npcData.name[0];
-        }*/
 
         vm.setReturnVar(instancename);
     });
