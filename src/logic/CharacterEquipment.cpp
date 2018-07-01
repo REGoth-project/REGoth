@@ -234,26 +234,34 @@ void Logic::CharacterEquipment::showBowWeaponOnCharacter()
     }
 }
 
-void Logic::CharacterEquipment::showMeleeWeaponInCharactersHand()
+void Logic::CharacterEquipment::putMeleeWeaponInCharactersHand()
 {
     using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::MELEE);
 
-    setCharacterModelAttachment(getItemVisual(item), EModelNode::Righthand);
+    putItemIntoRightHand(item);
+    removeCharacterModelAttachment(EModelNode::Sword);
+    removeCharacterModelAttachment(EModelNode::Longsword);
 }
 
-void Logic::CharacterEquipment::showBowWeaponOnCharactersHand()
+void Logic::CharacterEquipment::putBowWeaponOnCharactersHand()
 {
     using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::BOW);
 
-    setCharacterModelAttachment(getItemVisual(item), EModelNode::Righthand);
+    putItemIntoRightHand(item);
+    removeCharacterModelAttachment(EModelNode::Bow);
+    removeCharacterModelAttachment(EModelNode::Crossbow);
 }
 
 void Logic::CharacterEquipment::removeItemInCharactersHand()
 {
     removeCharacterModelAttachment(EModelNode::Lefthand);
     removeCharacterModelAttachment(EModelNode::Righthand);
+
+    // Need to put those back onto the character if they exist
+    showBowWeaponOnCharacter();
+    showMeleeWeaponOnCharacter();
 }
 
 tl::optional<CharacterEquipment::Slot> CharacterEquipment::getCorrectSlotForItem(ItemHandle item) const
@@ -469,9 +477,11 @@ bool Logic::CharacterEquipment::isItemEquipable(ItemHandle item) const
 
 bool CharacterEquipment::doAttributesAllowUse(ItemHandle item) const
 {
-    // Check attributes
-    Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
-    Daedalus::GEngineClasses::C_Npc& npc = getController().getScriptInstance();
+    using Daedalus::GEngineClasses::C_Item;
+    using Daedalus::GEngineClasses::C_Npc;
+
+    C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+    C_Npc& npc = getController().getScriptInstance();
     ScriptEngine& s = m_World.getScriptEngine();
 
     for (size_t i = 0; i < Daedalus::GEngineClasses::C_Item::COND_ATR_MAX; i++)
@@ -542,6 +552,11 @@ void CharacterEquipment::setCharacterModelAttachment(const std::string& visual, 
     pVisual->setNodeVisual(visual, node);
 }
 
+void Logic::CharacterEquipment::setCharacterModelAttachment(ItemHandle item, EModelNode node)
+{
+    setCharacterModelAttachment(getItemVisual(item), node);
+}
+
 void Logic::CharacterEquipment::removeCharacterModelAttachment(EModelNode node)
 {
     setCharacterModelAttachment("", node);
@@ -570,4 +585,14 @@ void CharacterEquipment::switchCharacterModelArmor(const std::string& visual)
     state.bodyVisual = visual;
 
     pVisual->setBodyState(state);
+}
+
+void Logic::CharacterEquipment::putItemIntoRightHand(ItemHandle item)
+{
+    setCharacterModelAttachment(item, EModelNode::Righthand);
+}
+
+void Logic::CharacterEquipment::putItemIntoLeftHand(ItemHandle item)
+{
+    setCharacterModelAttachment(item, EModelNode::Lefthand);
 }
