@@ -51,6 +51,38 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
     return true;
 }
 
+bool Logic::CharacterEquipment::equipItem(ItemHandle item)
+{
+    tl::optional<Slot> slot;
+    switch (getKindOfItem(item))
+    {
+        case Kind::MELEE:
+        case Kind::BOW:
+        case Kind::AMULET:
+        case Kind::BELT:
+        case Kind::ARMOR:
+            slot = getCorrectSlotForItem(item);
+            break;
+
+        case Kind::RING:
+            slot = findAnyFreeRingSlot();
+            break;
+
+        case Kind::MAGIC:
+            slot = findAnyFreeMagicSlot();
+            break;
+
+        case Kind::OTHER:
+        default:
+            return false;
+    }
+
+    if (!slot)
+        return false;
+
+    return equipItemToSlot(item, *slot);
+}
+
 void Logic::CharacterEquipment::unequipItemInSlot(Slot slot)
 {
     switch (slot)
