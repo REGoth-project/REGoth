@@ -8,14 +8,14 @@
 #include <daedalus/DaedalusVM.h>
 #include <debugdraw/debugdraw.h>
 #include <engine/GameEngine.h>
+#include <logic/DialogManager.h>
 #include <logic/PlayerController.h>
+#include <logic/ScriptEngine.h>
 #include <logic/visuals/ModelVisual.h>
 #include <ui/Hud.h>
-#include <ui/PrintScreenMessages.h>
 #include <ui/IntroduceChapterView.h>
+#include <ui/PrintScreenMessages.h>
 #include <utils/logger.h>
-#include <logic/ScriptEngine.h>
-#include <logic/DialogManager.h>
 
 #include "Externals_AI.h"
 #include "Externals_Npc.h"
@@ -26,51 +26,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 {
     Engine::BaseEngine* engine = world.getEngine();
     World::WorldInstance* pWorld = &world;
-    using Daedalus::GameState::NpcHandle;
     using Daedalus::GameState::ItemHandle;
+    using Daedalus::GameState::NpcHandle;
 
     registerEngineExternals_ai(world, vm, verbose);
     registerEngineExternals_snd(world, vm, verbose);
     registerEngineExternals_wld(world, vm, verbose);
     registerEngineExternals_npc(world, vm, verbose);
 
-    // TODO: Refractor
-    auto getNPCByInstance = [vm, engine](size_t instance) {
-        assert(vm->getDATFile().getSymbolByIndex(instance).instanceDataClass == Daedalus::EInstanceClass::IC_Npc);
-
-        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
-
-        if (!hnpc.isValid())
-        {
-            //LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
-            //LogWarn() << "Callstack: " << vm->getCallStack();
-
-            VobTypes::NpcVobInformation vob;
-            vob.entity.invalidate();
-            return vob;
-        }
-
-        // Get data of npc this belongs to
-        Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
-        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
-
-        if (userData)
-        {
-            World::WorldInstance& world = engine->getWorldInstance(userData->world);
-            VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
-
-            return vob;
-        }
-        else
-        {
-            LogWarn() << "No userptr on npc: " << npcData.name[0];
-
-            VobTypes::NpcVobInformation vob;
-            vob.entity.invalidate();
-
-            return vob;
-        }
-
+    auto getNPCByInstance = [=](size_t instance) {
+        return pWorld->getScriptEngine().findNPCVobFromScriptInstance(instance);
     };
 
     /**
@@ -126,7 +91,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
      * GetDistTo...
      */
     vm->registerExternalFunction("printdebuginstch", [=](Daedalus::DaedalusVM& vm) {
-
         uint32_t arr_npc;
         std::string s = vm.popString();
         int32_t ch = vm.popDataValue();
@@ -139,7 +103,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         LogInfo() << "DEBUG: " << s;
     });
-
 
     vm->registerExternalFunction("printscreen", [=](Daedalus::DaedalusVM& vm) {
         int32_t timesec = vm.popDataValue();
@@ -177,12 +140,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         }
     });
 
-
-
     vm->registerExternalFunction("infomanager_hasfinished", [=](Daedalus::DaedalusVM& vm) {
         vm.setReturn(pWorld->getDialogManager().isDialogActive() ? 0 : 1);
     });
-
 
     vm->registerExternalFunction("info_addchoice", [=](Daedalus::DaedalusVM& vm) {
         uint32_t func = vm.popVar();
@@ -205,7 +165,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         auto& cInfo = vm.getGameState().getInfo(hInfo);
         cInfo.subChoices.clear();
     });
-
 
     vm->registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
         if (verbose) LogInfo() << "mob_hasitems";

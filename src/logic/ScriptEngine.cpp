@@ -542,3 +542,57 @@ void ScriptEngine::unregisterNpc(Handle::EntityHandle e)
 {
     m_WorldNPCs.erase(e);
 }
+
+VobTypes::NpcVobInformation Logic::ScriptEngine::findNPCVobFromScriptInstance(size_t symbolIdx)
+{
+    using Daedalus::GameState::NpcHandle;
+
+    assert(m_pVM->getDATFile().getSymbolByIndex(symbolIdx).instanceDataClass == Daedalus::EInstanceClass::IC_Npc);
+
+    NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(m_pVM->getDATFile().getSymbolByIndex(symbolIdx).instanceDataHandle);
+
+    if (!hnpc.isValid())
+    {
+        VobTypes::NpcVobInformation vob;
+        vob.entity.invalidate();
+        return vob;
+    }
+
+    // Get data of npc this belongs to
+    Daedalus::GEngineClasses::C_Npc& npcData = m_pVM->getGameState().getNpc(hnpc);
+    VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
+
+    if (userData)
+    {
+        return VobTypes::asNpcVob(m_World, userData->vobEntity);
+    }
+    else
+    {
+        VobTypes::NpcVobInformation vob;
+        vob.entity.invalidate();
+
+        return vob;
+    }
+}
+
+Vob::VobInformation Logic::ScriptEngine::findItemVobFromScriptInstance(size_t symbolIdx)
+{
+    auto& parSymbol = m_pVM->getDATFile().getSymbolByIndex(symbolIdx);
+    Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>(parSymbol.instanceDataHandle);
+
+    if (hitem.isValid())
+    {
+        // Get data of npc this belongs to
+        Daedalus::GEngineClasses::C_Item& itemData = m_pVM->getGameState().getItem(hitem);
+        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
+
+        if (userData)
+        {
+            return Vob::asVob(m_World, userData->vobEntity);
+        }
+    }
+
+    Vob::VobInformation vob;
+    vob.entity.invalidate();
+    return vob;
+}

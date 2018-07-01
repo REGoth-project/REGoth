@@ -6,6 +6,7 @@
 #include <daedalus/DaedalusVM.h>
 #include <handle/HandleDef.h>
 #include <math/mathlib.h>
+#include <components/VobClasses.h>
 using json = nlohmann::json;
 
 namespace Daedalus
@@ -196,6 +197,15 @@ namespace Logic
          */
         void onLogEntryAdded(const std::string& topic, const std::string& entry);
 
+        /**
+         * @return NPC-Vob linked to the given script symbol
+         */
+        VobTypes::NpcVobInformation findNPCVobFromScriptInstance(size_t symbolIdx);
+
+        /**
+         * @return Item laying on the ground linked to the given script symbol
+         */
+        Vob::VobInformation findItemVobFromScriptInstance(size_t symbolIdx);
     protected:
 
         /**

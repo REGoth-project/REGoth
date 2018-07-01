@@ -26,73 +26,12 @@ void ScriptExternals::registerEngineExternals_wld(World::WorldInstance& world,
         return vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle.isValid();
     };
 
-    // TODO: Refractor
-    auto getNPCByInstance = [vm, engine](size_t instance) {
-        assert(vm->getDATFile().getSymbolByIndex(instance).instanceDataClass == Daedalus::EInstanceClass::IC_Npc);
-
-        NpcHandle hnpc = ZMemory::handleCast<NpcHandle>(vm->getDATFile().getSymbolByIndex(instance).instanceDataHandle);
-
-        if (!hnpc.isValid())
-        {
-            //LogWarn() << "Invalid handle in instance: " << instance << " (" << vm->getDATFile().getSymbolByIndex(instance).name << ")";
-            //LogWarn() << "Callstack: " << vm->getCallStack();
-
-            VobTypes::NpcVobInformation vob;
-            vob.entity.invalidate();
-            return vob;
-        }
-
-        // Get data of npc this belongs to
-        Daedalus::GEngineClasses::C_Npc& npcData = vm->getGameState().getNpc(hnpc);
-        VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(npcData.userPtr);
-
-        if (userData)
-        {
-            World::WorldInstance& world = engine->getWorldInstance(userData->world);
-            VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(world, userData->vobEntity);
-
-            return vob;
-        }
-        else
-        {
-            LogWarn() << "No userptr on npc: " << npcData.name[0];
-
-            VobTypes::NpcVobInformation vob;
-            vob.entity.invalidate();
-
-            return vob;
-        }
+    auto getNPCByInstance = [=](size_t instance) {
+        return pWorld->getScriptEngine().findNPCVobFromScriptInstance(instance);
     };
 
-    auto getItemByInstance = [vm, engine](size_t instance) {
-        auto& parSymbol = vm->getDATFile().getSymbolByIndex(instance);
-        Daedalus::GameState::ItemHandle hitem = ZMemory::handleCast<Daedalus::GameState::ItemHandle>(parSymbol.instanceDataHandle);
-
-        if (hitem.isValid())
-        {
-            // Get data of npc this belongs to
-            Daedalus::GEngineClasses::C_Item& itemData = vm->getGameState().getItem(hitem);
-            VobTypes::ScriptInstanceUserData* userData = reinterpret_cast<VobTypes::ScriptInstanceUserData*>(itemData.userPtr);
-
-            if (userData)
-            {
-                World::WorldInstance& world = engine->getWorldInstance(userData->world);
-                Vob::VobInformation vob = Vob::asVob(world, userData->vobEntity);
-
-                return vob;
-            }
-            else
-            {
-                LogWarn() << "No userptr on item: " << itemData.name;
-            }
-        }
-        else
-        {
-            LogWarn() << "could not get item handle from ParSymbol: " << parSymbol.name;
-        }
-        Vob::VobInformation vob;
-        vob.entity.invalidate();
-        return vob;
+    auto getItemByInstance = [=](size_t instance) {
+        return pWorld->getScriptEngine().findItemVobFromScriptInstance(instance);
     };
 
     vm->registerExternalFunction("wld_detectnpc", [=](Daedalus::DaedalusVM& vm) {
