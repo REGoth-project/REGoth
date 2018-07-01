@@ -254,7 +254,7 @@ void Logic::CharacterEquipment::putBowWeaponOnCharactersHand()
     removeCharacterModelAttachment(EModelNode::Crossbow);
 }
 
-void Logic::CharacterEquipment::removeItemInCharactersHand()
+void Logic::CharacterEquipment::removeItemInCharactersHandAndShowWeaponsOnBodyAndShowWeaponsOnBody()
 {
     removeCharacterModelAttachment(EModelNode::Lefthand);
     removeCharacterModelAttachment(EModelNode::Righthand);
@@ -291,25 +291,23 @@ tl::optional<CharacterEquipment::Slot> CharacterEquipment::getCorrectSlotForItem
 CharacterEquipment::Kind CharacterEquipment::getKindOfItem(ItemHandle item) const
 {
     using Daedalus::GEngineClasses::C_Item;
-    auto itemDataOpt = getDataOfItem(item);
+    auto itemData = getDataOfItem(item);
 
-    if (!itemDataOpt)
+    if (!itemData)
         return Kind::OTHER;
 
-    auto& itemData = *itemDataOpt;
-
     // Only equippable items get a kind
-    if ((itemData.mainflag & C_Item::ITM_CAT_EQUIPABLE) == 0)
+    if ((itemData->mainflag & C_Item::ITM_CAT_EQUIPABLE) == 0)
         return Kind::OTHER;
 
     // Magic and armor can only be identified through the mainflags
-    if ((itemData.mainflag & C_Item::ITM_CAT_RUNE) != 0)
+    if ((itemData->mainflag & C_Item::ITM_CAT_RUNE) != 0)
         return Kind::MAGIC;
 
-    if ((itemData.mainflag & C_Item::ITM_CAT_MAGIC) != 0)
+    if ((itemData->mainflag & C_Item::ITM_CAT_MAGIC) != 0)
         return Kind::MAGIC;
 
-    if ((itemData.mainflag & C_Item::ITM_CAT_ARMOR) != 0)
+    if ((itemData->mainflag & C_Item::ITM_CAT_ARMOR) != 0)
         return Kind::ARMOR;
 
     std::pair<C_Item::Flags, Kind> pairs[] = {
@@ -328,11 +326,39 @@ CharacterEquipment::Kind CharacterEquipment::getKindOfItem(ItemHandle item) cons
 
     for (auto& p : pairs)
     {
-        if (itemData.flags & p.first)
+        if (itemData->flags & p.first)
             return p.second;
     }
 
     return Kind::OTHER;
+}
+
+CharacterEquipment::WeaponKind CharacterEquipment::getWeaponKindOfItem(ItemHandle item) const
+{
+    using Daedalus::GEngineClasses::C_Item;
+
+    auto itemData = getDataOfItem(item);
+
+    if (!itemData)
+        return WeaponKind::NONE;
+
+    std::pair<C_Item::Flags, WeaponKind> pairs[] = {
+        {C_Item::Flags::ITEM_DAG, WeaponKind::MELEE_1H},
+        {C_Item::Flags::ITEM_SWD, WeaponKind::MELEE_1H},
+        {C_Item::Flags::ITEM_AXE, WeaponKind::MELEE_1H},
+        {C_Item::Flags::ITEM_2HD_SWD, WeaponKind::MELEE_2H},
+        {C_Item::Flags::ITEM_2HD_AXE, WeaponKind::MELEE_2H},
+        {C_Item::Flags::ITEM_BOW, WeaponKind::BOW},
+        {C_Item::Flags::ITEM_CROSSBOW, WeaponKind::CROSSBOW},
+    };
+
+    for (auto& p : pairs)
+    {
+        if (itemData->flags & p.first)
+            return p.second;
+    }
+
+    return WeaponKind::NONE;
 }
 
 tl::optional<CharacterEquipment::Slot> CharacterEquipment::findAnyFreeMagicSlot() const
