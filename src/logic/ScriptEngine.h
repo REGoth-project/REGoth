@@ -107,6 +107,7 @@ namespace Logic
          * @return Symbol-index, -1 of not found
          */
         size_t getSymbolIndexByName(const std::string& name);
+        std::string getSymbolNameByIndex(size_t idx) const;
 
         /**
          * Checks whether the given symbol exists
