@@ -295,75 +295,59 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 
 Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist)
 {
+    using Daedalus::GameState::ItemHandle;
+    using Slot = CharacterEquipment::Slot;
+    using WeaponKind = CharacterEquipment::WeaponKind;
+
     // Check if we already have a weapon in our hands
     if (m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
         return m_EquipmentState.activeWeapon;
 
-    ModelVisual* model = getModelVisual();
-
     // Remove anything that was active before putting something new there
     m_EquipmentState.activeWeapon.invalidate();
 
-    // Check what kind of weapon we got here
-    if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
-    {
-        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
-        m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
-    }
-    else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
-    {
-        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
-        m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
-    }
-    else
+    if (forceFist)
     {
         m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
     }
-
-    // Move the visual
-    if (m_EquipmentState.activeWeapon.isValid())
+    else
     {
-        // Get actual data of the weapon we are going to draw
-        Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(
-            m_EquipmentState.activeWeapon);
+        ItemHandle equippedWeapon = m_CharacterEquipment.getItemInSlot(Slot::MELEE);
+        m_EquipmentState.activeWeapon = equippedWeapon;
 
-        // Clear the possible on-body-visuals first
-        model->setNodeVisual("", EModelNode::Lefthand);
-        model->setNodeVisual("", EModelNode::Righthand);
-        model->setNodeVisual("", EModelNode::Sword);
-        model->setNodeVisual("", EModelNode::Longsword);
+        switch (m_CharacterEquipment.getWeaponKindOfItem(equippedWeapon))
+        {
+            case WeaponKind::MELEE_1H:
+                m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
+                break;
 
-        // Put visual into hand
-        // TODO: Listen to ani-events for this!
-        model->setNodeVisual(itemData.visual, EModelNode::Righthand);
+            case WeaponKind::MELEE_2H:
+                m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
+                break;
+
+            default:
+                // Not a melee weapon?
+                m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
+                break;
+        }
     }
 
-    // Couldn't draw anything
+    if(m_EquipmentState.activeWeapon.isValid())
+        m_CharacterEquipment.putMeleeWeaponInCharactersHand();
+
     return m_EquipmentState.activeWeapon;
 }
 
 void PlayerController::undrawWeapon(bool force)
 {
-    ModelVisual* model = getModelVisual();
-
     // TODO: Listen to ani-events for this!
     // TODO: Even do an animation for this!
     // TODO: Implement force-flag
 
-    // Clear hands
-    model->setNodeVisual("", EModelNode::Lefthand);
-    model->setNodeVisual("", EModelNode::Righthand);
+    m_CharacterEquipment.removeItemInCharactersHandAndShowWeaponsOnBody();
+
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
-
-    // activeWeapon should be only invalid when using fists
-    if (m_EquipmentState.activeWeapon.isValid())
-    {
-        // reequip the currently active item
-        equipItem(m_EquipmentState.activeWeapon);
-
-        // Remove active weapon
-        m_EquipmentState.activeWeapon.invalidate();
-    }
+    m_EquipmentState.activeWeapon.invalidate();
 }
 
 ModelVisual* PlayerController::getModelVisual()

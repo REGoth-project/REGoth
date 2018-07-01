@@ -63,6 +63,15 @@ namespace Logic
             OTHER,
         };
 
+        enum class WeaponKind
+        {
+            MELEE_1H,
+            MELEE_2H,
+            BOW,
+            CROSSBOW,
+            NONE,
+        };
+
         CharacterEquipment(World::WorldInstance& world, Handle::EntityHandle characterEntity);
 
         /**
@@ -103,6 +112,12 @@ namespace Logic
          * Every kind except "OTHER" can be equipped.
          */
         Kind getKindOfItem(ItemHandle item) const;
+
+        /**
+         * @return More specific weapon type of the given item, ie. whether a weapon is 1 or 2 handed.
+         *         If 'item' is not a weapon, it returns 'NONE'.
+         */
+        WeaponKind getWeaponKindOfItem(ItemHandle item) const;
 
         /**
          * Some types of items can be equipped to multiple slots. These functions
@@ -159,6 +174,14 @@ namespace Logic
         void putItemIntoRightHand(ItemHandle item);
         void putItemIntoLeftHand(ItemHandle item);
 
+        /**
+         * Removes the weapons from the characters body and shows them
+         * inside their hand
+         */
+        void putMeleeWeaponInCharactersHand();
+        void putBowWeaponInCharactersHand();
+        void removeItemInCharactersHandAndShowWeaponsOnBody();
+
     protected:
 
         /**
@@ -191,14 +214,6 @@ namespace Logic
          */
         void showMeleeWeaponOnCharacter();
         void showBowWeaponOnCharacter();
-
-        /**
-         * Removes the weapons from the characters body and shows them
-         * inside their hand
-         */
-        void putMeleeWeaponInCharactersHand();
-        void putBowWeaponOnCharactersHand();
-        void removeItemInCharactersHand();
 
         /**
          * Sets the visual attachment on the character model
