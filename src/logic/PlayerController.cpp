@@ -87,7 +87,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_PathFinder(world)
     , m_CharacterEquipment(world, entity)
 {
-    m_AIState.closestWaypoint = 0;
     m_NPCProperties.enablePhysics = true;
 
     m_MoveState.direction = Math::float3(1, 0, 0);
@@ -96,8 +95,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_MoveState.ground.triangleIndex = 0;
     m_MoveState.ground.waterDepth = 0;
     m_MoveState.ground.trianglePosition = Math::float3(0, 0, 0);
-    m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
-    m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
 
     m_ScriptState.npcHandle = scriptInstance;
 
@@ -188,8 +185,6 @@ void PlayerController::onUpdate(float deltaTime)
 
 void PlayerController::teleportToWaypoint(size_t wp)
 {
-    m_AIState.closestWaypoint = wp;
-
     teleportToPosition(m_World.getWaynet().waypoints[wp].position);
 
     setDirection(m_World.getWaynet().waypoints[wp].direction);

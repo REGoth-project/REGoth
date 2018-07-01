@@ -463,12 +463,6 @@ namespace Logic
 
         struct
         {
-            // Waypoint this NPC is closest to/was last positioned at
-            size_t closestWaypoint;
-
-            // Waypoint the NPC is going to
-            size_t targetWaypoint;
-
             // Handle to the Mob currently used by this NPC, if valid
             Handle::EntityHandle usedMob;
 
