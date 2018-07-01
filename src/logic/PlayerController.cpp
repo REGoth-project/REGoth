@@ -375,7 +375,7 @@ void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
     Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
     ModelVisual* model = getModelVisual();
 
-    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
+    if (!m_CharacterEquipment.isItemEquipable(item))
         return;  // Can't equip
 
     EModelNode node = EModelNode::None;
