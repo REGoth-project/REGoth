@@ -8,6 +8,7 @@
 #include <ZenLib/daedalus/DaedalusGameState.h>
 #include <tl/optional.hpp>
 #include <handle/HandleDef.h>
+#include <logic/visuals/ModelVisual.h>
 
 namespace World
 {
@@ -70,6 +71,11 @@ namespace Logic
          * Returns false if not possible (attributes, wrong kind of slot).
          */
         bool equipItemToSlot(ItemHandle item, Slot slot);
+
+        /**
+         * Takes of the item currently in the given slot
+         */
+        void unequipItemInSlot(Slot slot);
 
         /**
          * Finds a slot the given item could potentially be equipped to.
@@ -157,6 +163,22 @@ namespace Logic
         bool equipArmor(ItemHandle item);
 
         /**
+         * Sets the visual attachment on the character model
+         */
+        void setCharacterModelAttachment(const std::string& visual, EModelNode node);
+        void removeCharacterModelAttachment(EModelNode node);
+
+        /**
+         * Switches to the default no-armor body mesh
+         */
+        void switchToDefaultCharacterModel();
+
+        /**
+         * Switches to the given armor-visual
+         */
+        void switchCharacterModelArmor(const std::string& visual);
+
+        /**
          * @return handle to the underlaying character
          */
         PlayerController& getController() const;
@@ -165,6 +187,12 @@ namespace Logic
          * @return Data of the given item
          */
         tl::optional<ItemData&> getDataOfItem(ItemHandle item) const;
+
+
+        /**
+         * @return The visual for this item set by the scripts
+         */
+        std::string getItemVisual(ItemHandle item) const;
 
         World::WorldInstance& m_World;
         Handle::EntityHandle m_CharacterEntity;

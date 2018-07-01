@@ -51,15 +51,93 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
     return true;
 }
 
+void Logic::CharacterEquipment::unequipItemInSlot(Slot slot)
+{
+    switch (slot)
+    {
+        case Slot::MELEE:
+            removeCharacterModelAttachment(EModelNode::Longsword);
+            removeCharacterModelAttachment(EModelNode::Sword);
+            break;
+
+        case Slot::BOW:
+            removeCharacterModelAttachment(EModelNode::Bow);
+            removeCharacterModelAttachment(EModelNode::Crossbow);
+            break;
+
+        case Slot::ARMOR:
+            switchToDefaultCharacterModel();
+            break;
+
+        default:  // Everything else can be taken off without visual changes
+            break;
+    }
+}
+
 bool Logic::CharacterEquipment::equipMelee(ItemHandle item)
 {
+    using Daedalus::GEngineClasses::C_Item;
+
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return false;
+
+    EModelNode node;
+    if (data->flags & C_Item::Flags::ITEM_2HD_AXE)
+    {
+        node = EModelNode::Longsword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_2HD_SWD)
+    {
+        node = EModelNode::Longsword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_AXE)
+    {
+        node = EModelNode::Sword;
+    }
+    else if (data->flags & C_Item::Flags::ITEM_SWD)
+    {
+        node = EModelNode::Sword;
+    }
+    else
+    {
+        // What is this?
+        return false;
+    }
+
+    setCharacterModelAttachment(getItemVisual(item), node);
+
     setItemInSlot(item, Slot::MELEE);
+
     return true;
 }
 
 bool Logic::CharacterEquipment::equipBow(ItemHandle item)
 {
+    using Daedalus::GEngineClasses::C_Item;
+
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return false;
+
+    if (data->flags & C_Item::Flags::ITEM_CROSSBOW)
+    {
+        setCharacterModelAttachment(getItemVisual(item), EModelNode::Crossbow);
+    }
+    else if (data->flags & C_Item::Flags::ITEM_BOW)
+    {
+        setCharacterModelAttachment(getItemVisual(item), EModelNode::Bow);
+    }
+    else
+    {
+        // What is this?
+        return false;
+    }
+
     setItemInSlot(item, Slot::BOW);
+
     return true;
 }
 
@@ -89,6 +167,14 @@ bool Logic::CharacterEquipment::equipBelt(ItemHandle item)
 
 bool Logic::CharacterEquipment::equipArmor(ItemHandle item)
 {
+    using Daedalus::GEngineClasses::C_Item;
+
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return false;
+
+    switchCharacterModelArmor(data->visual_change);
     setItemInSlot(item, Slot::ARMOR);
     return true;
 }
@@ -323,6 +409,16 @@ tl::optional<CharacterEquipment::ItemData&> CharacterEquipment::getItemDataInSlo
     return getDataOfItem(getItemInSlot(slot));
 }
 
+std::string Logic::CharacterEquipment::getItemVisual(ItemHandle item) const
+{
+    auto data = getDataOfItem(item);
+
+    if (!data)
+        return "";
+
+    return data->visual;
+}
+
 CharacterEquipment::ItemHandle CharacterEquipment::getItemInSlot(Slot slot) const
 {
     return m_ItemsBySlot[(size_t)slot];
@@ -346,4 +442,44 @@ tl::optional<CharacterEquipment::ItemData&> Logic::CharacterEquipment::getDataOf
         return tl::nullopt;
 
     return m_World.getScriptEngine().getGameState().getItem(item);
+}
+
+void CharacterEquipment::setCharacterModelAttachment(const std::string& visual, EModelNode node)
+{
+    ModelVisual* pVisual = getController().getModelVisual();
+
+    if (!pVisual)
+        return;
+
+    pVisual->setNodeVisual(visual, node);
+}
+
+void Logic::CharacterEquipment::removeCharacterModelAttachment(EModelNode node)
+{
+    setCharacterModelAttachment("", node);
+}
+
+void Logic::CharacterEquipment::switchToDefaultCharacterModel()
+{
+    ModelVisual* pVisual = getController().getModelVisual();
+
+    if (!pVisual)
+        return;
+
+    // TODO: Implement this. Actually not easy to get the default character model as it seems
+    // ModelVisual::BodyState state = pVisual->getBodyState();
+    // state.bodyVisual = getController().getScriptInstance().
+}
+
+void CharacterEquipment::switchCharacterModelArmor(const std::string& visual)
+{
+    ModelVisual* pVisual = getController().getModelVisual();
+
+    if (!pVisual)
+        return;
+
+    ModelVisual::BodyState state = pVisual->getBodyState();
+    state.bodyVisual = visual;
+
+    pVisual->setBodyState(state);
 }
