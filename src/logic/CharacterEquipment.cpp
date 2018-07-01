@@ -17,6 +17,9 @@ CharacterEquipment::CharacterEquipment(World::WorldInstance& world, Handle::Enti
 
 bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
 {
+    if (!isItemEquipable(item))
+        return false;
+
     if (!isItemTypeCorrectForSlot(item, slot))
         return false;
 
@@ -53,6 +56,9 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
 
 bool Logic::CharacterEquipment::equipItem(ItemHandle item)
 {
+    if (!isItemEquipable(item))
+        return false;
+
     tl::optional<Slot> slot;
     switch (getKindOfItem(item))
     {
@@ -103,6 +109,16 @@ void Logic::CharacterEquipment::unequipItemInSlot(Slot slot)
 
         default:  // Everything else can be taken off without visual changes
             break;
+    }
+}
+
+void Logic::CharacterEquipment::unequipItem(ItemHandle item)
+{
+    auto slot = findSlotItemWasEquippedTo(item);
+
+    if(slot)
+    {
+        unequipItemInSlot(*slot);
     }
 }
 
@@ -315,6 +331,17 @@ tl::optional<CharacterEquipment::Slot> CharacterEquipment::findAnyFreeRingSlot()
     {
         if (!getItemInSlot(s).isValid())
             return s;
+    }
+
+    return tl::nullopt;
+}
+
+tl::optional<CharacterEquipment::Slot> CharacterEquipment::findSlotItemWasEquippedTo(ItemHandle item) const
+{
+    for(size_t i = 0; i < (size_t)Slot::COUNT; i++)
+    {
+        if (m_ItemsBySlot[i] == item)
+            return (Slot)i;
     }
 
     return tl::nullopt;

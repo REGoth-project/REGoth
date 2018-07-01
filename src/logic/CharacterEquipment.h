@@ -85,6 +85,11 @@ namespace Logic
         void unequipItemInSlot(Slot slot);
 
         /**
+         * Unequips the given item, if it is currently equipped
+         */
+        void unequipItem(ItemHandle item);
+
+        /**
          * Finds a slot the given item could potentially be equipped to.
          * For magic and rings the first slot is returned, regardless of
          * whether it's empty or not.
@@ -105,6 +110,11 @@ namespace Logic
          */
         tl::optional<CharacterEquipment::Slot> findAnyFreeMagicSlot() const;
         tl::optional<CharacterEquipment::Slot> findAnyFreeRingSlot() const;
+
+        /**
+         * Finds the slot the given item was equipped to
+         */
+        tl::optional<CharacterEquipment::Slot> findSlotItemWasEquippedTo(ItemHandle item) const;
 
         /**
          * Status queries
