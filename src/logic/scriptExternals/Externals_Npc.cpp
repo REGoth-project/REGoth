@@ -37,10 +37,8 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     vm->registerExternalFunction("npc_getdisttonpc", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_npc2;
         uint32_t npc2 = vm.popVar(arr_npc2);
-        if (verbose) LogInfo() << "npc2: " << npc2;
         uint32_t arr_npc1;
         uint32_t npc1 = vm.popVar(arr_npc1);
-        if (verbose) LogInfo() << "npc1: " << npc1;
 
         if (!isSymInstanceValid(npc1) || !isSymInstanceValid(npc2))
             vm.setReturn(INT32_MAX);
@@ -66,10 +64,8 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
 
     vm->registerExternalFunction("npc_getdisttowp", [=](Daedalus::DaedalusVM& vm) {
         std::string wpname = vm.popString();
-        if (verbose) LogInfo() << "wpname: " << wpname;
         uint32_t arr_self;
         uint32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation vob = getNPCByInstance(self);
 
@@ -104,7 +100,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
         uint32_t item = vm.popVar();
         uint32_t arr_npc;
         int32_t npc = vm.popVar(arr_npc);
-        if (verbose) LogInfo() << "npc: " << npc;
 
         VobTypes::NpcVobInformation npcvob = getNPCByInstance(npc);
         Vob::VobInformation itemvob = getItemByInstance(item);
@@ -126,7 +121,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     vm->registerExternalFunction("npc_getdisttoplayer", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_npc1;
         uint32_t npc1 = vm.popVar(arr_npc1);
-        if (verbose) LogInfo() << "npc1: " << npc1;
 
         VobTypes::NpcVobInformation vob1 = getNPCByInstance(npc1);
         VobTypes::NpcVobInformation vob2 = getNPCByInstance(vm.getDATFile().getSymbolIndexByName("hero"));
@@ -142,7 +136,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
 
     vm->registerExternalFunction("npc_isplayer", [=](Daedalus::DaedalusVM& vm) {
         uint32_t player = vm.popVar();
-        if (verbose) LogInfo() << "player: " << player;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(player);
 
@@ -213,10 +206,8 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
 
     vm->registerExternalFunction("npc_exchangeroutine", [=](Daedalus::DaedalusVM& vm) {
         std::string routinename = vm.popString();
-        if (verbose) LogInfo() << "routinename: " << routinename;
         uint32_t arr_self;
         uint32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
@@ -229,7 +220,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     vm->registerExternalFunction("npc_getnearestwp", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
@@ -250,7 +240,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     vm->registerExternalFunction("npc_getnextwp", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
@@ -331,12 +320,9 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     });
 
     vm->registerExternalFunction("npc_setstatetime", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "npc_setstatetime";
         int seconds = vm.popDataValue();
-        if (verbose) LogInfo() << "seconds: " << seconds;
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
         npc.playerController->getAIStateMachine().setCurrentStateTime(seconds);
@@ -427,14 +413,9 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     });
 
     vm->registerExternalFunction("npc_giveitem", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "npc_giveitem";
-
         uint32_t fromNpcId = vm.popVar();
-        if (verbose) LogInfo() << "from" << fromNpcId;
         uint32_t itemInstance = vm.popVar();
-        if (verbose) LogInfo() << "item" << itemInstance;
         uint32_t toNpcId = vm.popVar();
-        if (verbose) LogInfo() << "to" << toNpcId;
 
         VobTypes::NpcVobInformation fromNpc = getNPCByInstance(fromNpcId);
         VobTypes::NpcVobInformation toNpc = getNPCByInstance(toNpcId);
@@ -449,7 +430,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
 
     vm->registerExternalFunction("npc_clearinventory", [=](Daedalus::DaedalusVM& vm) {
         uint32_t npcId = vm.popVar();
-        if (verbose) LogInfo() << "npc_clearinventory " << npcId;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(npcId);
 
@@ -476,7 +456,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     });
 
     vm->registerExternalFunction("npc_isinstate", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "npc_isinstate";
         uint32_t state = (uint32_t)vm.popVar();
         int32_t self = vm.popVar();
 
@@ -491,7 +470,6 @@ void ScriptExternals::registerEngineExternals_npc(World::WorldInstance& world,
     });
 
     vm->registerExternalFunction("npc_hasequippedmeleeweapon", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "npc_hasequippedmeleeweapon";
         int32_t self = vm.popVar();
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);

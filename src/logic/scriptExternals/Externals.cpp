@@ -38,25 +38,16 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         return pWorld->getScriptEngine().findNPCVobFromScriptInstance(instance);
     };
 
-    /**
-     * ta_min
-     */
     vm->registerExternalFunction("ta_min", [=](Daedalus::DaedalusVM& vm) {
         std::string waypoint = vm.popString();
-        if (verbose) LogInfo() << "waypoint: " << waypoint;
 
         uint32_t action = vm.popDataValue();
         int32_t stop_m = vm.popDataValue();
-        if (verbose) LogInfo() << "stop_m: " << stop_m;
         int32_t stop_h = vm.popDataValue();
-        if (verbose) LogInfo() << "stop_h: " << stop_h;
         int32_t start_m = vm.popDataValue();
-        if (verbose) LogInfo() << "start_m: " << start_m;
         int32_t start_h = vm.popDataValue();
-        if (verbose) LogInfo() << "start_h: " << start_h;
         uint32_t arr_self;
         int32_t self = vm.popVar(arr_self);
-        if (verbose) LogInfo() << "self: " << self;
 
         VobTypes::NpcVobInformation npc = getNPCByInstance(self);
 
@@ -106,17 +97,11 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("printscreen", [=](Daedalus::DaedalusVM& vm) {
         int32_t timesec = vm.popDataValue();
-        if (verbose) LogInfo() << "timesec: " << timesec;
         std::string font = vm.popString();
-        if (verbose) LogInfo() << "font: " << font;
         int32_t posy = vm.popDataValue();
-        if (verbose) LogInfo() << "posy: " << posy;
         int32_t posx = vm.popDataValue();
-        if (verbose) LogInfo() << "posx: " << posx;
         std::string msg = vm.popString();
-        if (verbose) LogInfo() << "msg: " << msg;
         int32_t dialognr = vm.popDataValue();
-        if (verbose) LogInfo() << "dialognr: " << dialognr;
 
         pWorld->getPrintScreenManager().printMessageTimed(posx / 100.0f,
                                                           posy / 100.0f,
@@ -167,7 +152,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     });
 
     vm->registerExternalFunction("mob_hasitems", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "mob_hasitems";
         uint32_t iteminstance = (uint32_t)vm.popDataValue();
         std::string mobname = vm.popString();
 
@@ -186,7 +170,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("createinvitem", [=](Daedalus::DaedalusVM& vm) {
         uint32_t itemInstance = (uint32_t)vm.popDataValue();
-        if (verbose) LogInfo() << "itemInstance: " << itemInstance;
         uint32_t arr_n0;
         int32_t npc = vm.popVar(arr_n0);
 
@@ -206,7 +189,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
     vm->registerExternalFunction("createinvitems", [=](Daedalus::DaedalusVM& vm) {
         uint32_t num = (uint32_t)vm.popDataValue();
         uint32_t itemInstance = (uint32_t)vm.popDataValue();
-        if (verbose) LogInfo() << "itemInstance: " << itemInstance;
         uint32_t arr_n0;
         int32_t npc = vm.popVar(arr_n0);
 
@@ -217,7 +199,6 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
     vm->registerExternalFunction("hlp_getnpc", [=](Daedalus::DaedalusVM& vm) {
         int32_t instancename = vm.popDataValue();
-        if (verbose) LogInfo() << "instancename: " << instancename;
 
         /*if(!vm.getDATFile().getSymbolByIndex(instancename).instanceDataHandle.isValid())
         {

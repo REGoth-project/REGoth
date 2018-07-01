@@ -23,9 +23,7 @@ void ScriptExternals::registerEngineExternals_snd(World::WorldInstance& world,
     using Daedalus::GameState::NpcHandle;
 
     vm->registerExternalFunction("snd_play", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "snd_play";
         std::string s0 = vm.popString();
-        if (verbose) LogInfo() << "s0: " << s0;
 
         pWorld->getAudioWorld().playSound(s0);
     });

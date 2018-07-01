@@ -226,7 +226,6 @@ void ScriptExternals::registerEngineExternals_wld(World::WorldInstance& world,
     });
 
     vm->registerExternalFunction("wld_getday", [=](Daedalus::DaedalusVM& vm) {
-        if (verbose) LogInfo() << "wld_getday";
         vm.setReturn(pWorld->getEngine()->getGameClock().getDay());
     });
 

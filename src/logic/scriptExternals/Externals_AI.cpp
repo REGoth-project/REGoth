@@ -41,10 +41,8 @@ void ScriptExternals::registerEngineExternals_ai(World::WorldInstance& world, Da
     vm->registerExternalFunction("ai_turntonpc", [=](Daedalus::DaedalusVM& vm) {
         uint32_t arr_n1;
         int32_t target = vm.popVar(arr_n1);
-        if (verbose) LogInfo() << "target: " << target;
         uint32_t arr_n0;
         int32_t self = vm.popVar(arr_n0);
-        if (verbose) LogInfo() << "self: " << self;
 
         if (!isSymInstanceValid(self) || !isSymInstanceValid(target))
             return;
