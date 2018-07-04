@@ -28,3 +28,6 @@
 [submodule "lib/libdmusic"]
 	path = lib/libdmusic
 	url = https://github.com/frabert/libdmusic.git
+[submodule "lib/optional"]
+	path = lib/optional
+	url = https://github.com/TartanLlama/optional.git

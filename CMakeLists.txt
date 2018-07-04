@@ -313,6 +313,7 @@ else()
 endif()
 
 add_subdirectory(lib/adpcm)
+include_directories(lib/optional)
 
 add_subdirectory(src/target)
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT REGoth)
