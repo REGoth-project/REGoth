@@ -56,7 +56,7 @@ bool CharacterEquipment::equipItemToSlot(ItemHandle item, Slot slot)
     return true;
 }
 
-bool Logic::CharacterEquipment::equipItem(ItemHandle item)
+bool CharacterEquipment::equipItem(ItemHandle item)
 {
     if (!isItemEquipable(item))
         return false;
@@ -91,7 +91,7 @@ bool Logic::CharacterEquipment::equipItem(ItemHandle item)
     return equipItemToSlot(item, *slot);
 }
 
-void Logic::CharacterEquipment::unequipItemInSlot(Slot slot)
+void CharacterEquipment::unequipItemInSlot(Slot slot)
 {
     switch (slot)
     {
@@ -114,7 +114,7 @@ void Logic::CharacterEquipment::unequipItemInSlot(Slot slot)
     }
 }
 
-void Logic::CharacterEquipment::unequipItem(ItemHandle item)
+void CharacterEquipment::unequipItem(ItemHandle item)
 {
     auto slot = findSlotItemWasEquippedTo(item);
 
@@ -124,50 +124,46 @@ void Logic::CharacterEquipment::unequipItem(ItemHandle item)
     }
 }
 
-bool Logic::CharacterEquipment::equipMelee(ItemHandle item)
+bool CharacterEquipment::equipMelee(ItemHandle item)
 {
     setItemInSlot(item, Slot::MELEE);
 
     return true;
 }
 
-bool Logic::CharacterEquipment::equipBow(ItemHandle item)
+bool CharacterEquipment::equipBow(ItemHandle item)
 {
-    using Daedalus::GEngineClasses::C_Item;
-
     setItemInSlot(item, Slot::BOW);
 
     return true;
 }
 
-bool Logic::CharacterEquipment::equipAmulet(ItemHandle item)
+bool CharacterEquipment::equipAmulet(ItemHandle item)
 {
     setItemInSlot(item, Slot::AMULET);
     return true;
 }
 
-bool Logic::CharacterEquipment::equipRing(ItemHandle item, Slot slot)
+bool CharacterEquipment::equipRing(ItemHandle item, Slot slot)
 {
     setItemInSlot(item, slot);
     return true;
 }
 
-bool Logic::CharacterEquipment::equipMagic(ItemHandle item, Slot slot)
+bool CharacterEquipment::equipMagic(ItemHandle item, Slot slot)
 {
     setItemInSlot(item, slot);
     return true;
 }
 
-bool Logic::CharacterEquipment::equipBelt(ItemHandle item)
+bool CharacterEquipment::equipBelt(ItemHandle item)
 {
     setItemInSlot(item, Slot::BELT);
     return true;
 }
 
-bool Logic::CharacterEquipment::equipArmor(ItemHandle item)
+bool CharacterEquipment::equipArmor(ItemHandle item)
 {
-    using Daedalus::GEngineClasses::C_Item;
-
     auto data = getDataOfItem(item);
 
     if (!data)
@@ -178,7 +174,7 @@ bool Logic::CharacterEquipment::equipArmor(ItemHandle item)
     return true;
 }
 
-void Logic::CharacterEquipment::showMeleeWeaponOnCharacter()
+void CharacterEquipment::showMeleeWeaponOnCharacter()
 {
     using Daedalus::GEngineClasses::C_Item;
 
@@ -214,7 +210,7 @@ void Logic::CharacterEquipment::showMeleeWeaponOnCharacter()
     setCharacterModelAttachment(getItemVisual(item), node);
 }
 
-void Logic::CharacterEquipment::showBowWeaponOnCharacter()
+void CharacterEquipment::showBowWeaponOnCharacter()
 {
     using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::BOW);
@@ -237,9 +233,8 @@ void Logic::CharacterEquipment::showBowWeaponOnCharacter()
     }
 }
 
-void Logic::CharacterEquipment::putMeleeWeaponInCharactersHand()
+void CharacterEquipment::putMeleeWeaponInCharactersHand()
 {
-    using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::MELEE);
 
     putItemIntoRightHand(item);
@@ -247,9 +242,8 @@ void Logic::CharacterEquipment::putMeleeWeaponInCharactersHand()
     removeCharacterModelAttachment(EModelNode::Longsword);
 }
 
-void Logic::CharacterEquipment::putBowWeaponInCharactersHand()
+void CharacterEquipment::putBowWeaponInCharactersHand()
 {
-    using Daedalus::GEngineClasses::C_Item;
     auto item = getItemInSlot(Slot::BOW);
 
     putItemIntoRightHand(item);
@@ -257,7 +251,7 @@ void Logic::CharacterEquipment::putBowWeaponInCharactersHand()
     removeCharacterModelAttachment(EModelNode::Crossbow);
 }
 
-void Logic::CharacterEquipment::removeItemInCharactersHandAndShowWeaponsOnBody()
+void CharacterEquipment::removeItemInCharactersHandAndShowWeaponsOnBody()
 {
     removeCharacterModelAttachment(EModelNode::Lefthand);
     removeCharacterModelAttachment(EModelNode::Righthand);
@@ -425,7 +419,7 @@ bool CharacterEquipment::hasBowEquipped() const
     return getItemInSlot(Slot::BOW).isValid();
 }
 
-bool Logic::CharacterEquipment::hasItemEquipped(ItemHandle item) const
+bool CharacterEquipment::hasItemEquipped(ItemHandle item) const
 {
     for (auto h : m_ItemsBySlot)
     {
@@ -497,12 +491,12 @@ bool CharacterEquipment::isItemTypeCorrectForSlot(ItemHandle item, Slot slot) co
     }
 }
 
-bool Logic::CharacterEquipment::isItemOfKind(ItemHandle item, Kind kind) const
+bool CharacterEquipment::isItemOfKind(ItemHandle item, Kind kind) const
 {
     return getKindOfItem(item) == kind;
 }
 
-bool Logic::CharacterEquipment::isItemEquipable(ItemHandle item) const
+bool CharacterEquipment::isItemEquipable(ItemHandle item) const
 {
     return !isItemOfKind(item, Kind::OTHER);  // All but OTHER can be equipped
 }
@@ -539,7 +533,7 @@ tl::optional<CharacterEquipment::ItemData&> CharacterEquipment::getItemDataInSlo
     return getDataOfItem(getItemInSlot(slot));
 }
 
-std::string Logic::CharacterEquipment::getItemVisual(ItemHandle item) const
+std::string CharacterEquipment::getItemVisual(ItemHandle item) const
 {
     auto data = getDataOfItem(item);
 
@@ -554,7 +548,7 @@ CharacterEquipment::ItemHandle CharacterEquipment::getItemInSlot(Slot slot) cons
     return m_ItemsBySlot[(size_t)slot];
 }
 
-void Logic::CharacterEquipment::setItemInSlot(ItemHandle item, Slot slot)
+void CharacterEquipment::setItemInSlot(ItemHandle item, Slot slot)
 {
     m_ItemsBySlot[(size_t)slot] = item;
 }
@@ -563,10 +557,10 @@ PlayerController& CharacterEquipment::getController() const
 {
     auto logic = m_World.getEntity<Components::LogicComponent>(m_CharacterEntity).m_pLogicController;
     assert(logic != nullptr);
-    return *reinterpret_cast<Logic::PlayerController*>(logic);
+    return *reinterpret_cast<PlayerController*>(logic);
 }
 
-tl::optional<CharacterEquipment::ItemData&> Logic::CharacterEquipment::getDataOfItem(ItemHandle item) const
+tl::optional<CharacterEquipment::ItemData&> CharacterEquipment::getDataOfItem(ItemHandle item) const
 {
     if (!item.isValid())
         return tl::nullopt;
@@ -584,17 +578,17 @@ void CharacterEquipment::setCharacterModelAttachment(const std::string& visual, 
     pVisual->setNodeVisual(visual, node);
 }
 
-void Logic::CharacterEquipment::setCharacterModelAttachment(ItemHandle item, EModelNode node)
+void CharacterEquipment::setCharacterModelAttachment(ItemHandle item, EModelNode node)
 {
     setCharacterModelAttachment(getItemVisual(item), node);
 }
 
-void Logic::CharacterEquipment::removeCharacterModelAttachment(EModelNode node)
+void CharacterEquipment::removeCharacterModelAttachment(EModelNode node)
 {
     setCharacterModelAttachment("", node);
 }
 
-void Logic::CharacterEquipment::switchToDefaultCharacterModel()
+void CharacterEquipment::switchToDefaultCharacterModel()
 {
     ModelVisual* pVisual = getController().getModelVisual();
 
@@ -673,7 +667,7 @@ void CharacterEquipment::importSlots(const json& j)
     equipItemToSlot(inventory.getItem(j["ARMOR"].get<std::string>()), Slot::ARMOR);
 }
 
-std::string Logic::CharacterEquipment::getInstanceNameOfItem(ItemHandle item) const
+std::string CharacterEquipment::getInstanceNameOfItem(ItemHandle item) const
 {
     auto data = getDataOfItem(item);
 
