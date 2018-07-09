@@ -173,6 +173,15 @@ namespace Logic
         }
 
         /**
+         *
+         * @return Character equipment of this player
+         */
+        CharacterEquipment& getCharacterEquipment()
+        {
+            return m_CharacterEquipment;
+        }
+
+        /**
          * (Un)Equips the item with the given handle
          * Note: Be careful that this is actually inside the inventory of the player
          */
