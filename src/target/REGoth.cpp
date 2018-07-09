@@ -28,6 +28,7 @@
 #include <ui/Hud.h>
 #include <ui/ImageView.h>
 #include <ui/Menu.h>
+#include <ui/MenuStack.h>
 #include <ui/Menu_Main.h>
 #include <utils/cli.h>
 #include <utils/zTools.h>
@@ -97,7 +98,7 @@ void REGoth::init(int _argc, char** _argv)
 
     showSplash();
 
-    auto& menuMain = m_pEngine->getHud().pushMenu<UI::Menu_Main>();
+    auto& menuMain = m_pEngine->getHud().getMenuStack().push<UI::Menu_Main>();
     auto gameType = menuMain.determineGameType();
     m_pEngine->setBasicGameType(gameType);
     // Init SavegameManager
@@ -1121,7 +1122,14 @@ bool REGoth::update()
     // Pass text input from this frame
     m_pEngine->getHud().onTextInput(frameInputText);
 
-    Engine::Input::fireBindings();
+    auto actions = Engine::Input::getActions();
+    for (const auto& action : actions)
+    {
+        // TODO replace tuple with something readable like a struct
+        auto triggered = std::get<1>(action);
+        if (triggered)
+            m_pEngine->getRootUIView().onInputAction(std::get<0>(action), std::get<2>(action));
+    }
 
     // Check for resize
     if (m_Width != getWindowWidth() || m_Height != getWindowHeight())

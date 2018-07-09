@@ -61,12 +61,6 @@ namespace UI
         virtual bool onInputAction(Engine::ActionType action);
 
         /**
-         * To be called when there was text input since the last frame
-         * @param text Characters input since the last frame
-         */
-        virtual void onTextInput(const std::string& text);
-
-        /**
          * @return Underlaying HUD
          */
         Hud& getHud();

@@ -72,7 +72,7 @@ namespace Logic
         /**
          * Handles key event
          */
-        void onAction(Engine::ActionType actionType, bool triggered);
+        void onAction(Engine::ActionType actionType);
         void unbindKeys();
 
         /**

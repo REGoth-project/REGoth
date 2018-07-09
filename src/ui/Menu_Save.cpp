@@ -1,5 +1,6 @@
 #include "Menu_Save.h"
 #include "Hud.h"
+#include "MenuStack.h"
 #include "MenuItem.h"
 #include "Menu_Main.h"
 #include <daedalus/DaedalusVM.h>
@@ -12,6 +13,13 @@ using namespace UI;
 Menu_Save::Menu_Save(Engine::BaseEngine& e)
     : Menu(e)
 {
+    registerTextHandler([this](const std::string& text){
+        if (m_isWaitingForSaveName && m_SaveName.size() <= 32)  // Arbitrary length
+        {
+            m_SaveName += text;
+            getItemScriptData(m_MenuItemSaveSlot).text[0] = m_SaveName + "_";
+        }
+    });
 }
 
 Menu_Save::~Menu_Save()
@@ -86,7 +94,7 @@ void Menu_Save::onCustomAction(const std::string& action)
             m_isWaitingForSaveName = false;
             Engine::SavegameManager::saveToSlot(index, m_SaveName);
             // close menus after saving
-            getHud().popAllMenus();
+            getHud().getMenuStack().popAll();
         }
     }
 }
@@ -119,13 +127,4 @@ bool Menu_Save::onInputAction(Engine::ActionType action)
         }
     }
     return false;
-}
-
-void Menu_Save::onTextInput(const std::string& text)
-{
-    if (m_isWaitingForSaveName && m_SaveName.size() <= 32)  // Arbitrary length
-    {
-        m_SaveName += text;
-        getItemScriptData(m_MenuItemSaveSlot).text[0] = m_SaveName + "_";
-    }
 }

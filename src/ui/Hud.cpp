@@ -12,9 +12,11 @@
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
 #include "Menu_Status.h"
+#include "MenuStack.h"
 #include "PrintScreenMessages.h"
 #include "TextView.h"
 #include "IntroduceChapterView.h"
+#include "WorldView.h"
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
 #include <logic/CameraController.h>
@@ -31,6 +33,7 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pEnemyHealthBar = new BarView(m_Engine);
     m_pDialogBox = new DialogBox(m_Engine);
     m_pDialogBox->setHidden(true);
+    m_pMenuStack = new MenuStack(m_Engine);
     m_pPrintScreenMessageView = new PrintScreenMessages(m_Engine);
     m_pClock = new TextView(m_Engine);
     m_pLoadingScreen = new LoadingScreen(m_Engine);
@@ -42,11 +45,14 @@ UI::Hud::Hud(Engine::BaseEngine& e)
     m_pMenuBackground->setRelativeSize(false);
     m_pIntroduceChapterView = new IntroduceChapterView(m_Engine);
     m_pIntroduceChapterView->setHidden(true);
+    m_pWorldView = new WorldView(m_Engine);
 
+    addChild(m_pWorldView);
     addChild(m_pHealthBar);
     addChild(m_pManaBar);
     addChild(m_pEnemyHealthBar);
     addChild(m_pDialogBox);
+    addChild(m_pMenuStack);
     addChild(m_pPrintScreenMessageView);
     addChild(m_pClock);
     addChild(m_pLoadingScreen);
@@ -106,18 +112,16 @@ UI::Hud::Hud(Engine::BaseEngine& e)
         m_pClock->setTranslation(Math::float2(0.99f, 0.01f));
         m_pClock->setAlignment(A_TopRight);
     }
-
-    setupKeyBindings();
 }
 
 UI::Hud::~Hud()
 {
-    clearKeyBindings();
-
+    removeChild(m_pWorldView);
     removeChild(m_pHealthBar);
     removeChild(m_pManaBar);
     removeChild(m_pEnemyHealthBar);
     removeChild(m_pDialogBox);
+    removeChild(m_pMenuStack);
     removeChild(m_pPrintScreenMessageView);
     removeChild(m_pClock);
     removeChild(m_pLoadingScreen);
@@ -125,13 +129,13 @@ UI::Hud::~Hud()
     removeChild(m_pMenuBackground);
     removeChild(m_pIntroduceChapterView);
 
-    popAllMenus();
-
+    delete m_pWorldView;
     delete m_pHealthBar;
     delete m_pManaBar;
     delete m_pEnemyHealthBar;
     delete m_pPrintScreenMessageView;
     delete m_pDialogBox;
+    delete m_pMenuStack;
     delete m_pClock;
     delete m_pLoadingScreen;
     delete m_pConsoleBox;
@@ -140,21 +144,12 @@ UI::Hud::~Hud()
 
 void UI::Hud::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
-    // Free old menus
-    cleanMenus();
-
-    // Only draw last menu in the menu-chain
-    if (!m_MenuChain.empty())
-    {
-        for (Menu* m : m_MenuChain)
-            m->setHidden(true);
-
-        m_MenuChain.back()->setHidden(false);
-    }
-
     // Show the background, if there is no world loaded at the moment and loading isn't active
     const bool isWorldLoaded = m_Engine.getMainWorld().isValid();
     m_pMenuBackground->setHidden(isWorldLoaded || !m_pLoadingScreen->isHidden());
+
+    // Only show gameplay hud when menu stack is empty
+    m_Engine.getHud().setGameplayHudVisible(m_pMenuStack->isEmpty());
 
     View::update(dt, mstate, config);
 
@@ -188,137 +183,118 @@ void UI::Hud::setDateTimeDisplay(const std::string& timeStr)
     m_pClock->setText(timeStr);
 }
 
-void UI::Hud::onTextInput(const std::string& text)
-{
-    if (m_Engine.getConsole().isOpen())
-        m_Engine.getConsole().onTextInput(text);
-    else if (!m_MenuChain.empty())
-        m_MenuChain.back()->onTextInput(text);
-}
+// TODO bind MWheel Up/Down to UI_Up/UI_Down
+/*
+auto mousewheelBinding = registerAction(ActionType::UI_Mousewheel, [this](bool triggered, float intensity){
+    if (triggered) {
+        if (intensity == 1.f)
+            onInputAction(ActionType::UI_Up, triggered, 1.0f);
+        else if (intensity == -1.f)
+            onInputAction(ActionType::UI_Down, triggered, 1.0f);
+    }
+});
+ */
 
-void UI::Hud::setupKeyBindings() {
+bool UI::Hud::consumesAction(Engine::ActionType actionType, float intensity)
+{
+    if (isHidden())
+        return false;
 
     using Engine::ActionType;
-
-    auto registerAction = [this](ActionType actionType, auto functor){
-        m_HudBindings.push_back(Engine::Input::RegisterAction(actionType, functor));
+    // camera change actions
+    using ECameraMode = Logic::CameraController::ECameraMode;
+    static const std::map<Engine::ActionType, ECameraMode> cameraModes = {
+        {ActionType::CameraFirstPerson, ECameraMode::FirstPerson},
+        {ActionType::CameraThirdPerson, ECameraMode::ThirdPerson},
+        {ActionType::CameraFree, ECameraMode::Free},
+        {ActionType::CameraViewer, ECameraMode::Viewer},
     };
 
-    registerAction(ActionType::UI_Mousewheel, [this](bool triggered, float intensity){
-        if (triggered) {
+    // TODO make getMainWorld().isValid() checks redundant?
+    switch (actionType)
+    {
+        case ActionType::UI_Mousewheel: // TODO remove mouse wheel action?
             if (intensity == 1.f)
-                onInputAction(ActionType::UI_Up);
+                return consumesAction(ActionType::UI_Up, 1.0f);
             else if (intensity == -1.f)
-                onInputAction(ActionType::UI_Down);
-        }
-    });
-
-    {
-        std::vector<ActionType> hudActions = {  ActionType::UI_Confirm,
-                                                ActionType::UI_ToggleMainMenu,
-                                                ActionType::UI_Close,
-                                                ActionType::UI_Up,
-                                                ActionType::UI_Down,
-                                                ActionType::UI_Left,
-                                                ActionType::UI_Right,
-                                                ActionType::UI_ToggleConsole,
-                                                ActionType::UI_ToggleLogMenu,
-                                                ActionType::UI_ToggleStatusMenu,
-                                                ActionType::UI_END,
-                                                ActionType::UI_0,
-                                                ActionType::UI_1,
-                                                ActionType::UI_2,
-                                                ActionType::UI_3,
-                                                ActionType::UI_4,
-                                                ActionType::UI_5,
-                                                ActionType::UI_6,
-                                                ActionType::UI_7,
-                                                ActionType::UI_8,
-                                                ActionType::UI_9,
-                                                ActionType::UI_HOME,
-                                                ActionType::UI_Backspace};
-
-        for (auto action : hudActions)
-        {
-            registerAction(action, [this, action](bool triggered, float) {
-                if (triggered) {
-                    onInputAction(action);
-                }
+                return consumesAction(ActionType::UI_Down, 1.0f);
+            break;
+        case ActionType::Quicksave:
+            // better do saving at frame end and not between entity updates
+            m_Engine.getJobManager().queueJob([](Engine::BaseEngine* engine){
+                Engine::SavegameManager::saveToSlot(0, "");
             });
-        }
-    }
-}
-
-void UI::Hud::clearKeyBindings() {
-    m_HudBindings.clear();
-}
-
-void UI::Hud::onInputAction(Engine::ActionType action)
-{
-    using Engine::ActionType;
-
-    if (!m_pLoadingScreen->isHidden())
-        return;
-
-    if (!m_pIntroduceChapterView->isHidden() && action == ActionType::UI_ToggleMainMenu)
-    {
-        m_pIntroduceChapterView->close();
-        return;
-    }
-
-    if (m_Engine.getConsole().isOpen())
-    {
-        if (action == ActionType::UI_Close || action == ActionType::UI_ToggleConsole)
-        {
-            m_Engine.getConsole().setOpen(false);
-            m_Engine.getSession().enableActionBindings(true);
-        }
-        return;
-    }
-    else if (!m_MenuChain.empty())
-    {
-        // Notify last menu in chain
-        bool close = m_MenuChain.back()->onInputAction(action);
-        if (close)
-            popMenu();
-        return;
-    }
-    else if (m_Engine.getMainWorld().isValid() && m_Engine.getMainWorld().get().getDialogManager().isDialogActive())
-    {
-        m_Engine.getMainWorld().get().getDialogManager().onInputAction(action);
-        return;
-    }
-
-    // case: Nothing is open right now.
-    switch (action)
-    {
+            break;
+        case ActionType::Quickload:
+            Engine::SavegameManager::loadSaveGameSlot(0);
+            break;
+        case ActionType::PauseGame:
+            m_Engine.togglePaused();
+            break;
+        case ActionType::UI_Close:
         case ActionType::UI_ToggleMainMenu:
             // Show main-menu
-            pushMenu<UI::Menu_Main>();
-            return;
-        case ActionType::UI_ToggleConsole:
-            m_Engine.getConsole().setOpen(true);
-            m_Engine.getSession().enableActionBindings(false);
-            return;
+            m_pMenuStack->push<UI::Menu_Main>();
+            break;
         case ActionType::UI_ToggleStatusMenu:
         {
-            UI::Menu_Status& statsScreen = pushMenu<UI::Menu_Status>();
+            auto& statsScreen = m_pMenuStack->push<UI::Menu_Status>();
             // TODO: Refactor move this into menu_status.create/new function?
             // Update the players status menu once
             auto& s = m_Engine.getMainWorld().get().getScriptEngine();
             VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_Engine.getMainWorld().get(), s.getPlayerEntity());
             player.playerController->updateStatusScreen(statsScreen);
-            return;
+            break;
         }
+        case ActionType::UI_ToggleConsole:
+            m_Engine.getConsole().setOpen(true);
+            break;
+        case ActionType::CameraFirstPerson:
+        case ActionType::CameraThirdPerson:
+        case ActionType::CameraFree:
+        case ActionType::CameraViewer:
+            if (m_Engine.getMainWorld().isValid())
+                m_Engine.getMainWorld().get().getCameraController()->setCameraMode(cameraModes.at(actionType));
+            break;
+        case ActionType::DebugMoveSpeed:
+        case ActionType::DebugMoveSpeed2:
+            if (m_Engine.getMainWorld().isValid())
+                throw std::runtime_error("unimplemented")// TODO how to handle contiguous actions?
+                ;//m_Engine.getMainWorld().get().getCameraController()->setDebugMoveSpeed(?);
+            // TODO speed up Player (former handled in Playercontroller::onAction)
+            break;
         case ActionType::UI_ToggleLogMenu:
+            m_pMenuStack->push<UI::Menu_Log>();
+            break;
+        case ActionType::PlayerDrawWeaponMelee:
+        case ActionType::PlayerForward:
+        case ActionType::PlayerBackward:
+        case ActionType::PlayerTurnLeft:
+        case ActionType::PlayerTurnRight:
+        case ActionType::PlayerStrafeLeft:
+        case ActionType::PlayerStrafeRight:
+        case ActionType::PlayerAction:
+        case ActionType::PlayerActionContinous:
+        case ActionType::PlayerRotate:
         {
-            LogInfo() << "Open log";
-            pushMenu<UI::Menu_Log>();
-            return;
+            auto worldHandle = m_Engine.getMainWorld();
+            if (!worldHandle.isValid())
+                break;
+
+            auto player = worldHandle.get().getScriptEngine().getPlayerEntity();
+            if (!player.isValid())
+                break;
+
+            auto playervob = VobTypes::asNpcVob(worldHandle.get(), player);
+            if (playervob.isValid())
+                playervob.playerController->onAction(actionType, intensity); //
         }
+            break;
         default:
-            return;
+            break;
     }
+    // TODO pop menu when it returns false or pop menu self?
+    return View::onInputAction(actionType, intensity);
 }
 
 void UI::Hud::setGameplayHudVisible(bool value)
@@ -327,30 +303,8 @@ void UI::Hud::setGameplayHudVisible(bool value)
         v->setHidden(!value);
 }
 
-void UI::Hud::popMenu()
+bool UI::Hud::isMenuActive()
 {
-    // Move to other list to delete in the next frame. This makes it possible for menus to close themselves.
-    m_MenusToDelete.push_back(m_MenuChain.back());
-
-    removeChild(m_MenuChain.back());
-    m_MenuChain.pop_back();
-    if (m_MenuChain.empty())
-    {
-        setGameplayHudVisible(true);
-        m_Engine.setPaused(false);
-    }
+    return !m_pMenuStack->isEmpty();
 }
 
-void UI::Hud::cleanMenus()
-{
-    for (Menu* m : m_MenusToDelete)
-        delete m;
-
-    m_MenusToDelete.clear();
-}
-
-void UI::Hud::popAllMenus()
-{
-    while (!m_MenuChain.empty())
-        popMenu();
-}

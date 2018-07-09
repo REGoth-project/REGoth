@@ -55,8 +55,6 @@ std::multimap<ActionBinding, int /* key */> Input::actionBindingToKeyMap;
 std::map<ActionBinding, int /*mouseButton*/> Input::actionBindingToMouseButtonMap;
 std::map<ActionBinding, Input::MouseAxis> Input::actionBindingToMouseAxisMap;
 
-std::multimap<ActionType, Action> Input::actionTypeToActionMap;
-
 std::bitset<Input::NUM_KEYS> Input::keyState;
 std::bitset<Input::NUM_KEYS> Input::keyTriggered;
 std::vector<int32_t> Input::modsTriggered(Input::NUM_KEYS);
@@ -75,32 +73,6 @@ std::function<void(bool /* lock */)> Input::mouseLockCallback;
 float Input::windowHalfHeight;
 float Input::windowHalfWidth;
 std::string Input::frameTextInput;
-
-ManagedActionBinding Input::RegisterAction(ActionType actionType, std::function<void(bool, float)> function)
-{
-    auto it = actionTypeToActionMap.insert(std::make_pair(actionType, Action(function)));
-    return {it->first, &it->second};
-}
-
-void Input::clearActions()
-{
-    actionTypeToActionMap.clear();
-}
-
-bool Input::RemoveAction(ActionType actionType, Action* action)
-{
-    auto rangeIterators = actionTypeToActionMap.equal_range(actionType);
-    bool hasActionBeenFound = false;
-    for (auto it = rangeIterators.first; it != rangeIterators.second; ++it)
-        if (&((*it).second) == action)
-        {
-            actionTypeToActionMap.erase(it);
-            hasActionBeenFound = true;
-            break;
-        }
-
-    return hasActionBeenFound;
-}
 
 Math::float2 Input::getMouseCoordinates()
 {
@@ -226,8 +198,9 @@ void Input::setMouseLockCallback(std::function<void(bool)> callback)
     mouseLockCallback = callback;
 }
 
-void Input::fireBindings()
+std::vector<std::tuple<ActionType, bool, float>> Input::getActions()
 {
+    std::vector<std::tuple<ActionType, bool, float>> fired;
     for (const auto itBindingToKey : actionBindingToKeyMap)
     {
         //                             is key currently pressed   AND ( is continuous                    OR key has just been triggered )
@@ -237,77 +210,65 @@ void Input::fireBindings()
         // Invert intensity if isInverted is true
         intensity = itBindingToKey.first.isInverted ? -intensity : intensity;
 
-        for (const auto& action : actionTypeToActionMap)
-        {
-            if (action.first == itBindingToKey.first.actionType && action.second.isEnabled)
-            {
-                action.second.function(triggerAction, intensity);
-            }
-        }
-
-        /*auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToKey.first.actionType);
-        for(auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
-            if(itAction->second.isEnabled)
-            {
-                itAction->second.function(triggerAction, intensity);
-            }*/
+        fired.emplace_back(itBindingToKey.first.actionType, triggerAction, intensity);
     }
 
     clearTriggered();
 
     bool enableMouse = !Flags::disableMouse.isSet();
 
-    for (const auto itBindingToButton : actionBindingToMouseButtonMap)
+    // handle mouse buttons
+    if (enableMouse)
     {
-        bool triggerAction = mouseButtonState.test(itBindingToButton.second) && (itBindingToButton.first.isContinuous || mouseButtonTriggered.test(itBindingToButton.second));
-        // Button causes a constant intensity of 1.0 when pressed
-        float intensity = triggerAction ? 1.0f : 0.0f;
-        // Invert intensity if isInverted is true
-        intensity = itBindingToButton.first.isInverted ? -intensity : intensity;
-
-        auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToButton.first.actionType);
-        for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
-            if (itAction->second.isEnabled && enableMouse)
-                itAction->second.function(triggerAction, intensity);
-
+        for (const auto itBindingToButton : actionBindingToMouseButtonMap)
+        {
+            bool triggerAction = mouseButtonState.test(itBindingToButton.second) && (itBindingToButton.first.isContinuous || mouseButtonTriggered.test(itBindingToButton.second));
+            // Button causes a constant intensity of 1.0 when pressed
+            float intensity = triggerAction ? 1.0f : 0.0f;
+            // Invert intensity if isInverted is true
+            intensity = itBindingToButton.first.isInverted ? -intensity : intensity;
+            fired.emplace_back(itBindingToButton.first.actionType, triggerAction, intensity);
+        }
     }
     // This must be done after the loop, because multiple bindings to the same button may occur
     mouseButtonTriggered.reset();
 
-    float deltaMouse[2] = {
-        axisPosition[static_cast<std::size_t>(MouseAxis::CursorX)] - mousePosition.x,
-        axisPosition[static_cast<std::size_t>(MouseAxis::CursorY)] - mousePosition.y};
-
-    mousePosition.x = axisPosition[static_cast<std::size_t>(MouseAxis::CursorX)];
-    mousePosition.y = axisPosition[static_cast<std::size_t>(MouseAxis::CursorY)];
-
-    for (const auto itBindingToAxis : actionBindingToMouseAxisMap)
+    // handle mouse axis
+    if (enableMouse)
     {
-        const size_t& mouseAxisIndex = static_cast<std::size_t>(itBindingToAxis.second);
-        bool triggerAction = mouseAxisState.test(mouseAxisIndex) && (itBindingToAxis.first.isContinuous || mouseAxisTriggered.test(mouseAxisIndex));
+        float deltaMouse[2] = {
+            axisPosition[static_cast<std::size_t>(MouseAxis::CursorX)] - mousePosition.x,
+            axisPosition[static_cast<std::size_t>(MouseAxis::CursorY)] - mousePosition.y};
 
-        // Special care for mouse coordinates must be taken. Since screen coordinates dont make too much sense
-        // we are passing delta values of the mouse position.
-        float intensity;
-        if (itBindingToAxis.second == MouseAxis::CursorX || itBindingToAxis.second == MouseAxis::CursorY)
+        mousePosition.x = axisPosition[static_cast<std::size_t>(MouseAxis::CursorX)];
+        mousePosition.y = axisPosition[static_cast<std::size_t>(MouseAxis::CursorY)];
+
+        for (const auto itBindingToAxis : actionBindingToMouseAxisMap)
         {
-            // Mouse axis index is guaranteed to be either 0 or 1 due to the condition check above.
-            intensity = mouseSensitivity * deltaMouse[mouseAxisIndex];
+            const size_t& mouseAxisIndex = static_cast<std::size_t>(itBindingToAxis.second);
+            bool triggerAction = mouseAxisState.test(mouseAxisIndex) && (itBindingToAxis.first.isContinuous || mouseAxisTriggered.test(mouseAxisIndex));
+
+            // Special care for mouse coordinates must be taken. Since screen coordinates dont make too much sense
+            // we are passing delta values of the mouse position.
+            float intensity;
+            if (itBindingToAxis.second == MouseAxis::CursorX || itBindingToAxis.second == MouseAxis::CursorY)
+            {
+                // Mouse axis index is guaranteed to be either 0 or 1 due to the condition check above.
+                intensity = mouseSensitivity * deltaMouse[mouseAxisIndex];
+            }
+            else
+                // GLFW's mouse wheel implementiation provides deltas.
+                intensity = axisPosition[mouseAxisIndex];
+
+            // Pass the axis position as intensity, caring for invertion
+            intensity = itBindingToAxis.first.isInverted ? -intensity : intensity;
+            fired.emplace_back(itBindingToAxis.first.actionType, triggerAction, intensity);
         }
-        else
-            // GLFW's mouse wheel implementiation provides deltas.
-            intensity = axisPosition[mouseAxisIndex];
-
-        // Pass the axis position as intensity, caring for invertion
-        intensity = itBindingToAxis.first.isInverted ? -intensity : intensity;
-
-        auto rangeIterators = actionTypeToActionMap.equal_range(itBindingToAxis.first.actionType);
-        for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
-            if (itAction->second.isEnabled && enableMouse)
-                itAction->second.function(triggerAction, intensity);
     }
     // This must be done after the loop, because multiple bindings to the same axis may occur
     mouseAxisTriggered.reset();
+
+    return fired;
 }
 
 void Input::setMouseLock(bool mouseLock)
@@ -356,44 +317,4 @@ std::string Input::getFrameTextInput()
     std::string r = frameTextInput;
     frameTextInput.clear();
     return r;
-}
-
-ManagedActionBinding::ManagedActionBinding()
-    : action(nullptr)
-{
-}
-
-ManagedActionBinding::ManagedActionBinding(ManagedActionBinding&& other)
-    : ManagedActionBinding()
-{
-    swap(*this, other);
-}
-
-void ManagedActionBinding::swap(ManagedActionBinding& a, ManagedActionBinding& b)
-{
-    std::swap(a.actionType, b.actionType);
-    std::swap(a.action, b.action);
-}
-
-ManagedActionBinding::~ManagedActionBinding()
-{
-    if (action)
-        Input::RemoveAction(actionType, action);
-}
-
-ManagedActionBinding::ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action)
-    : actionType(actionType)
-    , action(action)
-{
-}
-
-ManagedActionBinding& ManagedActionBinding::operator=(ManagedActionBinding&& other)
-{
-    {
-        // disposes *this first
-        ManagedActionBinding tempEmpty;
-        swap(*this, tempEmpty);
-    }
-    swap(*this, other);
-    return *this;
 }

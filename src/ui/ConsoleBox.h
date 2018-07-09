@@ -5,7 +5,6 @@
 
 namespace UI
 {
-    class Console;
     class ConsoleBox : public View
     {
     public:
@@ -35,6 +34,9 @@ namespace UI
         int getSelectionIndex() const { return m_CurrentlySelected; }
 
     protected:
+
+        bool consumesAction(Engine::ActionType actionType, float intensity) override;
+
         /**
          * Console background image
          */

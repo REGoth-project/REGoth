@@ -89,8 +89,8 @@ namespace Engine
         UI_7,
         UI_8,
         UI_9,
-        UI_HOME,
-        UI_END,
+        UI_Top,
+        UI_Bottom,
 
         Count
     };
@@ -111,31 +111,13 @@ namespace Engine
 
     public:
         void setEnabled(bool enabled);
-
-    private:
-        Action(std::function<void(bool /*triggered*/, float /*intensity*/)> func);
-
+        // TODO make private again
         bool isEnabled;
         std::function<void(bool /*triggered*/, float /*intensity*/)> function;
-    };
+        Action(std::function<void(bool /*triggered*/, float /*intensity*/)> func);
 
-    class ManagedActionBinding
-    {
-    public:
-        ManagedActionBinding();
-        ManagedActionBinding(Engine::ActionType actionType, Engine::Action* action);
-        ManagedActionBinding(ManagedActionBinding&& other);
-        ManagedActionBinding& operator= (ManagedActionBinding&& other);
-        // copying is forbidden
-        ManagedActionBinding(const ManagedActionBinding&) = delete;
-        ManagedActionBinding& operator= (const ManagedActionBinding&) = delete;
+    private:
 
-        ~ManagedActionBinding();
-        static void swap(ManagedActionBinding& a, ManagedActionBinding& b);
-        Engine::Action& getAction() { return *action; }
-    protected:
-        Engine::ActionType actionType;
-        Engine::Action* action;
     };
 
     class Input
@@ -165,16 +147,8 @@ namespace Engine
         };
 
     public:
-        /**
-         * Registers a function to the given action
-         * Caution: The returned object must be stored somewhere.
-         * As soon as it goes out of scope, the binding is unregistered.
-         * @return An object on whose end of lifetime the binding is automatically unregistered
-         */
-        static ManagedActionBinding RegisterAction(ActionType actionType, std::function<void(bool /*triggered*/, float /*intensity*/)> function);
         static bool RemoveAction(ActionType actionType, Action* action);
-        static void clearActions();
-        static void fireBindings();
+        std::vector<std::tuple<ActionType, bool, float>> getActions();
         static void setMouseLock(bool mouseLock);
         static Math::float2 getMouseCoordinates();
         static void getMouseState(MouseState& ms);
@@ -220,8 +194,6 @@ namespace Engine
         static std::multimap<ActionBinding, int /* key */> actionBindingToKeyMap;
         static std::map<ActionBinding, int /*mouseButton*/> actionBindingToMouseButtonMap;
         static std::map<ActionBinding, MouseAxis> actionBindingToMouseAxisMap;
-
-        static std::multimap<ActionType, Action> actionTypeToActionMap;
 
         static std::bitset<NUM_KEYS> keyState;
         static std::bitset<NUM_KEYS> keyTriggered;

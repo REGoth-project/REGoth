@@ -27,6 +27,10 @@ UI::IntroduceChapterView::IntroduceChapterView(Engine::BaseEngine& e)
     m_pSubtitleTextView->setTranslation(Math::float2(.5f, .885f));
 
     m_QueueStatus = QueueStatus::Empty;
+
+    this->registerActionHandler(Engine::ActionType::UI_Close, [this](float){
+        this->close();
+    });
 }
 
 UI::IntroduceChapterView::~IntroduceChapterView()

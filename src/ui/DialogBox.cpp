@@ -109,24 +109,19 @@ void DialogBox::clearChoices()
     m_CurrentlySelected = -1;
 }
 
-void DialogBox::onInputAction(Engine::ActionType action)
+bool DialogBox::consumesAction(Engine::ActionType actionType, float intensity)
 {
+    if (isHidden())
+        return false;
     using Engine::ActionType;
 
-    if (m_Choices.empty())
-        return;
-
-    switch (action)
+    switch (actionType)
     {
         case ActionType::UI_Up:
             m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size());
             break;
         case ActionType::UI_Down:
             m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size());
-            break;
-        case ActionType::UI_Left:
-            break;
-        case ActionType::UI_Right:
             break;
         case ActionType::UI_0:
             break;
@@ -140,21 +135,15 @@ void DialogBox::onInputAction(Engine::ActionType action)
         case ActionType::UI_8:
         case ActionType::UI_9:
         {
-            int index = static_cast<int>(action) - static_cast<int>(ActionType::UI_1);
+            int index = static_cast<int>(actionType) - static_cast<int>(ActionType::UI_1);
             m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
         }
-        break;
-        case ActionType::UI_HOME:
+            break;
+        case ActionType::UI_Top:
             m_CurrentlySelected = 0;
             break;
-        case ActionType::UI_END:
+        case ActionType::UI_Bottom:
             m_CurrentlySelected = static_cast<int>(m_Choices.size()) - 1;
-            break;
-        case ActionType::UI_Close:
-            // closing Dialog-Option-Box when pressing Escape
-            //m_Engine.getMainWorld().get().getDialogManager().performChoice(m_Choices.size()-1);break;
-            // selecting last option in Dialog-Option-Box when pressing Escape
-            //m_CurrentlySelected = m_Choices.size()-1;break;
             break;
         case ActionType::UI_Confirm:
             if (m_CurrentlySelected != -1)
@@ -163,4 +152,43 @@ void DialogBox::onInputAction(Engine::ActionType action)
         default:
             break;
     }
+    return View::consumesAction(actionType, intensity);
 }
+
+
+// TODO remove
+// alternative way of specifying bindings
+/*
+ void DialogBox::setupBindings()
+{
+
+    using Engine::ActionType;
+
+    registerActionHandler(ActionType::UI_Up, [this](float intensity){
+        m_CurrentlySelected = Utils::mod(m_CurrentlySelected - 1, (int)m_Choices.size());
+    });
+    registerActionHandler(ActionType::UI_Down, [this](float intensity){
+        m_CurrentlySelected = Utils::mod(m_CurrentlySelected + 1, (int)m_Choices.size());
+    });
+    registerActionHandler(ActionType::UI_Top, [this](float intensity){
+        m_CurrentlySelected = 0;
+    });
+    registerActionHandler(ActionType::UI_Bottom, [this](float intensity){
+        m_CurrentlySelected = static_cast<int>(m_Choices.size()) - 1;
+    });
+    registerActionHandler(ActionType::UI_Confirm, [this](float intensity){
+        if (m_CurrentlySelected != -1)
+            m_Engine.getMainWorld().get().getDialogManager().performChoice(static_cast<size_t>(m_CurrentlySelected));
+    });
+
+    auto begin = ActionType::UI_1;
+    auto last = ActionType::UI_9;
+    for (auto it = begin; it <= last; it = static_cast<ActionType>(static_cast<int>(it) + 1))
+    {
+        registerActionHandler(ActionType::UI_Confirm, [this, it](float intensity){
+            int index = static_cast<int>(it) - static_cast<int>(ActionType::UI_1);
+            m_CurrentlySelected = std::min(index, (int)m_Choices.size() - 1);
+        });
+    }
+}
+ */

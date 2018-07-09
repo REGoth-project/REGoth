@@ -7,7 +7,6 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
-        ~CameraController();
 
         enum class ECameraMode
         {
@@ -180,22 +179,6 @@ namespace Logic
         std::pair<Math::float3, Math::float3> updateKeyframedPlay(float dt);
 
         /**
-         * registers a binding
-         */
-        template <class Functor>
-        Engine::Action* registerBinding(ECameraMode cameraMode, Engine::ActionType actionType, Functor functor)
-        {
-            auto managedBinding = Engine::Input::RegisterAction(actionType, functor);
-            m_ActionBindings[cameraMode].push_back(std::move(managedBinding));
-            return &m_ActionBindings[cameraMode].back().getAction();
-        }
-
-        /**
-         * clears all bindings for camera steering
-         */
-        void clearBindings();
-
-        /**
          * Transforms the given yaw/pitch into the corresponding direction vectors
          * @return pair of (forward, right)
          */
@@ -233,11 +216,6 @@ namespace Logic
          * Settings for the different camera modes
          */
         CameraSettings m_CameraSettings;
-
-        /**
-         * stored bindings
-         */
-        std::map<ECameraMode, std::vector<Engine::ManagedActionBinding>> m_ActionBindings;
 
         /**
          * Current view-matrix

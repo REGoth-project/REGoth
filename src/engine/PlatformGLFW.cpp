@@ -155,6 +155,9 @@ int32_t PlatformGLFW::run(int argc, char** argv)
 
     std::cout << "Binding keys..." << std::endl;
 
+    // TODO Continous Inverted Enums?
+    // TODO iscontinous = false default value
+
     bindKey(GLFW_KEY_F1, ActionType::CameraThirdPerson, false);
     bindKey(GLFW_KEY_F2, ActionType::CameraFirstPerson, false);
     bindKey(GLFW_KEY_F3, ActionType::CameraFree, false);
@@ -251,8 +254,8 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     bindKey(GLFW_KEY_B, ActionType::UI_ToggleStatusMenu, false);
     bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_ToggleStatusMenu, false);
     bindKey(GLFW_KEY_BACKSPACE, ActionType::UI_Backspace, false);
-    bindKey(GLFW_KEY_HOME, ActionType::UI_HOME, false);
-    bindKey(GLFW_KEY_END, ActionType::UI_END, false);
+    bindKey(GLFW_KEY_HOME, ActionType::UI_Top, false);
+    bindKey(GLFW_KEY_END, ActionType::UI_Bottom, false);
     bindMouseButton(GLFW_MOUSE_BUTTON_LEFT, ActionType::UI_Confirm, false);
     bindMouseButton(GLFW_MOUSE_BUTTON_RIGHT, ActionType::UI_Close, false);
     bindMouseAxis(MouseAxis::ScrollY, ActionType::UI_Mousewheel, false);

@@ -1,5 +1,7 @@
 #pragma once
 #include <vector>
+#include <map>
+#include <algorithm>
 #include <common.h>
 #include <engine/Input.h>
 #include <render/RenderSystem.h>
@@ -41,6 +43,12 @@ namespace UI
     {
     public:
         View(Engine::BaseEngine& e);
+
+        /**
+         * copying forbidden
+         */
+        View(const View&) = delete;
+        View& operator=(const View&) = delete;
 
         virtual ~View();
 
@@ -116,7 +124,96 @@ namespace UI
          */
         void drawText(const std::string& txt, int px, int py, EAlign alignment, Render::RenderConfig& config, const std::string& font = DEFAULT_FONT);
 
+        // TODO document what intensity describes
+        using ActionCallback = std::function<void(float /*intensity*/)>;
+        using TextCallback = std::function<void(const std::string&)>;
+        void registerActionHandler(Engine::ActionType actionType, ActionCallback actionCallback)
+        {
+            m_ActionCallbacks.emplace(actionType, std::move(actionCallback));
+        }
+
+        void registerTextHandler(TextCallback textCallback)
+        {
+            m_TextCallbacks.push_back(std::move(textCallback));
+        }
+
+        /**
+         * @return whether the action was consumed and may not be passed to further views
+         */
+        bool onInputAction(Engine::ActionType actionType, float intensity)
+        {
+            bool childConsumedInput = std::any_of(m_Children.rbegin(), m_Children.rend(), [=](View* pChild){
+                return pChild->onInputAction(actionType, intensity);
+            });
+            return childConsumedInput || consumesAction(actionType, intensity);
+        }
+
+        /**
+         * @return whether the text was consumed and may not be passed to further views
+         */
+        bool onTextInput(const std::string& text)
+        {
+            bool childConsumedInput = std::any_of(m_Children.rbegin(), m_Children.rend(), [=](View* pChild){
+                return pChild->onTextInput(text);
+            });
+            return childConsumedInput || consumesText(text);
+        }
+
     protected:
+
+        /**
+         * @return true when you want to signal the parent view, that this action shall not be passed to further views
+         */
+        virtual bool consumesAction(Engine::ActionType actionType, float intensity)
+        {
+            if (isHidden())
+                return false;
+            fireBindings(actionType, intensity);
+            return true;
+        }
+
+        /**
+         * @return true when you want to signal the parent view, that this text shall not be passed to further views
+         */
+        virtual bool consumesText(const std::string& text)
+        {
+            if (isHidden())
+                return false;
+            fireBindings(text);
+            return true;
+        }
+
+        /**
+         * @brief calls all functions, that have been registered for the specified action
+         */
+        bool fireBindings(Engine::ActionType actionType, float intensity)
+        {
+            bool fired = false;
+            // is it save to store the iterators? iterator invalidation through callback?
+            auto rangeIterators = m_ActionCallbacks.equal_range(actionType);
+            for (auto itAction = rangeIterators.first; itAction != rangeIterators.second; ++itAction)
+            {
+                bool enabled = true; // TODO use struct with bool enabled
+                if (enabled)
+                {
+                    itAction->second(intensity);
+                }
+                fired = true;
+            }
+            return fired;
+        }
+
+        /**
+         * @brief calls all functions, that have been registered
+         */
+        bool fireBindings(const std::string& text)
+        {
+            bool fired = !m_TextCallbacks.empty();
+            for (auto& callback : m_TextCallbacks)
+                callback(text);
+            return fired;
+        }
+
         /**
          * @param pParent Parent of this view
          */
@@ -144,5 +241,8 @@ namespace UI
          * Engine
          */
         Engine::BaseEngine& m_Engine;
+
+        std::multimap<Engine::ActionType, ActionCallback> m_ActionCallbacks;
+        std::vector<TextCallback> m_TextCallbacks;
     };
 }

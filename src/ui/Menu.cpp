@@ -8,6 +8,7 @@
 #include "MenuItem.h"
 #include "MenuItemListbox.h"
 #include "MenuItemScrollableText.h"
+#include "MenuStack.h"
 #include "TextView.h"
 #include <ZenLib/utils/logger.h>
 #include <daedalus/DaedalusVM.h>
@@ -323,7 +324,7 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
     switch (iData->getSelectionEvent(0))
     {
         case SEL_ACTION_BACK:
-            m_Engine.getHud().popMenu();
+            m_Engine.getHud().getMenuStack().pop();
             break;
 
         default:
@@ -337,8 +338,4 @@ void UI::Menu::performSelectAction(Daedalus::GameState::MenuItemHandle item)
 UI::Hud& UI::Menu::getHud()
 {
     return m_Engine.getHud();
-}
-
-void UI::Menu::onTextInput(const std::string& text)
-{
 }

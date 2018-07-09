@@ -12,6 +12,16 @@ UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e)
     m_BackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("CONSOLE.TGA");
     m_SuggestionsBackgroundTexture = e.getEngineTextureAlloc().loadTextureVDF("DLG_CHOICE.TGA");
     m_CurrentlySelected = -1;
+    m_IsHidden = true;
+
+    registerTextHandler([this](const std::string& text) {
+        onTextInput(text);
+    });
+    auto _toggleOpen = [&e](float intensity){
+        e.getConsole().toggleOpen();
+    };
+    registerActionHandler(Engine::ActionType::UI_ToggleConsole, _toggleOpen);
+    registerActionHandler(Engine::ActionType::UI_Close, _toggleOpen);
 }
 
 UI::ConsoleBox::~ConsoleBox()
@@ -207,4 +217,9 @@ void UI::ConsoleBox::setSelectionIndex(int newIndex)
     }
     int suggestionCount = static_cast<int>(suggestionsList.back().size());
     m_CurrentlySelected = Math::clamp(newIndex, -1, suggestionCount - 1);
+}
+
+bool UI::ConsoleBox::consumesAction(Engine::ActionType actionType, float intensity)
+{
+    return !isHidden() || (actionType == Engine::ActionType::UI_ToggleConsole);
 }

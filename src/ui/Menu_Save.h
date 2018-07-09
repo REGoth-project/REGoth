@@ -28,12 +28,6 @@ namespace UI
          */
         bool onInputAction(Engine::ActionType action) override;
 
-        /**
-         * To be called when there was text input since the last frame
-         * @param text Characters input since the last frame
-         */
-        void onTextInput(const std::string& text) override;
-
         static constexpr auto const EMPTY_SLOT_DISPLAYNAME = "---";
 
     private:

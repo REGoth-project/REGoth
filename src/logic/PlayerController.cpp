@@ -1981,18 +1981,18 @@ World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
     return distances[1].second;
 }
 
-void PlayerController::onAction(Engine::ActionType actionType, bool triggered, float intensity)
+void PlayerController::onAction(Engine::ActionType actionType, float intensity)
 {
     using Engine::ActionType;
 
-    m_AIHandler.onAction(actionType, triggered);
+    m_AIHandler.onAction(actionType);
 
     switch (actionType)
     {
         case ActionType::PlayerForward:
         {
             // Increment state, if currently using a mob
-            if (getUsedMob().isValid() && triggered)
+            if (getUsedMob().isValid())
             {
                 if (getEM().isEmpty())
                 {
@@ -2010,7 +2010,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
         case ActionType::PlayerBackward:
         {
             // Increment state, if currently using a mob
-            if (getUsedMob().isValid() && triggered)
+            if (getUsedMob().isValid())
             {
                 if (getEM().isEmpty())
                 {
@@ -2027,10 +2027,10 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
         break;
 
         case ActionType::DebugMoveSpeed:
-            m_MoveSpeed1 = m_MoveSpeed1 || triggered;
+            m_MoveSpeed1 = true;
             break;
         case ActionType::DebugMoveSpeed2:
-            m_MoveSpeed2 = m_MoveSpeed2 || triggered;
+            m_MoveSpeed2 = true;
             break;
         case ActionType::PlayerRotate:
         {
@@ -2042,153 +2042,150 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
         break;
         case ActionType::PlayerAction:
         {
-            if (triggered)
+            if (m_World.getDialogManager().isDialogActive())
+                return;
+
+            if (getWeaponMode() != EWeaponMode::WeaponNone)
+                return;
+
+            // ----- ITEMS -----
+            Handle::EntityHandle nearestItem;
+            float shortestDistItem = 5.0f;
+            const std::set<Handle::EntityHandle>& items = m_World.getScriptEngine().getWorldItems();
+            for (Handle::EntityHandle h : items)
             {
-                if (m_World.getDialogManager().isDialogActive())
-                    return;
+                Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
 
-                if (getWeaponMode() != EWeaponMode::WeaponNone)
-                    return;
-
-                // ----- ITEMS -----
-                Handle::EntityHandle nearestItem;
-                float shortestDistItem = 5.0f;
-                const std::set<Handle::EntityHandle>& items = m_World.getScriptEngine().getWorldItems();
-                for (Handle::EntityHandle h : items)
+                float dist = (m.Translation() -
+                              getEntityTransform().Translation())
+                                 .lengthSquared();
+                if (dist < shortestDistItem && dist < 10.0f * 10.0f)
                 {
-                    Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
+                    nearestItem = h;
+                    shortestDistItem = dist;
+                }
+            }
 
-                    float dist = (m.Translation() -
+            std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(
+                getEntityTransform().Translation(), 5.0f);
+
+            // Talk to the nearest NPC other than the current player, of course
+            Handle::EntityHandle nearestNPC;
+            float shortestDistNPC = 5.0f;
+            for (const Handle::EntityHandle& h : nearNPCs)
+            {
+                if (h != m_World.getScriptEngine().getPlayerEntity())
+                {
+                    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
+
+                    float dist = (Vob::getTransform(npc).Translation() -
                                   getEntityTransform().Translation())
                                      .lengthSquared();
-                    if (dist < shortestDistItem && dist < 10.0f * 10.0f)
+                    if (dist < shortestDistNPC)
                     {
-                        nearestItem = h;
-                        shortestDistItem = dist;
+                        nearestNPC = h;
+                        shortestDistNPC = dist;
                     }
                 }
+            }
 
-                std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(
-                    getEntityTransform().Translation(), 5.0f);
+            std::set<Handle::EntityHandle> mobs = m_World.getScriptEngine().getWorldMobs();
 
-                // Talk to the nearest NPC other than the current player, of course
-                Handle::EntityHandle nearestNPC;
-                float shortestDistNPC = 5.0f;
-                for (const Handle::EntityHandle& h : nearNPCs)
+            // Use the nearest mob
+            Handle::EntityHandle nearestMob;
+            float shortestDistMob = 5.0f;
+            for (const Handle::EntityHandle& h : mobs)
+            {
+                VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
+
+                float dist = (Vob::getTransform(vob).Translation() -
+                              getEntityTransform().Translation())
+                                 .lengthSquared();
+
+                if (dist < shortestDistMob)
                 {
-                    if (h != m_World.getScriptEngine().getPlayerEntity())
-                    {
-                        VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-
-                        float dist = (Vob::getTransform(npc).Translation() -
-                                      getEntityTransform().Translation())
-                                         .lengthSquared();
-                        if (dist < shortestDistNPC)
-                        {
-                            nearestNPC = h;
-                            shortestDistNPC = dist;
-                        }
-                    }
+                    nearestMob = h;
+                    shortestDistMob = dist;
                 }
+            }
 
-                std::set<Handle::EntityHandle> mobs = m_World.getScriptEngine().getWorldMobs();
+            int nearest = 0;
 
-                // Use the nearest mob
-                Handle::EntityHandle nearestMob;
-                float shortestDistMob = 5.0f;
-                for (const Handle::EntityHandle& h : mobs)
+            if (shortestDistItem < shortestDistMob && shortestDistItem < shortestDistNPC)
+                nearest = 1;
+
+            if (shortestDistMob < shortestDistItem && shortestDistMob < shortestDistNPC)
+                nearest = 3;
+
+            if (shortestDistNPC < shortestDistItem && shortestDistNPC < shortestDistMob)
+                nearest = 2;
+
+            if (nearest == 1 && nearestItem.isValid())
+            {
+                // Pick it up
+                VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
+                item.itemController->pickUp(m_Entity);
+
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_Stand_2_IGet_1"));
+                getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_IGet_2_Stand_1"));
+
+                return;
+            }
+
+            // ----- TALKING ----
+
+            if (nearest == 2 && nearestNPC.isValid())
+            {
+                VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
+
+                if (npc.playerController->getBodyState() == BS_STAND)
                 {
-                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
-
-                    float dist = (Vob::getTransform(vob).Translation() -
-                                  getEntityTransform().Translation())
-                                     .lengthSquared();
-
-                    if (dist < shortestDistMob)
-                    {
-                        nearestMob = h;
-                        shortestDistMob = dist;
-                    }
+                    Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
+                    m_World.getDialogManager().assessTalk(shnpc);
                 }
-
-                int nearest = 0;
-
-                if (shortestDistItem < shortestDistMob && shortestDistItem < shortestDistNPC)
-                    nearest = 1;
-
-                if (shortestDistMob < shortestDistItem && shortestDistMob < shortestDistNPC)
-                    nearest = 3;
-
-                if (shortestDistNPC < shortestDistItem && shortestDistNPC < shortestDistMob)
-                    nearest = 2;
-
-                if (nearest == 1 && nearestItem.isValid())
+                else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
                 {
-                    // Pick it up
-                    VobTypes::ItemVobInformation item = VobTypes::asItemVob(m_World, nearestItem);
-                    item.itemController->pickUp(m_Entity);
-
-                    getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_Stand_2_IGet_1"));
-                    getEM().onMessage(EventMessages::ConversationMessage::playAnimation("c_IGet_2_Stand_1"));
-
-                    return;
-                }
-
-                // ----- TALKING ----
-
-                if (nearest == 2 && nearestNPC.isValid())
-                {
-                    VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, nearestNPC);
-
-                    if (npc.playerController->getBodyState() == BS_STAND)
+                    // Take all his items
+                    auto& inv = npc.playerController->getInventory();
+                    for (auto h : inv.getItems())
                     {
-                        Daedalus::GameState::NpcHandle shnpc = VobTypes::getScriptHandle(npc);
-                        m_World.getDialogManager().assessTalk(shnpc);
-                    }
-                    else if (npc.playerController->getBodyState() == BS_UNCONSCIOUS || npc.playerController->getBodyState() == BS_DEAD)
-                    {
-                        // Take all his items
-                        auto& inv = npc.playerController->getInventory();
-                        for (auto h : inv.getItems())
-                        {
-                            unsigned int cnt = inv.getItemCount(h);
-                            size_t itm = inv.getItem(h).instanceSymbol;
+                        unsigned int cnt = inv.getItemCount(h);
+                        size_t itm = inv.getItem(h).instanceSymbol;
 
-                            getInventory().addItem(itm, cnt);
-                        }
-
-                        inv.clear();
+                        getInventory().addItem(itm, cnt);
                     }
 
-                    return;
+                    inv.clear();
                 }
 
-                if (nearest == 3 && nearestMob.isValid())
+                return;
+            }
+
+            if (nearest == 3 && nearestMob.isValid())
+            {
+                VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, nearestMob);
+
+                LogInfo() << "Using mob: " << vob.mobController->getFocusName();
+
+                vob.mobController->useMobToState(m_Entity, 1);
+                return;
+            }
+
+            /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
+                Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
+                VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
+
+                vob.playerController->changeRoutine("");
+                vob.playerController->teleportToWaypoint(targetWP);*/
+
+            // Use item last picked up
+            if (!getInventory().getItems().empty())
+            {
+                Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
+                if (lastItem.isValid())
                 {
-                    VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, nearestMob);
-
-                    LogInfo() << "Using mob: " << vob.mobController->getFocusName();
-
-                    vob.mobController->useMobToState(m_Entity, 1);
-                    return;
-                }
-
-                /*size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), getEntityTransform().Translation());
-                    Handle::EntityHandle h = VobTypes::Wld_InsertNpc(m_World, "VLK_574_Mud", m_World.getWaynet().waypoints[targetWP].name);
-                    VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, h);
-
-                    vob.playerController->changeRoutine("");
-                    vob.playerController->teleportToWaypoint(targetWP);*/
-
-                // Use item last picked up
-                if (!getInventory().getItems().empty())
-                {
-                    Daedalus::GameState::ItemHandle lastItem = getInventory().getItems().back();
-                    if (lastItem.isValid())
-                    {
-                        if (useItem(lastItem))
-                            getInventory().removeItem(lastItem);
-                    }
+                    if (useItem(lastItem))
+                        getInventory().removeItem(lastItem);
                 }
             }
         }

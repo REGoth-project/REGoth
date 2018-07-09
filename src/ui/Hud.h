@@ -28,6 +28,8 @@ namespace UI
     class DialogBox;
     class LoadingScreen;
     class IntroduceChapterView;
+    class WorldView;
+    class MenuStack;
 
     class Hud : public View
     {
@@ -66,31 +68,19 @@ namespace UI
         void setDateTimeDisplay(const std::string& timeStr);
 
         /**
-         * Registers all key bindings for the HUD
+         * @return WorldView
          */
-        void setupKeyBindings();
+        WorldView& getWorldView() { return *m_pWorldView; }
 
         /**
-         * Un-registers all key bindings for the HUD
+         * @return MenuStack
          */
-        void clearKeyBindings();
-
-        /**
-         * To be called when one of the given actions were triggered
-         * @param action Input action
-         */
-        void onInputAction(Engine::ActionType action);
-
-        /**
-         * To be called when there was text input since the last frame
-         * @param text Characters input since the last frame
-         */
-        void onTextInput(const std::string& text);
+        MenuStack& getMenuStack() { return *m_pMenuStack; }
 
         /**
          * @return Console-Box
          */
-        UI::ConsoleBox& getConsoleBox() { return *m_pConsoleBox; }
+        ConsoleBox& getConsoleBox() { return *m_pConsoleBox; }
         /**
          * @return Dialog-box
          */
@@ -98,7 +88,7 @@ namespace UI
         /**
          * @return PrintScreenManager
          */
-        UI::PrintScreenMessages& getPrintScreenManager() { return *m_pPrintScreenMessageView; }
+        PrintScreenMessages& getPrintScreenManager() { return *m_pPrintScreenMessageView; }
         /**
          * LoadingScreen
          */
@@ -113,37 +103,13 @@ namespace UI
         void setGameplayHudVisible(bool value);
 
         /**
-         * Appends a menu to the current menu-chain.
-         * @tparam T Type of menu to append. Must have a static 'create' function!
-         */
-        template <typename T>
-        T& pushMenu();
-
-        /**
-         * Pops the last menu from the chain and frees its memory.
-         */
-        void popMenu();
-
-        /**
-         * Pops all menus from the chain and frees its memory.
-         */
-        void popAllMenus();
-
-        template <typename T>
-        bool isTopMenu()
-        {
-            return dynamic_cast<T*>(m_MenuChain.empty() ? nullptr : m_MenuChain.back()) != nullptr;
-        }
-        /**
          * @return Whether a menu is currently active
          */
-        bool isMenuActive() { return !m_MenuChain.empty(); }
+        bool isMenuActive();
 
     protected:
-        /**
-         * Deletes all menus stored in the m_MenusToDelete-list
-         */
-        void cleanMenus();
+
+        bool consumesAction(Engine::ActionType actionType, float intensity) override;
 
         /**
          * All views qualifying as used while normal gameplay
@@ -160,42 +126,8 @@ namespace UI
         ImageView* m_pMenuBackground;
         ConsoleBox* m_pConsoleBox;
         IntroduceChapterView* m_pIntroduceChapterView;
-
-        /**
-         * Chain of opened menus. Only the last one will be rendered and processed
-         */
-        std::list<Menu*> m_MenuChain;
-        std::list<Menu*> m_MenusToDelete;  // Menus to be deleted next frame
-
-        /**
-         * All menus registered here
-         */
-        std::vector<Menu*> m_RegisteredMenus;
-
-        /**
-         * stored hud key bindings
-         */
-        std::vector<Engine::ManagedActionBinding> m_HudBindings;
+        WorldView* m_pWorldView;
+        MenuStack* m_pMenuStack;
     };
-
-    template <typename T>
-    inline T& Hud::pushMenu()
-    {
-        if (!m_MenuChain.empty() && dynamic_cast<T*>(m_MenuChain.back()) != nullptr)
-        {
-            return *static_cast<T*>(m_MenuChain.back());
-        }
-
-        // Hide gamplay hud since there is now at least one menu active
-        setGameplayHudVisible(false);
-
-        if (m_MenuChain.empty())
-        {
-            m_Engine.setPaused(true);
-        }
-        T* menu = T::create(m_Engine);
-        m_MenuChain.push_back(menu);
-        addChild(m_MenuChain.back());
-        return *menu;
-    }
 }
+

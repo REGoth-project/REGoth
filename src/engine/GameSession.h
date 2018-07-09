@@ -130,28 +130,7 @@ namespace Engine
          */
         void removeAllWorlds();
 
-        /**
-         * Registers all key bindings
-         */
-        void setupKeyBindings();
-
-        /**
-         * Un-registers all bindings
-         */
-        void clearBindings();
-
         Logic::LogManager& getLogManager() { return m_LogManager; }
-
-        /**
-         * Enables/Disables bindings that control the player
-         * @param respectCameraMode if true, will only set bindings if camera mode is not ECameramode::Free
-         */
-        void enablePlayerBindings(bool enabled, bool respectCameraMode = false);
-
-        /**
-         * Enables/Disables bindings for session control (save/load/pause/...)
-         */
-        void enableActionBindings(bool enabled);
 
     private:
         std::map<std::string, nlohmann::json> m_InactiveWorlds;
@@ -195,15 +174,5 @@ namespace Engine
          * reference to base engine
          */
         BaseEngine& m_Engine;
-
-        /**
-         * stored bindings
-         */
-        std::vector<ManagedActionBinding> m_ActionBindings;
-
-        /**
-         * stored player bindings
-         */
-        std::vector<ManagedActionBinding> m_PlayerBindings;
     };
 }

@@ -366,7 +366,7 @@ namespace Logic
         /**
          * Handles actions, that affect this NPC
          */
-        void onAction(Engine::ActionType actionType, bool triggered, float intensity);
+        void onAction(Engine::ActionType actionType, float intensity);
 
         /**
          * Updates the given status-screen once with the current attributes

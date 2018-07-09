@@ -376,35 +376,35 @@ void NpcAIHandler::playerUpdate(float deltaTime)
     resetKeyStates();
 }
 
-void NpcAIHandler::onAction(Engine::ActionType actionType, bool triggered)
+void NpcAIHandler::onAction(Engine::ActionType actionType)
 {
     // TODO remove this? and replace by Playercontroller isForward...?
     using Engine::ActionType;
     switch (actionType)
     {
         case ActionType::PlayerForward:
-            m_MovementState.isForward = m_MovementState.isForward || triggered;
+            m_MovementState.isForward = true;
             break;
         case ActionType::PlayerBackward:
-            m_MovementState.isBackward = m_MovementState.isBackward || triggered;
+            m_MovementState.isBackward = true;
             break;
         case ActionType::PlayerStrafeLeft:
-            m_MovementState.isStrafeLeft = m_MovementState.isStrafeLeft || triggered;
+            m_MovementState.isStrafeLeft = true;
             break;
         case ActionType::PlayerStrafeRight:
-            m_MovementState.isStrafeRight = m_MovementState.isStrafeRight || triggered;
+            m_MovementState.isStrafeRight = true;
             break;
         case ActionType::PlayerTurnRight:
-            m_MovementState.isTurnRight = m_MovementState.isTurnRight || triggered;
+            m_MovementState.isTurnRight = true;
             break;
         case ActionType::PlayerTurnLeft:
-            m_MovementState.isTurnLeft = m_MovementState.isTurnLeft || triggered;
+            m_MovementState.isTurnLeft = true;
             break;
         case ActionType::PlayerDrawWeaponMelee:
-            m_MovementState.isLastWeaponKey = m_MovementState.isLastWeaponKey || triggered;
+            m_MovementState.isLastWeaponKey = true;
             break;
         case ActionType::PlayerActionContinous:
-            m_MovementState.isAction = m_MovementState.isAction || triggered;
+            m_MovementState.isAction = true;
             break;
         default:
             break;
@@ -434,7 +434,6 @@ void NpcAIHandler::resetKeyStates()
 PlayerController& NpcAIHandler::getController() const
 {
     return *reinterpret_cast<Logic::PlayerController*>(m_World.getEntity<Components::LogicComponent>(m_HostVob).m_pLogicController);
-    ;
 }
 
 NpcAnimationHandler& NpcAIHandler::getNpcAnimationHandler() const

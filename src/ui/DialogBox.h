@@ -46,13 +46,10 @@ namespace UI
          */
         void clearChoices();
 
-        /**
-         * To be called when one of the given actions were triggered
-         * @param action Input action
-         */
-        void onInputAction(Engine::ActionType action);
-
     private:
+
+        bool consumesAction(Engine::ActionType actionType, float intensity) override;
+
         /**
          * Choices presented to the player
          */

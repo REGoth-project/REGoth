@@ -1,6 +1,7 @@
 
 #include "Menu_Main.h"
 #include "Hud.h"
+#include "MenuStack.h"
 #include "Menu_Load.h"
 #include "Menu_Save.h"
 #include "Menu_Settings.h"
@@ -44,20 +45,20 @@ void Menu_Main::onCustomAction(const std::string& action)
     if (action == "NEW_GAME")
     {
         LogInfo() << "Starting new game...";
-        getHud().popMenu();
+        getHud().getMenuStack().pop();
         m_Engine.getSession().startNewGame(m_Engine.getEngineArgs().startupZEN);
     }
     else if (action == "MENU_SAVEGAME_LOAD")
     {
-        getHud().pushMenu<Menu_Load>();
+        getHud().getMenuStack().push<Menu_Load>();
     }
     else if (action == "MENU_SAVEGAME_SAVE")
     {
-        getHud().pushMenu<Menu_Save>();
+        getHud().getMenuStack().push<Menu_Save>();
     }
     else if (action == "MENU_OPTIONS")
     {
-        getHud().pushMenu<Menu_Settings>();
+        getHud().getMenuStack().push<Menu_Settings>();
     }
     else if (action == "MENU_LEAVE_GAME")
     {

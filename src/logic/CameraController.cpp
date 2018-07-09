@@ -17,6 +17,7 @@
 
 const float CAMERA_SMOOTHING = 10.0f;
 
+// TODO pass CameraModeView to constructor
 Logic::CameraController::CameraController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
     , m_Active(true)
@@ -56,6 +57,8 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
 
 void Logic::CameraController::setupKeybinds()
 {
+    throw std::runtime_error("unimplemeted");// TODO camera Actions
+    /*
     // FirstPerson action
     {
         using namespace Engine;
@@ -201,7 +204,7 @@ void Logic::CameraController::setupKeybinds()
             }
         });
     }
-
+    */
     // Disable all at first and wait until one is enabled.
     enableActions(false);
     Engine::Input::setMouseLock(false);
@@ -215,27 +218,12 @@ void Logic::CameraController::setActive(bool active)
 
 void Logic::CameraController::enableActions(bool enable)
 {
-    for (auto& pair : m_ActionBindings)
-    {
-        if (pair.first == m_CameraMode)
-        {
-            for (auto &managedBinding : pair.second) {
-                managedBinding.getAction().setEnabled(enable);
-            }
-        }
-    }
+    throw std::runtime_error("unimplemented"); // TODO check also usages
 }
 
 void Logic::CameraController::switchModeActions(ECameraMode mode)
 {
-    for (auto& pair : m_ActionBindings)
-    {
-        bool enable = pair.first == mode;
-        for (auto& managedBinding : pair.second)
-        {
-            managedBinding.getAction().setEnabled(enable);
-        }
-    }
+    throw std::runtime_error("unimplemented"); // TODO imeplement via one CameraView object per CameraMode?
 }
 
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
@@ -441,20 +429,11 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
         || (mode == ECameraMode::FirstPerson)
         || (mode == ECameraMode::ThirdPerson)
         || (mode == ECameraMode::Static);
-    m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings);
+    // m_World.getEngine()->getSession().enablePlayerBindings(enablePlayerBindings); // TODO FIXME
+    throw std::runtime_error("unimplemented");
     #ifndef NDEBUG
     Engine::Input::setMouseLock(false);
     #endif
-}
-
-void Logic::CameraController::clearBindings()
-{
-    m_ActionBindings.clear();
-}
-
-Logic::CameraController::~CameraController()
-{
-    clearBindings();
 }
 
 void Logic::CameraController::storeKeyframe(unsigned idx)

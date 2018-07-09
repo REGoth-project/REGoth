@@ -59,12 +59,6 @@ namespace Logic
         void update(double dt);
 
         /**
-         * To be called when one of the given actions were triggered
-         * @param action Input action
-         */
-        void onInputAction(Engine::ActionType action);
-
-        /**
          * calls B_AssessTalk
          */
         void assessTalk(Daedalus::GameState::NpcHandle target);

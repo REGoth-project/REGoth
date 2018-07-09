@@ -1,5 +1,6 @@
 #include "Menu_Load.h"
 #include "Hud.h"
+#include "MenuStack.h"
 #include <engine/BaseEngine.h>
 #include <logic/SavegameManager.h>
 #include <utils/Utils.h>
@@ -75,7 +76,7 @@ void Menu_Load::onCustomAction(const std::string& action)
         std::string numStr = name.substr(std::string("MENUITEM_SAVE_SLOT").size());
         int idx = std::stoi(numStr);
         // Close menu_load & menu_main before queueing loading
-        getHud().popAllMenus();
+        getHud().getMenuStack().popAll();
         std::string error = SavegameManager::loadSaveGameSlot(idx);
         if (!error.empty())
         {

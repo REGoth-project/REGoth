@@ -35,6 +35,17 @@ DialogManager::DialogManager(World::WorldInstance& world)
     m_Talking = false;
     m_Interaction.currentDialogMessage = nullptr;
     m_ProcessInfos = false;
+
+    using Engine::ActionType;
+
+    throw std::runtime_error("unimplemented");// TODO automatic lifetime management of registered callback via RAII
+    // TODO this binding never gets removed
+    auto& dialogBox = m_World.getEngine()->getHud().getDialogBox();
+    dialogBox.registerActionHandler(ActionType::UI_Close, [engine = m_World.getEngine()](float intensity){
+        auto& dm = engine->getMainWorld().get().getDialogManager();
+        if (dm.isTalking())
+            dm.cancelTalk();
+    });
 }
 
 DialogManager::~DialogManager()
@@ -487,21 +498,6 @@ void DialogManager::importDialogManager(const json& j)
 
         for (int info : it.value())
             m_World.getDialogManager().getScriptDialogManager()->setNpcInfoKnown((unsigned int)npcInstance, (unsigned int)info);
-    }
-}
-
-void DialogManager::onInputAction(Engine::ActionType action)
-{
-    using Engine::ActionType;
-
-    auto& dialogBox = m_World.getEngine()->getHud().getDialogBox();
-    if (!dialogBox.isHidden())
-    {
-        dialogBox.onInputAction(action);
-    }
-    else if (isTalking() && action == ActionType::UI_Close)
-    {
-        cancelTalk();
     }
 }
 
