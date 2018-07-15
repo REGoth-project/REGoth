@@ -112,6 +112,7 @@ void CharacterEquipment::unequipItemInSlot(Slot slot)
         default:  // Everything else can be taken off without visual changes
             break;
     }
+    m_ItemsBySlot[(size_t)slot].invalidate();
 }
 
 void CharacterEquipment::unequipItem(ItemHandle item)
