@@ -245,7 +245,7 @@ void Logic::CameraController::nextDialogueShot() {
     VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
                                                             m_World.getScriptEngine().getPlayerEntity());
 
-    EDialogueShotType nextShot;
+    EDialogueShotType nextShot = m_DialogueShotType;
     bool playerTalking = m_dialogueTargetName == player.playerController->getScriptInstance().name[0];
 
     // Rule: Use close-up and neutral only after at least two fulls or shoulders
