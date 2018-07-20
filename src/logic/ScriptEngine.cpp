@@ -207,6 +207,11 @@ size_t ScriptEngine::getSymbolIndexByName(const std::string& name)
     return m_pVM->getDATFile().getSymbolIndexByName(name);
 }
 
+std::string Logic::ScriptEngine::getSymbolNameByIndex(size_t idx) const
+{
+    return m_pVM->getDATFile().getSymbolByIndex(idx).name;
+}
+
 void ScriptEngine::onInventoryItemInserted(Daedalus::GameState::ItemHandle item, Daedalus::GameState::NpcHandle npc)
 {
     Daedalus::GEngineClasses::C_Item& itemData = getGameState().getItem(item);

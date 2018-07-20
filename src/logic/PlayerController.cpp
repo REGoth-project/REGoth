@@ -18,21 +18,19 @@
 #include <engine/Input.h>
 #include <engine/Waynet.h>
 #include <engine/World.h>
+#include <engine/WorldMesh.h>
 #include <entry/input.h>
+#include <logic/DialogManager.h>
+#include <logic/PfxManager.h>
 #include <logic/SavegameManager.h>
+#include <logic/ScriptEngine.h>
+#include <logic/visuals/PfxVisual.h>
+#include <physics/PhysicsSystem.h>
 #include <render/WorldRender.h>
 #include <ui/Hud.h>
 #include <ui/Menu_Status.h>
 #include <ui/SubtitleBox.h>
 #include <utils/logger.h>
-#include <logic/ScriptEngine.h>
-#include <physics/PhysicsSystem.h>
-#include <logic/ScriptEngine.h>
-#include <logic/DialogManager.h>
-#include <engine/WorldMesh.h>
-#include <logic/PfxManager.h>
-#include <logic/visuals/PfxVisual.h>
-
 
 #define DEBUG_PLAYER (isPlayerControlled() && false)
 
@@ -60,12 +58,12 @@ namespace BodyNodes
     const char* NPC_NODE_HELMET = "ZS_HELMET";
     const char* NPC_NODE_JAWS = "ZS_JAWS";
     const char* NPC_NODE_TORSO = "ZS_TORSO";
-}
+}  // namespace BodyNodes
 
 /**
  * Default soundrange for SFX which doesn't specify a range. Gothic uses a default value of 35 meters.
  */
-static const float DEFAULT_CHARACTER_SOUND_RANGE = 35; // Meters
+static const float DEFAULT_CHARACTER_SOUND_RANGE = 35;  // Meters
 
 #define SINGLE_ACTION_KEY(key, fn)               \
     {                                            \
@@ -88,10 +86,8 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_NPCAnimationHandler(world, entity)
     , m_AIHandler(world, entity)
     , m_PathFinder(world)
+    , m_CharacterEquipment(world, entity)
 {
-    m_AIState.closestWaypoint = 0;
-    m_MoveState.currentPathPerc = 0;
-    m_NPCProperties.moveSpeed = 7.0f;
     m_NPCProperties.enablePhysics = true;
 
     m_MoveState.direction = Math::float3(1, 0, 0);
@@ -100,8 +96,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_MoveState.ground.triangleIndex = 0;
     m_MoveState.ground.waterDepth = 0;
     m_MoveState.ground.trianglePosition = Math::float3(0, 0, 0);
-    m_AIState.targetWaypoint = World::Waynet::INVALID_WAYPOINT;
-    m_AIState.closestWaypoint = World::Waynet::INVALID_WAYPOINT;
 
     m_ScriptState.npcHandle = scriptInstance;
 
@@ -109,15 +103,6 @@ PlayerController::PlayerController(World::WorldInstance& world,
     m_EquipmentState.activeWeapon.invalidate();
 
     m_RefuseTalkTime = 0;
-
-    m_isDrawWeaponMelee = false;
-    m_isForward = false;
-    m_isBackward = false;
-    m_isTurnLeft = false;
-    m_isTurnRight = false;
-    m_isStrafeLeft = false;
-    m_isStrafeRight = false;
-    m_isSwimming = false;
 
     m_LastAniRootPosUpdatedAniHash = 0;
     m_NoAniRootPosHack = false;
@@ -140,17 +125,6 @@ void PlayerController::onUpdate(float deltaTime)
 
     ModelVisual* model = getModelVisual();
 
-    // Build the route to follow this entity
-    if (m_RoutineState.entityTarget.isValid())
-    {
-        Math::float3 targetPos = m_World.getEntity<Components::PositionComponent>(m_RoutineState.entityTarget)
-                                     .m_WorldMatrix.Translation();
-
-        // FIXME: Doing this every frame is too often
-        size_t targetWP = World::Waynet::findNearestWaypointTo(m_World.getWaynet(), targetPos);
-
-        gotoWaypoint(targetWP);
-    }
     m_NoAniRootPosHack = false;
 
     if (model)
@@ -203,7 +177,8 @@ void PlayerController::onUpdate(float deltaTime)
     if (isPlayerControlled())
     {
         onUpdateForPlayer(deltaTime);
-    }else
+    }
+    else
     {
         m_AIHandler.npcUpdate(deltaTime);
     }
@@ -211,8 +186,6 @@ void PlayerController::onUpdate(float deltaTime)
 
 void PlayerController::teleportToWaypoint(size_t wp)
 {
-    m_AIState.closestWaypoint = wp;
-
     teleportToPosition(m_World.getWaynet().waypoints[wp].position);
 
     setDirection(m_World.getWaynet().waypoints[wp].direction);
@@ -231,12 +204,10 @@ void PlayerController::teleportToPosition(const Math::float3& pos)
     //getModelVisual()->setAnimation(ModelVisual::Idle);
 }
 
-
 void PlayerController::gotoWaypoint(World::Waynet::WaypointIndex wp)
 {
     m_PathFinder.startNewRouteTo(getEntityTransform().Translation(), wp);
 }
-
 
 void PlayerController::gotoVob(Handle::EntityHandle vob)
 {
@@ -254,7 +225,7 @@ void PlayerController::travelPath()
 
     Pathfinder::Instruction inst = m_PathFinder.updateToNextInstructionToTarget(positionNow);
 
-    if(!m_PathFinder.isTargetReachedByPosition(positionNow, inst.targetPosition))
+    if (!m_PathFinder.isTargetReachedByPosition(positionNow, inst.targetPosition))
     {
         // Turn towards target
         setDirection(inst.targetPosition - positionNow);
@@ -264,43 +235,8 @@ void PlayerController::travelPath()
     m_AIHandler.setTargetMovementState(EMovementState::Forward);
 }
 
-
 void PlayerController::onDebugDraw()
 {
-    /*if (!m_MoveState.currentPath.empty())
-    {
-        Render::debugDrawPath(m_World.getWaynet(), m_MoveState.currentPath);
-    }*/
-
-    // Math::float3 to = getEntityTransform().Translation() + Math::float3(0.0f, -1.0f, 0.0f);
-    // Math::float3 from = getEntityTransform().Translation() + Math::float3(0.0f, 1.0f, 0.0f);
-    //
-    // Physics::RayTestResult hit = m_World.getPhysicsSystem().raytrace(from, to, Physics::CollisionShape::CT_WorldMesh);
-    //
-    // if (hit.hasHit)
-    // {
-    //     ddDrawAxis(hit.hitPosition.x, hit.hitPosition.y, hit.hitPosition.z);
-    //
-    //     float shadow = m_World.getWorldMesh().interpolateTriangleShadowValue(hit.hitTriangleIndex, hit.hitPosition);
-    //
-    //     if(getModelVisual())
-    //         getModelVisual()->setShadowValue(shadow);
-    //
-    //     Math::float3 v3[3];
-    //     ZenLoad::zCMaterialData data = m_World.getWorldMesh().GetMatData(hit.hitTriangleIndex);
-    //     uint8_t matgroup;
-    //     m_World.getWorldMesh().getTriangle(hit.hitTriangleIndex, v3, matgroup);
-    //     // if (isPlayerControlled())
-    //     // {
-    //     //    LogInfo() << "matgroup : " << std::bitset<8>(data.matGroup);
-    //     //    LogInfo() << "matname: " << data.matName;
-    //     // }
-    //     for(int i=0;i<3;i++)
-    //     {
-    //         ddDrawAxis(v3[i].x, v3[i].y, v3[i].z);
-    //     }
-    // }
-
     if (isPlayerControlled())
     {
         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, m_Entity);
@@ -345,269 +281,74 @@ void PlayerController::onDebugDraw()
 
 void PlayerController::unequipItem(Daedalus::GameState::ItemHandle item)
 {
-    // Get item
-    Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
-    ModelVisual* model = getModelVisual();
-
-    EModelNode node = EModelNode::None;
-
-    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
-        return;  // Can't equip
-
-    // TODO: Don't forget if an item is already unequipped before executing stat changing script-code!
-
-    // Put into set of all equipped items first, then differentiate between the item-types
-    m_EquipmentState.equippedItemsAll.erase(item);
-
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
-    {
-        node = EModelNode::Longsword;
-
-        // Take off 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
-    {
-        node = EModelNode::Longsword;
-
-        // Take off 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
-    {
-        node = EModelNode::Crossbow;
-
-        // Take off crossbow
-        m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
-    {
-        node = EModelNode::Bow;
-
-        // Take off bow
-        m_EquipmentState.equippedItems.equippedBow.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
-    {
-        node = EModelNode::Sword;
-
-        // Take off 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
-    {
-        node = EModelNode::Sword;
-
-        // Take off 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
-    {
-        node = EModelNode::None;
-
-        // Take off amulet
-        m_EquipmentState.equippedItems.equippedAmulet.invalidate();
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
-    {
-        node = EModelNode::None;
-
-        // Take off ring
-        m_EquipmentState.equippedItems.equippedRings.erase(item);
-    }
-    else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0 || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
-    {
-        node = EModelNode::None;
-
-        // Take off our rune/scroll
-        m_EquipmentState.equippedItems.equippedRunes.erase(item);
-    }
-
-    // Show visual on the npc-model
-    if (node != EModelNode::None)
-        model->setNodeVisual("", node);
+    m_CharacterEquipment.unequipItem(item);
 }
 
 void PlayerController::equipItem(Daedalus::GameState::ItemHandle item)
 {
-    // Get item
-    Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(item);
-    ModelVisual* model = getModelVisual();
+    m_CharacterEquipment.equipItem(item);
+}
 
-    if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_EQUIPABLE) == 0)
-        return;  // Can't equip
-
-    EModelNode node = EModelNode::None;
-
-    // TODO: Don't forget if an item is already equipped before executing stat changing script-code!
-
-    // Put into set of all equipped items first, then differentiate between the item-types
-    m_EquipmentState.equippedItemsAll.insert(item);
-
-    if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_AXE) != 0)
-    {
-        node = EModelNode::Longsword;
-
-        // Take of any 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-        model->setNodeVisual("", EModelNode::Sword);
-
-        // Put on our 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_2HD_SWD) != 0)
-    {
-        node = EModelNode::Longsword;
-
-        // Take of any 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h.invalidate();
-        model->setNodeVisual("", EModelNode::Sword);
-
-        // Put on our 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_CROSSBOW) != 0)
-    {
-        node = EModelNode::Crossbow;
-
-        // Take off a bow
-        m_EquipmentState.equippedItems.equippedBow.invalidate();
-        model->setNodeVisual("", EModelNode::Bow);
-
-        // Put on our crossbow
-        m_EquipmentState.equippedItems.equippedCrossBow = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_BOW) != 0)
-    {
-        node = EModelNode::Bow;
-
-        // Take off a crossbow
-        m_EquipmentState.equippedItems.equippedCrossBow.invalidate();
-        model->setNodeVisual("", EModelNode::Crossbow);
-
-        // Put on our bow
-        m_EquipmentState.equippedItems.equippedBow = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_SWD) != 0)
-    {
-        node = EModelNode::Sword;
-
-        // Take of any 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-        model->setNodeVisual("", EModelNode::Longsword);
-
-        // Put on our 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AXE) != 0)
-    {
-        node = EModelNode::Sword;
-
-        // Take of any 2h weapon
-        m_EquipmentState.equippedItems.equippedWeapon2h.invalidate();
-        model->setNodeVisual("", EModelNode::Longsword);
-
-        // Put on our 1h weapon
-        m_EquipmentState.equippedItems.equippedWeapon1h = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_AMULET) != 0)
-    {
-        node = EModelNode::None;
-
-        // Put on our amulet
-        m_EquipmentState.equippedItems.equippedAmulet = item;
-    }
-    else if ((itemData.flags & Daedalus::GEngineClasses::C_Item::ITEM_RING) != 0)
-    {
-        node = EModelNode::None;
-
-        // Put on our ring
-        m_EquipmentState.equippedItems.equippedRings.insert(item);
-    }
-    else if ((itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_RUNE) != 0 || (itemData.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
-    {
-        node = EModelNode::None;
-
-        // Put on our rune/scroll
-        m_EquipmentState.equippedItems.equippedRunes.insert(item);
-    }
-
-    // Show visual on the npc-model
-    if (node != EModelNode::None)
-        model->setNodeVisual(itemData.visual, node);
+bool Logic::PlayerController::hasEquippedMeleeWeapon() const
+{
+    return m_CharacterEquipment.hasMeleeWeaponEquipped();
 }
 
 Daedalus::GameState::ItemHandle PlayerController::drawWeaponMelee(bool forceFist)
 {
+    using Daedalus::GameState::ItemHandle;
+    using Slot = CharacterEquipment::Slot;
+    using WeaponKind = CharacterEquipment::WeaponKind;
+
     // Check if we already have a weapon in our hands
     if (m_EquipmentState.weaponMode != EWeaponMode::WeaponNone)
         return m_EquipmentState.activeWeapon;
 
-    ModelVisual* model = getModelVisual();
-
     // Remove anything that was active before putting something new there
     m_EquipmentState.activeWeapon.invalidate();
 
-    // Check what kind of weapon we got here
-    if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon1h.isValid())
-    {
-        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon1h;
-        m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
-    }
-    else if (!forceFist && m_EquipmentState.equippedItems.equippedWeapon2h.isValid())
-    {
-        m_EquipmentState.activeWeapon = m_EquipmentState.equippedItems.equippedWeapon2h;
-        m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
-    }
-    else
+    if (forceFist)
     {
         m_EquipmentState.weaponMode = EWeaponMode::WeaponFist;
     }
-
-    // Move the visual
-    if (m_EquipmentState.activeWeapon.isValid())
+    else
     {
-        // Get actual data of the weapon we are going to draw
-        Daedalus::GEngineClasses::C_Item& itemData = m_World.getScriptEngine().getGameState().getItem(
-            m_EquipmentState.activeWeapon);
+        ItemHandle equippedWeapon = m_CharacterEquipment.getItemInSlot(Slot::MELEE);
+        m_EquipmentState.activeWeapon = equippedWeapon;
 
-        // Clear the possible on-body-visuals first
-        model->setNodeVisual("", EModelNode::Lefthand);
-        model->setNodeVisual("", EModelNode::Righthand);
-        model->setNodeVisual("", EModelNode::Sword);
-        model->setNodeVisual("", EModelNode::Longsword);
+        switch (m_CharacterEquipment.getWeaponKindOfItem(equippedWeapon))
+        {
+            case WeaponKind::MELEE_1H:
+                m_EquipmentState.weaponMode = EWeaponMode::Weapon1h;
+                break;
 
-        // Put visual into hand
-        // TODO: Listen to ani-events for this!
-        model->setNodeVisual(itemData.visual, EModelNode::Righthand);
+            case WeaponKind::MELEE_2H:
+                m_EquipmentState.weaponMode = EWeaponMode::Weapon2h;
+                break;
+
+            default:
+                // Not a melee weapon?
+                m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
+                break;
+        }
     }
 
-    // Couldn't draw anything
+    if (m_EquipmentState.activeWeapon.isValid())
+        m_CharacterEquipment.putMeleeWeaponInCharactersHand();
+
     return m_EquipmentState.activeWeapon;
 }
 
 void PlayerController::undrawWeapon(bool force)
 {
-    ModelVisual* model = getModelVisual();
-
     // TODO: Listen to ani-events for this!
     // TODO: Even do an animation for this!
     // TODO: Implement force-flag
 
-    // Clear hands
-    model->setNodeVisual("", EModelNode::Lefthand);
-    model->setNodeVisual("", EModelNode::Righthand);
+    m_CharacterEquipment.removeItemInCharactersHandAndShowWeaponsOnBody();
+
     m_EquipmentState.weaponMode = EWeaponMode::WeaponNone;
-
-    // activeWeapon should be only invalid when using fists
-    if (m_EquipmentState.activeWeapon.isValid())
-    {
-        // reequip the currently active item
-        equipItem(m_EquipmentState.activeWeapon);
-
-        // Remove active weapon
-        m_EquipmentState.activeWeapon.invalidate();
-    }
+    m_EquipmentState.activeWeapon.invalidate();
 }
 
 ModelVisual* PlayerController::getModelVisual()
@@ -622,7 +363,9 @@ void PlayerController::placeOnSurface(const Physics::RayTestResult& hit)
 {
     if (DEBUG_PLAYER)
     {
-        LogInfo() << (int)getMaterial(hit.hitTriangleIndex) << ", Placing hero at position: " << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
+        LogInfo() << (int)m_World.getWorldMesh().getMaterialGroupOfTriangle(hit.hitTriangleIndex)
+                  << ", Placing hero at position: "
+                  << hit.hitPosition.x << ", " << hit.hitPosition.y << ", " << hit.hitPosition.z;
     }
     Math::Matrix m = getEntityTransform();
 
@@ -712,7 +455,7 @@ void PlayerController::placeOnGround()
             highestHitY = result.hitPosition.y;
             highestHitSurface = result;
         }
-        auto material = getMaterial(result.hitTriangleIndex);
+        auto material = m_World.getWorldMesh().getMaterialGroupOfTriangle(result.hitTriangleIndex);
         if (result.hitFlags == Physics::CollisionShape::CT_Object) material = ZenLoad::MaterialGroup::UNDEF;  // we don't want underlying worldmesh material in this case
         if (material == ZenLoad::MaterialGroup::WATER)
         {
@@ -725,18 +468,14 @@ void PlayerController::placeOnGround()
             closestResult = newDistance;
         }
     }
-    shallowWater = closestHitGroundSurface.hitPosition.y < waterHitSurface.hitPosition.y && waterHitSurface.hitPosition.y <= highestHitSurface.hitPosition.y;
+
     auto manageState = [&]() {
         if (fellThrough)
         {
             placeOnSurface(highestHitSurface);
             return;
         }
-        if ((m_isSwimming = shallowWater && m_MoveState.ground.waterDepth > m_swimThreshold))
-        {
-            placeOnSurface(waterHitSurface);
-            return;
-        }
+
         placeOnSurface(closestHitGroundSurface);
     };
     manageState();
@@ -791,12 +530,12 @@ void PlayerController::onUpdateByInput(float deltaTime)
     if (m_World.getEngine()->getHud().isMenuActive())
         resetKeyStates();
 
-    // Stand up if wounded and forward is pressed
+    // Stand up if wounded
     if (getModelVisual()->isAnimPlaying("S_WOUNDEDB") && getBodyState() == EBodyState::BS_UNCONSCIOUS)
     {
         // Only stand up if the unconscious-state has ended (aka. is not valid anymore)
         // Otherwise, the player would fall down immediately
-        if (m_isForward && m_AIStateMachine.isStateActive())
+        if (m_AIStateMachine.isStateActive())
         {
             // FIXME: End UNCONSCIOUS-state here
 
@@ -822,309 +561,6 @@ void PlayerController::onUpdateByInput(float deltaTime)
     getModelVisual()->getAnimationHandler().setSpeedMultiplier(moveMod);
 
     m_AIHandler.playerUpdate(deltaTime);
-    return;
-
-    // FIXME: Temporary test-code
-    static bool lastDraw = false;
-
-    /*
-#define SINGLE_ACTION_KEY(key, fn) { \
-    static bool last = false; \
-    if(inputGetKeyState(key) && !last)\
-        last = true; \
-    else if(!inputGetKeyState(key) && last){\
-        last = false;\
-        fn();\
-    } }
-
-    SINGLE_ACTION_KEY(entry::Key::KeyK, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            VobTypes::NPC_DrawMeleeWeapon(npc);
-        }
-    });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyJ, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            VobTypes::NPC_UndrawWeapon(npc);
-        }
-    });
-
-    SINGLE_ACTION_KEY(entry::Key::KeyH, [&](){
-        // Let all near NPCs draw their weapon
-        std::set<Handle::EntityHandle> nearNPCs = m_World.getScriptEngine().getNPCsInRadius(getEntityTransform().Translation(), 10.0f);
-
-        for(const Handle::EntityHandle& h : nearNPCs)
-        {
-            VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
-            npc.playerController->attackFront();
-        }
-    });
-     */
-    if (m_isDrawWeaponMelee)
-    {
-        if (!lastDraw)
-        {
-            lastDraw = true;
-
-            if (m_EquipmentState.activeWeapon.isValid())
-                undrawWeapon();
-            else
-                drawWeaponMelee();
-        }
-
-        // Don't overwrite the drawing animation
-        return;
-    }
-    else if (!m_isDrawWeaponMelee && lastDraw)
-    {
-        lastDraw = false;
-    }
-
-    m_NoAniRootPosHack = false;
-
-    if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
-    {
-        static std::string lastMovementAni = "";
-        auto manageAnimation = [&](ModelVisual::EModelAnimType groundAniType, ModelVisual::EModelAnimType waterAniType) {
-            if (getSurfaceMaterial() == ZenLoad::MaterialGroup::WATER)
-            {
-                if (m_isSwimming)
-                {
-                    model->setAnimation(waterAniType);
-                }
-                else
-                {
-                    model->setAnimation(groundAniType);
-                }
-            }
-            else if (getSurfaceMaterial() != ZenLoad::MaterialGroup::UNDEF)
-            {
-                model->setAnimation(groundAniType);
-            }
-            else
-            {
-                //TODO this happens more than it should, there seems to be too much undefined materials, find out why
-                model->setAnimation(groundAniType);  // Ground animation is the default, we don't want the NPCs to start swimming in soil
-            }
-            if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr())
-                lastMovementAni = getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name;
-            m_NoAniRootPosHack = true;
-        };
-        if (m_isStrafeLeft)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::StrafeLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
-        }
-        else if (m_isStrafeRight)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::StrafeRight, ModelVisual::EModelAnimType::SwimTurnRight);
-        }
-        else if (m_isTurnLeft && !m_isForward)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::TurnLeft, ModelVisual::EModelAnimType::SwimTurnLeft);
-        }
-        else if (m_isTurnRight && !m_isForward)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::TurnRight, ModelVisual::EModelAnimType::SwimTurnRight);
-        }
-        else if (m_isForward)
-        {
-            manageAnimation(m_MoveState.ground.waterDepth > m_wadeThreshold ? ModelVisual::EModelAnimType::Wade : ModelVisual::EModelAnimType::Run, ModelVisual::EModelAnimType::SwimF);
-        }
-        else if (m_isBackward)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::Backpedal, ModelVisual::EModelAnimType::SwimB);
-        }
-        //		else if(inputGetKeyState(entry::Key::KeyQ))
-        //		{
-        //			model->setAnimation(ModelVisual::EModelAnimType::AttackFist);
-        //		}
-        else if (getModelVisual()->getAnimationHandler().getActiveAnimationPtr() && getModelVisual()->getAnimationHandler().getActiveAnimationPtr()->m_Name == lastMovementAni)
-        {
-            manageAnimation(ModelVisual::EModelAnimType::Idle, ModelVisual::EModelAnimType::Swim);
-            m_NoAniRootPosHack = true;
-        }
-    }
-    //	else
-    //	{
-    //        std::map<EWeaponMode, std::vector<ModelVisual::EModelAnimType>> aniMap =
-    //                {
-    //                        {EWeaponMode::Weapon1h, {       ModelVisual::EModelAnimType::Attack1h_L,
-    //                                                        ModelVisual::EModelAnimType::Attack1h_R,
-    //                                                        ModelVisual::EModelAnimType::Run1h,
-    //                                                        ModelVisual::EModelAnimType::Backpedal1h,
-    //                                                        ModelVisual::EModelAnimType::Attack1h,
-    //                                                        ModelVisual::EModelAnimType::Idle1h}},
-
-    //                        {EWeaponMode::Weapon2h, {       ModelVisual::EModelAnimType::Attack2h_L,
-    //                                                        ModelVisual::EModelAnimType::Attack2h_R,
-    //                                                        ModelVisual::EModelAnimType::Run2h,
-    //                                                        ModelVisual::EModelAnimType::Backpedal2h,
-    //                                                        ModelVisual::EModelAnimType::Attack2h,
-    //                                                        ModelVisual::EModelAnimType::Idle2h}},
-
-    //                        {EWeaponMode::WeaponBow, {      ModelVisual::EModelAnimType::IdleBow,
-    //                                                        ModelVisual::EModelAnimType::IdleBow,
-    //                                                        ModelVisual::EModelAnimType::RunBow,
-    //                                                        ModelVisual::EModelAnimType::BackpedalBow,
-    //                                                        ModelVisual::EModelAnimType::AttackBow,
-    //                                                        ModelVisual::EModelAnimType::IdleBow}},
-
-    //                        {EWeaponMode::WeaponCrossBow, { ModelVisual::EModelAnimType::IdleCBow,
-    //                                                        ModelVisual::EModelAnimType::IdleCBow,
-    //                                                        ModelVisual::EModelAnimType::RunCBow,
-    //                                                        ModelVisual::EModelAnimType::BackpedalCBow,
-    //                                                        ModelVisual::EModelAnimType::AttackCBow,
-    //                                                        ModelVisual::EModelAnimType::IdleCBow}}
-    //                };
-
-    //		if(inputGetKeyState(entry::Key::KeyA))
-    //		{
-    //			model->setAnimation(aniMap[m_EquipmentState.weaponMode][0]);
-    //		}
-    //		else if(inputGetKeyState(entry::Key::KeyD))
-    //		{
-    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][1]);
-    //		}
-    //		else if(inputGetKeyState(entry::Key::KeyW))
-    //		{
-    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][2]);
-    //		}
-    //		else if(inputGetKeyState(entry::Key::KeyS))
-    //		{
-    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][3]);
-    //		}
-    //		else if(inputGetKeyState(entry::Key::KeyQ))
-    //		{
-    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][4]);
-    //		}
-    //		else {
-    //            model->setAnimation(aniMap[m_EquipmentState.weaponMode][5]);
-    //		}
-    //	}
-
-    float yaw = 0.0f;
-    const float turnSpeed = 2.5f;
-
-    if (!m_AIState.usedMob.isValid())
-    {
-        if (m_isTurnLeft)
-        {
-            yaw += turnSpeed * deltaTime;
-            m_NoAniRootPosHack = true;
-        }
-        else if (m_isTurnRight)
-        {
-            yaw -= turnSpeed * deltaTime;
-            m_NoAniRootPosHack = true;
-        }
-    }
-
-    // No direction key pressed
-    if (!m_NoAniRootPosHack)
-        return;
-
-    // Apply animation-velocity
-    Math::float3 rootNodeVel = model->getAnimationHandler().getRootNodeVelocityTotal() * deltaTime;
-
-    float angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
-    m_MoveState.direction = Math::float3(cos(angle + yaw), 0, sin(angle + yaw));
-    angle = atan2(m_MoveState.direction.z, m_MoveState.direction.x);
-
-    m_MoveState.position += Math::Matrix::CreateRotationY(-angle + Math::PI * 0.5f) * rootNodeVel;
-
-    setDirection(m_MoveState.direction);
-
-    //Math::Matrix newTransform = Math::Matrix::CreateTranslation(m_MoveState.position) * Math::Matrix::CreateRotationY(angle + yaw);
-    //setEntityTransform(newTransform);
-
-    placeOnGround();
-    resetKeyStates();
-}
-
-void PlayerController::attackFront()
-{
-    if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
-        return;
-
-    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
-    switch (m_EquipmentState.weaponMode)
-    {
-        case EWeaponMode::Weapon1h:
-            type = ModelVisual::EModelAnimType::Attack1h;
-            break;
-        case EWeaponMode::Weapon2h:
-            type = ModelVisual::EModelAnimType::Attack2h;
-            break;
-        case EWeaponMode::WeaponBow:
-            type = ModelVisual::EModelAnimType::AttackBow;
-            break;
-        case EWeaponMode::WeaponCrossBow:
-            type = ModelVisual::EModelAnimType::AttackCBow;
-            break;
-        case EWeaponMode::WeaponFist:
-            type = ModelVisual::EModelAnimType::AttackFist;
-            break;
-        //case EWeaponMode::WeaponMagic: type = ModelVisual::EModelAnimType::AttackMagic; break; // TODO: Magic
-        default:
-            break;
-    }
-
-    if (type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
-        getModelVisual()->playAnimation(type);
-}
-
-void PlayerController::attackLeft()
-{
-    if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
-        return;
-
-    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
-    switch (m_EquipmentState.weaponMode)
-    {
-        case EWeaponMode::Weapon1h:
-            type = ModelVisual::EModelAnimType::Attack1h_L;
-            break;
-        case EWeaponMode::Weapon2h:
-            type = ModelVisual::EModelAnimType::Attack2h_L;
-            break;
-        default:
-            break;
-    }
-
-    if (type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
-        getModelVisual()->playAnimation(type);
-}
-
-void PlayerController::attackRight()
-{
-    if (m_EquipmentState.weaponMode == EWeaponMode::WeaponNone)
-        return;
-
-    ModelVisual::EModelAnimType type = ModelVisual::EModelAnimType::NUM_ANIMATIONS;
-    switch (m_EquipmentState.weaponMode)
-    {
-        case EWeaponMode::Weapon1h:
-            type = ModelVisual::EModelAnimType::Attack1h_R;
-            break;
-        case EWeaponMode::Weapon2h:
-            type = ModelVisual::EModelAnimType::Attack2h_L;
-            break;
-        default:
-            break;
-    }
-
-    if (type != ModelVisual::EModelAnimType::NUM_ANIMATIONS)
-        getModelVisual()->playAnimation(type);
 }
 
 void PlayerController::onMessage(SharedEMessage message, Handle::EntityHandle sourceVob)
@@ -1205,7 +641,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             break;
         case EventMessages::MovementMessage::ST_GotoFP:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 using namespace Components;
 
@@ -1224,7 +660,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -1236,7 +672,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
         case EventMessages::MovementMessage::ST_GotoVob:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 Math::float3 pos;
 
@@ -1247,7 +683,8 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
                 if (wp != World::Waynet::INVALID_WAYPOINT)
                 {
                     gotoWaypoint(wp);
-                } else
+                }
+                else
                 {
                     // This must be an actual vob
                     Handle::EntityHandle v = message.targetVob;
@@ -1266,7 +703,7 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -1278,13 +715,13 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
         case EventMessages::MovementMessage::ST_GotoPos:
         {
-            if(message.isFirstRun)
+            if (message.isFirstRun)
             {
                 gotoPosition(message.targetPosition);
             }
             else
             {
-                if(!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
+                if (!m_PathFinder.hasActiveRouteBeenCompleted(getEntityTransform().Translation()))
                 {
                     travelPath();
                 }
@@ -1809,12 +1246,6 @@ void PlayerController::standUp(bool walkingAllowed, bool startAniTransition)
     m_AIHandler.standup();
 }
 
-void PlayerController::stopRoute()
-{
-    m_MoveState.currentPath.clear();
-    m_RoutineState.entityTarget.invalidate();
-}
-
 void PlayerController::setRoutineFunc(size_t symRoutine)
 {
     getScriptInstance().daily_routine = static_cast<uint32_t>(symRoutine);
@@ -1858,8 +1289,8 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
         changeAttribute(Daedalus::GEngineClasses::C_Npc::EATR_HITPOINTS, data.nutrition);
     }
 
-    // Weapon?
-    if ((data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_NF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_FF) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_ARMOR) != 0 || (data.mainflag & Daedalus::GEngineClasses::C_Item::ITM_CAT_MAGIC) != 0)
+    // Equipment?
+    if (m_CharacterEquipment.isItemEquipable(item))
     {
         // FIXME: Hack to only allow equipping when no weapon is drawn
         if (getWeaponMode() == EWeaponMode::WeaponNone)
@@ -2050,16 +1481,17 @@ void PlayerController::exportPart(json& j)
     m_Inventory.exportInventory(j["inventory"]);
 
     // Export equipped items
+    m_CharacterEquipment.exportSlots(j["equipment"]);
     {
-        j["equipped"] = json::array();
-        for (auto item : m_EquipmentState.equippedItemsAll)
-        {
-            // Write instance of the equipped item
-            Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
-            std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+        // j["equipped"] = json::array();
+        // for (auto item : m_EquipmentState.equippedItemsAll)
+        // {
+        //     // Write instance of the equipped item
+        //     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
+        //     std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
 
-            j["equipped"].push_back(instanceName);
-        }
+        //     j["equipped"].push_back(instanceName);
+        // }
     }
 
     // export refusetalktime
@@ -2131,18 +1563,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
     m_Inventory.importInventory(j["inventory"]);
 
     // Import equipments
-    {
-        Inventory& inv = m_Inventory;
-
-        for (const std::string& sym : j["equipped"])
-        {
-            Daedalus::GameState::ItemHandle h = inv.getItem(sym);
-
-            assert(h.isValid());  // Item to equip MUST be inside the inventory
-
-            equipItem(h);
-        }
-    }
+    m_CharacterEquipment.importSlots(j["equipment"]);
 
     // import refusetalktime
     this->setRefuseTalkTime(static_cast<float>(j["refusetalktime"]));
@@ -2166,10 +1587,6 @@ void PlayerController::importObject(const json& j)
 Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
 {
     unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
-
-    /*std::string name = j["scriptObj"]["name"][0];
-    if(name != "Diego" && name != "ich")
-        return Handle::EntityHandle();*/
 
     // Create npc
     Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
@@ -2288,20 +1705,11 @@ void PlayerController::updateStatusScreen(UI::Menu_Status& statsScreen)
     statsScreen.setLearnPoints(stats.lp);
 }
 
-ZenLoad::MaterialGroup PlayerController::getMaterial(uint32_t triangleIdx)
-{
-    Math::float3 v3[3];
-    uint8_t matgroup;
-    // Beware! If triangle index is given such that the triangle is a building triangle of a VOB, this function will return material of the underlying worldmesh!!!
-    m_World.getWorldMesh().getTriangle(triangleIdx, v3, matgroup);
-    return static_cast<ZenLoad::MaterialGroup>(matgroup);
-}
-
 ZenLoad::MaterialGroup PlayerController::getSurfaceMaterial()
 {
     if (m_MoveState.ground.successful)
     {
-        return getMaterial(m_MoveState.ground.triangleIndex);
+        return m_World.getWorldMesh().getMaterialGroupOfTriangle(m_MoveState.ground.triangleIndex);
     }
     else
     {
@@ -2343,13 +1751,7 @@ void PlayerController::traceDownNPCGround()
         {
             auto diff = std::abs(entityPos.y - a.hitPosition.y);
 
-            if (ZenLoad::MaterialGroup::WATER == getMaterial(a.hitTriangleIndex))
-            {
-                resultWater = a;
-                waterSurfacePos = a.hitPosition.y;
-                waterMatFound = true;  // found water material
-            }
-            else if (closestGroundSurfacePos > diff)
+            if (closestGroundSurfacePos > diff)
             {
                 result = a;
                 closestGroundSurfacePos = diff;
@@ -2393,21 +1795,15 @@ void PlayerController::traceDownNPCGround()
 
 void PlayerController::resetKeyStates()
 {
-    m_isStrafeLeft = false;
-    m_isStrafeRight = false;
-    m_isForward = false;
-    m_isBackward = false;
-    m_isTurnLeft = false;
-    m_isTurnRight = false;
     m_MoveSpeed1 = false;
     m_MoveSpeed2 = false;
 }
 
-void PlayerController::updatePfxPosition(const pfxEvent &e)
+void PlayerController::updatePfxPosition(const pfxEvent& e)
 {
     Vob::VobInformation vob = Vob::asVob(m_World, e.entity);
-    auto &boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
-    auto &transform = getEntityTransform();
+    auto& boneTransforms = getNpcAnimationHandler().getAnimHandler().getObjectSpaceTransforms();
+    auto& transform = getEntityTransform();
     size_t nodeIndex = getModelVisual()->findNodeIndex(e.bodyPosition);
     auto position = transform * boneTransforms[nodeIndex];
     Vob::setTransform(vob, std::move(position));
@@ -2416,9 +1812,9 @@ void PlayerController::updatePfxPosition(const pfxEvent &e)
 void PlayerController::updatePfx()
 {
     //First remove all invalid handles / emitter that are in "canBeRemoved" state (all particles are dead)
-    for(auto it = m_activePfxEvents.begin(); it<m_activePfxEvents.end();)
+    for (auto it = m_activePfxEvents.begin(); it < m_activePfxEvents.end();)
     {
-        if(((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
+        if (((PfxVisual*)Vob::asVob(m_World, (*it).entity).visual)->canBeRemoved())
         {
             m_World.removeEntity((*it).entity);
             it = m_activePfxEvents.erase(it);
@@ -2426,7 +1822,7 @@ void PlayerController::updatePfx()
         else
         {
             //If pfx is attached to body, update the position
-            if((*it).isAttached)
+            if ((*it).isAttached)
                 updatePfxPosition(*it);
 
             ++it;
@@ -2465,7 +1861,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
     }
 
-    if(!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+    if (!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
     {
         // If emptyslot is not set, the currently played sound shall be stopped
         m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
@@ -2476,11 +1872,11 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 
     auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 
-    if(!sfx.m_EmptySlot)
+    if (!sfx.m_EmptySlot)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
 
-        if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+        if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
             m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
 
         m_MainNoiseSoundSlot = ticket;
@@ -2492,7 +1888,7 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
     if (m_MoveState.ground.successful)
     {
         // Play sound depending on ground type
-        ZenLoad::MaterialGroup mat = getMaterial(m_MoveState.ground.triangleIndex);
+        ZenLoad::MaterialGroup mat = getSurfaceMaterial();
 
         float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 
@@ -2500,11 +1896,11 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
 
-        if(!sfx.m_EmptySlot)
+        if (!sfx.m_EmptySlot)
         {
             // If emptyslot is not set, the currently played sound shall be stopped
 
-            if(m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+            if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
                 m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
 
             m_MainNoiseSoundSlot = ticket;
@@ -2518,41 +1914,42 @@ void PlayerController::AniEvent_Tag(const ZenLoad::zCModelScriptEventTag& tag)
 }
 void PlayerController::AniEvent_PFX(const ZenLoad::zCModelScriptEventPfx& pfx)
 {
-    if(!m_World.getPfxManager().hasPFX(pfx.m_Name))
+    if (!m_World.getPfxManager().hasPFX(pfx.m_Name))
     {
         return;
     }
     pfxEvent event = {Vob::constructVob(m_World), pfx.m_Pos, pfx.m_isAttached, pfx.m_Num};
     //From world of gothic animation events
-    if(event.bodyPosition.empty())
+    if (event.bodyPosition.empty())
     {
         event.bodyPosition = "BIP01";
     }
     m_activePfxEvents.push_back(std::move(event));
     Vob::VobInformation vob = Vob::asVob(m_World, m_activePfxEvents.back().entity);
-    Vob::setVisual(vob, pfx.m_Name+".PFX");
-	Vob::setTransform(vob, getEntityTransform());
+    Vob::setVisual(vob, pfx.m_Name + ".PFX");
+    Vob::setTransform(vob, getEntityTransform());
 }
 void PlayerController::AniEvent_PFXStop(const ZenLoad::zCModelScriptEventPfxStop& pfxStop)
 {
-	//FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
-	if(m_activePfxEvents.empty())
-		LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
+    //FIXME there is the error (at icedragon at oldworld) that there are pfxStop Events when no active pfx events are present...
+    if (m_activePfxEvents.empty())
+        LogWarn() << "No corresponding pfx Event for Stop Event of Animation " + getNpcAnimationHandler().getAnimHandler().getActiveAnimationPtr()->m_Name;
 
     //Kill pfx with the corresponding number
-    for (auto &pfx : m_activePfxEvents) {
-		if (pfx.m_Num == pfxStop.m_Num) {
-			Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
-			PfxVisual *visual = (PfxVisual *) vob.visual;
-			if (visual->isDead()) {
-				continue;
-			}
-			visual->killPfx();
-			break;
-		}
-	}
-
-
+    for (auto& pfx : m_activePfxEvents)
+    {
+        if (pfx.m_Num == pfxStop.m_Num)
+        {
+            Vob::VobInformation vob = Vob::asVob(m_World, pfx.entity);
+            PfxVisual* visual = (PfxVisual*)vob.visual;
+            if (visual->isDead())
+            {
+                continue;
+            }
+            visual->killPfx();
+            break;
+        }
+    }
 }
 
 World::Waynet::WaypointIndex PlayerController::getClosestWaypoint()
@@ -2582,7 +1979,7 @@ World::Waynet::WaypointIndex PlayerController::getSecondClosestWaypoint()
         float l2 = (position - waynet.waypoints[i].position).lengthSquared();
         distances.emplace_back(l2, i);
     }
-    auto compare = [](const auto& pair1, const auto& pair2){
+    auto compare = [](const auto& pair1, const auto& pair2) {
         return pair1.first < pair2.first;
     };
     std::nth_element(distances.begin(), distances.begin() + 1, distances.end(), compare);
@@ -2597,9 +1994,6 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
 
     switch (actionType)
     {
-        case ActionType::PlayerDrawWeaponMelee:
-            m_isDrawWeaponMelee = triggered;
-            break;
         case ActionType::PlayerForward:
         {
             // Increment state, if currently using a mob
@@ -2616,12 +2010,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                 }
             }
-            else
-            {
-                m_isForward = m_isForward || triggered;
-            }
         }
-            break;
+        break;
         case ActionType::PlayerBackward:
         {
             // Increment state, if currently using a mob
@@ -2638,24 +2028,9 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     }
                 }
             }
-            else
-            {
-                m_isBackward = m_isBackward || triggered;
-            }
         }
-            break;
-        case ActionType::PlayerTurnLeft:
-            m_isTurnLeft = m_isTurnLeft || triggered;
-            break;
-        case ActionType::PlayerTurnRight:
-            m_isTurnRight = m_isTurnRight || triggered;
-            break;
-        case ActionType::PlayerStrafeLeft:
-            m_isStrafeLeft = m_isStrafeLeft || triggered;
-            break;
-        case ActionType::PlayerStrafeRight:
-            m_isStrafeRight = m_isStrafeRight || triggered;
-            break;
+        break;
+
         case ActionType::DebugMoveSpeed:
             m_MoveSpeed1 = m_MoveSpeed1 || triggered;
             break;
@@ -2665,11 +2040,11 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
         case ActionType::PlayerRotate:
         {
             auto dir = getDirection();
-            auto deltaPhi = 0.02f * intensity; // TODO window width influences this???
+            auto deltaPhi = 0.02f * intensity;  // TODO window width influences this???
             dir = Math::Matrix::rotatedPointAroundLine(dir, {0, 0, 0}, getEntityTransform().Up(), deltaPhi);
             setDirection(dir);
         }
-            break;
+        break;
         case ActionType::PlayerAction:
         {
             if (triggered)
@@ -2689,8 +2064,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     Math::Matrix& m = m_World.getEntity<Components::PositionComponent>(h).m_WorldMatrix;
 
                     float dist = (m.Translation() -
-                        getEntityTransform().Translation())
-                        .lengthSquared();
+                                  getEntityTransform().Translation())
+                                     .lengthSquared();
                     if (dist < shortestDistItem && dist < 10.0f * 10.0f)
                     {
                         nearestItem = h;
@@ -2711,8 +2086,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         VobTypes::NpcVobInformation npc = VobTypes::asNpcVob(m_World, h);
 
                         float dist = (Vob::getTransform(npc).Translation() -
-                            getEntityTransform().Translation())
-                            .lengthSquared();
+                                      getEntityTransform().Translation())
+                                         .lengthSquared();
                         if (dist < shortestDistNPC)
                         {
                             nearestNPC = h;
@@ -2731,8 +2106,8 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                     VobTypes::MobVobInformation vob = VobTypes::asMobVob(m_World, h);
 
                     float dist = (Vob::getTransform(vob).Translation() -
-                        getEntityTransform().Translation())
-                        .lengthSquared();
+                                  getEntityTransform().Translation())
+                                     .lengthSquared();
 
                     if (dist < shortestDistMob)
                     {
@@ -2822,14 +2197,12 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                 }
             }
         }
-            break;
-
+        break;
 
         case ActionType::PlayerActionContinous:
             break;
 
         default:
-            assert(false);
             break;
     }
 }

@@ -8,6 +8,7 @@
 #include "NpcAnimationHandler.h"
 #include "NpcScriptState.h"
 #include "Pathfinder.h"
+#include "CharacterEquipment.h"
 #include <daedalus/DaedalusGameState.h>
 
 namespace UI
@@ -39,7 +40,7 @@ namespace Logic
         const char* const PLAYER_MOB_ANOTHER_IS_USING = "PLAYER_MOB_ANOTHER_IS_USING";
         const char* const PLAYER_PLUNDER_IS_EMPTY = "PLAYER_PLUNDER_IS_EMPTY";
         const char* const PLAYER_RANGED_NO_AMMO = "PLAYER_RANGED_NO_AMMO";
-    }
+    }  // namespace PlayerScriptInfo
 
     /**
      * All kinds of things an NPC can do
@@ -83,7 +84,6 @@ namespace Logic
     class PlayerController : public Controller
     {
     public:
-
         using WalkMode = EventMessages::MovementMessage::WalkMode;
 
         /**
@@ -96,8 +96,6 @@ namespace Logic
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
         EControllerType getControllerType() override { return EControllerType::PlayerController; }
-
-        void setFollowTarget(Handle::EntityHandle e) { m_RoutineState.entityTarget = e; }
 
         /**
          * Called when the models visual changed
@@ -138,11 +136,6 @@ namespace Logic
         void gotoWaypoint(World::Waynet::WaypointIndex wp);
         void gotoVob(Handle::EntityHandle vob);
         void gotoPosition(const Math::float3& position);
-
-        /**
-         * Stops going along the current route
-         */
-        void stopRoute();
 
         /**
          * Teleports the entity to the given waypoint
@@ -263,13 +256,6 @@ namespace Logic
          * @return Looks up the script instance to our handle
          */
         Daedalus::GEngineClasses::C_Npc& getScriptInstance();
-
-        /**
-         * Front/Right/Left-Attack with the current weapon
-         */
-        void attackFront();
-        void attackLeft();
-        void attackRight();
 
         /**
          * @return True, if this is the currently controlled character
@@ -393,10 +379,6 @@ namespace Logic
         ZenLoad::MaterialGroup getSurfaceMaterial();
 
         /**
-         * Returns material data of give triangle index
-         */
-        ZenLoad::MaterialGroup getMaterial(uint32_t triangleIdx);
-        /**
          * @return Item this NPC is currently interacting with
          */
         Daedalus::GameState::ItemHandle getInteractItem() { return Daedalus::GameState::ItemHandle(); /* TODO: Implement */ }
@@ -440,10 +422,7 @@ namespace Logic
         /**
          * Check if this NPC has equipped any melee weapon
          */
-        bool hasEquippedMeleeWeapon() const
-        {
-            return m_EquipmentState.equippedItems.equippedWeapon1h.isValid() || m_EquipmentState.equippedItems.equippedWeapon2h.isValid();
-        };
+        bool hasEquippedMeleeWeapon() const;
 
         /**
          * @param walkMode Whether we should be runnning, sneaking, etc
@@ -482,25 +461,8 @@ namespace Logic
          */
         void travelPath();
 
-        /**
-         * Current routine state
-         */
         struct
         {
-            /**
-             * Target of where the NPC should keep trying to go to
-             */
-            Handle::EntityHandle entityTarget;
-        } m_RoutineState;
-
-        struct
-        {
-            // Waypoint this NPC is closest to/was last positioned at
-            size_t closestWaypoint;
-
-            // Waypoint the NPC is going to
-            size_t targetWaypoint;
-
             // Handle to the Mob currently used by this NPC, if valid
             Handle::EntityHandle usedMob;
 
@@ -511,18 +473,6 @@ namespace Logic
 
         struct
         {
-            // Path the NPC is currently trying to take (To m_AIState.targetWaypoint)
-            std::vector<size_t> currentPath;
-
-            // Node the NPC is currently going to on the path
-            size_t targetNode;
-
-            // Percentage of how far the NPC has gotten so far on the current path
-            float currentPathPerc;
-
-            // Length of the current route
-            float currentRouteLength;
-
             // Where the npc currently is
             Math::float3 position;
 
@@ -542,9 +492,6 @@ namespace Logic
 
         struct
         {
-            // Move speed in m/s
-            float moveSpeed;
-
             // BBox for collision
             Math::float3 collisionBBox[2];
 
@@ -567,45 +514,14 @@ namespace Logic
             EWeaponMode weaponMode;
             Daedalus::GameState::ItemHandle activeWeapon;
 
-            // All equiped items. Contains weapons, rings, armor...
-            std::set<Daedalus::GameState::ItemHandle> equippedItemsAll;
-
-            // All possible equipped items on an NPC
-            struct
-            {
-                std::set<Daedalus::GameState::ItemHandle> equippedRings;
-                std::set<Daedalus::GameState::ItemHandle> equippedRunes;
-                Daedalus::GameState::ItemHandle equippedWeapon1h;
-                Daedalus::GameState::ItemHandle equippedWeapon2h;
-                Daedalus::GameState::ItemHandle equippedBow;
-                Daedalus::GameState::ItemHandle equippedCrossBow;
-                Daedalus::GameState::ItemHandle equippedBelt;
-                Daedalus::GameState::ItemHandle equippedAmulet;
-            } equippedItems;
         } m_EquipmentState;
 
-        /**
-         * This players inventory
-         */
         Inventory m_Inventory;
-
-        /**
-         * State manager
-         */
         NpcScriptState m_AIStateMachine;
-
-        /**
-         * Animation handler
-         */
         NpcAnimationHandler m_NPCAnimationHandler;
-
-        /**
-         * AI/Input handler
-         */
         NpcAIHandler m_AIHandler;
-
-        // Route-information
         Pathfinder m_PathFinder;
+        CharacterEquipment m_CharacterEquipment;
 
         /**
          * refuse talk countdown
@@ -615,14 +531,6 @@ namespace Logic
         /**
          * Key states
          */
-        bool m_isDrawWeaponMelee;
-        bool m_isForward;
-        bool m_isBackward;
-        bool m_isTurnLeft;
-        bool m_isTurnRight;
-        bool m_isStrafeLeft;
-        bool m_isStrafeRight;
-        bool m_isSwimming;
         bool m_MoveSpeed1, m_MoveSpeed2;
 
         /**
@@ -633,12 +541,14 @@ namespace Logic
             Handle::EntityHandle entity;
             std::string bodyPosition;
             bool isAttached;
-			int32_t m_Num;
+            int32_t m_Num;
         };
+
         /**
         * Stores active pfx handler associated with this PlayerController (one shot)
         */
         std::vector<pfxEvent> m_activePfxEvents;
+
         /**
         * Stores ended pfx handler (emitter don't spawn new particles)
         * After all particles are dead, updatePfx() will remove these elements from this vector
@@ -649,7 +559,8 @@ namespace Logic
          * Updates the position of the pfxEvent
          * @param e pfxEvent
          */
-        void updatePfxPosition(const pfxEvent &e);
+        void updatePfxPosition(const pfxEvent& e);
+
         /**
          * Upates the pfx for this player (removes dead emitter)
          * When "ATTACH" keyword is used, the position is also changed.
@@ -665,11 +576,5 @@ namespace Logic
 
         // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
         Utils::Ticket<World::AudioWorld> m_MainNoiseSoundSlot;
-
-        /**
-         * Contstants
-         */
-        static constexpr float m_swimThreshold = 1.3;  // TODO Adjust the value to reflect original game experiece
-        static constexpr float m_wadeThreshold = 0.5;  // TODO Adjust the value to reflect original game experiece
     };
-}
+}  // namespace Logic

@@ -147,7 +147,7 @@ Engine::SavegameManager::SavegameInfo SavegameManager::readSavegameInfo(int idx)
 
 bool SavegameManager::writePlayer(int idx, const std::string& playerName, const nlohmann::json& player)
 {
-    return writeFileInSlot(idx, playerName + ".json", Utils::iso_8859_1_to_utf8(player.dump()));
+    return writeFileInSlot(idx, playerName + ".json", Utils::iso_8859_1_to_utf8(player.dump(4)));
 }
 
 std::string SavegameManager::readPlayer(int idx, const std::string& playerName)
