@@ -105,8 +105,11 @@ namespace Logic
 
             struct
             {
+                // Counter used for shot progression during dialog
                 int dialogueShotCounter;
+                // The counter limit after which more shot types can be used
                 int dialogueShotLimit;
+                // Likelihood of the camera staying on target NPC when PC_Hero speaks
                 int dontShowHeroChance;
             } dialogueCameraSettings;
         };
@@ -179,6 +182,36 @@ namespace Logic
          * @brief Sets whether this controller should read input
          */
         void setActive(bool active);
+
+        /**
+         * Updates the camera according to dialogue camera rules
+         */
+        void updateDialogueCamera();
+
+        /**
+         * Updates the camera according to third person camera rules
+         */
+        void updateThirdPersonCamera(float deltaTime);
+
+        /**
+         * Updates the camera according to first person camera rules
+         */
+        void updateFirstPersonCamera();
+
+        /**
+         * Updates the camera according to free camera rules
+         */
+        void updateFreeCamera(float deltaTime);
+        /**
+         * Updates the camera according to viewer camera rules
+         */
+
+        void updateViewerCamera();
+
+        /**
+         * Updates the camera according to keyed animation camera rules
+         */
+        void updateKeyedAnimationCamera(float deltaTime);
 
         /**
          * Sets the entity to follow in the first/third person camera modes
