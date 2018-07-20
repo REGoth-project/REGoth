@@ -43,12 +43,15 @@ Logic::CameraController::CameraController(World::WorldInstance& world, Handle::E
     m_CameraSettings.thirdPersonCameraSettings.zoomExponent = 3.2f; // initial zoom pos, feel free to modify
     m_CameraSettings.thirdPersonCameraSettings.pitch = Math::degreeToRadians(0.0f); // initial camera angle, feel free to modify
                                                                                     // if you want to see more of the hero's legs, decrease this value
-
     m_CameraSettings.thirdPersonCameraSettings.cameraElevation = Math::degreeToRadians(25.0f);
     m_CameraSettings.thirdPersonCameraSettings.deltaPhi = 0;
 
     m_CameraSettings.firstPersonCameraSettings.pitch = 0;
     m_CameraSettings.firstPersonCameraSettings.yaw = 0;
+
+    m_CameraSettings.dialogueCameraSettings.dialogueShotCounter = 0;
+    m_CameraSettings.dialogueCameraSettings.dialogueShotLimit = 2;
+    m_CameraSettings.dialogueCameraSettings.dontShowHeroChance = 4;
 
     m_KeyframeDuration = 1.0f;
     setupKeybinds();
@@ -238,153 +241,262 @@ void Logic::CameraController::switchModeActions(ECameraMode mode)
     }
 }
 
+void Logic::CameraController::nextDialogueShot() {
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
+                                                            m_World.getScriptEngine().getPlayerEntity());
+
+    EDialogueShotType nextShot = m_DialogueShotType;
+    bool playerTalking = m_dialogueTargetName == player.playerController->getScriptInstance().name[0];
+
+    // Rule: Use close-up and neutral only after at least two fulls or shoulders
+    // Rule: Only full or over-the-shoulder shot for PC_Hero
+    if (playerTalking || m_CameraSettings.dialogueCameraSettings.dialogueShotCounter <=
+                         m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
+        // Rule: don't always cut to PC_Hero when they speak. Leave chance for camera to stay on target NPC
+        m_dontShowHero = rand() % m_CameraSettings.dialogueCameraSettings.dontShowHeroChance != 0;
+        if (m_CameraSettings.dialogueCameraSettings.dialogueShotCounter == 0 ||
+            m_CameraSettings.dialogueCameraSettings.dialogueShotCounter >
+            m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
+
+            // Only choose from first two (Full and OverTheShoulder)
+            nextShot = (EDialogueShotType) (rand() % 2);
+        }
+    } else {
+        // Rule: A close-up is the only possible option after a neutral shot
+        if (m_DialogueShotType == EDialogueShotType::Neutral && rand() % 4 == 0)
+            nextShot = EDialogueShotType::CloseUp;
+            // Rule: No shot should come after a close-up
+        else if (m_DialogueShotType != EDialogueShotType::CloseUp)
+            nextShot = (EDialogueShotType) (rand() % 4);
+    }
+
+    m_DialogueShotType = nextShot;
+    m_CameraSettings.dialogueCameraSettings.dialogueShotCounter++;
+}
+
+void Logic::CameraController::updateDialogueCamera() {
+    VobTypes::NpcVobInformation npc_vob = VobTypes::getVobFromScriptHandle(m_World, m_dialogueTargetNPCHandle);
+
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
+                                                            m_World.getScriptEngine().getPlayerEntity());
+
+    Math::Matrix pTrans = player.playerController->getEntityTransform();
+    Math::Matrix npcTrans = npc_vob.playerController->getEntityTransform();
+    Math::Matrix otherTrans, targetTrans;
+
+    // Can be either 1 or -1, flip the camera based on which character is speaking
+    float reverseShotModifier;
+
+    if (m_dialogueTargetName == player.playerController->getScriptInstance().name[0] && m_dontShowHero) {
+        // The PC_Hero is talking
+        otherTrans = npcTrans;
+        targetTrans = pTrans;
+        reverseShotModifier = -1.0;
+    } else {
+        // The other character is talking
+        otherTrans = pTrans;
+        targetTrans = npcTrans;
+        reverseShotModifier = 1.0;
+    }
+
+    // Pull further back based on distance between characters
+    float distance = (pTrans.Translation() - npcTrans.Translation()).length();
+
+    switch (m_DialogueShotType) {
+        case EDialogueShotType::Full: {
+            m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Right(), 0);
+            m_ViewMatrix *= Math::Matrix::CreateTranslation(-1.5 * reverseShotModifier, 0.5, distance + 0.3);
+            Math::Matrix targetLookAt = targetTrans * Math::Matrix::CreateTranslation(0.0, 0.6, 0.0);
+            m_ViewMatrix = Math::Matrix::CreateLookAt(m_ViewMatrix.Translation(), targetLookAt.Translation(),
+                                                      otherTrans.Up());
+            m_ViewMatrix = m_ViewMatrix.Invert();
+            m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), m_ViewMatrix.Up(),
+                                                          -0.3 * reverseShotModifier);
+        }
+            break;
+        case EDialogueShotType::OverTheShoulder: {
+            m_ViewMatrix = otherTrans.RotatedAroundLine(otherTrans.Translation(), otherTrans.Right(), 0.2);
+            m_ViewMatrix *= Math::Matrix::CreateTranslation(0.5 * reverseShotModifier, 0.8, -0.6);
+            m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), otherTrans.Up(),
+                                                          -0.55 * reverseShotModifier);
+        }
+            break;
+        case EDialogueShotType::Neutral: {
+            m_ViewMatrix = npcTrans.RotatedAroundLine(npcTrans.Translation(), npcTrans.Up(), Math::PI / 2);
+            m_ViewMatrix *= Math::Matrix::CreateTranslation((distance / 2) * -1, 0.5, distance * -1);
+        }
+            break;
+        case EDialogueShotType::CloseUp: {
+            m_ViewMatrix = targetTrans.RotatedAroundLine(targetTrans.Translation(), targetTrans.Up(), Math::PI);
+            m_ViewMatrix *= Math::Matrix::CreateTranslation(-0.3 * reverseShotModifier, 0.8, -1.5);
+            m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(otherTrans.Translation(), otherTrans.Right(), 0.2);
+            m_ViewMatrix = m_ViewMatrix.RotatedAroundLine(m_ViewMatrix.Translation(), otherTrans.Up(),
+                                                          0.2 * reverseShotModifier);
+        }
+            break;
+    }
+}
+
+void Logic::CameraController::updateThirdPersonCamera(float deltaTime) {
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
+
+    if (player.isValid()) {
+        const float verticalFactor = std::sin(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+        const float horizontalFactor = std::cos(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
+        // TODO use movestate direction instead? (swimming not tested)
+        Math::Matrix pTrans = player.playerController->getEntityTransformFacing();
+        Math::float3 pdir;
+
+        // If player is currently using a mob check if camera should be locked
+        // If so, use last known position and finish rotating to it
+        VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, player.playerController->getUsedMob());
+        if (!mob.isValid()) {
+            pdir = pTrans.Forward();
+        } else if (!mob.mobController->isCameraLocked()) {
+            pdir = pTrans.Forward();
+            m_savedPdir = pdir;
+        } else
+            pdir = m_savedPdir;
+
+        const float interpolationFraction = std::min(CAMERA_SMOOTHING * deltaTime, 1.0f);
+        m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection = Math::float3::lerp(
+                m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
+                pdir,
+                interpolationFraction);
+
+        pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
+
+
+        Components::AnimationComponent &anim = Components::Actions::initComponent<Components::AnimationComponent>(
+                player.world->getComponentAllocator(), player.entity);
+        const auto &playerSize = anim.getAnimHandler().getMeshLib().getBBoxMax();
+        const auto &width = playerSize.x;
+        const auto &height = playerSize.y;
+        const auto &length = playerSize.z;
+        float playerDimension = (width + height + length) / 3;
+
+        const auto &playerCenter = pTrans.Translation();
+
+        const Math::float3 up = Math::float3(0.0f, 1.0f, 0.0f);
+
+        float angle = m_CameraSettings.thirdPersonCameraSettings.pitch;
+        const auto &elevation = m_CameraSettings.thirdPersonCameraSettings.cameraElevation;
+        auto actualCameraAngle = Math::radiansToDegree(angle + elevation);
+
+        auto rotationAxisDir = pTrans.Left();
+
+        // cardinalPoint around which the camera will rotate vertically
+        auto cameraRotationCenter = playerCenter;
+        const auto &zoomExponent = m_CameraSettings.thirdPersonCameraSettings.zoomExponent;
+        float zoom = std::exp(zoomExponent * playerDimension);
+
+        Math::float3 newLookAt = cameraRotationCenter + verticalFactor * zoom * up;
+        Math::float3 newCamPos = newLookAt - horizontalFactor * zoom * pdir;
+
+        auto &deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
+        for (auto p : {&newLookAt, &newCamPos}) {
+            *p = Math::Matrix::rotatedPointAroundLine(*p, cameraRotationCenter, rotationAxisDir, angle);
+            // rotate camera around y-axis
+            // *p = Math::Matrix::rotatedPointAroundLine(*pc, pTrans.Translation(), pTrans.Up(), deltaPhi);
+        }
+
+        Math::float3 oldCamPos = getEntityTransform().Translation();
+        Math::float3 intCamPos = Math::float3::lerp(oldCamPos, newCamPos, interpolationFraction);
+
+        const Math::float3 &oldLookAt = m_CameraSettings.thirdPersonCameraSettings.currentLookAt;
+        m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3::lerp(oldLookAt, newLookAt,
+                                                                                      interpolationFraction);
+
+        m_ViewMatrix = Math::Matrix::CreateLookAt(intCamPos,
+                                                  m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
+                                                  up);
+
+        m_ViewMatrix = m_ViewMatrix.Invert();
+    }
+}
+
+void Logic::CameraController::updateFirstPersonCamera()
+{
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
+                                                            m_World.getScriptEngine().getPlayerEntity());
+
+    if (player.isValid()) {
+        auto &settings = m_CameraSettings.firstPersonCameraSettings;
+        Math::Matrix pTrans = player.playerController->getEntityTransform();
+        // TODO find position of player's head
+        m_ViewMatrix = pTrans.RotatedAroundLine(pTrans.Translation(), pTrans.Right(), settings.pitch);
+    }
+}
+
+void Logic::CameraController::updateFreeCamera(float deltaTime)
+{
+    auto &settings = m_CameraSettings.floatingCameraSettings;
+
+    // Get forward/right vector
+    std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
+    settings.up = settings.right.cross(settings.forward);
+
+    settings.forward *= deltaTime * 100.0f;
+    settings.right *= deltaTime * 100.0f;
+
+    m_ViewMatrix = Math::Matrix::CreateView(settings.position,
+                                            settings.yaw,
+                                            settings.pitch);
+
+    m_ViewMatrix = m_ViewMatrix.Invert();
+}
+
+void Logic::CameraController::updateViewerCamera()
+{
+    auto &settings = m_CameraSettings.viewerCameraSettings;
+
+    // getDirectionVectors only returns 2 of 3 direction vectors
+    std::tie(settings.in, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
+    settings.up = settings.right.cross(settings.in);
+
+    m_ViewMatrix = Math::Matrix::CreateLookAt(
+            settings.lookAt + settings.zoom * settings.in, settings.lookAt, settings.up);
+    m_ViewMatrix = m_ViewMatrix.Invert();
+}
+
+void Logic::CameraController::updateKeyedAnimationCamera(float deltaTime) {
+    if (m_Keyframes.empty() && m_KeyframeActive == -1.0f) {
+        return;
+    }
+
+    std::pair<Math::float3, Math::float3> poslookat = updateKeyframedPlay(deltaTime);
+    m_ViewMatrix = Math::Matrix::CreateLookAt(
+            poslookat.first, poslookat.first + poslookat.second, Math::float3(0, 1, 0));
+    m_ViewMatrix = m_ViewMatrix.Invert();
+}
+
 void Logic::CameraController::onUpdateExplicit(float deltaTime)
 {
-    if (m_CameraMode == ECameraMode::ThirdPerson) {
-        VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
-
-        if (player.isValid())
-        {
-            const float verticalFactor = std::sin(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
-            const float horizontalFactor = std::cos(m_CameraSettings.thirdPersonCameraSettings.cameraElevation);
-            // TODO use movestate direction instead? (swimming not tested)
-            Math::Matrix pTrans = player.playerController->getEntityTransformFacing();
-            Math::float3 pdir;
-
-            // If player is currently using a mob check if camera should be locked
-            // If so, use last known position and finish rotating to it
-            VobTypes::MobVobInformation mob = VobTypes::asMobVob(m_World, player.playerController->getUsedMob());
-            if (!mob.isValid())
-            {
-                pdir = pTrans.Forward();
-            }
-            else if (!mob.mobController->isCameraLocked())
-            {
-                pdir = pTrans.Forward();
-                m_savedPdir = pdir;
-            }
-            else
-                pdir = m_savedPdir;
-
-            const float interpolationFraction = std::min(CAMERA_SMOOTHING * deltaTime, 1.0f);
-            m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection = Math::float3::lerp(m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection,
-                                                                                                   pdir,
-                                                                                                   interpolationFraction);
-
-            pdir = m_CameraSettings.thirdPersonCameraSettings.currentOffsetDirection;
-
-
-            Components::AnimationComponent& anim = Components::Actions::initComponent<Components::AnimationComponent>(player.world->getComponentAllocator(), player.entity);
-            const auto& playerSize = anim.getAnimHandler().getMeshLib().getBBoxMax();
-            const auto& width = playerSize.x;
-            const auto& height = playerSize.y;
-            const auto& length = playerSize.z;
-            float playerDimension = (width + height + length) / 3;
-
-            const auto& playerCenter = pTrans.Translation();
-
-            const Math::float3 up = Math::float3(0.0f, 1.0f, 0.0f);
-
-            float angle = m_CameraSettings.thirdPersonCameraSettings.pitch;
-            const auto& elevation = m_CameraSettings.thirdPersonCameraSettings.cameraElevation;
-            auto actualCameraAngle = Math::radiansToDegree(angle + elevation);
-
-            auto rotationAxisDir = pTrans.Left();
-
-            // cardinalPoint around which the camera will rotate vertically
-            auto cameraRotationCenter = playerCenter;
-            const auto& zoomExponent = m_CameraSettings.thirdPersonCameraSettings.zoomExponent;
-            float zoom = std::exp(zoomExponent * playerDimension);
-
-            Math::float3 newLookAt = cameraRotationCenter + verticalFactor * zoom * up;
-            Math::float3 newCamPos = newLookAt - horizontalFactor * zoom * pdir;
-
-            auto& deltaPhi = m_CameraSettings.thirdPersonCameraSettings.deltaPhi;
-            for (auto p : {&newLookAt, &newCamPos})
-            {
-                *p = Math::Matrix::rotatedPointAroundLine(*p, cameraRotationCenter, rotationAxisDir, angle);
-                // rotate camera around y-axis
-                // *p = Math::Matrix::rotatedPointAroundLine(*pc, pTrans.Translation(), pTrans.Up(), deltaPhi);
-            }
-
-            Math::float3 oldCamPos = getEntityTransform().Translation();
-            Math::float3 intCamPos = Math::float3::lerp(oldCamPos, newCamPos, interpolationFraction);
-
-            const Math::float3& oldLookAt = m_CameraSettings.thirdPersonCameraSettings.currentLookAt;
-            m_CameraSettings.thirdPersonCameraSettings.currentLookAt = Math::float3::lerp(oldLookAt, newLookAt,
-                                                                                          interpolationFraction);
-
-            m_ViewMatrix = Math::Matrix::CreateLookAt(intCamPos,
-                                                      m_CameraSettings.thirdPersonCameraSettings.currentLookAt,
-                                                      up);
-
-            setEntityTransform(m_ViewMatrix.Invert());
-        }
+    Math::Matrix nextViewMatrix;
+    switch (m_CameraMode) {
+        case ECameraMode::Dialogue:
+            updateDialogueCamera();
+            break;
+        case ECameraMode::ThirdPerson:
+            updateThirdPersonCamera(deltaTime);
+            break;
+        case ECameraMode::FirstPerson:
+            updateFirstPersonCamera();
+            break;
+        case ECameraMode::Free:
+            updateFreeCamera(deltaTime);
+            break;
+        case ECameraMode::Viewer:
+            updateViewerCamera();
+            break;
+        case ECameraMode::KeyedAnimation:
+            updateKeyedAnimationCamera(deltaTime);
+            break;
+        case ECameraMode::Static:
+            //TODO add handling there?
+            break;
     }
-
-    if (m_Active) {
-        switch (m_CameraMode) {
-            case ECameraMode::FirstPerson: {
-                VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World,
-                                                                        m_World.getScriptEngine().getPlayerEntity());
-
-                if (player.isValid()) {
-                    auto &settings = m_CameraSettings.firstPersonCameraSettings;
-                    Math::Matrix pTrans = player.playerController->getEntityTransform();
-                    // TODO find position of player's head
-                    m_ViewMatrix = pTrans.RotatedAroundLine(pTrans.Translation(), pTrans.Right(), settings.pitch);
-                    setEntityTransform(m_ViewMatrix);
-                }
-            }
-                break;
-
-            case ECameraMode::Free: {
-                auto &settings = m_CameraSettings.floatingCameraSettings;
-
-                // Get forward/right vector
-                std::tie(settings.forward, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
-                settings.up = settings.right.cross(settings.forward);
-
-                settings.forward *= deltaTime * 100.0f;
-                settings.right *= deltaTime * 100.0f;
-
-                m_ViewMatrix = Math::Matrix::CreateView(settings.position,
-                                                        settings.yaw,
-                                                        settings.pitch);
-
-                setEntityTransform(m_ViewMatrix.Invert());
-            }
-                break;
-
-            case ECameraMode::Viewer: {
-                auto &settings = m_CameraSettings.viewerCameraSettings;
-
-                // getDirectionVectors only returns 2 of 3 direction vectors
-                std::tie(settings.in, settings.right) = getDirectionVectors(settings.yaw, settings.pitch);
-                settings.up = settings.right.cross(settings.in);
-
-                m_ViewMatrix = Math::Matrix::CreateLookAt(
-                        settings.lookAt + settings.zoom * settings.in, settings.lookAt, settings.up);
-                setEntityTransform(m_ViewMatrix.Invert());
-            }
-                break;
-
-            case ECameraMode::KeyedAnimation: {
-                if (!m_Keyframes.empty() && m_KeyframeActive != -1.0f) {
-                    std::pair<Math::float3, Math::float3> poslookat = updateKeyframedPlay(deltaTime);
-                    m_ViewMatrix = Math::Matrix::CreateLookAt(
-                            poslookat.first, poslookat.first + poslookat.second, Math::float3(0, 1, 0));
-                    setEntityTransform(m_ViewMatrix.Invert());
-                }
-            }
-                break;
-
-            case ECameraMode::Static: {
-                //TODO add handling there?
-            }
-                break;
-        }
-    }
+    setEntityTransform(m_ViewMatrix);
 }
 
 std::pair<Math::float3, Math::float3> Logic::CameraController::getDirectionVectors(float yaw, float pitch)
@@ -412,6 +524,7 @@ void Logic::CameraController::setTransforms(const Math::float3& position, float 
 
 void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode mode)
 {
+    m_savedCameraMode = m_CameraMode;
     m_CameraMode = mode;
     switchModeActions(mode);
     switch (mode)
@@ -427,6 +540,9 @@ void Logic::CameraController::setCameraMode(Logic::CameraController::ECameraMode
             Engine::Input::setMouseLock(false);
             break;
         case ECameraMode::ThirdPerson:
+            Engine::Input::setMouseLock(true);
+            break;
+        case ECameraMode::Dialogue:
             Engine::Input::setMouseLock(true);
             break;
         case ECameraMode::KeyedAnimation:

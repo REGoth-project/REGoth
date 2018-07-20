@@ -13,10 +13,19 @@ namespace Logic
         {
             ThirdPerson,
             FirstPerson,
+            Dialogue,
             Free,
             Viewer, // name is open to change
             Static,
             KeyedAnimation,
+        };
+
+        enum class EDialogueShotType
+        {
+            Full,
+            OverTheShoulder,
+            Neutral,
+            CloseUp,
         };
 
         struct CameraSettings
@@ -93,6 +102,16 @@ namespace Logic
                 Math::float3 up, right, in;
                 float yaw, pitch, zoom;
             } viewerCameraSettings;
+
+            struct
+            {
+                // Counter used for shot progression during dialog
+                int dialogueShotCounter;
+                // The counter limit after which more shot types can be used
+                int dialogueShotLimit;
+                // Likelihood of the camera staying on target NPC when PC_Hero speaks
+                int dontShowHeroChance;
+            } dialogueCameraSettings;
         };
 
         /**
@@ -120,13 +139,79 @@ namespace Logic
          * @return ECameraMode camera mode
          */
         ECameraMode getCameraMode() {
-         return m_CameraMode;
+            return m_CameraMode;
         }
+
+        /**
+         * Sets camera mode to mode before last setCameraMode() call
+         */
+        void restoreCameraMode()
+        {
+            setCameraMode(m_savedCameraMode);
+        }
+
+        /**
+         * Reset m_neutralShotCounter to 0 in order to begin camera progression from start
+         */
+        void resetCameraProgression() {m_CameraSettings.dialogueCameraSettings.dialogueShotCounter = 0;}
+
+        /**
+         * Sets the name of the character that is speaking
+         * @param target name of NPC
+         */
+        void setDialogueTargetName(std::string &target)
+        {
+            m_dialogueTargetName = target;
+        }
+
+        /**
+         * Sets the NPC handle of the character the player is talking to
+         * @param npc NPCHandle of NPC
+         */
+        void setDialogueTargetNPCHandle(Daedalus::GameState::NpcHandle npc)
+        {
+            m_dialogueTargetNPCHandle = npc;
+        }
+
+        /**
+         * Randomly chooses one of the dialogue shot types to cut to
+         */
+        void nextDialogueShot();
 
         /**
          * @brief Sets whether this controller should read input
          */
         void setActive(bool active);
+
+        /**
+         * Updates the camera according to dialogue camera rules
+         */
+        void updateDialogueCamera();
+
+        /**
+         * Updates the camera according to third person camera rules
+         */
+        void updateThirdPersonCamera(float deltaTime);
+
+        /**
+         * Updates the camera according to first person camera rules
+         */
+        void updateFirstPersonCamera();
+
+        /**
+         * Updates the camera according to free camera rules
+         */
+        void updateFreeCamera(float deltaTime);
+        /**
+         * Updates the camera according to viewer camera rules
+         */
+
+        void updateViewerCamera();
+
+        /**
+         * Updates the camera according to keyed animation camera rules
+         */
+        void updateKeyedAnimationCamera(float deltaTime);
 
         /**
          * Sets the entity to follow in the first/third person camera modes
@@ -225,6 +310,26 @@ namespace Logic
         ECameraMode m_CameraMode;
 
         /**
+         * What camera angle is used during dialogue
+         */
+        EDialogueShotType  m_DialogueShotType;
+
+        /**
+         * Tracks whether camera should show PC_hero when talking, or other character
+         */
+        bool m_dontShowHero;
+
+        /**
+         * Remember camera mode (i.e. for dialogue) to restore it later
+         */
+        ECameraMode m_savedCameraMode;
+
+        /**
+         * Name of NPC the dialogue camera should point at
+         */
+        std::string m_dialogueTargetName;
+
+        /**
          * Entity this is attached to
          */
         Handle::EntityHandle m_FollowedEntity;
@@ -268,9 +373,12 @@ namespace Logic
         float m_KeyframeActive;
         float m_KeyframeDuration;
 
-	/**
-         * Direction to use during locked camera while using mobs
-         */
+
+        Daedalus::GameState::NpcHandle m_dialogueTargetNPCHandle;
+
+        /**
+             * Direction to use during locked camera while using mobs
+             */
         Math::float3 m_savedPdir;
     };
 }

@@ -8,6 +8,7 @@
 #include <json.hpp>
 #include <stdlib.h>
 #include "visuals/ModelVisual.h"
+#include "CameraController.h"
 #include <audio/AudioEngine.h>
 #include <components/Entities.h>
 #include <components/Vob.h>
@@ -1000,17 +1001,21 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             {
                 message.status = ConversationMessage::Status::PLAYING;
 
+                if (!isMonolog)
+                {
+                    m_World.getDialogManager().setCurrentMessage(sharedMessage);
+                    std::string characterName = getScriptInstance().name[0];
+                    m_World.getDialogManager().displaySubtitle(message.text, characterName);
+                    m_World.getCameraController()->setDialogueTargetName(characterName);
+                    m_World.getCameraController()->nextDialogueShot();
+                    subtitleBox.setScaling(0.0);
+                    subtitleBox.setGrowDirection(+1.0f);
+                }
+
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
                 message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
-                if (!isMonolog)
-                {
-                    m_World.getDialogManager().setCurrentMessage(sharedMessage);
-                    m_World.getDialogManager().displaySubtitle(message.text, getScriptInstance().name[0]);
-                    subtitleBox.setScaling(0.0);
-                    subtitleBox.setGrowDirection(+1.0f);
-                }
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
