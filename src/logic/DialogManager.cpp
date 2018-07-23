@@ -3,6 +3,7 @@
 //
 
 #include "DialogManager.h"
+#include "CameraController.h"
 #include <components/VobClasses.h>
 #include <engine/BaseEngine.h>
 #include <engine/World.h>
@@ -268,6 +269,8 @@ void DialogManager::performChoice(size_t choice)
     {
         m_Interaction.currentInfo = infoHandle;
     }
+
+    m_World.getCameraController()->resetCameraProgression();
 }
 
 void DialogManager::assessTalk(NpcHandle target)
@@ -325,6 +328,9 @@ void DialogManager::endDialog()
 
     if (targetVob.isValid())
         targetVob.playerController->getEM().onMessage(msg, playerVob.entity);
+
+    m_World.getCameraController()->restoreCameraMode();
+    m_World.getEngine()->getSession().enableActionBindings(true);
 }
 
 bool DialogManager::init()
@@ -519,6 +525,10 @@ void DialogManager::startDialog(NpcHandle npc, NpcHandle player)
     m_Interaction.target = npc;
     m_ProcessInfos = true;
     m_DialogActive = true;
+    m_World.getCameraController()->setCameraMode(CameraController::ECameraMode::Dialogue);
+    m_World.getCameraController()->setDialogueTargetNPCHandle(npc);
+    m_World.getCameraController()->nextDialogueShot();
     m_World.getEngine()->getHud().setGameplayHudVisible(false);
+    m_World.getEngine()->getSession().enableActionBindings(false);
     updateChoices(npc);
 }
