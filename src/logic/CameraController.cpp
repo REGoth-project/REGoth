@@ -264,15 +264,21 @@ void Logic::CameraController::nextDialogueShot() {
         }
     } else {
         // Rule: A close-up is the only possible option after a neutral shot
-        if (m_DialogueShotType == EDialogueShotType::Neutral && rand() % 4 == 0)
+        if (m_DialogueShotType == EDialogueShotType::Neutral && rand() % 4 == 0) {
             nextShot = EDialogueShotType::CloseUp;
             // Rule: No shot should come after a close-up
-        else if (m_DialogueShotType != EDialogueShotType::CloseUp)
+        } else if (m_DialogueShotType != EDialogueShotType::CloseUp) {
             nextShot = (EDialogueShotType) (rand() % 4);
+        }
     }
 
     m_DialogueShotType = nextShot;
-    m_CameraSettings.dialogueCameraSettings.dialogueShotCounter++;
+
+    if (playerTalking) {
+        resetCameraProgression();
+    } else {
+        m_CameraSettings.dialogueCameraSettings.dialogueShotCounter++;
+    }
 }
 
 void Logic::CameraController::updateDialogueCamera() {
