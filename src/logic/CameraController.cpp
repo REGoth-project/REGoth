@@ -249,12 +249,14 @@ void Logic::CameraController::nextDialogueShot() {
     EDialogueShotType nextShot = m_DialogueShotType;
     bool playerTalking = m_dialogueTargetName == player.playerController->getScriptInstance().name[0];
 
+    int numOfShotTypes = 4; // length of EDialogueShotType Enum and number of dialogue shot types
+
     // Rule: Use close-up and neutral only after at least two fulls or shoulders
     // Rule: Only full or over-the-shoulder shot for PC_Hero
     if (playerTalking || m_CameraSettings.dialogueCameraSettings.dialogueShotCounter <=
                          m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
         // Rule: don't always cut to PC_Hero when they speak. Leave chance for camera to stay on target NPC
-        m_dontShowHero = rand() % m_CameraSettings.dialogueCameraSettings.dontShowHeroChance != 0;
+        m_dontShowHero = (rand() % m_CameraSettings.dialogueCameraSettings.dontShowHeroChance) != 0;
         if (m_CameraSettings.dialogueCameraSettings.dialogueShotCounter == 0 ||
             m_CameraSettings.dialogueCameraSettings.dialogueShotCounter >
             m_CameraSettings.dialogueCameraSettings.dialogueShotLimit) {
@@ -264,11 +266,11 @@ void Logic::CameraController::nextDialogueShot() {
         }
     } else {
         // Rule: A close-up is the only possible option after a neutral shot
-        if (m_DialogueShotType == EDialogueShotType::Neutral && rand() % 4 == 0) {
+        if (m_DialogueShotType == EDialogueShotType::Neutral && (rand() % numOfShotTypes) == 0) {
             nextShot = EDialogueShotType::CloseUp;
             // Rule: No shot should come after a close-up
         } else if (m_DialogueShotType != EDialogueShotType::CloseUp) {
-            nextShot = (EDialogueShotType) (rand() % 4);
+            nextShot = (EDialogueShotType) (rand() % numOfShotTypes);
         }
     }
 
