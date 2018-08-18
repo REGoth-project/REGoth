@@ -153,7 +153,7 @@ void View::drawTexture(uint8_t id, int x, int y, int width, int height, int surf
 
         float ortho[16];
         bx::mtxOrtho(ortho, 0.0f, (float)surfaceWidth, (float)surfaceHeight, 0.0f, 0.0f, 1000.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-        bgfx::setViewTransform(id, NULL, ortho);
+        bgfx::setViewTransform(id, nullptr, ortho);
         bgfx::setViewRect(id, 0, 0, surfaceWidth, surfaceHeight);
 
         if (ViewUtil::screenQuad(x, y, width, height))
@@ -274,7 +274,7 @@ void View::drawText(const std::string& txt, int px, int py, EAlign alignment, Re
     {
         float ortho[16];
         bx::mtxOrtho(ortho, 0.0f, (float)config.state.viewWidth, (float)config.state.viewHeight, 0.0f, 0.0f, 1000.0f, 0.0f, bgfx::getCaps()->homogeneousDepth);
-        bgfx::setViewTransform(BGFX_VIEW, NULL, ortho);
+        bgfx::setViewTransform(BGFX_VIEW, nullptr, ortho);
         bgfx::setViewRect(BGFX_VIEW, 0, 0, (uint16_t)config.state.viewWidth, (uint16_t)config.state.viewHeight);
 
         //Handle::TextureHandle fntTex = fnt->getFontTexture();

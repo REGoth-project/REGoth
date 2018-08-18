@@ -223,7 +223,7 @@ namespace Utils
     inline std::string utf8_to_iso8859_1(const char* in)
     {
         std::string out;
-        if (in == NULL)
+        if (in == nullptr)
             return out;
 
         unsigned int codepoint;

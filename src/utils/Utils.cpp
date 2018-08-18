@@ -200,7 +200,7 @@ const bgfx::Memory* Utils::loadFileToMemory(const char* _filePath)
         }
 
     LogWarn() << "Failed to load file at: " << _filePath;
-    return NULL;
+    return nullptr;
 }
 
 std::string Utils::stripExtension(const std::string& fileName)

@@ -42,7 +42,7 @@ bgfx::ProgramHandle Shader::loadProgram(const char* basePath, const char* _vsNam
 {
     bgfx::ShaderHandle vsh = loadShader(basePath, _vsName);
     bgfx::ShaderHandle fsh = BGFX_INVALID_HANDLE;
-    if (NULL != _fsName)
+    if (nullptr != _fsName)
     {
         fsh = loadShader(basePath, _fsName);
     }

@@ -72,16 +72,16 @@ inline void glfwSetWindow(GLFWwindow* _window)
     pd.nwh = (void*)(uintptr_t)glfwGetGLXWindow(_window);
     pd.context = glfwGetGLXContext(_window);
 #elif BX_PLATFORM_OSX
-    pd.ndt = NULL;
+    pd.ndt = nullptr;
     pd.nwh = glfwGetCocoaWindow(_window);
     pd.context = glfwGetNSGLContext(_window);
 #elif BX_PLATFORM_WINDOWS
-    pd.ndt = NULL;
+    pd.ndt = nullptr;
     pd.nwh = glfwGetWin32Window(_window);
-    pd.context = NULL;
+    pd.context = nullptr;
 #endif  // BX_PLATFORM_WINDOWS
-    pd.backBuffer = NULL;
-    pd.backBufferDS = NULL;
+    pd.backBuffer = nullptr;
+    pd.backBufferDS = nullptr;
     setPlatformData(pd);
 }
 
@@ -112,7 +112,7 @@ int32_t PlatformGLFW::run(int argc, char** argv)
     GLFWwindow* window;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "REGoth", fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
+    window = glfwCreateWindow(width, height, "REGoth", fullscreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
     if (!window)
     {
         std::cout << "GLFW: Failed to create window!";

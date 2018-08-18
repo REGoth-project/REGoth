@@ -12,10 +12,10 @@ namespace Audio
 {
     void AudioEngine::enumerateDevices(std::vector<std::string>& enumerated)
     {
-        if (alcIsExtensionPresent(NULL, "ALC_ENUMERATION_EXT"))
+        if (alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT"))
         {
             size_t len = 0;
-            const ALCchar* devices = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+            const ALCchar* devices = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
             const ALCchar *device = devices, *next = devices + 1;
 
             while (device && *device != '\0' && next && *next != '\0')
@@ -54,7 +54,7 @@ namespace Audio
 
     AudioEngine::AudioEngine(const std::string& name)
     {
-        m_Device = alcOpenDevice(name.empty() ? NULL : name.c_str());
+        m_Device = alcOpenDevice(name.empty() ? nullptr : name.c_str());
         if (!m_Device)
         {
             LogWarn() << "Could not open audio device '" << (name.empty() ? "default" : name) << "': "
