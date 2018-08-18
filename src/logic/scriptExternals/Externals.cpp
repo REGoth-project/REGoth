@@ -1100,7 +1100,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string spawnpoint = vm.popString();
         uint32_t npcinstance = vm.popDataValue();
 
-        if(spawnpoint == "")
+        if(spawnpoint.empty())
             return;
 
         if (!World::Waynet::waypointExists(pWorld->getWaynet(), spawnpoint)

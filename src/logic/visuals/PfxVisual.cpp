@@ -168,7 +168,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
             ++i;
         }
     }
-    if (pfx.m_Particles.size() == 0 && m_dead)
+    if (pfx.m_Particles.empty() && m_dead)
     {
         m_canBeRemoved = true;
     }

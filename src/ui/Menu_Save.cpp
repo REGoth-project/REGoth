@@ -102,7 +102,7 @@ bool Menu_Save::onInputAction(Engine::ActionType action)
                     performSelectAction(m_SelectableItems[m_SelectedItem]);
                 break;
             case ActionType::UI_Backspace:
-                if (m_SaveName.size() > 0)
+                if (!m_SaveName.empty())
                     m_SaveName.pop_back();
                 break;
             case ActionType::UI_Close:

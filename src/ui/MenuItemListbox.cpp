@@ -65,7 +65,7 @@ void MenuItemTypes::MenuItemListbox::update(double dt, Engine::Input::MouseState
 
 bool MenuItemTypes::MenuItemListbox::hasTopics()
 {
-    if (m_Entries.size() > 0)
+    if (!m_Entries.empty())
         return true;
     else
         return false;

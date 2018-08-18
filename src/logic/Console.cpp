@@ -67,7 +67,7 @@ void Console::onKeyDown(int glfwKey, int mods)
     }
     else if (glfwKey == GLFW_KEY_BACKSPACE)
     {
-        if (m_TypedLine.size() >= 1)
+        if (!m_TypedLine.empty())
         {
             m_TypedLine.pop_back();
             generateSuggestions(m_TypedLine, false);
