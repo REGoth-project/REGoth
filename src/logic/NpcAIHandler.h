@@ -44,7 +44,7 @@ namespace Logic
     {
     public:
         NpcAIHandler(World::WorldInstance& world, Handle::EntityHandle hostVob);
-        ~NpcAIHandler();
+        ~NpcAIHandler() = default;
 
         /**
          * Frame update

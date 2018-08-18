@@ -354,7 +354,7 @@ RayTestResult PhysicsSystem::raytrace(const Math::float3& from, const Math::floa
 
     struct FilteredRayResultCallback : public btCollisionWorld::RayResultCallback
     {
-        FilteredRayResultCallback() {}
+        FilteredRayResultCallback() = default;
         btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
         {
             const btRigidBody* rb = btRigidBody::upcast(rayResult.m_collisionObject);

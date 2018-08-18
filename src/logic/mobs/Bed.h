@@ -13,7 +13,7 @@ namespace Logic
         {
         public:
             Bed(World::WorldInstance& world, const Handle::EntityHandle& entity);
-            virtual ~Bed();
+            virtual ~Bed() = default;
 
             std::string getSchemeName() override;
             void onFreePositionFound(Handle::EntityHandle npc, InteractPosition* pos) override;

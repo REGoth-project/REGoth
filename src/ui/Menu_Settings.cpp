@@ -7,10 +7,6 @@ Menu_Settings::Menu_Settings(Engine::BaseEngine& e)
 {
 }
 
-Menu_Settings::~Menu_Settings()
-{
-}
-
 Menu_Settings* Menu_Settings::create(Engine::BaseEngine& e)
 {
     Menu_Settings* s = new Menu_Settings(e);

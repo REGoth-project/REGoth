@@ -40,7 +40,7 @@ namespace Components
 
     struct Component : public Handle::HandleTypeDescriptor<Handle::EntityHandle>
     {
-        ~Component(){};
+        ~Component() = default;
     };
 
     /**

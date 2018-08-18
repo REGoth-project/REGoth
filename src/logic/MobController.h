@@ -39,7 +39,7 @@ namespace Logic
         {
             m_StateNum = 0;
         }
-        virtual ~MobCore() {}
+        virtual ~MobCore() = default;
         /**
          * Sets the base animation-scheme to use
          * @param name New scheme

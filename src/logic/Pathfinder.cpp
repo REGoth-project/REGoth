@@ -29,13 +29,6 @@ Pathfinder::Pathfinder(World::WorldInstance& world)
 
 }
 
-
-Pathfinder::~Pathfinder()
-{
-
-}
-
-
 Pathfinder::MovementReport Pathfinder::checkMoveToLocation(const Math::float3& from, const Math::float3& to)
 {
     MovementReport report;

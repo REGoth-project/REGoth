@@ -13,7 +13,7 @@ namespace Logic
         {
         public:
             Ladder(World::WorldInstance& world, const Handle::EntityHandle& entity);
-            virtual ~Ladder();
+            virtual ~Ladder() = default;
 
             /**
              *

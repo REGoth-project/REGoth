@@ -7,7 +7,7 @@ namespace UI
     {
     public:
         Menu_Settings(Engine::BaseEngine& e);
-        ~Menu_Settings();
+        ~Menu_Settings() = default;
 
         /**
          * Creates an instance of this class and appends it to the root UI-View

@@ -126,10 +126,6 @@ ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entit
 {
 }
 
-ModelVisual::~ModelVisual()
-{
-}
-
 bool ModelVisual::load(const std::string& visual)
 {
     VisualController::load(visual);

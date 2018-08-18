@@ -31,13 +31,6 @@ SkyConfig::SkyConfig(const std::string& jsonString, SkyGametype gametype)
     loadFromJson(jsonString);
 }
 
-
-SkyConfig::~SkyConfig()
-{
-
-}
-
-
 void SkyConfig::addColorSet(const SkyConfig::SkyDayColorSet& set)
 {
     m_SkyDayColorsPerWorld[Utils::uppered(set.world)] = set;

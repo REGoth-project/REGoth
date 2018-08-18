@@ -14,10 +14,6 @@ StaticMeshVisual::StaticMeshVisual(World::WorldInstance& world, Handle::EntityHa
 {
 }
 
-StaticMeshVisual::~StaticMeshVisual()
-{
-}
-
 bool StaticMeshVisual::load(const std::string& visual)
 {
     VisualController::load(visual);

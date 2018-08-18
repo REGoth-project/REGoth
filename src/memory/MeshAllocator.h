@@ -5,7 +5,7 @@ namespace Meshes
     class MeshAllocator
     {
     public:
-        MeshAllocator() {}
+        MeshAllocator() = default;
     private:
         Meshes::StaticMeshDynSize
     };

@@ -14,10 +14,6 @@ UI::ConsoleBox::ConsoleBox(Engine::BaseEngine& e)
     m_CurrentlySelected = -1;
 }
 
-UI::ConsoleBox::~ConsoleBox()
-{
-}
-
 void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     m_IsHidden = !m_Engine.getConsole().isOpen();

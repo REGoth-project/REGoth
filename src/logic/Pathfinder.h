@@ -57,7 +57,7 @@ namespace Logic
         };
 
         Pathfinder(World::WorldInstance& world);
-        virtual ~Pathfinder();
+        virtual ~Pathfinder() = default;
 
         void startNewRouteTo(const Math::float3& positionNow, const Math::float3& target);
         void startNewRouteTo(const Math::float3& positionNow, World::Waynet::WaypointIndex waypoint);

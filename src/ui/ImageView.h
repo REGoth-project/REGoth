@@ -8,7 +8,7 @@ namespace UI
     {
     public:
         ImageView(Engine::BaseEngine& e);
-        ~ImageView();
+        ~ImageView() = default;
 
         /**
          * Updates/draws the UI-Views

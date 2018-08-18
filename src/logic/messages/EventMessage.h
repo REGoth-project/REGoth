@@ -48,7 +48,7 @@ namespace Logic
                 inUse = false;
                 isOverlay = false;
             }
-            virtual ~EventMessage() {}
+            virtual ~EventMessage() = default;
             /**
              * Export as JSON-String
              */
@@ -127,7 +127,7 @@ namespace Logic
                 messageType = EventMessageType::Npc;
                 isJob = true;
             }
-            virtual ~NpcMessage() {}
+            virtual ~NpcMessage() = default;
             /**
              * Export as JSON-String
              */

@@ -17,10 +17,6 @@ UI::BarView::BarView(Engine::BaseEngine& e)
     setInnerOffset(INNER_OFFSET_DEFAULT);
 }
 
-UI::BarView::~BarView()
-{
-}
-
 void UI::BarView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if (m_IsHidden)

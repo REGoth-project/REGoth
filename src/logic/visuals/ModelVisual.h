@@ -142,7 +142,7 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~ModelVisual();
+        virtual ~ModelVisual() = default;
 
         /**
          * @return Classtype of this visual

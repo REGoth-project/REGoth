@@ -18,10 +18,6 @@ Console::Console(Engine::BaseEngine& e)
     outputAdd(" ----------- REGoth Console -----------");
 }
 
-Console::~Console()
-{
-}
-
 void Console::onKeyDown(int glfwKey, int mods)
 {
     auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();

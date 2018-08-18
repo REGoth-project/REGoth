@@ -13,10 +13,6 @@ Bed::Bed(World::WorldInstance& world, const Handle::EntityHandle& entity)
     m_EnteringBackside = false;
 }
 
-Bed::~Bed()
-{
-}
-
 std::string Bed::getSchemeName()
 {
     return m_Scheme + "_" + (m_EnteringBackside ? "BACK" : "FRONT");

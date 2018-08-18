@@ -81,11 +81,6 @@ UI::zFont::zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInf
     m_FontTexture = m_Engine.getEngineTextureAlloc().loadTextureVDF(fontInfo.fontName);
 }
 
-UI::zFont::~zFont()
-{
-    // Note: No need to unload font-textures, as they are needed in all worlds anyways.
-}
-
 bool UI::zFont::getGlyphOf(unsigned char c, UI::zFont::Glyph& g) const
 {
     // FIXME Below always evaluates to false, what's the intention there?

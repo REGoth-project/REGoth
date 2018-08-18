@@ -28,7 +28,7 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         Controller(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~Controller(){};
+        virtual ~Controller() = default;
 
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h

@@ -12,10 +12,6 @@ Container::Container(World::WorldInstance& world, const Handle::EntityHandle& en
 {
 }
 
-Container::~Container()
-{
-}
-
 void Container::createContents(const std::string& contentString)
 {
     std::vector<std::string> items = Utils::split(contentString, ',');

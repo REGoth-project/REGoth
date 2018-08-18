@@ -50,10 +50,6 @@ Sky::Sky(World::WorldInstance& world)
     fillSkyStates();
 }
 
-Sky::~Sky()
-{
-}
-
 void Sky::calculateLUT_ZenGin(const Math::float3& col0, const Math::float3& col1, Math::float4* pLut)
 {
     for (int i = 0; i < 256; i++)

@@ -15,10 +15,6 @@ GenericMeshAllocator::GenericMeshAllocator(const VDFS::FileIndex* vdfidx)
 {
 }
 
-GenericMeshAllocator::~GenericMeshAllocator()
-{
-}
-
 Handle::MeshHandle GenericMeshAllocator::loadMeshVDF(const VDFS::FileIndex& idx, const std::string& name)
 {
     // Check if this was already loaded

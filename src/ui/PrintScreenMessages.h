@@ -11,7 +11,7 @@ namespace UI
     {
     public:
         PrintScreenMessages(Engine::BaseEngine& e);
-        ~PrintScreenMessages();
+        ~PrintScreenMessages() = default;
 
         /**
          * Updates/draws the UI-Views

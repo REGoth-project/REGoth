@@ -76,7 +76,7 @@ namespace Content
         };
 
         Sky(World::WorldInstance& world);
-        ~Sky();
+        ~Sky() = default;
 
         /**
          * Updates the sky and the colors

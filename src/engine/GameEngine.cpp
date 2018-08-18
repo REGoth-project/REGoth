@@ -29,10 +29,6 @@ GameEngine::GameEngine()
 {
 }
 
-GameEngine::~GameEngine()
-{
-}
-
 void GameEngine::initEngine(int argc, char** argv)
 {
     BaseEngine::initEngine(argc, argv);

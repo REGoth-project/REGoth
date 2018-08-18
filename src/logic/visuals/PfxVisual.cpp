@@ -24,10 +24,6 @@ Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle en
     Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), entity);
 }
 
-Logic::PfxVisual::~PfxVisual()
-{
-}
-
 bool Logic::PfxVisual::load(const std::string& visual)
 {
     VisualController::load(visual);

@@ -13,10 +13,6 @@ Menu_Load::Menu_Load(Engine::BaseEngine& e)
 {
 }
 
-Menu_Load::~Menu_Load()
-{
-}
-
 Menu_Load* Menu_Load::create(Engine::BaseEngine& e)
 {
     Menu_Load* s = new Menu_Load(e);
