@@ -16,7 +16,7 @@ namespace UI
     public:
         DialogBox(Engine::BaseEngine& e);
 
-        ~DialogBox() = default;
+        ~DialogBox() override = default;
 
         /**
          * Updates/draws the UI-Views

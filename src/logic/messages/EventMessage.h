@@ -127,7 +127,8 @@ namespace Logic
                 messageType = EventMessageType::Npc;
                 isJob = true;
             }
-            virtual ~NpcMessage() = default;
+
+            ~NpcMessage() override = default;
             /**
              * Export as JSON-String
              */

@@ -7,7 +7,7 @@ namespace Logic
     class CameraController : public Controller
     {
     public:
-        ~CameraController();
+        ~CameraController() override;
 
         enum class ECameraMode
         {

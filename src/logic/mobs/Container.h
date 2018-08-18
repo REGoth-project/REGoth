@@ -13,7 +13,8 @@ namespace Logic
         {
         public:
             Container(World::WorldInstance& world, const Handle::EntityHandle& entity);
-            virtual ~Container() = default;
+
+            ~Container() override = default;
 
             struct Item
             {

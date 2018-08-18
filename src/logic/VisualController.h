@@ -13,12 +13,13 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         VisualController(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~VisualController();
+
+        ~VisualController() override;
 
         /**
          * @return The type of this class. If you are adding a new base controller, be sure to add it to ControllerTypes.h
          */
-        virtual EControllerType getControllerType() override { return EControllerType::VisualController; }
+        EControllerType getControllerType() override { return EControllerType::VisualController; }
         /**
          * @return Classtype of this visual
          */

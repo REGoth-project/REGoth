@@ -13,7 +13,7 @@ namespace UI
     {
     public:
         BarView(Engine::BaseEngine& e);
-        ~BarView() = default;
+        ~BarView() override = default;
 
         /**
          * Updates/draws the UI-Views

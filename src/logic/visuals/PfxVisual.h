@@ -14,7 +14,8 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         PfxVisual(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~PfxVisual() = default;
+
+        ~PfxVisual() override = default;
 
         /**
          * @return Classtype of this visual

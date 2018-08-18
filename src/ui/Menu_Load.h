@@ -7,7 +7,7 @@ namespace UI
     {
     public:
         Menu_Load(Engine::BaseEngine& e);
-        ~Menu_Load() = default;
+        ~Menu_Load() override = default;
 
         /**
          * Creates an instance of this class and appends it to the root UI-View

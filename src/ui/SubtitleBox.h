@@ -9,7 +9,7 @@ namespace UI
     {
     public:
         SubtitleBox(Engine::BaseEngine& e);
-        ~SubtitleBox() = default;
+        ~SubtitleBox() override = default;
 
         enum class TextAlignment
         {

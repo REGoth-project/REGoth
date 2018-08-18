@@ -23,7 +23,7 @@ namespace UI
     {
     public:
         Menu(Engine::BaseEngine& e);
-        ~Menu();
+        ~Menu() override;
 
         /**
          * Updates/draws the UI-Views

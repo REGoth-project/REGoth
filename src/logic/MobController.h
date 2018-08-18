@@ -116,7 +116,8 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         MobController(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~MobController();
+
+        ~MobController() override;
 
         /**
          * Starts an interaction from the given npc. This is the method you should use to let

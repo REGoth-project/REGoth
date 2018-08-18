@@ -142,7 +142,8 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         ModelVisual(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~ModelVisual() = default;
+
+        ~ModelVisual() override = default;
 
         /**
          * @return Classtype of this visual
@@ -223,7 +224,7 @@ namespace Logic
         /**
          * @brief Called when something else modified the transform of the underlaying entity
          */
-        virtual void onTransformChanged() override;
+        void onTransformChanged() override;
 
         /**
          * Searches through the list of nodes and returns the index of the node with the given name

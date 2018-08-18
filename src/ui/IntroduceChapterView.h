@@ -13,7 +13,7 @@ namespace UI
     public:
         IntroduceChapterView(Engine::BaseEngine& e);
 
-        ~IntroduceChapterView();
+        ~IntroduceChapterView() override;
 
         /**
          * Updates/draws the UI-Views
