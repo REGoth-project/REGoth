@@ -111,7 +111,7 @@ namespace Logic
              */
             void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, SharedEMessage)> callback)
             {
-                onMessageDone.push_back(std::make_pair(hostVob, callback));
+                onMessageDone.emplace_back(hostVob, callback);
             }
 
             /**

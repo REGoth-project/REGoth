@@ -149,7 +149,7 @@ void Flag::readFromConfig(const json& contents)
         m_ParsedArgs.clear();
         if (jf.is_boolean())
         {
-            m_ParsedArgs.push_back(contents[m_ConfigSection][flag] ? "1" : "0");  // Doesn't matter where exactly this ends up in the commandline, this has to be non-0 to count as "set"
+            m_ParsedArgs.emplace_back(contents[m_ConfigSection][flag] ? "1" : "0");  // Doesn't matter where exactly this ends up in the commandline, this has to be non-0 to count as "set"
         }
         else
         {
@@ -226,7 +226,7 @@ const std::string& Flag::getParam(unsigned i)
 void ::Cli::setCommandlineArgs(int argc, char** argv)
 {
     for (int i = 0; i < argc; i++)
-        Global::commandline.push_back(std::string(argv[i]));
+        Global::commandline.emplace_back(argv[i]);
 
     // Check all flags for correctness
     for (Flag* f : Global::getFlagList())

@@ -144,7 +144,7 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
                 return content;
             }
 
-            content.push_back(file.name);
+            content.emplace_back(file.name);
 
             tinydir_next(&dir);
         }

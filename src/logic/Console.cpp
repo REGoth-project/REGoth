@@ -292,7 +292,7 @@ std::vector<std::string> Console::tokenized(const std::string& line)
     if (tokens.empty() || std::isspace(line.back(), std::locale::classic()))
     {
         // append empty pseudo token to trigger lookahead for the next token
-        tokens.push_back("");
+        tokens.emplace_back("");
     }
     return tokens;
 }

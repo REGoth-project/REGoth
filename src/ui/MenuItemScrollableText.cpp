@@ -108,7 +108,7 @@ void UI::MenuItemTypes::MenuItemScrollableText::setTopicEntries(std::vector<std:
         if (i + 1 < entries.size())
         {
             std::vector<std::string> sep;
-            sep.push_back("---");
+            sep.emplace_back("---");
             m_NumberOfFormattedEntries += sep.size();
             m_FormattedEntries.push_back(std::move(sep));
         }

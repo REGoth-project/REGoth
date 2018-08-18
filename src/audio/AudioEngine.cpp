@@ -20,7 +20,7 @@ namespace Audio
 
             while (device && *device != '\0' && next && *next != '\0')
             {
-                enumerated.push_back(device);
+                enumerated.emplace_back(device);
 
                 len = strlen(device);
                 device += (len + 1);
@@ -29,7 +29,7 @@ namespace Audio
         }
 
         if (enumerated.empty())
-            enumerated.push_back(std::string());  // empty string is default device
+            enumerated.emplace_back();  // empty string is default device
     }
 
     const char* AudioEngine::getErrorString(size_t errorCode)

@@ -118,7 +118,7 @@ void UI::ConsoleBox::update(double dt, Engine::Input::MouseState& mstate, Render
                 }
                 else
                 {
-                    column.push_back("");
+                    column.emplace_back("");
                 }
             }
 
