@@ -167,13 +167,12 @@ Handle::CollisionShapeHandle PhysicsSystem::makeCollisionShapeFromMesh(const std
     btTriangleMesh* wm = new btTriangleMesh;
 
     wm->preallocateVertices((int)triangles.size() * 3);
-    for (size_t i = 0; i < triangles.size(); i++)
-    {
+    for (const auto &triangle : triangles) {
         // Convert to btvector
         const btVector3 v[] = {
-            {triangles[i].vertices[0].Position.x, triangles[i].vertices[0].Position.y, triangles[i].vertices[0].Position.z},
-            {triangles[i].vertices[1].Position.x, triangles[i].vertices[1].Position.y, triangles[i].vertices[1].Position.z},
-            {triangles[i].vertices[2].Position.x, triangles[i].vertices[2].Position.y, triangles[i].vertices[2].Position.z}};
+            {triangle.vertices[0].Position.x, triangle.vertices[0].Position.y, triangle.vertices[0].Position.z},
+            {triangle.vertices[1].Position.x, triangle.vertices[1].Position.y, triangle.vertices[1].Position.z},
+            {triangle.vertices[2].Position.x, triangle.vertices[2].Position.y, triangle.vertices[2].Position.z}};
 
         wm->addTriangle(v[0], v[1], v[2]);
     }

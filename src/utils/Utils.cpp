@@ -159,22 +159,20 @@ std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, 
     if (!prePath.empty())
         result = prePath;
 
-    for (size_t i = 0; i < parts.size(); i++)
-    {
+    for (const auto &part : parts) {
         std::vector<std::string> listing = getListing(result);
 
         bool found = false;
-        for (size_t j = 0; j < listing.size(); j++)
-        {
+        for (const auto &j : listing) {
             // Transform to lowercase
-            std::string lw = listing[j];
+            std::string lw = j;
             std::transform(lw.begin(), lw.end(), lw.begin(), ::tolower);
 
             // Append the path in original casing
-            if (parts[i] == lw)
+            if (part == lw)
             {
                 found = true;
-                result += "/" + listing[j];
+                result += "/" + j;
                 break;
             }
         }

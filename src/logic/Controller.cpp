@@ -53,8 +53,8 @@ void Logic::Controller::exportPart(json& j)
     for (int i = 0; i < 16; i++)
         values[i] = getEntityTransform().mv[i];
 
-    for (int i = 0; i < 16; i++)
-        j["transform"].push_back(values[i]);
+    for (float value : values)
+        j["transform"].push_back(value);
 
     Vob::VobInformation vob = Vob::asVob(m_World, m_Entity);
 

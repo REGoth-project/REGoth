@@ -132,10 +132,7 @@ Handle::MeshHandle SkeletalMeshAllocator::loadFromPacked(const ZenLoad::PackedSk
     }
 
     // Put all indices into one continuous chunk of memory
-    for (size_t i = 0, end = packed.subMeshes.size(); i < end; i++)
-    {
-        auto& m = packed.subMeshes[i];
-
+    for (const auto &m : packed.subMeshes) {
         mesh.m_SubmeshStarts.push_back({static_cast<WorldSkeletalMeshIndex>(mesh.m_Indices.size()),
                                         static_cast<WorldSkeletalMeshIndex>(m.indices.size())});
 

@@ -189,9 +189,8 @@ std::string Flag::documentConfigText(const std::string& configText)
     std::string flag = m_VerboseFlag.empty() ? m_Flag : m_VerboseFlag;
 
     // Find a line with our flag
-    for (size_t i = 0; i < lines.size(); i++)
-    {
-        if (lines[i].find("\"" + flag + "\": ") != std::string::npos)
+    for (auto &line : lines) {
+        if (line.find("\"" + flag + "\": ") != std::string::npos)
         {
             // This is our line! Add our desc above it
             for (const std::string& d : docLines)
@@ -204,7 +203,7 @@ std::string Flag::documentConfigText(const std::string& configText)
             }
         }
 
-        actualLines.push_back(lines[i]);
+        actualLines.push_back(line);
     }
 
     // Merge lines to text again

@@ -207,15 +207,14 @@ std::map<Daedalus::GameState::MenuItemHandle, UI::MenuItem*> UI::Menu::initializ
     Daedalus::GEngineClasses::C_Menu& menu = getScriptData();
     std::vector<Daedalus::GameState::MenuItemHandle> items;
 
-    for (int i = 0; i < Daedalus::GEngineClasses::MenuConstants::MAX_ITEMS; i++)
-    {
-        if (!menu.items[i].empty())
+    for (auto &item : menu.items) {
+        if (!item.empty())
         {
             items.push_back(m_pVM->getGameState().createMenuItem());
 
-            LogInfo() << "Initializing item: " << menu.items[i];
+            LogInfo() << "Initializing item: " << item;
             m_pVM->initializeInstance(ZMemory::toBigHandle(items.back()),
-                                      m_pVM->getDATFile().getSymbolIndexByName(menu.items[i]),
+                                      m_pVM->getDATFile().getSymbolIndexByName(item),
                                       Daedalus::IC_MenuItem);
         }
     }

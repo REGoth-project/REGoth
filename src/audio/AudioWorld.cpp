@@ -149,12 +149,10 @@ namespace World
     void AudioWorld::musicRenderFunction()
     {
         ALenum error;
-        std::int16_t buf[RE_MUSIC_BUFFER_LEN];
-        for (int i = 0; i < RE_MUSIC_BUFFER_LEN; i++) buf[i] = 0;
+        std::int16_t buf[RE_MUSIC_BUFFER_LEN]{};
 
-        for (int i = 0; i < RE_NUM_MUSIC_BUFFERS; i++)
-        {
-            alBufferData(m_musicBuffers[i], AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
+        for (unsigned int m_musicBuffer : m_musicBuffers) {
+            alBufferData(m_musicBuffer, AL_FORMAT_STEREO16, buf, RE_MUSIC_BUFFER_LEN * 2, 44100);
         }
 
         alSourceQueueBuffers(m_musicSource, RE_NUM_MUSIC_BUFFERS, m_musicBuffers);
