@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 #include "Utils.h"
-#include <assert.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdlib>
 #include <ZenLib/utils/logger.h>
 #include <ZenLib/utils/split.h>
 

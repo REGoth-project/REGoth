@@ -4,7 +4,7 @@
 
 #include "View.h"
 #include "zFont.h"
-#include <assert.h>
+#include <cassert>
 #include <engine/BaseEngine.h>
 #include <handle/HandleDef.h>
 #include <imgui/imgui.h>

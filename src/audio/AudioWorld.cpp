@@ -17,7 +17,7 @@
 
 #include <adpcm/adpcm-lib.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <daedalus/DATFile.h>
 #include <daedalus/DaedalusGameState.h>
 #include <daedalus/DaedalusVM.h>

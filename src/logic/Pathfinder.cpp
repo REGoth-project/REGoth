@@ -5,7 +5,7 @@
 #include "Pathfinder.h"
 #include <engine/World.h>
 #include <debugdraw/debugdraw.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <utils/cli.h>
 #include <physics/PhysicsSystem.h>
 #include <engine/WorldMesh.h>

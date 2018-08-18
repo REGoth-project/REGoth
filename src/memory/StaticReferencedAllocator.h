@@ -5,7 +5,7 @@
 #include <functional>
 #include "FreeList.h"
 #include "MemUtils.h"
-#include <assert.h>
+#include <cassert>
 
 namespace Memory
 {

@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
-#include <string.h>
+#include <cstring>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>

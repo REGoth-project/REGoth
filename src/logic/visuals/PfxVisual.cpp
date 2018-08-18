@@ -3,7 +3,7 @@
 //
 
 #include "PfxVisual.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <ZenLib/utils/logger.h>
 #include <bx/math.h>
 #include <components/EntityActions.h>

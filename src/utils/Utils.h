@@ -13,7 +13,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdint>
-#include <stdlib.h>
+#include <cstdlib>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
 #include <bx/timer.h>
