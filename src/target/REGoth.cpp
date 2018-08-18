@@ -41,6 +41,7 @@
 #include <content/AnimationAllocator.h>
 #include <content/StaticMeshAllocator.h>
 #include <content/SkeletalMeshAllocator.h>
+#include <logic/FightAI.h>
 
 using json = nlohmann::json;
 
@@ -185,6 +186,29 @@ void REGoth::initConsole()
             return "Playing keyed animation";
         });
 
+    console.registerCommand("fightmoves", [this](const std::vector<std::string>& args) -> std::string {
+        Logic::FightAI ai(m_pEngine->getMainWorld().get());
+
+        auto instanceNames = ai.dumpAllMoveInstancesToLog();
+
+        std::string out;
+
+        if (instanceNames.empty())
+        {
+            out = "No instances of class C_FightAI found!";
+        }
+        else
+        {
+            out = "Instances of class C_FightAI:";
+
+            for (auto name : instanceNames)
+            {
+                out += std::string(" - ") + name + "\n";
+            }
+        }
+
+        return out;
+    });
 
     console.registerCommand("stats", [](const std::vector<std::string>& args) -> std::string {
         static bool s_Stats = false;
