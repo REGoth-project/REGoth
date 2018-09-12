@@ -45,7 +45,7 @@ void SoundController::onUpdate(float deltaTime)
     switch (m_SoundMode)
     {
         case ZenLoad::SM_LOOPING:
-            if (!m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
+            if (!m_PlayedSound|| m_PlayedSound->state() != Audio::State::Playing && isInHearingRange())
             {
                 playSound(m_SoundFile);
             }
@@ -68,7 +68,7 @@ void SoundController::onUpdate(float deltaTime)
             {
                 setNextPlayingTimeRandomized();
             }
-            else if (totalSeconds >= m_SoundTimePlayNextRandom && !m_World.getAudioWorld().soundIsPlaying(m_PlayedSound) && isInHearingRange())
+            else if (m_PlayedSound && totalSeconds >= m_SoundTimePlayNextRandom && m_PlayedSound->state() != Audio::State::Playing && isInHearingRange())
             {
                 playSound(m_SoundFile);
 

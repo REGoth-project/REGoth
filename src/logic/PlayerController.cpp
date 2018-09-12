@@ -1021,27 +1021,22 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
             if (message.status == ConversationMessage::Status::PLAYING)
             {
                 bool playingFinished;
-#ifdef RE_USE_SOUND
                 if (message.canceled)
                 {
-                    m_World.getAudioWorld().stopSound(message.soundTicket);
+                    message.soundTicket->stop();
                 }
                 // toggle this bool to switch auto skip when sound ended
                 // TODO: read from config maybe
                 const bool autoPlay = true;
                 if (autoPlay)
                 {
-                    bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    bool isPlaying = message.soundTicket && message.soundTicket->state() == Audio::State::Playing;
                     playingFinished = !isPlaying;
                 }
                 else
                 {
                     playingFinished = message.canceled;
                 }
-#else
-                // when sound is disabled, message must be skipped manually
-                playingFinished = message.canceled;
-#endif
                 if (playingFinished)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
@@ -1861,10 +1856,10 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
     }
 
-    if (!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+    if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot && m_MainNoiseSoundSlot->state() == Audio::State::Playing)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
-        m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+        m_MainNoiseSoundSlot->stop();
     }
 
     // Play sound specified in the event
@@ -1872,12 +1867,12 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
 
     auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 
-    if (!sfx.m_EmptySlot)
+    if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
 
-        if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
-            m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+        if (m_MainNoiseSoundSlot->state() == Audio::State::Playing)
+            m_MainNoiseSoundSlot->stop();
 
         m_MainNoiseSoundSlot = ticket;
     }
@@ -1896,12 +1891,12 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
 
-        if (!sfx.m_EmptySlot)
+        if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
         {
             // If emptyslot is not set, the currently played sound shall be stopped
 
-            if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
-                m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+            if (m_MainNoiseSoundSlot->state() == Audio::State::Playing)
+                m_MainNoiseSoundSlot->stop();
 
             m_MainNoiseSoundSlot = ticket;
         }

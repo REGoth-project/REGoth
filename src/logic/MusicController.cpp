@@ -114,14 +114,9 @@ bool MusicController::isInBoundingBox()
 {
     Math::float3 cam = m_World.getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation();
 
-    if (cam.x >= m_bbox[0].x && cam.x < m_bbox[1].x &&
-        cam.y >= m_bbox[0].y && cam.y < m_bbox[1].y &&
-        cam.z >= m_bbox[0].z && cam.z < m_bbox[1].z)
-    {
-        return true;
-    }
-
-    return false;
+    return (cam.x >= m_bbox[0].x && cam.x < m_bbox[1].x &&
+            cam.y >= m_bbox[0].y && cam.y < m_bbox[1].y &&
+            cam.z >= m_bbox[0].z && cam.z < m_bbox[1].z);
 }
 
 void MusicController::playDefaultMusic(World::WorldInstance& world)

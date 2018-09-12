@@ -921,7 +921,7 @@ void REGoth::initConsole()
             return "Missing argument. Usage: volume <value>";
 
         auto& world = m_pEngine->getMainWorld().get();
-        world.getAudioWorld().setListenerGain(std::stof(args[1]));
+        m_pEngine->getAudioEngine().gain(std::stof(args[1]));
 
         return "Set volume to " + args[1];
     });
