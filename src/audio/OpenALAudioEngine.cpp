@@ -1,3 +1,5 @@
+#ifdef RE_USE_SOUND
+
 #include "OpenALAudioEngine.h"
 
 #include <algorithm>
@@ -479,3 +481,5 @@ ALuint OpenALAudioEngine::getFreeSource()
         return source;
     }
 }
+
+#endif // RE_USE_SOUND

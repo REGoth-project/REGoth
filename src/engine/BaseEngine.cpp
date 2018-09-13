@@ -3,7 +3,9 @@
 #include "World.h"
 #include "audio/AudioEngine.h"
 #include "audio/NullAudioEngine.h"
-#include "audio/OpenALAudioEngine.h"
+#ifdef RE_USE_SOUND
+#   include "audio/OpenALAudioEngine.h"
+#endif
 #include <bx/commandline.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
@@ -38,7 +40,6 @@ namespace Flags
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
 
 #ifdef RE_USE_SOUND
-    Cli::Flag disableSound("snd", "no-sound", 0, "Disables audio output");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 #endif
 
