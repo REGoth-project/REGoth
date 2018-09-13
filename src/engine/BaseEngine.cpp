@@ -40,6 +40,7 @@ namespace Flags
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
 
 #ifdef RE_USE_SOUND
+    Cli::Flag disableSound("", "no-sound", 0, "Disables audio output");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
 #endif
 
