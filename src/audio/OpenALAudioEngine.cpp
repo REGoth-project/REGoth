@@ -13,12 +13,6 @@
 
 using namespace Audio;
 
-static std::vector<std::string> enumeratedDevices;
-
-// The mutex is there so that static members
-// can be accessed in a thread-safe manner
-static std::mutex mtx_enumeratedDevices;
-
 constexpr std::size_t OPENAL_SOURCES_POOL = 256;
 
 std::string getErrorString(ALenum error)
@@ -50,6 +44,12 @@ OpenALException::OpenALException(ALenum error)
 
 const std::vector<std::string>& OpenALAudioEngine::devices()
 {
+    static std::vector<std::string> enumeratedDevices;
+
+    // The mutex is there so that static members
+    // can be accessed in a thread-safe manner
+    static std::mutex mtx_enumeratedDevices;
+
     std::lock_guard<std::mutex> lock(mtx_enumeratedDevices);
 
     if (enumeratedDevices.empty())
