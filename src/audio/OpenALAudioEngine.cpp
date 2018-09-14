@@ -95,8 +95,8 @@ OpenALAudioEngine::OpenALAudioEngine(const std::string& deviceName)
 
 OpenALAudioEngine::~OpenALAudioEngine()
 {
-    m_bufferedSounds.erase(std::begin(m_bufferedSounds), std::end(m_bufferedSounds));
-    m_streamingSounds.erase(std::begin(m_streamingSounds), std::end(m_streamingSounds));
+    m_bufferedSounds.clear();
+    m_streamingSounds.clear();
 
     alDeleteSources(m_freeSources.size(), m_freeSources.data());
     alcMakeContextCurrent(nullptr);
@@ -120,19 +120,19 @@ void OpenALAudioEngine::gain(float g)
 void OpenALAudioEngine::position(const Math::float3& p)
 {
     captureContext();
-    alListenerfv(AL_POSITION, (ALfloat*)&p);
+    alListenerfv(AL_POSITION, reinterpret_cast<const ALfloat*>(&p));
 }
 
 void OpenALAudioEngine::velocity(const Math::float3& v)
 {
     captureContext();
-    alListenerfv(AL_VELOCITY, (ALfloat*)&v);
+    alListenerfv(AL_VELOCITY, reinterpret_cast<const ALfloat*>(&v));
 }
 
 void OpenALAudioEngine::orientation(const Orientation& o)
 {
     captureContext();
-    alListenerfv(AL_ORIENTATION, (ALfloat*)&o);
+    alListenerfv(AL_ORIENTATION, reinterpret_cast<const ALfloat*>(&o));
 }
 
 namespace Audio
@@ -149,7 +149,8 @@ namespace Audio
             , m_engine(engine)
         {}
     public:
-        OpenALSound(OpenALAudioEngine* engine, const std::int16_t* buf, std::size_t len, Format fmt, std::size_t samplingFreq)
+        OpenALSound(OpenALAudioEngine* engine, const std::int16_t* buf,
+                    std::size_t len, Format fmt, std::size_t samplingFreq)
             : m_buffer(0)
             , m_hasBuffer(true)
             , m_source(0)
@@ -227,19 +228,19 @@ namespace Audio
         void position(const Math::float3& p) override
         {
             getSource();
-            alSourcefv(m_source, AL_POSITION, (ALfloat*)&p);
+            alSourcefv(m_source, AL_POSITION, reinterpret_cast<const ALfloat*>(&p));
         }
 
         void velocity(const Math::float3& v) override
         {
             getSource();
-            alSourcefv(m_source, AL_VELOCITY, (ALfloat*)&v);
+            alSourcefv(m_source, AL_VELOCITY, reinterpret_cast<const ALfloat*>(&v));
         }
 
         void direction(const Math::float3& d) override
         {
             getSource();
-            alSourcefv(m_source, AL_DIRECTION, (ALfloat*)&d);
+            alSourcefv(m_source, AL_DIRECTION, reinterpret_cast<const ALfloat*>(&d));
         }
 
         void relative(bool r) override
@@ -325,7 +326,8 @@ namespace Audio
          */
         static constexpr std::size_t BUFFER_SIZE = 1024;
     public:
-        StreamingOpenALSound(OpenALAudioEngine* engine, SoundStream stream, Format fmt, std::size_t sampleRate)
+        StreamingOpenALSound(OpenALAudioEngine* engine,
+                            SoundStream stream, Format fmt, std::size_t sampleRate)
             : OpenALSound(engine)
             , m_stream(stream)
             , m_format(fmt == Format::Mono ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16)
@@ -432,7 +434,7 @@ namespace Audio
     };
 }  // namespace Audio
 
-SoundRef OpenALAudioEngine::createSound(const std::int16_t* buf, std::size_t len, Format fmt, std::size_t sampleRate)
+SoundPtr OpenALAudioEngine::createSound(const std::int16_t* buf, std::size_t len, Format fmt, std::size_t sampleRate)
 {
     captureContext();
     auto ptr = std::make_shared<OpenALSound>(this, buf, len, fmt, sampleRate);
@@ -440,7 +442,7 @@ SoundRef OpenALAudioEngine::createSound(const std::int16_t* buf, std::size_t len
     return ptr;
 }
 
-SoundRef OpenALAudioEngine::createSound(SoundStream stream, Format fmt, std::size_t sampleRate)
+SoundPtr OpenALAudioEngine::createSound(SoundStream stream, Format fmt, std::size_t sampleRate)
 {
     captureContext();
     auto ptr = std::make_shared<StreamingOpenALSound>(this, stream, fmt, sampleRate);
@@ -451,11 +453,12 @@ SoundRef OpenALAudioEngine::createSound(SoundStream stream, Format fmt, std::siz
 ALuint OpenALAudioEngine::getFreeSource()
 {
     captureContext();
+
+    auto lambda = [](const auto& sound) { return sound.use_count() == 1; };
+
     // Remove all expired sounds
-    std::remove_if(std::begin(m_bufferedSounds), std::end(m_bufferedSounds),
-                   [](const std::shared_ptr<OpenALSound>& sound) { return sound.use_count() == 1; });
-    std::remove_if(std::begin(m_streamingSounds), std::end(m_streamingSounds),
-                   [](const std::shared_ptr<OpenALSound>& sound) { return sound.use_count() == 1; });
+    std::remove_if(std::begin(m_bufferedSounds), std::end(m_bufferedSounds), lambda);
+    std::remove_if(std::begin(m_streamingSounds), std::end(m_streamingSounds), lambda);
 
     if (m_freeSources.empty())
     {

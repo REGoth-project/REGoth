@@ -603,7 +603,7 @@ namespace Logic
             /**
              * Ticket. Can be used to ask AudioWorld if sound is playing.
              */
-            Audio::SoundRef soundTicket;
+            Audio::SoundPtr soundTicket;
         };
 
         struct MagicMessage : public NpcMessage

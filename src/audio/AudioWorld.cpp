@@ -110,7 +110,7 @@ namespace World
             LogInfo() << "All segments loaded.";
 
             m_MusicSource = m_Engine.getAudioEngine().createSound(
-                [&](std::int16_t* buf, std::size_t len) -> int {
+                [&](auto buf, auto len) -> int {
                     if (m_exiting) return -1;
 
                     m_musicContext->renderBlock(buf, len);
@@ -171,7 +171,7 @@ namespace World
 
         try
         {
-            const std::int16_t* dataPtr = (std::int16_t*)(wav.getData());
+            auto dataPtr = reinterpret_cast<const std::int16_t*>(wav.getData());
             auto format = wav.getChannels() == 1 ? Audio::Format::Mono : Audio::Format::Stereo;
             auto sound = m_Engine.getAudioEngine().createSound(dataPtr, wav.getDataSize(), format, wav.getRate());
             snd->sound = sound;
@@ -201,7 +201,7 @@ namespace World
         return loadAudioVDF(m_VDFSIndex, name);
     }
 
-    Audio::SoundRef AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
+    Audio::SoundPtr AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist)
     {
         Sound& snd = m_Allocator.getElement(h);
 
@@ -321,12 +321,12 @@ namespace World
         } while (v.isValid());
     }
 
-    Audio::SoundRef AudioWorld::playSound(Handle::SfxHandle h)
+    Audio::SoundPtr AudioWorld::playSound(Handle::SfxHandle h)
     {
         return playSound(h, Math::float3(0, 0, 0), true);
     }
 
-    Audio::SoundRef AudioWorld::playSound(const std::string& name)
+    Audio::SoundPtr AudioWorld::playSound(const std::string& name)
     {
         // Check if that sound has already been loaded. If not, load it now.
         Handle::SfxHandle h = loadAudioVDF(name);
@@ -340,12 +340,12 @@ namespace World
         return playSound(h, Math::float3(0, 0, 0), true);
     }
 
-    Audio::SoundRef AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist)
+    Audio::SoundPtr AudioWorld::playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist)
     {
         return playSound(h, position, false, maxDist);
     }
 
-    Audio::SoundRef AudioWorld::playSound(const std::string& name, const Math::float3& position, float maxDist)
+    Audio::SoundPtr AudioWorld::playSound(const std::string& name, const Math::float3& position, float maxDist)
     {
         // Check if that sound has already been loaded. If not, load it now.
         Handle::SfxHandle h = loadAudioVDF(name);
@@ -359,7 +359,7 @@ namespace World
         return playSound(h, position, false, maxDist);
     }
 
-    Audio::SoundRef AudioWorld::playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist)
+    Audio::SoundPtr AudioWorld::playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist)
     {
         // Check if that sound has already been loaded. If not, load it now.
         Handle::SfxHandle h = loadAudioVDF(name);
@@ -373,14 +373,14 @@ namespace World
         return playSoundVariantRandom(h, position, maxDist);
     }
 
-    Audio::SoundRef AudioWorld::playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist)
+    Audio::SoundPtr AudioWorld::playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist)
     {
         Sound& snd = m_Allocator.getElement(h);
 
         return playSound(snd.variants[rand() % snd.variants.size()], position, false, maxDist);
     }
 
-    Audio::SoundRef AudioWorld::playSoundVariantRandom(const std::string& name)
+    Audio::SoundPtr AudioWorld::playSoundVariantRandom(const std::string& name)
     {
         // Check if that sound has already been loaded. If not, load it now.
         Handle::SfxHandle h = loadAudioVDF(name);
@@ -394,7 +394,7 @@ namespace World
         return playSoundVariantRandom(h);
     }
 
-    Audio::SoundRef AudioWorld::playSoundVariantRandom(Handle::SfxHandle h)
+    Audio::SoundPtr AudioWorld::playSoundVariantRandom(Handle::SfxHandle h)
     {
         Sound& snd = m_Allocator.getElement(h);
 

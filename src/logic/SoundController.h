@@ -77,7 +77,7 @@ namespace Logic
         /**
          * Handle to the currently played or last played sound
          */
-        Audio::SoundRef m_PlayedSound;
+        Audio::SoundPtr m_PlayedSound;
 
         /**
          * Time when to play this for the next time (seconds)

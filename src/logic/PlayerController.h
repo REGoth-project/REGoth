@@ -575,6 +575,6 @@ namespace Logic
         size_t m_LastAniRootPosUpdatedAniHash;
 
         // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
-        Audio::SoundRef m_MainNoiseSoundSlot;
+        Audio::SoundPtr m_MainNoiseSoundSlot;
     };
 }  // namespace Logic

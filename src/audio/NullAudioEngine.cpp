@@ -30,12 +30,12 @@ private:
 };
 }
 
-SoundRef NullAudioEngine::createSound(const std::int16_t*, std::size_t, Format, std::size_t)
+SoundPtr NullAudioEngine::createSound(const std::int16_t*, std::size_t, Format, std::size_t)
 {
     return std::make_shared<NullAudioSound>();
 }
 
-SoundRef NullAudioEngine::createSound(SoundStream, Format, std::size_t)
+SoundPtr NullAudioEngine::createSound(SoundStream, Format, std::size_t)
 {
     return std::make_shared<NullAudioSound>();
 }

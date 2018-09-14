@@ -67,16 +67,16 @@ namespace World
         /**
          * Plays the sound of the given handle/name
          */
-        Audio::SoundRef playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist = FLT_MAX);
-        Audio::SoundRef playSound(Handle::SfxHandle h);
-        Audio::SoundRef playSound(const std::string& name);
-        Audio::SoundRef playSoundVariantRandom(const std::string& name);
-        Audio::SoundRef playSoundVariantRandom(Handle::SfxHandle h);
+        Audio::SoundPtr playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(Handle::SfxHandle h);
+        Audio::SoundPtr playSound(const std::string& name);
+        Audio::SoundPtr playSoundVariantRandom(const std::string& name);
+        Audio::SoundPtr playSoundVariantRandom(Handle::SfxHandle h);
 
-        Audio::SoundRef playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
-        Audio::SoundRef playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
-        Audio::SoundRef playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
-        Audio::SoundRef playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
 
         /**
          * Plays the segment identified by a name
@@ -122,7 +122,7 @@ namespace World
         {
             Daedalus::GEngineClasses::C_SFX sfx;
             std::vector<Handle::SfxHandle> variants;  // Instances ending with "_Ax"
-            Audio::SoundRef sound = nullptr;
+            Audio::SoundPtr sound;
             std::string name;
         };
 
@@ -146,13 +146,13 @@ namespace World
         /**
          * List of currently playing sounds or sounds that have been playing
          */
-        std::list<Audio::SoundRef> m_Sources;
+        std::list<Audio::SoundPtr> m_Sources;
 
         /**
          * Audio source for music
          * 
          */
-        Audio::SoundRef m_MusicSource;
+        Audio::SoundPtr m_MusicSource;
 
         /**
          * Holds the music state

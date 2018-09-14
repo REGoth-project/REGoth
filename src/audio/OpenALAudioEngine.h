@@ -32,9 +32,9 @@ namespace Audio
 
         void orientation(const Orientation&) override;
 
-        SoundRef createSound(const std::int16_t* buf, std::size_t len, Format, std::size_t) override;
+        SoundPtr createSound(const std::int16_t* buf, std::size_t len, Format, std::size_t) override;
         
-        SoundRef createSound(SoundStream, Format, std::size_t) override;
+        SoundPtr createSound(SoundStream, Format, std::size_t) override;
     private:
         ALCdevice* m_device = nullptr;
         ALCcontext* m_context = nullptr;

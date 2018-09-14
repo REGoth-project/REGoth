@@ -118,7 +118,7 @@ namespace Audio
         virtual void stop() = 0;
     };
 
-    using SoundRef = std::shared_ptr<Sound>;
+    using SoundPtr = std::shared_ptr<Sound>;
     using SoundStream = std::function<int(std::int16_t* buf, std::size_t size)>;
 
     struct Orientation {
@@ -161,15 +161,15 @@ namespace Audio
         /**
          * @brief Creates a sound object from an audio buffer
          * 
-         * @return SoundRef 
+         * @return SoundPtr 
          */
-        virtual SoundRef createSound(const std::int16_t* buf, std::size_t len, Format, std::size_t samplingFreq) = 0;
+        virtual SoundPtr createSound(const std::int16_t* buf, std::size_t len, Format, std::size_t samplingFreq) = 0;
         
         /**
          * @brief Creates a sound object from an audio stream
          * 
-         * @return SoundRef 
+         * @return SoundPtr 
          */
-        virtual SoundRef createSound(SoundStream, Format, std::size_t samplingFreq) = 0;
+        virtual SoundPtr createSound(SoundStream, Format, std::size_t samplingFreq) = 0;
     };
 }
