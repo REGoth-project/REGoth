@@ -225,7 +225,7 @@ namespace Engine
          */
         EngineArgs m_Args;
 
-        std::shared_ptr<Audio::AudioEngine> m_AudioEngine;
+        std::unique_ptr<Audio::AudioEngine> m_AudioEngine;
 
         /**
          * Base UI-View

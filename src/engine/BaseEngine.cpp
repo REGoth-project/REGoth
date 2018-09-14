@@ -127,22 +127,22 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     if(Flags::disableSound.isSet())
     {
-        m_AudioEngine = std::make_shared<Audio::NullAudioEngine>();
+        m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
     }
     else
     {
         try
         {
-            m_AudioEngine = std::make_shared<Audio::OpenALAudioEngine>(snd_device);
+            m_AudioEngine = std::make_unique<Audio::OpenALAudioEngine>(snd_device);
         }
         catch(const std::runtime_error& err)
         {
             LogError() << "Cannot initialize OpenAL audio engine: " << err.what();
-            m_AudioEngine = std::make_shared<Audio::NullAudioEngine>();
+            m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
         }
     }
     #else
-    m_AudioEngine = std::make_shared<Audio::NullAudioEngine>();
+    m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
     #endif
 
     // Init HUD
