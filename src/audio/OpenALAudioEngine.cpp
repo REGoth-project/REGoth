@@ -145,18 +145,14 @@ namespace Audio
     {
     protected:
         OpenALSound(OpenALAudioEngine* engine)
-            : m_buffer(0)
-            , m_hasBuffer(false)
-            , m_source(0)
+            : m_hasBuffer(false)
             , m_hasSource(false)
             , m_engine(engine)
         {}
     public:
         OpenALSound(OpenALAudioEngine* engine, const std::int16_t* buf,
                     std::size_t len, Format fmt, std::size_t samplingFreq)
-            : m_buffer(0)
-            , m_hasBuffer(true)
-            , m_source(0)
+            : m_hasBuffer(true)
             , m_hasSource(false)
             , m_engine(engine)
         {
@@ -295,11 +291,11 @@ namespace Audio
         }
 
     private:
-        ALuint m_buffer;
+        ALuint m_buffer = 0;
         bool m_hasBuffer;
 
     protected:
-        ALuint m_source;
+        ALuint m_source = 0;
         bool m_hasSource; 
         OpenALAudioEngine* m_engine;
 
