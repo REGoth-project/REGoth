@@ -107,6 +107,11 @@ void REGoth::init(int _argc, char** _argv)
     {
         menuMain.onCustomAction("NEW_GAME");
     }
+    else
+    {
+        m_pEngine->getAudioWorld().playMusicTheme("SYS_Menu");
+        m_pEngine->getAudioWorld().playSound("GAMESTART");
+    }
 
     m_timeOffset = bx::getHPCounter();
 

@@ -157,6 +157,7 @@ void GameSession::switchToWorld(const std::string& worldFile)
             auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
             engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
+            engine->getAudioWorld().playMusicTheme("SYS_Loading");
 
             auto& session = engine->getSession();
             auto oldWorld = engine->getMainWorld();
