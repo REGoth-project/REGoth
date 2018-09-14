@@ -19,6 +19,13 @@ namespace Audio
         friend OpenALSound;
         friend StreamingOpenALSound;
     public:
+        /**
+         * @brief Returns a vector containing a list of available OpenAL devices
+         * 
+         * This method is thread-safe
+         * 
+         * @return const std::vector<std::string>& The names of the available devices
+         */
         static const std::vector<std::string>& devices();
 
         OpenALAudioEngine(const std::string& device = "");

@@ -95,6 +95,9 @@ OpenALAudioEngine::OpenALAudioEngine(const std::string& deviceName)
 
 OpenALAudioEngine::~OpenALAudioEngine()
 {
+    /* Clearing the vectors has the effect of destroying all the buffers allocated
+    for the various sounds, before destroying the sources and closing the
+    OpenAL device */
     m_bufferedSounds.clear();
     m_streamingSounds.clear();
 
