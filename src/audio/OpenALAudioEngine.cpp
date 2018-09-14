@@ -62,7 +62,7 @@ const std::vector<std::string>& OpenALAudioEngine::devices()
 
             while (device && *device != '\0' && next && *next != '\0')
             {
-                enumeratedDevices.push_back(device);
+                enumeratedDevices.emplace_back(device);
 
                 len = strlen(device);
                 device += (len + 1);
@@ -71,7 +71,7 @@ const std::vector<std::string>& OpenALAudioEngine::devices()
         }
         else
         {
-            enumeratedDevices.push_back("");
+            enumeratedDevices.emplace_back();
         }
     }
 
