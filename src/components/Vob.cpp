@@ -92,8 +92,7 @@ void ::Vob::broadcastTransformChange(VobInformation& vob)
 
 void ::Vob::setVisual(VobInformation& vob, const std::string& _visual)
 {
-    std::string visual = _visual;
-    std::transform(visual.begin(), visual.end(), visual.begin(), ::toupper);
+    std::string visual = Utils::uppered(_visual);
 
     // Don't set twice
     if (vob.visual && vob.visual->getName() == visual)

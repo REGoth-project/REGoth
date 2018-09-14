@@ -136,8 +136,7 @@ namespace World
 
     Handle::SfxHandle AudioWorld::loadAudioVDF(const VDFS::FileIndex& idx, const std::string& name)
     {
-        std::string ucname = name;
-        std::transform(ucname.begin(), ucname.end(), ucname.begin(), ::toupper);
+        std::string ucname = Utils::uppered(name);
 
         // m_SoundMap contains all the sounds with C_SFX script definitions
         Sound* snd = nullptr;
@@ -408,16 +407,13 @@ namespace World
         {
             return false;
         }
-        else
+
+        if (m_playingSegment != loweredName)
         {
-            if (m_playingSegment != loweredName)
-            {
-                m_musicContext->playSegment(m_Segments.at(loweredName), timing);
-                m_playingSegment = loweredName;
-            }
-            return true;
+            m_musicContext->playSegment(m_Segments.at(loweredName), timing);
+            m_playingSegment = loweredName;
         }
-        return false;
+        return true;
     }
 
     bool AudioWorld::playMusicTheme(const std::string& name)
