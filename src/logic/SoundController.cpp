@@ -26,7 +26,7 @@ void SoundController::exportPart(json& j)
 
 void SoundController::playSound(const std::string& sound)
 {
-    m_PlayedSound = m_World.getAudioWorld().playSound(sound, getEntityTransform().Translation(), m_SoundMaxDistance);
+    m_PlayedSound = m_World.getEngine()->getAudioWorld().playSound(sound, getEntityTransform().Translation(), m_SoundMaxDistance);
 
     m_NumTimesPlayed++;
 }

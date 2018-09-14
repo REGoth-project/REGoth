@@ -3,6 +3,7 @@
 #include "World.h"
 #include "audio/AudioEngine.h"
 #include "audio/NullAudioEngine.h"
+#include "audio/AudioWorld.h"
 #ifdef RE_USE_SOUND
 #   include "audio/OpenALAudioEngine.h"
 #endif
@@ -148,6 +149,9 @@ void BaseEngine::initEngine(int argc, char** argv)
     m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
     getRootUIView().addChild(m_pHUD);
+
+    LogInfo() << "Creating AudioWorld";
+    m_AudioWorld = std::make_unique<World::AudioWorld>(*this, *m_AudioEngine, m_FileIndex);
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -227,13 +231,10 @@ void BaseEngine::setPaused(bool paused)
 {
     if (paused != m_Paused)
     {
-        if (getMainWorld().isValid())
-        {
-            if (paused)
-                getMainWorld().get().getAudioWorld().pauseSounds();
-            else
-                getMainWorld().get().getAudioWorld().continueSounds();
-        }
+        if(paused) 
+            m_AudioWorld->pauseSounds();
+        else
+            m_AudioWorld->continueSounds();
         m_Paused = paused;
     }
 }

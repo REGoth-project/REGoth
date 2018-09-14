@@ -87,6 +87,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_AIHandler(world, entity)
     , m_PathFinder(world)
     , m_CharacterEquipment(world, entity)
+    , m_AudioWorld(world.getEngine()->getAudioWorld())
 {
     m_NPCProperties.enablePhysics = true;
 
@@ -1015,7 +1016,7 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
+                message.soundTicket = m_AudioWorld.playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
@@ -1865,7 +1866,7 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
     // Play sound specified in the event
     float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 
-    auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
+    auto ticket = m_AudioWorld.playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 
     if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
     {
@@ -1889,7 +1890,7 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         std::string soundfile = sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat);
 
-        auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
+        auto ticket = m_AudioWorld.playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
 
         if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
         {

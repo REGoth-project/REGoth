@@ -848,8 +848,7 @@ void REGoth::initConsole()
         if (args.size() < 2)
             return "Missing argument. Usage: playsound <soundfile>";
 
-        auto& world = m_pEngine->getMainWorld().get();
-        world.getAudioWorld().playSound(args[1]);
+        m_pEngine->getAudioWorld().playSound(args[1]);
 
         return "Played sound " + args[1];
     });
@@ -1055,7 +1054,7 @@ void REGoth::initConsole()
         if (args.size() < 2)
             return "Usage: playsegment [segmentname]";
 
-        auto& world = m_pEngine->getMainWorld().get().getAudioWorld();
+        auto& world = m_pEngine->getAudioWorld();
         if (world.playSegment(args[1]))
         {
             return "Segment enqueued";
@@ -1066,7 +1065,7 @@ void REGoth::initConsole()
         }
     }).registerAutoComplete([this]() {
         std::vector<Suggestion> suggestions;
-        for (const auto& suggestion : this->m_pEngine->getMainWorld().get().getAudioWorld().getLoadedSegments())
+        for (const auto& suggestion : this->m_pEngine->getAudioWorld().getLoadedSegments())
         {
             std::vector<std::string> s;
             s.push_back(suggestion);

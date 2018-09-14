@@ -1,6 +1,7 @@
 #pragma once
 
 #include <set>
+#include "CharacterEquipment.h"
 #include "Controller.h"
 #include "Inventory.h"
 #include "LogicDef.h"
@@ -8,7 +9,6 @@
 #include "NpcAnimationHandler.h"
 #include "NpcScriptState.h"
 #include "Pathfinder.h"
-#include "CharacterEquipment.h"
 #include <daedalus/DaedalusGameState.h>
 
 namespace UI
@@ -19,6 +19,11 @@ namespace UI
 namespace Physics
 {
     struct RayTestResult;
+}
+
+namespace World
+{
+    class AudioWorld;
 }
 
 namespace Logic
@@ -576,5 +581,7 @@ namespace Logic
 
         // Main noise sound slot. Other sounds using it won't play if there is already a sound playing here.
         Audio::SoundPtr m_MainNoiseSoundSlot;
+
+        World::AudioWorld& m_AudioWorld;
     };
 }  // namespace Logic

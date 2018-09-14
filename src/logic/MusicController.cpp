@@ -4,6 +4,7 @@
 #include <logic/ScriptEngine.h>
 #include <engine/World.h>
 #include <debugdraw/debugdraw.h>
+#include <audio/AudioWorld.h>
 
 using namespace Logic;
 
@@ -53,11 +54,12 @@ void MusicController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
 
 void MusicController::playZone(World::WorldInstance& world, const std::string& prefix, EMusicTime time, EMusicType type)
 {
-    if (!world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[time + type]))
+    auto& audioWorld = world.getEngine()->getAudioWorld();
+    if (!audioWorld.playMusicTheme(prefix + m_instanceSuffixes[time + type]))
     {
-        if (!world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + type]))
+        if (!audioWorld.playMusicTheme(prefix + m_instanceSuffixes[MT_Day + type]))
         {
-            m_playingMusic = world.getAudioWorld().playMusicTheme(prefix + m_instanceSuffixes[MT_Day + MT_Std]) || m_playingMusic;
+            m_playingMusic = audioWorld.playMusicTheme(prefix + m_instanceSuffixes[MT_Day + MT_Std]) || m_playingMusic;
         }
         else
         {

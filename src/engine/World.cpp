@@ -49,7 +49,6 @@ public:
         , dialogManager(world)
         , bspTree(world)
         , pfxManager(world)
-        , audioWorld(nullptr)
     {}
 
     WorldMesh worldMesh;
@@ -58,7 +57,6 @@ public:
     Logic::ScriptEngine scriptEngine;
     Physics::PhysicsSystem physicsSystem;
     Animations::AnimationLibrary animationLibrary;
-    std::unique_ptr<World::AudioWorld> audioWorld;
     Content::Sky sky;
     Logic::DialogManager dialogManager;
     Logic::PfxManager pfxManager;
@@ -523,12 +521,6 @@ bool WorldInstance::init(const std::string& zen,
             LOAD_SECTION_RUNSCRIPTS.p2,
             LOAD_SECTION_RUNSCRIPTS.info);
 
-        LogInfo() << "Creating AudioWorld";
-        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_ClassContents->audioWorld = std::make_unique<World::AudioWorld>(*m_pEngine,
-                                                                          m_pEngine->getAudioEngine(),
-                                                                          engine.getVDFSIndex());
-
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         // Load script engine if one is provided. Always the case except "start new game"
@@ -725,7 +717,6 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
 
     // Update sound-listener position
     getEngine()->getAudioEngine().position(getCameraController()->getEntityTransform().Translation());
-    //getAudioWorld().setListenerVelocity(); // don't need this for now, no need for the Doppler effect
     const auto& camMatrix = getCameraController()->getEntityTransform();
     getEngine()->getAudioEngine().orientation({camMatrix.Forward(), camMatrix.Up()});
 
@@ -1152,11 +1143,6 @@ Content::Sky& WorldInstance::getSky()
 Logic::DialogManager& WorldInstance::getDialogManager()
 {
     return m_ClassContents->dialogManager;
-}
-
-World::AudioWorld& WorldInstance::getAudioWorld()
-{
-    return *m_ClassContents->audioWorld;
 }
 
 Logic::PfxManager& WorldInstance::getPfxManager()

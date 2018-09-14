@@ -1201,8 +1201,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         std::string s0 = vm.popString();
         if (verbose) LogInfo() << "s0: " << s0;
 
-        pWorld->getAudioWorld().playSound(s0);
-
+        engine->getAudioWorld().playSound(s0);
     });
 
     vm->registerExternalFunction("npc_setrefusetalk", [=](Daedalus::DaedalusVM& vm) {

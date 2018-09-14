@@ -63,7 +63,6 @@ namespace Animations
 
 namespace World
 {
-    class AudioWorld;
     class WorldMesh;
     struct WorldAllocators;
 
@@ -217,7 +216,6 @@ namespace World
         WorldMesh& getWorldMesh();
         Content::Sky& getSky();
         Logic::DialogManager& getDialogManager();
-        World::AudioWorld& getAudioWorld();
         Logic::PfxManager& getPfxManager();
         Animations::AnimationLibrary& getAnimationLibrary();
 
