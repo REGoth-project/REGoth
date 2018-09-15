@@ -329,6 +329,7 @@ namespace Audio
             , m_stream(stream)
             , m_format(fmt == Format::Mono ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16)
             , m_sampleRate(sampleRate)
+            , m_stop(false)
         {
             alGenBuffers(BUFFER_NUM, m_buffers.data());
             ALenum error = alGetError();
@@ -360,7 +361,7 @@ namespace Audio
         SoundStream m_stream;
         ALenum m_format;
         std::size_t m_sampleRate;
-        std::atomic_bool m_stop = false;
+        std::atomic_bool m_stop;
         std::array<ALuint, BUFFER_NUM> m_buffers{};
         std::thread m_thread;
 
