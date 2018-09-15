@@ -146,14 +146,12 @@ namespace Audio
     protected:
         OpenALSound(OpenALAudioEngine* engine)
             : m_hasBuffer(false)
-            , m_hasSource(false)
             , m_engine(engine)
         {}
     public:
         OpenALSound(OpenALAudioEngine* engine, const std::int16_t* buf,
                     std::size_t len, Format fmt, std::size_t samplingFreq)
             : m_hasBuffer(true)
-            , m_hasSource(false)
             , m_engine(engine)
         {
             alGenBuffers(1, &m_buffer);
@@ -296,7 +294,7 @@ namespace Audio
 
     protected:
         ALuint m_source = 0;
-        bool m_hasSource; 
+        bool m_hasSource = false; 
         OpenALAudioEngine* m_engine;
 
         virtual void getSource()
@@ -331,7 +329,6 @@ namespace Audio
             , m_stream(stream)
             , m_format(fmt == Format::Mono ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16)
             , m_sampleRate(sampleRate)
-            , m_stop(false)
         {
             alGenBuffers(BUFFER_NUM, m_buffers.data());
             ALenum error = alGetError();
@@ -363,7 +360,7 @@ namespace Audio
         SoundStream m_stream;
         ALenum m_format;
         std::size_t m_sampleRate;
-        std::atomic_bool m_stop;
+        std::atomic_bool m_stop = false;
         std::array<ALuint, BUFFER_NUM> m_buffers{};
         std::thread m_thread;
 
