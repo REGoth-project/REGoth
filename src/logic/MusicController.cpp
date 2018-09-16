@@ -47,7 +47,7 @@ void MusicController::initFromVobDescriptor(const ZenLoad::zCVobData& vob)
     m_bbox[1] = vob.bbox[1] * 0.01;
 
     m_zoneName = vob.vobName;
-    m_instancePrefix = vob.vobName.substr(vob.vobName.find('_') + 1);
+    m_instancePrefix = Utils::uppered(vob.vobName.substr(vob.vobName.find('_') + 1));
 
     LogInfo() << "Music: controller created for " << m_zoneName;
 }
@@ -84,6 +84,8 @@ void MusicController::onUpdate(float deltaTime)
     }
 
     EMusicTime time = m_World.getEngine()->getGameClock().isDaytime() ? MT_Day : MT_Ngt;
+    const auto& audioWorld = m_World.getEngine()->getAudioWorld();
+    const auto& currentTheme = audioWorld.currentMusicTheme();
 
     // We need to play a new segment in either one of two scenarios:
     // if the character has just entered the zone or
@@ -91,7 +93,7 @@ void MusicController::onUpdate(float deltaTime)
     // changed.
     // FIXME: It'll also be needed to check if the character is
     // threatened or fighting to play the correct music.
-    if ((!m_isPlaying && isInBoundingBox())
+    if (((!m_isPlaying || currentTheme.find(m_instancePrefix) != 0) && isInBoundingBox())
         || (m_isPlaying && m_currentTime != time))
     {
         m_isPlaying = true;

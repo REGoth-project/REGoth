@@ -6,13 +6,13 @@
 
 #include <glm/glm.hpp>
 
-#include <dmusic/PlayingContext.h>
+#include <audio/AudioEngine.h>
 #include <daedalus/DaedalusStdlib.h>
+#include <dmusic/PlayingContext.h>
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 #include <utils/Utils.h>
 #include <vdfs/fileIndex.h>
-#include <audio/AudioEngine.h>
 
 typedef struct ALCcontext_struct ALCcontext;
 
@@ -34,7 +34,7 @@ namespace Daedalus
     {
         struct C_SFX;
     }
-}
+}  // namespace Daedalus
 
 namespace Logic
 {
@@ -89,6 +89,12 @@ namespace World
         bool playMusicTheme(const std::string& name);
 
         /**
+         * Returns the currently playing music theme, or an
+         * empty string if no music themes are playing
+         */
+        const std::string& currentMusicTheme() const { return m_CurrentMusicTheme; }
+
+        /**
          * Returns the names of the currently loaded segments
          */
         std::vector<std::string> getLoadedSegments() const;
@@ -116,7 +122,7 @@ namespace World
          */
         const VDFS::FileIndex& m_VDFSIndex;
 
-        Daedalus::DaedalusVM* m_SoundVM = nullptr, *m_MusicVM = nullptr;
+        Daedalus::DaedalusVM *m_SoundVM = nullptr, *m_MusicVM = nullptr;
 
         struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>
         {
@@ -188,5 +194,10 @@ namespace World
          * Contains all loaded sounds by name
          */
         std::map<std::string, Handle::SfxHandle> m_SoundMap;
+
+        /**
+         * The currently playing music theme
+         */
+        std::string m_CurrentMusicTheme;
     };
-}
+}  // namespace World

@@ -413,19 +413,25 @@ namespace World
             m_musicContext->playSegment(m_Segments.at(loweredName), timing);
             m_playingSegment = loweredName;
         }
+        m_CurrentMusicTheme = "";
         return true;
     }
 
     bool AudioWorld::playMusicTheme(const std::string& name)
     {
-        if (m_MusicVM->getDATFile().hasSymbolName(Utils::uppered(name)))
+        auto uname = Utils::uppered(name);
+        if (m_CurrentMusicTheme == uname) return true;
+
+        if (m_MusicVM->getDATFile().hasSymbolName(uname))
         {
-            size_t i = m_MusicVM->getDATFile().getSymbolIndexByName(Utils::uppered(name));
+            size_t i = m_MusicVM->getDATFile().getSymbolIndexByName(uname);
             Daedalus::GameState::MusicThemeHandle h = m_MusicVM->getGameState().createMusicTheme();
             Daedalus::GEngineClasses::C_MusicTheme& mt = m_MusicVM->getGameState().getMusicTheme(h);
             m_MusicVM->initializeInstance(ZMemory::toBigHandle(h), i, Daedalus::IC_MusicTheme);
 
-            return playSegment(mt.file, getTiming(mt.transSubType));
+            bool result = playSegment(mt.file, getTiming(mt.transSubType));
+            if (result) m_CurrentMusicTheme = uname;
+            return result;
         }
         return false;
     }
