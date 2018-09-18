@@ -1,21 +1,24 @@
 #include "MusicController.h"
 #include <ZenLib/zenload/zTypes.h>
-#include <engine/BaseEngine.h>
-#include <logic/ScriptEngine.h>
-#include <engine/World.h>
-#include <debugdraw/debugdraw.h>
 #include <audio/AudioWorld.h>
+#include <components/Vob.h>
+#include <components/VobClasses.h>
+#include <debugdraw/debugdraw.h>
+#include <engine/BaseEngine.h>
+#include <engine/World.h>
+#include <logic/ScriptEngine.h>
+#include <logic/PlayerController.h>
 
 using namespace Logic;
 
 const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
-{
-    "_DAY_STD",
-    "_DAY_THR",
-    "_DAY_FGT",
-    "_NGT_STD",
-    "_NGT_THR",
-    "_NGT_FGT",
+    {
+        "_DAY_STD",
+        "_DAY_THR",
+        "_DAY_FGT",
+        "_NGT_STD",
+        "_NGT_THR",
+        "_NGT_FGT",
 };
 
 bool MusicController::m_debugDraw = false;
@@ -25,7 +28,9 @@ std::string MusicController::m_defaultZone = "DEF";
 
 MusicController::MusicController(World::WorldInstance& world, Handle::EntityHandle entity)
     : Controller(world, entity)
-    , m_isPlaying(false) {}
+    , m_isPlaying(false)
+{
+}
 
 void MusicController::importObject(const json& j)
 {
@@ -76,7 +81,7 @@ void MusicController::onUpdate(float deltaTime)
 {
     if (m_debugDraw)
     {
-        Aabb box = { m_bbox[0].x, m_bbox[0].y, m_bbox[0].z, m_bbox[1].x, m_bbox[1].y, m_bbox[1].z };
+        Aabb box = {m_bbox[0].x, m_bbox[0].y, m_bbox[0].z, m_bbox[1].x, m_bbox[1].y, m_bbox[1].z};
         ddPush();
         ddSetColor(0xFF0000FF);
         ddDraw(box);
@@ -93,8 +98,7 @@ void MusicController::onUpdate(float deltaTime)
     // changed.
     // FIXME: It'll also be needed to check if the character is
     // threatened or fighting to play the correct music.
-    if (((!m_isPlaying || currentTheme.find(m_instancePrefix) != 0) && isInBoundingBox())
-        || (m_isPlaying && m_currentTime != time))
+    if (((!m_isPlaying || currentTheme.find(m_instancePrefix) != 0) && isInBoundingBox()) || (m_isPlaying && m_currentTime != time))
     {
         m_isPlaying = true;
 
@@ -116,11 +120,18 @@ void MusicController::onUpdate(float deltaTime)
 
 bool MusicController::isInBoundingBox()
 {
-    Math::float3 cam = m_World.getCameraComp<Components::PositionComponent>().m_WorldMatrix.Translation();
+    // Get player's position
+    VobTypes::NpcVobInformation player = VobTypes::asNpcVob(m_World, m_World.getScriptEngine().getPlayerEntity());
+    Math::float3 pos{};
 
-    return (cam.x >= m_bbox[0].x && cam.x < m_bbox[1].x &&
-            cam.y >= m_bbox[0].y && cam.y < m_bbox[1].y &&
-            cam.z >= m_bbox[0].z && cam.z < m_bbox[1].z);
+    if (player.isValid() && !player.playerController->getUsedMob().isValid())
+    {
+        pos = player.position->m_WorldMatrix.Translation();
+    }
+
+    return (pos.x >= m_bbox[0].x && pos.x < m_bbox[1].x &&
+            pos.y >= m_bbox[0].y && pos.y < m_bbox[1].y &&
+            pos.z >= m_bbox[0].z && pos.z < m_bbox[1].z);
 }
 
 void MusicController::playDefaultMusic(World::WorldInstance& world)
