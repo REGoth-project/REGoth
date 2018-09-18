@@ -377,6 +377,15 @@ bool WorldInstance::init(const std::string& zen,
                     VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
                     mus.musicController->initFromVobDescriptor(v);
 
+                    /* Sets an increased factor to allow detection of very large
+                    music zones. For example, Khorinis's zone would be disabled
+                    on the standard factor.
+                    
+                    This should not impact performance much because music controllers
+                    are lightweight and do not draw anything (unless the debug
+                    draw is enabled) */
+                    mus.position->m_DrawDistanceFactor = 10;
+
                     vob = Vob::asVob(*this, e);
                 }
                 else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
