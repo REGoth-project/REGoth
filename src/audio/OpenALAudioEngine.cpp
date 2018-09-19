@@ -401,15 +401,13 @@ namespace Audio
 
             if(!renderBuffer(dataBuffer)) return;
 
-            while(true)
+            while(!m_stop)
             {
-                if(m_stop) return;
                 if(!m_hasSource) continue;
 
                 ALint processedBuffers;
                 alGetSourcei(m_source, AL_BUFFERS_PROCESSED, &processedBuffers);
-                if(processedBuffers <= 0) continue;
-                while(processedBuffers--)
+                for(std::size_t i = 0; i < processedBuffers; i++)
                 {
                     ALuint buffer;
                     alSourceUnqueueBuffers(m_source, 1, &buffer);
