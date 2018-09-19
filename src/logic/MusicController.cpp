@@ -12,13 +12,13 @@
 using namespace Logic;
 
 const std::array<const std::string, 6> MusicController::m_instanceSuffixes =
-    {
-        "_DAY_STD",
-        "_DAY_THR",
-        "_DAY_FGT",
-        "_NGT_STD",
-        "_NGT_THR",
-        "_NGT_FGT",
+{
+    "_DAY_STD",
+    "_DAY_THR",
+    "_DAY_FGT",
+    "_NGT_STD",
+    "_NGT_THR",
+    "_NGT_FGT",
 };
 
 bool MusicController::m_debugDraw = false;
