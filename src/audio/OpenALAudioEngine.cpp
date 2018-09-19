@@ -452,8 +452,16 @@ ALuint OpenALAudioEngine::getFreeSource()
     auto lambda = [](const auto& sound) { return sound.use_count() == 1; };
 
     // Remove all expired sounds
-    std::remove_if(std::begin(m_bufferedSounds), std::end(m_bufferedSounds), lambda);
-    std::remove_if(std::begin(m_streamingSounds), std::end(m_streamingSounds), lambda);
+    m_bufferedSounds.erase(
+        std::remove_if(
+            std::begin(m_bufferedSounds),
+            std::end(m_bufferedSounds), lambda),
+        std::end(m_bufferedSounds));
+    m_streamingSounds.erase(
+        std::remove_if(
+            std::begin(m_streamingSounds),
+            std::end(m_streamingSounds), lambda),
+        std::end(m_streamingSounds));
 
     if (m_freeSources.empty())
     {
