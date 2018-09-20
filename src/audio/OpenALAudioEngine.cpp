@@ -169,7 +169,7 @@ namespace Audio
             }
         }
 
-        virtual ~OpenALSound()
+        ~OpenALSound() override
         {
             if (m_hasSource)
             {

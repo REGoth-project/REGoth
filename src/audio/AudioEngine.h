@@ -30,6 +30,8 @@ namespace Audio
      */
     class Sound {
     public:
+        virtual ~Sound() = default;
+
         /**
          * @brief Set sound pitch, must be positive
          * 
