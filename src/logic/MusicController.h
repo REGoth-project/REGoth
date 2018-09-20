@@ -5,6 +5,10 @@
 #include <daedalus/DaedalusGameState.h>
 
 namespace Logic {
+    /**
+     * @brief If enabled, draws a box around a music zone
+     * 
+     */
     class MusicController : public Controller {
     public:
         /**
@@ -38,57 +42,13 @@ namespace Logic {
         static void toggleDebugDraw() { m_debugDraw = !m_debugDraw; }
         static void disableDebugDraw() { m_debugDraw = false; }
 
-        static void setDefaultZone(const std::string& name) { m_defaultZone = name; }
-        static const std::string& getDefaultZone() { return m_defaultZone; }
-        static void playDefaultMusic(World::WorldInstance& world);
-        static bool isMusicPlaying() { return m_playingMusic; }
-
-        static void resetDefaults()
-        {
-            m_playingMusic = false;
-            m_defaultZone = "DEF";
-        }
-
     protected:
-        /**
-        * @return True, if the current camera is in the bounding box of the zone
-        */
-        bool isInBoundingBox();
 
         void exportPart(json& j) override;
 
     private:
-
         std::array<ZMath::float3, 2> m_bbox;
 
-        bool m_isPlaying;
-
-        std::string m_zoneName, m_instancePrefix;
-
-        enum EMusicTime {
-            MT_Day = 0,
-            MT_Ngt = 3,
-        };
-
-        enum EMusicType {
-            MT_Std = 0,
-            MT_Thr = 1,
-            MT_Fgt = 2,
-        };
-
-        /**
-        * Tries to play the segment associated with the specified prefix according to
-        * the current time of day and character condition.
-        * Falls back to day and standard variants if the requested ones are not found
-        */
-        static void playZone(World::WorldInstance& world, const std::string& prefix, EMusicTime time, EMusicType type);
-
-        EMusicTime m_currentTime;
-
-        static const std::array<const std::string, 6> m_instanceSuffixes;
-
-        static bool m_debugDraw, m_playingMusic;
-
-        static std::string m_defaultZone;
+        static bool m_debugDraw;
     };
 }

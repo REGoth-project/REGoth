@@ -12,6 +12,7 @@
 #include <debugdraw/debugdraw.h>
 #include <engine/BaseEngine.h>
 #include <engine/GameEngine.h>
+#include <engine/MusicZoneManager.h>
 #include <engine/World.h>
 #include <entry/input.h>
 #include <handle/HandleDef.h>
@@ -80,8 +81,9 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     : m_pEngine(&engine)
     , m_Allocators(std::make_unique<WorldAllocators>(engine))
     , m_ClassContents(std::make_unique<ClassContents>(*this))
+    , m_MusicZoneManager(std::make_unique<Engine::MusicZoneManager>(*this))
 {
-    Logic::MusicController::resetDefaults();
+    Logic::MusicController::disableDebugDraw();
 }
 
 WorldInstance::~WorldInstance()
@@ -376,6 +378,7 @@ bool WorldInstance::init(const std::string& zen,
 
                     VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
                     mus.musicController->initFromVobDescriptor(v);
+                    m_MusicZoneManager->addZone(v);
 
                     /* Sets an increased factor to allow detection of very large
                     music zones. For example, Khorinis's zone would be disabled
@@ -391,7 +394,7 @@ bool WorldInstance::init(const std::string& zen,
                 else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
                 {
                     std::string zoneName = v.vobName.substr(v.vobName.find('_') + 1);
-                    Logic::MusicController::setDefaultZone(zoneName);
+                    m_MusicZoneManager->setDefaultZone(zoneName);
 
                     LogInfo() << "Found default music zone: " << v.vobName;
                 }
@@ -746,10 +749,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
     }*/
 
-    if (!Logic::MusicController::isMusicPlaying())
-    {
-        Logic::MusicController::playDefaultMusic(*this);
-    }
+    m_MusicZoneManager->onUpdate();
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)

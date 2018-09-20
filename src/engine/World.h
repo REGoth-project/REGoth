@@ -17,6 +17,7 @@ namespace ZenLoad
 namespace Engine
 {
     class BaseEngine;
+    class MusicZoneManager;
 }
 
 namespace Physics
@@ -411,5 +412,6 @@ namespace World
          */
         std::unique_ptr<WorldAllocators> m_Allocators;
         std::unique_ptr<ClassContents> m_ClassContents;
+        std::unique_ptr<Engine::MusicZoneManager> m_MusicZoneManager;
     };
 }
