@@ -233,6 +233,9 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
             engine->resetSession();
             engine->getHud().getLoadingScreen().reset();
             engine->getHud().getLoadingScreen().setHidden(false);
+
+            // Play loading screen music
+            engine->getAudioWorld().playMusicTheme("SYS_Loading");
         };
         engine->getJobManager().executeInMainThread<void>(resetSession).wait();
 
