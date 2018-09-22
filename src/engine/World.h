@@ -99,7 +99,8 @@ namespace World
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
                   const json& dialogManager = json(),
-                  const json& logManager = json());
+                  const json& logManager = json(),
+                  const json& musicManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -219,6 +220,7 @@ namespace World
         Logic::DialogManager& getDialogManager();
         Logic::PfxManager& getPfxManager();
         Animations::AnimationLibrary& getAnimationLibrary();
+        Engine::MusicZoneManager& getMusicZoneManager();
 
         /**
          * HUD's print-screen manager
@@ -412,6 +414,5 @@ namespace World
          */
         std::unique_ptr<WorldAllocators> m_Allocators;
         std::unique_ptr<ClassContents> m_ClassContents;
-        std::unique_ptr<Engine::MusicZoneManager> m_MusicZoneManager;
     };
 }

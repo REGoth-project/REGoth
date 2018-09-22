@@ -7,6 +7,7 @@
 #include <logic/ScriptEngine.h>
 
 using namespace Engine;
+using namespace nlohmann;
 
 static const std::array<const std::string, 6> instanceSuffixes =
 {
@@ -69,7 +70,8 @@ void MusicZoneManager::onUpdate()
         if (isInside(playerPos, zone.bbox[0] * .01f, zone.bbox[1] * .01f))
         {
             if (!currentZone
-                || currentZone->oCZoneMusic.priority < zone.oCZoneMusic.priority)
+                || (currentZone->oCZoneMusic.priority < zone.oCZoneMusic.priority
+                    && zone.oCZoneMusic.enabled))
             {
                 currentZone = &zone;
             }
@@ -92,5 +94,66 @@ void MusicZoneManager::onUpdate()
 
         // Try playing the zone's theme
         playTheme(instancePrefix, MT_Std, time);
+    }
+}
+
+static json serializeVector(const ZMath::float3& vec)
+{
+    json result;
+    result["x"] = vec.x;
+    result["y"] = vec.y;
+    result["z"] = vec.z;
+    return result;
+}
+
+void MusicZoneManager::exportMusicZoneManager(json& result)
+{
+    result["defaultZone"] = m_defaultZonePrefix;
+    for(const auto& zone : m_zones)
+    {
+        json z;
+        z["name"] = zone.vobName;
+        z["ellipsoid"] = zone.oCZoneMusic.ellipsoid;
+        z["enabled"] = zone.oCZoneMusic.enabled;
+        z["loop"] = zone.oCZoneMusic.loop;
+        z["priority"] = zone.oCZoneMusic.priority;
+        z["reverbLevel"] = zone.oCZoneMusic.reverbLevel;
+        z["volumeLevel"] = zone.oCZoneMusic.volumeLevel;
+
+        z["bbox"] = json::array({
+            serializeVector(zone.bbox[0]),
+            serializeVector(zone.bbox[1])
+        });
+
+        result["zones"].push_back(z);
+    }
+}
+
+static ZMath::float3 deserializeVector(const json& j)
+{
+    return {j["x"].get<float>(), j["y"].get<float>(), j["z"].get<float>()};
+}
+
+void MusicZoneManager::importMusicZoneManager(const nlohmann::json& json)
+{
+    m_zones.clear();
+    m_defaultZonePrefix = json["defaultZone"].get<std::string>();
+
+    for(const auto& zone : json["zones"])
+    {
+        ZenLoad::zCVobData vob;
+        vob.vobType = ZenLoad::zCVobData::VT_oCZoneMusic;
+        vob.vobName = zone["name"].get<std::string>();
+        vob.oCZoneMusic.ellipsoid = zone["ellipsoid"].get<bool>();
+        vob.oCZoneMusic.enabled = zone["enabled"].get<bool>();
+        vob.oCZoneMusic.loop = zone["loop"].get<bool>();
+        vob.oCZoneMusic.priority = zone["priority"].get<int>();
+        vob.oCZoneMusic.reverbLevel = zone["reverbLevel"].get<float>();
+        vob.oCZoneMusic.volumeLevel = zone["volumeLevel"].get<float>();
+
+        vob.bbox[0] = deserializeVector(zone["bbox"][0]);
+        vob.bbox[1] = deserializeVector(zone["bbox"][1]);
+
+        m_zones.emplace_back(vob);
     }
 }

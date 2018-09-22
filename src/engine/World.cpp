@@ -50,6 +50,7 @@ public:
         , dialogManager(world)
         , bspTree(world)
         , pfxManager(world)
+        , musicZoneManager(world)
     {}
 
     WorldMesh worldMesh;
@@ -61,6 +62,7 @@ public:
     Content::Sky sky;
     Logic::DialogManager dialogManager;
     Logic::PfxManager pfxManager;
+    Engine::MusicZoneManager musicZoneManager;
 };
 
 struct LoadSection
@@ -81,7 +83,6 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     : m_pEngine(&engine)
     , m_Allocators(std::make_unique<WorldAllocators>(engine))
     , m_ClassContents(std::make_unique<ClassContents>(*this))
-    , m_MusicZoneManager(std::make_unique<Engine::MusicZoneManager>(*this))
 {
     Logic::MusicController::disableDebugDraw();
 }
@@ -135,7 +136,8 @@ bool WorldInstance::init(const std::string& zen,
                          const json& worldJson,
                          const json& scriptEngine,
                          const json& dialogManager,
-                         const json& logManager)
+                         const json& logManager,
+                         const json& musicManager)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -378,7 +380,7 @@ bool WorldInstance::init(const std::string& zen,
 
                     VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
                     mus.musicController->initFromVobDescriptor(v);
-                    m_MusicZoneManager->addZone(v);
+                    m_ClassContents->musicZoneManager.addZone(v);
 
                     /* Sets an increased factor to allow detection of very large
                     music zones. For example, Khorinis's zone would be disabled
@@ -394,7 +396,7 @@ bool WorldInstance::init(const std::string& zen,
                 else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
                 {
                     std::string zoneName = v.vobName.substr(v.vobName.find('_') + 1);
-                    m_MusicZoneManager->setDefaultZone(zoneName);
+                    m_ClassContents->musicZoneManager.setDefaultZone(zoneName);
 
                     LogInfo() << "Found default music zone: " << v.vobName;
                 }
@@ -559,6 +561,11 @@ bool WorldInstance::init(const std::string& zen,
         if (!logManager.empty())
         {
             engine.getSession().getLogManager().importLogManager(logManager);
+        }
+
+        if(!musicManager.empty())
+        {
+            m_ClassContents->musicZoneManager.importMusicZoneManager(musicManager);
         }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
@@ -749,7 +756,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
     }*/
 
-    m_MusicZoneManager->onUpdate();
+    m_ClassContents->musicZoneManager.onUpdate();
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
@@ -1208,4 +1215,9 @@ Logic::CameraController* WorldInstance::getCameraController()
 {
     Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
     return dynamic_cast<Logic::CameraController*>(ptr);
+}
+
+Engine::MusicZoneManager& WorldInstance::getMusicZoneManager()
+{
+    return m_ClassContents->musicZoneManager;
 }

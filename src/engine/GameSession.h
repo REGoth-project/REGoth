@@ -82,7 +82,8 @@ namespace Engine
                                                           const json& worldJson = json(),
                                                           const json& scriptEngine = json(),
                                                           const json& dialogManager = json(),
-                                                          const json& logManager = json());
+                                                          const json& logManager = json(),
+                                                          const json& musicManager = json());
 
         Handle::WorldHandle registerWorld(std::unique_ptr<World::WorldInstance> pWorldInstance);
 

@@ -1,6 +1,7 @@
 #include "SavegameManager.h"
 #include <fstream>
 #include "engine/GameEngine.h"
+#include "engine/MusicZoneManager.h"
 #include "ui/Hud.h"
 #include "ui/LoadingScreen.h"
 #include <json/json.hpp>
@@ -244,11 +245,13 @@ std::string Engine::SavegameManager::loadSaveGameSlot(int index)
         json scriptEngine = json::parse(SavegameManager::readFileInSlot(index, "scriptengine.json"));
         json dialogManager = json::parse(SavegameManager::readFileInSlot(index, "dialogmanager.json"));
         json logManager = json::parse(SavegameManager::readFileInSlot(index, "logmanager.json"));
+        json musicManager = json::parse(SavegameManager::readFileInSlot(index, "musicmanager.json"));
         engine->getSession().setCurrentSlot(index);
         engine->getGameClock().setTotalSeconds(timePlayed);
         using UniqueWorld = std::unique_ptr<World::WorldInstance>;
         std::shared_ptr<UniqueWorld> pWorld;
-        pWorld = std::make_shared<UniqueWorld>(engine->getSession().createWorld("", worldJson, scriptEngine, dialogManager, logManager));
+        pWorld = std::make_shared<UniqueWorld>(engine->getSession().createWorld("",
+            worldJson, scriptEngine, dialogManager, logManager, musicManager));
 
         auto registerWorld = [index, pWorld](BaseEngine * engine)
         {
@@ -338,6 +341,11 @@ void Engine::SavegameManager::saveToSlot(int index, std::string savegameName)
     json scriptEngine;
     mainWorld.getScriptEngine().exportScriptEngine(scriptEngine);
     Engine::SavegameManager::writeFileInSlot(index, "scriptengine.json", Utils::iso_8859_1_to_utf8(scriptEngine.dump(4)));
+
+    json musicManager;
+    mainWorld.getMusicZoneManager().exportMusicZoneManager(musicManager);
+    Engine::SavegameManager::writeFileInSlot(index, "musicmanager.json", Utils::iso_8859_1_to_utf8(musicManager.dump(4)));
+
     gameEngine->getSession().setCurrentSlot(index);
 }
 

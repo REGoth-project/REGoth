@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <json.hpp>
 
 #include <engine/World.h>
 
@@ -25,6 +26,9 @@ namespace Engine
          */
         void setDefaultZone(const std::string& zone) { m_defaultZonePrefix = zone; }
         void onUpdate();
+
+        void exportMusicZoneManager(nlohmann::json& json);
+        void importMusicZoneManager(const nlohmann::json& json);
 
     private:
         World::WorldInstance& m_world;
