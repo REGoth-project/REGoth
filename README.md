@@ -60,13 +60,14 @@ Currently supported/tested are:
 
 You will also need a copy of `libsndfile` installed on your computer.
 
-## Obtaining `libsndfile`
+## Obtaining `libsndfile` and `libxinerama`
 
 ### *nix systems (Linux, BSD, macOS)
 On most *nix systems, this can be obtained using a package manager, for example on Debian/Ubuntu:
 
 ```sh
-$ sudo apt install libsndfile1-dev
+$ sudo apt install libsndfile1-dev libasound2-dev
+$ sudo apt install libxinerama-dev
 ```
 
 Or on macOS
