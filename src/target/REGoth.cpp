@@ -86,6 +86,7 @@ void REGoth::init(int _argc, char** _argv)
     Meshes::PositionUVVertex2D::init();
     Meshes::SkeletalVertex::init();
 
+    VDFS::FileIndex::initVDFS(_argv[0]);
     m_pEngine = new Engine::GameEngine;
 
 #if BX_PLATFORM_ANDROID
