@@ -924,7 +924,6 @@ bool PlayerController::EV_Manipulate(std::shared_ptr<EventMessages::ManipulateMe
 
             if (message.symIdx != static_cast<size_t>(-1))
             {
-                m_World.getScriptEngine().prepareRunFunction();
                 m_World.getScriptEngine().runFunctionBySymIndex(message.symIdx);
             }
             return false;
@@ -1302,7 +1301,6 @@ bool PlayerController::useItem(Daedalus::GameState::ItemHandle item)
     if (data.on_state[0])
     {
         m_World.getScriptEngine().setInstanceNPC("self", getScriptHandle());
-        m_World.getScriptEngine().prepareRunFunction();
         m_World.getScriptEngine().runFunctionBySymIndex(data.on_state[0]);
 
         return true;
@@ -1336,8 +1334,6 @@ bool PlayerController::canUse(Daedalus::GameState::ItemHandle item)
                 // Display messages, if this is the player and do debug-output
                 s.setInstanceNPC("self", getScriptHandle());
                 s.setInstanceItem("item", item);
-
-                s.prepareRunFunction();
 
                 s.pushInt(data.cond_value[i]);
                 s.pushInt(data.cond_atr[i]);

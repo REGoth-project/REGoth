@@ -84,7 +84,6 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
         m_CurrentState.isRoutineState = isRoutineState;
 
         // Just call the function
-        s.prepareRunFunction();
         s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
         s.runFunctionBySymIndex(symIdx);
 
@@ -245,7 +244,6 @@ bool NpcScriptState::doAIState(float deltaTime)
                 if (m_CurrentState.symIndex > 0)
                 {
                     // Call setup-function
-                    s.prepareRunFunction();
                     s.runFunctionBySymIndex(m_CurrentState.symIndex);
                 }
 
@@ -261,7 +259,6 @@ bool NpcScriptState::doAIState(float deltaTime)
                 // Call looping-function
                 if (m_CurrentState.symLoop > 0)
                 {
-                    s.prepareRunFunction();
                     end = s.runFunctionBySymIndex(m_CurrentState.symLoop) != 0;
                 }
 
@@ -295,7 +292,6 @@ bool NpcScriptState::doAIState(float deltaTime)
                 // Call end-function
                 if (m_CurrentState.symEnd > 0)
                 {
-                    s.prepareRunFunction();
                     s.runFunctionBySymIndex(m_CurrentState.symEnd);
                 }
 
@@ -450,7 +446,6 @@ void NpcScriptState::reinitRoutine()
 
     if (newSymFn != 0)
     {
-        s.prepareRunFunction();
         s.runFunctionBySymIndex(newSymFn);
 
         LogInfo() << "Changed routine on "

@@ -70,12 +70,6 @@ bool ScriptEngine::initVMWithLoadedDAT()
     return true;
 }
 
-void ScriptEngine::prepareRunFunction()
-{
-    // Clean the VM for this run
-    m_pVM->pushState();
-}
-
 int32_t ScriptEngine::runFunction(const std::string& fname, bool clearDataStack)
 {
     assert(getVM().getDATFile().hasSymbolName(fname));
@@ -153,7 +147,6 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
         if (firstStart && m_pVM->getDATFile().hasSymbolName("startup_" + world))
         {
             LogInfo() << "Running: Startup_" << world;
-            prepareRunFunction();
             runFunction("startup_" + world);
             LogInfo() << "Done!";
         }
@@ -161,7 +154,6 @@ void ScriptEngine::initForWorld(const std::string& world, bool firstStart)
         if (m_pVM->getDATFile().hasSymbolName("init_" + world))
         {
             LogInfo() << "Running init_" << world;
-            prepareRunFunction();
             runFunction("init_" + world);
             LogInfo() << "Done!";
         }
@@ -253,8 +245,6 @@ void ScriptEngine::onNPCInitialized(Daedalus::GameState::NpcHandle npc)
 
     if (npcData.daily_routine != 0)
     {
-        prepareRunFunction();
-
         m_pVM->setInstance("self", ZMemory::toBigHandle(npc), Daedalus::IC_Npc);
         m_pVM->setCurrentInstance(getSymbolIndexByName("self"));
 

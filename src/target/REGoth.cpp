@@ -664,7 +664,6 @@ void REGoth::initConsole()
             return "error: could not find script functions";
 
         int exp = std::stoi(args[1]);
-        s1.prepareRunFunction();
         s1.pushInt(exp);
         s1.runFunction(scriptName, false);
 

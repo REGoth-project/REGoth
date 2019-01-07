@@ -89,7 +89,6 @@ std::vector<ChoiceEntry> DialogManager::evaluateConditions(NpcHandle player,
         int32_t valid = 0;
         if (info.condition)
         {
-            m_World.getScriptEngine().prepareRunFunction();
             valid = m_World.getScriptEngine().runFunctionBySymIndex(info.condition);
         }
 
@@ -241,7 +240,6 @@ void DialogManager::performChoice(size_t choice)
     getVM().setInstance("other", ZMemory::toBigHandle(m_Interaction.player), Daedalus::IC_Npc);
 
     // Call the script routine attached to the choice
-    m_World.getScriptEngine().prepareRunFunction();
     size_t fnSym = choiceEntry.functionSym;
     m_World.getScriptEngine().runFunctionBySymIndex(fnSym);
 

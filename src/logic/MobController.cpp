@@ -308,7 +308,6 @@ void MobController::callOnStateFunc(Handle::EntityHandle npc, int state)
         s.setInstanceNPC("self", VobTypes::getScriptHandle(nv));
         s.setInstanceItem("item", nv.playerController->getInteractItem());
 
-        s.prepareRunFunction();
         s.runFunctionBySymIndex(idx);
     }
 }
