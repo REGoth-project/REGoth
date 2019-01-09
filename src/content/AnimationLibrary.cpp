@@ -120,10 +120,9 @@ namespace Animations
         ModelAnimationParser p(zen);
         p.setScale(1.0f / 100.0f);
 
-        ModelAnimationParser::EChunkType type;
-        while ((type = p.parse()) != ModelAnimationParser::CHUNK_EOF)
+        while (true)
         {
-            switch (type)
+            switch (p.parse())
             {
                 case ModelAnimationParser::CHUNK_HEADER:
                     data.m_Header = p.getHeader();
@@ -134,10 +133,11 @@ namespace Animations
                     break;
                 case ModelAnimationParser::CHUNK_ERROR:
                     return Handle::AnimationDataHandle::makeInvalidHandle();
+                case ModelAnimationParser::CHUNK_EOF:
+                    return h;
             }
         }
-
-        return h;
+        return Handle::AnimationDataHandle::makeInvalidHandle();
     }
 
     /*
@@ -344,6 +344,8 @@ namespace Animations
                 break;
                 case ModelScriptParser::CHUNK_ERROR:
                     return false;
+                default:
+                    break;
             }
         }
 
