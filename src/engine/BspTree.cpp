@@ -90,10 +90,14 @@ std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
             case Utils::PLANE_INFRONT:  // Front
                 if (m_Nodes[n].front != INVALID_NODE)
                     return rec(bbox, m_Nodes[n].front);
+                else
+                    return {};
 
             case Utils::PLANE_BEHIND:  // Back
                 if (m_Nodes[n].back != INVALID_NODE)
                     return rec(bbox, m_Nodes[n].back);
+                else
+                    return {};
 
             case Utils::PLANE_SPANNING:  // Split
             {
@@ -108,8 +112,6 @@ std::vector<NodeIndex> BspTree::findLeafOf(const Utils::BBox3D& bbox)
             default:
                 return {};
         }
-
-        return {};
     };
 
     ddSetTransform(nullptr);
