@@ -84,7 +84,7 @@ bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool i
         m_CurrentState.isRoutineState = isRoutineState;
 
         // Just call the function
-        s.setInstance("self", VobTypes::getScriptObject(vob).instanceSymbol);
+        s.setInstance("self", VobTypes::getScriptObject(vob).parSymbolIndex);
         s.runFunctionBySymIndex(symIdx);
 
         m_CurrentState.isRoutineState = oldIsRoutineState;

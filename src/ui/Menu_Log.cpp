@@ -53,13 +53,13 @@ void Menu_Log::initializeLogEntries()
 
     // Find listboxes
     for (auto& item : m_Items)
-        if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_ACT").instanceSymbol)
+        if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData("MENU_ITEM_LIST_MISSIONS_ACT").parSymbolIndex)
             listbox_running = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
-        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_FAILED").instanceSymbol)
+        else if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData("MENU_ITEM_LIST_MISSIONS_FAILED").parSymbolIndex)
             listbox_failed = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
-        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_MISSIONS_OLD").instanceSymbol)
+        else if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData("MENU_ITEM_LIST_MISSIONS_OLD").parSymbolIndex)
             listbox_old = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
-        else if (item.second->getItemScriptData().instanceSymbol == getItemScriptData("MENU_ITEM_LIST_LOG").instanceSymbol)
+        else if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData("MENU_ITEM_LIST_LOG").parSymbolIndex)
             listbox_info = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
 
     // Set topic entries to listboxes
@@ -99,7 +99,7 @@ MenuItem* UI::Menu_Log::findMenuItem(const std::string& instance)
     MenuItem* menuItem = nullptr;
 
     for (auto& item : m_Items)
-        if (item.second->getItemScriptData().instanceSymbol == getItemScriptData(instance).instanceSymbol)
+        if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData(instance).parSymbolIndex)
         {
             menuItem = item.second;
             break;
@@ -131,7 +131,7 @@ bool Menu_Log::onInputAction(Engine::ActionType action)
     {
         // Find current selected listbox and hide all other listboxes
         for (auto& item : m_Items)
-            if (item.second->getItemScriptData().instanceSymbol == getItemScriptData(result[1]).instanceSymbol)
+            if (item.second->getItemScriptData().parSymbolIndex == getItemScriptData(result[1]).parSymbolIndex)
             {
                 listbox = dynamic_cast<MenuItemTypes::MenuItemListbox*>(item.second);
                 listbox->setHidden(false);

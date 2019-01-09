@@ -68,7 +68,7 @@ void Menu_Load::onCustomAction(const std::string& action)
         using namespace Engine;
 
         // Load actions don't give us the index. We have to check the name for that...
-        size_t sym = getItemScriptData(m_SelectableItems[m_SelectedItem]).instanceSymbol;
+        size_t sym = getItemScriptData(m_SelectableItems[m_SelectedItem]).parSymbolIndex;
         std::string name = m_pVM->getDATFile().getSymbolByIndex(sym).name;
 
         // Find the corresponding number

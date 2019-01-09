@@ -578,7 +578,7 @@ void REGoth::initConsole()
 
             Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
             const std::string& npcDisplayName = npcScriptObject.name[0];
-            const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+            const std::string& npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
 
             std::vector<std::string> group;
             for (auto npcName : {npcDatFileName, npcDisplayName})
@@ -635,7 +635,7 @@ void REGoth::initConsole()
                    VobTypes::NpcVobInformation npcVobInfo = VobTypes::asNpcVob(worldInstance, suggestion->npcHandle);
                    Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
                    const std::string& npcDisplayName = npcScriptObject.name[0];
-                   const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                   const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
                    std::string npnNameFull = npcDisplayName + " (" + npcDatFileName + ")";
                    return "took control over " + npnNameFull;
                }
@@ -718,7 +718,7 @@ void REGoth::initConsole()
                     success = true;
                     Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
                     const std::string& npcDisplayName = npcScriptObject.name[0];
-                    const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                    const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
                     vobInfos.push_back(npcVobInfo);
                     fullNames.push_back(npcDisplayName + " (" + npcDatFileName + ")");
                 }
@@ -807,7 +807,7 @@ void REGoth::initConsole()
         }
         Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
         const std::string& npcDisplayName = npcScriptObject.name[0];
-        const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+        const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
         std::string npnNameFull = npcDisplayName + " (" + npcDatFileName + ")";
 
         return npnNameFull + " is now in " + stateName + " state";
@@ -895,7 +895,7 @@ void REGoth::initConsole()
                 npcVobInfo.playerController->getNpcAnimationHandler().getAnimHandler().playAnimation(aniName);
                 Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
                 const std::string& npcDisplayName = npcScriptObject.name[0];
-                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+                const std::string& npcDatFileName = scriptEngine.getVM().getDATFile().getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
                 std::string fullName = npcDisplayName + " (" + npcDatFileName + ")";
                 return "Playing animation " + animationName + " on " + fullName;
             }

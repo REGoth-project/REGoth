@@ -418,7 +418,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
 
         if (npc.isValid())
         {
-            vm.setReturn((int32_t)npc.playerController->getScriptInstance().instanceSymbol);
+            vm.setReturn((int32_t)npc.playerController->getScriptInstance().parSymbolIndex);
         }
         else
         {
@@ -806,7 +806,7 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
                     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(*pWorld, e);
                     Daedalus::GEngineClasses::C_Npc& scriptInstance = VobTypes::getScriptObject(vob);
 
-                    if (instance >= 0 && scriptInstance.instanceSymbol != static_cast<size_t>(instance)) continue;
+                    if (instance >= 0 && scriptInstance.parSymbolIndex != static_cast<size_t>(instance)) continue;
                     if (guild >= 0 && scriptInstance.guild != guild) continue;
                     if (aiState >= 0 && vob.playerController->getAIStateMachine().isInState((size_t)aiState)) continue;
 
@@ -1338,9 +1338,9 @@ void ::Logic::ScriptExternals::registerEngineExternals(World::WorldInstance& wor
         Daedalus::GEngineClasses::C_Npc& npc = vm.getGameState().getNpc(hself);
 
         auto& scriptDialogManager = *pWorld->getDialogManager().getScriptDialogManager();
-        bool knows = scriptDialogManager.doesNpcKnowInfo(npc.instanceSymbol, infoinstance);
+        bool knows = scriptDialogManager.doesNpcKnowInfo(npc.parSymbolIndex, infoinstance);
 
-        //LogInfo() << "Does he kow? (" << vm.getDATFile().getSymbolByIndex(npc.instanceSymbol).name << " -> " << vm.getDATFile().getSymbolByIndex(infoinstance).name << "): " << knows;
+        //LogInfo() << "Does he kow? (" << vm.getDATFile().getSymbolByIndex(npc.parSymbolIndex).name << " -> " << vm.getDATFile().getSymbolByIndex(infoinstance).name << "): " << knows;
 
         vm.setReturn(knows);
     });

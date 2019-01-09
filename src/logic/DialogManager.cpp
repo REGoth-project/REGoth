@@ -79,8 +79,8 @@ std::vector<ChoiceEntry> DialogManager::evaluateConditions(NpcHandle player,
         if (info.important != important)
             continue;
 
-        bool npcKnowsInfo = m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(player).instanceSymbol,
-                                                                    getGameState().getInfo(infoHandle).instanceSymbol);
+        bool npcKnowsInfo = m_ScriptDialogMananger->doesNpcKnowInfo(getGameState().getNpc(player).parSymbolIndex,
+                                                                    getGameState().getInfo(infoHandle).parSymbolIndex);
         // no need check for permanent. npc never knows permanent info
         if (npcKnowsInfo)
             continue;
@@ -256,7 +256,7 @@ void DialogManager::performChoice(size_t choice)
         // Never set NpcInfoKnown if the info is permanent.
         // This also makes npc_knowsinfo return false for permanent infos (requested by the docu (externals.d))
         // Actually affects mordrag (escort to new camp only available after "You have a problem")
-        m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).instanceSymbol, info.instanceSymbol);
+        m_ScriptDialogMananger->setNpcInfoKnown(getGameState().getNpc(m_Interaction.player).parSymbolIndex, info.parSymbolIndex);
     }
 
     if (info.subChoices.empty())

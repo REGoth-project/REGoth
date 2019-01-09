@@ -43,5 +43,5 @@ void ItemController::exportPart(json& j)
     Controller::exportPart(j);
 
     j["type"] = "ItemController";
-    j["instanceSymbol"] = m_ScriptState.scriptInstance;
+    j["parSymbolIndex"] = m_ScriptState.scriptInstance;
 }

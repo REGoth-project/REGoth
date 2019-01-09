@@ -266,7 +266,7 @@ void PlayerController::onDebugDraw()
                     }
                     else
                     {
-                        displayName = datFile.getSymbolByIndex(idata.instanceSymbol).name;
+                        displayName = datFile.getSymbolByIndex(idata.parSymbolIndex).name;
                     }
                 }
 
@@ -826,7 +826,7 @@ bool PlayerController::EV_State(std::shared_ptr<EventMessages::StateMessage> sha
             }
 
             // Set up script instances. // TODO: Self is originally not set by gothic here! Why?
-            m_World.getScriptEngine().setInstance("self", getScriptInstance().instanceSymbol);
+            m_World.getScriptEngine().setInstance("self", getScriptInstance().parSymbolIndex);
             m_World.getScriptEngine().setInstanceNPC("other", message.other);
             m_World.getScriptEngine().setInstanceNPC("victim", message.victim);
 
@@ -1435,7 +1435,7 @@ void PlayerController::giveItem(const std::string& instanceName, unsigned int co
 
 void PlayerController::exportPart(json& j)
 {
-    size_t sym = getScriptInstance().instanceSymbol;
+    size_t sym = getScriptInstance().parSymbolIndex;
 
     Controller::exportPart(j);
 
@@ -1443,7 +1443,7 @@ void PlayerController::exportPart(json& j)
 
     // Export script-values
     auto& scriptObj = getScriptInstance();
-    j["scriptObj"]["instanceSymbol"] = scriptObj.instanceSymbol;
+    j["scriptObj"]["parSymbolIndex"] = scriptObj.parSymbolIndex;
     j["scriptObj"]["id"] = scriptObj.id;
     j["scriptObj"]["name"] = Utils::putArray(scriptObj.name);
     j["scriptObj"]["slot"] = scriptObj.slot;
@@ -1484,7 +1484,7 @@ void PlayerController::exportPart(json& j)
         // {
         //     // Write instance of the equipped item
         //     Daedalus::GEngineClasses::C_Item& data = m_World.getScriptEngine().getGameState().getItem(item);
-        //     std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+        //     std::string instanceName = m_World.getScriptEngine().getVM().getDATFile().getSymbolByIndex(data.parSymbolIndex).name;
 
         //     j["equipped"].push_back(instanceName);
         // }
@@ -1516,7 +1516,7 @@ void PlayerController::importObject(const json& j, bool noTransform)
     {
         auto& scriptObj = getScriptInstance();
 
-        scriptObj.instanceSymbol = j["scriptObj"]["instanceSymbol"];
+        scriptObj.parSymbolIndex = j["scriptObj"]["parSymbolIndex"];
         scriptObj.id = j["scriptObj"]["id"];
 
         Utils::putArray(scriptObj.name, j["scriptObj"]["name"]);
@@ -1582,7 +1582,7 @@ void PlayerController::importObject(const json& j)
 
 Handle::EntityHandle PlayerController::importPlayerController(World::WorldInstance& world, const json& j)
 {
-    unsigned int instanceSymbol = j["scriptObj"]["instanceSymbol"];
+    unsigned int instanceSymbol = j["scriptObj"]["parSymbolIndex"];
 
     // Create npc
     Handle::EntityHandle e = VobTypes::Wld_InsertNpc(world, instanceSymbol);
@@ -2153,7 +2153,7 @@ void PlayerController::onAction(Engine::ActionType actionType, bool triggered, f
                         for (auto h : inv.getItems())
                         {
                             unsigned int cnt = inv.getItemCount(h);
-                            size_t itm = inv.getItem(h).instanceSymbol;
+                            size_t itm = inv.getItem(h).parSymbolIndex;
 
                             getInventory().addItem(itm, cnt);
                         }

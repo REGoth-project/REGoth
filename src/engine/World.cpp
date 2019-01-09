@@ -978,7 +978,7 @@ Handle::EntityHandle WorldInstance::importSingleVob(const json& j)
         }
         else if (j["logic"]["type"] == "ItemController")
         {
-            size_t sym = j["logic"]["instanceSymbol"];
+            size_t sym = j["logic"]["parSymbolIndex"];
             entity = VobTypes::createItem(*this, sym);
         }
     }

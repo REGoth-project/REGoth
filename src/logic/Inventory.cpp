@@ -69,7 +69,7 @@ bool Inventory::removeItem(Daedalus::GameState::ItemHandle item, unsigned int co
 
     Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
 
-    return vm.getGameState().removeInventoryItem(data.instanceSymbol, m_NPC, count);
+    return vm.getGameState().removeInventoryItem(data.parSymbolIndex, m_NPC, count);
 }
 
 Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
@@ -82,7 +82,7 @@ Daedalus::GameState::ItemHandle Inventory::getItem(size_t symIndex)
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(h);
 
-        if (data.instanceSymbol == symIndex)
+        if (data.parSymbolIndex == symIndex)
             return h;
     }
 
@@ -128,7 +128,7 @@ void Inventory::exportInventory(json& j)
     for (auto item : getItems())
     {
         Daedalus::GEngineClasses::C_Item& data = vm.getGameState().getItem(item);
-        std::string instanceName = vm.getVM().getDATFile().getSymbolByIndex(data.instanceSymbol).name;
+        std::string instanceName = vm.getVM().getDATFile().getSymbolByIndex(data.parSymbolIndex).name;
 
         // Save instance and amount. Rest will be initialized by script on loading
         j[instanceName] = data.amount;

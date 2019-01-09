@@ -280,7 +280,7 @@ Handle::EntityHandle ScriptEngine::findWorldNPC(const std::string& name)
 
         Daedalus::GEngineClasses::C_Npc& npcScriptObject = npcVobInfo.playerController->getScriptInstance();
         std::string npcDisplayName = npcScriptObject.name[0];
-        std::string npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.instanceSymbol).name;
+        std::string npcDatFileName = datFile.getSymbolByIndex(npcScriptObject.parSymbolIndex).name;
 
         for (auto npcName : {npcDisplayName, npcDatFileName})
         {

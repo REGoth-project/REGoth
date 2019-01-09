@@ -676,5 +676,5 @@ std::string CharacterEquipment::getInstanceNameOfItem(ItemHandle item) const
 
     ScriptEngine& s = m_World.getScriptEngine();
 
-    return s.getSymbolNameByIndex(data->instanceSymbol);
+    return s.getSymbolNameByIndex(data->parSymbolIndex);
 }
