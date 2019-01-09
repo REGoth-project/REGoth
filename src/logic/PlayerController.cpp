@@ -745,10 +745,8 @@ bool PlayerController::EV_Movement(std::shared_ptr<EventMessages::MovementMessag
 
             // Fill position-field
             message.targetPosition = Vob::getTransform(vob).Translation();
-
-            // Fall through to ST_TurnToPos now
         }
-
+            //@fallthrough@
         case EventMessages::MovementMessage::ST_TurnToPos:
         {
             Math::float3 dir = (message.targetPosition - getEntityTransform().Translation());
