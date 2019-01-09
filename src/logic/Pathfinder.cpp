@@ -39,7 +39,7 @@ Pathfinder::~Pathfinder()
 Pathfinder::MovementReport Pathfinder::checkMoveToLocation(const Math::float3& from, const Math::float3& to)
 {
     MovementReport report;
-    Math::float3 fromGround = from - Math::float3(0, m_UserConfiguration.height, 0);
+    //Math::float3 fromGround = from - Math::float3(0, m_UserConfiguration.height, 0);
     Math::float3 toGround = to - Math::float3(0, m_UserConfiguration.height, 0);
 
     report.lowerThanStepHeight = (to.y - from.y) < -m_UserConfiguration.stepHeight;
