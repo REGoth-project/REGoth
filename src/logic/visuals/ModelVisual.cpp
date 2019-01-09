@@ -712,6 +712,7 @@ void ModelVisual::updateAttachmentVisuals()
         size_t nodeIdx = findNodeIndex(p.first);
         if (nodeIdx != static_cast<size_t>(-1))
         {
+            /*
             //TODO update is not used, what's the intention there?
             bool update = false;
 
@@ -728,6 +729,7 @@ void ModelVisual::updateAttachmentVisuals()
                 if (vis && vis->getName() != p.second)
                     update = true;
             }
+            */
 
             // Set the new visual
             setNodeVisual(p.second, p.first);
