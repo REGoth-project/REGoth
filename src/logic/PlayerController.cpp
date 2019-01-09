@@ -1736,7 +1736,7 @@ void PlayerController::traceDownNPCGround()
         LogInfo() << "traceDownNPCGround ITERATION BEGIN";
     }
     Physics::RayTestResult result = hitall[0];
-    Physics::RayTestResult resultWater = hitall[0];
+    //Physics::RayTestResult resultWater = hitall[0];
     bool waterMatFound = false;
     float closestGroundSurfacePos = std::numeric_limits<float>::max();
     float underWaterGroundPos = std::numeric_limits<float>::min();
