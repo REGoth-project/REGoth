@@ -64,7 +64,10 @@ namespace Animations
                 ModelScriptTextParser p(zen);
                 p.setStrict(false);  // TODO: should be configurable
                 if (!loadModelScript(fn, p))
-                    ;  //return false;
+                {
+                    //return false;
+                }
+
 
                 // MDS always overwrites
                 msb_loaded[withoutExt] = true;
@@ -81,7 +84,9 @@ namespace Animations
                 ZenParser zen(fn, m_World.getEngine()->getVDFSIndex());
                 ModelScriptBinParser p(zen);
                 if (!loadModelScript(fn, p))
-                    ;  //return false;
+                {
+                    //return false;
+                }
 
                 msb_loaded[withoutExt] = false;
             }
