@@ -49,11 +49,11 @@ NodeIndex BspTree::findLeafOf(const Math::float3& position)
             case 1:  // Front
                 if (m_Nodes[n].front != INVALID_NODE)
                     return rec(m_Nodes[n].front);
-
+                break;
             case 2:  // Back
                 if (m_Nodes[n].back != INVALID_NODE)
                     return rec(m_Nodes[n].back);
-
+                break;
             case 3:  // Split
             default:
                 break;
