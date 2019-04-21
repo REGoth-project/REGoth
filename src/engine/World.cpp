@@ -12,6 +12,7 @@
 #include <debugdraw/debugdraw.h>
 #include <engine/BaseEngine.h>
 #include <engine/GameEngine.h>
+#include <engine/MusicZoneManager.h>
 #include <engine/World.h>
 #include <entry/input.h>
 #include <handle/HandleDef.h>
@@ -49,7 +50,7 @@ public:
         , dialogManager(world)
         , bspTree(world)
         , pfxManager(world)
-        , audioWorld(nullptr)
+        , musicZoneManager(world)
     {}
 
     WorldMesh worldMesh;
@@ -58,10 +59,10 @@ public:
     Logic::ScriptEngine scriptEngine;
     Physics::PhysicsSystem physicsSystem;
     Animations::AnimationLibrary animationLibrary;
-    std::unique_ptr<World::AudioWorld> audioWorld;
     Content::Sky sky;
     Logic::DialogManager dialogManager;
     Logic::PfxManager pfxManager;
+    Engine::MusicZoneManager musicZoneManager;
 };
 
 struct LoadSection
@@ -83,7 +84,7 @@ WorldInstance::WorldInstance(Engine::BaseEngine& engine)
     , m_Allocators(std::make_unique<WorldAllocators>(engine))
     , m_ClassContents(std::make_unique<ClassContents>(*this))
 {
-    Logic::MusicController::resetDefaults();
+    Logic::MusicController::disableDebugDraw();
 }
 
 WorldInstance::~WorldInstance()
@@ -135,7 +136,8 @@ bool WorldInstance::init(const std::string& zen,
                          const json& worldJson,
                          const json& scriptEngine,
                          const json& dialogManager,
-                         const json& logManager)
+                         const json& logManager,
+                         const json& musicManager)
 {
     m_ZenFile = zen;
     Engine::BaseEngine& engine = *m_pEngine;
@@ -378,13 +380,23 @@ bool WorldInstance::init(const std::string& zen,
 
                     VobTypes::MusicVobInformation mus = VobTypes::asMusicVob(*this, e);
                     mus.musicController->initFromVobDescriptor(v);
+                    m_ClassContents->musicZoneManager.addZone(v);
+
+                    /* Sets an increased factor to allow detection of very large
+                    music zones. For example, Khorinis's zone would be disabled
+                    on the standard factor.
+                    
+                    This should not impact performance much because music controllers
+                    are lightweight and do not draw anything (unless the debug
+                    draw is enabled) */
+                    mus.position->m_DrawDistanceFactor = 10;
 
                     vob = Vob::asVob(*this, e);
                 }
                 else if (v.objectClass == "oCZoneMusicDefault:oCZoneMusic:zCVob")
                 {
                     std::string zoneName = v.vobName.substr(v.vobName.find('_') + 1);
-                    Logic::MusicController::setDefaultZone(zoneName);
+                    m_ClassContents->musicZoneManager.setDefaultZone(zoneName);
 
                     LogInfo() << "Found default music zone: " << v.vobName;
                 }
@@ -523,12 +535,6 @@ bool WorldInstance::init(const std::string& zen,
             LOAD_SECTION_RUNSCRIPTS.p2,
             LOAD_SECTION_RUNSCRIPTS.info);
 
-        LogInfo() << "Creating AudioWorld";
-        // must create AudioWorld before initializeScriptEngineForZenWorld, because startup_<worldname> calls snd_play
-        m_ClassContents->audioWorld = std::make_unique<World::AudioWorld>(*m_pEngine,
-                                                                          m_pEngine->getAudioEngine(),
-                                                                          engine.getVDFSIndex());
-
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(20);
 
         // Load script engine if one is provided. Always the case except "start new game"
@@ -555,6 +561,11 @@ bool WorldInstance::init(const std::string& zen,
         if (!logManager.empty())
         {
             engine.getSession().getLogManager().importLogManager(logManager);
+        }
+
+        if(!musicManager.empty())
+        {
+            m_ClassContents->musicZoneManager.importMusicZoneManager(musicManager);
         }
 
         m_pEngine->getHud().getLoadingScreen().setSectionProgress(40);
@@ -724,10 +735,9 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
     }
 
     // Update sound-listener position
-    getAudioWorld().setListenerPosition(getCameraController()->getEntityTransform().Translation());
-    //getAudioWorld().setListenerVelocity(); // don't need this for now, no need for the Doppler effect
+    getEngine()->getAudioEngine().position(getCameraController()->getEntityTransform().Translation());
     const auto& camMatrix = getCameraController()->getEntityTransform();
-    getAudioWorld().setListenerOrientation(camMatrix.Forward(), camMatrix.Up());
+    getEngine()->getAudioEngine().orientation({camMatrix.Forward(), camMatrix.Up()});
 
     // Update dialogs
     m_ClassContents->dialogManager.update(deltaTime);
@@ -746,10 +756,7 @@ void WorldInstance::onFrameUpdate(double deltaTime, float updateRangeSquared, co
         ddDrawAxis(fpPosition.x, fpPosition.y, fpPosition.z, 0.5f);
     }*/
 
-    if (!Logic::MusicController::isMusicPlaying())
-    {
-        Logic::MusicController::playDefaultMusic(*this);
-    }
+    m_ClassContents->musicZoneManager.onUpdate();
 }
 
 void WorldInstance::removeEntity(Handle::EntityHandle h)
@@ -1154,11 +1161,6 @@ Logic::DialogManager& WorldInstance::getDialogManager()
     return m_ClassContents->dialogManager;
 }
 
-World::AudioWorld& WorldInstance::getAudioWorld()
-{
-    return *m_ClassContents->audioWorld;
-}
-
 Logic::PfxManager& WorldInstance::getPfxManager()
 {
     return m_ClassContents->pfxManager;
@@ -1213,4 +1215,9 @@ Logic::CameraController* WorldInstance::getCameraController()
 {
     Logic::Controller* ptr = getCameraComp<Components::LogicComponent>().m_pLogicController;
     return dynamic_cast<Logic::CameraController*>(ptr);
+}
+
+Engine::MusicZoneManager& WorldInstance::getMusicZoneManager()
+{
+    return m_ClassContents->musicZoneManager;
 }

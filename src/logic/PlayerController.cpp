@@ -87,6 +87,7 @@ PlayerController::PlayerController(World::WorldInstance& world,
     , m_AIHandler(world, entity)
     , m_PathFinder(world)
     , m_CharacterEquipment(world, entity)
+    , m_AudioWorld(world.getEngine()->getAudioWorld())
 {
     m_NPCProperties.enablePhysics = true;
 
@@ -1015,33 +1016,28 @@ bool PlayerController::EV_Conversation(std::shared_ptr<EventMessages::Conversati
                 // Play the random dialog gesture
                 startDialogAnimation();
                 // Play sound of this conv-message
-                message.soundTicket = m_World.getAudioWorld().playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
+                message.soundTicket = m_AudioWorld.playSound(message.name, getEntityTransform().Translation(), DEFAULT_CHARACTER_SOUND_RANGE);
             }
 
             if (message.status == ConversationMessage::Status::PLAYING)
             {
                 bool playingFinished;
-#ifdef RE_USE_SOUND
                 if (message.canceled)
                 {
-                    m_World.getAudioWorld().stopSound(message.soundTicket);
+                    message.soundTicket->stop();
                 }
                 // toggle this bool to switch auto skip when sound ended
                 // TODO: read from config maybe
                 const bool autoPlay = true;
                 if (autoPlay)
                 {
-                    bool isPlaying = m_World.getAudioWorld().soundIsPlaying(message.soundTicket);
+                    bool isPlaying = message.soundTicket && message.soundTicket->state() == Audio::State::Playing;
                     playingFinished = !isPlaying;
                 }
                 else
                 {
                     playingFinished = message.canceled;
                 }
-#else
-                // when sound is disabled, message must be skipped manually
-                playingFinished = message.canceled;
-#endif
                 if (playingFinished)
                 {
                     message.status = ConversationMessage::Status::FADING_OUT;
@@ -1861,23 +1857,23 @@ void PlayerController::AniEvent_SFX(const ZenLoad::zCModelScriptEventSfx& sfx)
         }
     }
 
-    if (!sfx.m_EmptySlot && m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
+    if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot && m_MainNoiseSoundSlot->state() == Audio::State::Playing)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
-        m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+        m_MainNoiseSoundSlot->stop();
     }
 
     // Play sound specified in the event
     float range = sfx.m_Range != 0.0f ? sfx.m_Range : DEFAULT_CHARACTER_SOUND_RANGE;
 
-    auto ticket = m_World.getAudioWorld().playSound(sfx.m_Name, getEntityTransform().Translation(), range);
+    auto ticket = m_AudioWorld.playSound(sfx.m_Name, getEntityTransform().Translation(), range);
 
-    if (!sfx.m_EmptySlot)
+    if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
     {
         // If emptyslot is not set, the currently played sound shall be stopped
 
-        if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
-            m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+        if (m_MainNoiseSoundSlot->state() == Audio::State::Playing)
+            m_MainNoiseSoundSlot->stop();
 
         m_MainNoiseSoundSlot = ticket;
     }
@@ -1894,14 +1890,14 @@ void PlayerController::AniEvent_SFXGround(const ZenLoad::zCModelScriptEventSfx& 
 
         std::string soundfile = sfx.m_Name + "_" + ZenLoad::zCMaterial::getMatGroupString(mat);
 
-        auto ticket = m_World.getAudioWorld().playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
+        auto ticket = m_AudioWorld.playSoundVariantRandom(soundfile, getEntityTransform().Translation(), range);
 
-        if (!sfx.m_EmptySlot)
+        if (!sfx.m_EmptySlot && m_MainNoiseSoundSlot)
         {
             // If emptyslot is not set, the currently played sound shall be stopped
 
-            if (m_World.getAudioWorld().soundIsPlaying(m_MainNoiseSoundSlot))
-                m_World.getAudioWorld().stopSound(m_MainNoiseSoundSlot);
+            if (m_MainNoiseSoundSlot->state() == Audio::State::Playing)
+                m_MainNoiseSoundSlot->stop();
 
             m_MainNoiseSoundSlot = ticket;
         }

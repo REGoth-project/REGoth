@@ -6,19 +6,15 @@
 
 #include <glm/glm.hpp>
 
-#include <dmusic/PlayingContext.h>
+#include <audio/AudioEngine.h>
 #include <daedalus/DaedalusStdlib.h>
+#include <dmusic/PlayingContext.h>
 #include <handle/HandleDef.h>
 #include <memory/Config.h>
 #include <utils/Utils.h>
 #include <vdfs/fileIndex.h>
 
 typedef struct ALCcontext_struct ALCcontext;
-
-#ifdef RE_USE_SOUND
-#define RE_NUM_MUSIC_BUFFERS 3
-#define RE_MUSIC_BUFFER_LEN 1024
-#endif
 
 namespace Audio
 {
@@ -38,7 +34,7 @@ namespace Daedalus
     {
         struct C_SFX;
     }
-}
+}  // namespace Daedalus
 
 namespace Logic
 {
@@ -61,16 +57,6 @@ namespace World
 
         virtual ~AudioWorld();
 
-        /* Listener (TODO) */
-
-        void setListenerGain(float gain);
-
-        void setListenerPosition(const Math::float3& position);
-
-        void setListenerVelocity(const Math::float3& velocity);
-
-        void setListenerOrientation(const Math::float3& at, const Math::float3& up);
-
         /**
          * @brief Loads an audio-file from the given or stored VDFS-FileIndex
          */
@@ -81,16 +67,16 @@ namespace World
         /**
          * Plays the sound of the given handle/name
          */
-        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist = FLT_MAX);
-        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h);
-        Utils::Ticket<AudioWorld> playSound(const std::string& name);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h);
+        Audio::SoundPtr playSound(Handle::SfxHandle h, const Math::float3& position, bool relative, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(Handle::SfxHandle h);
+        Audio::SoundPtr playSound(const std::string& name);
+        Audio::SoundPtr playSoundVariantRandom(const std::string& name);
+        Audio::SoundPtr playSoundVariantRandom(Handle::SfxHandle h);
 
-        Utils::Ticket<AudioWorld> playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
-        Utils::Ticket<AudioWorld> playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
-        Utils::Ticket<AudioWorld> playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSound(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSoundVariantRandom(const std::string& name, const Math::float3& position, float maxDist = FLT_MAX);
+        Audio::SoundPtr playSoundVariantRandom(Handle::SfxHandle h, const Math::float3& position, float maxDist = FLT_MAX);
 
         /**
          * Plays the segment identified by a name
@@ -103,31 +89,20 @@ namespace World
         bool playMusicTheme(const std::string& name);
 
         /**
-         * Returns the names of the currently loaded segments
+         * Returns the currently playing music theme, or an
+         * empty string if no music themes are playing
          */
-        const std::vector<std::string> getLoadedSegments() const;
+        const std::string& currentMusicTheme() const { return m_CurrentMusicTheme; }
 
         /**
-         * Sets the maximum distance this sound can be heard
-         * @param maxDist Distance in meters
+         * Returns the names of the currently loaded segments
          */
-        void setSoundMaxDistance(Utils::Ticket<AudioWorld> sound, float maxDist);
+        std::vector<std::string> getLoadedSegments() const;
 
         /**
          * Stops all playing sounds
          */
         void stopSounds();
-
-        /**
-         * Stops Sound with given Ticket
-         * @param ticket to identify the sound
-         */
-        void stopSound(Utils::Ticket<AudioWorld> ticket);
-
-        /**
-         * returns whether the source of the associated ticket is playing
-         */
-        bool soundIsPlaying(Utils::Ticket<AudioWorld> ticket);
 
         /**
          * Pauses all sounds
@@ -147,25 +122,15 @@ namespace World
          */
         const VDFS::FileIndex& m_VDFSIndex;
 
-        ALCcontext* m_Context = nullptr;
-
-        Daedalus::DaedalusVM* m_SoundVM = nullptr, *m_MusicVM = nullptr;
-
-        struct Source
-        {
-            unsigned m_Handle = 0;
-            Utils::Ticket<AudioWorld> soundTicket;
-        };
+        Daedalus::DaedalusVM *m_SoundVM = nullptr, *m_MusicVM = nullptr;
 
         struct Sound : public Handle::HandleTypeDescriptor<Handle::SfxHandle>
         {
             Daedalus::GEngineClasses::C_SFX sfx;
             std::vector<Handle::SfxHandle> variants;  // Instances ending with "_Ax"
-            unsigned m_Handle = 0;
+            Audio::SoundPtr sound;
             std::string name;
         };
-
-#ifdef RE_USE_SOUND
 
         void createSounds();
 
@@ -180,12 +145,6 @@ namespace World
         void loadVariants(Handle::SfxHandle sfx);
 
         /**
-         * Checks if we currently have a stopped sound to use or creates a new one, if not
-         * @return sound object to use for a new sound
-         */
-        Source getFreeSource();
-
-        /**
          * Data allocator
          */
         Memory::StaticReferencedAllocator<Sound, Config::MAX_NUM_LEVEL_AUDIO_FILES> m_Allocator;
@@ -193,7 +152,13 @@ namespace World
         /**
          * List of currently playing sounds or sounds that have been playing
          */
-        std::list<Source> m_Sources;
+        std::list<Audio::SoundPtr> m_Sources;
+
+        /**
+         * Audio source for music
+         * 
+         */
+        Audio::SoundPtr m_MusicSource;
 
         /**
          * Holds the music state
@@ -216,17 +181,6 @@ namespace World
         std::string m_playingSegment;
 
         /**
-         * Background thread that puts music data into the soundbuffer(s)
-         */
-        void musicRenderFunction();
-        std::thread m_musicRenderThread;
-
-        /**
-         * Contain music buffers and source
-         */
-        unsigned m_musicBuffers[RE_NUM_MUSIC_BUFFERS], m_musicSource;
-
-        /**
          * Used to signal when the music rendering thread should stop
         */
         bool m_exiting;
@@ -235,11 +189,15 @@ namespace World
          * Music loading routine
          */
         void initializeMusic();
-#endif
 
         /**
          * Contains all loaded sounds by name
          */
         std::map<std::string, Handle::SfxHandle> m_SoundMap;
+
+        /**
+         * The currently playing music theme
+         */
+        std::string m_CurrentMusicTheme;
     };
-}
+}  // namespace World

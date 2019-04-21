@@ -24,6 +24,11 @@ namespace Audio
     class AudioEngine;
 }
 
+namespace World
+{
+    class AudioWorld;
+}
+
 namespace Engine
 {
     class GameSession;
@@ -123,6 +128,8 @@ namespace Engine
         UI::Hud& getHud() { return *m_pHUD; }
         UI::zFontCache& getFontCache() { return *m_pFontCache; }
         Audio::AudioEngine& getAudioEngine() { return *m_AudioEngine; }
+        World::AudioWorld& getAudioWorld() { return *m_AudioWorld; }
+
         /**
          * Sets the path the engine is looking for files
          * @param path New path
@@ -218,7 +225,7 @@ namespace Engine
          */
         EngineArgs m_Args;
 
-        Audio::AudioEngine* m_AudioEngine = nullptr;
+        std::unique_ptr<Audio::AudioEngine> m_AudioEngine;
 
         /**
          * Base UI-View
@@ -241,5 +248,7 @@ namespace Engine
          * if the engine is paused. When it is paused the world doesn't receive the delta time updates
          */
         bool m_Paused;
+
+        std::unique_ptr<World::AudioWorld> m_AudioWorld;
     };
 }

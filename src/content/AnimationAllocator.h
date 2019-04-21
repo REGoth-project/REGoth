@@ -54,8 +54,7 @@ namespace Animations
 
     inline Handle::AnimationHandle AnimationAllocator::allocate(const std::string& name)
     {
-        std::string uname = name;
-        std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
+        std::string uname = Utils::uppered(name);
 
         auto h = m_Allocator.createObject();
         m_AnimationsByName[uname] = h;

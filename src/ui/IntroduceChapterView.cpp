@@ -62,7 +62,7 @@ void UI::IntroduceChapterView::update(double dt, Engine::Input::MouseState& msta
         }
 
         //Setup Sound
-        World::AudioWorld& audioWorld = m_Engine.getMainWorld().get().getAudioWorld();
+        World::AudioWorld& audioWorld = m_Engine.getAudioWorld();
         {
             audioWorld.playSound(m_Sound);
         }
@@ -105,7 +105,7 @@ void UI::IntroduceChapterView::enqueueChapterIntroduction(std::string title, std
     Textures::TextureAllocator& alloc = m_Engine.getEngineTextureAlloc();
     m_Texture = alloc.loadTextureVDF(texture_name);
 
-    m_Sound = m_Engine.getMainWorld().get().getAudioWorld().loadAudioVDF(sound_name);
+    m_Sound = m_Engine.getAudioWorld().loadAudioVDF(sound_name);
 
     m_WaitTime = wait_time/1000;
 

@@ -210,7 +210,7 @@ namespace Math
             this->x = v;
             this->y = v;
             this->z = v;
-            this->w = w;
+            this->w = v;
         }
 
         union {

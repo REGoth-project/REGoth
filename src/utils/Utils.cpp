@@ -76,8 +76,7 @@ std::list<std::string> Utils::getFilesInDirectory(const std::string& directory, 
     std::list<std::string> l;
 
     forEachFile(directory, [&](const std::string& path, const std::string& name, const std::string& fext) {
-        std::string extlower = fext;
-        std::transform(extlower.begin(), extlower.end(), extlower.begin(), ::tolower);
+        std::string extlower = Utils::lowered(fext);
 
         if (ext == "*" || extlower == ext)
             l.push_back(path);
@@ -117,8 +116,7 @@ size_t Utils::getFileSize(const std::string& file)
 std::string Utils::getCaseSensitivePath(const std::string& caseInsensitivePath, const std::string& prePath)
 {
     // Transform input path to lower
-    std::string pathLower = caseInsensitivePath;
-    std::transform(pathLower.begin(), pathLower.end(), pathLower.begin(), ::tolower);
+    std::string pathLower = Utils::lowered(caseInsensitivePath);
 
     // Split the input-path at /
     std::vector<std::string> parts = Utils::split(pathLower, "/\\");

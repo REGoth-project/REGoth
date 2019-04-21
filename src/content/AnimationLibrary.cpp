@@ -94,8 +94,7 @@ namespace Animations
 
     Handle::AnimationDataHandle AnimationLibrary::loadMAN(const std::string& name)
     {
-        std::string file_name = name + ".MAN";
-        std::transform(file_name.begin(), file_name.end(), file_name.begin(), ::toupper);
+        std::string file_name = Utils::uppered(name + ".MAN");
 
         Handle::AnimationDataHandle h = m_World.getAnimationDataAllocator().getAnimationData(name);
         if (h.isValid())
@@ -347,10 +346,9 @@ namespace Animations
 
     std::string AnimationLibrary::makeQualifiedName(const std::string& mesh_lib, const std::string& overlay, const std::string& name)
     {
-        std::string umesh_lib = mesh_lib, uoverlay = overlay, uname = name;
-        std::transform(umesh_lib.begin(), umesh_lib.end(), umesh_lib.begin(), ::toupper);
-        std::transform(uoverlay.begin(), uoverlay.end(), uoverlay.begin(), ::toupper);
-        std::transform(uname.begin(), uname.end(), uname.begin(), ::toupper);
+        std::string umesh_lib = Utils::uppered(mesh_lib),
+            uoverlay = Utils::uppered(overlay),
+            uname = Utils::uppered(name);
 
         std::string qname;
         if (uoverlay.find(umesh_lib) != 0)

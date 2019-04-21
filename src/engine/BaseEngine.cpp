@@ -2,6 +2,11 @@
 #include <fstream>
 #include "World.h"
 #include "audio/AudioEngine.h"
+#include "audio/NullAudioEngine.h"
+#include "audio/AudioWorld.h"
+#ifdef RE_USE_SOUND
+#   include "audio/OpenALAudioEngine.h"
+#endif
 #include <bx/commandline.h>
 #include <components/EntityActions.h>
 #include <components/Vob.h>
@@ -34,7 +39,11 @@ namespace Flags
     Cli::Flag emptyWorld("", "empty-world", 0, "Will load no .ZEN-file at all.");
     Cli::Flag playerScriptname("p", "player", 1, "When starting a new game, the player will be inserted as the given NPC", {"PC_HERO"});
     Cli::Flag startNewGame("", "skipmenu", 0, "Skips the menu and starts a new game directly on game startup");
+
+#ifdef RE_USE_SOUND
+    Cli::Flag disableSound("", "no-sound", 0, "Disables audio output");
     Cli::Flag sndDevice("snd", "sound-device", 1, "OpenAL sound device", {""}, "Sound");
+#endif
 
     Cli::Flag noTextureFiltering("nf", "disable-filtering", 0, "Disables texture filtering");
 }
@@ -58,7 +67,6 @@ BaseEngine::BaseEngine()
 BaseEngine::~BaseEngine()
 {
     getRootUIView().removeChild(m_pHUD);
-    delete m_AudioEngine;
     delete m_pHUD;
     delete m_pFontCache;
 }
@@ -109,18 +117,40 @@ void BaseEngine::initEngine(int argc, char** argv)
 
     m_Args.startNewGame = Flags::startNewGame.isSet();
 
+    #ifdef RE_USE_SOUND
     std::string snd_device;
     if (Flags::sndDevice.isSet())
         snd_device = Flags::sndDevice.getParam(0);
 
     m_Args.noTextureFiltering = Flags::noTextureFiltering.isSet();
 
-    m_AudioEngine = new Audio::AudioEngine(snd_device);
+    if(Flags::disableSound.isSet())
+    {
+        m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
+    }
+    else
+    {
+        try
+        {
+            m_AudioEngine = std::make_unique<Audio::OpenALAudioEngine>(snd_device);
+        }
+        catch(const std::runtime_error& err)
+        {
+            LogError() << "Cannot initialize OpenAL audio engine: " << err.what();
+            m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
+        }
+    }
+    #else
+    m_AudioEngine = std::make_unique<Audio::NullAudioEngine>();
+    #endif
 
     // Init HUD
     m_pFontCache = new UI::zFontCache(*this);
     m_pHUD = new UI::Hud(*this);
     getRootUIView().addChild(m_pHUD);
+
+    LogInfo() << "Creating AudioWorld";
+    m_AudioWorld = std::make_unique<World::AudioWorld>(*this, *m_AudioEngine, m_FileIndex);
 }
 
 void BaseEngine::frameUpdate(double dt, uint16_t width, uint16_t height)
@@ -200,13 +230,10 @@ void BaseEngine::setPaused(bool paused)
 {
     if (paused != m_Paused)
     {
-        if (getMainWorld().isValid())
-        {
-            if (paused)
-                getMainWorld().get().getAudioWorld().pauseSounds();
-            else
-                getMainWorld().get().getAudioWorld().continueSounds();
-        }
+        if(paused) 
+            m_AudioWorld->pauseSounds();
+        else
+            m_AudioWorld->continueSounds();
         m_Paused = paused;
     }
 }

@@ -80,7 +80,8 @@ std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string
                                                                const json& worldJson,
                                                                const json& scriptEngine,
                                                                const json& dialogManager,
-                                                               const json& logManager)
+                                                               const json& logManager,
+                                                               const json& musicManager)
 {
     std::string worldFile = _worldFile;
 
@@ -102,7 +103,7 @@ std::unique_ptr<World::WorldInstance> GameSession::createWorld(const std::string
             return nullptr;
         }
     }
-    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager, logManager))  // expensive operation
+    if (!world.init(worldFile, worldJson, scriptEngine, dialogManager, logManager, musicManager))  // expensive operation
     {
         LogError() << "Failed to init world file: " << worldFile;
         return nullptr;
@@ -157,6 +158,9 @@ void GameSession::switchToWorld(const std::string& worldFile)
             auto strippedWorldName = Utils::uppered(Utils::stripExtension(worldFile));
             engine->getHud().getLoadingScreen().reset("LOADING_" + strippedWorldName + ".TGA");
             engine->getHud().getLoadingScreen().setHidden(false);
+
+            // Play loading screen music
+            engine->getAudioWorld().playMusicTheme("SYS_Loading");
 
             auto& session = engine->getSession();
             auto oldWorld = engine->getMainWorld();

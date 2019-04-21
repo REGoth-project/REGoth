@@ -17,6 +17,7 @@ namespace ZenLoad
 namespace Engine
 {
     class BaseEngine;
+    class MusicZoneManager;
 }
 
 namespace Physics
@@ -63,7 +64,6 @@ namespace Animations
 
 namespace World
 {
-    class AudioWorld;
     class WorldMesh;
     struct WorldAllocators;
 
@@ -99,7 +99,8 @@ namespace World
                   const json& worldJson = json(),
                   const json& scriptEngine = json(),
                   const json& dialogManager = json(),
-                  const json& logManager = json());
+                  const json& logManager = json(),
+                  const json& musicManager = json());
 
         /**
          * Creates an entity with the given components and returns its handle
@@ -217,9 +218,9 @@ namespace World
         WorldMesh& getWorldMesh();
         Content::Sky& getSky();
         Logic::DialogManager& getDialogManager();
-        World::AudioWorld& getAudioWorld();
         Logic::PfxManager& getPfxManager();
         Animations::AnimationLibrary& getAnimationLibrary();
+        Engine::MusicZoneManager& getMusicZoneManager();
 
         /**
          * HUD's print-screen manager
