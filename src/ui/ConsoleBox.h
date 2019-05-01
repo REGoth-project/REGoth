@@ -10,7 +10,7 @@ namespace UI
     {
     public:
         ConsoleBox(Engine::BaseEngine& e);
-        ~ConsoleBox();
+        ~ConsoleBox() override = default;
 
         /**
          * Updates/draws the UI-Views

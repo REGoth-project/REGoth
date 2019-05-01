@@ -1240,7 +1240,7 @@ void REGoth::showSplash()
     bgfx::setViewRect(1, 0, 0, (uint16_t)getWindowWidth(), (uint16_t)getWindowHeight());
 
     // Set view and projection matrix for view 0.
-    bgfx::setViewTransform(1, NULL, proj);
+    bgfx::setViewTransform(1, nullptr, proj);
 
     bgfx::touch(0);
 

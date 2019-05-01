@@ -81,11 +81,6 @@ UI::zFont::zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInf
     m_FontTexture = m_Engine.getEngineTextureAlloc().loadTextureVDF(fontInfo.fontName);
 }
 
-UI::zFont::~zFont()
-{
-    // Note: No need to unload font-textures, as they are needed in all worlds anyways.
-}
-
 bool UI::zFont::getGlyphOf(unsigned char c, UI::zFont::Glyph& g) const
 {
     // FIXME Below always evaluates to false, what's the intention there?
@@ -145,9 +140,8 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
     int yPos = 0;
     int xMax = 0;
     int yMax = 0;
-    for (unsigned i = 0; i < txt.size(); i++)
-    {
-        if (txt[i] == '\n')
+    for (char i : txt) {
+        if (i == '\n')
         {
             xPos = 0;
             yPos += m_Font.fontHeight;
@@ -155,7 +149,7 @@ void UI::zFont::calcTextMetrics(const std::string& txt, int& width, int& height)
         else
         {
             Glyph g;
-            getGlyphOf((unsigned char)txt[i], g);
+            getGlyphOf((unsigned char) i, g);
 
             xPos += g.width + DISTANCE_BETWEEN_GLYPHS;
         }

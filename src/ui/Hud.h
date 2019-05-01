@@ -33,7 +33,7 @@ namespace UI
     {
     public:
         Hud(Engine::BaseEngine& e);
-        ~Hud();
+        ~Hud() override;
 
         /**
          * Updates/draws the UI-Views

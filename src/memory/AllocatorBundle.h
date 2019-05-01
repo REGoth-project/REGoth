@@ -30,9 +30,7 @@ namespace Memory
         {
         }
 
-        ~AllocatorBundle()
-        {
-        }
+        ~AllocatorBundle() = default;
 
         /**
          * Returns a handle to a free chunk of memory and marks it as used

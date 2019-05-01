@@ -35,7 +35,7 @@ namespace Engine
         struct EngineArgs
         {
             EngineArgs()
-                : cmdline(0, NULL)
+                : cmdline(0, nullptr)
             {
             }
 

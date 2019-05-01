@@ -15,10 +15,6 @@ NpcAnimationHandler::NpcAnimationHandler(World::WorldInstance& world, Handle::En
     m_WalkMode = WalkMode::Run;
 }
 
-NpcAnimationHandler::~NpcAnimationHandler()
-{
-}
-
 PlayerController& NpcAnimationHandler::getController() const
 {
     return *reinterpret_cast<Logic::PlayerController*>(m_World.getEntity<Components::LogicComponent>(m_HostVob).m_pLogicController);

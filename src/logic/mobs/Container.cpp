@@ -1,5 +1,5 @@
 #include "Container.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <ZenLib/utils/logger.h>
 #include <components/VobClasses.h>
 #include <logic/PlayerController.h>
@@ -9,10 +9,6 @@ using namespace MobCores;
 
 Container::Container(World::WorldInstance& world, const Handle::EntityHandle& entity)
     : MobCore(world, entity)
-{
-}
-
-Container::~Container()
 {
 }
 

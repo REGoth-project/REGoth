@@ -42,10 +42,6 @@ NpcScriptState::NpcScriptState(World::WorldInstance& world, Handle::EntityHandle
     m_Routine.routineActiveIdx = 0;
 }
 
-NpcScriptState::~NpcScriptState()
-{
-}
-
 bool Logic::NpcScriptState::startAIState(size_t symIdx, bool endOldState, bool isRoutineState, bool isPrgState)
 {
     VobTypes::NpcVobInformation vob = VobTypes::asNpcVob(m_World, m_HostVob);

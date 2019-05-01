@@ -18,10 +18,6 @@ Console::Console(Engine::BaseEngine& e)
     outputAdd(" ----------- REGoth Console -----------");
 }
 
-Console::~Console()
-{
-}
-
 void Console::onKeyDown(int glfwKey, int mods)
 {
     auto& consoleBox = m_BaseEngine.getHud().getConsoleBox();
@@ -71,7 +67,7 @@ void Console::onKeyDown(int glfwKey, int mods)
     }
     else if (glfwKey == GLFW_KEY_BACKSPACE)
     {
-        if (m_TypedLine.size() >= 1)
+        if (!m_TypedLine.empty())
         {
             m_TypedLine.pop_back();
             generateSuggestions(m_TypedLine, false);
@@ -296,7 +292,7 @@ std::vector<std::string> Console::tokenized(const std::string& line)
     if (tokens.empty() || std::isspace(line.back(), std::locale::classic()))
     {
         // append empty pseudo token to trigger lookahead for the next token
-        tokens.push_back("");
+        tokens.emplace_back("");
     }
     return tokens;
 }

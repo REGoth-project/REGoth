@@ -39,7 +39,7 @@ namespace Logic
         {
             m_StateNum = 0;
         }
-        virtual ~MobCore() {}
+        virtual ~MobCore() = default;
         /**
          * Sets the base animation-scheme to use
          * @param name New scheme
@@ -116,7 +116,8 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         MobController(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~MobController();
+
+        ~MobController() override;
 
         /**
          * Starts an interaction from the given npc. This is the method you should use to let

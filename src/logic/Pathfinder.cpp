@@ -5,7 +5,7 @@
 #include "Pathfinder.h"
 #include <engine/World.h>
 #include <debugdraw/debugdraw.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <utils/cli.h>
 #include <physics/PhysicsSystem.h>
 #include <engine/WorldMesh.h>
@@ -28,13 +28,6 @@ Pathfinder::Pathfinder(World::WorldInstance& world)
 {
 
 }
-
-
-Pathfinder::~Pathfinder()
-{
-
-}
-
 
 Pathfinder::MovementReport Pathfinder::checkMoveToLocation(const Math::float3& from, const Math::float3& to)
 {

@@ -14,7 +14,7 @@ namespace UI
     {
     public:
         LoadingScreen(Engine::BaseEngine& e);
-        ~LoadingScreen();
+        ~LoadingScreen() override;
 
         /**
          * Updates/draws the UI-Views

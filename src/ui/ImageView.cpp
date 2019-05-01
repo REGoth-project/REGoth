@@ -17,10 +17,6 @@ UI::ImageView::ImageView(Engine::BaseEngine& e)
     m_ImageWidth = 0;
 }
 
-UI::ImageView::~ImageView()
-{
-}
-
 void UI::ImageView::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if (m_IsHidden)

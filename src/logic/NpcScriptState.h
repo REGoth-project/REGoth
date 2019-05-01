@@ -76,7 +76,7 @@ namespace Logic
     {
     public:
         NpcScriptState(World::WorldInstance& world, Handle::EntityHandle hostVob);
-        ~NpcScriptState();
+        ~NpcScriptState() = default;
 
         /**
          * @param symIdx Symbol-index of the state-main function

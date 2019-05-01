@@ -126,10 +126,6 @@ ModelVisual::ModelVisual(World::WorldInstance& world, Handle::EntityHandle entit
 {
 }
 
-ModelVisual::~ModelVisual()
-{
-}
-
 bool ModelVisual::load(const std::string& visual)
 {
     VisualController::load(visual);
@@ -617,10 +613,7 @@ void ModelVisual::updateBodyMesh()
     // Fix body-texture and skin-color
     if (!m_PartEntities.mainSkelMeshEntities.empty())
     {
-        for (size_t i = 0; i < m_PartEntities.mainSkelMeshEntities.size(); i++)
-        {
-            Handle::EntityHandle bodyMain = m_PartEntities.mainSkelMeshEntities[i];
-
+        for (auto bodyMain : m_PartEntities.mainSkelMeshEntities) {
             Components::EntityComponent& ent = m_World.getEntity<Components::EntityComponent>(bodyMain);
             if (Components::hasComponent<Components::StaticMeshComponent>(ent))
             {

@@ -21,7 +21,7 @@ namespace Meshes
     {
     public:
         GenericMeshAllocator(const VDFS::FileIndex* vdfidx = nullptr);
-        virtual ~GenericMeshAllocator();
+        virtual ~GenericMeshAllocator() = default;
 
         /**
          * @brief Sets the VDFS-Index to use

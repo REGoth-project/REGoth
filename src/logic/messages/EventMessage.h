@@ -48,7 +48,7 @@ namespace Logic
                 inUse = false;
                 isOverlay = false;
             }
-            virtual ~EventMessage() {}
+            virtual ~EventMessage() = default;
             /**
              * Export as JSON-String
              */
@@ -111,7 +111,7 @@ namespace Logic
              */
             void addDoneCallback(Handle::EntityHandle hostVob, std::function<void(Handle::EntityHandle hostVob, SharedEMessage)> callback)
             {
-                onMessageDone.push_back(std::make_pair(hostVob, callback));
+                onMessageDone.emplace_back(hostVob, callback);
             }
 
             /**
@@ -127,7 +127,8 @@ namespace Logic
                 messageType = EventMessageType::Npc;
                 isJob = true;
             }
-            virtual ~NpcMessage() {}
+
+            ~NpcMessage() override = default;
             /**
              * Export as JSON-String
              */

@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 #include "Utils.h"
-#include <assert.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdlib>
 #include <ZenLib/utils/logger.h>
 #include <ZenLib/utils/split.h>
 
@@ -149,7 +149,7 @@ void Flag::readFromConfig(const json& contents)
         m_ParsedArgs.clear();
         if (jf.is_boolean())
         {
-            m_ParsedArgs.push_back(contents[m_ConfigSection][flag] ? "1" : "0");  // Doesn't matter where exactly this ends up in the commandline, this has to be non-0 to count as "set"
+            m_ParsedArgs.emplace_back(contents[m_ConfigSection][flag] ? "1" : "0");  // Doesn't matter where exactly this ends up in the commandline, this has to be non-0 to count as "set"
         }
         else
         {
@@ -189,9 +189,8 @@ std::string Flag::documentConfigText(const std::string& configText)
     std::string flag = m_VerboseFlag.empty() ? m_Flag : m_VerboseFlag;
 
     // Find a line with our flag
-    for (size_t i = 0; i < lines.size(); i++)
-    {
-        if (lines[i].find("\"" + flag + "\": ") != std::string::npos)
+    for (auto &line : lines) {
+        if (line.find("\"" + flag + "\": ") != std::string::npos)
         {
             // This is our line! Add our desc above it
             for (const std::string& d : docLines)
@@ -204,7 +203,7 @@ std::string Flag::documentConfigText(const std::string& configText)
             }
         }
 
-        actualLines.push_back(lines[i]);
+        actualLines.push_back(line);
     }
 
     // Merge lines to text again
@@ -227,7 +226,7 @@ const std::string& Flag::getParam(unsigned i)
 void ::Cli::setCommandlineArgs(int argc, char** argv)
 {
     for (int i = 0; i < argc; i++)
-        Global::commandline.push_back(std::string(argv[i]));
+        Global::commandline.emplace_back(argv[i]);
 
     // Check all flags for correctness
     for (Flag* f : Global::getFlagList())

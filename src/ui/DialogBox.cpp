@@ -22,10 +22,6 @@ DialogBox::DialogBox(Engine::BaseEngine& e)
     setTranslation(Math::float2(0.125f, 0));
 }
 
-DialogBox::~DialogBox()
-{
-}
-
 void DialogBox::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if (m_IsHidden)

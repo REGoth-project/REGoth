@@ -24,7 +24,7 @@ namespace Logic
             {
             }
 
-            virtual ~SuggestionBase(){};
+            virtual ~SuggestionBase() = default;
 
             bool operator<(const SuggestionBase& b) const;
 
@@ -104,7 +104,7 @@ namespace Logic
 
         Console(Engine::BaseEngine& e);
 
-        ~Console();
+        ~Console() = default;
 
         /**
          * To be called when a key got pressed.

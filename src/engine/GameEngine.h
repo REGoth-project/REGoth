@@ -10,7 +10,7 @@ namespace Engine
     {
     public:
         GameEngine();
-        ~GameEngine();
+        ~GameEngine() override = default;
 
         /**
          * @brief Initializes the Engine

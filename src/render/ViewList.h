@@ -1,5 +1,5 @@
 #pragma once
-#include <inttypes.h>
+#include <cinttypes>
 
 /**
  * Explicit drawing-orders or views used for special effects must be set here

@@ -7,7 +7,7 @@ namespace UI
     {
     public:
         Menu_Save(Engine::BaseEngine& e);
-        ~Menu_Save();
+        ~Menu_Save() override = default;
 
         /**
          * Creates an instance of this class and appends it to the root UI-View

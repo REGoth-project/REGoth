@@ -13,7 +13,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdint>
-#include <stdlib.h>
+#include <cstdlib>
 #include <bgfx/bgfx.h>
 #include <math/mathlib.h>
 #include <bx/timer.h>
@@ -204,9 +204,8 @@ namespace Utils
     inline std::string iso_8859_1_to_utf8(const std::string& str)
     {
         std::string strOut;
-        for (auto it = str.begin(); it != str.end(); ++it)
-        {
-            uint8_t ch = (uint8_t)*it;
+        for (char it : str) {
+            uint8_t ch = (uint8_t) it;
             if (ch < 0x80)
             {
                 strOut.push_back(ch);
@@ -223,7 +222,7 @@ namespace Utils
     inline std::string utf8_to_iso8859_1(const char* in)
     {
         std::string out;
-        if (in == NULL)
+        if (in == nullptr)
             return out;
 
         unsigned int codepoint;

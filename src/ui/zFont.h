@@ -19,7 +19,7 @@ namespace UI
     {
     public:
         zFont(Engine::BaseEngine& e, const ZenLoad::zCFont::FontInfo& fontInfo);
-        ~zFont();
+        ~zFont() = default;     // Note: No need to unload font-textures, as they are needed in all worlds anyways.
 
         struct Glyph
         {

@@ -141,7 +141,7 @@ inline std::future<ReturnType> JobManager::executeInThread(JobType<ReturnType> j
         {
             std::future<void> keepAliveFuture = std::async(std::launch::async, std::move(wrappedJob), m_pEngine);
             std::lock_guard<std::mutex> guard(m_AsyncJobsMutex);
-            m_AsyncJobs.push_back(std::move(keepAliveFuture));
+            m_AsyncJobs.emplace_back(std::move(keepAliveFuture));
         }
             break;
     }

@@ -7,7 +7,7 @@
 #include "MobController.h"
 #include "CameraController.h"
 #include <json.hpp>
-#include <stdlib.h>
+#include <cstdlib>
 #include "visuals/ModelVisual.h"
 #include <audio/AudioEngine.h>
 #include <components/Entities.h>

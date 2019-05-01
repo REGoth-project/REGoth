@@ -100,10 +100,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     if (!triangles)
     {
         // Put all indices into one continuous chunk of memory
-        for (size_t i = 0, end = packed.subMeshes.size(); i < end; i++)
-        {
-            auto& m = packed.subMeshes[i];
-
+        for (const auto &m : packed.subMeshes) {
             mesh.mesh.m_SubmeshStarts.push_back({static_cast<WorldStaticMeshIndex>(mesh.mesh.m_Indices.size()),
                                                  static_cast<WorldStaticMeshIndex>(m.indices.size())});
 
@@ -130,10 +127,7 @@ Handle::MeshHandle StaticMeshAllocator::loadFromPackedTriList(const ZenLoad::Pac
     else
     {
         size_t idxStart = 0;
-        for (size_t i = 0, end = packed.subMeshes.size(); i < end; i++)
-        {
-            auto& m = packed.subMeshes[i];
-
+        for (const auto &m : packed.subMeshes) {
             mesh.mesh.m_SubmeshMaterials.emplace_back();
             mesh.mesh.m_SubmeshMaterials.back().m_TextureName = m.material.texture;
             mesh.mesh.m_SubmeshMaterials.back().m_NoCollision = m.material.noCollDet;

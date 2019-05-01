@@ -20,7 +20,7 @@ namespace Logic
         using WalkMode = EventMessages::MovementMessage::WalkMode;
 
         NpcAnimationHandler(World::WorldInstance& world, Handle::EntityHandle hostVob);
-        ~NpcAnimationHandler();
+        ~NpcAnimationHandler() = default;
 
         /**
          * Initializes all animations for the currently loaded model

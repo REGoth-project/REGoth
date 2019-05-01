@@ -198,7 +198,7 @@ std::vector<std::shared_ptr<const std::string>> SavegameManager::gatherAvailable
             if (namePtr)
                 names2.push_back(*namePtr);
             else
-                names2.push_back("");
+                names2.emplace_back("");
         }
         LogInfo() << "Available savegames: " << names2;
     }

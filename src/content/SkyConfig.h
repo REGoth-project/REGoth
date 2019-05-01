@@ -30,7 +30,7 @@ namespace Content
          * @param gametype Which game we're currently in
          */
         SkyConfig(const std::string& jsonString, SkyGametype gametype);
-        ~SkyConfig();
+        ~SkyConfig() = default;
 
         /**
          * @return Whether the loaded config was valid and this contains useful data

@@ -8,8 +8,9 @@ namespace Physics
     class DebugDrawer : public btIDebugDraw
     {
     public:
-        DebugDrawer() {}
-        virtual ~DebugDrawer() {}
+        DebugDrawer() = default;
+
+        ~DebugDrawer() override = default;
         void drawLine(const btVector3& from, const btVector3& to, const btVector3& color) override
         {
             ddPush();

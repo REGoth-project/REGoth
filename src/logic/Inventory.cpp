@@ -12,10 +12,6 @@ Inventory::Inventory(World::WorldInstance& world, Daedalus::GameState::NpcHandle
 {
 }
 
-Inventory::~Inventory()
-{
-}
-
 Daedalus::GameState::ItemHandle Inventory::addItem(size_t sym, unsigned int count)
 {
     // Get script-engine

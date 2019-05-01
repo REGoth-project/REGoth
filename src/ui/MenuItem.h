@@ -15,7 +15,7 @@ namespace UI
     {
     public:
         MenuItem(Engine::BaseEngine& e, Menu& baseMenu, Daedalus::GameState::MenuItemHandle scriptHandle);
-        ~MenuItem();
+        ~MenuItem() override;
 
         void setTextLine(const std::string& text, unsigned int line = 0);
 

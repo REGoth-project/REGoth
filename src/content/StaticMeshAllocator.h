@@ -42,7 +42,8 @@ namespace Meshes
     {
     public:
         StaticMeshAllocator(Engine::BaseEngine& engine);
-        virtual ~StaticMeshAllocator();
+
+        ~StaticMeshAllocator() override;
 
         /**
          * Allocates a mesh-instance and returns the handle to it.

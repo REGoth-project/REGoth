@@ -10,10 +10,6 @@ Ladder::Ladder(World::WorldInstance& world, const Handle::EntityHandle& entity)
 {
 }
 
-Ladder::~Ladder()
-{
-}
-
 void Ladder::onBeginStateChange(Handle::EntityHandle npc, int from, int to)
 {
     MobCore::onBeginStateChange(npc, from, to);

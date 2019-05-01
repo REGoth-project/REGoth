@@ -8,7 +8,7 @@ namespace UI
     {
     public:
         TextView(Engine::BaseEngine& e);
-        ~TextView();
+        ~TextView() override = default;
 
         /**
          * Updates/draws the UI-Views

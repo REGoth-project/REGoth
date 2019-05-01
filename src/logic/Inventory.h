@@ -16,7 +16,7 @@ namespace Logic
     {
     public:
         Inventory(World::WorldInstance& world, Daedalus::GameState::NpcHandle npc);
-        virtual ~Inventory();
+        virtual ~Inventory() = default;
 
         /**
          * Creates and adds an item of the underlaying script instance

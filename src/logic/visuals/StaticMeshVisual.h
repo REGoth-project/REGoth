@@ -13,7 +13,8 @@ namespace Logic
          * @param entity Entity owning this controller
          */
         StaticMeshVisual(World::WorldInstance& world, Handle::EntityHandle entity);
-        virtual ~StaticMeshVisual();
+
+        ~StaticMeshVisual() override = default;
 
         /**
          * @return Classtype of this visual

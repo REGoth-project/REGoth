@@ -24,10 +24,7 @@ AnimHandler::AnimHandler()
     m_pWorld = nullptr;
     m_AnimationFrame = 0.0f;
 
-    for (unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
-    {
-        m_AnimVelocityRingBuff[i] = Math::float3(0, 0, 0);
-    }
+    std::fill(std::begin(m_AnimVelocityRingBuff), std::end(m_AnimVelocityRingBuff), Math::float3(0, 0, 0));
 }
 
 /**
@@ -512,12 +509,7 @@ float AnimHandler::getActiveAnimationProgress()
 
 Math::float3 AnimHandler::getRootNodeVelocityAvg()
 {
-    Math::float3 avg(0, 0, 0);
-
-    for (unsigned i = 0; i < NUM_VELOCITY_AVERAGE_STEPS; i++)
-    {
-        avg += m_AnimVelocityRingBuff[i];
-    }
+     Math::float3 avg = std::accumulate(std::begin(m_AnimVelocityRingBuff), std::end(m_AnimVelocityRingBuff), Math::float3(0, 0, 0));
 
     return avg / (float)NUM_VELOCITY_AVERAGE_STEPS;
 }

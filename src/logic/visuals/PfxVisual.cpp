@@ -3,7 +3,7 @@
 //
 
 #include "PfxVisual.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <ZenLib/utils/logger.h>
 #include <bx/math.h>
 #include <components/EntityActions.h>
@@ -22,10 +22,6 @@ Logic::PfxVisual::PfxVisual(World::WorldInstance& world, Handle::EntityHandle en
 {
     Components::Actions::initComponent<Components::PfxComponent>(m_World.getComponentAllocator(), entity);
     Components::Actions::initComponent<Components::BBoxComponent>(m_World.getComponentAllocator(), entity);
-}
-
-Logic::PfxVisual::~PfxVisual()
-{
 }
 
 bool Logic::PfxVisual::load(const std::string& visual)
@@ -172,7 +168,7 @@ void Logic::PfxVisual::onUpdate(float deltaTime)
             ++i;
         }
     }
-    if (pfx.m_Particles.size() == 0 && m_dead)
+    if (pfx.m_Particles.empty() && m_dead)
     {
         m_canBeRemoved = true;
     }

@@ -21,10 +21,6 @@ PrintScreenMessages::PrintScreenMessages(Engine::BaseEngine& e)
     m_TimeToPopMessage = TIME_TO_POP_MESSAGE;
 }
 
-PrintScreenMessages::~PrintScreenMessages()
-{
-}
-
 void PrintScreenMessages::update(double dt, Engine::Input::MouseState& mstate, Render::RenderConfig& config)
 {
     if (m_IsHidden)
